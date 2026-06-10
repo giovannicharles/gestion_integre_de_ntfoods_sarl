@@ -1,0 +1,90 @@
+<div class="page animate-fadeInUp">
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div>
+        <h1 class="ph-title">Alertes &amp; Seuils de Stock</h1>
+        <p class="ph-sub">Produits sous le seuil minimum — Action requise</p>
+      </div>
+    </div>
+    <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-truck-ramp-box"></i> Commander / Réceptionner
+    </a>
+  </div>
+
+  @if (!loading()) {
+    <div class="filter-tabs">
+      <button class="ftab" [class.ft-on]="activeFilter()==='TOUS'" (click)="activeFilter.set('TOUS')">
+        Toutes <span class="ftab-count">{{ alertes().length }}</span>
+      </button>
+      <button class="ftab ftab-r" [class.ft-on]="activeFilter()==='CRITIQUE'" (click)="activeFilter.set('CRITIQUE')">
+        <span class="pulse-sm"></span> Critiques <span class="ftab-count">{{ getCritiqueCount() }}</span>
+      </button>
+      <button class="ftab ftab-o" [class.ft-on]="activeFilter()==='FAIBLE'" (click)="activeFilter.set('FAIBLE')">
+        Faibles <span class="ftab-count">{{ getFaibleCount() }}</span>
+      </button>
+    </div>
+
+    <div class="alerts-grid">
+      @for (al of getFiltered(); track al.produitId) {
+        <div class="al-card" [class.al-crit]="al.niveau==='CRITIQUE'" [class.al-faib]="al.niveau==='FAIBLE'">
+
+          <div class="al-top">
+            <div class="al-badge-wrap">
+              @if (al.niveau === 'CRITIQUE') { <div class="ring-wrap"><span class="ring-inner"></span></div> }
+              <span class="badge {{ getNiveauClass(al.niveau) }}">{{ al.niveau }}</span>
+            </div>
+            @if (needsUrgentOrder(al)) {
+              <span class="ship-chip"><i class="fa-solid fa-ship"></i>Import urgent</span>
+            }
+          </div>
+
+          <h3 class="al-name">{{ al.designation }}</h3>
+          <p class="al-mag"><i class="fa-solid fa-warehouse"></i>{{ getMagasinLabel(al.magasin) }}</p>
+
+          <div class="al-gauge">
+            <div class="al-gauge-track">
+              <div class="al-gauge-fill"
+                [style.width.%]="getStockPct(al)"
+                [style.background]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">
+              </div>
+            </div>
+            <span class="al-pct" [style.color]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">{{ getStockPct(al) }}%</span>
+          </div>
+
+          <div class="al-stocks">
+            <div class="als-item">
+              <span class="als-lbl">Actuel</span>
+              <span class="als-val" [style.color]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">{{ al.stockActuel | number }}</span>
+            </div>
+            <div class="als-sep"></div>
+            <div class="als-item">
+              <span class="als-lbl">Minimum</span>
+              <span class="als-val">{{ al.stockMinimum | number }}</span>
+            </div>
+            <div class="als-sep"></div>
+            <div class="als-item">
+              <span class="als-lbl">Valeur stock</span>
+              <span class="als-val" style="font-size:12px">{{ formatCFA(getValeurStockAlert(al)) }}</span>
+            </div>
+          </div>
+
+          <a routerLink="/stock/reception/new" class="btn btn-primary btn-full btn-sm">
+            <i class="fa-solid fa-truck-ramp-box"></i> Commander
+          </a>
+        </div>
+      }
+      @empty {
+        <div class="no-alerts">
+          <div class="na-ico"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="na-title">Aucune alerte !</h3>
+          <p class="na-sub">Tous vos stocks sont à des niveaux satisfaisants.</p>
+        </div>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><div class="spinner spinner-lg"></div><span>Chargement des alertes…</span></div>
+  }
+</div>

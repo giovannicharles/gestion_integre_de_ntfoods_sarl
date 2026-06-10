@@ -1,0 +1,51 @@
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-section">
+                <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
+            </div>
+            <h1>Bienvenue</h1>
+            <p>Connectez-vous à votre espace ERP</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" formControlName="email" placeholder="votre@email.com"
+                    [class.is-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" />
+                <div class="error-message" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+                    Email invalide
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Mot de passe</label>
+                <div class="password-input">
+                    <input [type]="showPassword ? 'text' : 'password'" class="form-control" formControlName="password"
+                        placeholder="••••••••"
+                        [class.is-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" />
+                    <button type="button" class="toggle-password" (click)="togglePassword()">
+                        <i [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                </div>
+                <div class="error-message"
+                    *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+                    Le mot de passe doit contenir au moins 6 caractères
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading">
+                    <span *ngIf="!loading">Se connecter</span>
+                    <span *ngIf="loading" class="spinner spinner-sm"></span>
+                </button>
+            </div>
+
+            <div class="form-footer">
+                <a (click)="goToForgotPassword()" class="forgot-link">
+                    Mot de passe oublié ?
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

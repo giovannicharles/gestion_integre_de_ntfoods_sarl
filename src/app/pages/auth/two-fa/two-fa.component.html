@@ -1,0 +1,43 @@
+<div class="otp-container">
+    <div class="otp-card">
+        <div class="otp-header">
+            <div class="logo-section">
+                <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
+            </div>
+            <h1>Vérification OTP</h1>
+            <p>Entrez le code à 6 chiffres envoyé à votre numéro de téléphone</p>
+        </div>
+
+        <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form">
+            <div class="form-group">
+                <label class="form-label">Code OTP</label>
+                <input type="text" class="form-control otp-input" formControlName="otp" placeholder="000000"
+                    maxlength="6" [class.is-error]="otpForm.get('otp')?.touched && otpForm.get('otp')?.invalid" />
+                <div class="error-message" *ngIf="otpForm.get('otp')?.touched && otpForm.get('otp')?.invalid">
+                    Le code doit contenir 6 chiffres
+                </div>
+            </div>
+
+            <div class="countdown-section">
+                <p *ngIf="!canResend">Renvoyer dans {{ countdown }} secondes</p>
+                <button type="button" class="resend-btn" (click)="resendOtp()" [disabled]="!canResend"
+                    *ngIf="canResend">
+                    Renvoyer le code
+                </button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-full" [disabled]="otpForm.invalid || loading">
+                    <span *ngIf="!loading">Vérifier</span>
+                    <span *ngIf="loading" class="spinner spinner-sm"></span>
+                </button>
+            </div>
+
+            <div class="form-footer">
+                <a (click)="goToLogin()" class="back-link">
+                    ← Retour à la connexion
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

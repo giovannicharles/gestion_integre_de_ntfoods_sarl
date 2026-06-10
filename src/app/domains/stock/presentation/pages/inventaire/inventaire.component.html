@@ -1,0 +1,96 @@
+<div class="page animate-fadeInUp">
+  @if (toastMsg()) { <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'"><i class="fa-solid fa-circle-check"></i>{{ toastMsg() }}</div> }
+  <div class="ph"><div class="ph-left"><div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div><div><h1 class="ph-title">Inventaire des Stocks</h1><p class="ph-sub">Niveaux par entrepôt — Brand → Gamme → Variété → Produit</p></div></div><div style="display:flex;gap:8px;align-items:center"><div class="vt"><button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"><i class="fa-solid fa-table-list"></i></button><button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"><i class="fa-solid fa-grip"></i></button></div><button class="btn btn-ghost btn-sm" (click)="openAjust(all()[0])"><i class="fa-solid fa-sliders"></i> Ajuster</button><a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Nouvelle réception</a></div></div>
+  @if (!loading()) {
+    <div class="card kpi-bar"><div class="kb-item"><span class="kb-val kv-g">{{ fCFA(getTotalVal()) }}</span><span class="kb-lbl">Valeur totale (filtrée)</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val">{{ filtered().length }}<span class="kb-unit">/{{ all().length }}</span></span><span class="kb-lbl">Niveaux</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val kv-r">{{ countAlert('CRITIQUE') }}</span><span class="kb-lbl">Critiques</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val kv-o">{{ countAlert('FAIBLE') }}</span><span class="kb-lbl">Faibles</span></div></div>
+    <!-- CHART -->
+    <div class="card"><div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-chart-bar"></i></span><div><h3>Valeur de Stock par Produit (Top 8)</h3><p class="sec-sub">Couleur: Rouge=Critique · Orange=Faible · Vert=Normal</p></div></div></div><div class="card-body" style="padding:12px"><div class="chart-container"><canvas #valueCanvas></canvas></div></div></div>
+    <!-- FILTERS -->
+    <div class="card"><div class="card-body" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center"><i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;color:var(--n400);font-size:13px"></i><input type="text" style="width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);outline:none;background:white" placeholder="Rechercher produit, SKU…" [(ngModel)]="search" (ngModelChange)="applyFilters()"></div>
+      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterW" (ngModelChange)="applyFilters()"><option value="">Tous entrepôts</option>@for (w of warehouses(); track w.id) { <option [value]="w.id">{{ w.name }}</option> }</select>
+      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterA" (ngModelChange)="applyFilters()"><option value="">Toutes alertes</option><option value="CRITIQUE">🔴 Critique</option><option value="FAIBLE">🟠 Faible</option><option value="NORMAL">🟢 Normal</option></select>
+    </div></div>
+    <!-- TABLE -->
+    @if (viewMode()==='table') {
+    <div class="card" style="overflow:hidden"><div class="table-wrapper"><table class="table">
+      <thead><tr><th>Entrepôt</th><th>Produit</th><th>SKU</th><th class="text-right">Stock</th><th class="text-right">Disponible</th><th>Niveau</th><th class="text-right">Valeur</th><th>Alerte</th><th></th></tr></thead>
+      <tbody>
+        @for (sl of paginated(); track sl.id) {
+          <tr class="table-row-anim" (click)="selected.set(sl)" style="cursor:pointer">
+            <td><span class="badge badge-neutral" style="font-size:10px">{{ (sl.warehouseName||'').substring(0,14) }}</span></td>
+            <td><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ sl.productName }}</span>@if(sl.variantName){<span style="font-size:10px;color:var(--g);font-weight:600">{{ sl.brandName }} · {{ sl.variantName }}</span>}</div></td>
+            <td><span style="font-size:11px;font-weight:700;color:var(--n500);font-family:monospace;background:var(--n100);padding:2px 7px;border-radius:5px">{{ sl.productSku }}</span></td>
+            <td class="text-right"><span style="font-family:var(--font-d);font-size:15px;font-weight:800;" [style.color]="getColor(sl)">{{ sl.quantity | number }}</span><span style="font-size:11px;color:var(--n400);margin-left:3px">{{ sl.productUnit }}</span></td>
+            <td class="text-right"><span style="font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--s)">{{ (sl.availableQty||sl.quantity) | number }}</span></td>
+            <td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:var(--n150);border-radius:3px;overflow:hidden"><div [style.width.%]="getPct(sl)" [style.background]="getColor(sl)" style="height:100%;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;" [style.color]="getColor(sl)">{{ getPct(sl) }}%</span></div></td>
+            <td class="text-right"><span style="font-size:12px;font-weight:700;color:var(--n700)">{{ fCFA(sl.stockValue || 0) }}</span></td>
+            <td><span class="badge {{ getNClass(sl.alertLevel||'NORMAL') }}">{{ sl.alertLevel }}</span></td>
+            <td><div style="display:flex;gap:4px"><button style="width:28px;height:28px;border-radius:6px;background:var(--g-gh);color:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" (click)="$event.stopPropagation();openAjust(sl)" title="Ajuster"><i class="fa-solid fa-sliders"></i></button></div></td>
+          </tr>
+        }
+      </tbody>
+    </table></div>
+    @if (totalPages()>1) { <div class="pagination-bar"><span class="pg-info">{{ (cp()-1)*ps+1 }}–{{ mathMin(cp()*ps,filtered().length) }} sur {{ filtered().length }}</span><div class="pg-controls"><button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-angle-left"></i></button>@for (p of pages; track p) { <button class="pg-btn" [class.pg-active]="p===cp()" (click)="goTo(p)">{{ p }}</button> }<button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-angle-right"></i></button></div></div> }
+    </div>
+    }
+    <!-- CARDS -->
+    @if (viewMode()==='cards') {
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
+        @for (sl of paginated(); track sl.id) {
+          <div style="background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:box-shadow .2s;animation:cardIn .3s ease both" [style.border-left]="sl.alertLevel==='CRITIQUE'?'4px solid var(--r)':sl.alertLevel==='FAIBLE'?'4px solid var(--o)':''" (click)="selected.set(sl)" (mouseenter)="$event.target">
+            <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--n400);font-family:monospace;font-weight:700">{{ sl.productSku }}</span><span class="badge {{ getNClass(sl.alertLevel||'NORMAL') }}" style="font-size:9px">{{ sl.alertLevel }}</span></div>
+            <h4 style="font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--n800);line-height:1.3">{{ sl.productName }}</h4>
+            <span class="badge badge-neutral" style="font-size:10px;align-self:flex-start">{{ (sl.warehouseName||'').substring(0,14) }}</span>
+            <div style="display:flex;align-items:baseline;gap:4px"><span style="font-family:var(--font-d);font-size:26px;font-weight:800;line-height:1;" [style.color]="getColor(sl)">{{ sl.quantity | number }}</span><span style="font-size:12px;color:var(--n400)">{{ sl.productUnit }}</span></div>
+            <div style="height:5px;background:var(--n150);border-radius:3px;overflow:hidden"><div [style.width.%]="getPct(sl)" [style.background]="getColor(sl)" style="height:100%;border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--n400)">Seuil: {{ sl.reorderPoint | number }}</span><span style="font-size:11px;font-weight:700;color:var(--g)">{{ fCFA(sl.stockValue || 0) }}</span></div>
+          </div>
+        }
+      </div>
+    }
+  }
+  @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
+
+  <!-- DETAIL MODAL -->
+  @if (selected()) {
+    <div class="modal-overlay animate-fadeIn" (click)="selected.set(null)">
+      <div style="background:white;border-radius:var(--r-xl);box-shadow:var(--sh-xl);width:100%;max-width:600px;overflow:hidden;animation:fadeInUp .3s ease" (click)="$event.stopPropagation()">
+        <div class="modal-header"><div><div style="display:flex;gap:8px;margin-bottom:6px"><span class="badge badge-neutral" style="font-size:10px">{{ selected()!.warehouseName }}</span><span class="badge {{ getNClass(selected()!.alertLevel||'NORMAL') }} badge-lg">{{ selected()!.alertLevel }}</span></div><h2 style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--n900)">{{ selected()!.productName }}</h2>@if(selected()!.variantName){<span style="font-size:11px;color:var(--g);font-weight:600">{{ selected()!.brandName }} › {{ selected()!.productLineName }} › {{ selected()!.variantName }}</span>}<span style="font-size:11px;color:var(--n400);display:block;margin-top:2px;font-family:monospace">{{ selected()!.productSku }}</span></div><button class="modal-close" (click)="selected.set(null)"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div><h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Niveau de stock</h4>
+              <div style="height:10px;background:var(--n150);border-radius:5px;overflow:hidden;margin-bottom:8px"><div [style.width.%]="getPct(selected()!)" [style.background]="getColor(selected()!)"></div></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:10px;color:var(--n400)">Seuil: {{ selected()!.reorderPoint | number }}</span><span style="font-family:var(--font-d);font-size:22px;font-weight:800;" [style.color]="getColor(selected()!)">{{ selected()!.quantity | number }} {{ selected()!.productUnit }}</span><span style="font-size:10px;color:var(--n400)">Max: {{ (selected()!.reorderPoint*6) | number }}</span></div>
+            </div>
+            <div><h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Informations</h4>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                @for (row of [['Stock physique', (selected()!.quantity|number)+' '+selected()!.productUnit],['Réservé', (selected()!.reservedQty||0|number)+''],['Disponible', ((selected()!.availableQty||selected()!.quantity)|number)+''],['Seuil réappro.', (selected()!.reorderPoint|number)+''],['Prix unitaire', fCFA(selected()!.unitPrice||0)],['Valeur stock', fCFA(selected()!.stockValue||0)],['Délai appro.', selected()!.leadTimeDays?selected()!.leadTimeDays+'j':'—']]; track $index) {
+                  <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--n150)"><span style="color:var(--n500)">{{ row[0] }}</span><span style="font-weight:600;color:var(--n800)">{{ row[1] }}</span></div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-ghost" (click)="selected.set(null)">Fermer</button><button class="btn btn-outline btn-sm" (click)="openAjust(selected()!);selected.set(null)"><i class="fa-solid fa-sliders"></i> Ajuster stock</button><a routerLink="/stock/reception/new" class="btn btn-primary btn-sm" (click)="selected.set(null)"><i class="fa-solid fa-truck-ramp-box"></i> Réceptionner</a></div>
+      </div>
+    </div>
+  }
+
+  <!-- AJUST MODAL -->
+  @if (showAjust()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeAjust()">
+      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="background:var(--b-gh)"><div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div><button class="modal-close" (click)="closeAjust()"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-body">
+          <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Cet ajustement génère un StockMovement ADJUSTMENT dans l'audit trail.</span></div>
+          <div class="form-group"><label class="form-label">Niveau de stock</label><select class="form-control" [(ngModel)]="ajustId">@for (sl of all(); track sl.id) { <option [value]="sl.id">{{ sl.productName }} — {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
+          @if (getAjustSL(); as sl) { <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:center;gap:12px"><span style="font-size:12px;color:var(--n500)">Actuel :</span><span style="font-family:var(--font-d);font-size:17px;font-weight:800;color:var(--g)">{{ sl.quantity | number }} {{ sl.productUnit }}</span></div> }
+          <div class="form-group"><label class="form-label">Nouvelle quantité <span class="req">*</span></label><input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité après inventaire physique"></div>
+          <div class="form-group"><label class="form-label">Motif <span class="req">*</span></label><textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="ajustMotif"></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAjust()">Annuler</button><button class="btn btn-primary" [disabled]="!ajustId||!ajustMotif||ajustSaving()" (click)="sauverAjust()">@if (ajustSaving()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-check"></i> Confirmer }</button></div>
+      </div>
+    </div>
+  }
+</div>

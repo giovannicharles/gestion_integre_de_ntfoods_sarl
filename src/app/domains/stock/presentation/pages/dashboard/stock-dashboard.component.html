@@ -1,0 +1,404 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
+      <div>
+        <h1 class="ph-title">Tableau de Bord — Stock</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Yaoundé</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <div class="period-selector">
+        <button class="period-btn" [class.active]="selectedPeriod() === 'today'"
+          (click)="setPeriod('today')">Aujourd'hui</button>
+        <button class="period-btn" [class.active]="selectedPeriod() === 'week'" (click)="setPeriod('week')">Cette
+          semaine</button>
+        <button class="period-btn" [class.active]="selectedPeriod() === 'month'" (click)="setPeriod('month')">Ce
+          mois</button>
+      </div>
+      <div class="ph-stats-summary">
+        <span class="ph-stat-item"><i class="fa-solid fa-box"></i> {{ stats()!.totalStockLevels }} articles</span>
+        <span class="ph-stat-item"><i class="fa-solid fa-warehouse"></i> 4 entrepôts</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" (click)="loadAll()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <a routerLink="/stock/reception/new" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Nouvelle Réception
+      </a>
+    </div>
+  </div>
+
+  <!-- SKELETON -->
+  @if (loading()) {
+  <div class="sk-kpi-grid">
+    @for (i of skeletonItems; track i) {
+    <div class="card sk-kpi-card">
+      <div class="sk-shimmer sk-ico"></div>
+      <div class="sk-lines">
+        <div class="sk-shimmer sk-s"></div>
+        <div class="sk-shimmer sk-l"></div>
+        <div class="sk-shimmer sk-m"></div>
+      </div>
+    </div>
+    }
+  </div>
+  <div class="sk-body">
+    <div class="sk-shimmer sk-chart-big"></div>
+    <div class="sk-charts-sm">
+      <div class="sk-shimmer sk-chart-sm"></div>
+      <div class="sk-shimmer sk-chart-sm"></div>
+    </div>
+  </div>
+  }
+
+  @if (!loading() && stats()) {
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-warehouse"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Valeur Totale Stock</span>
+        <span class="kpi-val">{{ formatCFA(stats()!.totalStockValue) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i>{{ stats()!.totalStockLevels }} niveaux · 4
+          entrepôts</div>
+      </div>
+      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+8.2%</div>
+    </div>
+
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Alertes Critiques</span>
+        <span class="kpi-val" [style.color]="stats()!.criticalAlerts > 0 ? 'var(--r)' : ''">
+          {{ stats()!.criticalAlerts }}
+          @if (stats()!.criticalAlerts > 0) { <span class="p-dot"></span> }
+        </span>
+        <div class="kpi-meta"><i class="fa-solid fa-circle-dot" style="color:var(--o)"></i>{{ stats()!.lowAlerts }}
+          niveaux faibles</div>
+      </div>
+      <a routerLink="/stock/alertes" class="kpi-link">Voir alertes <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="kpi-card kp-o">
+      <div class="kpi-decor kd-o"></div>
+      <div class="kpi-ico io"><i class="fa-solid fa-truck-ramp-box"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Réceptions en Attente</span>
+        <span class="kpi-val">{{ stats()!.pendingReceipts }}</span>
+        <div class="kpi-meta"><i class="fa-regular fa-calendar-days"></i>{{ stats()!.todayReceipts }} aujourd'hui</div>
+      </div>
+      <a routerLink="/stock/validation" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-industry"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Lots Prod. en Attente</span>
+        <span class="kpi-val">{{ stats()!.pendingBatches }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-cart-plus"></i>{{ stats()!.activeInternalOrders }} commandes actives
+        </div>
+      </div>
+      <a routerLink="/stock/production" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="dash-grid">
+    <!-- LEFT -->
+    <div class="dash-col-main">
+
+      <!-- CHART 1: Niveaux de stock (barres) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-g"><i class="fa-solid fa-chart-bar"></i></span>
+            <div>
+              <h3>Niveaux de Stock vs Seuils de Réapprovisionnement</h3>
+              <p class="sec-sub">Top 8 produits par valeur · comparaison stock réel / seuil commande</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <div class="chart-container-lg">
+            <canvas #stockBarCanvas></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART 3: Mouvements par type (barres horizontales) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-b"><i class="fa-solid fa-right-left"></i></span>
+            <div>
+              <h3>Répartition des Mouvements de Stock</h3>
+              <p class="sec-sub">Par type d'opération</p>
+            </div>
+          </div>
+          <a routerLink="/stock/mouvements" class="btn btn-ghost btn-sm">Historique <i
+              class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <div class="chart-container">
+            <canvas #movementsCanvas></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABS: réceptions / mouvements / lots -->
+      <div class="card">
+        <div class="card-header" style="padding:14px 20px">
+          <div style="display:flex;gap:4px">
+            <button class="tab-pill" [class.t-active]="activeTab()==='receipts'" (click)="activeTab.set('receipts')">
+              <i class="fa-solid fa-truck-ramp-box"></i> Réceptions <span class="tab-count">{{ receipts().length
+                }}</span>
+            </button>
+            <button class="tab-pill" [class.t-active]="activeTab()==='batches'" (click)="activeTab.set('batches')">
+              <i class="fa-solid fa-industry"></i> Lots Prod. <span class="tab-count">{{ getPendingBatches().length
+                }}</span>
+            </button>
+            <button class="tab-pill" [class.t-active]="activeTab()==='movements'" (click)="activeTab.set('movements')">
+              <i class="fa-solid fa-right-left"></i> Mouvements <span class="tab-count">{{ movements().length }}</span>
+            </button>
+          </div>
+          <a [routerLink]="activeTab()==='receipts'?'/stock/reception':activeTab()==='batches'?'/stock/production':'/stock/mouvements'"
+            class="btn btn-ghost btn-sm">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="no-pad">
+
+          @if (activeTab() === 'receipts') {
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>N° Réception</th>
+                  <th>Source / Fournisseur</th>
+                  <th>Entrepôt</th>
+                  <th>Montant</th>
+                  <th>Date</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of receipts(); track r.id) {
+                <tr class="table-row-anim">
+                  <td><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--g)">{{
+                      r.receiptNumber }}</span></td>
+                  <td>
+                    @if (r.source === 'SUPPLIER') {
+                    <div style="display:flex;flex-direction:column;gap:2px"><span
+                        style="font-size:13px;font-weight:600;color:var(--n800)">{{ r.fournisseur?.name || '—'
+                        }}</span><span style="font-size:11px;color:var(--n400)"><i class="fa-solid fa-location-dot"></i>
+                        {{ r.fournisseur?.pays }}</span></div>
+                    } @else {
+                    <span class="badge badge-primary"><i class="fa-solid fa-industry"></i> Production</span>
+                    }
+                  </td>
+                  <td><span class="badge {{ getWBadge(r.warehouseName) }}">{{ getWShort(r.warehouseName) }}</span></td>
+                  <td><span style="font-size:12px;font-weight:700;color:var(--n700)">{{ formatCFA(r.totalAmount)
+                      }}</span></td>
+                  <td><span style="font-size:11px;color:var(--n500)">{{ r.createdAt | date:'dd/MM HH:mm' }}</span></td>
+                  <td><span class="badge {{ getRStatutClass(r.status) }}">{{ getRStatutLabel(r.status) }}</span></td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+
+          @if (activeTab() === 'batches') {
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Produit</th>
+                  <th>Quantité déclarée</th>
+                  <th>→ Unités</th>
+                  <th>Date prod.</th>
+                  <th>Date lot</th>
+                  <th>Chef Prod.</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of batches(); track b.id) {
+                <tr class="table-row-anim">
+                  <td>
+                    <div style="display:flex;flex-direction:column;gap:2px"><span
+                        style="font-size:13px;font-weight:600;color:var(--n800)">{{ b.productName }}</span><span
+                        style="font-size:10px;color:var(--n400);font-family:monospace">{{ b.productSku }}</span></div>
+                  </td>
+                  <td><span style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--n800)">{{
+                      b.declaredQuantityKg | number }} <span style="font-size:11px;color:var(--n400)">kg</span></span>
+                  </td>
+                  <td><span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{
+                      b.equivalentUnits | number }}</span></td>
+                  <td><span style="font-size:12px;color:var(--n600)">{{ b.productionDate | date:'dd/MM/yyyy' }}</span>
+                  </td>
+                  <td><span style="font-size:12px;font-weight:700;color:var(--g)">{{ b.batchDate | date:'dd/MM/yyyy'
+                      }}</span></td>
+                  <td><span style="font-size:12px;color:var(--n600)">{{ b.declaredByName }}</span></td>
+                  <td><span class="badge {{ getBStatutClass(b.status) }}" style="font-size:10px">{{
+                      getBStatutLabel(b.status) }}</span></td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+
+          @if (activeTab() === 'movements') {
+          <div style="display:flex;flex-direction:column">
+            @for (m of movements(); track m.id) {
+            <div class="mov-item table-row-anim">
+              <div class="mov-ico {{ getMColor(m.type) }}"><i class="fa-solid {{ getMIcon(m.type) }}"></i></div>
+              <div class="mov-body">
+                <span class="mov-type">{{ getMLabel(m.type) }}</span>
+                <span class="mov-prod">{{ m.product?.designation || m.product?.sku || 'Produit #' + m.productId
+                  }}</span>
+              </div>
+              <div class="mov-qty" [class.mq-pos]="isEntree(m.type)" [class.mq-neg]="!isEntree(m.type)">
+                {{ isEntree(m.type) ? '+' : '-' }}{{ m.quantity | number }} {{ m.product?.unit }}
+              </div>
+              <div class="mov-meta">
+                <span>{{ m.createdAt | date:'dd/MM HH:mm' }}</span>
+                <span style="font-size:10px;color:var(--n300)">{{ m.reference || '—' }}</span>
+              </div>
+            </div>
+            }
+          </div>
+          }
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="dash-col-side">
+
+      <!-- CHART 2: Donut valeur par entrepôt -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-warehouse"></i></span>
+            <div>
+              <h3>Valeur par Entrepôt</h3>
+              <p class="sec-sub">Répartition FCFA</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:12px">
+          <div class="chart-container-sm"><canvas #donutCanvas></canvas></div>
+        </div>
+      </div>
+
+      <!-- CHART 4: Polar area alertes -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-r"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <div>
+              <h3>Distribution des Alertes</h3>
+              <p class="sec-sub">{{ stockLevels().length }} articles</p>
+            </div>
+          </div><a routerLink="/stock/alertes" class="btn btn-ghost btn-sm">Toutes</a>
+        </div>
+        <div class="card-body" style="padding:12px">
+          <div class="chart-container-sm"><canvas #alertRadarCanvas></canvas></div>
+        </div>
+      </div>
+
+      <!-- ACTIONS RAPIDES -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-bolt"></i></span>
+            <div>
+              <h3>Actions Rapides</h3>
+            </div>
+          </div>
+        </div>
+        <div class="no-pad">
+          <div class="qa-list">
+            <a routerLink="/stock/reception/new" class="qa-item qa-g">
+              <div class="qa-ico"><i class="fa-solid fa-truck-ramp-box"></i></div>
+              <div class="qa-txt"><span class="qa-t">Saisir une réception</span><span class="qa-s">Entrée
+                  fournisseur</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/validation" class="qa-item qa-o">
+              <div class="qa-ico"><i class="fa-solid fa-clipboard-check"></i></div>
+              <div class="qa-txt"><span class="qa-t">Valider réceptions</span><span class="qa-s">{{
+                  stats()!.pendingReceipts }} en attente</span></div>@if (stats()!.pendingReceipts > 0) { <span
+                class="qa-cnt">{{ stats()!.pendingReceipts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/production" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-industry"></i></div>
+              <div class="qa-txt"><span class="qa-t">Lots de production</span><span class="qa-s">{{
+                  stats()!.pendingBatches }} en attente</span></div>@if (stats()!.pendingBatches > 0) { <span
+                class="qa-cnt">{{ stats()!.pendingBatches }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/orders" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-cart-plus"></i></div>
+              <div class="qa-txt"><span class="qa-t">Commander à la production</span><span class="qa-s">{{
+                  stats()!.activeInternalOrders }} commandes actives</span></div><i
+                class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/commercial" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-users"></i></div>
+              <div class="qa-txt"><span class="qa-t">Module Commercial</span><span class="qa-s">Dotations · Ventes ·
+                  Caisse</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/notifications" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-bell"></i></div>
+              <div class="qa-txt"><span class="qa-t">Notifications</span><span class="qa-s">Voir toutes les
+                  notifications</span></div>@if (stats()!.criticalAlerts > 0) { <span class="qa-cnt qa-cnt-red">{{
+                stats()!.criticalAlerts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUITS CRITIQUES -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-r"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <div>
+              <h3>Produits Critiques</h3>
+              <p class="sec-sub">Stock en dessous du seuil</p>
+            </div>
+          </div>
+          <a routerLink="/stock/alertes" class="btn btn-ghost btn-sm">Tous</a>
+        </div>
+        <div class="no-pad">
+          <div class="critical-list">
+            @for (item of getCriticalItems(); track item.id) {
+            <div class="critical-item">
+              <div class="critical-ico"><i class="fa-solid fa-exclamation-circle"></i></div>
+              <div class="critical-body">
+                <span class="critical-name">{{ item.productName || item.productSku }}</span>
+                <span class="critical-qty">{{ item.quantity }} / {{ item.reorderPoint }}</span>
+              </div>
+              <div class="critical-pct {{ getCriticalClass(item) }}">
+                {{ getPct(item) }}%
+              </div>
+            </div>
+            } @empty {
+            <div class="empty-critical">
+              <i class="fa-solid fa-check-circle"></i>
+              <span>Aucun produit critique</span>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  } <!-- end !loading -->
+</div>
