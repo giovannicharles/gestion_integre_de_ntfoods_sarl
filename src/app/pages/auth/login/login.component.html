@@ -8,13 +8,20 @@
             <p>Connectez-vous à votre espace ERP</p>
         </div>
 
+        @if (error()) {
+            <div class="error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error() }}</span>
+            </div>
+        }
+
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
             <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" formControlName="email" placeholder="votre@email.com"
-                    [class.is-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" />
-                <div class="error-message" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
-                    Email invalide
+                <label class="form-label">Matricule</label>
+                <input type="text" class="form-control" formControlName="matricule" placeholder="Ex: ADM-2025-0001"
+                    [class.is-error]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid" />
+                <div class="error-message" *ngIf="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid">
+                    Le matricule est obligatoire
                 </div>
             </div>
 
@@ -35,9 +42,13 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading">
-                    <span *ngIf="!loading">Se connecter</span>
-                    <span *ngIf="loading" class="spinner spinner-sm"></span>
+                <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading()">
+                    @if (!loading()) {
+                        <span>Se connecter</span>
+                    } @else {
+                        <span class="spinner spinner-sm"></span>
+                        <span>Connexion en cours...</span>
+                    }
                 </button>
             </div>
 

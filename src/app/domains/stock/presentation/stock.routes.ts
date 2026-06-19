@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
 import { StockLayoutComponent } from '../../../layout/stock-layout/stock-layout.component';
+import { authGuard } from '../../../core/auth/auth.guard';
 
 export const STOCK_ROUTES: Routes = [
   {
     path: '',
     component: StockLayoutComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/stock-dashboard.component').then(m => m.StockDashboardComponent) },

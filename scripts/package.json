@@ -1,0 +1,17 @@
+{
+  "name": "tanty-product-import",
+  "version": "1.0.0",
+  "description": "Script d'import des produits TANTY depuis Excel",
+  "main": "import-products.js",
+  "scripts": {
+    "import": "node import-products.js",
+    "import:dev": "node import-products.js ../comprehension_du_projet/LISTE\\ DES\\ PRODUITS.xlsx"
+  },
+  "keywords": ["tanty", "erp", "import", "products", "excel"],
+  "author": "TANTY DIGITAL",
+  "license": "ISC",
+  "dependencies": {
+    "xlsx": "^0.18.5",
+    "axios": "^1.6.0"
+  }
+}

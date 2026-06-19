@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════
    TANTY DIGITAL ERP — DESIGN SYSTEM GLOBAL v3
-   Charte: Vert #1A6B2A · Jaune #FFD700
+   Charte: Vert #1A6B2A · Jaune #f3d105
    ══════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
@@ -9,7 +9,7 @@
 :root {
   --g:       #1A6B2A;  --g-d:  #0F4019;  --g-m:  #2E7D32;  --g-l:  #4CAF50;
   --g-pale:  #C8E6C9;  --g-gh: #E8F5E9;  --g-sf: #F1F8F2;
-  --y:       #FFD700;  --y-d:  #C8A800;  --y-m:  #FFC107;  --y-l:  #FFE57F;  --y-gh: #FFFDE7;
+  --y:       #f3d105;  --y-d:  #C8A800;  --y-m:  #FFC107;  --y-l:  #FFE57F;  --y-gh: #FFFDE7;
   --r:       #C62828;  --r-l:  #EF5350;  --r-gh: #FFEBEE;
   --o:       #E65100;  --o-gh: #FBE9E7;
   --b:       #0277BD;  --b-gh: #E1F5FE;

@@ -4,6 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
+import { AuthService } from '../../core/auth/auth.service';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
@@ -16,6 +17,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 })
 export class StockLayoutComponent implements OnInit {
   router = inject(Router);
+  private authService = inject(AuthService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());
@@ -57,5 +59,11 @@ export class StockLayoutComponent implements OnInit {
     if (window.innerWidth < 768) this.mobileOpen.update(v => !v);
     else this.sidebarOpen.update(v => !v);
   }
+
   closeMobile() { this.mobileOpen.set(false); }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
 }
