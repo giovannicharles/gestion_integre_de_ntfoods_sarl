@@ -1,95 +1,444 @@
 <div class="page animate-fadeInUp">
-  @if (toastMsg()) { <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'"><i class="fa-solid fa-circle-check"></i>{{ toastMsg() }}</div> }
-  <div class="ph"><div class="ph-left"><div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div><div><h1 class="ph-title">Inventaire des Stocks</h1><p class="ph-sub">Niveaux par entrepôt — Brand → Gamme → Variété → Produit</p></div></div><div style="display:flex;gap:8px;align-items:center"><div class="vt"><button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"><i class="fa-solid fa-table-list"></i></button><button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"><i class="fa-solid fa-grip"></i></button></div><button class="btn btn-ghost btn-sm" (click)="openAjust(all()[0])"><i class="fa-solid fa-sliders"></i> Ajuster</button><a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Nouvelle réception</a></div></div>
-  @if (!loading()) {
-    <div class="card kpi-bar"><div class="kb-item"><span class="kb-val kv-g">{{ fCFA(getTotalVal()) }}</span><span class="kb-lbl">Valeur totale (filtrée)</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val">{{ filtered().length }}<span class="kb-unit">/{{ all().length }}</span></span><span class="kb-lbl">Niveaux</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val kv-r">{{ countAlert('CRITIQUE') }}</span><span class="kb-lbl">Critiques</span></div><div class="kb-sep"></div><div class="kb-item"><span class="kb-val kv-o">{{ countAlert('FAIBLE') }}</span><span class="kb-lbl">Faibles</span></div></div>
-    <!-- CHART -->
-    <div class="card"><div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-chart-bar"></i></span><div><h3>Valeur de Stock par Produit (Top 8)</h3><p class="sec-sub">Couleur: Rouge=Critique · Orange=Faible · Vert=Normal</p></div></div></div><div class="card-body" style="padding:12px"><div class="chart-container"><canvas #valueCanvas></canvas></div></div></div>
-    <!-- FILTERS -->
-    <div class="card"><div class="card-body" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center"><i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;color:var(--n400);font-size:13px"></i><input type="text" style="width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);outline:none;background:white" placeholder="Rechercher produit, SKU…" [(ngModel)]="search" (ngModelChange)="applyFilters()"></div>
-      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterW" (ngModelChange)="applyFilters()"><option value="">Tous entrepôts</option>@for (w of warehouses(); track w.id) { <option [value]="w.id">{{ w.name }}</option> }</select>
-      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterA" (ngModelChange)="applyFilters()"><option value="">Toutes alertes</option><option value="CRITIQUE">🔴 Critique</option><option value="FAIBLE">🟠 Faible</option><option value="NORMAL">🟢 Normal</option></select>
-    </div></div>
-    <!-- TABLE -->
-    @if (viewMode()==='table') {
-    <div class="card" style="overflow:hidden"><div class="table-wrapper"><table class="table">
-      <thead><tr><th>Entrepôt</th><th>Produit</th><th>SKU</th><th class="text-right">Stock</th><th class="text-right">Disponible</th><th>Niveau</th><th class="text-right">Valeur</th><th>Alerte</th><th></th></tr></thead>
-      <tbody>
-        @for (sl of paginated(); track sl.id) {
-          <tr class="table-row-anim" (click)="selected.set(sl)" style="cursor:pointer">
-            <td><span class="badge badge-neutral" style="font-size:10px">{{ (sl.warehouseName||'').substring(0,14) }}</span></td>
-            <td><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ sl.productName }}</span>@if(sl.variantName){<span style="font-size:10px;color:var(--g);font-weight:600">{{ sl.brandName }} · {{ sl.variantName }}</span>}</div></td>
-            <td><span style="font-size:11px;font-weight:700;color:var(--n500);font-family:monospace;background:var(--n100);padding:2px 7px;border-radius:5px">{{ sl.productSku }}</span></td>
-            <td class="text-right"><span style="font-family:var(--font-d);font-size:15px;font-weight:800;" [style.color]="getColor(sl)">{{ sl.quantity | number }}</span><span style="font-size:11px;color:var(--n400);margin-left:3px">{{ sl.productUnit }}</span></td>
-            <td class="text-right"><span style="font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--s)">{{ (sl.availableQty||sl.quantity) | number }}</span></td>
-            <td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:var(--n150);border-radius:3px;overflow:hidden"><div [style.width.%]="getPct(sl)" [style.background]="getColor(sl)" style="height:100%;border-radius:3px"></div></div><span style="font-size:11px;font-weight:700;" [style.color]="getColor(sl)">{{ getPct(sl) }}%</span></div></td>
-            <td class="text-right"><span style="font-size:12px;font-weight:700;color:var(--n700)">{{ fCFA(sl.stockValue || 0) }}</span></td>
-            <td><span class="badge {{ getNClass(sl.alertLevel||'NORMAL') }}">{{ sl.alertLevel }}</span></td>
-            <td><div style="display:flex;gap:4px"><button style="width:28px;height:28px;border-radius:6px;background:var(--g-gh);color:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" (click)="$event.stopPropagation();openAjust(sl)" title="Ajuster"><i class="fa-solid fa-sliders"></i></button></div></td>
-          </tr>
-        }
-      </tbody>
-    </table></div>
-    @if (totalPages()>1) { <div class="pagination-bar"><span class="pg-info">{{ (cp()-1)*ps+1 }}–{{ mathMin(cp()*ps,filtered().length) }} sur {{ filtered().length }}</span><div class="pg-controls"><button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-angle-left"></i></button>@for (p of pages; track p) { <button class="pg-btn" [class.pg-active]="p===cp()" (click)="goTo(p)">{{ p }}</button> }<button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-angle-right"></i></button></div></div> }
+  @if (toastMsg()) {
+    <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-circle-check]="toastType()==='success'" [class.fa-triangle-exclamation]="toastType()==='error'"></i>{{ toastMsg() }}
     </div>
+  }
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div>
+        <h1 class="ph-title">Inventaire des Stocks</h1>
+        <p class="ph-sub">Vue consolidée — Central · Tampon · Mobile</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="vt">
+        <button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"><i class="fa-solid fa-table-list"></i></button>
+        <button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"><i class="fa-solid fa-grip"></i></button>
+      </div>
+      <button class="btn btn-ghost btn-sm" (click)="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+      <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Réception</a>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)">
+      <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement de l'inventaire…
+    </div>
+  } @else {
+
+    <!-- MATERIAL TYPE FILTER TABS -->
+    <div class="type-tabs">
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='ALL'" (click)="filterMaterial.set('ALL'); applyFilters()">
+        <i class="fa-solid fa-layer-group"></i> Tous types
+        <span class="tt-count">{{ allItems().length }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='PRODUIT_FINI'" (click)="filterMaterial.set('PRODUIT_FINI'); applyFilters()">
+        <i class="fa-solid fa-box"></i> Produits Finis
+        <span class="tt-count">{{ produitFiniCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='MATIERE_PREMIERE'" (click)="filterMaterial.set('MATIERE_PREMIERE'); applyFilters()">
+        <i class="fa-solid fa-sack-wheat"></i> Matières Premières
+        <span class="tt-count">{{ matierePremiereCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='CONSOMMABLE'" (click)="filterMaterial.set('CONSOMMABLE'); applyFilters()">
+        <i class="fa-solid fa-box-open"></i> Consommables
+        <span class="tt-count">{{ consommableCount() }}</span>
+      </button>
+    </div>
+
+    <!-- LOCATION FILTER TABS -->
+    <div class="type-tabs" style="margin-top:8px">
+      <button class="type-tab" [class.tt-active]="filterType()==='ALL'" (click)="filterType.set('ALL'); applyFilters()">
+        <i class="fa-solid fa-warehouse"></i> Tous emplacements
+        <span class="tt-count">{{ allItems().length }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterType()==='CENTRAL'" (click)="filterType.set('CENTRAL'); applyFilters()">
+        <i class="fa-solid fa-warehouse"></i> Central
+        <span class="tt-count">{{ centralCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterType()==='BUFFER'" (click)="filterType.set('BUFFER'); applyFilters()">
+        <i class="fa-solid fa-layer-group"></i> Tampon
+        <span class="tt-count">{{ bufferCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterType()==='MOBILE'" (click)="filterType.set('MOBILE'); applyFilters()">
+        <i class="fa-solid fa-truck"></i> Mobile
+        <span class="tt-count">{{ mobileCount() }}</span>
+      </button>
+    </div>
+
+    <!-- KPI BAR -->
+    <div class="card kpi-bar">
+      <div class="kb-item"><span class="kb-val kv-g">{{ fCFA(totalValue) }}</span><span class="kb-lbl">Valeur totale</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val">{{ totalQty | number }}</span><span class="kb-lbl">Quantité totale</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val">{{ filtered().length }}</span><span class="kb-lbl">Références</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-r">{{ criticalCount }}</span><span class="kb-lbl">Critiques</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-o">{{ lowCount }}</span><span class="kb-lbl">Faibles</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-g">{{ normalCount }}</span><span class="kb-lbl">Normaux</span></div>
+    </div>
+
+    <!-- STATS PAR GAMME -->
+    @if (gammes().length > 0) {
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-g"><i class="fa-solid fa-layer-group"></i></span>
+            <div>
+              <h3>Statistiques par Gamme</h3>
+              <p class="sec-sub">Quantités et alertes par gamme de produit</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:12px 16px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+            @for (g of gammes(); track g.name) {
+              <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 14px;border:1px solid var(--n150);cursor:pointer"
+                   [style.border-color]="filterGamme()===g.name ? 'var(--g)' : 'var(--n150)'"
+                   (click)="filterGamme.set(filterGamme()===g.name ? 'ALL' : g.name); applyFilters()">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:700;color:var(--n800)">{{ g.name }}</span>
+                  @if (g.criticalCount > 0) {
+                    <span class="badge badge-danger" style="font-size:9px">{{ g.criticalCount }} critique{{ g.criticalCount>1 ? 's' : '' }}</span>
+                  }
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n800)">{{ g.totalQty | number }}</span>
+                  <span style="font-size:11px;color:var(--n400)">unités · {{ g.count }} réf.</span>
+                </div>
+                @if (g.lowCount > 0) {
+                  <span style="font-size:10px;color:var(--o);margin-top:4px;display:block">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ g.lowCount }} faible{{ g.lowCount>1 ? 's' : '' }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
     }
-    <!-- CARDS -->
+
+    <!-- CHART -->
+    <div class="card">
+      <div class="card-header">
+        <div class="sec-head">
+          <span class="sh-ico sh-g"><i class="fa-solid fa-chart-bar"></i></span>
+          <div>
+            <h3>Valeur de Stock par Produit (Top 8)</h3>
+            <p class="sec-sub">Rouge = Critique · Orange = Faible · Vert = Normal</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-body" style="padding:12px">
+        <div class="chart-container"><canvas #valueCanvas></canvas></div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="card">
+      <div class="card-body" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;color:var(--n400);font-size:13px"></i>
+          <input type="text" class="search-input" placeholder="Rechercher produit, SKU…" [(ngModel)]="search" (ngModelChange)="applyFilters()">
+        </div>
+        <select class="filter-select" [(ngModel)]="filterGamme" (ngModelChange)="applyFilters()">
+          <option value="ALL">Toutes gammes</option>
+          @for (g of gammeOptions(); track g) {
+            <option [value]="g">{{ g }}</option>
+          }
+        </select>
+        <select class="filter-select" [(ngModel)]="filterAlert" (ngModelChange)="applyFilters()">
+          <option value="ALL">Tous niveaux</option>
+          <option value="CRITIQUE">🔴 Critique</option>
+          <option value="FAIBLE">🟠 Faible</option>
+          <option value="NORMAL">🟢 Normal</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    @if (viewMode()==='table') {
+      <div class="card" style="overflow:hidden">
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th (click)="setSort('name')" style="cursor:pointer">Produit <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+                <th>Type</th>
+                <th>Gamme</th>
+                <th>Emplacement</th>
+                <th class="text-right" (click)="setSort('qty')" style="cursor:pointer">Stock <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+                <th class="text-right">Seuil réappro</th>
+                <th>Niveau</th>
+                <th (click)="setSort('alert')" style="cursor:pointer">Alerte <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+                <th class="text-right" (click)="setSort('value')" style="cursor:pointer">Valeur <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of paginated(); track item.id) {
+                <tr class="table-row-anim" (click)="selectedItem.set(item)" style="cursor:pointer">
+                  <td>
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                      <span style="font-size:13px;font-weight:600;color:var(--n800)">{{ item.productName }}</span>
+                      <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace;background:var(--n100);padding:1px 6px;border-radius:4px;width:fit-content">{{ item.productSku }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="mat-badge {{ getMaterialClass(item.materialType) }}">
+                      <i class="fa-solid" [class]="getMaterialIcon(item.materialType)"></i> {{ getMaterialLabel(item.materialType) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span style="font-size:11px;font-weight:600;color:var(--n600)">{{ item.productLineName || '—' }}</span>
+                    @if (item.brandName) {
+                      <span style="font-size:10px;color:var(--n400);display:block">{{ item.brandName }}</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="loc-badge" [class.loc-central]="item.locationType==='CENTRAL'" [class.loc-buffer]="item.locationType==='BUFFER'" [class.loc-mobile]="item.locationType==='MOBILE'">
+                      <i class="fa-solid" [class]="getTypeIcon(item.locationType)"></i> {{ item.locationName }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <span style="font-family:var(--font-d);font-size:15px;font-weight:800" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }}</span>
+                    <span style="font-size:11px;color:var(--n400);margin-left:3px">{{ item.unit }}</span>
+                  </td>
+                  <td class="text-right">
+                    <span style="font-size:12px;color:var(--n500)">{{ item.reorderPoint | number }}</span>
+                    @if (item.safetyStock > 0) {
+                      <span style="font-size:10px;color:var(--r);display:block">S: {{ item.safetyStock | number }}</span>
+                    }
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <div style="width:60px;height:6px;background:var(--n150);border-radius:3px;overflow:hidden">
+                        <div [style.width.%]="getPct(item)" [style.background]="getColor(item.alertLevel)" style="height:100%;border-radius:3px"></div>
+                      </div>
+                      <span style="font-size:11px;font-weight:700" [style.color]="getColor(item.alertLevel)">{{ getPct(item) }}%</span>
+                    </div>
+                  </td>
+                  <td><span class="badge {{ getNClass(item.alertLevel) }}">{{ item.alertLevel }}</span></td>
+                  <td class="text-right"><span style="font-size:12px;font-weight:700;color:var(--n700)">{{ fCFA(item.stockValue) }}</span></td>
+                  <td>
+                    <div style="display:flex;gap:4px;justify-content:flex-end">
+                      <button class="icon-btn icon-btn-g" (click)="$event.stopPropagation();openAjust(item)" title="Ajuster"><i class="fa-solid fa-sliders"></i></button>
+                      @if (item.locationType==='CENTRAL') {
+                        <button class="icon-btn icon-btn-blue" (click)="$event.stopPropagation();openTransfer(item)" title="Transférer vers tampon"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (totalPages()>1) {
+          <div class="pagination-bar">
+            <span class="pg-info">{{ (cp()-1)*ps+1 }}–{{ mathMin(cp()*ps,filtered().length) }} sur {{ filtered().length }}</span>
+            <div class="pg-controls">
+              <button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-angle-left"></i></button>
+              @for (p of pages; track p) { <button class="pg-btn" [class.pg-active]="p===cp()" (click)="goTo(p)">{{ p }}</button> }
+              <button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-angle-right"></i></button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- CARDS VIEW -->
     @if (viewMode()==='cards') {
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
-        @for (sl of paginated(); track sl.id) {
-          <div style="background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:box-shadow .2s;animation:cardIn .3s ease both" [style.border-left]="sl.alertLevel==='CRITIQUE'?'4px solid var(--r)':sl.alertLevel==='FAIBLE'?'4px solid var(--o)':''" (click)="selected.set(sl)" (mouseenter)="$event.target">
-            <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--n400);font-family:monospace;font-weight:700">{{ sl.productSku }}</span><span class="badge {{ getNClass(sl.alertLevel||'NORMAL') }}" style="font-size:9px">{{ sl.alertLevel }}</span></div>
-            <h4 style="font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--n800);line-height:1.3">{{ sl.productName }}</h4>
-            <span class="badge badge-neutral" style="font-size:10px;align-self:flex-start">{{ (sl.warehouseName||'').substring(0,14) }}</span>
-            <div style="display:flex;align-items:baseline;gap:4px"><span style="font-family:var(--font-d);font-size:26px;font-weight:800;line-height:1;" [style.color]="getColor(sl)">{{ sl.quantity | number }}</span><span style="font-size:12px;color:var(--n400)">{{ sl.productUnit }}</span></div>
-            <div style="height:5px;background:var(--n150);border-radius:3px;overflow:hidden"><div [style.width.%]="getPct(sl)" [style.background]="getColor(sl)" style="height:100%;border-radius:3px"></div></div>
-            <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:var(--n400)">Seuil: {{ sl.reorderPoint | number }}</span><span style="font-size:11px;font-weight:700;color:var(--g)">{{ fCFA(sl.stockValue || 0) }}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px">
+        @for (item of paginated(); track item.id) {
+          <div class="inv-card" [class.inv-card-critical]="item.alertLevel==='CRITIQUE'" [class.inv-card-low]="item.alertLevel==='FAIBLE'"
+               (click)="selectedItem.set(item)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <span style="font-size:10px;color:var(--n400);font-family:monospace;font-weight:700">{{ item.productSku }}</span>
+              <span class="mat-badge {{ getMaterialClass(item.materialType) }}" style="font-size:9px">{{ getMaterialLabel(item.materialType) }}</span>
+            </div>
+            <h4 style="font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--n800);line-height:1.3;margin:6px 0">{{ item.productName }}</h4>
+            @if (item.productLineName) {
+              <span style="font-size:10px;color:var(--n500);font-weight:600">{{ item.productLineName }}</span>
+            }
+            <span class="loc-badge" [class.loc-central]="item.locationType==='CENTRAL'" [class.loc-buffer]="item.locationType==='BUFFER'" [class.loc-mobile]="item.locationType==='MOBILE'" style="font-size:10px;align-self:flex-start">
+              <i class="fa-solid" [class]="getTypeIcon(item.locationType)"></i> {{ item.locationName }}
+            </span>
+            <div style="display:flex;align-items:baseline;gap:4px;margin-top:8px">
+              <span style="font-family:var(--font-d);font-size:26px;font-weight:800;line-height:1" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }}</span>
+              <span style="font-size:12px;color:var(--n400)">{{ item.unit }}</span>
+            </div>
+            <div style="height:5px;background:var(--n150);border-radius:3px;overflow:hidden;margin:8px 0">
+              <div [style.width.%]="getPct(item)" [style.background]="getColor(item.alertLevel)" style="height:100%;border-radius:3px"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:10px;color:var(--n400)">Seuil: {{ item.reorderPoint | number }}</span>
+              <span style="font-size:11px;font-weight:700;color:var(--g)">{{ fCFA(item.stockValue) }}</span>
+            </div>
+            <div style="display:flex;gap:4px;margin-top:8px">
+              <button class="btn btn-ghost btn-sm" style="flex:1" (click)="$event.stopPropagation();openAjust(item)"><i class="fa-solid fa-sliders"></i> Ajuster</button>
+              @if (item.locationType==='CENTRAL') {
+                <button class="btn btn-ghost btn-sm" (click)="$event.stopPropagation();openTransfer(item)" title="Vers tampon"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+              }
+            </div>
           </div>
         }
       </div>
     }
   }
-  @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
 
   <!-- DETAIL MODAL -->
-  @if (selected()) {
-    <div class="modal-overlay animate-fadeIn" (click)="selected.set(null)">
-      <div style="background:white;border-radius:var(--r-xl);box-shadow:var(--sh-xl);width:100%;max-width:600px;overflow:hidden;animation:fadeInUp .3s ease" (click)="$event.stopPropagation()">
-        <div class="modal-header"><div><div style="display:flex;gap:8px;margin-bottom:6px"><span class="badge badge-neutral" style="font-size:10px">{{ selected()!.warehouseName }}</span><span class="badge {{ getNClass(selected()!.alertLevel||'NORMAL') }} badge-lg">{{ selected()!.alertLevel }}</span></div><h2 style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--n900)">{{ selected()!.productName }}</h2>@if(selected()!.variantName){<span style="font-size:11px;color:var(--g);font-weight:600">{{ selected()!.brandName }} › {{ selected()!.productLineName }} › {{ selected()!.variantName }}</span>}<span style="font-size:11px;color:var(--n400);display:block;margin-top:2px;font-family:monospace">{{ selected()!.productSku }}</span></div><button class="modal-close" (click)="selected.set(null)"><i class="fa-solid fa-xmark"></i></button></div>
+  @if (selectedItem(); as item) {
+    <div class="modal-overlay animate-fadeIn" (click)="selectedItem.set(null)">
+      <div class="modal-box animate-fadeInUp" style="max-width:620px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+              <span class="loc-badge" [class.loc-central]="item.locationType==='CENTRAL'" [class.loc-buffer]="item.locationType==='BUFFER'" [class.loc-mobile]="item.locationType==='MOBILE'">
+                <i class="fa-solid" [class]="getTypeIcon(item.locationType)"></i> {{ item.locationName }}
+              </span>
+              <span class="badge {{ getNClass(item.alertLevel) }}">{{ item.alertLevel }}</span>
+            </div>
+            <h2 style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--n900)">{{ item.productName }}</h2>
+            <span style="font-size:11px;color:var(--n400);font-family:monospace">{{ item.productSku }}</span>
+          </div>
+          <button class="modal-close" (click)="selectedItem.set(null)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         <div class="modal-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div><h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Niveau de stock</h4>
-              <div style="height:10px;background:var(--n150);border-radius:5px;overflow:hidden;margin-bottom:8px"><div [style.width.%]="getPct(selected()!)" [style.background]="getColor(selected()!)"></div></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:10px;color:var(--n400)">Seuil: {{ selected()!.reorderPoint | number }}</span><span style="font-family:var(--font-d);font-size:22px;font-weight:800;" [style.color]="getColor(selected()!)">{{ selected()!.quantity | number }} {{ selected()!.productUnit }}</span><span style="font-size:10px;color:var(--n400)">Max: {{ (selected()!.reorderPoint*6) | number }}</span></div>
+            <div>
+              <h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Niveau de stock</h4>
+              <div style="height:10px;background:var(--n150);border-radius:5px;overflow:hidden;margin-bottom:8px">
+                <div [style.width.%]="getPct(item)" [style.background]="getColor(item.alertLevel)" style="height:100%;border-radius:5px"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:10px;color:var(--n400)">Seuil: {{ item.reorderPoint | number }}</span>
+                <span style="font-family:var(--font-d);font-size:22px;font-weight:800" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }} {{ item.unit }}</span>
+              </div>
             </div>
-            <div><h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Informations</h4>
+            <div>
+              <h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Informations</h4>
               <div style="display:flex;flex-direction:column;gap:6px">
-                @for (row of [['Stock physique', (selected()!.quantity|number)+' '+selected()!.productUnit],['Réservé', (selected()!.reservedQty||0|number)+''],['Disponible', ((selected()!.availableQty||selected()!.quantity)|number)+''],['Seuil réappro.', (selected()!.reorderPoint|number)+''],['Prix unitaire', fCFA(selected()!.unitPrice||0)],['Valeur stock', fCFA(selected()!.stockValue||0)],['Délai appro.', selected()!.leadTimeDays?selected()!.leadTimeDays+'j':'—']]; track $index) {
-                  <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--n150)"><span style="color:var(--n500)">{{ row[0] }}</span><span style="font-weight:600;color:var(--n800)">{{ row[1] }}</span></div>
+                @for (row of [
+                  ['Stock physique', (item.quantity|number)+' '+item.unit],
+                  ['Seuil réappro.', (item.reorderPoint|number)+''],
+                  ['Stock sécurité', (item.safetyStock|number)+''],
+                  ['Prix unitaire', fCFA(item.unitPrice)],
+                  ['Valeur stock', fCFA(item.stockValue)],
+                  ['Catégorie', getMaterialLabel(item.materialType)],
+                  ['Gamme', item.productLineName || '—'],
+                  ['Marque', item.brandName || '—'],
+                  ['Emplacement', getTypeLabel(item.locationType)]
+                ]; track $index) {
+                  <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--n150)">
+                    <span style="color:var(--n500)">{{ row[0] }}</span>
+                    <span style="font-weight:600;color:var(--n800)">{{ row[1] }}</span>
+                  </div>
                 }
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer"><button class="btn btn-ghost" (click)="selected.set(null)">Fermer</button><button class="btn btn-outline btn-sm" (click)="openAjust(selected()!);selected.set(null)"><i class="fa-solid fa-sliders"></i> Ajuster stock</button><a routerLink="/stock/reception/new" class="btn btn-primary btn-sm" (click)="selected.set(null)"><i class="fa-solid fa-truck-ramp-box"></i> Réceptionner</a></div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="selectedItem.set(null)">Fermer</button>
+          <button class="btn btn-outline btn-sm" (click)="openAjust(item); selectedItem.set(null)"><i class="fa-solid fa-sliders"></i> Ajuster</button>
+          @if (item.locationType==='CENTRAL') {
+            <button class="btn btn-primary btn-sm" (click)="openTransfer(item); selectedItem.set(null)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transférer tampon</button>
+          }
+          <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm" (click)="selectedItem.set(null)"><i class="fa-solid fa-truck-ramp-box"></i> Réceptionner</a>
+        </div>
       </div>
     </div>
   }
 
   <!-- AJUST MODAL -->
-  @if (showAjust()) {
+  @if (showAjust() && ajustItem(); as item) {
     <div class="modal-overlay animate-fadeIn" (click)="closeAjust()">
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
-        <div class="modal-header" style="background:var(--b-gh)"><div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div><button class="modal-close" (click)="closeAjust()"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="modal-body">
-          <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Cet ajustement génère un StockMovement ADJUSTMENT dans l'audit trail.</span></div>
-          <div class="form-group"><label class="form-label">Niveau de stock</label><select class="form-control" [(ngModel)]="ajustId">@for (sl of all(); track sl.id) { <option [value]="sl.id">{{ sl.productName }} — {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
-          @if (getAjustSL(); as sl) { <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:center;gap:12px"><span style="font-size:12px;color:var(--n500)">Actuel :</span><span style="font-family:var(--font-d);font-size:17px;font-weight:800;color:var(--g)">{{ sl.quantity | number }} {{ sl.productUnit }}</span></div> }
-          <div class="form-group"><label class="form-label">Nouvelle quantité <span class="req">*</span></label><input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité après inventaire physique"></div>
-          <div class="form-group"><label class="form-label">Motif <span class="req">*</span></label><textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="ajustMotif"></textarea></div>
+        <div class="modal-header" style="background:var(--g-gh)">
+          <div class="modal-title" style="color:var(--g)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div>
+          <button class="modal-close" (click)="closeAjust()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAjust()">Annuler</button><button class="btn btn-primary" [disabled]="!ajustId||!ajustMotif||ajustSaving()" (click)="sauverAjust()">@if (ajustSaving()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-check"></i> Confirmer }</button></div>
+        <div class="modal-body">
+          <div class="banner banner-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Cet ajustement génère un <strong>StockMovement ADJUSTMENT</strong> dans l'audit trail pour traçabilité.</span>
+          </div>
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+            <div style="font-weight:700;color:var(--n800);font-size:14px">{{ item.productName }}</div>
+            <div style="font-size:12px;color:var(--n400)">{{ item.locationName }} · SKU: {{ item.productSku }}</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+              <span style="font-size:12px;color:var(--n500)">Stock actuel :</span>
+              <span style="font-family:var(--font-d);font-size:17px;font-weight:800;color:var(--g)">{{ item.quantity | number }} {{ item.unit }}</span>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Nouvelle quantité <span class="req">*</span></label>
+            <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité après inventaire physique">
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Motif <span class="req">*</span></label>
+            <textarea class="form-control" rows="2" placeholder="Raison de l'ajustement…" [(ngModel)]="ajustMotif"></textarea>
+          </div>
+          @if (ajustQty !== item.quantity) {
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--n600)">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              Différence : <strong style="font-family:var(--font-d)" [style.color]="ajustQty > item.quantity ? 'var(--g)' : 'var(--r)'">
+                {{ ajustQty > item.quantity ? '+' : '' }}{{ (ajustQty - item.quantity) | number }} {{ item.unit }}
+              </strong>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeAjust()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="!ajustMotif || ajustSaving()" (click)="sauverAjust()">
+            @if (ajustSaving()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-check"></i> Confirmer }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TRANSFER MODAL -->
+  @if (showTransfer() && transferItem(); as item) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeTransfer()">
+      <div class="modal-box animate-fadeInUp" style="max-width:460px" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="background:var(--b-gh)">
+          <div class="modal-title" style="color:var(--b-d)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfert Central → Tampon</div>
+          <button class="modal-close" (click)="closeTransfer()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+            <div style="font-weight:700;color:var(--n800);font-size:14px">{{ item.productName }}</div>
+            <div style="font-size:12px;color:var(--n400)">Stock central : {{ item.quantity | number }} {{ item.unit }}</div>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Quantité à transférer <span class="req">*</span></label>
+            <input type="number" class="form-control" min="1" [max]="item.quantity" [(ngModel)]="transferQty" placeholder="Quantité">
+            <p style="font-size:11px;color:var(--n400);margin-top:4px">Stock disponible : {{ item.quantity | number }} {{ item.unit }}</p>
+          </div>
+          @if (transferQty > 0 && transferQty <= item.quantity) {
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--n600)">
+              <i class="fa-solid fa-circle-info"></i>
+              Après transfert : <strong>{{ (item.quantity - transferQty) | number }}</strong> en central · <strong>{{ transferQty | number }}</strong> au tampon
+            </div>
+          }
+          @if (transferQty > item.quantity) {
+            <div class="banner banner-danger"><i class="fa-solid fa-triangle-exclamation"></i><span>Quantité supérieure au stock disponible.</span></div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeTransfer()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="transferQty<=0 || transferQty>item.quantity || transferSaving()" (click)="sauverTransfer()">
+            @if (transferSaving()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> Transférer }
+          </button>
+        </div>
       </div>
     </div>
   }

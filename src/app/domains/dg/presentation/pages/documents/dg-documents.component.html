@@ -1,0 +1,76 @@
+<div class="page animate-fadeInUp">
+  <div style="display:flex;align-items:center;gap:13px;margin-bottom:22px">
+    <div style="width:46px;height:46px;background:var(--mc-gh);color:var(--mc);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px">
+      <i class="fa-solid fa-folder-open"></i>
+    </div>
+    <div>
+      <h1 style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)">Archivage Documentaire</h1>
+      <p style="font-size:12px;color:var(--n400);margin-top:2px">Importer et consulter les documents archivés</p>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast toast-{{ toastType() }}">{{ toastMsg() }}</div>
+  }
+
+  <div class="card" style="margin-bottom:22px">
+    <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+      <i class="fa-solid fa-upload"></i> Importer un document
+    </h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="form-group">
+        <label>Type de document</label>
+        <select class="form-input" [(ngModel)]="typeDocument">
+          @for (t of docTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Référence</label>
+        <input type="text" class="form-input" [(ngModel)]="reference" placeholder="ex: FAC-2025-001">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Fichier</label>
+      <input type="file" class="form-input" (change)="onFileSelected($event)" style="padding:8px">
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-primary" (click)="importer()" [disabled]="uploading() || !selectedFile || !reference">
+        @if (uploading()) { Importation… } @else { <i class="fa-solid fa-upload"></i> Archiver }
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+      <i class="fa-solid fa-list"></i> Documents archivés
+    </h3>
+    @if (!documents().length) {
+      <p style="text-align:center;color:var(--n400);padding:24px">Aucun document archivé pour le moment.</p>
+    } @else {
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead>
+            <tr><th>Type</th><th>Référence</th><th>Clé de stockage</th><th>Date d'import</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            @for (d of documents(); track d.storageKey) {
+              <tr>
+                <td><span class="badge bg-neutral">{{ d.typeDocument }}</span></td>
+                <td style="font-weight:600">{{ d.reference }}</td>
+                <td style="font-family:monospace;font-size:11px">{{ d.storageKey }}</td>
+                <td>{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" (click)="telecharger(d)">
+                    <i class="fa-solid fa-download"></i> Télécharger
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,152 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Reporting Financier</h1>
+      <p class="ph-sub">Synthèse financière — {{ today | date:'MMMM yyyy' }}</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-download"></i> Exporter PDF
+    </button>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-cash-register"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total versements du jour</div>
+      <div class="kpi-val">{{ fCFA(totalVersements()) }}</div>
+      <div class="kpi-meta">{{ versements().length }} versements</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total facturé (TTC)</div>
+      <div class="kpi-val">{{ fCFA(totalFacturesTTC()) }}</div>
+      <div class="kpi-meta">{{ factures().length }} documents</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-circle-exclamation"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Créances en cours</div>
+      <div class="kpi-val">{{ fCFA(totalCreances()) }}</div>
+      <div class="kpi-meta">soldes restants</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-arrow-trend-up"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Évolution CA N/N-1</div>
+      <div class="kpi-val">{{ evolutionPct() > 0 ? '+' : '' }}{{ evolutionPct() }}%</div>
+      <div class="kpi-meta">cumul période</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-table-columns"></i> CA Mensuel N vs N-1</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Mois</th>
+          <th>CA Année N</th>
+          <th>CA Année N-1</th>
+          <th>Évolution</th>
+          <th>Tendance</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of caMensuel(); track $index) {
+          <tr>
+            <td><strong>{{ m.mois }}</strong></td>
+            <td>{{ fCFA(m.n) }}</td>
+            <td>{{ fCFA(m.nMoins1) }}</td>
+            <td [class]="m.n >= m.nMoins1 ? 'txt-success' : 'txt-danger'">
+              {{ m.n >= m.nMoins1 ? '+' : '' }}{{ fCFA(m.n - m.nMoins1) }}
+            </td>
+            <td>
+              @if (m.n >= m.nMoins1) {
+                <span class="badge bg-success"><i class="fa-solid fa-arrow-up"></i> Hausse</span>
+              } @else {
+                <span class="badge bg-red"><i class="fa-solid fa-arrow-down"></i> Baisse</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-state">Données CA mensuel non disponibles</td></tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr class="tfoot-total">
+          <td><strong>TOTAL</strong></td>
+          <td><strong>{{ fCFA(totalCaN()) }}</strong></td>
+          <td><strong>{{ fCFA(totalCaNMoins1()) }}</strong></td>
+          <td [class]="totalCaN() >= totalCaNMoins1() ? 'txt-success' : 'txt-danger'">
+            <strong>{{ fCFA(totalCaN() - totalCaNMoins1()) }}</strong>
+          </td>
+          <td>
+            <span [class]="evolutionPct() >= 0 ? 'badge bg-success' : 'badge bg-red'">
+              {{ evolutionPct() }}%
+            </span>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> Versements du Jour</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Réf.</th><th>Commercial</th><th>Versé</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          @for (v of versements(); track v.id) {
+            <tr>
+              <td>{{ v.referenceVersement }}</td>
+              <td>{{ v.matriculeCommercial }}</td>
+              <td>{{ fCFA(v.cashVerse) }}</td>
+              <td><span [class]="v.statut === 'VALIDE' ? 'badge bg-success' : 'badge bg-orange'">{{ v.statut }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-file-invoice"></i> Dernières Factures</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Numéro</th><th>Client</th><th>TTC</th><th>Statut</th></tr>
+        </thead>
+        <tbody>
+          @for (f of factures(); track f.id) {
+            <tr>
+              <td>{{ f.numeroFacture }}</td>
+              <td>{{ f.codeClient }}</td>
+              <td>{{ fCFA(getFactureTTC(f)) }}</td>
+              <td><span [class]="f.statut === 'PAYEE' ? 'badge bg-success' : 'badge bg-orange'">{{ f.statut }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

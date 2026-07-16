@@ -1,14 +1,26 @@
 <div class="page animate-fadeInUp">
-  @if (toastMsg()) { <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'"><i class="fa-solid fa-circle-check"></i>{{ toastMsg() }}</div> }
+  @if (toastMsg()) {
+    <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid fa-circle-check"></i>{{ toastMsg() }}
+    </div>
+  }
+
   <div class="ph">
-    <div class="ph-left"><div class="ph-icon ph-o"><i class="fa-solid fa-clipboard-check"></i></div><div><h1 class="ph-title">Validation des Entrées Stock</h1><p class="ph-sub">Double validation obligatoire — Gestionnaire → Chef Production (MP)</p></div></div>
-    <div style="display:flex;gap:6px">
-      <button class="role-btn" [class.rb-on]="currentRole()==='gestionnaire'" (click)="currentRole.set('gestionnaire')"><i class="fa-solid fa-user"></i> Gestionnaire</button>
-      <button class="role-btn" [class.rb-on]="currentRole()==='chef'" (click)="currentRole.set('chef')"><i class="fa-solid fa-hard-hat"></i> Chef Production</button>
+    <div class="ph-left">
+      <div class="ph-icon ph-o"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div><h1 class="ph-title">Validation des Réceptions</h1><p class="ph-sub">Double validation obligatoire — le rôle requis est appliqué automatiquement par le serveur</p></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="badge badge-neutral"><i class="fa-solid fa-user-tag"></i> {{ currentRoles() }}</span>
+      @if (isSecondRoleOnly()) {
+        <span class="badge badge-primary"><i class="fa-solid fa-user-shield"></i> Accès 2ème validation</span>
+      }
     </div>
   </div>
-  @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
-  @else if (receipts().length===0) {
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+  } @else if (firstPending().length===0 && secondPending().length===0) {
     <div class="card"><div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px;text-align:center">
       <i class="fa-solid fa-circle-check" style="font-size:52px;color:var(--g)"></i>
       <h3 style="font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--n800)">Tout est à jour !</h3>
@@ -16,59 +28,115 @@
       <a routerLink="/stock/reception/new" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouvelle réception</a>
     </div></div>
   } @else {
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px">
-      @for (r of receipts(); track r.id) {
-        <div class="rec-card">
-          <div class="rc-head">
-            <div><span class="rc-num">{{ r.receiptNumber }}</span>@if (r.source==='PRODUCTION') { <span style="font-size:11px;color:var(--n400)"> · Production interne</span> }</div>
-            <span class="badge {{ sClass(r.status) }}">{{ sLabel(r.status) }}</span>
-          </div>
-          <div class="rc-body">
-            <div class="rc-grid">
-              <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.source==='SUPPLIER'?(r.fournisseur?.name||'—'):'Production interne' }}</span></div>
-              <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Entrepôt</span><span class="rc-val">{{ r.warehouseName }}</span></div>
-              <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-box"></i> Lignes</span><span class="rc-val">{{ r.items.length }} · {{ totalQty(r)|number }} unités</span></div>
-              <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-coins"></i> Montant</span><span class="rc-val" style="color:var(--g);font-weight:700">{{ fCFA(r.totalAmount) }}</span></div>
+    @if (isSecondRoleOnly()) {
+      <div class="banner banner-primary" style="margin-bottom:16px"><i class="fa-solid fa-user-shield"></i><span>Vous êtes connecté en tant que <strong>Comptable / Contrôleur Général</strong>. Seules les réceptions en attente de validation finale vous sont présentées.</span></div>
+    }
+
+    @if (canValidateFirst() && firstPending().length) {
+      <h3 style="font-family:var(--font-d);font-size:15px;margin:18px 0 10px;color:var(--n700)">
+        <i class="fa-solid fa-hourglass-half"></i> En attente de 1ère validation ({{ firstPending().length }})
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px;margin-bottom:24px">
+        @for (r of firstPending(); track r.receiptNumber) {
+          <div class="rec-card">
+            <div class="rc-head">
+              <div><span class="rc-num">{{ r.receiptNumber }}</span><span style="font-size:11px;color:var(--n400)"> · {{ r.receptionTypeLabel }}</span></div>
+              <span class="badge {{ sClass(r.status) }}">{{ sLabel(r.status) }}</span>
             </div>
-            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:5px">
-              <span style="font-size:10px;font-weight:700;color:var(--n400);text-transform:uppercase">Détail lignes</span>
-              @for (item of r.items; track item.id) {
-                <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--n150)">
-                  <span style="flex:1;font-weight:600;color:var(--n700)">{{ item.productName }}</span>
-                  <span style="color:var(--n600)">Reçu: <strong>{{ item.receivedQty | number }}</strong> {{ item.productUnit }}</span>
-                  @if (item.deviation && item.deviation!==0) { <span style="padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;" [style.background]="(item.deviation||0)<0?'var(--r-gh)':'var(--b-gh)'" [style.color]="(item.deviation||0)<0?'var(--r)':'var(--b)'">{{ (item.deviation||0)>0?'+':'' }}{{ item.deviation }}</span> }
-                </div>
+            <div class="rc-body">
+              <div class="rc-grid">
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-box"></i> Lignes</span><span class="rc-val">{{ itemCount(r) }}</span></div>
+              </div>
+              <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:5px">
+                <span style="font-size:10px;font-weight:700;color:var(--n400);text-transform:uppercase">Détail lignes</span>
+                @for (item of r.items; track item.productSku) {
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--n150)">
+                    <span style="flex:1;font-weight:600;color:var(--n700);font-family:monospace">{{ item.productSku }}</span>
+                    <span style="color:var(--n600)">Reçu: <strong>{{ item.receivedQty | number }}</strong> {{ item.productUnit }}</span>
+                    @if (item.deviation && item.deviation!==0) {
+                      <span style="padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700" [style.background]="item.deviation<0?'var(--r-gh)':'var(--g-gh)'" [style.color]="item.deviation<0?'var(--r)':'var(--g)'">{{ item.deviation>0?'+':'' }}{{ item.deviation }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="rc-footer">
+              <span style="font-size:11px;color:var(--n400)"><i class="fa-regular fa-clock"></i> {{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-primary btn-sm" (click)="openAction(r,'v1')"><i class="fa-solid fa-check"></i> Valider</button>
+                <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (canValidateSecond() && secondPending().length) {
+      <h3 style="font-family:var(--font-d);font-size:15px;margin:18px 0 10px;color:var(--n700)">
+        <i class="fa-solid fa-user-check"></i> En attente de validation finale ({{ secondPending().length }})
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px">
+        @for (r of secondPending(); track r.receiptNumber) {
+          <div class="rec-card">
+            <div class="rc-head">
+              <div><span class="rc-num">{{ r.receiptNumber }}</span><span style="font-size:11px;color:var(--n400)"> · {{ r.receptionTypeLabel }}</span></div>
+              <span class="badge {{ sClass(r.status) }}">{{ sLabel(r.status) }}</span>
+            </div>
+            <div class="rc-body">
+              <div class="rc-grid">
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-box"></i> Lignes</span><span class="rc-val">{{ itemCount(r) }}</span></div>
+              </div>
+              @if (r.requiresAuthCode) {
+                <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Écart &gt; 10% détecté — code d'autorisation DG requis pour finaliser.</span></div>
               }
+              <div class="rc-trail">
+                <div class="trail-item">
+                  <div class="trail-dot td-done"></div>
+                  <div><span class="tt">1ère validation</span><span class="ts"><span style="color:var(--s)">{{ r.firstValidator }} · {{ r.firstValidatedAt | date:'dd/MM HH:mm' }}</span></span></div>
+                </div>
+              </div>
             </div>
-            <div class="rc-trail">
-              <div class="trail-item"><div class="trail-dot" [class.td-done]="r.firstValidatorId"></div><div><span class="tt">Validation Gestionnaire</span><span class="ts">@if (r.firstValidatorId) { <span style="color:var(--s)">{{ r.firstValidatorName }} · {{ r.firstValidatedAt | date:'dd/MM HH:mm' }}</span> } @else { <span style="color:var(--n400);font-style:italic">En attente</span> }</span></div></div>
-              @if (isMP(r)) { <div class="trail-item"><div class="trail-dot" [class.td-done]="r.secondValidatorId"></div><div><span class="tt">Validation Chef Production</span><span class="ts">@if (r.secondValidatorId) { <span style="color:var(--s)">{{ r.secondValidatorName }}</span> } @else { <span style="color:var(--n400);font-style:italic">En attente</span> }</span></div></div> }
+            <div class="rc-footer">
+              <span style="font-size:11px;color:var(--n400)"><i class="fa-regular fa-clock"></i> {{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" (click)="openAction(r,'v2')"><i class="fa-solid fa-check-double"></i> Valider (final)</button>
+                <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              </div>
             </div>
           </div>
-          <div class="rc-footer">
-            <span style="font-size:11px;color:var(--n400)"><i class="fa-regular fa-clock"></i> {{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
-            <div style="display:flex;gap:6px">
-              @if (canV1(r) && currentRole()==='gestionnaire') { <button class="btn btn-primary btn-sm" (click)="openAction(r,'v1')"><i class="fa-solid fa-check"></i> Valider (Gest.)</button> }
-              @if (canV2(r) && currentRole()==='chef') { <button class="btn btn-secondary btn-sm" (click)="openAction(r,'v2')"><i class="fa-solid fa-hard-hat"></i> Valider (Chef Prod)</button> }
-              <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
-            </div>
-          </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    }
   }
 
   @if (selected() && action()) {
     <div class="modal-overlay animate-fadeIn" (click)="closeAction()">
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header" [style.background]="action()==='rej'?'var(--r-gh)':'var(--g-gh)'">
-          <div class="modal-title" [style.color]="action()==='rej'?'var(--r)':'var(--g)'"><i class="fa-solid fa-{{ action()==='rej'?'xmark-circle':'clipboard-check' }}"></i>{{ action()==='rej'?'Rejeter la réception':action()==='v1'?'Confirmer 1ère validation':'Confirmer 2ème validation (Chef Prod)' }}</div>
+          <div class="modal-title" [style.color]="action()==='rej'?'var(--r)':'var(--g)'">
+            <i class="fa-solid fa-{{ action()==='rej'?'xmark-circle':'clipboard-check' }}"></i>
+            {{ action()==='rej'?'Rejeter la réception':action()==='v1'?'Confirmer la 1ère validation':'Confirmer la validation finale' }}
+          </div>
           <button class="modal-close" (click)="closeAction()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px"><span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ selected()?.receiptNumber }}</span><br><span style="font-size:12px;color:var(--n500)">{{ selected()?.warehouseName }} · {{ fCFA(selected()?.totalAmount||0) }}</span></div>
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px">
+            <span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ selected()?.receiptNumber }}</span><br>
+            <span style="font-size:12px;color:var(--n500)">{{ selected()?.destinationLocationName }} · {{ selected()?.items?.length || 0 }} lignes</span>
+          </div>
           @if (action()!=='rej') {
-            <div class="banner banner-primary"><i class="fa-solid fa-circle-info"></i><span>@if (action()==='v2') { Validation finale — le stock des Produits Finis sera mis à jour automatiquement. } @else { Une 2ème validation sera requise si entrepôt Matières Premières. }</span></div>
+            <div class="banner banner-primary">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>@if (action()==='v2') { Validation finale — le stock sera mis à jour automatiquement. } @else { Une seconde validation sera ensuite requise. }</span>
+            </div>
+            @if (action()==='v2' && selected()?.requiresAuthCode) {
+              <div class="form-group"><label class="form-label">Code d'autorisation DG <span class="req">*</span></label><input type="text" class="form-control" placeholder="Code fourni par la Direction Générale" [(ngModel)]="authCode"></div>
+            }
             <div class="form-group"><label class="form-label">Observations (optionnel)</label><textarea class="form-control" rows="2" placeholder="Contrôle physique…" [(ngModel)]="notes"></textarea></div>
           } @else {
             <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Le stock ne sera PAS modifié. Motif obligatoire.</span></div>
@@ -77,7 +145,9 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="closeAction()">Annuler</button>
-          <button class="btn" [class.btn-primary]="action()!=='rej'" [class.btn-danger]="action()==='rej'" [disabled]="(action()==='rej'&&!rejectReason)||processing()" (click)="confirm()">
+          <button class="btn" [class.btn-primary]="action()!=='rej'" [class.btn-danger]="action()==='rej'"
+                  [disabled]="(action()==='rej'&&!rejectReason)||(action()==='v2'&&selected()?.requiresAuthCode&&!authCode)||processing()"
+                  (click)="confirm()">
             @if (processing()) { <div class="spinner spinner-sm"></div> Traitement… } @else { <i class="fa-solid fa-{{ action()==='rej'?'xmark':'check' }}"></i> Confirmer }
           </button>
         </div>

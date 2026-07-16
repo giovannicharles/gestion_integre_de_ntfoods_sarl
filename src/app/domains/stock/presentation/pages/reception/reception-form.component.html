@@ -4,125 +4,205 @@
       <div class="success-box">
         <div class="success-ico"><i class="fa-solid fa-circle-check"></i></div>
         <h3>Réception enregistrée !</h3>
-        <p>En attente de validation. Redirection en cours…</p>
+        <p>En attente de première validation. Redirection en cours…</p>
         <div class="success-bar"></div>
       </div>
     </div>
   }
+
   <div class="ph">
     <div style="display:flex;align-items:center;gap:12px">
       <button class="back-btn" (click)="router.navigate(['/stock/reception'])"><i class="fa-solid fa-arrow-left"></i></button>
       <div class="ph-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
-      <div><h1 class="ph-title">Nouvelle Réception</h1><p class="ph-sub">Priorité à la quantité réelle sur le bon de commande</p></div>
+      <div>
+        <h1 class="ph-title">{{ readOnlyMode() ? 'Détail de la réception' : 'Nouvelle Réception' }}</h1>
+        <p class="ph-sub">Priorité à la quantité réelle constatée sur le quai</p>
+      </div>
     </div>
   </div>
 
-  <!-- STEPPER -->
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+  } @else if (errorMsg() && !viewedReceipt()) {
+    <div class="banner banner-danger" style="margin:20px 0"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  }
+
+  <!-- ═══ MODE LECTURE (détail d'une réception existante) ═══ -->
+  @else if (readOnlyMode()) {
+  @if (viewedReceipt(); as r) {
+    <div class="card" style="padding:16px 24px;margin-bottom:16px">
+      <div class="stepper">
+        <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Créée</span><span class="ss">{{ r.createdBy }}</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div [class]="r.firstValidator ? 'sc-on' : 'sc-pend'">1</div><div><span class="st">1ère validation</span><span class="ss">{{ r.firstValidator || 'En attente' }}</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div [class]="r.secondValidator ? 'sc-on' : 'sc-pend'">2</div><div><span class="st">2nde validation</span><span class="ss">{{ r.secondValidator || 'En attente' }}</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div [class]="r.status==='VALIDATED' ? 'sc-on' : 'sc-pend'"><i class="fa-solid fa-check"></i></div><div><span class="st">Stock mis à jour</span><span class="ss">{{ r.status==='VALIDATED' ? 'Fait' : 'En attente' }}</span></div></div>
+      </div>
+    </div>
+
+    @if (r.status === 'REJECTED') {
+      <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-ban"></i><span><strong>Rejetée</strong> par {{ r.rejectedBy }} — {{ r.rejectionReason }}</span></div>
+    }
+
+    <div class="card">
+      <div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-invoice"></i></span><div><h3>{{ r.receiptNumber }}</h3><p class="sec-sub">{{ r.receptionTypeLabel }} · {{ r.sourceLabel }}</p></div></div></div>
+      <div class="card-body">
+        <div class="g2" style="margin-bottom:14px">
+          <div><span style="color:var(--n500);font-size:12px">Destination</span><div style="font-weight:600">{{ r.destinationLocationName || r.destinationLocationId }}</div></div>
+          <div><span style="color:var(--n500);font-size:12px">Date</span><div style="font-weight:600">{{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</div></div>
+        </div>
+        <table class="table">
+          <thead><tr><th>Produit</th><th>Conditionnement</th><th>Commandé</th><th>Reçu</th><th>Écart</th><th>Lot</th></tr></thead>
+          <tbody>
+            @for (it of r.items; track it.productSku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ it.productSku }}</td>
+                <td>{{ it.packagingType || '—' }}</td>
+                <td>{{ it.orderedQty | number }} {{ it.productUnit }}</td>
+                <td>{{ it.receivedQty | number }} {{ it.productUnit }}</td>
+                <td>
+                  @if (!it.exactMatch) {
+                    <span class="badge badge-warning">{{ it.deviation! > 0 ? '+' : '' }}{{ it.deviation | number }}</span>
+                  } @else { <span class="badge badge-success">Conforme</span> }
+                </td>
+                <td>{{ it.lotNumber || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+  }
+
+  <!-- ═══ MODE CRÉATION ═══ -->
+  @else {
   <div class="card" style="padding:16px 24px">
     <div class="stepper">
-      <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Saisie Gestionnaire</span><span class="ss">Vous êtes ici</span></div></div>
+      <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Saisie</span><span class="ss">Vous êtes ici</span></div></div>
       <div class="step-line"></div>
-      <div class="step"><div class="sc-pend">2</div><div><span class="st">1ère Validation</span><span class="ss">Gestionnaire stock</span></div></div>
-      @if (requiresSecond()) {
-        <div class="step-line"></div>
-        <div class="step"><div class="sc-pend">3</div><div><span class="st">2ème Validation</span><span class="ss">Chef Production <span class="req-tag">MP</span></span></div></div>
-      }
+      <div class="step"><div class="sc-pend">2</div><div><span class="st">1ère Validation</span><span class="ss">{{ workflowInfo.firstLabel }}</span></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="sc-pend">3</div><div><span class="st">2nde Validation</span><span class="ss">{{ workflowInfo.secondLabel }}</span></div></div>
       <div class="step-line"></div>
       <div class="step"><div class="sc-pend"><i class="fa-solid fa-check"></i></div><div><span class="st">Stock mis à jour</span><span class="ss">Automatique</span></div></div>
     </div>
   </div>
 
-  @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
-  @else {
   <div class="form-layout">
     <div class="form-main">
       <!-- ENTÊTE -->
       <div class="card">
         <div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-invoice"></i></span><div><h3>Informations générales</h3></div></div></div>
         <div class="card-body">
-          <div class="g2">
-            <div class="form-group">
-              <label class="form-label">Fournisseur <span class="req">*</span></label>
-              <select class="form-control" [(ngModel)]="supplierId"><option [value]="0">— Sélectionner —</option>@for (s of suppliers(); track s.id) { <option [value]="s.id">{{ s.name }} · {{ s.pays }}</option> }</select>
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Type de réception <span class="req">*</span></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              @for (t of receptionTypes; track t.value) {
+                <button type="button" class="mag-opt" [class.mo-on]="receptionType===t.value" (click)="receptionType=t.value">
+                  <i class="fa-solid {{ t.value==='CONSOMMABLE'?'fa-box':t.value==='MATIERE_PREMIERE'?'fa-truck':'fa-screwdriver-wrench' }}"></i>
+                  <span>{{ t.label }}</span>
+                </button>
+              }
             </div>
-            <div class="form-group">
-              <label class="form-label">N° Bon de Commande</label>
-              <input type="text" class="form-control" placeholder="BC-2026-0001" [(ngModel)]="bc">
-            </div>
+          </div>
+          <div class="banner banner-primary" style="margin-bottom:14px">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Double validation : <strong>{{ workflowInfo.firstLabel }}</strong> puis <strong>{{ workflowInfo.secondLabel }}</strong>.</span>
           </div>
           <div class="g2">
             <div class="form-group">
-              <label class="form-label">Entrepôt de destination <span class="req">*</span></label>
-              <div style="display:flex;gap:8px">
-                @for (w of warehouses(); track w.id) {
-                  <button type="button" class="mag-opt" [class.mo-on]="warehouseId===w.id" (click)="warehouseId=w.id">
-                    <i class="fa-solid fa-{{ w.name.includes('Premières')?'seedling':w.name.includes('Consomm')?'box-archive':'star' }}"></i>
-                    <span>{{ w.name.length>12?w.name.substring(0,12)+'…':w.name }}</span>
-                  </button>
-                }
-              </div>
+              <label class="form-label">Emplacement de destination <span class="req">*</span></label>
+              <select class="form-control" [(ngModel)]="destinationLocationId">
+                <option value="">— Sélectionner —</option>
+                @for (loc of locations(); track loc.id) { <option [value]="loc.id">{{ loc.name }}</option> }
+              </select>
+              @if (!locations().length) {
+                <p style="color:var(--r);font-size:12px;margin-top:4px">Aucun emplacement Stock Central trouvé. Contactez l'administrateur.</p>
+              }
             </div>
             <div class="form-group">
-              <label class="form-label">Type</label>
-              <div style="display:flex;gap:8px">
-                <button type="button" class="mag-opt" [class.mo-on]="source==='SUPPLIER'" (click)="source='SUPPLIER'"><i class="fa-solid fa-truck"></i><span>Fournisseur</span></button>
-                <button type="button" class="mag-opt" [class.mo-on]="source==='PRODUCTION'" (click)="source='PRODUCTION'"><i class="fa-solid fa-industry"></i><span>Production</span></button>
-              </div>
+              <label class="form-label">Fournisseur / Source <span class="req">*</span></label>
+              <input type="text" class="form-control" placeholder="Ex: Fournisseur XYZ, ou 'Production interne'" [(ngModel)]="sourceLabel">
             </div>
           </div>
-          @if (requiresSecond()) { <div class="banner banner-warning" style="margin-bottom:14px"><i class="fa-solid fa-hard-hat"></i><span>Matières premières : 2 validations requises (Gest. + Chef Prod).</span></div> }
-          <div class="form-group"><label class="form-label">Observations</label><textarea class="form-control" rows="2" [(ngModel)]="observations" placeholder="Notes…"></textarea></div>
         </div>
       </div>
+
       <!-- LIGNES -->
       <div class="card">
-        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span><div><h3>Lignes de Réception</h3><p class="sec-sub">Quantités réelles reçues — priorité au réel</p></div></div><button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter</button></div>
-        <div class="card-body"><div style="display:flex;flex-direction:column;gap:16px">
-          @for (l of lignes; track l.id; let i = $index) {
-            <div style="border:1.5px solid {{ l.ecart!==0 ? (l.ecart<0?'var(--r)':'var(--b)') : 'var(--n200)' }};border-radius:var(--r-md);overflow:hidden">
-              <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--n50);border-bottom:1px solid var(--n150)">
-                <span style="font-size:11px;font-weight:800;color:var(--n500);text-transform:uppercase;flex:1">Ligne {{ i+1 }}</span>
-                @if (l.ecart!==0) { <span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);" [style.background]="l.ecart<0?'var(--r-gh)':'var(--b-gh)'" [style.color]="l.ecart<0?'var(--r)':'var(--b)'"><i class="fa-solid fa-{{ l.ecart<0?'minus':'plus' }}"></i>Écart: {{ l.ecart>0?'+':'' }}{{ l.ecart }}</span> }
-                @if (lignes.length>1) { <button style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button> }
-              </div>
-              <div style="padding:14px 16px">
-                <div class="g1" style="margin-bottom:14px">
-                  <div class="form-group"><label class="form-label">Produit / Niveau de stock <span class="req">*</span></label>
-                    <select class="form-control" [(ngModel)]="l.slId" (ngModelChange)="onSLChange(l)">
-                      <option [value]="0">— Sélectionner —</option>
-                      @for (sl of getFiltered(); track sl.id) { <option [value]="sl.id">{{ sl.productName }} · Stock: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }
-                    </select>
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span><div><h3>Lignes de réception</h3><p class="sec-sub">Quantités réelles reçues — priorité au réel constaté</p></div></div>
+          <button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            @for (l of lignes; track l.uid; let i = $index) {
+              <div style="border:1.5px solid var(--n200);border-radius:var(--r-md);overflow:hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--n50);border-bottom:1px solid var(--n150)">
+                  <span style="font-size:11px;font-weight:800;color:var(--n500);text-transform:uppercase;flex:1">Ligne {{ i+1 }}</span>
+                  @if (lignes.length>1) {
+                    <button style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:26px;height:26px" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button>
+                  }
+                </div>
+                <div style="padding:14px 16px">
+                  <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Produit <span class="req">*</span></label>
+                    @if (loadingProducts()) {
+                      <div style="display:flex;align-items:center;gap:8px;color:var(--n400);font-size:12px;padding:8px 0"><div class="spinner spinner-sm"></div> Chargement des produits…</div>
+                    } @else if (getFilteredProducts().length === 0) {
+                      <p style="color:var(--r);font-size:12px;padding:8px 0">Aucun produit "{{ receptionType }}" dans le catalogue.</p>
+                    } @else {
+                      <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
+                        <option [value]="0">— Sélectionner un produit —</option>
+                        @for (p of getFilteredProducts(); track p.id) { <option [value]="p.id">[{{ p.sku }}] {{ p.designation || p.sku }}</option> }
+                      </select>
+                    }
                   </div>
-                </div>
-                <div class="g4">
-                  <div class="form-group"><label class="form-label">Qté commandée</label><input type="number" class="form-control" min="0" [(ngModel)]="l.orderedQty" (ngModelChange)="onQteChange(l)"></div>
-                  <div class="form-group"><label class="form-label">Qté reçue réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" style="border-color:var(--g-pale);background:var(--g-sf)" [(ngModel)]="l.receivedQty" (ngModelChange)="onQteChange(l)"></div>
-                  <div class="form-group"><label class="form-label">Prix unitaire (FCFA)</label><input type="number" class="form-control" min="0" [(ngModel)]="l.prixUnit" (ngModelChange)="recalc(l)"></div>
-                  <div class="form-group"><label class="form-label">Montant ligne</label><div style="padding:10px 13px;background:var(--g-gh);border:1.5px solid var(--g-pale);border-radius:var(--r-md);font-size:13px;font-weight:800;color:var(--g)">{{ fCFA(l.total) }}</div></div>
-                </div>
-                <div class="g2">
-                  <div class="form-group"><label class="form-label">N° Lot</label><input type="text" class="form-control" placeholder="LOT-XXXXX" [(ngModel)]="l.lot"></div>
-                  @if (l.ecart!==0) { <div class="form-group"><label class="form-label" style="color:var(--o)">Motif écart <span class="req">*</span></label><input type="text" class="form-control" [class.is-error]="!l.deviationReason" placeholder="Raison obligatoire…" [(ngModel)]="l.deviationReason"></div> }
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+                    <div class="form-group"><label class="form-label">Qté commandée <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label><input type="number" class="form-control" min="0" [(ngModel)]="l.orderedQty"></div>
+                    <div class="form-group"><label class="form-label">Qté reçue réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" style="border-color:var(--g-pale);background:var(--g-sf)" [(ngModel)]="l.receivedQty"></div>
+                    <div class="form-group"><label class="form-label">Conditionnement</label>
+                      <select class="form-control" [(ngModel)]="l.packagingType">
+                        <option value="">—</option>
+                        @for (pt of packagingTypes; track pt) { <option [value]="pt">{{ pt }}</option> }
+                      </select>
+                    </div>
+                  </div>
+                  <div class="g2">
+                    <div class="form-group"><label class="form-label">Qté par carton <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label><input type="number" class="form-control" min="0" [(ngModel)]="l.quantityPerCarton"></div>
+                    <div class="form-group"><label class="form-label">N° Lot</label><input type="text" class="form-control" placeholder="LOT-2026-XXXX" [(ngModel)]="l.lot"></div>
+                  </div>
+                  @if (hasDeviation(l)) {
+                    <div class="form-group" style="margin-top:14px">
+                      <label class="form-label">Motif de l'écart <span class="req">*</span></label>
+                      <input type="text" class="form-control" placeholder="Ex: casse transport, sous-remplissage…" [(ngModel)]="l.deviationReason">
+                      <p style="color:var(--o);font-size:12px;margin-top:4px">Écart : {{ deviation(l) > 0 ? '+' : '' }}{{ deviation(l) }} {{ findProduct(l.productId)?.unit }}</p>
+                    </div>
+                  }
                 </div>
               </div>
-            </div>
-          }
-        </div></div>
+            }
+          </div>
+        </div>
       </div>
     </div>
+
     <!-- SIDE -->
     <div class="form-side">
       <div class="card" style="position:sticky;top:24px">
-        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-b"><i class="fa-solid fa-receipt"></i></span><div><h3>Récapitulatif</h3></div></div></div>
+        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-receipt"></i></span><div><h3>Récapitulatif</h3></div></div></div>
         <div class="card-body">
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Fournisseur</span><span style="font-weight:600;color:var(--n800)">{{ getSupName() }}</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Entrepôt</span><span style="font-weight:600;color:var(--n800)">{{ getWName() }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Type</span><span style="font-weight:600;color:var(--n800)">{{ receptionType }}</span></div>
             <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Lignes</span><span style="font-weight:600;color:var(--n800)">{{ lignes.length }}</span></div>
-            <div style="height:1px;background:var(--n200)"></div>
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:700;color:var(--n700)">Montant total</span><span style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--g)">{{ fCFA(getTotal()) }}</span></div>
           </div>
-          <div class="banner banner-info" style="margin-bottom:16px"><i class="fa-solid fa-circle-info"></i><span>Validation requise avant mise à jour du stock.</span></div>
+          @if (errorMsg()) {
+            <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+          }
+          <div class="banner banner-primary" style="margin-bottom:16px"><i class="fa-solid fa-circle-info"></i><span>Double validation requise avant mise à jour du stock.</span></div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <button class="btn btn-ghost btn-full" (click)="router.navigate(['/stock/reception'])"><i class="fa-solid fa-xmark"></i> Annuler</button>
             <button class="btn btn-primary btn-full" [disabled]="!isValid()||saving()" (click)="sauvegarder()">

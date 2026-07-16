@@ -1,0 +1,528 @@
+@if (loading()) {
+  <div class="page-loading">
+    <div class="spinner spinner-lg"></div>
+    <p>Chargement du catalogue produits…</p>
+  </div>
+} @else {
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1><i class="fa-solid fa-boxes-stacked"></i> Gestion des Produits</h1>
+      <p class="page-subtitle">Configuration centralisée : Gammes, Variantes, Produits & Prix — Marque TANTY</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreate(activeTab() === 'lines' ? 'line' : activeTab() === 'variants' ? 'variant' : 'product')">
+      <i class="fa-solid fa-plus"></i> Ajouter
+    </button>
+  </div>
+
+  <!-- KPI BAR -->
+  <div class="kpi-bar">
+    <div class="kpi-item">
+      <div class="kpi-icon" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-layer-group"></i></div>
+      <div><div class="kpi-value">{{ lineCount() }}</div><div class="kpi-label">Gammes</div></div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-icon" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-code-branch"></i></div>
+      <div><div class="kpi-value">{{ variantCount() }}</div><div class="kpi-label">Variantes</div></div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-icon" style="background:rgba(139,92,246,.1);color:#7c3aed"><i class="fa-solid fa-box"></i></div>
+      <div><div class="kpi-value">{{ productCount() }}</div><div class="kpi-label">Produits</div></div>
+    </div>
+    <div class="kpi-item">
+      <div class="kpi-icon" style="background:rgba(234,88,12,.1);color:#ea580c"><i class="fa-solid fa-coins"></i></div>
+      <div><div class="kpi-value">{{ activeProductCount() }}</div><div class="kpi-label">Actifs</div></div>
+    </div>
+  </div>
+
+  <!-- STATS DASHBOARD -->
+  <div class="stats-toggle-row">
+    <button class="stats-toggle-btn" (click)="toggleStats()">
+      <i class="fa-solid" [class.fa-chart-pie]="!showStats()" [class.fa-chart-pie]="showStats()"></i>
+      {{ showStats() ? 'Masquer' : 'Afficher' }} les statistiques
+    </button>
+  </div>
+
+  @if (showStats()) {
+    <div class="stats-dashboard">
+      <!-- Chart 1: Material type distribution (doughnut) -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <span class="chart-title"><i class="fa-solid fa-chart-pie"></i> Répartition par type</span>
+        </div>
+        <div class="chart-body">
+          <div class="chart-canvas-wrap" style="height:240px">
+            <canvas #materialChart></canvas>
+          </div>
+          <div class="chart-legend-custom">
+            @for (d of materialDistribution(); track d.label) {
+              <div class="legend-item">
+                <span class="legend-dot" [style.background]="d.color"></span>
+                <i class="fa-solid" [class]="d.icon" [style.color]="d.color"></i>
+                <span class="legend-label">{{ d.label }}</span>
+                <span class="legend-value">{{ d.value }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 2: Category distribution (horizontal bar) -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <span class="chart-title"><i class="fa-solid fa-chart-bar"></i> Top catégories</span>
+        </div>
+        <div class="chart-body">
+          <div class="chart-canvas-wrap" style="height:280px">
+            <canvas #categoryChart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat cards row -->
+      <div class="stat-cards-grid">
+        <!-- Active vs Inactive -->
+        <div class="mini-stat-card">
+          <div class="mini-stat-header"><i class="fa-solid fa-circle-check" style="color:var(--g)"></i> Actifs / Inactifs</div>
+          <div class="mini-stat-body">
+            <div class="mini-stat-bar">
+              <div class="mini-stat-bar-active" [style.width.%]="productCount() > 0 ? (activeProductCount() / productCount() * 100) : 0"></div>
+            </div>
+            <div class="mini-stat-numbers">
+              <span class="ms-active">{{ activeProductCount() }} actifs</span>
+              <span class="ms-inactive">{{ inactiveProductCount() }} inactifs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price stats -->
+        <div class="mini-stat-card">
+          <div class="mini-stat-header"><i class="fa-solid fa-tag" style="color:var(--o)"></i> Prix unitaire</div>
+          <div class="mini-stat-body">
+            <div class="mini-stat-row"><span>Moyen</span><strong>{{ formatCFA(avgPrice()) }}</strong></div>
+            <div class="mini-stat-row"><span>Min</span><strong>{{ formatCFA(minPrice()) }}</strong></div>
+            <div class="mini-stat-row"><span>Max</span><strong>{{ formatCFA(maxPrice()) }}</strong></div>
+          </div>
+        </div>
+
+        <!-- Weight stats -->
+        <div class="mini-stat-card">
+          <div class="mini-stat-header"><i class="fa-solid fa-weight-hanging" style="color:#7c3aed"></i> Poids moyen</div>
+          <div class="mini-stat-body">
+            <div class="mini-stat-big">{{ avgWeight() | number:'1.0-2' }} <span class="mini-stat-unit">g</span></div>
+          </div>
+        </div>
+
+        <!-- Packaging distribution -->
+        <div class="mini-stat-card">
+          <div class="mini-stat-header"><i class="fa-solid fa-box-open" style="color:var(--b)"></i> Conditionnements</div>
+          <div class="mini-stat-body">
+            @for (pkg of packagingDistribution(); track pkg.label) {
+              <div class="pkg-row">
+                <span class="pkg-label">{{ pkg.label }}</span>
+                <span class="pkg-count">{{ pkg.value }}</span>
+              </div>
+            } @empty {
+              <div class="pkg-empty">Aucun conditionnement défini</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.tab-active]="activeTab()==='products'" (click)="setTab('products')">
+      <i class="fa-solid fa-box"></i> Produits
+    </button>
+    <button class="tab-btn" [class.tab-active]="activeTab()==='lines'" (click)="setTab('lines')">
+      <i class="fa-solid fa-layer-group"></i> Gammes
+    </button>
+    <button class="tab-btn" [class.tab-active]="activeTab()==='variants'" (click)="setTab('variants')">
+      <i class="fa-solid fa-code-branch"></i> Variantes
+    </button>
+    <button class="tab-btn" [class.tab-active]="activeTab()==='prices'" (click)="setTab('prices')">
+      <i class="fa-solid fa-coins"></i> Prix
+    </button>
+  </div>
+
+  <!-- ═══ PRODUCTS TAB ═══ -->
+  @if (activeTab() === 'products') {
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button class="ftab" [class.ftab-active]="filterMaterial()==='ALL'" (click)="filterMaterial.set('ALL')">Tous</button>
+        @for (mt of materialTypes; track mt.value) {
+          <button class="ftab" [class.ftab-active]="filterMaterial()===mt.value" (click)="filterMaterial.set(mt.value)">
+            <i class="fa-solid" [class]="mt.icon"></i> {{ mt.label }}
+          </button>
+        }
+      </div>
+      <input type="text" class="search-input" placeholder="Rechercher (SKU, catégorie)…" [(ngModel)]="searchProduct" (ngModelChange)="searchProduct=$event">
+    </div>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Variante</th>
+            <th>Unité</th>
+            <th>Prix unitaire</th>
+            <th>Conditionnement</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filteredProducts(); track p.id) {
+            <tr>
+              <td><strong>{{ p.sku }}</strong></td>
+              <td>{{ p.category || '—' }}</td>
+              <td>
+                <span class="mat-badge" [style.color]="getMaterialColor(p.materialType || 'PRODUIT_FINI')">
+                  <i class="fa-solid" [class]="getMaterialIcon(p.materialType || 'PRODUIT_FINI')"></i>
+                  {{ getMaterialLabel(p.materialType || 'PRODUIT_FINI') }}
+                </span>
+              </td>
+              <td>{{ p.variantId ? getLineName(p.variantId) : '—' }}</td>
+              <td>{{ p.unit || '—' }}</td>
+              <td><strong>{{ formatCFA(p.unitPriceAmount || 0) }}</strong></td>
+              <td>{{ p.packagingType ? p.packagingType + (p.quantityPerCarton ? ' (' + p.quantityPerCarton + '/carton)' : '') : '—' }}</td>
+              <td>
+                @if (p.active) {
+                  <span class="badge badge-success">Actif</span>
+                } @else {
+                  <span class="badge badge-neutral">Inactif</span>
+                }
+              </td>
+              <td class="actions-cell">
+                <button class="btn-icon" title="Prix" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i></button>
+                <button class="btn-icon" title="Modifier" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-icon btn-danger" title="Supprimer" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-row">Aucun produit trouvé</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ═══ LINES TAB ═══ -->
+  @if (activeTab() === 'lines') {
+    <div class="card-grid">
+      @for (l of filteredLines(); track l.id) {
+        <div class="entity-card">
+          <div class="entity-card-header">
+            <div class="entity-icon" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+              <div class="entity-name">{{ l.name }}</div>
+              <div class="entity-code">{{ l.code }}</div>
+            </div>
+          </div>
+          <div class="entity-card-body">
+            <span class="badge" [class.badge-success]="l.active" [class.badge-neutral]="!l.active">{{ l.active ? 'Actif' : 'Inactif' }}</span>
+            <span class="entity-meta">{{ variantCountForLine(l.id) }} variante(s)</span>
+          </div>
+          <div class="entity-card-footer">
+            <button class="btn btn-ghost btn-sm" (click)="openEdit('line', l)"><i class="fa-solid fa-pen"></i> Modifier</button>
+            <button class="btn btn-ghost btn-sm btn-danger" (click)="deleteItem('line', l.id)"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><i class="fa-solid fa-layer-group"></i><p>Aucune gamme configurée</p></div>
+      }
+    </div>
+  }
+
+  <!-- ═══ VARIANTS TAB ═══ -->
+  @if (activeTab() === 'variants') {
+    <div class="filter-bar">
+      <select class="select-input" (change)="filterLineId.set(+$any($event.target).value || null)">
+        <option [value]="0">Toutes les gammes</option>
+        @for (l of lines(); track l.id) {
+          <option [value]="l.id">{{ l.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr><th>Nom</th><th>Code</th><th>Gamme</th><th>Produits</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          @for (v of filteredVariants(); track v.id) {
+            <tr>
+              <td><strong>{{ v.name }}</strong></td>
+              <td>{{ v.code }}</td>
+              <td>{{ getLineName(v.productLineId) }}</td>
+              <td>{{ productCountForVariant(v.id) }}</td>
+              <td class="actions-cell">
+                <button class="btn-icon" (click)="openEdit('variant', v)"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-icon btn-danger" (click)="deleteItem('variant', v.id)"><i class="fa-solid fa-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-row">Aucune variante trouvée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ═══ PRICES TAB ═══ -->
+  @if (activeTab() === 'prices') {
+    <div class="info-banner">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>Sélectionnez un produit pour gérer ses prix (achat, gros, détail, promo, etc.). Les prix alimentent automatiquement la valorisation du stock.</span>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr><th>SKU</th><th>Catégorie</th><th>Type</th><th>Prix unitaire (défaut)</th><th>Prix configurés</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          @for (p of filteredProducts(); track p.id) {
+            <tr>
+              <td><strong>{{ p.sku }}</strong></td>
+              <td>{{ p.category || '—' }}</td>
+              <td><span class="mat-badge" [style.color]="getMaterialColor(p.materialType || 'PRODUIT_FINI')">{{ getMaterialLabel(p.materialType || 'PRODUIT_FINI') }}</span></td>
+              <td>{{ formatCFA(p.unitPriceAmount || 0) }}</td>
+              <td><button class="btn btn-ghost btn-sm" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i> Gérer les prix</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-row">Aucun produit</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+<!-- ═══ CREATE/EDIT MODAL ═══ -->
+@if (showModal()) {
+  <div class="modal-overlay animate-fadeIn" (click)="closeModal()">
+    <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid" [class.fa-plus]="modalMode()==='create'" [class.fa-pen]="modalMode()==='edit'"></i>
+          {{ modalMode() === 'create' ? 'Ajouter' : 'Modifier' }} {{ modalEntity() === 'line' ? 'Gamme' : modalEntity() === 'variant' ? 'Variante' : 'Produit' }}
+        </div>
+        <button class="modal-close" (click)="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        @if (modalEntity() === 'line') {
+          <div class="form-group">
+            <label class="form-label">Nom <span class="req">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formName" placeholder="Ex: TANTY Bouillies Sachets">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code</label>
+            <input type="text" class="form-control" [(ngModel)]="formCode" placeholder="Ex: TBS">
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox"><input type="checkbox" [(ngModel)]="formActive"> Actif</label>
+          </div>
+        }
+
+        @if (modalEntity() === 'variant') {
+          <div class="form-group">
+            <label class="form-label">Gamme <span class="req">*</span></label>
+            <select class="form-control" [(ngModel)]="formLineId">
+              <option [ngValue]="null">— Sélectionner —</option>
+              @for (l of lines(); track l.id) { <option [value]="l.id">{{ l.name }} ({{ getBrandName(l.brandId) }})</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom <span class="req">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="formName" placeholder="Ex: TBSA">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code</label>
+            <input type="text" class="form-control" [(ngModel)]="formCode" placeholder="Ex: TBSA">
+          </div>
+        }
+
+        @if (modalEntity() === 'product') {
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">SKU <span class="req">*</span></label>
+              <input type="text" class="form-control" [(ngModel)]="formSku" placeholder="Ex: RBS-AR" [disabled]="modalMode()==='edit'">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Code-barres</label>
+              <input type="text" class="form-control" [(ngModel)]="formBarcode">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Type de matériel <span class="req">*</span></label>
+              <select class="form-control" [(ngModel)]="formMaterialType">
+                @for (mt of materialTypes; track mt.value) { <option [value]="mt.value">{{ mt.label }}</option> }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catégorie</label>
+              <input type="text" class="form-control" [(ngModel)]="formCategory" placeholder="Ex: Bouillies, Soja décortiqué…">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Variante</label>
+              <select class="form-control" [ngModel]="formVariantId" (ngModelChange)="formVariantId=$event">
+                <option [ngValue]="null">— Aucune (matière première/consommable) —</option>
+                @for (v of variants(); track v.id) { <option [value]="v.id">{{ v.name }} ({{ getLineName(v.productLineId) }})</option> }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unité</label>
+              <input type="text" class="form-control" [(ngModel)]="formUnit" placeholder="unite, kg, L…">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Prix unitaire (FCFA)</label>
+              <input type="number" class="form-control" [(ngModel)]="formUnitPrice">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Conditionnement</label>
+              <input type="text" class="form-control" [(ngModel)]="formPackagingType" placeholder="SACHET, ETUI…">
+            </div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Qté/carton</label>
+              <input type="number" class="form-control" [(ngModel)]="formQtyPerCarton">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Poids unit. (g)</label>
+              <input type="number" class="form-control" [(ngModel)]="formUnitWeight">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Volume</label>
+              <input type="text" class="form-control" [(ngModel)]="formVolume" placeholder="1L, 5L…">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Délai appro (jours)</label>
+              <input type="number" class="form-control" [(ngModel)]="formLeadTime">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stock sécurité (jours)</label>
+              <input type="number" class="form-control" [(ngModel)]="formSafetyStock">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox"><input type="checkbox" [(ngModel)]="formActive"> Actif</label>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeModal()">Annuler</button>
+        <button class="btn btn-primary" (click)="saveModal()">
+          <i class="fa-solid fa-check"></i> {{ modalMode() === 'create' ? 'Créer' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ PRICE MANAGEMENT MODAL ═══ -->
+@if (showPriceModal() && priceModalProduct(); as prod) {
+  <div class="modal-overlay animate-fadeIn" (click)="closePriceModal()">
+    <div class="modal-box animate-fadeInUp" style="max-width:640px" (click)="$event.stopPropagation()">
+      <div class="modal-header" style="background:var(--o-gh)">
+        <div class="modal-title" style="color:var(--o)"><i class="fa-solid fa-coins"></i> Prix — {{ prod.sku }}</div>
+        <button class="modal-close" (click)="closePriceModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+          <div style="font-weight:700;color:var(--n800)">{{ prod.category || prod.sku }}</div>
+          <div style="font-size:12px;color:var(--n400)">Prix par défaut: {{ formatCFA(prod.unitPriceAmount || 0) }}</div>
+        </div>
+
+        <!-- Existing prices -->
+        <div class="table-wrapper" style="margin-bottom:16px">
+          <table class="data-table compact">
+            <thead>
+              <tr><th>Type</th><th>Prix</th><th>Devise</th><th>Qté min</th><th>Statut</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              @for (pr of productPrices(); track pr.id) {
+                <tr>
+                  <td><strong>{{ getPriceTypeLabel(pr.priceType) }}</strong></td>
+                  <td>{{ formatCFA(pr.price || 0) }}</td>
+                  <td>{{ pr.currency || 'XAF' }}</td>
+                  <td>{{ pr.minQuantity || 0 }}</td>
+                  <td>
+                    @if (pr.active) { <span class="badge badge-success">Actif</span> }
+                    @else { <span class="badge badge-neutral">Inactif</span> }
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn-icon" (click)="editPrice(pr)"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-icon btn-danger" (click)="deletePrice(pr.id)"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="empty-row">Aucun prix configuré</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add/Edit price form -->
+        <div style="border-top:1px solid var(--n150);padding-top:16px">
+          <h4 style="font-size:13px;font-weight:700;color:var(--n700);margin-bottom:12px">
+            {{ priceEditingId ? 'Modifier le prix' : 'Ajouter un prix' }}
+          </h4>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Type de prix <span class="req">*</span></label>
+              <select class="form-control" [(ngModel)]="priceType" [disabled]="priceEditingId !== null">
+                @for (pt of priceTypes; track pt.value) { <option [value]="pt.value">{{ pt.label }}</option> }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Prix (FCFA) <span class="req">*</span></label>
+              <input type="number" class="form-control" [(ngModel)]="priceAmount">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Devise</label>
+              <input type="text" class="form-control" [(ngModel)]="priceCurrency">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Quantité minimum</label>
+              <input type="number" class="form-control" [(ngModel)]="priceMinQty">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox"><input type="checkbox" [(ngModel)]="priceActive"> Actif</label>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            @if (priceEditingId) {
+              <button class="btn btn-primary btn-sm" (click)="savePrice()"><i class="fa-solid fa-check"></i> Modifier</button>
+              <button class="btn btn-ghost btn-sm" (click)="cancelEditPrice()">Annuler</button>
+            } @else {
+              <button class="btn btn-primary btn-sm" (click)="savePrice()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- TOAST -->
+@if (toastMsg()) {
+  <div class="toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+    <i class="fa-solid" [class.fa-circle-check]="toastType()==='success'" [class.fa-triangle-exclamation]="toastType()==='error'"></i>
+    {{ toastMsg() }}
+  </div>
+}

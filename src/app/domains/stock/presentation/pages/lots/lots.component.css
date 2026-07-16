@@ -1,0 +1,80 @@
+.page { display:flex;flex-direction:column;gap:22px; }
+
+/* Header */
+.ph { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px; }
+.ph-left { display:flex;align-items:center;gap:13px; }
+.ph-icon { width:46px;height:46px;background:#E3F2FD;color:#1565C0;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px; }
+.ph-title { font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);margin:0; }
+.ph-sub { font-size:12px;color:var(--n400);margin-top:2px; }
+
+/* Card */
+.card { background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm); }
+
+/* Form */
+.form-card { margin-bottom:0; }
+.form-title { font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:14px; }
+.form-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px; }
+.form-actions { display:flex;justify-content:flex-end;gap:10px;margin-top:16px; }
+label { display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--n600); }
+.form-control { padding:8px 10px;border:1.5px solid var(--n200);border-radius:var(--r-sm);font-size:13px; }
+.form-control:focus { outline:none;border-color:var(--g); }
+
+/* Filters */
+.filters-bar { display:flex;gap:6px;flex-wrap:wrap; }
+.tab-btn { display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--n200);background:transparent;color:var(--n500);transition:all .15s;font-family:var(--font-b); }
+.tab-btn:hover { background:var(--n100); }
+.tab-btn.tb-active { background:var(--n200);color:var(--n800); }
+.tb-red.tb-active { background:var(--r-gh);color:var(--r);border-color:rgba(198,40,40,.3); }
+.tb-o.tb-active { background:var(--o-gh);color:var(--o);border-color:rgba(230,81,0,.3); }
+.tab-spacer { margin-left:auto; }
+
+/* Loading */
+.loading-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--n400);gap:12px; }
+.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite; }
+.spinner-lg { width:40px;height:40px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Empty */
+.empty-state { padding:48px;text-align:center;color:var(--n400); }
+
+/* Lots Grid */
+.lots-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px; }
+.lot-card { border-left:4px solid var(--o); }
+.lot-expired { border-left-color:var(--r); }
+.lot-available { border-left-color:var(--g); }
+.lot-quarantine { border-left-color:var(--o); }
+
+.lot-header { display:flex;justify-content:space-between;align-items:flex-start; }
+.lot-number { font-family:var(--font-d);font-size:15px;font-weight:800;margin:0; }
+.lot-product { font-size:12px;color:var(--n500);margin-top:2px; }
+
+.lot-details { display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--n600);margin-top:12px; }
+.lot-notes { font-size:11px;color:var(--n400);background:var(--n50);padding:6px;border-radius:var(--r-sm);margin-top:10px; }
+
+.lot-actions { display:flex;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06);margin-top:10px; }
+
+/* Badges */
+.badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600; }
+.badge-danger { background:var(--r-gh);color:var(--r); }
+.badge-success { background:var(--g-gh);color:var(--g); }
+.badge-warning { background:var(--o-gh);color:var(--o); }
+
+/* Buttons */
+.btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-b); }
+.btn-primary { background:var(--g);color:#fff; }
+.btn-primary:hover { background:var(--g-d); }
+.btn-secondary { background:var(--n200);color:var(--n700); }
+.btn-secondary:hover { background:var(--n300); }
+.btn-danger { background:var(--r);color:#fff; }
+.btn-danger:hover { background:var(--r-d); }
+.btn-sm { padding:6px 12px;font-size:12px; }
+.btn:disabled { opacity:.5;cursor:not-allowed; }
+
+/* Animation */
+.animate-fadeInUp { animation:fadeInUp .4s ease; }
+@keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+
+@media (max-width: 600px) {
+  .lots-grid { grid-template-columns:1fr; }
+  .form-grid { grid-template-columns:1fr; }
+}

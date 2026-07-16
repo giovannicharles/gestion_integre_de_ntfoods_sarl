@@ -6,7 +6,7 @@ import {
   Supplier, Receipt, ReceiptItem, ProductionBatch, InternalOrder,
   Commercial, InfoProduits, StockMovement,
   DashboardStatsResponse, StockAlert, MovementType
-} from '../../domain/models/stock.models';
+} from '../../domain/models';
 
 /** Repository mock — données camerounaises NTFoods pour développement offline. */
 @Injectable({ providedIn: 'root' })
@@ -90,45 +90,27 @@ export class StockMockRepository {
   ];
 
   // ── RECEIPTS ───────────────────────────────────────────────
+  // Simplifié : la page Réceptions utilise désormais exclusivement StockApiRepository
+  // (backend réel). Ce tableau ne sert plus qu'à alimenter le compteur du dashboard
+  // mock ci-dessous, avec la forme du nouveau contrat Receipt (receptionType /
+  // destinationLocationId), plus aucune des anciennes méthodes CRUD factices.
   private _receipts: Receipt[] = [
     {
-      id:1, receiptNumber:'REC-2026-0042', source:'SUPPLIER', sourceId:1,
-      receiptDate:'2026-05-07', warehouseId:1, warehouseName:'Magasin Matières Premières',
-      status:'PENDING_FIRST_VALIDATION', totalAmount:306500, createdAt:'2026-05-07T08:30:00',
-      warehouse: this.warehouses[0], fournisseur: this.suppliers[0],
-      items:[
-        { id:1, productId:1, productName:'Maïs jaune (grain)', productSku:'MP-MAIS-001', productUnit:'KG', orderedQty:500, receivedQty:490, deviation:-10, deviationReason:'Sacs sous-remplis', lotNumber:'LOT-MAI-2605', unitPrice:350, lineTotal:171500 },
-        { id:2, productId:3, productName:"Poudre d'arachide",  productSku:'MP-ARACH-001',productUnit:'KG', orderedQty:150, receivedQty:150, deviation:0, unitPrice:900, lineTotal:135000 },
+      id: 1, receiptNumber: 'REC-MP-2026-0042', receptionType: 'MATIERE_PREMIERE',
+      sourceLabel: 'Fournisseur Maïs SARL', receiptDate: '2026-05-07',
+      destinationLocationId: 'mock-central', status: 'PENDING_FIRST_VALIDATION',
+      items: [
+        { productId: 1, productName: 'Maïs jaune (grain)', productSku: 'MP-MAIS-001', productUnit: 'KG', orderedQty: 500, receivedQty: 490, deviation: -10, deviationReason: 'Sacs sous-remplis', lotNumber: 'LOT-MAI-2605' },
       ]
     },
     {
-      id:2, receiptNumber:'REC-2026-0041', source:'SUPPLIER', sourceId:2,
-      receiptDate:'2026-05-06', warehouseId:2, warehouseName:'Magasin Consommables & Emballages',
-      status:'PENDING_SECOND_VALIDATION', totalAmount:336400, createdAt:'2026-05-06T14:00:00',
-      firstValidatorId:1, firstValidatorName:'Mvondo Jean-Baptiste', firstValidatedAt:'2026-05-06',
-      warehouse: this.warehouses[1], fournisseur: this.suppliers[1],
-      items:[
-        { id:3, productId:6, productName:'Sachets 42g TANTY', productSku:'CONS-SACH-001', productUnit:'SACHET_42G', orderedQty:10000, receivedQty:10000, deviation:0, unitPrice:25, lineTotal:250000 },
-        { id:4, productId:7, productName:'Seaux 1L TANTY',    productSku:'CONS-SEAU-1L',  productUnit:'SEAU_1L',    orderedQty:500, receivedQty:480, deviation:-20, deviationReason:'Casse maritime', unitPrice:180, lineTotal:86400 },
+      id: 2, receiptNumber: 'REC-CONS-2026-0041', receptionType: 'CONSOMMABLE',
+      sourceLabel: 'Fournisseur Emballages CM', receiptDate: '2026-05-06',
+      destinationLocationId: 'mock-central', status: 'PENDING_SECOND_VALIDATION',
+      firstValidator: 'GEST001', firstValidatedAt: '2026-05-06',
+      items: [
+        { productId: 6, productName: 'Sachets 42g TANTY', productSku: 'CONS-SACH-001', productUnit: 'SACHET', orderedQty: 10000, receivedQty: 10000, deviation: 0 },
       ]
-    },
-    {
-      id:3, receiptNumber:'REC-2026-0040', source:'SUPPLIER', sourceId:5,
-      receiptDate:'2026-05-05', warehouseId:1, warehouseName:'Magasin Matières Premières',
-      status:'VALIDATED', totalAmount:183000, createdAt:'2026-05-05T10:15:00',
-      firstValidatorId:1, firstValidatorName:'Mvondo Jean-Baptiste', firstValidatedAt:'2026-05-05',
-      secondValidatorId:2, secondValidatorName:'M. Clive Nkomo', secondValidatedAt:'2026-05-05',
-      warehouse: this.warehouses[0], fournisseur: this.suppliers[4],
-      items:[{ id:5, productId:2, productName:'Soja décortiqué', productSku:'MP-SOJA-001', productUnit:'KG', orderedQty:300, receivedQty:305, deviation:5, deviationReason:'Surplus fournisseur', lotNumber:'SOJA-CI-0505', unitPrice:600, lineTotal:183000 }]
-    },
-    {
-      id:4, receiptNumber:'REC-2026-0039', source:'PRODUCTION', sourceId:1,
-      receiptDate:'2026-05-04', warehouseId:3, warehouseName:'Magasin Produits Finis',
-      status:'VALIDATED', totalAmount:327250, createdAt:'2026-05-04T09:00:00',
-      firstValidatorId:1, firstValidatorName:'M. Clive Nkomo', firstValidatedAt:'2026-05-04',
-      secondValidatorId:1, secondValidatorName:'Mvondo Jean-Baptiste', secondValidatedAt:'2026-05-04',
-      warehouse: this.warehouses[2],
-      items:[{ id:6, productId:9, productName:'TBSA 42g', productSku:'PF-TBSA-042', productUnit:'SACHET_42G', orderedQty:1309, receivedQty:1309, deviation:0, lotNumber:'PROD-2026-05-01', unitPrice:250, lineTotal:327250 }]
     },
   ];
 
@@ -259,69 +241,6 @@ export class StockMockRepository {
       activeInternalOrders: this._orders.filter(o => o.status === 'DRAFT' || o.status === 'APPROVED').length,
       todaySales: 74250,
     }).pipe(delay(200));
-  }
-
-  getReceipts(): Observable<Receipt[]> {
-    return of([...this._receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt))).pipe(delay(180));
-  }
-  getPendingReceipts(): Observable<Receipt[]> {
-    return of(this._receipts.filter(r => r.status === 'PENDING_FIRST_VALIDATION' || r.status === 'PENDING_SECOND_VALIDATION')).pipe(delay(150));
-  }
-
-  createReceipt(data: Partial<Receipt>): Observable<Receipt> {
-    const r: Receipt = {
-      id: Date.now(), receiptNumber: 'REC-2026-' + String(this._receipts.length + 43).padStart(4,'0'),
-      source: data.source || 'SUPPLIER', receiptDate: new Date().toISOString().split('T')[0],
-      warehouseId: data.warehouseId!, status: 'PENDING_FIRST_VALIDATION',
-      totalAmount: data.items?.reduce((a, i) => a + (i.lineTotal || 0), 0) || 0,
-      createdAt: new Date().toISOString(), items: data.items || [],
-      warehouse: this.warehouses.find(w => w.id === data.warehouseId),
-      fournisseur: this.suppliers.find(s => s.id === data.fournisseur?.id),
-    };
-    this._receipts.unshift(r); return of(r).pipe(delay(400));
-  }
-
-  validateFirst(id: number, notes: string): Observable<Receipt> {
-    const r = this._receipts.find(x => x.id === id);
-    if (r) {
-      const needsSecond = this.rules.requiresSecondValidation(r.warehouseName || '');
-      r.status = needsSecond ? 'PENDING_SECOND_VALIDATION' : 'VALIDATED';
-      r.firstValidatorId = 1; r.firstValidatorName = 'Mvondo Jean-Baptiste';
-      r.firstValidatedAt = new Date().toISOString().split('T')[0];
-      r.firstValidatorNotes = notes;
-      if (!needsSecond) this._updateStockFromReceipt(r);
-    }
-    return of(r!).pipe(delay(300));
-  }
-
-  validateSecond(id: number, notes: string): Observable<Receipt> {
-    const r = this._receipts.find(x => x.id === id);
-    if (r) {
-      r.status = 'VALIDATED';
-      r.secondValidatorId = 2; r.secondValidatorName = 'M. Clive Nkomo';
-      r.secondValidatedAt = new Date().toISOString().split('T')[0];
-      r.secondValidatorNotes = notes;
-      this._updateStockFromReceipt(r);
-    }
-    return of(r!).pipe(delay(300));
-  }
-
-  rejectReceipt(id: number, reason: string): Observable<Receipt> {
-    const r = this._receipts.find(x => x.id === id);
-    if (r) { r.status = 'REJECTED'; r.rejectionReason = reason; }
-    return of(r!).pipe(delay(200));
-  }
-
-  private _updateStockFromReceipt(r: Receipt): void {
-    r.items.forEach(item => {
-      const sl = this._stockLevels.find(s => s.productId === item.productId && s.warehouseId === r.warehouseId);
-      if (sl) {
-        const prev = sl.quantity;
-        sl.quantity += item.receivedQty;
-        sl.alertLevel = this.rules.calcAlertLevel(sl);
-        this._movements.unshift({ id: Date.now(), type: r.source === 'PRODUCTION' ? 'ENTRY_FROM_PRODUCTION' : 'ENTRY_FROM_SUPPLIER', productId: item.productId, warehouseId: r.warehouseId, quantity: item.receivedQty, previousStock: prev, newStock: sl.quantity, reference: r.receiptNumber, createdBy: 1, createdAt: new Date().toISOString(), notes: 'Réception validée: ' + r.receiptNumber });
-      }
-    });
   }
 
   getBatches(): Observable<ProductionBatch[]> {

@@ -279,6 +279,15 @@ input:checked + .slider:before {
   font-size: 14px;
 }
 
+/* Toast */
+.toast-toast { position:fixed;top:20px;right:20px;z-index:9999;padding:14px 20px;border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:var(--sh-lg);animation:slideIn .3s ease; }
+.toast-success { background:var(--g);color:#fff; }
+.toast-error { background:var(--r);color:#fff; }
+@keyframes slideIn { from { transform:translateX(100%);opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+/* Alert Error */
+.alert-error { padding:12px 16px;background:var(--r-gh);color:var(--r);border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .form-row {

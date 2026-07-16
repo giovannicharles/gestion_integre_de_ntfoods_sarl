@@ -1,0 +1,55 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div>
+        <div class="ph-title">Suivi des Ventes à Crédit</div>
+        <div class="ph-sub">Encours clients · {{ fCFA(totalCredit()) }} total à recouvrer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-users"></i> Encours par client</span></div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Type</th><th>Commercial</th><th>Solde dette</th></tr></thead>
+          <tbody>
+            @for (r of debiteurs(); track r.id) {
+            <tr [class.row-alert]="r.montantRestant > 300000">
+              <td class="fw-bold">{{ r.nomClient }}</td>
+              <td><span class="zone-chip">{{ r.statut }}</span></td>
+              <td style="font-size:12px">{{ commercialNom(r.matriculeCommercial) }}</td>
+              <td class="mono fw-bold text-danger">{{ fCFA(r.montantRestant) }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot><tr class="tfoot-total"><td colspan="3" class="fw-bold">Total encours crédit</td><td class="mono fw-bold">{{ fCFA(totalCredit()) }}</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="card ranking-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-user-tie"></i> Crédit par commercial</span></div>
+      <div style="padding:0 var(--sp-4) var(--sp-4)">
+        @for (p of parCommercial(); track p.nom) {
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span class="fw-bold">{{ p.nom }} <span style="color:var(--n400)">· {{ p.zone }}</span></span>
+            <span class="mono">{{ fCFA(p.total) }}</span>
+          </div>
+          <div class="prog-track-wide">
+            <div class="prog-bar" [class.prog-r]="p.total>300000" [style.width.%]="totalCredit() ? (p.total/totalCredit())*100 : 0"></div>
+          </div>
+          <div style="font-size:11px;color:var(--n400);margin-top:2px">{{ p.nbClients }} client(s) débiteur(s)</div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-banner-red">
+    <i class="fa-solid fa-ban"></i> Règle du non-doublement : bloquer toute nouvelle livraison à un client dont l'encours dépasse le plafond autorisé.
+  </div>
+</div>

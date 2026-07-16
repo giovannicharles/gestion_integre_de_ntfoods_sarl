@@ -1,0 +1,407 @@
+<div class="page animate-fadeInUp">
+  @if (toastMsg()) {
+    <div class="toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-circle-check]="toastType()==='success'" [class.fa-circle-xmark]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-warehouse"></i></div>
+      <div>
+        <h1 class="ph-title">Magasin Tampon</h1>
+        <p class="ph-sub">Réapprovisionnement rapide depuis le stock central</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      @if (criticalCount() + warningCount() > 0) {
+        <button class="btn btn-primary btn-sm" (click)="reapproAll()" [disabled]="reapproSaving()">
+          @if (reapproSaving()) { <div class="spinner spinner-sm" style="display:inline-block;vertical-align:middle"></div> }
+          @else { <i class="fa-solid fa-bolt"></i> }
+          Réappro. auto ({{ criticalCount() + warningCount() }})
+        </button>
+      }
+      <button class="btn btn-ghost btn-sm" (click)="load()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+      <button class="btn btn-primary btn-sm" (click)="openAddBuffer()"><i class="fa-solid fa-plus"></i> Ajouter produit</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:48px;text-align:center;color:var(--n400)">
+      <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…
+    </div>
+  } @else {
+
+    <!-- MATERIAL TYPE TABS -->
+    <div class="type-tabs">
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='ALL'" (click)="filterMaterial.set('ALL'); applyFilters()">
+        <i class="fa-solid fa-layer-group"></i> Tous
+        <span class="tt-count">{{ allItems().length }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='PRODUIT_FINI'" (click)="filterMaterial.set('PRODUIT_FINI'); applyFilters()">
+        <i class="fa-solid fa-box"></i> Produits Finis
+        <span class="tt-count">{{ produitFiniCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='MATIERE_PREMIERE'" (click)="filterMaterial.set('MATIERE_PREMIERE'); applyFilters()">
+        <i class="fa-solid fa-sack-wheat"></i> Matières Premières
+        <span class="tt-count">{{ matierePremiereCount() }}</span>
+      </button>
+      <button class="type-tab" [class.tt-active]="filterMaterial()==='CONSOMMABLE'" (click)="filterMaterial.set('CONSOMMABLE'); applyFilters()">
+        <i class="fa-solid fa-box-open"></i> Consommables
+        <span class="tt-count">{{ consommableCount() }}</span>
+      </button>
+    </div>
+
+    <!-- KPI BAR -->
+    <div class="card kpi-bar">
+      <div class="kb-item"><span class="kb-val">{{ allItems().length }}</span><span class="kb-lbl">Références</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val">{{ totalQty() | number }}</span><span class="kb-lbl">Quantité totale</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-r">{{ criticalCount() }}</span><span class="kb-lbl">Critiques</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-o">{{ warningCount() }}</span><span class="kb-lbl">Sous seuil</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val kv-g">{{ okCount() }}</span><span class="kb-lbl">OK</span></div>
+      <div class="kb-sep"></div>
+      <div class="kb-item"><span class="kb-val" style="color:var(--b)">{{ fCFA(totalValue()) }}</span><span class="kb-lbl">Valeur totale</span></div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="card">
+      <div class="card-body" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;color:var(--n400);font-size:13px"></i>
+          <input type="text" class="search-input" placeholder="Rechercher produit, SKU…" [(ngModel)]="search" (ngModelChange)="applyFilters()">
+        </div>
+        <select class="filter-select" [(ngModel)]="filterAlert" (ngModelChange)="applyFilters()">
+          <option value="ALL">Tous niveaux</option>
+          <option value="CRITIQUE">Critique</option>
+          <option value="FAIBLE">Sous seuil</option>
+          <option value="NORMAL">OK</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card" style="overflow:hidden">
+      <div class="card-header">
+        <div class="sec-head">
+          <span class="sh-ico sh-o"><i class="fa-solid fa-boxes-stacked"></i></span>
+          <div><h3>Niveaux du tampon</h3><p class="sec-sub">Cliquez sur réapprovisionner pour transférer depuis le stock central</p></div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th (click)="setSort('name')" style="cursor:pointer">Produit <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+              <th>Type</th>
+              <th class="text-right" (click)="setSort('qty')" style="cursor:pointer">Stock tampon <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+              <th class="text-right">Seuil réappro.</th>
+              <th>Niveau</th>
+              <th (click)="setSort('alert')" style="cursor:pointer">Statut <i class="fa-solid fa-sort" style="font-size:9px;opacity:.5"></i></th>
+              <th class="text-right">Stock central</th>
+              <th class="text-right">Recommandé</th>
+              <th class="text-right">Prix unit.</th>
+              <th class="text-right">Valeur</th>
+              <th style="text-align:right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filtered(); track item.id) {
+              <tr class="table-row-anim" [style.background]="item.alertLevel==='CRITIQUE' ? 'rgba(198,40,40,.03)' : (item.alertLevel==='FAIBLE' ? 'rgba(230,81,0,.03)' : 'transparent')">
+                <td>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:13px;font-weight:600;color:var(--n800)">{{ item.productSku }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="mat-badge {{ getMaterialClass(item.materialType) }}">
+                    <i class="fa-solid" [class]="getMaterialIcon(item.materialType)"></i> {{ getMaterialLabel(item.materialType) }}
+                  </span>
+                </td>
+                <td class="text-right">
+                  <span style="font-family:var(--font-d);font-size:15px;font-weight:800" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }}</span>
+                  <span style="font-size:11px;color:var(--n400);margin-left:3px">{{ item.unit }}</span>
+                  @if (item.packagings.length > 1) {
+                    <div style="margin-top:4px;display:flex;flex-direction:column;gap:1px">
+                      @for (p of item.packagings; track p.packagingType) {
+                        <span style="font-size:10px;color:var(--n500)">
+                          <i class="fa-solid fa-box" style="font-size:8px;margin-right:2px"></i>{{ getPackagingLabel(p.packagingType) }}: {{ p.quantity | number }}
+                          @if (p.cartons > 0) { <span style="color:var(--n400)">({{ p.cartons }} cart.)</span> }
+                        </span>
+                      }
+                    </div>
+                  } @else if (item.packagings.length === 1 && item.packagings[0].cartons > 0) {
+                    <span style="font-size:10px;color:var(--n400);display:block">{{ item.packagings[0].cartons }} carton(s)</span>
+                  }
+                </td>
+                <td class="text-right">
+                  <span style="font-size:12px;color:var(--n500)">{{ item.reorderPoint | number }}</span>
+                  @if (item.safetyStock > 0) {
+                    <span style="font-size:10px;color:var(--r);display:block">S: {{ item.safetyStock | number }}</span>
+                  }
+                </td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <div style="width:60px;height:6px;background:var(--n150);border-radius:3px;overflow:hidden">
+                      <div [style.width.%]="getPct(item.quantity, item.reorderPoint)" [style.background]="getColor(item.alertLevel)" style="height:100%;border-radius:3px"></div>
+                    </div>
+                    <span style="font-size:11px;font-weight:700" [style.color]="getColor(item.alertLevel)">{{ getPct(item.quantity, item.reorderPoint) }}%</span>
+                  </div>
+                </td>
+                <td><span class="badge {{ getNClass(item.alertLevel) }}">{{ item.alertLevel }}</span></td>
+                <td class="text-right">
+                  @if (item.centralQty > 0) {
+                    <span style="font-size:13px;font-weight:700;color:var(--g)">{{ item.centralQty | number }}</span>
+                    <span style="font-size:10px;color:var(--n400)">{{ item.unit }}</span>
+                    @if (item.centralPackagings.length > 1) {
+                      <div style="margin-top:3px;display:flex;flex-direction:column;gap:1px">
+                        @for (p of item.centralPackagings; track p.packagingType) {
+                          <span style="font-size:10px;color:var(--n500)">
+                            {{ getPackagingLabel(p.packagingType) }}: {{ p.quantity | number }}
+                            @if (p.cartons > 0) { <span style="color:var(--n400)">({{ p.cartons }} cart.)</span> }
+                          </span>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <span style="font-size:11px;color:var(--r);font-weight:600"><i class="fa-solid fa-circle-xmark"></i> Indisponible</span>
+                  }
+                </td>
+                <td class="text-right">
+                  @if (item.recommendedQty > 0) {
+                    <span style="font-size:13px;font-weight:700;color:var(--o)">{{ item.recommendedQty | number }}</span>
+                  } @else {
+                    <span style="font-size:11px;color:var(--n400)">—</span>
+                  }
+                </td>
+                <td class="text-right">
+                  @if (item.unitPrice > 0) {
+                    <span style="font-size:12px;font-weight:600;color:var(--n600)">{{ fCFA(item.unitPrice) }}</span>
+                  } @else {
+                    <span style="font-size:11px;color:var(--n400)">—</span>
+                  }
+                </td>
+                <td class="text-right">
+                  @if (item.itemValue > 0) {
+                    <span style="font-size:13px;font-weight:800;color:var(--b)">{{ fCFA(item.itemValue) }}</span>
+                  } @else {
+                    <span style="font-size:11px;color:var(--n400)">—</span>
+                  }
+                </td>
+                <td>
+                  <div style="display:flex;gap:4px;justify-content:flex-end">
+                    <button class="btn btn-primary btn-sm" (click)="openReappro(item)"
+                            [disabled]="item.centralQty === 0" style="white-space:nowrap">
+                      <i class="fa-solid fa-arrow-right-arrow-left"></i> Réapprov.
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="11" style="text-align:center;padding:48px;color:var(--n400)">
+                <i class="fa-solid fa-inbox" style="font-size:32px;display:block;margin-bottom:8px"></i>Aucun produit dans le tampon
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TRANSFER HISTORY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="sec-head">
+          <span class="sh-ico sh-b"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <div><h3>Derniers transferts central → tampon</h3></div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Produit</th><th>Quantité</th><th>Référence</th></tr></thead>
+          <tbody>
+            @for (m of movements(); track m.id) {
+              <tr>
+                <td>{{ (m.requestedAt || m.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ m.productSku || m.product?.sku || '—' }}</td>
+                <td><span style="font-weight:800;color:var(--g)">{{ m.quantity | number }}</span></td>
+                <td><span style="font-family:var(--font-d)">{{ m.referenceNumber || m.reference || '—' }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--n400)">Aucun transfert récent</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- REAPPRO MODAL -->
+  @if (showReappro() && reapproItem(); as item) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeReappro()">
+      <div class="modal-box animate-fadeInUp" style="max-width:520px" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="background:var(--o-gh)">
+          <div class="modal-title" style="color:var(--o)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Réapprovisionner le Tampon</div>
+          <button class="modal-close" (click)="closeReappro()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <!-- Product info -->
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:700;color:var(--n800);font-size:14px">{{ item.productSku }}</div>
+                <div style="font-size:12px;color:var(--n400)">{{ getMaterialLabel(item.materialType) }}</div>
+                @if (item.productLineName) {
+                  <div style="font-size:11px;color:var(--n500);margin-top:2px">Gamme: {{ item.productLineName }}</div>
+                }
+              </div>
+              @if (item.unitPrice > 0) {
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700">Prix unit.</div>
+                  <div style="font-size:14px;font-weight:800;color:var(--b)">{{ fCFA(item.unitPrice) }}</div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Stock comparison -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(230,81,0,.06);border:1px solid rgba(230,81,0,.15);border-radius:var(--r-md);padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700;margin-bottom:4px">Stock Tampon</div>
+              <div style="font-family:var(--font-d);font-size:22px;font-weight:800" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }}</div>
+              <div style="font-size:11px;color:var(--n400)">{{ item.unit }}</div>
+              <div style="margin-top:6px;height:5px;background:var(--n150);border-radius:3px;overflow:hidden">
+                <div [style.width.%]="getPct(item.quantity, item.reorderPoint)" [style.background]="getColor(item.alertLevel)" style="height:100%;border-radius:3px"></div>
+              </div>
+              <div style="font-size:10px;color:var(--n500);margin-top:4px">Seuil: {{ item.reorderPoint | number }}</div>
+            </div>
+            <div style="background:rgba(26,107,42,.06);border:1px solid rgba(26,107,42,.15);border-radius:var(--r-md);padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700;margin-bottom:4px">Stock Central</div>
+              <div style="font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--g)">{{ item.centralQty | number }}</div>
+              <div style="font-size:11px;color:var(--n400)">{{ item.unit }}</div>
+              @if (item.centralQty === 0) {
+                <div style="font-size:10px;color:var(--r);margin-top:6px"><i class="fa-solid fa-triangle-exclamation"></i> Indisponible</div>
+              } @else {
+                <div style="font-size:10px;color:var(--n500);margin-top:6px">Disponible pour transfert</div>
+              }
+            </div>
+          </div>
+
+          <!-- Recommended -->
+          @if (item.recommendedQty > 0) {
+            <div style="background:rgba(255,143,0,.08);border:1px solid rgba(255,143,0,.2);border-radius:var(--r-md);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+              <i class="fa-solid fa-lightbulb" style="color:var(--o);font-size:16px"></i>
+              <div>
+                <div style="font-size:12px;color:var(--n600)">Quantité recommandée</div>
+                <div style="font-size:16px;font-weight:800;color:var(--o)">{{ item.recommendedQty | number }} {{ item.unit }}</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" style="margin-left:auto" (click)="reapproQty = item.recommendedQty">Utiliser</button>
+            </div>
+          }
+
+          <!-- Input -->
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Quantité à transférer <span class="req">*</span></label>
+            <input type="number" class="form-control" min="1" [max]="item.centralQty" [(ngModel)]="reapproQty" placeholder="Quantité à transférer">
+            @if (reapproQty > item.centralQty) {
+              <div style="font-size:11px;color:var(--r);margin-top:4px">
+                <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant ({{ item.centralQty | number }} {{ item.unit }})
+              </div>
+            }
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Notes</label>
+            <input type="text" class="form-control" [(ngModel)]="reapproNotes" placeholder="Motif du réapprovisionnement">
+          </div>
+
+          <!-- Preview -->
+          @if (reapproQty > 0 && reapproQty <= item.centralQty) {
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--n600)">
+              <i class="fa-solid fa-circle-info"></i>
+              Après transfert : <strong>{{ (item.quantity + reapproQty) | number }}</strong> en tampon · <strong>{{ (item.centralQty - reapproQty) | number }}</strong> en central
+              @if (item.unitPrice > 0) {
+                <br><i class="fa-solid fa-coins" style="margin-left:18px"></i> Valeur du transfert : <strong style="color:var(--b)">{{ fCFA(reapproQty * item.unitPrice) }}</strong>
+              }
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeReappro()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="reapproQty<=0 || reapproQty>item.centralQty || reapproSaving()" (click)="confirmReappro()">
+            @if (reapproSaving()) { <div class="spinner spinner-sm"></div> }
+            @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirmer }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ADD TO BUFFER MODAL -->
+  @if (showAddBuffer()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeAddBuffer()">
+      <div class="modal-box animate-fadeInUp" style="max-width:640px" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="background:var(--b-gh)">
+          <div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-plus"></i> Ajouter un produit au tampon</div>
+          <button class="modal-close" (click)="closeAddBuffer()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Rechercher un produit du stock central</label>
+            <input type="text" class="form-control" placeholder="SKU ou nom du produit…" [(ngModel)]="addBufferSearch">
+          </div>
+
+          @if (filteredCentralProducts.length === 0) {
+            <div style="text-align:center;padding:32px;color:var(--n400)">
+              <i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>
+              Aucun produit disponible dans le stock central à ajouter
+            </div>
+          } @else {
+            <div style="max-height:280px;overflow-y:auto;border:1px solid var(--n150);border-radius:var(--r-md);margin-bottom:16px">
+              @for (p of filteredCentralProducts; track p.productSku) {
+                <div (click)="selectAddBufferProduct(p.productSku)"
+                     style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--n100);display:flex;justify-content:space-between;align-items:center"
+                     [style.background]="addBufferSelectedSku()===p.productSku ? 'rgba(26,107,42,.08)' : 'transparent'">
+                  <div>
+                    <div style="font-weight:600;font-size:13px;color:var(--n800)">{{ p.productSku }}</div>
+                    <div style="font-size:11px;color:var(--n400)">{{ p.productName }} · {{ p.packagingType }}</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-size:13px;font-weight:700;color:var(--g)">{{ p.quantity | number }}</div>
+                    <div style="font-size:10px;color:var(--n400)">{{ p.unit }} dispo.</div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (addBufferSelectedSku()) {
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--n600)">
+              <i class="fa-solid fa-circle-info"></i> Produit sélectionné: <strong>{{ addBufferSelectedSku() }}</strong>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">Quantité à transférer <span class="req">*</span></label>
+              <input type="number" class="form-control" min="1" [(ngModel)]="addBufferQty" placeholder="Quantité">
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Notes</label>
+              <input type="text" class="form-control" [(ngModel)]="addBufferNotes" placeholder="Motif de l'ajout">
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeAddBuffer()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="!addBufferSelectedSku() || addBufferQty<=0 || addBufferSaving()" (click)="confirmAddBuffer()">
+            @if (addBufferSaving()) { <div class="spinner spinner-sm"></div> }
+            @else { <i class="fa-solid fa-plus"></i> Ajouter au tampon }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

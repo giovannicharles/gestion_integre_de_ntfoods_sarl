@@ -15,23 +15,38 @@
     </div>
   </div>
 
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
   <!-- FILTERS -->
   <div class="notification-filters">
-    <button class="filter-btn" [class.active]="filterType === 'all'" (click)="setFilter('all')">
+    <button class="filter-btn" [class.active]="filterType() === 'all'" (click)="setFilter('all')">
       Toutes
     </button>
-    <button class="filter-btn" [class.active]="filterType === 'unread'" (click)="setFilter('unread')">
+    <button class="filter-btn" [class.active]="filterType() === 'unread'" (click)="setFilter('unread')">
       Non lues
     </button>
-    <button class="filter-btn" [class.active]="filterType === 'warning'" (click)="setFilter('warning')">
+    <button class="filter-btn" [class.active]="filterType() === 'warning'" (click)="setFilter('warning')">
       Alertes
     </button>
-    <button class="filter-btn" [class.active]="filterType === 'success'" (click)="setFilter('success')">
+    <button class="filter-btn" [class.active]="filterType() === 'success'" (click)="setFilter('success')">
       Succès
     </button>
   </div>
 
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement des notifications…</p>
+    </div>
+  }
+
   <!-- NOTIFICATIONS LIST -->
+  @if (!loading()) {
   <div class="notifications-list">
     @for (notification of getFilteredNotifications(); track notification.id) {
       <div class="notification-item {{ getNotificationClass(notification.type) }}" [class.unread]="!notification.read">
@@ -63,4 +78,5 @@
       </div>
     }
   </div>
+  }
 </div>

@@ -1,0 +1,200 @@
+<div class="page animate-fadeInUp">
+  @if (success()) {
+    <div class="success-overlay animate-fadeIn">
+      <div class="success-box">
+        <div class="success-ico"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Dotation enregistrée !</h3>
+        <p>En attente de révision par le gestionnaire de stock. Redirection en cours…</p>
+        <div class="success-bar"></div>
+      </div>
+    </div>
+  }
+
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" (click)="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="ph-icon"><i class="fa-solid fa-hand-holding"></i></div>
+      <div>
+        <h1 class="ph-title">Nouvelle Dotation</h1>
+        <p class="ph-sub">Demande de produits pour le stock mobile commercial</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+  } @else if (errorMsg() && !products().length) {
+    <div class="banner banner-danger" style="margin:20px 0"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  } @else {
+
+  <div class="card" style="padding:16px 24px">
+    <div class="stepper">
+      <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Saisie</span><span class="ss">Vous êtes ici</span></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="sc-pend">2</div><div><span class="st">Révision</span><span class="ss">Gestionnaire de stock</span></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="sc-pend">3</div><div><span class="st">Approbation</span><span class="ss">Gestionnaire de stock</span></div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="sc-pend"><i class="fa-solid fa-check"></i></div><div><span class="st">Transfert</span><span class="ss">Tampon → Mobile</span></div></div>
+    </div>
+  </div>
+
+  <div class="form-layout">
+    <div class="form-main">
+      <!-- ENTÊTE -->
+      <div class="card">
+        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-user-tie"></i></span><div><h3>Informations générales</h3></div></div></div>
+        <div class="card-body">
+          <div class="g2">
+            <div class="form-group">
+              <label class="form-label">Commercial <span class="req">*</span></label>
+              <div class="commercial-autocomplete">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Rechercher par nom ou matricule…"
+                  [ngModel]="commercialSearch()"
+                  (ngModelChange)="commercialSearch.set($event)"
+                  (focus)="onCommercialSearchFocus()"
+                  (blur)="onCommercialSearchBlur()"
+                />
+                @if (selectedCommercialMatricule) {
+                  <button type="button" class="commercial-clear" (click)="clearCommercialSelection()"><i class="fa-solid fa-xmark"></i></button>
+                }
+                @if (commercialDropdownOpen() && filteredCommercials().length > 0) {
+                  <div class="commercial-dropdown">
+                    @for (c of filteredCommercials(); track $index) {
+                      <div class="commercial-option" (mousedown)="$event.preventDefault(); selectCommercial(c)">
+                        <div class="co-info">
+                          <span class="co-name">{{ getCommercialName(c) }}</span>
+                          <span class="co-mat">{{ getCommercialMatricule(c) }}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right co-arrow"></i>
+                      </div>
+                    }
+                  </div>
+                }
+                @if (commercialDropdownOpen() && filteredCommercials().length === 0 && commercials().length > 0) {
+                  <div class="commercial-dropdown">
+                    <div class="commercial-empty">Aucun commercial trouvé</div>
+                  </div>
+                }
+              </div>
+              @if (checkingDotations()) {
+                <p style="color:var(--n400);font-size:12px;margin-top:4px"><i class="fa-solid fa-spinner fa-spin"></i> Vérification des dotations en cours…</p>
+              } @else if (hasPendingDotation()) {
+                <p style="color:var(--r);font-size:12px;margin-top:4px"><i class="fa-solid fa-circle-exclamation"></i> Ce commercial a une dotation en attente de paiement. La secrétaire doit d'abord vérifier le dépôt.</p>
+              }
+              @if (!commercials().length) {
+                <p style="color:var(--o);font-size:12px;margin-top:4px">Aucun commercial avec stock mobile trouvé.</p>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label">Justification</label>
+              <input type="text" class="form-control" placeholder="Ex: Tournée secteur Nord…" [(ngModel)]="justification">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIGNES -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span><div><h3>Produits demandés</h3><p class="sec-sub">Sélectionnez les produits à doter au commercial</p></div></div>
+          <button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            @for (l of lignes; track l.uid; let i = $index) {
+              <div style="border:1.5px solid var(--n200);border-radius:var(--r-md);overflow:hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--n50);border-bottom:1px solid var(--n150)">
+                  <span style="font-size:11px;font-weight:800;color:var(--n500);text-transform:uppercase;flex:1">Ligne {{ i+1 }}</span>
+                  @if (lignes.length>1) {
+                    <button style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:26px;height:26px" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button>
+                  }
+                </div>
+                <div style="padding:14px 16px">
+                  <div class="form-group" style="margin-bottom:14px">
+                    <label class="form-label">Produit <span class="req">*</span></label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
+                      <div>
+                        <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Sélectionner</label>
+                        <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
+                          <option [value]="0">— Choisir —</option>
+                          @for (p of getFilteredProducts(); track p.id) {
+                            <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                          }
+                        </select>
+                      </div>
+                      <div>
+                        <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Ou taper le code</label>
+                        <input type="text" class="form-control" placeholder="Ex: RBSA" [(ngModel)]="l.skuInput" (ngModelChange)="onSkuInput(l, $event)" [ngModelOptions]="{updateOn:'blur'}">
+                      </div>
+                    </div>
+                    @if (l.productId) {
+                      @let avail = getBufferStockForLine(l);
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+                        <span class="badge" [class.badge-success]="avail > 0" [class.badge-danger]="avail === 0" style="font-size:12px"><i class="fa-solid fa-warehouse"></i> Stock tampon : {{ avail | number }}</span>
+                        @if (isStockInsufficient(l)) {
+                          <span class="badge badge-danger" style="font-size:12px"><i class="fa-solid fa-circle-exclamation"></i> Insuffisant (demande {{ l.requestedQty | number }})</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+                    <div class="form-group">
+                      <label class="form-label">Qté demandée <span class="req">*</span></label>
+                      <input type="number" class="form-control" min="0" style="border-color:var(--g-pale);background:var(--g-sf)" [(ngModel)]="l.requestedQty">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Conditionnement</label>
+                      <select class="form-control" [(ngModel)]="l.packagingType">
+                        <option value="">—</option>
+                        @for (pt of packagingTypes; track pt) { <option [value]="pt">{{ pt }}</option> }
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Qté par carton</label>
+                      <input type="number" class="form-control" min="0" [(ngModel)]="l.quantityPerCarton">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Notes <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label>
+                    <input type="text" class="form-control" placeholder="Remarque sur cette ligne…" [(ngModel)]="l.notes">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="form-side">
+      <div class="card" style="position:sticky;top:24px">
+        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-receipt"></i></span><div><h3>Récapitulatif</h3></div></div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Commercial</span><span style="font-weight:600;color:var(--n800)">{{ selectedCommercialName || '—' }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Lignes</span><span style="font-weight:600;color:var(--n800)">{{ validLineCount }}</span></div>
+          </div>
+          @if (errorMsg()) {
+            <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+          }
+          <div class="banner banner-primary" style="margin-bottom:16px"><i class="fa-solid fa-circle-info"></i><span>La dotation sera révisée puis approuvée avant transfert vers le stock mobile.</span></div>
+          @if (hasInsufficientStock()) {
+            <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i><span>Stock tampon insuffisant pour au moins un produit. Réduisez les quantités demandées ou réapprovisionnez le tampon.</span></div>
+          }
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-ghost btn-full" (click)="goBack()"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            <button class="btn btn-primary btn-full" [disabled]="!isValid()||saving()||hasPendingDotation()" (click)="sauvegarder()">
+              @if (saving()) { <div class="spinner spinner-sm"></div> Enregistrement… } @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

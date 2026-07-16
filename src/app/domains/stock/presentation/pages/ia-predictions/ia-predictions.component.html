@@ -1,0 +1,161 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon ai-icon"><i class="fa-solid fa-brain"></i></div>
+      <div>
+        <h1 class="ph-title">IA Prédictions &amp; Analyse Prédictive</h1>
+        <p class="ph-sub">Prévisions de stock, analyse de tendances et recommandations automatiques</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="refresh()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Analyse des données et génération des prédictions…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card kp-ai">
+        <div class="kpi-decor" style="background:linear-gradient(135deg,#7C3AED,#2563EB)"></div>
+        <div class="kpi-ico" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="fa-solid fa-chart-line"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Produits analysés</span>
+          <span class="kpi-val">{{ stats().total }}</span>
+        </div>
+      </div>
+      <div class="kpi-card kp-crit">
+        <div class="kpi-decor" style="background:var(--r)"></div>
+        <div class="kpi-ico" style="background:var(--r-gh);color:var(--r)"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Réappro urgent</span>
+          <span class="kpi-val" style="color:var(--r)">{{ stats().critical }}</span>
+        </div>
+      </div>
+      <div class="kpi-card kp-high">
+        <div class="kpi-decor" style="background:var(--o)"></div>
+        <div class="kpi-ico" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Priorité haute</span>
+          <span class="kpi-val" style="color:var(--o)">{{ stats().high }}</span>
+        </div>
+      </div>
+      <div class="kpi-card kp-conf">
+        <div class="kpi-decor" style="background:var(--g)"></div>
+        <div class="kpi-ico" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-gauge-high"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Confiance moyenne</span>
+          <span class="kpi-val" style="color:var(--g)">{{ stats().avgConfidence }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="charts-row">
+      <div class="card chart-card-lg">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> Tendance &amp; Prévisions par produit</span>
+        </div>
+        <div class="chart-wrap-lg"><canvas #trendCanvas></canvas></div>
+      </div>
+      <div class="card chart-card-sm">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-circle-half-stroke" style="color:#7C3AED"></i> Répartition urgence</span>
+        </div>
+        <div class="chart-wrap-sm"><canvas #urgencyCanvas></canvas></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="charts-row">
+      <div class="card chart-card-md">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-chart-column" style="color:#2563EB"></i> Prévisions comparées (actuel vs 30j vs 90j)</span>
+        </div>
+        <div class="chart-wrap-md"><canvas #forecastCanvas></canvas></div>
+      </div>
+      <div class="card chart-card-md">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-fire" style="color:#EA580C"></i> Top 10 consommateurs (conso/jour)</span>
+        </div>
+        <div class="chart-wrap-md"><canvas #consumptionCanvas></canvas></div>
+      </div>
+    </div>
+
+    <!-- PREDICTIONS TABLE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table" style="color:#7C3AED"></i> Prédictions détaillées par produit</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          @for (f of ['ALL','CRITICAL','HIGH','MEDIUM','LOW']; track f) {
+            <button class="filter-chip" [class.active]="filterUrgency()===f" (click)="setFilterUrgency(f)">
+              {{ f === 'ALL' ? 'Tous' : f === 'CRITICAL' ? 'Critique' : f === 'HIGH' ? 'Élevé' : f === 'MEDIUM' ? 'Moyen' : 'Faible' }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="pred-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Stock actuel</th>
+              <th>Conso./jour</th>
+              <th>Jours restants</th>
+              <th>Prévision 30j</th>
+              <th>Prévision 90j</th>
+              <th>Tendance</th>
+              <th>Confiance</th>
+              <th>Urgence</th>
+              <th>Recommandation</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredPredictions(); track p.sku) {
+              <tr>
+                <td class="mono fw-bold">{{ p.sku }}</td>
+                <td class="mono">{{ p.currentQty | number }}</td>
+                <td class="mono">{{ p.avgDailyConsumption | number:'1.0-1' }}</td>
+                <td class="mono">
+                  @if (p.daysOfStockLeft >= 999) { <span style="color:var(--g)">∞</span> }
+                  @else { <span [style.color]="p.daysOfStockLeft <= 7 ? 'var(--r)' : p.daysOfStockLeft <= 15 ? 'var(--o)' : 'var(--n700)'">{{ p.daysOfStockLeft }}j</span> }
+                </td>
+                <td class="mono" [style.color]="p.predictedStock30d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock30d | number }}</td>
+                <td class="mono" [style.color]="p.predictedStock90d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock90d | number }}</td>
+                <td><i class="fa-solid {{ getTrendIcon(p.trend) }}" [style.color]="getTrendColor(p.trend)"></i></td>
+                <td>
+                  <div class="conf-bar">
+                    <div class="conf-fill" [style.width.%]="p.confidence" [style.background]="p.confidence >= 70 ? 'var(--g)' : p.confidence >= 50 ? 'var(--o)' : 'var(--r)'"></div>
+                    <span>{{ p.confidence }}%</span>
+                  </div>
+                </td>
+                <td><span class="urg-badge {{ getUrgencyClass(p.urgency) }}"><i class="fa-solid {{ getUrgencyIcon(p.urgency) }}"></i> {{ p.urgency }}</span></td>
+                <td style="font-size:12px;color:var(--n600)">{{ p.recommendation }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INFO NOTE -->
+    <div class="ai-info-note">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>Les prédictions sont basées sur l'historique des mouvements des 30 derniers jours. La confiance augmente avec le volume de données disponibles.</span>
+    </div>
+  }
+</div>

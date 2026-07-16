@@ -1,0 +1,114 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-users-gear ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion Utilisateurs</h1>
+      <p class="ph-sub">Comptes, rôles et accès système</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary">
+      <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
+    </button>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total utilisateurs</div>
+      <div class="kpi-val">{{ users().length }}</div>
+      <div class="kpi-meta">comptes enregistrés</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-user-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Actifs</div>
+      <div class="kpi-val">{{ nbActifs() }}</div>
+      <div class="kpi-meta">accès autorisé</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-user-slash"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Inactifs</div>
+      <div class="kpi-val">{{ nbInactifs() }}</div>
+      <div class="kpi-meta">comptes suspendus</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-table"></i> Liste des Utilisateurs</h2>
+    <div class="filter-row">
+      <label>Filtrer par rôle :</label>
+      <select [ngModel]="filtreRole()" (ngModelChange)="filtreRole.set($event)" class="form-select-sm">
+        @for (r of rolesDisponibles; track r) {
+          <option [value]="r">{{ r === 'TOUS' ? 'Tous les rôles' : getRoleLabel(r) }}</option>
+        }
+      </select>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Matricule</th>
+          <th>Nom</th>
+          <th>Prénom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th>Terminal IMEI</th>
+          <th>Dernière connexion</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of usersFiltres(); track u.id) {
+          <tr [class]="!u.actif ? 'row-inactive' : ''">
+            <td><span class="badge bg-neutral">{{ u.matricule }}</span></td>
+            <td><strong>{{ u.nom }}</strong></td>
+            <td>{{ u.prenom }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ getRoleLabel(u.role) }}</td>
+            <td>
+              @if (u.actif) {
+                <span class="badge bg-success">Actif</span>
+              } @else {
+                <span class="badge bg-red">Inactif</span>
+              }
+            </td>
+            <td>
+              @if (u.terminalImei) {
+                <span class="imei-code">{{ u.terminalImei }}</span>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </td>
+            <td>{{ u.derniereConnexion | date:'dd/MM HH:mm' }}</td>
+            <td>
+              <button
+                class="btn btn-sm"
+                [class]="u.actif ? 'btn-ghost-red' : 'btn-success'"
+                (click)="toggleActif(u.id)"
+              >
+                @if (u.actif) {
+                  <i class="fa-solid fa-ban"></i> Suspendre
+                } @else {
+                  <i class="fa-solid fa-check"></i> Activer
+                }
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">
+    {{ usersFiltres().length }} utilisateur(s) affichés
+  </div>
+</div>

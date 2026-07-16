@@ -6,7 +6,7 @@
 import { Brand, ProductLine, ProductVariant, Product, Category, UnitType } from './stock.models';
 
 // ── PRICE TYPES ─────────────────────────────────────────────
-export type PriceType = 'PURCHASE' | 'COST' | 'WHOLESALE' | 'RETAIL' | 'PROMOTIONAL' | 'DISTRIBUTOR' | 'COMMERCIAL';
+export type PriceType = 'DISTRIBUTOR' | 'WHOLESALE' | 'RETAIL' | 'DETAIL';
 
 export interface ProductPrice {
   id: number;

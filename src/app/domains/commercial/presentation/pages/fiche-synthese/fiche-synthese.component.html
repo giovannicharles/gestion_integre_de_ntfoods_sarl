@@ -1,0 +1,77 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-file-lines"></i></div>
+      <div>
+        <h1 class="ph-title">Fiche de Synthèse Journalière</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Récapitulatif complet de la tournée du jour</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-print"></i> Imprimer</button>
+    </div>
+  </div>
+
+  <!-- RÉSUMÉ FINANCIER -->
+  <div class="card fs-summary">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-calculator"></i> Résumé Financier</span></div>
+    <div class="fs-grid">
+      <div class="fs-item"><span class="fs-lbl">VAC Init</span><span class="fs-val">{{ fCFA(fiche()?.vacInit ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">CA Réalisé</span><span class="fs-val text-success">{{ fCFA(fiche()?.ca ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Vente à Crédit (VAC)</span><span class="fs-val text-warning">{{ fCFA(fiche()?.vac ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Recouvrement</span><span class="fs-val text-success">{{ fCFA(fiche()?.recouvrements ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Vente Comptant</span><span class="fs-val text-success fw-bold">{{ fCFA(fiche()?.vteCpt ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Solde VAC</span><span class="fs-val text-warning">{{ fCFA(fiche()?.soldeVAC ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">e-Chèques</span><span class="fs-val">{{ fCFA(fiche()?.eCheques ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Vst. Banques</span><span class="fs-val">{{ fCFA(fiche()?.vstBanques ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Dépenses Justifiées</span><span class="fs-val text-danger">{{ fCFA(fiche()?.depensesJustifiees ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Dépenses Non Just.</span><span class="fs-val text-danger">{{ fCFA(fiche()?.depensesNonJust ?? 0) }}</span></div>
+      <div class="fs-item fs-item-big"><span class="fs-lbl">Solde Caisse Final</span><span class="fs-val fs-val-big text-primary">{{ fCFA(fiche()?.sCaisse ?? 0) }}</span></div>
+      <div class="fs-item"><span class="fs-lbl">Avaries + Promos</span><span class="fs-val text-danger">{{ fCFA((fiche()?.montantAvaries ?? 0) + (fiche()?.montantDotPromo ?? 0)) }}</span></div>
+    </div>
+  </div>
+
+  <!-- TABLEAU PRODUITS -->
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Détail par Produit</span></div>
+    <div class="tbl-wrap">
+      <table class="data-table fs-table">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th class="center">Produit</th>
+            <th class="center">Stk Veille</th>
+            <th class="center">Stk Camion</th>
+            <th class="center">Total</th>
+            <th class="center">Sorties</th>
+            <th class="center">Stk Final</th>
+            <th class="center">Avo/Prom</th>
+            <th class="center fw-bold">Facturé</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ligne of fiche()?.lignes ?? []; track ligne.codeProduit) {
+          <tr>
+            <td>
+              <div class="prod-cell">
+                <span class="prod-code">{{ ligne.codeProduit }}</span>
+                <span class="prod-name">{{ getProduit(ligne.codeProduit)?.designation ?? ligne.codeProduit }}</span>
+              </div>
+            </td>
+            <td class="center mono">{{ ligne.qteProduite }}</td>
+            <td class="center mono">{{ ligne.stockVeille }}</td>
+            <td class="center mono">{{ ligne.stockCamion }}</td>
+            <td class="center mono fw-bold">{{ ligne.stockTotal }}</td>
+            <td class="center mono">{{ ligne.qteSorties }}</td>
+            <td class="center mono">{{ ligne.stockFinal }}</td>
+            <td class="center mono text-danger">{{ ligne.qteAvoDotProm }}</td>
+            <td class="center mono fw-bold text-success">{{ ligne.qteFacturee }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,38 @@
+.card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
+.filter-row { display: flex; gap: var(--sp-2); align-items: center; }
+.form-select-sm { padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
+
+.workflow-banner { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
+.wf-step { display: flex; align-items: center; gap: var(--sp-2); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+.wf-done { background: #d1fae5; color: #065f46; }
+.wf-active { background: #fef3c7; color: #92400e; }
+.wf-pending { background: var(--surface-2); color: var(--text-muted); }
+.wf-arrow { color: var(--text-muted); }
+
+.cmd-card { border: 1px solid var(--border); border-radius: 8px; padding: var(--sp-3); margin-bottom: var(--sp-3); }
+.cmd-card.cmd-pending { border-left: 3px solid var(--warning); }
+.cmd-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-2); }
+.cmd-info { display: flex; flex-direction: column; gap: 2px; }
+.cmd-commercial { font-size: 0.9rem; color: var(--text-muted); }
+.cmd-date { font-size: 0.8rem; color: var(--text-muted); }
+.cmd-actions { display: flex; align-items: center; gap: var(--sp-2); }
+
+.cmd-signatures { display: flex; gap: var(--sp-3); margin-bottom: var(--sp-2); font-size: 0.82rem; }
+.sig-ok { color: #065f46; }
+.sig-pending { color: var(--text-muted); }
+
+.empty-state { color: var(--text-muted); padding: var(--sp-4); text-align: center; }
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .filter-row { flex-direction:column;align-items:flex-start;width:100%;gap:6px; }
+  .form-select-sm { width:100%; }
+  .workflow-banner { flex-wrap:wrap;gap:.5rem; }
+  .wf-arrow { display:none; }
+  .cmd-header { flex-direction:column;gap:.5rem; }
+  .cmd-actions { width:100%;justify-content:flex-end; }
+  .cmd-signatures { flex-wrap:wrap;gap:1rem; }
+}

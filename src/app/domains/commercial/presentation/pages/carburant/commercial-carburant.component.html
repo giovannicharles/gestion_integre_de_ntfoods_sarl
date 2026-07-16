@@ -1,0 +1,89 @@
+<div class="dash animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-orange"><i class="fa-solid fa-gas-pump"></i></div>
+      <div>
+        <h1 class="ph-title">Gestion Carburant</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · {{ commercial?.matricule ?? 'Commercial' }} · Douala Akwa</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      @if (!showForm()) {
+      <button class="btn btn-primary" (click)="showForm.set(true)"><i class="fa-solid fa-plus"></i> Nouvelle fiche</button>
+      }
+    </div>
+  </div>
+
+  @if (submitted()) {
+  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Fiche carburant soumise — en attente de signature superviseur.</div>
+  }
+
+  <!-- FORMULAIRE -->
+  @if (showForm()) {
+  <div class="card form-card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-gas-pump"></i> Nouvelle Fiche Carburant</span></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Kilométrage compteur (km)</label>
+        <input type="number" class="form-input" [(ngModel)]="form().kmCompteur" placeholder="Ex: 187220" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Litres demandés</label>
+        <input type="number" class="form-input" [(ngModel)]="form().litresDemandes" placeholder="Ex: 60" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Station</label>
+        <input type="text" class="form-input" [(ngModel)]="form().station" placeholder="Ex: Total Akwa — Douala" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Montant (FCFA)</label>
+        <input type="number" class="form-input" [(ngModel)]="form().montant" placeholder="Ex: 30000" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Soumettre pour signature</button>
+    </div>
+  </div>
+  }
+
+  <!-- FICHES -->
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list"></i> Mes Fiches Carburant</span></div>
+    <div class="fiches-list">
+      @for (f of fiches(); track f.id) {
+      <div class="fiche-card" [class.fiche-ok]="f.statut==='VALIDEE'">
+        <div class="fiche-header">
+          <div class="fiche-id">{{ f.id }}</div>
+          <div class="fiche-immat"><i class="fa-solid fa-car"></i> {{ f.immatriculation }}</div>
+          @if (f.statut==='VALIDEE') { <span class="badge bg-success">Validée ✓</span> }
+          @else { <span class="badge bg-orange">Att. Signature</span> }
+        </div>
+        <div class="fiche-details">
+          <div class="fiche-detail"><span class="fd-lbl">Km Compteur</span><span class="fd-val">{{ f.kmCompteur?.toLocaleString() ?? '—' }} km</span></div>
+          <div class="fiche-detail"><span class="fd-lbl">Volume</span><span class="fd-val">{{ f.litresDemandes }} L</span></div>
+          <div class="fiche-detail"><span class="fd-lbl">Montant</span><span class="fd-val fw-bold">{{ fCFA(f.montant) }}</span></div>
+          <div class="fiche-detail"><span class="fd-lbl">Station</span><span class="fd-val">{{ f.station }}</span></div>
+        </div>
+        <div class="fiche-sigs">
+          <div class="sig-step" [class.sig-done]="f.signatureCommercial">
+            <i class="fa-solid" [class.fa-circle-check]="f.signatureCommercial" [class.fa-circle]="!f.signatureCommercial"></i>
+            <span>Signature Commercial</span>
+          </div>
+          <div class="sig-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+          <div class="sig-step" [class.sig-done]="f.signatureSuperviseur">
+            <i class="fa-solid" [class.fa-circle-check]="f.signatureSuperviseur" [class.fa-circle]="!f.signatureSuperviseur"></i>
+            <span>Signature Superviseur</span>
+          </div>
+        </div>
+        @if (f.superviseur) {
+        <div class="fiche-sup"><i class="fa-solid fa-user-check"></i> Validé par : {{ f.superviseur }}</div>
+        }
+      </div>
+      }
+      @empty {
+      <div class="empty-state"><i class="fa-solid fa-gas-pump"></i><p>Aucune fiche carburant</p></div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,94 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-bullseye ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Suivi Objectifs CA</h1>
+      <p class="ph-sub">Vue comptable — lecture seule</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span class="badge bg-neutral">{{ today | date:'MMMM yyyy' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-chart-bar"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">CA Global réalisé</div>
+      <div class="kpi-val">{{ fCFA(totalCA()) }}</div>
+      <div class="kpi-meta">objectif {{ fCFA(totalObjectif()) }}</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Taux d'atteinte global</div>
+      <div class="kpi-val">{{ tauxGlobal() }}%</div>
+      <div class="kpi-meta">{{ nbAtteints() }}/{{ objectifs().length }} objectifs définis</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Objectifs définis</div>
+      <div class="kpi-val">{{ objectifs().length }}</div>
+      <div class="kpi-meta">terrain</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement par Performance</h2>
+    <span class="badge bg-neutral">Lecture seule</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Rang</th>
+          <th>Commercial</th>
+          <th>Zone</th>
+          <th>Ville</th>
+          <th>Objectif CA</th>
+          <th>CA Réalisé</th>
+          <th>Taux</th>
+          <th>Progression</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (o of objectifs(); track o.id) {
+          <tr>
+            <td><strong>#{{ o.id }}</strong></td>
+            <td>
+              <div class="commercial-cell">
+                <span class="initiales">{{ o.matriculeCommercial.charAt(0) }}</span>
+                <span>{{ o.matriculeCommercial }}</span>
+              </div>
+            </td>
+            <td>{{ o.objectifFarines }}</td>
+            <td>{{ o.objectifEaux }}</td>
+            <td>{{ fCFA(o.objectifGlobal) }}</td>
+            <td><strong>{{ fCFA(o.objectifGlobal) }}</strong></td>
+            <td>{{ tauxGlobal() }}%</td>
+            <td>
+              <div class="prog-track">
+                <div
+                  [class]="progressClass(o.objectifGlobal, o.objectifGlobal)"
+                  [style.width.%]="cappedTaux(o.objectifGlobal, o.objectifGlobal)">
+                </div>
+              </div>
+            </td>
+            <td>
+              <span [class]="statutClass(o.objectifGlobal, o.objectifGlobal)">
+                {{ o.objectifGlobal > 0 ? 'Défini' : 'À définir' }}
+              </span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

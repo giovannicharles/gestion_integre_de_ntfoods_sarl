@@ -1,0 +1,115 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-red"><i class="fa-solid fa-money-bill-transfer"></i></div>
+      <div>
+        <h1 class="ph-title">Décaissements — Validation DG</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Double validation DG + Contrôleur de Gestion requise</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      @if (nbEnAttentesDG() > 0) {
+      <span class="alert-banner-red"><i class="fa-solid fa-circle-exclamation"></i> {{ nbEnAttentesDG() }} décaissement(s) en attente de votre signature</span>
+      }
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">En attente DG</span>
+        <span class="kpi-val" [style.color]="nbEnAttentesDG()>0?'var(--r)':''">{{ nbEnAttentesDG() }}</span>
+        <div class="kpi-meta">Montant à approuver : {{ fCFA(totalEnAttente()) }}</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-signature"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Validés (DG + CG)</span>
+        <span class="kpi-val">{{ nbValides() }}</span>
+        <div class="kpi-meta">{{ fCFA(totalValide()) }}</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-list-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Journalier</span>
+        <span class="kpi-val">{{ fCFA(totalDecaissements()) }}</span>
+        <div class="kpi-meta">{{ decaissements().length }} demandes au total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTRES -->
+  <div class="filter-bar">
+    <button class="filter-btn" [class.active]="filterStatut()==='all'" (click)="filterStatut.set('all')">Toutes</button>
+    <button class="filter-btn filter-red" [class.active]="filterStatut()==='EN_ATTENTE_DG'" (click)="filterStatut.set('EN_ATTENTE_DG')">En attente DG</button>
+    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='DG_APPROUVE'" (click)="filterStatut.set('DG_APPROUVE')">DG Approuvé — Att. CG</button>
+    <button class="filter-btn filter-green" [class.active]="filterStatut()==='VALIDE'" (click)="filterStatut.set('VALIDE')">Validés</button>
+  </div>
+
+  <!-- LISTE -->
+  <div class="dec-list">
+    @for (dec of liste(); track dec.numero) {
+    <div class="dec-card card" [class.dec-waiting]="dec.statut==='EN_ATTENTE_DG'" [class.dec-dg-ok]="dec.statut==='DG_APPROUVE'" [class.dec-valide]="dec.statut==='VALIDE'">
+
+      <div class="dec-header">
+        <div class="dec-left">
+          <div class="dec-id">{{ dec.numero }}</div>
+          <div class="dec-libelle">{{ dec.typeDepense }}</div>
+          <div class="dec-demande-par"><i class="fa-solid fa-user"></i> {{ dec.matriculeProposant }}</div>
+        </div>
+        <div class="dec-right">
+          <div class="dec-montant">{{ fCFA(dec.montantFCFA) }}</div>
+          @if (dec.statut === 'EN_ATTENTE_DG') { <span class="badge bg-red">En attente DG</span> }
+          @else if (dec.statut === 'DG_APPROUVE') { <span class="badge bg-orange">DG ✓ · Att. CG</span> }
+          @else if (dec.statut === 'VALIDE') { <span class="badge bg-success">Validé ✓✓</span> }
+          @else { <span class="badge bg-neutral">Refusé</span> }
+        </div>
+      </div>
+
+      <div class="dec-motif">
+        <i class="fa-solid fa-comment-dots"></i>
+        <span>{{ dec.motif }}</span>
+      </div>
+
+      <div class="validation-track">
+        <div class="v-step" [class.v-done]="dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE'">
+          <div class="v-dot" [class.v-dot-done]="dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE'"><i class="fa-solid fa-check"></i></div>
+          <div class="v-info">
+            <span class="v-lbl">Signature DG</span>
+            @if (dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE') { <span class="v-date">Approuvé</span> }
+            @else { <span class="v-pending">En attente</span> }
+          </div>
+        </div>
+        <div class="v-line" [class.v-line-done]="dec.statut === 'VALIDE'"></div>
+        <div class="v-step" [class.v-done]="dec.statut === 'VALIDE'">
+          <div class="v-dot" [class.v-dot-done]="dec.statut === 'VALIDE'"><i class="fa-solid fa-check"></i></div>
+          <div class="v-info">
+            <span class="v-lbl">Signature Contrôleur Gestion</span>
+            @if (dec.statut === 'VALIDE') { <span class="v-date">Approuvé</span> }
+            @else { <span class="v-pending">En attente</span> }
+          </div>
+        </div>
+      </div>
+
+      @if (dec.statut === 'EN_ATTENTE_DG') {
+      <div class="dec-actions">
+        <button class="btn btn-danger btn-sm" (click)="refuserDG(dec.numero)"><i class="fa-solid fa-xmark"></i> Refuser</button>
+        <button class="btn btn-success btn-sm" (click)="approuverDG(dec.numero)"><i class="fa-solid fa-signature"></i> Approuver & transmettre au CG</button>
+      </div>
+      }
+    </div>
+    }
+    @empty {
+    <div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Aucun décaissement dans ce filtre</p></div>
+    }
+  </div>
+
+</div>

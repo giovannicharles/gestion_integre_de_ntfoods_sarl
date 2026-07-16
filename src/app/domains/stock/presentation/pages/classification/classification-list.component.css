@@ -1,0 +1,109 @@
+/* Styles spécifiques — hérite du design system global (styles.css / charte TANTY) */
+
+.dash { display:flex;flex-direction:column;gap:var(--sp-4);padding:24px;max-width:1400px;margin:0 auto; }
+
+/* ── HEADER ── */
+.ph { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px; }
+.ph-left { display:flex;align-items:center;gap:13px; }
+.ph-icon { width:46px;height:46px;background:var(--b-gh);color:var(--b);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px; }
+.ph-title { font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);margin:0; }
+.ph-sub { font-size:12px;color:var(--n400);margin-top:2px; }
+.ph-actions { display:flex;gap:8px;flex-wrap:wrap; }
+
+/* ── CARDS ── */
+.card { background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);box-shadow:var(--sh-sm); }
+.card-hd { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--n150); }
+.card-title { font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--n800);display:flex;align-items:center;gap:8px; }
+.card-title i { color:var(--b); }
+
+/* ── KPI BAR ── */
+.kpi-bar { display:flex;align-items:center;padding:16px 24px;background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);box-shadow:var(--sh-sm);flex-wrap:wrap; }
+.kpi-item { display:flex;flex-direction:column;gap:2px;padding:0 20px; }
+.kpi-item:first-child { padding-left:0; }
+.kpi-val { font-family:var(--font-d);font-size:21px;font-weight:800;color:var(--n900);line-height:1; }
+.kpi-lbl { font-size:10px;color:var(--n400);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
+.kpi-sep { width:1px;height:40px;background:var(--n200); }
+
+/* ── FILTER ROW ── */
+.filter-row { display:flex;gap:14px;padding:16px 20px;flex-wrap:wrap; }
+.filter-row .fg { flex:1;min-width:200px; }
+
+/* ── FORM ── */
+.form-card { padding:18px 20px; }
+.form-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:16px; }
+.fg { display:flex;flex-direction:column;gap:5px; }
+.fg label { font-size:12px;font-weight:600;color:var(--n600); }
+.form-control { padding:8px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n800);outline:none;background:#fff; }
+.form-control:focus { border-color:var(--b); }
+.form-actions { display:flex;justify-content:flex-end;gap:10px;padding-top:12px;border-top:1px solid var(--n150); }
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x:auto; }
+.data-table { width:100%;border-collapse:collapse;font-size:13px; }
+.data-table th { text-align:left;padding:10px 14px;background:var(--n50);color:var(--n700);font-weight:700;border-bottom:2px solid var(--n200);white-space:nowrap; }
+.data-table td { padding:10px 14px;border-bottom:1px solid var(--n150); }
+.data-table tbody tr:hover { background:var(--n50); }
+.mono { font-family:var(--font-m);font-variant-numeric:tabular-nums;font-size:12px;color:var(--n500); }
+.fw-bold { font-weight:700;color:var(--n800); }
+
+/* ── ROW ACTIONS ── */
+.row-actions { display:flex;gap:6px;justify-content:flex-end; }
+
+/* ── REQUIRED MARKER ── */
+.req { color:var(--r);font-weight:700; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border:none;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-b); }
+.btn-primary { background:var(--b);color:#fff; }
+.btn-primary:hover { background:var(--b-d); }
+.btn-ghost { background:transparent;color:var(--n600);border:1px solid var(--n300); }
+.btn-ghost:hover { background:var(--n100); }
+.btn-danger { background:var(--r);color:#fff; }
+.btn-danger:hover { background:var(--r-d); }
+.btn-sm { padding:5px 10px;font-size:11px; }
+.btn:disabled { opacity:.5;cursor:not-allowed; }
+
+/* ── TOAST ── */
+.toast-toast { position:fixed;top:20px;right:20px;z-index:9999;padding:14px 20px;border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:var(--sh-lg);animation:slideIn .3s ease; }
+.toast-success { background:var(--g);color:#fff; }
+.toast-error { background:var(--r);color:#fff; }
+@keyframes slideIn { from { transform:translateX(100%);opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+/* ── LOADING ── */
+.loading-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--n400);gap:14px; }
+.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--b);border-radius:50%;animation:spin .8s linear infinite; }
+.spinner-lg { width:40px;height:40px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--n400);gap:14px; }
+.empty-state i { font-size:40px; }
+.empty-state p { font-size:14px; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px; }
+.modal-box { background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-lg);width:100%;max-width:480px; }
+.modal-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--n150); }
+.modal-header-danger { background:var(--r);color:#fff;border-radius:var(--r-lg) var(--r-lg) 0 0; }
+.modal-title { display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;font-family:var(--font-d); }
+.modal-close { background:transparent;border:none;color:inherit;font-size:18px;cursor:pointer;opacity:.8;padding:4px; }
+.modal-close:hover { opacity:1; }
+.modal-body { padding:20px; }
+.modal-text { font-size:14px;color:var(--n800);margin:0 0 8px; }
+.modal-text-muted { font-size:12px;color:var(--n400);margin:0; }
+.modal-footer { display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--n150); }
+
+/* ── ANIMATION ── */
+.animate-fadeInUp { animation:fadeInUp .4s ease; }
+.animate-fadeIn { animation:fadeIn .2s ease; }
+@keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .kpi-bar { gap:10px; }
+  .kpi-sep { display:none; }
+  .kpi-item { padding:0; }
+  .form-grid { grid-template-columns:1fr; }
+  .filter-row { flex-direction:column; }
+}

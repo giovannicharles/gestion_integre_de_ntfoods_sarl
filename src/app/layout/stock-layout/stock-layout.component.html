@@ -1,31 +1,38 @@
 <div class="layout-root" [class.sidebar-collapsed]="!sidebarOpen()" [class.mobile-open]="mobileOpen()">
   @if (mobileOpen()) { <div class="mobile-overlay" (click)="closeMobile()"></div> }
-  <!-- ══ SIDEBAR (fond vert) ══ -->
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-inner">
-      <!-- BRAND — fond jaune -->
+      <!-- BRAND -->
       <div class="sidebar-brand">
         <div class="brand-content">
           <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          @if (alertCount() > 0) {
+          <a class="logo-alert-badge" routerLink="/stock/alertes" title="{{ alertCount() }} alerte(s) active(s) dont {{ criticalCount() }} critique(s)">
+            <i class="fa-solid fa-bell"></i>
+            <span class="lab-count">{{ alertCount() }}</span>
+          </a>
+          }
         </div>
         <button class="sb-collapse-btn" (click)="toggleSidebar()">
           <i class="fa-solid" [class.fa-chevron-left]="sidebarOpen()" [class.fa-chevron-right]="!sidebarOpen()"></i>
         </button>
       </div>
 
-      <!-- USER -->
+      <!-- USER DYNAMIQUE -->
       <div class="sb-user">
-        <div class="sb-av">MJ<span class="sb-dot"></span></div>
+        <div class="sb-av">{{ userInitials() }}<span class="sb-dot"></span></div>
         <div class="sb-user-info">
-          <span class="sb-name">Mvondo Jean-Baptiste</span>
-          <span class="sb-role"><i class="fa-solid fa-warehouse"></i> Gestionnaire de Stock</span>
+          <span class="sb-name">{{ userFullName() }}</span>
+          <span class="sb-role"><i class="fa-solid fa-warehouse"></i> {{ userRoleLabel() }}</span>
         </div>
       </div>
 
-      <!-- NAV -->
+      <!-- NAV FILTREE PAR ROLE -->
       <nav class="sb-nav">
         <span class="sb-section-lbl">MODULE STOCK</span>
-        @for (item of navItems; track item.route) {
+        @for (item of filteredNav(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -39,22 +46,21 @@
 
       <!-- FOOTER -->
       <div class="sb-footer">
-        <a class="sb-item" routerLink="/stock/settings" [title]="!sidebarOpen() ? 'Paramètres' : ''">
+        <a class="sb-item" routerLink="/stock/settings" [title]="!sidebarOpen() ? 'Parametres' : ''">
           <span class="sb-ico"><i class="fa-solid fa-gear"></i></span>
-          <span class="sb-lbl">Paramètres</span>
+          <span class="sb-lbl">Parametres</span>
         </a>
         <button class="sb-item sb-logout" (click)="logout()">
           <span class="sb-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
-          <span class="sb-lbl">Déconnexion</span>
+          <span class="sb-lbl">Deconnexion</span>
         </button>
         <div class="sb-version"><span>v3.0 — Sprint 3</span></div>
       </div>
     </div>
   </aside>
 
-  <!-- ══ MAIN ══ -->
+  <!-- MAIN -->
   <div class="main-area">
-
     <!-- TOPBAR -->
     <header class="topbar">
       <div class="tb-left">
@@ -70,28 +76,38 @@
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
-        <button class="tb-icon-btn" routerLink="/stock/alertes" title="Alertes stock">
+        <button class="tb-icon-btn" routerLink="/stock/alertes" title="Alertes stock" [class.tb-alert-pulse]="criticalCount() > 0">
           <i class="fa-solid fa-triangle-exclamation"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
         </button>
         <button class="tb-icon-btn" title="Notifications" routerLink="/stock/notifications">
           <i class="fa-regular fa-bell"></i>
-          <span class="tb-badge tb-badge-green">2</span>
+          @if (notifCount() > 0) { <span class="tb-badge tb-badge-green">{{ notifCount() }}</span> }
         </button>
         <div class="tb-divider"></div>
         <div class="tb-user">
-          <div class="tb-av">MJ</div>
+          <div class="tb-av">{{ userInitials() }}</div>
           <div class="tb-user-txt">
-            <span class="tb-u-name">Mvondo J-B.</span>
-            <span class="tb-u-role">Stock Manager</span>
+            <span class="tb-u-name">{{ userShortName() }}</span>
+            <span class="tb-u-role">{{ userRoleLabel() }}</span>
           </div>
           <i class="fa-solid fa-chevron-down tb-caret"></i>
         </div>
       </div>
     </header>
 
+    @if (network.offlineMessage()) {
+      <div class="offline-banner">
+        <i class="fa-solid fa-wifi"></i>
+        <span>{{ network.offlineMessage() }}</span>
+      </div>
+    }
+
     <main class="page-content">
       <router-outlet />
     </main>
   </div>
+
+  <!-- TantyBot Chatbot Widget -->
+  <app-tantybot />
 </div>

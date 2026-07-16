@@ -1,51 +1,235 @@
+// ═══ FICHIER : reception-form.component.ts ═══
+// Réécrit : l'ancienne version était branchée sur StockMockRepository (produits
+// et fournisseurs factices) et construisait un payload qui ne correspondait à
+// aucun endpoint réel du backend. Elle ne créait donc jamais aucune réception.
+//
+// Corrections de cette révision :
+// 1. "Le nom du produit est requis" : productName était lu depuis l.product,
+//    un cache alimenté uniquement par l'évènement (ngModelChange) du <select>.
+//    Si ce cache n'était pas à jour au moment d'enregistrer, productName partait
+//    vide et le backend rejetait la réception. On résout désormais le produit
+//    fraîchement depuis products() au moment de la sauvegarde, sans dépendre
+//    d'un état intermédiaire.
+// 2. Filtrage strict par type de réception : le backend expose maintenant un
+//    vrai champ materialType (MATIERE_PREMIERE/CONSOMMABLE/MATERIEL) sur
+//    chaque produit. Le formulaire recharge la liste filtrée à chaque
+//    changement de type, et réinitialise les lignes pour éviter qu'une ligne
+//    garde un produit qui n'appartient plus au type sélectionné.
 import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt.use-case';
-import { StockMockRepository } from '../../../infrastructure/repositories/stock-mock.repository';
-import { StockRulesDomainService } from '../../../domain/services/stock-rules.domain.service';
-import { Supplier, Warehouse, StockLevel, Receipt, ReceiptItem } from '../../../domain/models/stock.models';
+import { StockLocationDto } from '../../../infrastructure/repositories/stock-api.repository';
+import { Product, Receipt, ReceptionType } from '../../../domain/models';
 
-interface LineForm { id:string; slId:number; sl?:StockLevel; orderedQty:number; receivedQty:number; ecart:number; deviationReason:string; prixUnit:number; total:number; lot:string; }
+interface LineForm {
+  uid: string;
+  productId: number;
+  packagingType: string;
+  quantityPerCarton?: number;
+  orderedQty: number;
+  receivedQty: number;
+  lot: string;
+  deviationReason: string;
+}
 
-@Component({ selector:'app-reception-form', standalone:true, imports:[CommonModule,FormsModule,RouterLink,DecimalPipe], templateUrl:'./reception-form.component.html', styleUrls:['./reception-form.component.css'] })
+const PACKAGING_TYPES = ['SACHET', 'ETUI', 'SEAU', 'DOYPACK', 'BOUTEILLE', 'CARTON', 'SAC', 'BIDON', 'ROULEAU', 'PALETTE'];
+
+/** Rôles requis par type de réception, à titre indicatif côté UI (l'application réelle
+ *  du contrôle se fait côté backend, cf. ReceiptAggregate.getRequiredXValidatorRole). */
+const ROLE_LABELS: Record<string, string> = {
+  GESTIONNAIRE_STOCK: 'Gestionnaire de stock',
+  CHEF_PRODUCTION: 'Responsable de production',
+  COMPTABLE: 'Comptable',
+  CONTROLEUR_GENERAL: 'Contrôleur Général'
+};
+const WORKFLOW: Record<ReceptionType, { first: string; second: string }> = {
+  CONSOMMABLE: { first: 'GESTIONNAIRE_STOCK', second: 'CONTROLEUR_GENERAL' },
+  MATIERE_PREMIERE: { first: 'GESTIONNAIRE_STOCK', second: 'COMPTABLE' },
+  MATERIEL: { first: 'GESTIONNAIRE_STOCK', second: 'CONTROLEUR_GENERAL' }
+};
+
+@Component({
+  selector: 'app-reception-form',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, DecimalPipe],
+  templateUrl: './reception-form.component.html',
+  styleUrls: ['./reception-form.component.css']
+})
 export class ReceptionFormComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
-  router=inject(Router);
-  private uc=inject(ReceiptUseCase);
-  private repo=inject(StockMockRepository);
-  private rules=inject(StockRulesDomainService);
-  loading=signal(true); saving=signal(false); success=signal(false);
-  suppliers=signal<Supplier[]>([]); warehouses=signal<Warehouse[]>([]); levels=signal<StockLevel[]>([]);
-  supplierId=0; warehouseId=1; bc=''; observations=''; source:'SUPPLIER'|'PRODUCTION'='SUPPLIER';
+  private route = inject(ActivatedRoute);
+  router = inject(Router);
+  private uc = inject(ReceiptUseCase);
+
+  loading = signal(true);
+  loadingProducts = signal(false);
+  saving = signal(false);
+  success = signal(false);
+  errorMsg = signal('');
+  readOnlyMode = signal(false);
+  viewedReceipt = signal<Receipt | null>(null);
+
+  locations = signal<StockLocationDto[]>([]);
+  products = signal<Product[]>([]);
+
+  destinationLocationId = '';
+  sourceLabel = '';
+  private _receptionType: ReceptionType = 'MATIERE_PREMIERE';
   lignes: LineForm[] = [];
-  ngOnInit(){
-    forkJoin({s:this.uc.getSuppliers(),w:this.uc.getWarehouses(),l:this.repo.getStockLevels()})
-      .pipe(takeUntil(this.d$)).subscribe(({s,w,l})=>{this.suppliers.set(s);this.warehouses.set(w.filter(x=>!x.isBuffer));this.levels.set(l);this.warehouseId=w[0]?.id||1;this.loading.set(false);});
+
+  packagingTypes = PACKAGING_TYPES;
+  receptionTypes: { value: ReceptionType; label: string }[] = [
+    { value: 'CONSOMMABLE', label: 'Consommable' },
+    { value: 'MATIERE_PREMIERE', label: 'Matière première' },
+    { value: 'MATERIEL', label: 'Matériel' }
+  ];
+
+  get receptionType(): ReceptionType { return this._receptionType; }
+  set receptionType(value: ReceptionType) {
+    if (value === this._receptionType) return;
+    this._receptionType = value;
+    this.lignes = [];
+    this.addLine();
+    this.loadProducts();
+  }
+
+  get workflowInfo() {
+    const w = WORKFLOW[this.receptionType];
+    return { firstLabel: ROLE_LABELS[w.first], secondLabel: ROLE_LABELS[w.second] };
+  }
+
+  ngOnInit() {
+    const routeId = this.route.snapshot.paramMap.get('id');
+    if (routeId) {
+      this.readOnlyMode.set(true);
+      this.uc.getByNumber(routeId).pipe(takeUntil(this.d$)).subscribe({
+        next: r => { this.viewedReceipt.set(r); this.loading.set(false); },
+        error: () => { this.errorMsg.set('Réception introuvable.'); this.loading.set(false); }
+      });
+      return;
+    }
+
+    forkJoin({
+      locs: this.uc.getDestinationLocations(),
+      products: this.uc.getProducts(this.receptionType)
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: ({ locs, products }) => {
+        this.locations.set(locs);
+        this.products.set(products);
+        this.destinationLocationId = locs[0]?.id || '';
+        this.loading.set(false);
+      },
+      error: () => {
+        this.errorMsg.set('Impossible de charger les emplacements/produits. Vérifiez la connexion au serveur.');
+        this.loading.set(false);
+      }
+    });
     this.addLine();
   }
-  getFiltered(){return this.levels().filter(sl=>sl.warehouseId===this.warehouseId);}
-  addLine(){this.lignes.push({id:'l'+Date.now(),slId:0,orderedQty:0,receivedQty:0,ecart:0,deviationReason:'',prixUnit:0,total:0,lot:''});}
-  removeLine(i:number){if(this.lignes.length>1)this.lignes.splice(i,1);}
-  onSLChange(l:LineForm){const sl=this.levels().find(x=>x.id===l.slId);l.sl=sl;if(sl){l.prixUnit=sl.unitPrice||0;this.recalc(l);}}
-  onQteChange(l:LineForm){l.ecart=l.receivedQty-l.orderedQty;this.recalc(l);}
-  recalc(l:LineForm){l.total=l.receivedQty*l.prixUnit;}
-  getTotal(){return this.lignes.reduce((a,l)=>a+l.total,0);}
-  isValid(){return this.supplierId>0&&this.lignes.some(l=>l.slId>0&&l.receivedQty>0)&&this.lignes.filter(l=>l.ecart!==0).every(l=>!!l.deviationReason);}
-  getWName(){return this.warehouses().find(w=>w.id===this.warehouseId)?.name||'—';}
-  getSupName(){return this.suppliers().find(s=>s.id===this.supplierId)?.name||'—';}
-  fCFA(n:number){return new Intl.NumberFormat('fr-CM').format(Math.round(n))+' FCFA';}
-  requiresSecond(){const w=this.warehouses().find(x=>x.id===this.warehouseId);return this.rules.requiresSecondValidation(w?.name||'');}
-  sauvegarder(){
-    if(!this.isValid()||this.saving())return;
-    this.saving.set(true);
-    const wh=this.warehouses().find(w=>w.id===this.warehouseId)!;
-    const sup=this.suppliers().find(s=>s.id===this.supplierId)!;
-    const items:ReceiptItem[]=this.lignes.filter(l=>l.slId>0&&l.receivedQty>0).map(l=>({id:Date.now(),productId:l.sl!.productId,productName:l.sl?.productName,productSku:l.sl?.productSku,productUnit:l.sl?.productUnit,orderedQty:l.orderedQty,receivedQty:l.receivedQty,deviation:l.ecart,deviationReason:l.deviationReason||undefined,lotNumber:l.lot||undefined,unitPrice:l.prixUnit,lineTotal:l.total}));
-    this.uc.create({source:this.source,warehouse:wh,fournisseur:sup,warehouseId:wh.id,items,totalAmount:this.getTotal(),observationsGestionnaire:this.observations||undefined} as any)
-      .pipe(takeUntil(this.d$)).subscribe({next:()=>{this.saving.set(false);this.success.set(true);setTimeout(()=>this.router.navigate(['/stock/reception']),2200);},error:()=>this.saving.set(false)});
+
+  /** Recharge le catalogue filtré côté serveur à chaque changement de type de réception. */
+  loadProducts() {
+    this.loadingProducts.set(true);
+    this.uc.getProducts(this.receptionType).pipe(takeUntil(this.d$)).subscribe({
+      next: products => { this.products.set(products); this.loadingProducts.set(false); },
+      error: () => { this.loadingProducts.set(false); this.showLoadError(); }
+    });
   }
-  ngOnDestroy(){this.d$.next();this.d$.complete();}
+
+  private showLoadError() {
+    this.errorMsg.set('Impossible de charger les produits pour ce type de réception.');
+  }
+
+  getFilteredProducts(): Product[] {
+    return this.products().filter(p => p.active !== false);
+  }
+
+  findProduct(productId: any): Product | undefined {
+    const id = Number(productId);
+    return this.products().find(p => p.id === id);
+  }
+
+  addLine() {
+    this.lignes.push({
+      uid: 'l' + Date.now() + Math.random(),
+      productId: 0, packagingType: '', orderedQty: 0, receivedQty: 0, lot: '', deviationReason: ''
+    });
+  }
+  removeLine(i: number) { if (this.lignes.length > 1) this.lignes.splice(i, 1); }
+
+  onProductChange(l: LineForm) {
+    const p = this.findProduct(l.productId);
+    if (p) {
+      l.packagingType = p.packagingType || l.packagingType;
+      l.quantityPerCarton = p.quantityPerCarton ?? l.quantityPerCarton;
+    }
+  }
+
+  deviation(l: LineForm): number {
+    return (l.receivedQty || 0) - (l.orderedQty || 0);
+  }
+
+  hasDeviation(l: LineForm): boolean {
+    return !!l.orderedQty && this.deviation(l) !== 0;
+  }
+
+  isValid(): boolean {
+    return !!this.destinationLocationId
+      && !!this.sourceLabel.trim()
+      && this.lignes.some(l => Number(l.productId) > 0 && l.receivedQty > 0 && !!this.findProduct(l.productId));
+  }
+
+  sauvegarder() {
+    if (!this.isValid() || this.saving()) return;
+    this.saving.set(true);
+    this.errorMsg.set('');
+
+    const validLines = this.lignes.filter(l => Number(l.productId) > 0 && l.receivedQty > 0);
+    const missing = validLines.find(l => !this.findProduct(l.productId));
+    if (missing) {
+      this.saving.set(false);
+      this.errorMsg.set('Un produit sélectionné n\'est plus disponible pour ce type de réception. Veuillez le re-sélectionner.');
+      return;
+    }
+
+    const items = validLines.map(l => {
+      const p = this.findProduct(l.productId)!;
+      return {
+        productId: l.productId,
+        productName: p.designation || p.sku,
+        productSku: p.sku,
+        productUnit: p.unit || 'unite',
+        packagingType: l.packagingType || p.packagingType || undefined,
+        quantityPerCarton: l.quantityPerCarton || undefined,
+        orderedQty: l.orderedQty || l.receivedQty,
+        receivedQty: l.receivedQty,
+        deviationReason: this.hasDeviation(l) ? (l.deviationReason || 'Non renseigné') : undefined,
+        lotNumber: l.lot || undefined
+      };
+    });
+
+    const payload = {
+      receptionType: this.receptionType,
+      sourceLabel: this.sourceLabel,
+      destinationLocationId: this.destinationLocationId,
+      items
+    };
+
+    this.uc.create(payload as any).pipe(takeUntil(this.d$)).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.success.set(true);
+        setTimeout(() => this.router.navigate(['/stock/reception']), 2000);
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.errorMsg.set(err?.error?.message || 'Erreur lors de la création de la réception. Vérifiez les champs et réessayez.');
+      }
+    });
+  }
+
+  ngOnDestroy() { this.d$.next(); this.d$.complete(); }
 }

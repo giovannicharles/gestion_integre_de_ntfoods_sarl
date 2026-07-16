@@ -1,0 +1,34 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div>
+        <div class="ph-title">Valorisation des Stocks (PMP)</div>
+        <div class="ph-sub">{{ nbProduits() }} références · {{ fCFA(total()) }} valeur totale</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-warehouse"></i> Détail par entrepôt</span></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Entrepôt</th><th>Produit</th><th>Quantité</th><th>Type</th><th>Valeur</th></tr></thead>
+        <tbody>
+          @for (s of stocks(); track s.codeProduit + s.codeEntrepot) {
+          <tr>
+            <td class="fw-bold">{{ s.libelleEntrepot }}</td>
+            <td>{{ s.designation }}</td>
+            <td class="mono">{{ s.quantite }}</td>
+            <td><span class="badge bg-neutral badge-sm">{{ s.typeEntrepot }}</span></td>
+            <td class="mono fw-bold">{{ fCFA(s.valeurStock) }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucune donnée de stock disponible</td></tr>
+          }
+        </tbody>
+        <tfoot><tr class="tfoot-total"><td colspan="4" class="fw-bold">Valeur totale consolidée</td><td class="mono fw-bold">{{ fCFA(total()) }}</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>

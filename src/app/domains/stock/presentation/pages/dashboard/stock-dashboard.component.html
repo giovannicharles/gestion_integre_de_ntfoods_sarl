@@ -6,7 +6,7 @@
       <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
       <div>
         <h1 class="ph-title">Tableau de Bord — Stock</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Yaoundé</p>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Douala</p>
       </div>
     </div>
     <div class="ph-actions">
@@ -19,11 +19,11 @@
           mois</button>
       </div>
       <div class="ph-stats-summary">
-        <span class="ph-stat-item"><i class="fa-solid fa-box"></i> {{ stats()!.totalStockLevels }} articles</span>
-        <span class="ph-stat-item"><i class="fa-solid fa-warehouse"></i> 4 entrepôts</span>
+        <span class="ph-stat-item"><i class="fa-solid fa-box"></i> {{ stats()?.totalStockLevels || 0 }} articles</span>
+        <span class="ph-stat-item"><i class="fa-solid fa-warehouse"></i> {{ avgStockByWarehouse().length || 0 }} sites</span>
       </div>
-      <button class="btn btn-ghost btn-sm" (click)="loadAll()" [disabled]="loading()">
-        <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> Actualiser
+      <button class="btn btn-ghost btn-sm" [class.active-refresh]="autoRefresh()" (click)="toggleAutoRefresh()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> {{ autoRefresh() ? 'Auto 30s' : 'Actualiser' }}
       </button>
       <a routerLink="/stock/reception/new" class="btn btn-primary">
         <i class="fa-solid fa-plus"></i> Nouvelle Réception
@@ -31,8 +31,13 @@
     </div>
   </div>
 
+  <!-- ERROR -->
+  @if (error()) {
+    <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
+  }
+
   <!-- SKELETON -->
-  @if (loading()) {
+  @if (loading() && !error()) {
   <div class="sk-kpi-grid">
     @for (i of skeletonItems; track i) {
     <div class="card sk-kpi-card">
@@ -56,7 +61,7 @@
 
   @if (!loading() && stats()) {
 
-  <!-- KPI CARDS -->
+  <!-- KPI CARDS — 6 KPIs puissants -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
@@ -64,10 +69,9 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Valeur Totale Stock</span>
         <span class="kpi-val">{{ formatCFA(stats()!.totalStockValue) }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i>{{ stats()!.totalStockLevels }} niveaux · 4
-          entrepôts</div>
+        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i>{{ stats()!.totalStockLevels }} niveaux · {{ avgStockByWarehouse().length }} sites</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+8.2%</div>
+      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>Stock</div>
     </div>
 
     <div class="kpi-card kp-r">
@@ -79,8 +83,7 @@
           {{ stats()!.criticalAlerts }}
           @if (stats()!.criticalAlerts > 0) { <span class="p-dot"></span> }
         </span>
-        <div class="kpi-meta"><i class="fa-solid fa-circle-dot" style="color:var(--o)"></i>{{ stats()!.lowAlerts }}
-          niveaux faibles</div>
+        <div class="kpi-meta"><i class="fa-solid fa-circle-dot" style="color:var(--o)"></i>{{ stats()!.lowAlerts }} faibles · {{ surplusCount() }} surplus</div>
       </div>
       <a routerLink="/stock/alertes" class="kpi-link">Voir alertes <i class="fa-solid fa-arrow-right"></i></a>
     </div>
@@ -96,16 +99,37 @@
       <a routerLink="/stock/validation" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
     </div>
 
-    <div class="kpi-card kp-b">
-      <div class="kpi-decor kd-b"></div>
-      <div class="kpi-ico ib"><i class="fa-solid fa-industry"></i></div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-industry"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Lots Prod. en Attente</span>
         <span class="kpi-val">{{ stats()!.pendingBatches }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-cart-plus"></i>{{ stats()!.activeInternalOrders }} commandes actives
-        </div>
+        <div class="kpi-meta"><i class="fa-solid fa-cart-plus"></i>{{ stats()!.activeInternalOrders }} commandes actives</div>
       </div>
       <a routerLink="/stock/production" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-right-left"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Mouvements du Jour</span>
+        <span class="kpi-val">{{ stats()!.todayMovements }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-arrow-down" style="color:var(--s)"></i>Entrées + <i class="fa-solid fa-arrow-up" style="color:var(--r)"></i>Sorties</div>
+      </div>
+      <a routerLink="/stock/mouvements" class="kpi-link">Historique <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+
+    <div class="kpi-card kp-s">
+      <div class="kpi-decor kd-s"></div>
+      <div class="kpi-ico is"><i class="fa-solid fa-coins"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Ventes du Jour</span>
+        <span class="kpi-val" style="font-size:17px">{{ formatCFA(stats()!.todaySales) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-chart-line" style="color:var(--g)"></i>CA via dotations</div>
+      </div>
+      <a routerLink="/stock/commercial" class="kpi-link">Commercial <i class="fa-solid fa-arrow-right"></i></a>
     </div>
   </div>
 
@@ -132,18 +156,36 @@
         </div>
       </div>
 
+      <!-- CHART 5: Tendance entrées/sorties -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-g"><i class="fa-solid fa-chart-line"></i></span>
+            <div>
+              <h3>Tendance Entrées / Sorties</h3>
+              <p class="sec-sub">Derniers mouvements · quantités par jour</p>
+            </div>
+          </div>
+          <a routerLink="/stock/mouvements" class="btn btn-ghost btn-sm">Détails <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <div class="chart-container">
+            <canvas #trendCanvas></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- CHART 3: Mouvements par type (barres horizontales) -->
       <div class="card">
         <div class="card-header">
           <div class="sec-head">
-            <span class="sh-ico sh-b"><i class="fa-solid fa-right-left"></i></span>
+            <span class="sh-ico sh-y"><i class="fa-solid fa-right-left"></i></span>
             <div>
               <h3>Répartition des Mouvements de Stock</h3>
               <p class="sec-sub">Par type d'opération</p>
             </div>
           </div>
-          <a routerLink="/stock/mouvements" class="btn btn-ghost btn-sm">Historique <i
-              class="fa-solid fa-arrow-right"></i></a>
+          <a routerLink="/stock/mouvements" class="btn btn-ghost btn-sm">Historique <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="card-body" style="padding:16px">
           <div class="chart-container">
@@ -157,12 +199,10 @@
         <div class="card-header" style="padding:14px 20px">
           <div style="display:flex;gap:4px">
             <button class="tab-pill" [class.t-active]="activeTab()==='receipts'" (click)="activeTab.set('receipts')">
-              <i class="fa-solid fa-truck-ramp-box"></i> Réceptions <span class="tab-count">{{ receipts().length
-                }}</span>
+              <i class="fa-solid fa-truck-ramp-box"></i> Réceptions <span class="tab-count">{{ receipts().length }}</span>
             </button>
             <button class="tab-pill" [class.t-active]="activeTab()==='batches'" (click)="activeTab.set('batches')">
-              <i class="fa-solid fa-industry"></i> Lots Prod. <span class="tab-count">{{ getPendingBatches().length
-                }}</span>
+              <i class="fa-solid fa-industry"></i> Lots Prod. <span class="tab-count">{{ getPendingBatches().length }}</span>
             </button>
             <button class="tab-pill" [class.t-active]="activeTab()==='movements'" (click)="activeTab.set('movements')">
               <i class="fa-solid fa-right-left"></i> Mouvements <span class="tab-count">{{ movements().length }}</span>
@@ -179,32 +219,29 @@
               <thead>
                 <tr>
                   <th>N° Réception</th>
-                  <th>Source / Fournisseur</th>
-                  <th>Entrepôt</th>
-                  <th>Montant</th>
+                  <th>Type / Source</th>
+                  <th>Destination</th>
+                  <th>Lignes</th>
                   <th>Date</th>
                   <th>Statut</th>
                 </tr>
               </thead>
               <tbody>
-                @for (r of receipts(); track r.id) {
+                @for (r of receipts(); track r.receiptNumber) {
                 <tr class="table-row-anim">
-                  <td><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--g)">{{
-                      r.receiptNumber }}</span></td>
+                  <td><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--g)">{{ r.receiptNumber }}</span></td>
                   <td>
-                    @if (r.source === 'SUPPLIER') {
-                    <div style="display:flex;flex-direction:column;gap:2px"><span
-                        style="font-size:13px;font-weight:600;color:var(--n800)">{{ r.fournisseur?.name || '—'
-                        }}</span><span style="font-size:11px;color:var(--n400)"><i class="fa-solid fa-location-dot"></i>
-                        {{ r.fournisseur?.pays }}</span></div>
+                    @if (r.receptionType === 'MATERIEL') {
+                    <span class="badge badge-info"><i class="fa-solid fa-screwdriver-wrench"></i> {{ r.sourceLabel || 'Matériel' }}</span>
+                    } @else if (r.receptionType === 'MATIERE_PREMIERE') {
+                    <span class="badge badge-secondary"><i class="fa-solid fa-truck"></i> {{ r.sourceLabel || 'Fournisseur' }}</span>
                     } @else {
-                    <span class="badge badge-primary"><i class="fa-solid fa-industry"></i> Production</span>
+                    <span class="badge badge-secondary"><i class="fa-solid fa-box"></i> {{ r.sourceLabel || 'Fournisseur' }}</span>
                     }
                   </td>
-                  <td><span class="badge {{ getWBadge(r.warehouseName) }}">{{ getWShort(r.warehouseName) }}</span></td>
-                  <td><span style="font-size:12px;font-weight:700;color:var(--n700)">{{ formatCFA(r.totalAmount)
-                      }}</span></td>
-                  <td><span style="font-size:11px;color:var(--n500)">{{ r.createdAt | date:'dd/MM HH:mm' }}</span></td>
+                  <td><span class="badge badge-neutral">{{ r.destinationLocationName || '—' }}</span></td>
+                  <td><span style="font-size:13px;font-weight:800;color:var(--n800)">{{ r.items.length }}</span></td>
+                  <td><span style="font-size:11px;color:var(--n500)">{{ r.receiptDate | date:'dd/MM HH:mm' }}</span></td>
                   <td><span class="badge {{ getRStatutClass(r.status) }}">{{ getRStatutLabel(r.status) }}</span></td>
                 </tr>
                 }
@@ -220,7 +257,7 @@
                 <tr>
                   <th>Produit</th>
                   <th>Quantité déclarée</th>
-                  <th>→ Unités</th>
+                  <th>&rarr; Unités</th>
                   <th>Date prod.</th>
                   <th>Date lot</th>
                   <th>Chef Prod.</th>
@@ -231,22 +268,14 @@
                 @for (b of batches(); track b.id) {
                 <tr class="table-row-anim">
                   <td>
-                    <div style="display:flex;flex-direction:column;gap:2px"><span
-                        style="font-size:13px;font-weight:600;color:var(--n800)">{{ b.productName }}</span><span
-                        style="font-size:10px;color:var(--n400);font-family:monospace">{{ b.productSku }}</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ b.productName }}</span><span style="font-size:10px;color:var(--n400);font-family:monospace">{{ b.productSku }}</span></div>
                   </td>
-                  <td><span style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--n800)">{{
-                      b.declaredQuantityKg | number }} <span style="font-size:11px;color:var(--n400)">kg</span></span>
-                  </td>
-                  <td><span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{
-                      b.equivalentUnits | number }}</span></td>
-                  <td><span style="font-size:12px;color:var(--n600)">{{ b.productionDate | date:'dd/MM/yyyy' }}</span>
-                  </td>
-                  <td><span style="font-size:12px;font-weight:700;color:var(--g)">{{ b.batchDate | date:'dd/MM/yyyy'
-                      }}</span></td>
+                  <td><span style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--n800)">{{ b.declaredQuantityKg | number }} <span style="font-size:11px;color:var(--n400)">kg</span></span></td>
+                  <td><span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ b.equivalentUnits | number }}</span></td>
+                  <td><span style="font-size:12px;color:var(--n600)">{{ b.productionDate | date:'dd/MM/yyyy' }}</span></td>
+                  <td><span style="font-size:12px;font-weight:700;color:var(--g)">{{ b.batchDate | date:'dd/MM/yyyy' }}</span></td>
                   <td><span style="font-size:12px;color:var(--n600)">{{ b.declaredByName }}</span></td>
-                  <td><span class="badge {{ getBStatutClass(b.status) }}" style="font-size:10px">{{
-                      getBStatutLabel(b.status) }}</span></td>
+                  <td><span class="badge {{ getBStatutClass(b.status) }}" style="font-size:10px">{{ getBStatutLabel(b.status) }}</span></td>
                 </tr>
                 }
               </tbody>
@@ -261,14 +290,13 @@
               <div class="mov-ico {{ getMColor(m.type) }}"><i class="fa-solid {{ getMIcon(m.type) }}"></i></div>
               <div class="mov-body">
                 <span class="mov-type">{{ getMLabel(m.type) }}</span>
-                <span class="mov-prod">{{ m.product?.designation || m.product?.sku || 'Produit #' + m.productId
-                  }}</span>
+                <span class="mov-prod">{{ m.product?.designation || m.product?.sku || 'Produit #' + m.productId }}</span>
               </div>
               <div class="mov-qty" [class.mq-pos]="isEntree(m.type)" [class.mq-neg]="!isEntree(m.type)">
                 {{ isEntree(m.type) ? '+' : '-' }}{{ m.quantity | number }} {{ m.product?.unit }}
               </div>
               <div class="mov-meta">
-                <span>{{ m.createdAt | date:'dd/MM HH:mm' }}</span>
+                <span>{{ (m.requestedAt || m.createdAt) | date:'dd/MM HH:mm' }}</span>
                 <span style="font-size:10px;color:var(--n300)">{{ m.reference || '—' }}</span>
               </div>
             </div>
@@ -276,6 +304,198 @@
           </div>
           }
 
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ INNOVATIONS ROW ═══ -->
+    <div class="dash-col-innov">
+
+      <!-- INNOVATION 1: Score de Santé Stock -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-g"><i class="fa-solid fa-heart-pulse"></i></span>
+            <div>
+              <h3>Score de Santé Stock</h3>
+              <p class="sec-sub">Indicateur composite 0-100</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body health-body">
+          <div class="health-gauge-wrap">
+            <canvas #healthGaugeCanvas></canvas>
+            <div class="health-gauge-overlay">
+              <span class="health-score" [style.color]="healthColor()">{{ healthScore() }}</span>
+              <span class="health-label">{{ healthLabel() }}</span>
+            </div>
+          </div>
+          <div class="health-breakdown">
+            @for (item of healthBreakdown(); track item.label) {
+              <div class="health-bd-item">
+                <div class="health-bd-header">
+                  <span class="health-bd-label">{{ item.label }}</span>
+                  <span class="health-bd-weight">×{{ item.weight }}%</span>
+                </div>
+                <div class="health-bd-bar">
+                  <div class="health-bd-fill" [style.width.%]="item.score"
+                    [style.background]="item.score >= 70 ? 'linear-gradient(90deg,#14532D,#15803D)' : item.score >= 40 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#C22B2B,#EF4444)'"></div>
+                </div>
+                <span class="health-bd-score">{{ item.score }}/100</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- INNOVATION 2: Analyse ABC / Pareto -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-y"><i class="fa-solid fa-chart-column"></i></span>
+            <div>
+              <h3>Analyse ABC / Pareto</h3>
+              <p class="sec-sub">Classification 20/80 des produits par valeur</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <div class="chart-container">
+            <canvas #abcCanvas></canvas>
+          </div>
+        </div>
+        <div class="abc-legend">
+          @for (item of abcData(); track item.class) {
+            <div class="abc-tag abc-tag-{{ item.class | lowercase }}">
+              <span class="abc-letter">{{ item.class }}</span>
+              <span class="abc-info">{{ item.count }} articles · {{ item.pctValue }}% valeur</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- INNOVATION 3: Prédictions de rupture -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-r"><i class="fa-solid fa-crystal-ball"></i></span>
+            <div>
+              <h3>Prévisions de Rupture</h3>
+              <p class="sec-sub">IA prédictive basée sur le taux de consommation</p>
+            </div>
+          </div>
+          <a routerLink="/stock/alertes" class="btn btn-ghost btn-sm">Alertes <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="no-pad">
+          @if (stockOutPredictions().length > 0) {
+            <div class="prediction-list">
+              @for (pred of stockOutPredictions(); track pred.sku) {
+                <div class="prediction-item pred-{{ pred.urgency | lowercase }}">
+                  <div class="pred-ico">
+                    @if (pred.urgency === 'CRITICAL') { <i class="fa-solid fa-circle-exclamation"></i> }
+                    @else if (pred.urgency === 'WARNING') { <i class="fa-solid fa-triangle-exclamation"></i> }
+                    @else { <i class="fa-solid fa-circle-check"></i> }
+                  </div>
+                  <div class="pred-body">
+                    <span class="pred-name">{{ pred.productName }}</span>
+                    <span class="pred-meta">Stock: {{ pred.currentQty }} · Conso: {{ pred.dailyConsumption }}/jour</span>
+                  </div>
+                  <div class="pred-days">
+                    <span class="pred-days-val">{{ pred.daysLeft }}</span>
+                    <span class="pred-days-lbl">jours</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-critical">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Aucune rupture prévue à 30 jours</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- INNOVATION 4: Pipeline Dotation Workflow -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-b"><i class="fa-solid fa-diagram-project"></i></span>
+            <div>
+              <h3>Pipeline Dotations</h3>
+              <p class="sec-sub">{{ totalDotations() }} demandes · workflow 5 étapes</p>
+            </div>
+          </div>
+          <a routerLink="/stock/dotations" class="btn btn-ghost btn-sm">Détails <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="no-pad">
+          <div class="pipeline">
+            @for (step of dotationPipeline(); track step.step; let i = $index) {
+              <div class="pipeline-step" [class.ps-active]="step.count > 0">
+                <div class="ps-node" [style.border-color]="step.count > 0 ? step.color : 'var(--n200)'" [style.background]="step.count > 0 ? step.color : 'var(--n100)'">
+                  <i class="fa-solid {{ step.icon }}" [style.color]="step.count > 0 ? '#fff' : 'var(--n400)'"></i>
+                  @if (step.count > 0) { <span class="ps-count">{{ step.count }}</span> }
+                </div>
+                <span class="ps-label">{{ step.label }}</span>
+                @if (i < dotationPipeline().length - 1) { <div class="ps-connector" [class.ps-connector-active]="dotationPipeline()[i + 1].count > 0"></div> }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- INNOVATION 5: Flux de stock -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-t"><i class="fa-solid fa-arrows-turn-to-dots"></i></span>
+            <div>
+              <h3>Flux de Stock</h3>
+              <p class="sec-sub">Central → Tampon → Mobile</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <div class="chart-container">
+            <canvas #flowCanvas></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- INNOVATION 6: Taux de rotation -->
+      <div class="card innov-card">
+        <div class="card-header">
+          <div class="sec-head">
+            <span class="sh-ico sh-g"><i class="fa-solid fa-arrows-rotate"></i></span>
+            <div>
+              <h3>Taux de Rotation</h3>
+              <p class="sec-sub">Vélocité par produit · jours de couverture</p>
+            </div>
+          </div>
+        </div>
+        <div class="no-pad">
+          @if (turnoverRates().length > 0) {
+            <div class="turnover-list">
+              @for (tr of turnoverRates(); track tr.sku) {
+                <div class="turnover-item">
+                  <div class="to-body">
+                    <span class="to-name">{{ tr.productName }}</span>
+                    <span class="to-sku">{{ tr.sku }}</span>
+                  </div>
+                  <div class="to-rate">
+                    <span class="to-rate-val">{{ tr.turnoverRate }}x</span>
+                    <span class="to-cover">{{ tr.daysOfCover >= 0 ? tr.daysOfCover + 'j couverture' : '∞' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-critical">
+              <i class="fa-solid fa-info-circle"></i>
+              <span>Pas assez de données de sortie</span>
+            </div>
+          }
         </div>
       </div>
 
@@ -305,7 +525,7 @@
           <div class="sec-head"><span class="sh-ico sh-r"><i class="fa-solid fa-triangle-exclamation"></i></span>
             <div>
               <h3>Distribution des Alertes</h3>
-              <p class="sec-sub">{{ stockLevels().length }} articles</p>
+              <p class="sec-sub">{{ stockLevels().length }} articles surveillés</p>
             </div>
           </div><a routerLink="/stock/alertes" class="btn btn-ghost btn-sm">Toutes</a>
         </div>
@@ -314,50 +534,74 @@
         </div>
       </div>
 
+      <!-- TOP 5 PRODUITS PAR VALEUR -->
+      <div class="card">
+        <div class="card-header">
+          <div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-ranking-star"></i></span>
+            <div>
+              <h3>Top 5 par Valeur</h3>
+              <p class="sec-sub">Valorisation stock</p>
+            </div>
+          </div>
+        </div>
+        <div class="no-pad">
+          <div class="top-list">
+            @for (item of topProducts(); track item.id; let i = $index) {
+            <div class="top-item">
+              <div class="top-rank" [class.tr-1]="i===0" [class.tr-2]="i===1" [class.tr-3]="i===2">{{ i + 1 }}</div>
+              <div class="top-body">
+                <span class="top-name">{{ item.productName || item.productSku }}</span>
+                <span class="top-sku">{{ item.productSku }} · {{ item.warehouseName }}</span>
+              </div>
+              <div class="top-val">{{ formatCFA(item.stockValue || 0) }}</div>
+            </div>
+            } @empty {
+            <div class="empty-critical"><i class="fa-solid fa-box-open"></i><span>Aucun produit</span></div>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- ACTIONS RAPIDES -->
       <div class="card">
         <div class="card-header">
           <div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-bolt"></i></span>
-            <div>
-              <h3>Actions Rapides</h3>
-            </div>
+            <div><h3>Actions Rapides</h3></div>
           </div>
         </div>
         <div class="no-pad">
           <div class="qa-list">
             <a routerLink="/stock/reception/new" class="qa-item qa-g">
               <div class="qa-ico"><i class="fa-solid fa-truck-ramp-box"></i></div>
-              <div class="qa-txt"><span class="qa-t">Saisir une réception</span><span class="qa-s">Entrée
-                  fournisseur</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
+              <div class="qa-txt"><span class="qa-t">Saisir une réception</span><span class="qa-s">Entrée fournisseur</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
             <a routerLink="/stock/validation" class="qa-item qa-o">
               <div class="qa-ico"><i class="fa-solid fa-clipboard-check"></i></div>
-              <div class="qa-txt"><span class="qa-t">Valider réceptions</span><span class="qa-s">{{
-                  stats()!.pendingReceipts }} en attente</span></div>@if (stats()!.pendingReceipts > 0) { <span
-                class="qa-cnt">{{ stats()!.pendingReceipts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+              <div class="qa-txt"><span class="qa-t">Valider réceptions</span><span class="qa-s">{{ stats()!.pendingReceipts }} en attente</span></div>@if (stats()!.pendingReceipts > 0) { <span class="qa-cnt">{{ stats()!.pendingReceipts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
             <a routerLink="/stock/production" class="qa-item qa-n">
               <div class="qa-ico"><i class="fa-solid fa-industry"></i></div>
-              <div class="qa-txt"><span class="qa-t">Lots de production</span><span class="qa-s">{{
-                  stats()!.pendingBatches }} en attente</span></div>@if (stats()!.pendingBatches > 0) { <span
-                class="qa-cnt">{{ stats()!.pendingBatches }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+              <div class="qa-txt"><span class="qa-t">Lots de production</span><span class="qa-s">{{ stats()!.pendingBatches }} en attente</span></div>@if (stats()!.pendingBatches > 0) { <span class="qa-cnt">{{ stats()!.pendingBatches }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
-            <a routerLink="/stock/orders" class="qa-item qa-n">
-              <div class="qa-ico"><i class="fa-solid fa-cart-plus"></i></div>
-              <div class="qa-txt"><span class="qa-t">Commander à la production</span><span class="qa-s">{{
-                  stats()!.activeInternalOrders }} commandes actives</span></div><i
-                class="fa-solid fa-chevron-right qa-arr"></i>
+            <a routerLink="/stock/dotations" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-hand-holding-box"></i></div>
+              <div class="qa-txt"><span class="qa-t">Dotations</span><span class="qa-s">Demandes commerciaux</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
             <a routerLink="/stock/commercial" class="qa-item qa-n">
               <div class="qa-ico"><i class="fa-solid fa-users"></i></div>
-              <div class="qa-txt"><span class="qa-t">Module Commercial</span><span class="qa-s">Dotations · Ventes ·
-                  Caisse</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
+              <div class="qa-txt"><span class="qa-t">Module Commercial</span><span class="qa-s">Dotations · Ventes · Caisse</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
             <a routerLink="/stock/notifications" class="qa-item qa-n">
               <div class="qa-ico"><i class="fa-solid fa-bell"></i></div>
-              <div class="qa-txt"><span class="qa-t">Notifications</span><span class="qa-s">Voir toutes les
-                  notifications</span></div>@if (stats()!.criticalAlerts > 0) { <span class="qa-cnt qa-cnt-red">{{
-                stats()!.criticalAlerts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+              <div class="qa-txt"><span class="qa-t">Notifications</span><span class="qa-s">Voir toutes les notifications</span></div>@if (stats()!.criticalAlerts > 0) { <span class="qa-cnt qa-cnt-red">{{ stats()!.criticalAlerts }}</span> }<i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/lots" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
+              <div class="qa-txt"><span class="qa-t">Lots / Traçabilité</span><span class="qa-s">Gestion des lots FEFO</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
+            </a>
+            <a routerLink="/stock/audit" class="qa-item qa-n">
+              <div class="qa-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
+              <div class="qa-txt"><span class="qa-t">Audit Stock</span><span class="qa-s">Journal des actions</span></div><i class="fa-solid fa-chevron-right qa-arr"></i>
             </a>
           </div>
         </div>
@@ -399,6 +643,110 @@
 
     </div>
   </div>
+
+  <!-- ═══ SECTION INVENTAIRE PRODUITS ═══ -->
+  @if (!loading() && stats()) {
+  <div class="card inv-card">
+    <div class="card-header">
+      <div class="sec-head">
+        <span class="sh-ico sh-g"><i class="fa-solid fa-boxes-stacked"></i></span>
+        <div>
+          <h3>Inventaire Détaillé des Produits</h3>
+          <p class="sec-sub">{{ filteredProducts().length }} produits · {{ stockLevels().length }} niveaux de stock · {{ formatCFA(totalValue()) }} valeur totale</p>
+        </div>
+      </div>
+      <div class="inv-header-actions">
+        <div class="inv-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Rechercher produit, SKU..." [value]="productSearch()" (input)="onProductSearch($event)">
+        </div>
+        <select class="inv-filter" (change)="onWarehouseFilter($event)">
+          <option value="">Tous les entrepôts</option>
+          @for (wh of avgStockByWarehouse(); track wh.name) {
+            <option [value]="wh.name">{{ wh.name }}</option>
+          }
+        </select>
+        <select class="inv-filter" (change)="onAlertFilter($event)">
+          <option value="">Tous les statuts</option>
+          <option value="CRITIQUE">Critique</option>
+          <option value="FAIBLE">Faible</option>
+          <option value="NORMAL">Normal</option>
+          <option value="SURPLUS">Surplus</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" (click)="toggleProductSort()">
+          <i class="fa-solid fa-arrow-down-wide-short"></i> {{ productSortLabel() }}
+        </button>
+      </div>
+    </div>
+    <div class="no-pad">
+      <div class="table-wrapper inv-table-wrap">
+        <table class="table inv-table">
+          <thead>
+            <tr>
+              <th class="inv-th-prod">Produit</th>
+              <th>SKU</th>
+              <th>Entrepôt</th>
+              <th class="inv-th-qty">Quantité</th>
+              <th>Seuil réappro.</th>
+              <th class="inv-th-bar">Niveau stock</th>
+              <th>Valeur</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filteredProducts(); track item.id; let i = $index) {
+            <tr class="table-row-anim inv-row" [class.inv-row-critical]="item.alertLevel === 'CRITIQUE'">
+              <td>
+                <div class="inv-prod-cell">
+                  <div class="inv-prod-ico" [style.background]="getColor(item) + '22'" [style.color]="getColor(item)">
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <div class="inv-prod-info">
+                    <span class="inv-prod-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</span>
+                    <span class="inv-prod-cat">{{ item.productCategory || '—' }} · {{ item.productUnit || 'unité' }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="inv-sku">{{ item.productSku || '—' }}</span></td>
+              <td><span class="badge {{ getWBadge(item.warehouseName) }}">{{ getWShort(item.warehouseName) }}</span></td>
+              <td class="inv-qty-cell">
+                <span class="inv-qty-val">{{ item.quantity | number }}</span>
+                <span class="inv-qty-unit">{{ item.productUnit || '' }}</span>
+              </td>
+              <td><span class="inv-reorder">{{ item.reorderPoint | number }}</span></td>
+              <td>
+                <div class="inv-bar-wrap">
+                  <div class="inv-bar" [style.width.%]="getPct(item)" [style.background]="getBarGradient(item)"></div>
+                  <span class="inv-bar-pct">{{ getPct(item) }}%</span>
+                </div>
+              </td>
+              <td><span class="inv-value">{{ formatCFA(item.stockValue || 0) }}</span></td>
+              <td><span class="badge {{ getNAlertClass(item.alertLevel || 'NORMAL') }}">{{ item.alertLevel || 'NORMAL' }}</span></td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="empty-critical">
+                  <i class="fa-solid fa-box-open"></i>
+                  <span>Aucun produit trouvé pour ces critères</span>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (filteredProducts().length < stockLevels().length) {
+        <div class="inv-footer">
+          <span>{{ filteredProducts().length }} / {{ stockLevels().length }} produits affichés</span>
+          <button class="btn btn-ghost btn-sm" (click)="clearFilters()">
+            <i class="fa-solid fa-xmark"></i> Effacer les filtres
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+  }
 
   } <!-- end !loading -->
 </div>

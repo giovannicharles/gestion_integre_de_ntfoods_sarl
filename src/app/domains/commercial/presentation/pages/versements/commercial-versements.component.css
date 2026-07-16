@@ -1,0 +1,35 @@
+.card { padding: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.status-card { display: flex; align-items: center; gap: 1rem; margin-bottom: var(--sp-4); border-left: 4px solid var(--n300); }
+.status-ok { border-left-color: var(--s); background: #f1f8f3; }
+.status-alert { border-left-color: var(--r); background: #fff1f1; }
+.status-icon { font-size: 2rem; flex-shrink: 0; }
+.status-info { flex: 1; }
+.status-title { font-weight: 700; font-size: .95rem; margin-bottom: .2rem; }
+.status-sub { font-size: .85rem; color: var(--n600); }
+.status-ecart { font-size: .82rem; font-style: italic; margin-top: .2rem; }
+.form-card { margin-bottom: var(--sp-4); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.form-full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-label { font-size: .82rem; font-weight: 600; color: var(--n700); }
+.form-input, .form-select, .form-textarea { border: 1.5px solid var(--n300); border-radius: var(--r-md); padding: .6rem .75rem; font-size: .9rem; width: 100%; }
+.form-textarea { resize: vertical; }
+.form-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--n200); }
+.success-card { text-align: center; padding: 2.5rem; }
+.success-icon { font-size: 3rem; color: var(--s); display: block; margin-bottom: 1rem; }
+.text-success { color: var(--s) !important; }
+.text-warning { color: var(--o) !important; }
+.text-danger { color: var(--r) !important; }
+.mono { font-variant-numeric: tabular-nums; }
+
+@media (max-width:767px) {
+  .form-grid { grid-template-columns:1fr; }
+  .status-card { flex-direction:column;gap:.5rem; }
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .form-actions { flex-direction:column;gap:8px; }
+  .form-actions .btn { width:100%;justify-content:center; }
+}

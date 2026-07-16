@@ -1,0 +1,290 @@
+<div class="page animate-fadeInUp">
+  @if (success()) {
+    <div class="success-overlay animate-fadeIn">
+      <div class="success-box">
+        <div class="success-ico"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Lot(s) déclaré(s) !</h3>
+        <p>{{ successMsg() }}</p>
+        <div class="success-bar"></div>
+      </div>
+    </div>
+  }
+
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" (click)="router.navigate(['/stock/production'])"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="ph-icon"><i class="fa-solid fa-hard-hat"></i></div>
+      <div>
+        <h1 class="ph-title">Déclaration de Lot de Production</h1>
+        <p class="ph-sub">Saisissez le code produit, le conditionnement et la quantité produite</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement des produits finis…</div>
+  } @else if (errorMsg() && !success() && lignes().length === 0) {
+    <div class="banner banner-danger" style="margin:20px 0"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  }
+
+  @else {
+    <div class="card" style="padding:16px 24px">
+      <div class="stepper">
+        <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Saisie</span><span class="ss">Vous êtes ici</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="sc-pend">2</div><div><span class="st">Validation Stock</span><span class="ss">Gestionnaire de stock</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="sc-pend"><i class="fa-solid fa-check"></i></div><div><span class="st">Stock PF mis à jour</span><span class="ss">Automatique</span></div></div>
+      </div>
+    </div>
+
+    <div class="form-layout">
+      <div class="form-main">
+        <div class="card">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-y"><i class="fa-solid fa-file-invoice"></i></span>
+              <div><h3>Informations générales</h3></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="banner banner-primary" style="margin-bottom:14px">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Tapez le <strong>code produit (SKU)</strong> directement ou recherchez par nom. Sélectionnez le type de conditionnement et la quantité produite.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Instructions / Notes générales <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label>
+              <textarea class="form-control" rows="2" placeholder="Observations sur la production…" [(ngModel)]="globalNotes"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span>
+              <div><h3>Lots à déclarer</h3><p class="sec-sub">Produit + conditionnement + quantité + date de production</p></div>
+            </div>
+            <button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
+          </div>
+          <div class="card-body">
+            @if (productCount() === 0) {
+              <div class="banner banner-danger" style="margin-bottom:16px">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Aucun produit fini chargé.</strong> Vérifiez que l'API est démarrée et que des produits finis existent en base.</span>
+              </div>
+            }
+            <div style="display:flex;flex-direction:column;gap:14px">
+              @for (l of lignes(); track l.uid; let i = $index) {
+                <div class="lc-card">
+                  <div class="lc-header">
+                    <span class="lc-badge">{{ i + 1 }}</span>
+                    <span class="lc-title">Lot {{ i + 1 }}</span>
+                    @if (l.productId > 0) {
+                      <span class="lc-sku-tag">{{ l.productSku }}</span>
+                    }
+                    <span style="flex:1"></span>
+                    @if (lignes().length > 1) {
+                      <button class="lc-del" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button>
+                    }
+                  </div>
+
+                  <div class="lc-body">
+                    <div class="combobox">
+                      <div class="cb-input-wrap">
+                        <i class="fa-solid fa-barcode cb-icon"></i>
+                        <input
+                          type="text"
+                          class="form-control cb-input"
+                          placeholder="Tapez le code produit (ex: PF001) ou le nom…"
+                          [ngModel]="l.searchText"
+                          (ngModelChange)="l.searchText = $event; onSearchInput(l)"
+                          (focus)="onSearchFocus(l)"
+                          (blur)="onSearchBlur(l)"
+                          (keydown)="onSearchKeydown($event, l)"
+                          [class.is-invalid]="l.notFound"
+                        >
+                        @if (l.productId > 0) {
+                          <button type="button" class="cb-clear" (click)="clearProduct(l)">
+                            <i class="fa-solid fa-xmark"></i>
+                          </button>
+                        }
+                      </div>
+
+                      @if (l.showDropdown && l.productId === 0) {
+                        <div class="combobox-dropdown">
+                          @if (getSearchResults(l).length > 0) {
+                            @for (p of getSearchResults(l); track p.id) {
+                              <div class="combobox-item" (mousedown)="$event.preventDefault(); selectProduct(l, p)">
+                                <div class="cb-item-left">
+                                  <span class="cb-sku">{{ p.sku }}</span>
+                                  <span class="cb-name">{{ p.designation || p.sku }}</span>
+                                </div>
+                                <div class="cb-item-right">
+                                  @if (p.packagingType) {
+                                    <span class="cb-pack">{{ getConditioningLabel(p.packagingType) }}</span>
+                                  }
+                                  @if (p.quantityPerCarton) {
+                                    <span class="cb-qpc">{{ p.quantityPerCarton }} u/cart</span>
+                                  }
+                                </div>
+                              </div>
+                            }
+                          } @else if (l.searchText && l.searchText.length >= 2) {
+                            <div class="combobox-empty">
+                              <i class="fa-solid fa-magnifying-glass"></i>
+                              Aucun produit pour « {{ l.searchText }} »
+                            </div>
+                          } @else {
+                            <div class="combobox-empty">
+                              <i class="fa-solid fa-keyboard"></i>
+                              Tapez le code ou le nom du produit
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      @if (l.notFound) {
+                        <div class="cb-notfound">
+                          <i class="fa-solid fa-circle-exclamation"></i> Produit introuvable. Vérifiez le code saisi.
+                        </div>
+                      }
+                    </div>
+
+                    @if (l.productId > 0) {
+                      <div class="product-info-bar">
+                        <div class="pi-sku">
+                          <span class="pi-sku-label">SKU</span>
+                          <span class="pi-sku-value">{{ l.productSku }}</span>
+                        </div>
+                        <div class="pi-divider"></div>
+                        <div class="pi-name">{{ l.productName }}</div>
+                        <div class="pi-unit">{{ l.productUnit }}</div>
+                      </div>
+
+                      <div class="pk-section">
+                        <div class="pk-section-head">
+                          <i class="fa-solid fa-boxes-stacked"></i>
+                          <span>Conditionnement</span>
+                        </div>
+                        <div class="pk-grid">
+                          <div class="pk-selector">
+                            <label class="pk-label">Type</label>
+                            <select class="form-control pk-select" [ngModel]="l.conditioningType" (ngModelChange)="l.conditioningType = $event">
+                              @for (ct of getAvailableConditioningTypes(l); track ct) {
+                                <option [value]="ct">{{ getConditioningLabel(ct) }}</option>
+                              }
+                            </select>
+                            <div class="pk-qpc-info">
+                              <span class="pk-qpc-label">Unités/conditionnement</span>
+                              <span class="pk-qpc-value">{{ getUnitsPerConditioning(l) }}</span>
+                            </div>
+                          </div>
+
+                          <div class="pk-stock-wrap">
+                            <div style="display:flex;flex-direction:column;gap:6px">
+                              <div style="font-size:10px;font-weight:700;color:var(--n400);text-transform:uppercase">Aperçu conversion</div>
+                              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                                <div style="background:white;border:1px solid var(--n200);border-radius:var(--r-sm);padding:5px 10px">
+                                  <span style="font-size:10px;color:var(--n400)">Poids total</span>
+                                  <div style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--n800)">{{ getPreviewKg(l) | number }} kg</div>
+                                </div>
+                                <div style="background:white;border:1px solid var(--n200);border-radius:var(--r-sm);padding:5px 10px">
+                                  <span style="font-size:10px;color:var(--n400)">Unités équivalentes</span>
+                                  <div style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ getPreviewUnits(l) | number }}</div>
+                                </div>
+                                <div style="background:white;border:1px solid var(--n200);border-radius:var(--r-sm);padding:5px 10px">
+                                  <span style="font-size:10px;color:var(--n400)">Date lot (TANTY)</span>
+                                  <div style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ getPreviewBatchDate(l) }}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="qty-row">
+                        <div class="qty-cell">
+                          <label class="qty-label">Quantité conditionnée <span class="req">*</span></label>
+                          <input type="number" class="form-control qty-input" min="1" placeholder="Ex: 50" [(ngModel)]="l.conditioningQty">
+                          <span class="qty-hint">{{ getConditioningLabel(l.conditioningType) }}</span>
+                        </div>
+                        <div class="qty-cell">
+                          <label class="qty-label">Date de production <span class="req">*</span></label>
+                          <input type="date" class="form-control qty-input" [(ngModel)]="l.productionDate">
+                          <span class="qty-hint">Règle : ≤15 → 1er / >15 → 15</span>
+                        </div>
+                        <div class="qty-cell qty-notes-cell">
+                          <label class="qty-label">Notes <span class="qty-auto">(opt.)</span></label>
+                          <input type="text" class="form-control qty-input" placeholder="Observations…" [(ngModel)]="l.notes">
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-side">
+        <div class="card" style="position:sticky;top:24px">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-g"><i class="fa-solid fa-receipt"></i></span>
+              <div><h3>Récapitulatif</h3></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Lots valides</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getValidLineCount() }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Total poids</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getTotalKg() | number }} kg</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Total unités</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getTotalUnits() | number }}</span>
+              </div>
+            </div>
+
+            @if (getValidLineCount() > 0) {
+              <div style="background:var(--n50);border-radius:var(--r-md);padding:12px;margin-bottom:16px">
+                <div style="font-size:10px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:8px">Détail par lot</div>
+                @for (l of lignes(); track l.uid) {
+                  @if (l.productId > 0 && l.conditioningQty > 0) {
+                    <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--n150)">
+                      <span style="color:var(--n600);font-weight:600">
+                        <span style="font-family:var(--font-d);color:var(--n800)">{{ l.productSku }}</span>
+                        · {{ l.conditioningQty }} {{ getConditioningLabel(l.conditioningType) }}
+                      </span>
+                      <span style="color:var(--g);font-weight:700">{{ getPreviewUnits(l) | number }} u</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+
+            @if (errorMsg()) {
+              <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+            }
+            <div class="banner banner-primary" style="margin-bottom:16px">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Les lots seront soumis au <strong>Gestionnaire de Stock</strong> pour validation. Le stock PF ne sera mis à jour qu'après validation.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-ghost btn-full" (click)="router.navigate(['/stock/production'])"><i class="fa-solid fa-xmark"></i> Annuler</button>
+              <button class="btn btn-primary btn-full" [disabled]="!isValid()||saving()" (click)="sauvegarder()">
+                @if (saving()) { <div class="spinner spinner-sm"></div> Déclaration… } @else { <i class="fa-solid fa-paper-plane"></i> Déclarer le(s) lot(s) }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

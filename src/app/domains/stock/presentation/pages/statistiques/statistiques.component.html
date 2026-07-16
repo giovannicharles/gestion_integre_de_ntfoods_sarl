@@ -1,0 +1,263 @@
+<div class="stats-page">
+  <!-- Header -->
+  <div class="stats-header">
+    <div class="header-left">
+      <a routerLink="/stock/dashboard" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Retour au dashboard
+      </a>
+      <h1><i class="fa-solid fa-chart-line"></i> Statistiques & Analyses Avancées</h1>
+    </div>
+    <button class="btn-refresh" (click)="loadAll()" [disabled]="loading()">
+      <i class="fa-solid fa-rotate" [class.spinning]="loading()"></i> Actualiser
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des statistiques...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-banner">
+      <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+    </div>
+  }
+
+  <!-- Toast -->
+  @if (toast()) {
+    <div class="toast" [class.toast-success]="toastType() === 'success'" [class.toast-error]="toastType() === 'error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType() === 'success'" [class.fa-circle-exclamation]="toastType() === 'error'"></i>
+      {{ toast() }}
+    </div>
+  }
+
+  @if (!loading() && !error()) {
+    <!-- KPIs animés -->
+    <section class="card kpi-section">
+      <h2><i class="fa-solid fa-gauge-high"></i> Indicateurs clés (année {{ statYear() }})</h2>
+      <div class="kpi-grid">
+        @for (kpi of statKPIs(); track kpi.label) {
+          <div class="kpi-card" [style.border-left-color]="kpi.color">
+            <div class="kpi-icon" [style.color]="kpi.color"><i class="fa-solid" [class]="kpi.icon"></i></div>
+            <div class="kpi-info">
+              <div class="kpi-value">{{ kpi.value | number }}</div>
+              <div class="kpi-label">{{ kpi.label }}</div>
+              <div class="kpi-unit">{{ kpi.unit }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Year selector -->
+    <section class="card year-selector-section">
+      <div class="year-selector">
+        <label>Année:</label>
+        <select [value]="statYear()" (change)="setStatYear(+$any($event.target).value)">
+          @for (y of availableYears(); track y) {
+            <option [value]="y">{{ y }}</option>
+          }
+        </select>
+      </div>
+    </section>
+
+    <!-- Monthly Evolution Chart -->
+    <section class="card chart-section">
+      <h2><i class="fa-solid fa-chart-column"></i> Évolution mensuelle — Entrées vs Sorties</h2>
+      <div class="chart-container">
+        <canvas #evolutionCanvas></canvas>
+      </div>
+    </section>
+
+    <!-- Quarterly Chart -->
+    <section class="card chart-section">
+      <h2><i class="fa-solid fa-chart-bar"></i> Évolution trimestrielle</h2>
+      <div class="chart-container">
+        <canvas #quarterlyCanvas></canvas>
+      </div>
+    </section>
+
+    <!-- Executive Summary -->
+    <section class="card summary-section">
+      <h2><i class="fa-solid fa-clipboard-check"></i> Synthèse exécutive</h2>
+      <div class="summary-list">
+        @for (item of executiveSummary(); track item.text) {
+          <div class="summary-item" [class]="getToneClass(item.tone)">
+            <i class="fa-solid" [class]="item.icon"></i>
+            <span>{{ item.text }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Stock Aging -->
+    <section class="card aging-section">
+      <h2><i class="fa-solid fa-hourglass-half"></i> Analyse de l'âge du stock</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th><th>Âge moyen (jours)</th><th>Âge max (jours)</th><th>Quantité</th><th>Risque</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of stockAging(); track item.sku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                <td>{{ item.avgAgeDays }}</td>
+                <td>{{ item.oldestAgeDays }}</td>
+                <td>{{ item.qty }}</td>
+                <td><span class="badge" [class]="getRiskClass(item.riskLevel)">{{ getRiskLabel(item.riskLevel) }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Reorder Suggestions -->
+    <section class="card reorder-section">
+      <h2><i class="fa-solid fa-lightbulb"></i> Recommandations de réapprovisionnement</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th><th>Stock actuel</th><th>Qté suggérée</th><th>Conso. /jour</th><th>Urgence</th><th>Motif</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of reorderSuggestions(); track item.sku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                <td>{{ item.currentQty }}</td>
+                <td>{{ item.suggestedQty }}</td>
+                <td>{{ item.dailyConsumption }}</td>
+                <td><span class="badge" [class]="getUrgencyClass(item.urgency)">{{ getUrgencyLabel(item.urgency) }}</span></td>
+                <td>{{ item.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Velocity Matrix -->
+    <section class="card velocity-section">
+      <h2><i class="fa-solid fa-gauge"></i> Matrice de vélocité des produits</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th><th>Vélocité</th><th>Qté /mois</th><th>Tendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of velocityMatrix(); track item.sku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                <td><span class="badge" [class]="getVelocityClass(item.velocity)">{{ getVelocityLabel(item.velocity) }}</span></td>
+                <td>{{ item.monthlyQty }}</td>
+                <td><i class="fa-solid" [class]="getTrendIcon(item.trend)" [style.color]="getTrendColor(item.trend)"></i></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Warehouse Capacity -->
+    <section class="card capacity-section">
+      <h2><i class="fa-solid fa-warehouse"></i> Capacité des entrepôts</h2>
+      <div class="capacity-grid">
+        @for (wh of warehouseCapacity(); track wh.name) {
+          <div class="capacity-card">
+            <div class="capacity-header">
+              <span class="wh-name">{{ wh.name }}</span>
+              <span class="badge" [class]="getCapacityStatusClass(wh.status)">{{ getCapacityStatusLabel(wh.status) }}</span>
+            </div>
+            <div class="capacity-bar">
+              <div class="capacity-fill" [style.width.%]="wh.pct"
+                [class.fill-warning]="wh.pct > 75 && wh.pct <= 90"
+                [class.fill-critical]="wh.pct > 90"></div>
+            </div>
+            <div class="capacity-info">{{ wh.used | number }} / {{ wh.capacity | number }} ({{ wh.pct }}%)</div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Demand Forecast -->
+    <section class="card forecast-section">
+      <h2><i class="fa-solid fa-chart-line"></i> Prévisions de demande (30 jours)</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th><th>Stock actuel</th><th>Prévision 30j</th><th>Confiance</th><th>Tendance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of demandForecast(); track item.sku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                <td>{{ item.currentQty }}</td>
+                <td>{{ item.forecast30d }}</td>
+                <td>
+                  <div class="confidence-bar">
+                    <div class="confidence-fill" [style.width.%]="item.confidence"></div>
+                    <span>{{ item.confidence }}%</span>
+                  </div>
+                </td>
+                <td><i class="fa-solid" [class]="getTrendIcon(item.trend)" [style.color]="getTrendColor(item.trend)"></i></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Report Generation -->
+    <section class="card report-section">
+      <h2><i class="fa-solid fa-file-export"></i> Génération de rapports</h2>
+      <div class="report-controls">
+        <div class="control-group">
+          <label>Période:</label>
+          <select [value]="statPeriod()" (change)="setPeriod($any($event.target).value)">
+            <option value="monthly">Mensuel</option>
+            <option value="quarterly">Trimestriel</option>
+          </select>
+        </div>
+        @if (statPeriod() === 'monthly') {
+          <div class="control-group">
+            <label>Mois:</label>
+            <select [value]="statMonth()" (change)="setStatMonth(+$any($event.target).value)">
+              @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
+            </select>
+          </div>
+        } @else {
+          <div class="control-group">
+            <label>Trimestre:</label>
+            <select [value]="statQuarter()" (change)="setStatQuarter(+$any($event.target).value)">
+              @for (q of [1,2,3,4]; track q) {
+                <option [value]="q">T{{ q }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Link to Reports component -->
+    <section class="card" style="text-align:center;padding:24px">
+      <h2 style="font-family:var(--font-d);font-size:16px;margin-bottom:8px"><i class="fa-solid fa-file-lines" style="color:var(--g)"></i> Besoin de documents PDF/Excel ?</h2>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">Générez fiches de synthèse, rapports de mouvements, exports Excel et plus encore.</p>
+      <a routerLink="/stock/rapports" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i> Ouvrir Documents & Rapports</a>
+    </section>
+  }
+</div>

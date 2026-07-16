@@ -1,0 +1,178 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-file-export"></i></div>
+      <div>
+        <h1 class="ph-title">Export de Données</h1>
+        <p class="ph-sub">Articles, mouvements, fiches de synthèse — CSV, Excel, PDF</p>
+      </div>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Export en cours…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- ARTICLES DE STOCK -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-box-open"></i> Articles de stock</span>
+      </div>
+      <div class="card-body">
+        <div class="filter-row">
+          <div class="fg">
+            <label>Localisation</label>
+            <select class="form-control" [ngModel]="selectedLocationId()" (ngModelChange)="onLocationChange($event)">
+              @for (loc of locations(); track loc.id) {
+                <option [value]="loc.id">{{ loc.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="export-actions">
+          <button class="btn btn-primary" (click)="exportItems('csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
+          <button class="btn btn-success" (click)="exportItems('excel')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+          <button class="btn btn-danger" (click)="exportItems('pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOUVEMENTS -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-arrows-left-right"></i> Mouvements de stock</span>
+      </div>
+      <div class="card-body">
+        <div class="export-actions">
+          <button class="btn btn-primary" (click)="exportMovements('csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
+          <button class="btn btn-success" (click)="exportMovements('excel')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+          <button class="btn btn-danger" (click)="exportMovements('pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FICHES DE SYNTHESE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiches de synthèse (PDF)</span>
+      </div>
+      <div class="card-body">
+        <div class="filter-row">
+          <div class="fg">
+            <label>Type de stock</label>
+            <select class="form-control" [(ngModel)]="ficheLocationType">
+              <option value="STOCK_CENTRAL">Stock Central</option>
+              <option value="STOCK_BUFFER">Stock Tampon</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Période début</label>
+            <input type="date" class="form-control" [(ngModel)]="fichePeriodStart">
+          </div>
+          <div class="fg">
+            <label>Période fin</label>
+            <input type="date" class="form-control" [(ngModel)]="fichePeriodEnd">
+          </div>
+        </div>
+        <div class="export-actions export-wrap">
+          <button class="btn btn-danger" (click)="downloadFiche('stock')"><i class="fa-solid fa-file-pdf"></i> Fiche Stock</button>
+          <button class="btn btn-danger" (click)="downloadFiche('sorties')"><i class="fa-solid fa-file-pdf"></i> Sorties par produit</button>
+          <button class="btn btn-danger" (click)="downloadFiche('entrees')"><i class="fa-solid fa-file-pdf"></i> Entrées par produit</button>
+          <button class="btn btn-danger" (click)="downloadFiche('globale')"><i class="fa-solid fa-file-pdf"></i> Synthèse globale</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXCEL WITH CHARTS -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-column"></i> Rapports Excel avec graphiques</span>
+      </div>
+      <div class="card-body">
+        <p class="card-hint">Fichiers .xlsx avec graphiques intégrés (barres) pour analyse visuelle directe dans Excel.</p>
+        <div class="filter-row">
+          <div class="fg">
+            <label>Type de stock</label>
+            <select class="form-control" [(ngModel)]="excelLocationType">
+              <option value="STOCK_CENTRAL">Stock Central</option>
+              <option value="STOCK_BUFFER">Stock Tampon</option>
+              <option value="STOCK_MOBILE">Stock Mobile</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Période début (global)</label>
+            <input type="date" class="form-control" [(ngModel)]="excelPeriodStart">
+          </div>
+          <div class="fg">
+            <label>Période fin (global)</label>
+            <input type="date" class="form-control" [(ngModel)]="excelPeriodEnd">
+          </div>
+        </div>
+        <div class="export-actions export-wrap">
+          <button class="btn btn-success" (click)="downloadExcelChart('items')"><i class="fa-solid fa-file-excel"></i> Stock avec graphique</button>
+          <button class="btn btn-success" (click)="downloadExcelChart('movements')"><i class="fa-solid fa-file-excel"></i> Mouvements avec graphique</button>
+          <button class="btn btn-success" (click)="downloadExcelChart('valorisation')"><i class="fa-solid fa-file-excel"></i> Valorisation avec graphique</button>
+          <button class="btn btn-success" (click)="downloadExcelChart('global')"><i class="fa-solid fa-file-excel"></i> Rapport global multi-feuilles</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FICHE NTFOODS -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Fiche NTFoods — Infos Produits TANTY</span>
+      </div>
+      <div class="card-body">
+        <p class="card-hint">Modèle vierge avec cases de quantités. Seul le motif change selon le type d'opération.</p>
+        <div class="filter-row">
+          <div class="fg">
+            <label>Motif</label>
+            <select class="form-control" [(ngModel)]="ntFoodsMotif">
+              <option value="Vente">Vente</option>
+              <option value="Promo">Promo</option>
+              <option value="Dotation">Dotation</option>
+              <option value="EV">EV</option>
+              <option value="AV">AV</option>
+              <option value="Production">Production</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Nom</label>
+            <input type="text" class="form-control" [(ngModel)]="ntFoodsNom" placeholder="Nom">
+          </div>
+          <div class="fg">
+            <label>Ville</label>
+            <input type="text" class="form-control" [(ngModel)]="ntFoodsVille" placeholder="Ville">
+          </div>
+          <div class="fg">
+            <label>Zone</label>
+            <input type="text" class="form-control" [(ngModel)]="ntFoodsZone" placeholder="Zone">
+          </div>
+          <div class="fg">
+            <label>Nbre de colis</label>
+            <input type="number" class="form-control" [(ngModel)]="ntFoodsColis" placeholder="—">
+          </div>
+        </div>
+        <div class="export-actions">
+          <button class="btn btn-danger" (click)="downloadNTFoodsFiche()"><i class="fa-solid fa-file-pdf"></i> Télécharger la fiche NTFoods</button>
+        </div>
+      </div>
+    </div>
+
+  }
+
+</div>

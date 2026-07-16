@@ -1,1 +1,194 @@
-<p>dg-layout works!</p>
+<div class="layout-root" [class.sidebar-collapsed]="!sidebarOpen()" [class.mobile-open]="mobileOpen()">
+  @if (mobileOpen()) { <div class="mobile-overlay" (click)="closeMobile()"></div> }
+  <!-- ══ SIDEBAR (fond vert) ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <!-- BRAND — fond jaune -->
+      <div class="sidebar-brand">
+        <div class="brand-content">
+          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          @if (alertCount() > 0) {
+          <a class="logo-alert-badge" routerLink="/stock/alertes" title="{{ alertCount() }} alerte(s) active(s)">
+            <i class="fa-solid fa-bell"></i>
+            <span class="lab-count">{{ alertCount() }}</span>
+          </a>
+          }
+        </div>
+        <button class="sb-collapse-btn" (click)="toggleSidebar()">
+          <i class="fa-solid" [class.fa-chevron-left]="sidebarOpen()" [class.fa-chevron-right]="!sidebarOpen()"></i>
+        </button>
+      </div>
+
+      <!-- USER -->
+      <div class="sb-user">
+        <div class="sb-av">KJ<span class="sb-dot"></span></div>
+        <div class="sb-user-info">
+          <span class="sb-name">Kamga Jean-Marie</span>
+          <span class="sb-role"><i class="fa-solid fa-user-tie"></i> Directeur Général</span>
+        </div>
+      </div>
+
+      <!-- NAV -->
+      <nav class="sb-nav">
+        <span class="sb-section-lbl">MODULE DIRECTION</span>
+        @for (item of navItems; track item.route) {
+        <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
+          [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
+          <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
+          <span class="sb-lbl">{{ item.label }}</span>
+          @if (item.badge && item.badge > 0) {
+          <span class="sb-badge {{ item.badgeClass || 'bd-neutral' }}">{{ item.badge }}</span>
+          }
+        </a>
+        }
+
+        <!-- GROUPS WITH SUB-MENUS -->
+        @for (group of navGroups; track group.label) {
+        <div class="sb-group">
+          <button class="sb-item sb-group-header" (click)="toggleGroup(group.label)"
+            [class.sb-group-open]="expandedGroup() === group.label"
+            [title]="!sidebarOpen() ? group.label : ''">
+            <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
+            <span class="sb-lbl">{{ group.label }}</span>
+            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label"></i>
+          </button>
+          @if (expandedGroup() === group.label) {
+            <div class="sb-group-children">
+              @for (child of group.children; track child.route) {
+              <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
+                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
+                <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
+                <span class="sb-lbl">{{ child.label }}</span>
+                @if (child.badge && child.badge > 0) {
+                <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
+                }
+              </a>
+              }
+            </div>
+          }
+        </div>
+        }
+
+        <span class="sb-section-lbl">ADMINISTRATION</span>
+        @for (item of adminItems; track item.route) {
+        <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
+          [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
+          <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
+          <span class="sb-lbl">{{ item.label }}</span>
+        </a>
+        }
+      </nav>
+
+      <!-- FOOTER -->
+      <div class="sb-footer">
+        <button class="sb-item sb-logout" (click)="router.navigate(['/auth/login'])">
+          <span class="sb-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
+          <span class="sb-lbl">Déconnexion</span>
+        </button>
+        <div class="sb-version"><span>v3.0 — Sprint 3</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="tb-left">
+        <button class="tb-menu-btn" (click)="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="tb-breadcrumb">
+          <span class="tb-module-chip"><i class="fa-solid fa-user-tie"></i> Direction</span>
+          <i class="fa-solid fa-chevron-right tb-sep-icon"></i>
+          <span class="tb-page">{{ currentPageTitle() }}</span>
+        </div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-date">
+          <i class="fa-regular fa-calendar"></i>
+          <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
+        </div>
+
+        <!-- NOTIFICATION BELL -->
+        <div class="tb-notif-wrap">
+          <button class="tb-icon-btn" (click)="toggleNotifPanel()" [class.tb-alert-pulse]="alertCount() > 0" title="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
+          </button>
+          @if (showNotifPanel()) {
+            <div class="notif-panel animate-fadeInUp" (click)="$event.stopPropagation()">
+              <div class="notif-panel-header">
+                <span class="notif-panel-title"><i class="fa-solid fa-bell"></i> Notifications</span>
+                <span class="notif-panel-count">{{ alertCount() }} active(s)</span>
+              </div>
+              <div class="notif-panel-body">
+                @if (alertCount() === 0) {
+                  <div class="notif-empty">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>Aucune notification active</span>
+                  </div>
+                } @else {
+                  <a class="notif-item notif-danger" routerLink="/stock/alertes" (click)="closeNotifPanel()">
+                    <div class="notif-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="notif-content">
+                      <span class="notif-title">{{ alertCount() }} alerte(s) stock</span>
+                      <span class="notif-desc">Produits sous seuil critique — action requise</span>
+                    </div>
+                  </a>
+                  @if (criticalCount() > 0) {
+                    <a class="notif-item notif-danger" routerLink="/stock/alertes" (click)="closeNotifPanel()">
+                      <div class="notif-ico"><i class="fa-solid fa-fire"></i></div>
+                      <div class="notif-content">
+                        <span class="notif-title">{{ criticalCount() }} alerte(s) critique(s)</span>
+                        <span class="notif-desc">Ruptures de stock imminentes</span>
+                      </div>
+                    </a>
+                  }
+                  <a class="notif-item notif-warning" routerLink="/dg/arbitrage" (click)="closeNotifPanel()">
+                    <div class="notif-ico"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="notif-content">
+                      <span class="notif-title">3 arbitrages en attente</span>
+                      <span class="notif-desc">Demandes de prix exceptionnels à valider</span>
+                    </div>
+                  </a>
+                  <a class="notif-item notif-warning" routerLink="/dg/decaissements" (click)="closeNotifPanel()">
+                    <div class="notif-ico"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                    <div class="notif-content">
+                      <span class="notif-title">2 décaissements en attente</span>
+                      <span class="notif-desc">Demandes de paiement à approuver</span>
+                    </div>
+                  </a>
+                }
+              </div>
+              <div class="notif-panel-footer">
+                <a routerLink="/stock/alertes" (click)="closeNotifPanel()" class="notif-view-all">Voir toutes les alertes</a>
+              </div>
+            </div>
+          }
+        </div>
+
+        <button class="tb-icon-btn" routerLink="/dg/arbitrage" title="Arbitrages en attente" [class.tb-alert-pulse]="criticalCount() > 0">
+          <i class="fa-solid fa-scale-balanced"></i>
+          @if (alertCount() > 0) { <span class="tb-badge tb-badge-orange">{{ alertCount() }}</span> }
+        </button>
+        <button class="tb-icon-btn" routerLink="/dg/decaissements" title="Décaissements en attente">
+          <i class="fa-solid fa-money-bill-transfer"></i>
+          <span class="tb-badge tb-badge-red">2</span>
+        </button>
+        <div class="tb-divider"></div>
+        <div class="tb-user">
+          <div class="tb-av">KJ</div>
+          <div class="tb-user-txt">
+            <span class="tb-u-name">Kamga J-M.</span>
+            <span class="tb-u-role">Directeur Général</span>
+          </div>
+          <i class="fa-solid fa-chevron-down tb-caret"></i>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -3,15 +3,15 @@
   <div class="ph"><div class="ph-left"><div class="ph-icon"><i class="fa-solid fa-right-left"></i></div><div><h1 class="ph-title">Mouvements de Stock</h1><p class="ph-sub">Audit trail immuable · Entrées, Sorties, Ajustements, Transferts</p></div></div><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" (click)="showTransfert.set(true)"><i class="fa-solid fa-boxes-stacked"></i> Transfert tampon</button><button class="btn btn-outline btn-sm" (click)="showAjust.set(true)"><i class="fa-solid fa-sliders"></i> Ajustement</button></div></div>
   @if (!loading()) {
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <div class="kc kc-g"><i class="fa-solid fa-arrow-circle-down"></i><div><span>{{ count('ENTRY_FROM_SUPPLIER') }}</span><span>Entrées Fourn.</span></div></div>
-      <div class="kc kc-t"><i class="fa-solid fa-industry"></i><div><span>{{ count('ENTRY_FROM_PRODUCTION') }}</span><span>Entrées Prod.</span></div></div>
-      <div class="kc kc-b"><i class="fa-solid fa-truck"></i><div><span>{{ count('EXIT_TO_COMMERCIAL') }}</span><span>Sorties Comm.</span></div></div>
+      <div class="kc kc-g"><i class="fa-solid fa-arrow-circle-down"></i><div><span>{{ count('RECEPTION_PRODUCTION') + count('RECEPTION_CONSOMMABLE') + count('RECEPTION_RAW_MATERIAL') + count('RECEPTION_MATERIEL') }}</span><span>Réceptions</span></div></div>
+      <div class="kc kc-t"><i class="fa-solid fa-boxes-stacked"></i><div><span>{{ count('TRANSFER_CENTRAL_TO_BUFFER') }}</span><span>Central→Tampon</span></div></div>
+      <div class="kc kc-b"><i class="fa-solid fa-truck"></i><div><span>{{ count('TRANSFER_BUFFER_TO_MOBILE') }}</span><span>Dotations</span></div></div>
       <div class="kc kc-n"><i class="fa-solid fa-sliders"></i><div><span>{{ count('ADJUSTMENT') }}</span><span>Ajustements</span></div></div>
-      <div class="kc kc-o"><i class="fa-solid fa-boxes-stacked"></i><div><span>{{ count('TRANSFER') }}</span><span>Transferts tampon</span></div></div>
+      <div class="kc kc-r"><i class="fa-solid fa-triangle-exclamation"></i><div><span>{{ count('LOSS') + count('EXPIRATION') }}</span><span>Pertes/Expir.</span></div></div>
     </div>
     <div class="card"><div style="padding:14px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <div style="position:relative;flex:1;min-width:200px;display:flex;align-items:center"><i class="fa-solid fa-magnifying-glass" style="position:absolute;left:11px;color:var(--n400);font-size:13px"></i><input style="width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;font-family:var(--font-b);color:var(--n800);outline:none;background:white" placeholder="Rechercher produit, référence…" [(ngModel)]="search" (ngModelChange)="applyFilters()"></div>
-      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterType" (ngModelChange)="applyFilters()"><option value="">Tous types</option><option value="ENTRY_FROM_SUPPLIER">Entrée fournisseur</option><option value="ENTRY_FROM_PRODUCTION">Entrée production</option><option value="EXIT_TO_COMMERCIAL">Sortie commercial</option><option value="TRANSFER">Transfert tampon</option><option value="ADJUSTMENT">Ajustement</option></select>
+      <select style="padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)" [(ngModel)]="filterType" (ngModelChange)="applyFilters()"><option value="">Tous types</option><option value="RECEPTION_PRODUCTION">Entrée production</option><option value="RECEPTION_CONSOMMABLE">Réception consommable</option><option value="RECEPTION_RAW_MATERIAL">Réception MP</option><option value="RECEPTION_MATERIEL">Réception matériel</option><option value="TRANSFER_CENTRAL_TO_BUFFER">Transfert central→tampon</option><option value="TRANSFER_BUFFER_TO_MOBILE">Dotation (tampon→mobile)</option><option value="TRANSFER_MOBILE_TO_CENTRAL">Retour mobile→central</option><option value="SALE">Vente</option><option value="ADJUSTMENT">Ajustement</option><option value="LOSS">Perte/Casse</option><option value="EXPIRATION">Expiration</option></select>
       <span class="badge badge-neutral">{{ filtered().length }} résultat(s)</span>
     </div></div>
     <div class="card" style="overflow:hidden">
@@ -21,13 +21,13 @@
           @for (m of paginated(); track m.id) {
             <tr class="table-row-anim">
               <td><div style="display:flex;align-items:center;gap:8px"><div class="mov-ico {{ getColor(m.type) }}"><i class="fa-solid {{ getIcon(m.type) }}"></i></div><span style="font-size:12px;font-weight:600;color:var(--n700)">{{ getLabel(m.type) }}</span></div></td>
-              <td><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;font-weight:600;color:var(--n800)">{{ m.product?.designation || m.product?.sku || 'Produit #'+m.productId }}</span><span style="font-size:10px;color:var(--n400);font-family:monospace">{{ m.product?.sku }}</span></div></td>
+              <td><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;font-weight:600;color:var(--n800);font-family:monospace">{{ m.productSku || 'Produit #'+m.productId }}</span></div></td>
               <td><span class="badge badge-neutral" style="font-size:10px">{{ m.warehouse?.name?.substring(0,14)||'—' }}</span></td>
-              <td class="text-right"><span style="font-size:12px;color:var(--n400)">{{ m.previousStock | number }}</span></td>
-              <td class="text-center"><span style="font-family:var(--font-d);font-size:14px;font-weight:800;" [style.color]="isEntree(m.type)?'var(--s)':'var(--r)'">{{ isEntree(m.type)?'+':'-' }}{{ m.quantity | number }}</span><span style="font-size:10px;color:var(--n400);margin-left:2px">{{ m.product?.unit }}</span></td>
-              <td class="text-right"><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--n800)">{{ m.newStock | number }}</span></td>
-              <td><span style="font-size:11px;color:var(--n500);font-family:monospace">{{ m.reference||'—' }}</span></td>
-              <td><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:11px;font-weight:600;color:var(--n700)">{{ m.createdAt | date:'dd/MM/yyyy' }}</span><span style="font-size:10px;color:var(--n400)">{{ m.createdAt | date:'HH:mm' }}</span></div></td>
+              <td class="text-right"><span style="font-size:12px;color:var(--n400)">{{ m.previousStock!=null ? (m.previousStock | number) : '—' }}</span></td>
+              <td class="text-center"><span style="font-family:var(--font-d);font-size:14px;font-weight:800;" [style.color]="isEntree(m.type)?'var(--s)':'var(--r)'">{{ isEntree(m.type)?'+':'-' }}{{ m.quantity | number }}</span></td>
+              <td class="text-right"><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--n800)">{{ m.newStock!=null ? (m.newStock | number) : '—' }}</span></td>
+              <td><span style="font-size:11px;color:var(--n500);font-family:monospace">{{ m.referenceNumber||m.reference||'—' }}</span></td>
+              <td><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:11px;font-weight:600;color:var(--n700)">{{ (m.requestedAt||m.createdAt) | date:'dd/MM/yyyy' }}</span><span style="font-size:10px;color:var(--n400)">{{ (m.requestedAt||m.createdAt) | date:'HH:mm' }}</span></div></td>
             </tr>
           }
           @empty { <tr><td colspan="8" style="text-align:center;padding:48px;color:var(--n400)"><i class="fa-solid fa-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>Aucun mouvement</td></tr> }
@@ -42,10 +42,10 @@
   @if (showAjust()) {
     <div class="modal-overlay animate-fadeIn" (click)="showAjust.set(false)">
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
-        <div class="modal-header" style="background:var(--b-gh)"><div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div><button class="modal-close" (click)="showAjust.set(false)"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="modal-header" style="background:var(--g-gh)"><div class="modal-title" style="color:var(--g)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div><button class="modal-close" (click)="showAjust.set(false)"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="modal-body">
           <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Génère un mouvement ADJUSTMENT dans l'audit trail.</span></div>
-          <div class="form-group"><label class="form-label">Niveau de stock <span class="req">*</span></label><select class="form-control" [(ngModel)]="ajustId">@for (sl of levels(); track sl.id) { <option [value]="sl.id">{{ sl.productName }} — {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
+          <div class="form-group"><label class="form-label">Niveau de stock <span class="req">*</span></label><select class="form-control" [(ngModel)]="ajustId">@for (sl of levels(); track sl.id) { <option [value]="sl.id">{{ sl.productSku }} — {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
           <div class="form-group"><label class="form-label">Nouvelle quantité réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Après inventaire physique"></div>
           <div class="form-group"><label class="form-label">Motif <span class="req">*</span></label><textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="ajustMotif"></textarea></div>
         </div>
@@ -59,8 +59,8 @@
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header" style="background:#E0F2F1"><div class="modal-title" style="color:#00796B"><i class="fa-solid fa-boxes-stacked"></i> Transfert vers Magasin Tampon</div><button class="modal-close" (click)="showTransfert.set(false)"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="modal-body">
-          <div class="banner banner-info"><i class="fa-solid fa-circle-info"></i><span>Le tampon ravitaille la production hebdomadairement. Quantité déduite du stock principal.</span></div>
-          <div class="form-group"><label class="form-label">Matière Première <span class="req">*</span></label><select class="form-control" [(ngModel)]="transfertId">@for (sl of getMPLevels(); track sl.id) { <option [value]="sl.id">{{ sl.productName }} — Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }</select></div>
+          <div class="banner banner-primary"><i class="fa-solid fa-circle-info"></i><span>Le tampon ravitaille la production hebdomadairement. Quantité déduite du stock principal.</span></div>
+          <div class="form-group"><label class="form-label">Matière Première <span class="req">*</span></label><select class="form-control" [(ngModel)]="transfertId">@for (sl of getMPLevels(); track sl.id) { <option [value]="sl.id">{{ sl.productSku }} — Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }</select></div>
           <div class="form-group"><label class="form-label">Quantité à transférer <span class="req">*</span></label><input type="number" class="form-control" min="1" [(ngModel)]="transfertQty" placeholder="Quantité tampon hebdo"></div>
         </div>
         <div class="modal-footer"><button class="btn btn-ghost" (click)="showTransfert.set(false)">Annuler</button><button class="btn btn-primary" [disabled]="!transfertId||transfertQty<=0||transfertSaving()" (click)="sauverTransfert()">@if(transfertSaving()){<div class="spinner spinner-sm"></div>}@else{<i class="fa-solid fa-arrow-right"></i>} Effectuer</button></div>

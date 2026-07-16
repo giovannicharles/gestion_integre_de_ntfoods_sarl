@@ -1,0 +1,179 @@
+<div class="page animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-truck-field"></i></div>
+      <div><h1 class="ph-title">Suivi Stock Mobile</h1><p class="ph-sub">Stock détenu par les commerciaux, rotation et stock dormant</p></div>
+    </div>
+    <button class="btn btn-outline" (click)="load()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:48px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+  } @else if (error()) {
+    <div class="error-banner"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div>
+  } @else {
+    <div class="kpi-grid" style="margin-bottom:22px">
+      <div class="kpi-card" style="border-left:4px solid var(--g)">
+        <div class="kpi-info"><div class="kpi-value">{{ summaries().length }}</div><div class="kpi-label">Commerciaux actifs</div></div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid var(--b)">
+        <div class="kpi-info"><div class="kpi-value">{{ totalItems | number }}</div><div class="kpi-label">Articles en stock mobile</div></div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid var(--o)">
+        <div class="kpi-info"><div class="kpi-value">{{ totalStockValue | number }}</div><div class="kpi-label">Valeur du stock mobile</div></div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid var(--p)">
+        <div class="kpi-info"><div class="kpi-value">{{ totalOut | number }}</div><div class="kpi-label">Sorties cumulées</div></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="activeTab()==='overview'" (click)="activeTab.set('overview')"><i class="fa-solid fa-list"></i> Vue d'ensemble</button>
+      <button class="tab-btn" [class.active]="activeTab()==='rotation'" (click)="activeTab.set('rotation')"><i class="fa-solid fa-rotate"></i> Rotation</button>
+      <button class="tab-btn" [class.active]="activeTab()==='slow'" (click)="activeTab.set('slow')"><i class="fa-solid fa-hourglass-half"></i> Stock dormant</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="rpt-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="form-control" placeholder="Rechercher un matricule..." [ngModel]="search()" (ngModelChange)="search.set($event)"></div>
+      </div>
+      <div class="card-body">
+        @if (activeTab() === 'overview') {
+          <div class="ms-grid">
+            @for (s of filteredSummaries(); track s.commercialMatricule) {
+              <div class="ms-card" (click)="openDetail(s)">
+                <div class="ms-card-head">
+                  <span class="ms-avatar">{{ s.commercialMatricule.slice(0,2).toUpperCase() }}</span>
+                  <div><div class="ms-title">{{ s.commercialMatricule }}</div><div class="ms-sub">{{ s.totalItems }} article(s)</div></div>
+                  <button class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); openDetail(s)"><i class="fa-solid fa-eye"></i></button>
+                </div>
+                <div class="ms-card-body">
+                  <div class="ms-row"><span>Valeur stock</span><strong>{{ fCFA(s.totalValue) }}</strong></div>
+                  <div class="ms-row"><span>Localisation</span><strong>{{ s.locationId }}</strong></div>
+                  <div class="ms-products">
+                    @for (item of s.stockItems.slice(0,4); track item.productId) {
+                      <span class="ms-chip">{{ item.productSku }}: {{ item.quantity | number }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @empty { <div class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun stock mobile</div> }
+          </div>
+        }
+
+        @if (activeTab() === 'rotation') {
+          <div class="ms-table-wrapper">
+            <table class="rpt-table">
+              <thead><tr><th>Commercial</th><th>Entrées</th><th>Sorties</th><th>Mouvements</th><th>Net</th></tr></thead>
+              <tbody>
+                @for (s of filteredSummaries(); track s.commercialMatricule) {
+                  @let r = rotationFor(s.commercialMatricule);
+                  <tr>
+                    <td>{{ s.commercialMatricule }}</td>
+                    <td>{{ (r?.totalIn || 0) | number }}</td>
+                    <td>{{ (r?.totalOut || 0) | number }}</td>
+                    <td>{{ (r?.movementCount || 0) | number }}</td>
+                    <td><span [class.badge-success]="(r?.netMovement || 0)>=0" [class.badge-danger]="(r?.netMovement || 0)<0">{{ (r?.netMovement || 0) | number }}</span></td>
+                  </tr>
+                } @empty { <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune donnée</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (activeTab() === 'slow') {
+          <div class="ms-table-wrapper">
+            <table class="rpt-table">
+              <thead><tr><th>Commercial</th><th>Magasin</th><th>Ventes</th><th>Stock</th><th>Nb produits</th></tr></thead>
+              <tbody>
+                @for (s of slowStocks(); track s.matricule) {
+                  <tr>
+                    <td>{{ s.matricule }}</td>
+                    <td>{{ s.locationName }}</td>
+                    <td>{{ s.totalSales | number }}</td>
+                    <td>{{ s.totalStock | number }}</td>
+                    <td>{{ s.productCount }}</td>
+                  </tr>
+                } @empty { <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun stock dormant détecté</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (selectedSummary(); as sel) {
+    <div class="ms-detail-overlay animate-fadeIn" (click)="closeDetail()">
+      <div class="ms-detail-panel animate-slideRight" (click)="$event.stopPropagation()">
+        <div class="ms-detail-head">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="ms-avatar" style="width:48px;height:48px;font-size:16px">{{ sel.commercialMatricule.slice(0,2).toUpperCase() }}</span>
+            <div><h3 style="margin:0;font-size:18px">{{ sel.commercialMatricule }}</h3><p style="margin:0;font-size:12px;color:var(--n500)">{{ sel.totalItems }} article(s) · {{ sel.locationId }}</p></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="tabs" style="margin:0 16px">
+          <button class="tab-btn" [class.active]="detailTab()==='stock'" (click)="detailTab.set('stock')"><i class="fa-solid fa-box"></i> Stock</button>
+          <button class="tab-btn" [class.active]="detailTab()==='rotation'" (click)="detailTab.set('rotation')"><i class="fa-solid fa-rotate"></i> Rotation</button>
+          <button class="tab-btn" [class.active]="detailTab()==='history'" (click)="detailTab.set('history')"><i class="fa-solid fa-clock-rotate-left"></i> Dotations</button>
+        </div>
+
+        <div class="ms-detail-body">
+          @if (detailTab() === 'stock') {
+            <table class="rpt-table">
+              <thead><tr><th>Code</th><th>Désignation</th><th>Qté</th><th>Prix Un.</th><th>Valeur</th></tr></thead>
+              <tbody>
+                @for (item of sel.stockItems; track item.productId) {
+                  <tr>
+                    <td><span class="ms-chip">{{ item.productSku }}</span></td>
+                    <td>{{ item.productName || item.productSku }}</td>
+                    <td>{{ item.quantity | number }}</td>
+                    <td>{{ fCFA(item.unitPrice || 0) }}</td>
+                    <td>{{ fCFA((item.quantity || 0) * (item.unitPrice || 0)) }}</td>
+                  </tr>
+                } @empty { <tr><td colspan="5" class="rpt-empty">Aucun article</td></tr> }
+              </tbody>
+            </table>
+          }
+
+          @if (detailTab() === 'rotation') {
+            @let rot = rotationFor(sel.commercialMatricule);
+            @if (rot) {
+              <div class="ms-kpi-row">
+                <div class="ms-kpi"><span>{{ rot.totalIn | number }}</span><label>Entrées</label></div>
+                <div class="ms-kpi"><span>{{ rot.totalOut | number }}</span><label>Sorties</label></div>
+                <div class="ms-kpi"><span>{{ rot.movementCount }}</span><label>Mouvements</label></div>
+                <div class="ms-kpi"><span [class.c-green]="rot.netMovement>=0" [class.c-red]="rot.netMovement<0">{{ rot.netMovement | number }}</span><label>Net</label></div>
+              </div>
+            } @else { <div class="rpt-empty">Aucune rotation pour ce commercial</div> }
+          }
+
+          @if (detailTab() === 'history') {
+            @if (detailLoading()) { <div style="padding:30px;text-align:center"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div></div> }
+            @else {
+              <table class="rpt-table">
+                <thead><tr><th>Réf.</th><th>Date</th><th>Articles</th><th>Statut</th></tr></thead>
+                <tbody>
+                  @for (d of dotationHistory(); track d.id) {
+                    <tr>
+                      <td>{{ d.referenceNumber || d.id }}</td>
+                      <td>{{ d.requestedAt | date:'dd/MM/yy HH:mm' }}</td>
+                      <td>{{ d.items.length }}</td>
+                      <td><span class="badge {{ getStatusClass(d.status) }}">{{ getStatusLabel(d.status) }}</span></td>
+                    </tr>
+                  } @empty { <tr><td colspan="4" class="rpt-empty">Aucune dotation</td></tr> }
+                </tbody>
+              </table>
+            }
+          }
+        </div>
+
+        <div class="ms-detail-foot">
+          <a [routerLink]="['/stock/commercial']" [queryParams]="{matricule: sel.commercialMatricule}" class="btn btn-primary" (click)="closeDetail()"><i class="fa-solid fa-users"></i> Voir module commercial</a>
+        </div>
+      </div>
+    </div>
+  }
+</div>

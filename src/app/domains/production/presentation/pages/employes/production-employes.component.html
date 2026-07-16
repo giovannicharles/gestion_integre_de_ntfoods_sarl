@@ -1,0 +1,119 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-person-digging ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Registre Employés</h1>
+      <p class="ph-sub">Présences et performances — {{ today | date:'dd MMMM yyyy' }}</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-user-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Présents</div>
+      <div class="kpi-val">{{ nbPresents() }}</div>
+      <div class="kpi-meta">taux {{ tauxPresence() }}%</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-user-xmark"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Absents</div>
+      <div class="kpi-val">{{ nbAbsents() }}</div>
+      <div class="kpi-meta">sur {{ employes().length }} effectif</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-briefcase"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Postes distincts</div>
+      <div class="kpi-val">{{ postesDistincts() }}</div>
+      <div class="kpi-meta">types de postes</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-percent"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Taux présence</div>
+      <div class="kpi-val">{{ tauxPresence() }}%</div>
+      <div class="kpi-meta">journée en cours</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre du Jour</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Présence</th>
+          <th>Nom</th>
+          <th>Poste</th>
+          <th>Heure arrivée</th>
+          <th>Qté réalisée</th>
+          <th>Unité</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of employes(); track e.matriculeEmploye) {
+          <tr [class]="!e.present ? 'row-absent' : ''">
+            <td>
+              @if (e.present) {
+                <span class="badge bg-success"><i class="fa-solid fa-check"></i> Présent</span>
+              } @else {
+                <span class="badge bg-red"><i class="fa-solid fa-times"></i> Absent</span>
+              }
+            </td>
+            <td><strong>{{ e.nomEmploye }}</strong></td>
+            <td>{{ e.poste }}</td>
+            <td>
+              @if (e.heureArrivee) {
+                {{ e.heureArrivee }}
+              } @else {
+                <span class="txt-muted">—</span>
+              }
+            </td>
+            <td>
+              @if (e.present) {
+                <strong class="txt-success">{{ e.qteRealisee }}</strong>
+              } @else {
+                <span class="txt-muted">—</span>
+              }
+            </td>
+            <td>{{ e.present ? e.unite : '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">Aucun employé enregistré</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-chart-bar"></i> Performances du Jour (Présents)</h2>
+  </div>
+  @for (e of presentsSeul(); track e.matriculeEmploye) {
+    <div class="perf-row">
+      <div class="perf-info">
+        <span class="perf-nom">{{ e.nomEmploye }}</span>
+        <span class="perf-poste">{{ e.poste }}</span>
+      </div>
+      <div class="perf-stats">
+        <span class="perf-qty"><strong>{{ e.qteRealisee }}</strong> {{ e.unite }}</span>
+        <span class="perf-heure">Arrivée {{ e.heureArrivee }}</span>
+      </div>
+    </div>
+  } @empty {
+    <div class="empty-state" style="padding:24px;text-align:center">Aucun employé présent aujourd'hui</div>
+  }
+</div>

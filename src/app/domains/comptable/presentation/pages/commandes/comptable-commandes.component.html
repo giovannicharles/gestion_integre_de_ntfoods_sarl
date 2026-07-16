@@ -1,0 +1,120 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-signature ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Validation Précommandes J+1</h1>
+      <p class="ph-sub">Étape comptable — approbation finale avant chargement</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">En attente validation</div>
+      <div class="kpi-val">{{ nbEnAttente() }}</div>
+      <div class="kpi-meta">commandes Secrétaire ✓</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Validées aujourd'hui</div>
+      <div class="kpi-val">{{ nbValidees() }}</div>
+      <div class="kpi-meta">chargement autorisé</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-list-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total commandes</div>
+      <div class="kpi-val">{{ commandes().length }}</div>
+      <div class="kpi-meta">toutes périodes</div>
+    </div>
+  </div>
+</div>
+
+<!-- Workflow Banner -->
+<div class="workflow-banner card">
+  <div class="wf-step wf-done">
+    <i class="fa-solid fa-user-pen"></i>
+    <span>Secrétaire ✓</span>
+  </div>
+  <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  <div class="wf-step wf-active">
+    <i class="fa-solid fa-calculator"></i>
+    <span>Comptable (en cours)</span>
+  </div>
+  <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+  <div class="wf-step wf-pending">
+    <i class="fa-solid fa-truck-loading"></i>
+    <span>Chargement</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Précommandes</h2>
+    <div class="filter-row">
+      <select [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)" class="form-select-sm">
+        @for (s of statutOptions; track s) {
+          <option [value]="s">{{ s === 'TOUTES' ? 'Toutes' : statutLabel(s) }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (commandesFiltrees().length === 0) {
+    <p class="empty-state">Aucune commande pour ce filtre.</p>
+  }
+
+  @for (cmd of commandesFiltrees(); track cmd.id) {
+    <div class="cmd-card" [class.cmd-pending]="cmd.statut === 'VALIDEE_SECRETAIRE'">
+      <div class="cmd-header">
+        <div class="cmd-info">
+          <strong>{{ cmd.id }}</strong>
+          <span class="cmd-commercial">{{ getCommercialNom(cmd.commercialId) }}</span>
+          <span class="cmd-date">{{ cmd.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="cmd-actions">
+          <span [class]="statutClass(cmd.statut)">{{ statutLabel(cmd.statut) }}</span>
+          @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
+            <button class="btn btn-success btn-sm" (click)="validerCommande(cmd.id)">
+              <i class="fa-solid fa-check"></i> Valider Comptable
+            </button>
+          }
+        </div>
+      </div>
+      <div class="cmd-signatures">
+        <span [class]="cmd.signatureSecretaire ? 'sig-ok' : 'sig-pending'">
+          <i class="fa-solid fa-pen-nib"></i> Secrétaire {{ cmd.signatureSecretaire ? '✓' : '⏳' }}
+        </span>
+        <span [class]="cmd.signatureComptable ? 'sig-ok' : 'sig-pending'">
+          <i class="fa-solid fa-calculator"></i> Comptable {{ cmd.signatureComptable ? '✓' : '⏳' }}
+        </span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Quantité</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of cmd.lignes; track ligne.produitCode) {
+              <tr>
+                <td>{{ getProduitDesignation(ligne.produitCode) }}</td>
+                <td>{{ ligne.quantite }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

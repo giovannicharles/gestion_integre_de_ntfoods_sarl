@@ -1,90 +1,325 @@
 <div class="page animate-fadeInUp">
+  <!-- Header -->
   <div class="page-header">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="ph-icon ph-icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <div>
         <h1 class="ph-title">Alertes &amp; Seuils de Stock</h1>
-        <p class="ph-sub">Produits sous le seuil minimum — Action requise</p>
+        <p class="ph-sub">Surveillance automatique — Acquisition et résolution</p>
       </div>
     </div>
-    <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm">
-      <i class="fa-solid fa-truck-ramp-box"></i> Commander / Réceptionner
-    </a>
-  </div>
-
-  @if (!loading()) {
-    <div class="filter-tabs">
-      <button class="ftab" [class.ft-on]="activeFilter()==='TOUS'" (click)="activeFilter.set('TOUS')">
-        Toutes <span class="ftab-count">{{ alertes().length }}</span>
-      </button>
-      <button class="ftab ftab-r" [class.ft-on]="activeFilter()==='CRITIQUE'" (click)="activeFilter.set('CRITIQUE')">
-        <span class="pulse-sm"></span> Critiques <span class="ftab-count">{{ getCritiqueCount() }}</span>
-      </button>
-      <button class="ftab ftab-o" [class.ft-on]="activeFilter()==='FAIBLE'" (click)="activeFilter.set('FAIBLE')">
-        Faibles <span class="ftab-count">{{ getFaibleCount() }}</span>
+    <div class="hdr-actions">
+      @if (lastCheck()) {
+        <span class="last-check"><i class="fa-solid fa-clock"></i> Dernière vérif: {{ lastCheck() | date:'HH:mm:ss' }}</span>
+      }
+      <button class="btn btn-secondary btn-sm" (click)="triggerCheck()" title="Relancer la vérification des seuils">
+        <i class="fa-solid fa-rotate"></i> Vérifier
       </button>
     </div>
+  </div>
 
-    <div class="alerts-grid">
-      @for (al of getFiltered(); track al.produitId) {
-        <div class="al-card" [class.al-crit]="al.niveau==='CRITIQUE'" [class.al-faib]="al.niveau==='FAIBLE'">
-
-          <div class="al-top">
-            <div class="al-badge-wrap">
-              @if (al.niveau === 'CRITIQUE') { <div class="ring-wrap"><span class="ring-inner"></span></div> }
-              <span class="badge {{ getNiveauClass(al.niveau) }}">{{ al.niveau }}</span>
-            </div>
-            @if (needsUrgentOrder(al)) {
-              <span class="ship-chip"><i class="fa-solid fa-ship"></i>Import urgent</span>
-            }
-          </div>
-
-          <h3 class="al-name">{{ al.designation }}</h3>
-          <p class="al-mag"><i class="fa-solid fa-warehouse"></i>{{ getMagasinLabel(al.magasin) }}</p>
-
-          <div class="al-gauge">
-            <div class="al-gauge-track">
-              <div class="al-gauge-fill"
-                [style.width.%]="getStockPct(al)"
-                [style.background]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">
-              </div>
-            </div>
-            <span class="al-pct" [style.color]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">{{ getStockPct(al) }}%</span>
-          </div>
-
-          <div class="al-stocks">
-            <div class="als-item">
-              <span class="als-lbl">Actuel</span>
-              <span class="als-val" [style.color]="al.niveau==='CRITIQUE' ? '#C62828' : '#E65100'">{{ al.stockActuel | number }}</span>
-            </div>
-            <div class="als-sep"></div>
-            <div class="als-item">
-              <span class="als-lbl">Minimum</span>
-              <span class="als-val">{{ al.stockMinimum | number }}</span>
-            </div>
-            <div class="als-sep"></div>
-            <div class="als-item">
-              <span class="als-lbl">Valeur stock</span>
-              <span class="als-val" style="font-size:12px">{{ formatCFA(getValeurStockAlert(al)) }}</span>
-            </div>
-          </div>
-
-          <a routerLink="/stock/reception/new" class="btn btn-primary btn-full btn-sm">
-            <i class="fa-solid fa-truck-ramp-box"></i> Commander
-          </a>
-        </div>
-      }
-      @empty {
-        <div class="no-alerts">
-          <div class="na-ico"><i class="fa-solid fa-circle-check"></i></div>
-          <h3 class="na-title">Aucune alerte !</h3>
-          <p class="na-sub">Tous vos stocks sont à des niveaux satisfaisants.</p>
-        </div>
-      }
+  @if (actionMsg()) {
+    <div class="action-toast">
+      <i class="fa-solid fa-circle-check"></i> {{ actionMsg() }}
     </div>
   }
 
   @if (loading()) {
     <div class="loading-center"><div class="spinner spinner-lg"></div><span>Chargement des alertes…</span></div>
+  } @else {
+    <!-- KPIs -->
+    <div class="alert-kpis">
+      <div class="ak-card ak-total">
+        <div class="ak-ico"><i class="fa-solid fa-bell"></i></div>
+        <div class="ak-info"><span class="ak-val">{{ backendAlerts().length }}</span><span class="ak-lbl">Alertes système</span></div>
+      </div>
+      <div class="ak-card ak-crit">
+        <div class="ak-ico"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="ak-info"><span class="ak-val">{{ countByPriority('CRITICAL') }}</span><span class="ak-lbl">Critiques</span></div>
+      </div>
+      <div class="ak-card ak-high">
+        <div class="ak-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="ak-info"><span class="ak-val">{{ countByPriority('HIGH') }}</span><span class="ak-lbl">Hautes</span></div>
+      </div>
+      <div class="ak-card ak-unack">
+        <div class="ak-ico"><i class="fa-solid fa-bell-slash"></i></div>
+        <div class="ak-info"><span class="ak-val">{{ getUnackCount() }}</span><span class="ak-lbl">Non acquittées</span></div>
+      </div>
+      <div class="ak-card ak-level">
+        <div class="ak-ico"><i class="fa-solid fa-warehouse"></i></div>
+        <div class="ak-info"><span class="ak-val">{{ alerts().length }}</span><span class="ak-lbl">Sous seuil (niveaux)</span></div>
+      </div>
+    </div>
+
+    <!-- Source tabs -->
+    <div class="source-tabs">
+      <button class="stab" [class.st-on]="source()==='dashboard'" (click)="source.set('dashboard')">
+        <i class="fa-solid fa-warehouse"></i> Niveaux de stock <span class="stab-count">{{ alerts().length }}</span>
+      </button>
+      <button class="stab" [class.st-on]="source()==='backend'" (click)="source.set('backend')">
+        <i class="fa-solid fa-bell"></i> Alertes système <span class="stab-count">{{ backendAlerts().length }}</span>
+      </button>
+    </div>
+
+    <!-- DASHBOARD SOURCE: Stock levels under threshold -->
+    @if (source() === 'dashboard') {
+      <div class="filter-tabs">
+        <button class="ftab" [class.ft-on]="filter()==='TOUS'" (click)="filter.set('TOUS')">
+          Toutes <span class="ftab-count">{{ alerts().length }}</span>
+        </button>
+        <button class="ftab ftab-r" [class.ft-on]="filter()==='CRITIQUE'" (click)="filter.set('CRITIQUE')">
+          <span class="pulse-sm"></span> Critiques <span class="ftab-count">{{ critiques().length }}</span>
+        </button>
+        <button class="ftab ftab-o" [class.ft-on]="filter()==='FAIBLE'" (click)="filter.set('FAIBLE')">
+          Faibles <span class="ftab-count">{{ faibles().length }}</span>
+        </button>
+      </div>
+
+      <div class="alerts-grid">
+        @for (sl of getFilteredDashboard(); track sl.id) {
+          <div class="al-card" [class.al-crit]="sl.alertLevel==='CRITIQUE'" [class.al-faib]="sl.alertLevel==='FAIBLE'">
+            <div class="al-top">
+              <div class="al-badge-wrap">
+                @if (sl.alertLevel === 'CRITIQUE') { <div class="ring-wrap"><span class="ring-inner"></span></div> }
+                <span class="badge {{ getNiveauClass(sl.alertLevel) }}">{{ sl.alertLevel }}</span>
+              </div>
+              @if ((sl.leadTimeDays||0)>=90) {
+                <span class="ship-chip"><i class="fa-solid fa-ship"></i>Import urgent</span>
+              }
+            </div>
+            <h3 class="al-name">{{ sl.productName }}</h3>
+            <p class="al-mag"><i class="fa-solid fa-warehouse"></i> {{ sl.warehouseName || '—' }}</p>
+            <div class="al-bar-wrap">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:5px">
+                <span>Stock actuel</span>
+                <span style="font-weight:700" [style.color]="sl.alertLevel==='CRITIQUE'?'var(--r)':'var(--o)'">
+                  {{ sl.quantity | number }} / {{ sl.reorderPoint | number }} {{ sl.productUnit }}
+                </span>
+              </div>
+              <div style="height:8px;background:var(--n150);border-radius:4px;overflow:hidden">
+                <div [style.width.%]="Math.min(100,(sl.quantity/sl.reorderPoint)*100)"
+                     [style.background]="sl.alertLevel==='CRITIQUE'?'var(--r)':'var(--o)'"
+                     style="height:100%;border-radius:4px;transition:width 1s"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;border-top:1px solid rgba(0,0,0,.06)">
+              <span style="font-size:11px;color:var(--n500)">Valeur: <strong>{{ fCFA(sl.stockValue||0) }}</strong></span>
+            </div>
+            <!-- Actions Acquitter / Commander / Résoudre -->
+            <div class="al-actions">
+              @if (!isLevelAcked(sl.id)) {
+                <button class="btn btn-secondary btn-sm" (click)="acknowledgeLevel(sl)">
+                  <i class="fa-solid fa-check"></i> Acquitter
+                </button>
+              } @else {
+                <span class="al-acked-tag"><i class="fa-solid fa-user-check"></i> Acquittée</span>
+              }
+              @if (!isAlertOrdered(sl.id)) {
+                @if ((sl.warehouseType || '').toUpperCase().includes('CENTRAL')) {
+                  <button class="btn btn-ghost btn-sm" (click)="orderLevel(sl)"
+                          [disabled]="orderingId() === sl.id">
+                    @if (orderingId() === sl.id) {
+                      <i class="fa-solid fa-spinner fa-spin"></i>…
+                    } @else {
+                      <i class="fa-solid fa-truck-ramp-box"></i> Commander
+                    }
+                  </button>
+                } @else {
+                  <button class="btn btn-ghost btn-sm" (click)="openInlineReappro(sl)">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Réappro tampon
+                  </button>
+                }
+              } @else {
+                <span class="al-acked-tag" style="color:var(--g)"><i class="fa-solid fa-check-circle"></i> {{ (sl.warehouseType || '').toUpperCase().includes('CENTRAL') ? 'Commandée' : 'Réapprov.' }}</span>
+              }
+              <button class="btn btn-primary btn-sm" (click)="resolveLevel(sl)"
+                      [disabled]="resolvingId() === sl.id">
+                @if (resolvingId() === sl.id) {
+                  <i class="fa-solid fa-spinner fa-spin"></i> En cours…
+                } @else {
+                  <i class="fa-solid fa-circle-check"></i> Résoudre
+                }
+              </button>
+            </div>
+          </div>
+        }
+        @empty {
+          <div class="no-alerts">
+            <div class="na-ico"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 class="na-title">Tous les stocks sont sains !</h3>
+            <p class="na-sub">Aucune alerte de niveau actuelle.</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- BACKEND SOURCE: System alerts with acknowledge/resolve -->
+    @if (source() === 'backend') {
+      <!-- Type filters -->
+      <div class="type-filters">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='ALL'" (click)="typeFilter.set('ALL')">
+          <i class="fa-solid fa-layer-group"></i> Tous <span class="tf-count">{{ backendAlerts().length }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='CRITICAL_STOCK'" (click)="typeFilter.set('CRITICAL_STOCK')">
+          <i class="fa-solid fa-circle-exclamation"></i> Stock critique <span class="tf-count">{{ countByType('CRITICAL_STOCK') }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='LOW_STOCK'" (click)="typeFilter.set('LOW_STOCK')">
+          <i class="fa-solid fa-arrow-down"></i> Stock bas <span class="tf-count">{{ countByType('LOW_STOCK') }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRATION_SOON'" (click)="typeFilter.set('EXPIRATION_SOON')">
+          <i class="fa-solid fa-clock"></i> Péremption <span class="tf-count">{{ countByType('EXPIRATION_SOON') }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRED'" (click)="typeFilter.set('EXPIRED')">
+          <i class="fa-solid fa-skull-crossbones"></i> Expirés <span class="tf-count">{{ countByType('EXPIRED') }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='SLOW_ROTATION'" (click)="typeFilter.set('SLOW_ROTATION')">
+          <i class="fa-solid fa-rotate"></i> Rotation lente <span class="tf-count">{{ countByType('SLOW_ROTATION') }}</span>
+        </button>
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='BUFFER_INSUFFICIENT'" (click)="typeFilter.set('BUFFER_INSUFFICIENT')">
+          <i class="fa-solid fa-layer-group"></i> Tampon insuff. <span class="tf-count">{{ countByType('BUFFER_INSUFFICIENT') }}</span>
+        </button>
+      </div>
+
+      @if (getFilteredBackend().length === 0) {
+        <div class="no-alerts">
+          <div class="na-ico"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="na-title">Aucune alerte système active !</h3>
+          <p class="na-sub">La surveillance automatique n'a détecté aucune anomalie.</p>
+        </div>
+      } @else {
+        <div class="alerts-grid">
+          @for (a of getFilteredBackend(); track a.id) {
+            <div class="be-card" [style.border-left-color]="getTypeColor(a.type)">
+              <!-- Header -->
+              <div class="be-top">
+                <div class="be-ico-wrap" [style.background]="getTypeColor(a.type)+'15'" [style.color]="getTypeColor(a.type)">
+                  <i class="fa-solid {{ getTypeIcon(a.type) }}"></i>
+                </div>
+                <div class="be-info">
+                  <h4 class="be-name">{{ a.productName }}</h4>
+                  <span class="be-type">{{ getTypeLabel(a.type) }} · <span style="font-family:monospace">{{ a.productSku }}</span></span>
+                </div>
+                <span class="badge {{ getPriorityClass(a.priority) }}">{{ a.priority }}</span>
+              </div>
+
+              <!-- Message -->
+              <p class="be-msg">{{ a.message }}</p>
+
+              <!-- Quantities -->
+              <div class="be-qty-row">
+                <div class="be-qty">
+                  <span class="bq-lbl">Actuel</span>
+                  <span class="bq-val" [style.color]="getTypeColor(a.type)">{{ a.currentQuantity | number }}</span>
+                </div>
+                <div class="be-qty-sep"></div>
+                <div class="be-qty">
+                  <span class="bq-lbl">Seuil</span>
+                  <span class="bq-val">{{ a.threshold | number }}</span>
+                </div>
+              </div>
+
+              <!-- Meta -->
+              <div class="be-meta">
+                <span><i class="fa-solid fa-clock"></i> {{ a.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="be-status" [class.bes-ack]="a.status==='ACKNOWLEDGED'" [class.bes-res]="a.status==='RESOLVED'">
+                  @if (a.status === 'ACTIVE') { <span class="status-dot sd-active"></span> Active }
+                  @else if (a.status === 'ACKNOWLEDGED') { <span class="status-dot sd-ack"></span> Acquittée }
+                  @else { <span class="status-dot sd-res"></span> Résolue }
+                </span>
+              </div>
+
+              @if (a.acknowledged && a.acknowledgedBy) {
+                <div class="be-ack-info">
+                  <i class="fa-solid fa-user-check"></i> Acquittée par {{ a.acknowledgedBy }} · {{ a.acknowledgedAt | date:'dd/MM HH:mm' }}
+                </div>
+              }
+
+              <!-- Actions -->
+              <div class="be-actions">
+                @if (a.status !== 'RESOLVED') {
+                  @if (!a.acknowledged) {
+                    <button class="btn btn-secondary btn-sm" (click)="acknowledge(a.id)">
+                      <i class="fa-solid fa-check"></i> Acquitter
+                    </button>
+                  }
+                  @if (a.type === 'LOW_STOCK' || a.type === 'CRITICAL_STOCK' || a.type === 'REORDER_NEEDED' || a.type === 'BUFFER_INSUFFICIENT') {
+                    @if (!isAlertOrdered(a.id)) {
+                      <button class="btn btn-ghost btn-sm" (click)="orderProduct(a)"
+                              [disabled]="orderingId() === a.id">
+                        @if (orderingId() === a.id) {
+                          <i class="fa-solid fa-spinner fa-spin"></i>…
+                        } @else {
+                          <i class="fa-solid fa-truck-ramp-box"></i>
+                          {{ isCentralLocation(a.locationId) ? 'Commander' : 'Réappro tampon' }}
+                        }
+                      </button>
+                    } @else {
+                      <span class="be-ordered-tag"><i class="fa-solid fa-check-circle"></i> {{ isCentralLocation(a.locationId) ? 'Commandée' : 'Redirigé' }}</span>
+                    }
+                  }
+                  <button class="btn btn-primary btn-sm" (click)="resolve(a.id)">
+                    <i class="fa-solid fa-circle-check"></i> Résoudre
+                  </button>
+                } @else {
+                  <span class="be-resolved-tag"><i class="fa-solid fa-check-circle"></i> Résolue le {{ a.resolvedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+
+  <!-- INLINE REAPPRO MODAL -->
+  @if (showReappro()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeInlineReappro()">
+      <div class="modal-box animate-fadeInUp" style="max-width:460px" (click)="$event.stopPropagation()">
+        <div class="modal-header" style="background:var(--o-gh)">
+          <div class="modal-title" style="color:var(--o)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Réapprovisionner le Tampon</div>
+          <button class="modal-close" (click)="closeInlineReappro()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+            <div style="font-weight:700;color:var(--n800);font-size:14px">{{ reapproName() }}</div>
+            <div style="font-size:12px;color:var(--n400)">{{ reapproSku() }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(26,107,42,.06);border:1px solid rgba(26,107,42,.15);border-radius:var(--r-md);padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700;margin-bottom:4px">Stock Central</div>
+              <div style="font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--g)">{{ reapproCentralQty() | number }}</div>
+              <div style="font-size:11px;color:var(--n400)">{{ reapproUnit() }}</div>
+            </div>
+            <div style="background:rgba(230,81,0,.06);border:1px solid rgba(230,81,0,.15);border-radius:var(--r-md);padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700;margin-bottom:4px">À transférer</div>
+              <div style="font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--o)">{{ reapproQty() | number }}</div>
+              <div style="font-size:11px;color:var(--n400)">{{ reapproUnit() }}</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Quantité à transférer <span class="req">*</span></label>
+            <input type="number" class="form-control" min="1" [max]="reapproCentralQty()" [ngModel]="reapproQty()" (ngModelChange)="reapproQty.set($event)" placeholder="Quantité">
+            @if (reapproQty() > reapproCentralQty()) {
+              <div style="font-size:11px;color:var(--r);margin-top:4px">
+                <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant ({{ reapproCentralQty() | number }} {{ reapproUnit() }})
+              </div>
+            }
+          </div>
+          @if (reapproQty() > 0 && reapproQty() <= reapproCentralQty()) {
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--n600)">
+              <i class="fa-solid fa-circle-info"></i>
+              Après transfert : <strong>{{ (reapproCentralQty() - reapproQty()) | number }}</strong> en central
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeInlineReappro()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="reapproQty()<=0 || reapproQty()>reapproCentralQty() || reapproSaving()" (click)="confirmInlineReappro()">
+            @if (reapproSaving()) { <div class="spinner spinner-sm"></div> }
+            @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirmer }
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

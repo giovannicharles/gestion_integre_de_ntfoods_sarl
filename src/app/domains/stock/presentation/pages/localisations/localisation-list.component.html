@@ -1,0 +1,133 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+      <div>
+        <h1 class="ph-title">Gestion des Localisations</h1>
+        <p class="ph-sub">Emplacements de stock — central, tampon, mobile, magasins</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="initializeDefaults()"><i class="fa-solid fa-gear"></i> Initialiser défauts</button>
+      <button class="btn btn-primary btn-sm" (click)="toggleForm()">
+        <i class="fa-solid" [class.fa-plus]="!showForm()" [class.fa-xmark]="showForm()"></i>
+        {{ showForm() ? 'Fermer' : 'Nouvelle Localisation' }}
+      </button>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement des localisations…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- KPI BAR -->
+    <div class="kpi-bar">
+      <div class="kpi-item"><span class="kpi-val">{{ locations().length }}</span><span class="kpi-lbl">Total</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ centralCount }}</span><span class="kpi-lbl">Central</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ bufferCount }}</span><span class="kpi-lbl">Tampon</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ mobileCount }}</span><span class="kpi-lbl">Mobile</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ magasinCount }}</span><span class="kpi-lbl">Magasins</span></div>
+    </div>
+
+    <!-- CREATE FORM -->
+    @if (showForm()) {
+      <div class="card form-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvelle localisation</span>
+        </div>
+        <div class="form-grid">
+          <div class="fg">
+            <label>Type</label>
+            <select class="form-control" [(ngModel)]="newLocation.type">
+              @for (type of locationTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="fg">
+            <label>Nom</label>
+            <input type="text" class="form-control" [(ngModel)]="newLocation.name" placeholder="Nom de la localisation">
+          </div>
+          <div class="fg">
+            <label>Description</label>
+            <input type="text" class="form-control" [(ngModel)]="newLocation.description" placeholder="Description">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="createLocation()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Création…' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table"></i> Emplacements</span>
+        <button class="btn btn-ghost btn-sm" (click)="loadLocations()"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <div class="tbl-wrap">
+        @if (locations().length === 0) {
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <p>Aucune localisation trouvée</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>Commercial assigné</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (loc of locations(); track loc.id) {
+                <tr>
+                  <td class="mono">{{ loc.id }}</td>
+                  <td><span class="badge {{ getTypeClass(loc.type) }}">{{ getTypeLabel(loc.type) }}</span></td>
+                  <td class="fw-bold">{{ loc.name }}</td>
+                  <td>{{ loc.description || '—' }}</td>
+                  <td>{{ loc.assignedUserId || 'Non assigné' }}</td>
+                  <td>
+                    @if (loc.type === 'STOCK_MOBILE') {
+                      <input type="text" class="assign-input" placeholder="ID commercial"
+                             #commercialId (keyup.enter)="assignCommercial(loc.id, commercialId.value)">
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+  }
+</div>

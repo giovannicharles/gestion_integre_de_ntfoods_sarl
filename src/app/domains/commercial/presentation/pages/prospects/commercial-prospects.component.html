@@ -1,0 +1,88 @@
+<div class="dash animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-user-plus"></i></div>
+      <div>
+        <h1 class="ph-title">Gestion des Prospects</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Prospecter, déclarer et suivre les nouveaux points de vente</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      @if (!showForm()) {
+      <button class="btn btn-primary" (click)="showForm.set(true)"><i class="fa-solid fa-plus"></i> Nouveau prospect</button>
+      }
+    </div>
+  </div>
+
+  @if (submitted()) {
+  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Prospect soumis en attente de validation direction.</div>
+  }
+
+  @if (showForm()) {
+  <div class="card form-card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-store"></i> Déclarer un nouveau prospect</span></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Nom du commerce</label>
+        <input type="text" class="form-input" [(ngModel)]="nouveauProspect().nomCommerce" placeholder="Ex: Épicerie Moderne Oyili" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Téléphone</label>
+        <input type="tel" class="form-input" [(ngModel)]="nouveauProspect().telephone" placeholder="+237 699 XXX XXX" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type estimé</label>
+        <select class="form-select" [(ngModel)]="nouveauProspect().typeEstime">
+          <option value="DETAILLANT">Détaillant</option>
+          <option value="GROSSISTE">Grossiste</option>
+          <option value="DISTRIBUTEUR">Distributeur</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Position GPS (optionnel)</label>
+        <input type="text" class="form-input" placeholder="Lat, Long — ou cliquer sur carte" />
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes & observations</label>
+        <textarea class="form-textarea" rows="3" [(ngModel)]="nouveauProspect().notes" placeholder="Potentiel estimé, environnement commercial..."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Soumettre</button>
+    </div>
+  </div>
+  }
+
+  <!-- LISTE PROSPECTS -->
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-map-location-dot"></i> Mes Prospects ({{ prospects().length }})</span></div>
+    <div class="prospects-grid">
+      @for (p of prospects(); track p.id) {
+      <div class="prospect-card" [class.conv]="p.statut==='CONVERTI'" [class.ref]="p.statut==='REFUSE'">
+        <div class="prospect-header">
+          <div class="prospect-icon"><i class="fa-solid fa-store"></i></div>
+          <div class="prospect-info">
+            <div class="prospect-nom">{{ p.nomCommerce }}</div>
+            <div class="prospect-loc"><i class="fa-solid fa-location-dot"></i> {{ p.zone }}</div>
+          </div>
+          @if (p.statut==='CONVERTI') { <span class="badge bg-success">Converti ✓</span> }
+          @else if (p.statut==='REFUSE') { <span class="badge bg-red">Refusé</span> }
+          @else { <span class="badge bg-orange">En attente</span> }
+        </div>
+        <div class="prospect-details">
+          <span><i class="fa-solid fa-phone"></i> {{ p.telephone }}</span>
+          <span><i class="fa-solid fa-tag"></i> {{ p.typeEstime }}</span>
+          <span><i class="fa-regular fa-calendar"></i> {{ p.dateProspection | date:'dd/MM':'':"fr" }}</span>
+        </div>
+        @if (p.notes) {
+        <div class="prospect-notes"><i class="fa-solid fa-comment-dots"></i> {{ p.notes }}</div>
+        }
+      </div>
+      }
+      @empty {
+      <div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Aucun prospect pour votre zone. Commencez à prospecter !</p></div>
+      }
+    </div>
+  </div>
+</div>

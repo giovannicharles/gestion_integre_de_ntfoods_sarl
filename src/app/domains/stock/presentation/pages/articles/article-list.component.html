@@ -1,0 +1,462 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-box-open"></i></div>
+      <div>
+        <h1 class="ph-title">Gestion des Articles de Stock</h1>
+        <p class="ph-sub">Articles par emplacement — ajustements, édition, suivi des seuils</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="loadItems()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+      <button class="btn btn-primary btn-sm" (click)="toggleForm()">
+        <i class="fa-solid" [class.fa-plus]="!showForm()" [class.fa-xmark]="showForm()"></i>
+        {{ showForm() ? 'Fermer' : 'Nouvel Article' }}
+      </button>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  <!-- LOCATION SELECTOR -->
+  <div class="card loc-card">
+    <div class="loc-row">
+      <label class="loc-label"><i class="fa-solid fa-location-dot"></i> Emplacement</label>
+      <select class="loc-select" [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event); onLocationChange()">
+        @for (loc of locations(); track loc.id) {
+          <option [value]="loc.id">{{ loc.name }} ({{ getLocationTypeLabel(loc.type) }})</option>
+        }
+      </select>
+      @if (selectedLocationId()) {
+        <span class="badge {{ getLocationTypeClass(selectedLocationType()) }}">{{ getLocationTypeLabel(selectedLocationType()) }}</span>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement des articles…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- KPI BAR -->
+    <div class="kpi-bar">
+      <div class="kpi-item"><span class="kpi-val">{{ items().length }}</span><span class="kpi-lbl">Références</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ totalQuantity | number }}</span><span class="kpi-lbl">Quantité totale</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ totalCartons | number }}</span><span class="kpi-lbl">Cartons</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val">{{ totalWeight | number:'1.0-1' }}</span><span class="kpi-lbl">Poids (kg)</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val kpi-danger">{{ criticalCount }}</span><span class="kpi-lbl">Critique</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val kpi-warning">{{ lowCount }}</span><span class="kpi-lbl">Faible</span></div>
+      <div class="kpi-sep"></div>
+      <div class="kpi-item"><span class="kpi-val kpi-success">{{ normalCount }}</span><span class="kpi-lbl">Normal</span></div>
+    </div>
+
+    <!-- INVENTORY STATS DASHBOARD -->
+    <div class="inv-stats-toggle">
+      <button class="inv-stats-btn" (click)="toggleStats()">
+        <i class="fa-solid fa-chart-pie"></i>
+        {{ showStats() ? 'Masquer' : 'Afficher' }} les statistiques
+      </button>
+    </div>
+
+    @if (showStats()) {
+      <div class="inv-stats-dashboard">
+        <!-- Chart view selector -->
+        <div class="inv-chart-selector">
+          <button class="inv-chart-tab" [class.active]="chartView()==='material'" (click)="setChartView('material')">
+            <i class="fa-solid fa-chart-pie"></i> Répartition par type
+          </button>
+          <button class="inv-chart-tab" [class.active]="chartView()==='quantity'" (click)="setChartView('quantity')">
+            <i class="fa-solid fa-chart-column"></i> Quantités par type
+          </button>
+          <button class="inv-chart-tab" [class.active]="chartView()==='packaging'" (click)="setChartView('packaging')">
+            <i class="fa-solid fa-box-open"></i> Par conditionnement
+          </button>
+        </div>
+
+        <!-- Charts grid -->
+        <div class="inv-charts-grid">
+          <!-- Main chart (changes based on selector) -->
+          <div class="inv-chart-card inv-chart-main">
+            <div class="inv-chart-header">
+              <span class="inv-chart-title">
+                <i class="fa-solid" [class.fa-chart-pie]="chartView()==='material'" [class.fa-chart-column]="chartView()==='quantity'" [class.fa-box-open]="chartView()==='packaging'"></i>
+                {{ chartView() === 'material' ? 'Répartition par type de matériel' : chartView() === 'quantity' ? 'Quantités par type de matériel' : 'Répartition par conditionnement' }}
+              </span>
+            </div>
+            <div class="inv-chart-body">
+              @if (chartView() === 'material') {
+                <div class="inv-canvas-wrap" style="height:280px">
+                  <canvas #invMaterialChart></canvas>
+                </div>
+                <div class="inv-chart-legend">
+                  @for (d of materialDist(); track d.label) {
+                    <div class="inv-legend-item">
+                      <span class="inv-legend-dot" [style.background]="d.color"></span>
+                      <span class="inv-legend-label">{{ d.label }}</span>
+                      <span class="inv-legend-value">{{ d.value }}</span>
+                    </div>
+                  }
+                </div>
+              }
+              @if (chartView() === 'quantity') {
+                <div class="inv-canvas-wrap" style="height:280px">
+                  <canvas #invQtyChart></canvas>
+                </div>
+              }
+              @if (chartView() === 'packaging') {
+                <div class="inv-canvas-wrap" style="height:280px">
+                  <canvas #invPackagingChart></canvas>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Top 10 products by quantity -->
+          <div class="inv-chart-card">
+            <div class="inv-chart-header">
+              <span class="inv-chart-title"><i class="fa-solid fa-trophy"></i> Top 10 — Quantités</span>
+            </div>
+            <div class="inv-chart-body">
+              <div class="inv-top-list">
+                @for (p of topQtyProducts(); track p.label; let idx = $index) {
+                  <div class="inv-top-row">
+                    <span class="inv-top-rank">{{ idx + 1 }}</span>
+                    <span class="inv-top-name">{{ p.label }}</span>
+                    <span class="inv-top-qty">{{ p.value | number }}</span>
+                  </div>
+                } @empty {
+                  <div class="inv-top-empty">Aucune donnée</div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert summary cards -->
+        <div class="inv-alert-cards">
+          <div class="inv-alert-card inv-alert-critical">
+            <div class="inv-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="inv-alert-info"><span class="inv-alert-val">{{ criticalCount }}</span><span class="inv-alert-lbl">Stock critique</span></div>
+          </div>
+          <div class="inv-alert-card inv-alert-low">
+            <div class="inv-alert-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+            <div class="inv-alert-info"><span class="inv-alert-val">{{ lowCount }}</span><span class="inv-alert-lbl">Stock faible</span></div>
+          </div>
+          <div class="inv-alert-card inv-alert-normal">
+            <div class="inv-alert-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="inv-alert-info"><span class="inv-alert-val">{{ normalCount }}</span><span class="inv-alert-lbl">Stock normal</span></div>
+          </div>
+          <div class="inv-alert-card inv-alert-total">
+            <div class="inv-alert-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <div class="inv-alert-info"><span class="inv-alert-val">{{ totalQuantity | number }}</span><span class="inv-alert-lbl">Quantité totale</span></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- CREATE FORM -->
+    @if (showForm()) {
+      <div class="card form-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvel article</span>
+        </div>
+        <div class="form-grid">
+          <div class="fg">
+            <label>SKU Produit <span class="req">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="newItem.productSku" placeholder="Ex: TANTY-001">
+          </div>
+          <div class="fg">
+            <label>Quantité <span class="req">*</span></label>
+            <input type="number" class="form-control" [(ngModel)]="newItem.quantity" placeholder="0" min="0">
+          </div>
+          <div class="fg">
+            <label>Qté par carton</label>
+            <input type="number" class="form-control" [(ngModel)]="newItem.quantityPerCarton" placeholder="1" min="1">
+          </div>
+          <div class="fg">
+            <label>Poids unitaire (kg)</label>
+            <input type="number" class="form-control" [(ngModel)]="newItem.unitWeight" placeholder="1" step="0.01" min="0">
+          </div>
+          <div class="fg">
+            <label>Volume</label>
+            <input type="text" class="form-control" [(ngModel)]="newItem.volume" placeholder="Ex: 1L, 500ml">
+          </div>
+          <div class="fg">
+            <label>Type de conditionnement</label>
+            <select class="form-control" [(ngModel)]="newItem.packagingType">
+              <option value="UNIT">Unité</option>
+              <option value="CARTON">Carton</option>
+              <option value="ASSORTIMENT">Assortiment</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Cartons par assortiment</label>
+            <input type="number" class="form-control" [(ngModel)]="newItem.cartonsPerAssortiment" placeholder="—" min="0">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="createItem()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Création…' : 'Créer l\'article' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- SEARCH + FILTERS + TABLE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table"></i> Articles — {{ getLocationName(selectedLocationId()) }}</span>
+        <div class="card-hd-right">
+          <select class="filter-select" [ngModel]="filterPackaging()" (ngModelChange)="filterPackaging.set($event); onFilterPackaging()">
+            <option value="ALL">Tous conditionnements</option>
+            <option value="UNIT">Unité</option>
+            <option value="CARTON">Carton</option>
+            <option value="ASSORTIMENT">Assortiment</option>
+          </select>
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rechercher SKU, produit, marque…" [ngModel]="search()" (ngModelChange)="search.set($event); onSearch()">
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        @if (filtered().length === 0) {
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <p>Aucun article trouvé</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="th-sortable" (click)="sortBy('productSku')">SKU <i class="fa-solid {{ sortIcon('productSku') }}"></i></th>
+                <th>Marque</th>
+                <th>Catégorie</th>
+                <th class="th-sortable" (click)="sortBy('quantity')">Quantité <i class="fa-solid {{ sortIcon('quantity') }}"></i></th>
+                <th>Unité</th>
+                <th>Cartons</th>
+                <th class="th-sortable" (click)="sortBy('unitWeight')">Poids unit. <i class="fa-solid {{ sortIcon('unitWeight') }}"></i></th>
+                <th>Conditionnement</th>
+                <th>Seuil</th>
+                <th class="th-sortable" (click)="sortBy('lastUpdated')">Modifié <i class="fa-solid {{ sortIcon('lastUpdated') }}"></i></th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filtered(); track item.id) {
+                <tr>
+                  <td class="mono fw-bold">{{ item.productSku }}</td>
+                  <td>{{ item.brandName || '—' }}</td>
+                  <td>{{ item.productCategory || '—' }}</td>
+                  <td class="mono fw-bold">{{ item.quantity | number }}</td>
+                  <td class="mono">{{ item.productUnit || '—' }}</td>
+                  <td class="mono">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }}</td>
+                  <td class="mono">{{ item.unitWeight | number:'1.0-2' }} kg</td>
+                  <td><span class="badge badge-neutral">{{ packagingLabel(item.packagingType) }}</span></td>
+                  <td>
+                    @if (computeAlert(item) !== 'NORMAL') {
+                      <span class="badge {{ alertClass(computeAlert(item)) }}">{{ computeAlert(item) }}</span>
+                    } @else {
+                      <span class="badge badge-success">OK</span>
+                    }
+                  </td>
+                  <td class="mono cell-date">{{ formatDate(item.lastUpdated) }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn btn-sm btn-ghost" (click)="openDetailModal(item)" title="Détails"><i class="fa-solid fa-eye"></i></button>
+                      <button class="btn btn-sm btn-ghost" (click)="openEditModal(item)" title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
+                      <button class="btn btn-sm btn-success" (click)="openAdjustModal(item, 'add')" title="Ajouter quantité"><i class="fa-solid fa-plus"></i></button>
+                      <button class="btn btn-sm btn-danger" (click)="openAdjustModal(item, 'subtract')" title="Retirer quantité"><i class="fa-solid fa-minus"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+      @if (filtered().length > 0) {
+        <div class="card-footer">
+          <span class="footer-count">{{ filtered().length }} article(s) sur {{ items().length }}</span>
+        </div>
+      }
+    </div>
+
+  }
+
+  <!-- MODAL: Ajustement de quantité -->
+  @if (showAdjustModal()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeAdjustModal()">
+      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+        <div class="modal-header" [class.modal-header-success]="adjustMode()==='add'" [class.modal-header-danger]="adjustMode()==='subtract'">
+          <div class="modal-title">
+            <i class="fa-solid" [class.fa-circle-plus]="adjustMode()==='add'" [class.fa-circle-minus]="adjustMode()==='subtract'"></i>
+            {{ adjustMode() === 'add' ? 'Ajouter' : 'Retirer' }} une quantité
+          </div>
+          <button class="modal-close" (click)="closeAdjustModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (adjustItem(); as item) {
+            <div class="modal-info-box">
+              <div class="info-row"><span class="info-label">Produit</span><span class="info-value fw-bold">{{ item.productName || item.productSku }}</span></div>
+              <div class="info-row"><span class="info-label">SKU</span><span class="info-value mono">{{ item.productSku }}</span></div>
+              <div class="info-row"><span class="info-label">Stock actuel</span><span class="info-value mono fw-bold">{{ item.quantity | number }} {{ item.productUnit }}</span></div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label>Quantité à {{ adjustMode() === 'add' ? 'ajouter' : 'retirer' }} <span class="req">*</span></label>
+                <input type="number" class="form-control" [ngModel]="adjustAmount()" (ngModelChange)="adjustAmount.set($event)" min="1" placeholder="10">
+              </div>
+            </div>
+            <div class="quick-amounts">
+              <button class="btn btn-sm btn-ghost" (click)="adjustAmount.set(1)">1</button>
+              <button class="btn btn-sm btn-ghost" (click)="adjustAmount.set(5)">5</button>
+              <button class="btn btn-sm btn-ghost" (click)="adjustAmount.set(10)">10</button>
+              <button class="btn btn-sm btn-ghost" (click)="adjustAmount.set(50)">50</button>
+              <button class="btn btn-sm btn-ghost" (click)="adjustAmount.set(100)">100</button>
+            </div>
+            @if (adjustMode() === 'subtract') {
+              <div class="modal-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Nouveau stock après retrait : <strong>{{ (adjustItem()!.quantity - adjustAmount()) | number }}</strong>
+                @if (adjustAmount() > adjustItem()!.quantity) {
+                  <span class="modal-error-text"> — Stock insuffisant !</span>
+                }
+              </div>
+            } @else {
+              <div class="modal-info">
+                <i class="fa-solid fa-circle-info"></i>
+                Nouveau stock après ajout : <strong>{{ (adjustItem()!.quantity + adjustAmount()) | number }}</strong>
+              </div>
+            }
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeAdjustModal()">Annuler</button>
+          <button class="btn" [class.btn-success]="adjustMode()==='add'" [class.btn-danger]="adjustMode()==='subtract'"
+                  (click)="confirmAdjust()" [disabled]="saving() || (adjustMode()==='subtract' && adjustAmount() > adjustItem()!.quantity)">
+            <i class="fa-solid" [class.fa-circle-plus]="adjustMode()==='add'" [class.fa-circle-minus]="adjustMode()==='subtract'"></i>
+            {{ saving() ? 'Traitement…' : 'Confirmer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: Édition article -->
+  @if (showEditModal()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeEditModal()">
+      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-primary">
+          <div class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Modifier l'article</div>
+          <button class="modal-close" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (editItem(); as item) {
+            <div class="modal-info-box">
+              <div class="info-row"><span class="info-label">SKU</span><span class="info-value mono fw-bold">{{ item.productSku }}</span></div>
+              <div class="info-row"><span class="info-label">Produit</span><span class="info-value">{{ item.productName || '—' }}</span></div>
+            </div>
+            <div class="form-grid">
+              <div class="fg">
+                <label>Quantité <span class="req">*</span></label>
+                <input type="number" class="form-control" [ngModel]="editQuantity()" (ngModelChange)="editQuantity.set($event)" min="0">
+              </div>
+              <div class="fg">
+                <label>Qté par carton</label>
+                <input type="number" class="form-control" [ngModel]="editQtyPerCarton()" (ngModelChange)="editQtyPerCarton.set($event)" min="1">
+              </div>
+              <div class="fg">
+                <label>Poids unitaire (kg)</label>
+                <input type="number" class="form-control" [ngModel]="editUnitWeight()" (ngModelChange)="editUnitWeight.set($event)" step="0.01" min="0">
+              </div>
+              <div class="fg">
+                <label>Volume</label>
+                <input type="text" class="form-control" [ngModel]="editVolume()" (ngModelChange)="editVolume.set($event)">
+              </div>
+              <div class="fg">
+                <label>Conditionnement</label>
+                <select class="form-control" [ngModel]="editPackagingType()" (ngModelChange)="editPackagingType.set($event)">
+                  <option value="UNIT">Unité</option>
+                  <option value="CARTON">Carton</option>
+                  <option value="ASSORTIMENT">Assortiment</option>
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeEditModal()">Annuler</button>
+          <button class="btn btn-primary" (click)="saveEdit()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: Détails article -->
+  @if (showDetailModal()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeDetailModal()">
+      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-info">
+          <div class="modal-title"><i class="fa-solid fa-circle-info"></i> Détails de l'article</div>
+          <button class="modal-close" (click)="closeDetailModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (detailItem(); as item) {
+            <div class="detail-grid">
+              <div class="detail-row"><span class="detail-label">SKU</span><span class="detail-value mono fw-bold">{{ item.productSku }}</span></div>
+              <div class="detail-row"><span class="detail-label">Désignation</span><span class="detail-value">{{ item.productName || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Marque</span><span class="detail-value">{{ item.brandName || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Catégorie</span><span class="detail-value">{{ item.productCategory || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Gamme produit</span><span class="detail-value">{{ item.productLineName || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Type matière</span><span class="detail-value">{{ item.materialType || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Quantité</span><span class="detail-value mono fw-bold">{{ item.quantity | number }} {{ item.productUnit }}</span></div>
+              <div class="detail-row"><span class="detail-label">Qté / carton</span><span class="detail-value mono">{{ item.quantityPerCarton }}</span></div>
+              <div class="detail-row"><span class="detail-label">Nombre de cartons</span><span class="detail-value mono">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Poids unitaire</span><span class="detail-value mono">{{ item.unitWeight | number:'1.0-2' }} kg</span></div>
+              <div class="detail-row"><span class="detail-label">Poids total</span><span class="detail-value mono">{{ (item.quantity * item.unitWeight) | number:'1.0-2' }} kg</span></div>
+              <div class="detail-row"><span class="detail-label">Volume</span><span class="detail-value">{{ item.volume || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Conditionnement</span><span class="detail-value"><span class="badge badge-neutral">{{ packagingLabel(item.packagingType) }}</span></span></div>
+              <div class="detail-row"><span class="detail-label">Cartons / assortiment</span><span class="detail-value mono">{{ item.cartonsPerAssortiment || '—' }}</span></div>
+              <div class="detail-row"><span class="detail-label">Point de réappro</span><span class="detail-value mono">{{ item.reorderPoint | number }}</span></div>
+              <div class="detail-row"><span class="detail-label">Stock de sécurité</span><span class="detail-value mono">{{ item.safetyStock | number }}</span></div>
+              <div class="detail-row"><span class="detail-label">Niveau d'alerte</span><span class="detail-value"><span class="badge {{ alertClass(computeAlert(item)) }}">{{ computeAlert(item) }}</span></span></div>
+              <div class="detail-row"><span class="detail-label">Dernière modification</span><span class="detail-value">{{ formatDate(item.lastUpdated) }}</span></div>
+              <div class="detail-row"><span class="detail-label">Modifié par</span><span class="detail-value mono">{{ item.lastUpdatedBy || '—' }}</span></div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeDetailModal()">Fermer</button>
+          @if (detailItem(); as item) {
+            <button class="btn btn-primary" (click)="editFromDetail(item)">
+              <i class="fa-solid fa-pen-to-square"></i> Modifier
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

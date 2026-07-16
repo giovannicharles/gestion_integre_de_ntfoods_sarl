@@ -1,0 +1,94 @@
+<div class="page animate-fadeInUp">
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div>
+        <h1 class="ph-title">Gestion des Lots</h1>
+        <p class="ph-sub">Traçabilité FIFO/FEFO des produits en stock</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="showForm.set(!showForm())">
+      <i class="fa-solid fa-plus"></i> Nouveau lot
+    </button>
+  </div>
+
+  <!-- CREATE FORM -->
+  @if (showForm()) {
+    <div class="card form-card">
+      <h3 class="form-title">Créer un lot</h3>
+      <div class="form-grid">
+        <label>Numéro de lot<input type="text" [(ngModel)]="newBatch.batchNumber" class="form-control" placeholder="LOT-XXXX"></label>
+        <label>ID Produit<input type="number" [(ngModel)]="newBatch.productId" class="form-control"></label>
+        <label>SKU<input type="text" [(ngModel)]="newBatch.productSku" class="form-control"></label>
+        <label>Nom produit<input type="text" [(ngModel)]="newBatch.productName" class="form-control"></label>
+        <label>Fournisseur<input type="text" [(ngModel)]="newBatch.supplierName" class="form-control"></label>
+        <label>Date fabrication<input type="date" [(ngModel)]="newBatch.manufactureDate" class="form-control"></label>
+        <label>Date péremption<input type="date" [(ngModel)]="newBatch.expiryDate" class="form-control"></label>
+        <label>Quantité initiale<input type="number" [(ngModel)]="newBatch.initialQuantity" class="form-control"></label>
+        <label>Emplacement (ID)<input type="text" [(ngModel)]="newBatch.locationId" class="form-control"></label>
+        <label>Notes<textarea [(ngModel)]="newBatch.notes" class="form-control" rows="1"></textarea></label>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="showForm.set(false)">Annuler</button>
+        <button class="btn btn-primary" (click)="createBatch()" [disabled]="!canCreate()">Enregistrer</button>
+      </div>
+    </div>
+  }
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <button class="tab-btn" [class.tb-active]="filter()==='TOUS'" (click)="filter.set('TOUS')">Tous</button>
+    <button class="tab-btn tb-o" [class.tb-active]="filter()==='AVAILABLE'" (click)="filter.set('AVAILABLE')">Disponibles</button>
+    <button class="tab-btn tb-red" [class.tb-active]="filter()==='EXPIRED'" (click)="filter.set('EXPIRED')">Expirés</button>
+    <button class="tab-btn tab-spacer" (click)="loadExpiringSoon()"><i class="fa-solid fa-clock"></i> Proches péremption</button>
+    <button class="tab-btn" (click)="loadExpired()"><i class="fa-solid fa-calendar-xmark"></i> Expirés</button>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement…</p>
+    </div>
+  }
+
+  <!-- EMPTY -->
+  @else if (filtered().length === 0) {
+    <div class="card"><div class="empty-state">Aucun lot trouvé.</div></div>
+  }
+
+  <!-- LOTS GRID -->
+  @else {
+    <div class="lots-grid">
+      @for (b of filtered(); track b.id) {
+        <div class="card lot-card" [class.lot-expired]="b.status==='EXPIRED'" [class.lot-available]="b.status==='AVAILABLE'" [class.lot-quarantine]="b.status==='QUARANTINE'">
+          <div class="lot-header">
+            <div>
+              <h4 class="lot-number">{{ b.batchNumber }}</h4>
+              <div class="lot-product">{{ b.productName || b.productSku }}</div>
+            </div>
+            <span class="badge" [class.badge-danger]="b.status==='EXPIRED'" [class.badge-success]="b.status==='AVAILABLE'" [class.badge-warning]="b.status!=='EXPIRED' && b.status!=='AVAILABLE'">{{ b.status }}</span>
+          </div>
+          <div class="lot-details">
+            <div><strong>Initial:</strong> {{ b.initialQuantity | number }}</div>
+            <div><strong>Restant:</strong> {{ b.remainingQuantity | number }}</div>
+            <div><strong>Fab:</strong> {{ b.manufactureDate | date:'dd/MM/yyyy' }}</div>
+            <div><strong>Exp:</strong> {{ b.expiryDate | date:'dd/MM/yyyy' }}</div>
+          </div>
+          @if (b.notes) {
+            <div class="lot-notes">{{ b.notes }}</div>
+          }
+          <div class="lot-actions">
+            <button class="btn btn-sm btn-secondary" (click)="setStatus(b.id, 'QUARANTINE')" [disabled]="b.status==='QUARANTINE'">
+              <i class="fa-solid fa-shield"></i> Quarantaine
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="setStatus(b.id, 'EXPIRED')" [disabled]="b.status==='EXPIRED'">
+              <i class="fa-solid fa-calendar-xmark"></i> Marquer expiré
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

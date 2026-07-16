@@ -1,0 +1,335 @@
+<div class="page animate-fadeInUp">
+  @if (toastMsg()) {
+    <div class="toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-circle-check]="toastType()==='success'" [class.fa-circle-xmark]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-file-lines"></i></div>
+      <div><h1 class="ph-title">Documents & Rapports</h1><p class="ph-sub">Générez fiches PDF, exports Excel et rapports d'analyse</p></div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="toggleAnalysis()">
+        <i class="fa-solid fa-chart-pie"></i> {{ showAnalysis() ? 'Masquer' : 'Analyse' }}
+      </button>
+      <button class="btn btn-primary" (click)="toggleForm()"><i class="fa-solid fa-plus"></i> Nouveau rapport</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:48px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+  } @else {
+
+    <!-- ═══ VISUAL ANALYSIS SECTION ═══ -->
+    @if (showAnalysis()) {
+      <div class="rpt-analysis-section">
+        <div class="rpt-analysis-header">
+          <h2><i class="fa-solid fa-chart-pie"></i> Analyse visuelle du stock</h2>
+          <div class="rpt-analysis-tabs">
+            <button class="rpt-analysis-tab" [class.active]="analysisView()==='material'" (click)="setAnalysisView('material')">
+              <i class="fa-solid fa-boxes-stacked"></i> Matériel
+            </button>
+            <button class="rpt-analysis-tab" [class.active]="analysisView()==='alerts'" (click)="setAnalysisView('alerts')">
+              <i class="fa-solid fa-triangle-exclamation"></i> Alertes
+            </button>
+            <button class="rpt-analysis-tab" [class.active]="analysisView()==='warehouse'" (click)="setAnalysisView('warehouse')">
+              <i class="fa-solid fa-warehouse"></i> Entrepôts
+            </button>
+            <button class="rpt-analysis-tab" [class.active]="analysisView()==='movements'" (click)="setAnalysisView('movements')">
+              <i class="fa-solid fa-right-left"></i> Mouvements
+            </button>
+          </div>
+        </div>
+
+        @if (analysisLoading()) {
+          <div class="rpt-analysis-loading"><div class="spinner spinner-sm"></div> Chargement des données…</div>
+        } @else {
+          <!-- KPI cards -->
+          <div class="rpt-analysis-kpis">
+            <div class="rpt-kpi-card">
+              <div class="rpt-kpi-icon" style="background:rgba(26,107,42,.1);color:#1A6B2A"><i class="fa-solid fa-boxes-stacked"></i></div>
+              <div><div class="rpt-kpi-val">{{ stockLevels().length }}</div><div class="rpt-kpi-lbl">Références</div></div>
+            </div>
+            <div class="rpt-kpi-card">
+              <div class="rpt-kpi-icon" style="background:rgba(37,99,235,.1);color:#2563eb"><i class="fa-solid fa-cube"></i></div>
+              <div><div class="rpt-kpi-val">{{ totalStockQty() | number }}</div><div class="rpt-kpi-lbl">Quantité totale</div></div>
+            </div>
+            <div class="rpt-kpi-card">
+              <div class="rpt-kpi-icon" style="background:rgba(234,88,12,.1);color:#ea580c"><i class="fa-solid fa-coins"></i></div>
+              <div><div class="rpt-kpi-val">{{ formatCFA(totalStockValue()) }}</div><div class="rpt-kpi-lbl">Valeur stock</div></div>
+            </div>
+            <div class="rpt-kpi-card">
+              <div class="rpt-kpi-icon" style="background:rgba(220,38,38,.1);color:#dc2626"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div><div class="rpt-kpi-val">{{ alertDistribution()[0].value }}</div><div class="rpt-kpi-lbl">Alertes critiques</div></div>
+            </div>
+          </div>
+
+          <!-- Charts grid -->
+          <div class="rpt-charts-grid">
+            <!-- Main chart based on selected view -->
+            <div class="rpt-chart-card rpt-chart-main">
+              <div class="rpt-chart-header">
+                <span class="rpt-chart-title">
+                  <i class="fa-solid" [class.fa-boxes-stacked]="analysisView()==='material'" [class.fa-triangle-exclamation]="analysisView()==='alerts'" [class.fa-warehouse]="analysisView()==='warehouse'" [class.fa-right-left]="analysisView()==='movements'"></i>
+                  {{ analysisView() === 'material' ? 'Répartition par type de matériel' : analysisView() === 'alerts' ? 'Niveaux d\\'alerte' : analysisView() === 'warehouse' ? 'Stock par entrepôt' : 'Mouvements par type' }}
+                </span>
+              </div>
+              <div class="rpt-chart-body">
+                @if (analysisView() === 'material') {
+                  <div class="rpt-canvas-wrap" style="height:300px"><canvas #rptMaterialChart></canvas></div>
+                }
+                @if (analysisView() === 'alerts') {
+                  <div class="rpt-canvas-wrap" style="height:300px"><canvas #rptAlertChart></canvas></div>
+                }
+                @if (analysisView() === 'warehouse') {
+                  <div class="rpt-canvas-wrap" style="height:300px"><canvas #rptWarehouseChart></canvas></div>
+                }
+                @if (analysisView() === 'movements') {
+                  <div class="rpt-canvas-wrap" style="height:300px"><canvas #rptMovementChart></canvas></div>
+                }
+              </div>
+            </div>
+
+            <!-- Top 10 products sidebar -->
+            <div class="rpt-chart-card">
+              <div class="rpt-chart-header">
+                <span class="rpt-chart-title"><i class="fa-solid fa-trophy"></i> Top 10 — Stock</span>
+              </div>
+              <div class="rpt-chart-body">
+                <div class="rpt-top-list">
+                  @for (p of topStockProducts(); track p.name; let idx = $index) {
+                    <div class="rpt-top-row">
+                      <span class="rpt-top-rank">{{ idx + 1 }}</span>
+                      <span class="rpt-top-name">{{ p.name }}</span>
+                      <span class="rpt-top-qty">{{ p.qty | number }}</span>
+                    </div>
+                  } @empty {
+                    <div class="rpt-top-empty">Aucune donnée</div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Material breakdown table -->
+          @if (analysisView() === 'material') {
+            <div class="rpt-breakdown-table">
+              <table class="rpt-table">
+                <thead>
+                  <tr><th>Type</th><th>Nombre produits</th><th>Quantité totale</th><th>Valeur stock</th></tr>
+                </thead>
+                <tbody>
+                  @for (d of materialAnalysis(); track d.label) {
+                    <tr>
+                      <td><strong>{{ d.label }}</strong></td>
+                      <td>{{ d.count }}</td>
+                      <td>{{ d.qty | number }}</td>
+                      <td>{{ formatCFA(d.value) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="rpt-empty">Aucune donnée</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- Alert breakdown -->
+          @if (analysisView() === 'alerts') {
+            <div class="rpt-alert-breakdown">
+              @for (a of alertDistribution(); track a.label) {
+                <div class="rpt-alert-bd-card" [style.border-left-color]="a.color">
+                  <div class="rpt-alert-bd-icon" [style.background]="a.color + '20'" [style.color]="a.color"><i class="fa-solid fa-circle"></i></div>
+                  <div><div class="rpt-alert-bd-val">{{ a.value }}</div><div class="rpt-alert-bd-lbl">{{ a.label }}</div></div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Warehouse breakdown -->
+          @if (analysisView() === 'warehouse') {
+            <div class="rpt-breakdown-table">
+              <table class="rpt-table">
+                <thead>
+                  <tr><th>Entrepôt</th><th>Produits</th><th>Quantité</th><th>Valeur</th></tr>
+                </thead>
+                <tbody>
+                  @for (w of warehouseDistribution(); track w.name) {
+                    <tr>
+                      <td><strong>{{ w.name }}</strong></td>
+                      <td>{{ w.count }}</td>
+                      <td>{{ w.qty | number }}</td>
+                      <td>{{ formatCFA(w.value) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="rpt-empty">Aucune donnée</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- Movement breakdown -->
+          @if (analysisView() === 'movements') {
+            <div class="rpt-breakdown-table">
+              <table class="rpt-table">
+                <thead>
+                  <tr><th>Type de mouvement</th><th>Quantité totale</th></tr>
+                </thead>
+                <tbody>
+                  @for (m of movementTypeDist(); track m.type) {
+                    <tr>
+                      <td><strong>{{ m.type }}</strong></td>
+                      <td>{{ m.qty | number }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="2" class="rpt-empty">Aucun mouvement</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </div>
+    }
+
+    @if (showForm()) {
+      <div class="card rpt-form-card animate-fadeInUp">
+        <div class="card-header"><div class="sec-head"><span class="sh-ico sh-b"><i class="fa-solid fa-file-circle-plus"></i></span><div><h3>Générer un rapport analytique</h3><p class="sec-sub">Sauvegardé dans l'historique et consultable à tout moment</p></div></div></div>
+        <div class="card-body">
+          <div class="rpt-form-grid">
+            <div class="form-group"><label class="form-label">Type de rapport</label>
+              <select class="form-control" [(ngModel)]="newReport.type">
+                @for (type of reportTypes; track type.value) { <option [value]="type.value">{{ type.label }}</option> }
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Date début</label><input type="date" class="form-control" [(ngModel)]="newReport.periodStart"></div>
+            <div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-control" [(ngModel)]="newReport.periodEnd"></div>
+            <div class="form-group"><label class="form-label">Format</label>
+              <select class="form-control" [(ngModel)]="newReport.format"><option value="PDF">PDF</option><option value="EXCEL">Excel</option><option value="CSV">CSV</option></select>
+            </div>
+          </div>
+          <div class="rpt-actions">
+            <button class="btn btn-primary" (click)="generateReport()" [disabled]="generating()">
+              @if (generating()) { <div class="spinner spinner-sm"></div> Génération… } @else { <i class="fa-solid fa-play"></i> Générer le rapport }
+            </button>
+            <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- DOCUMENT TEMPLATES -->
+    <div class="rpt-section">
+      <div class="rpt-section-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-export"></i></span><h2>Documents à générer</h2></div>
+
+      <div class="rpt-period-bar">
+        <label><i class="fa-solid fa-calendar"></i> Période pour les synthèses :</label>
+        <input type="date" class="form-control" [(ngModel)]="docPeriodStart">
+        <span class="rpt-sep">→</span>
+        <input type="date" class="form-control" [(ngModel)]="docPeriodEnd">
+      </div>
+
+      <div class="rpt-doc-grid">
+        @for (doc of documentTemplates; track doc.id) {
+          <div class="rpt-doc-card" (click)="doc.action()">
+            <div class="rpt-doc-icon" [style.background]="doc.color + '20'" [style.color]="doc.color">
+              <i class="fa-solid {{ doc.icon }}"></i>
+            </div>
+            <div class="rpt-doc-info">
+              <h4>{{ doc.label }}</h4>
+              <p>{{ doc.description }}</p>
+              @if (doc.needsPeriod) { <span class="rpt-doc-tag"><i class="fa-solid fa-calendar-day"></i> Période</span> }
+            </div>
+            <button class="rpt-doc-btn"><i class="fa-solid fa-download"></i></button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- REPORT LIST -->
+    <div class="card">
+      <div class="card-header">
+        <div class="sec-head"><span class="sh-ico sh-b"><i class="fa-solid fa-clock-rotate-left"></i></span><div><h3>Rapports générés</h3><p class="sec-sub">{{ filteredReports().length }} rapport(s) dans l'historique</p></div></div>
+        <div class="rpt-list-controls">
+          <div class="rpt-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="form-control" placeholder="Rechercher..." [(ngModel)]="search" (input)="search.set($any($event.target).value)"></div>
+          <select class="form-control" [(ngModel)]="filterType">
+            <option value="ALL">Tous les types</option>
+            @for (t of reportTypes; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+          </select>
+          <select class="form-control" [(ngModel)]="sortBy">
+            <option value="date">Tri par date</option>
+            <option value="type">Tri par type</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="rpt-table-wrapper">
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Période</th>
+                <th>Format</th>
+                <th>Généré par</th>
+                <th>Date</th>
+                <th style="width:120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (report of filteredReports(); track report.id) {
+                <tr (click)="openDetail(report)">
+                  <td>
+                    <div class="rpt-item">
+                      <span class="rpt-item-icon" [style.background]="getReportColor(report.type) + '20'" [style.color]="getReportColor(report.type)"><i class="fa-solid {{ getReportIcon(report.type) }}"></i></span>
+                      <div><div class="rpt-item-title">{{ report.title || getReportTypeLabel(report.type) }}</div><div class="rpt-item-sub">{{ getReportTypeLabel(report.type) }}</div></div>
+                    </div>
+                  </td>
+                  <td>{{ report.periodStart | date:'dd/MM/yyyy' }} — {{ report.periodEnd | date:'dd/MM/yyyy' }}</td>
+                  <td><span class="rpt-format">{{ report.format }}</span></td>
+                  <td>{{ report.generatedBy || '—' }}</td>
+                  <td>{{ report.generatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <div class="rpt-row-actions">
+                      <button class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); downloadReport(report)" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+                      <button class="btn btn-sm btn-danger" (click)="deleteReport(report.id, $event)" title="Supprimer"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun rapport généré</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+@if (selectedReport(); as sr) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:520px">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid {{ getReportIcon(sr.type) }}"></i> {{ sr.title || getReportTypeLabel(sr.type) }}</div>
+        <button class="modal-close" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="rpt-detail-grid">
+          <div><span class="rpt-detail-label">Type</span><strong>{{ getReportTypeLabel(sr.type) }}</strong></div>
+          <div><span class="rpt-detail-label">Période</span><strong>{{ sr.periodStart | date:'dd/MM/yyyy' }} — {{ sr.periodEnd | date:'dd/MM/yyyy' }}</strong></div>
+          <div><span class="rpt-detail-label">Format</span><strong>{{ sr.format }}</strong></div>
+          <div><span class="rpt-detail-label">Généré par</span><strong>{{ sr.generatedBy || '—' }}</strong></div>
+          <div><span class="rpt-detail-label">Généré le</span><strong>{{ sr.generatedAt | date:'dd/MM/yyyy à HH:mm' }}</strong></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeDetail()">Fermer</button>
+        <button class="btn btn-primary" (click)="downloadReport(sr)"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+  </div>
+}

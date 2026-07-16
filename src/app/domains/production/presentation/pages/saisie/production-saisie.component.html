@@ -1,0 +1,141 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-pen-to-square ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Saisie Journalière</h1>
+      <p class="ph-sub">Registres broyage et dosage — {{ today | date:'dd MMMM yyyy' }}</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-gear"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Broyé aujourd'hui</div>
+      <div class="kpi-val">{{ totalBroyeAujourd_hui() }} kg</div>
+      <div class="kpi-meta">production nette</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-fill-drip"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fûts dosés aujourd'hui</div>
+      <div class="kpi-val">{{ totalFuts() }}</div>
+      <div class="kpi-meta">unités dosées</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-arrow-trend-down"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Perte moyenne broyage</div>
+      <div class="kpi-val">{{ perteMoyenne() }}%</div>
+      <div class="kpi-meta">sur {{ broyage().length }} sessions</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-gears"></i> Registre Broyage</h2>
+    <button class="btn btn-primary btn-sm" (click)="showFormBroyage.set(!showFormBroyage())">
+      <i class="fa-solid fa-plus"></i> Nouvelle Saisie Broyage
+    </button>
+  </div>
+
+  @if (showFormBroyage()) {
+    <div class="form-placeholder">
+      <i class="fa-solid fa-file-pen"></i>
+      Formulaire de saisie broyage — à brancher sur le service de production.
+      <button class="btn btn-ghost btn-sm" (click)="showFormBroyage.set(false)">Fermer</button>
+    </div>
+  }
+
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Machiniste</th>
+          <th>Quantité nette (kg)</th>
+          <th>Matières entrées (kg)</th>
+          <th>% Perte</th>
+          <th>Machines</th>
+          <th>Heure début</th>
+          <th>Heure fin</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of broyage(); track r.id) {
+          <tr>
+            <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
+            <td><strong>{{ r.matriculeChefMachiniste }}</strong></td>
+            <td class="txt-success"><strong>{{ r.indicateursGlobaux?.totalPoudreKg ?? 0 }}</strong></td>
+            <td>{{ r.realisations.length }} saisies</td>
+            <td>—</td>
+            <td>{{ r.statut }}</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-state">Aucune session de broyage</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-fill-drip"></i> Registre Dosage</h2>
+    <button class="btn btn-primary btn-sm" (click)="showFormDosage.set(!showFormDosage())">
+      <i class="fa-solid fa-plus"></i> Nouvelle Saisie Dosage
+    </button>
+  </div>
+
+  @if (showFormDosage()) {
+    <div class="form-placeholder">
+      <i class="fa-solid fa-file-pen"></i>
+      Formulaire de saisie dosage — à brancher sur le service de production.
+      <button class="btn btn-ghost btn-sm" (click)="showFormDosage.set(false)">Fermer</button>
+    </div>
+  }
+
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Agent Doseur</th>
+          <th>Nombre Fûts</th>
+          <th>Machines</th>
+          <th>Heure début</th>
+          <th>Heure fin</th>
+          <th>Matières</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of dosage(); track r.id) {
+          <tr>
+            <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
+            <td><strong>{{ r.matriculeAgentDoseur }}</strong></td>
+            <td class="txt-success"><strong>{{ r.futsProduits }}</strong></td>
+            <td>{{ r.machines.join(', ') || '—' }}</td>
+            <td>—</td>
+            <td>—</td>
+            <td>
+              @for (m of r.matieresUtilisees; track m.typeMatiere) {
+                <span class="matiere-tag">{{ m.typeMatiere }}: {{ m.quantiteKg }} kg</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty-state">Aucune session de dosage</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

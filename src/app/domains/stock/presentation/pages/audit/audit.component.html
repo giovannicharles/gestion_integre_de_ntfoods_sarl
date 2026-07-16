@@ -1,0 +1,72 @@
+<div class="page animate-fadeInUp">
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <div>
+        <h1 class="ph-title">Journal d'Audit Stock</h1>
+        <p class="ph-sub">Trace des actions sur les stocks</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card filter-card">
+    <div class="filter-row">
+      <label>Entité<input type="text" [(ngModel)]="filters.entityType" class="form-control" placeholder="STOCK_ITEM"></label>
+      <label>ID Entité<input type="text" [(ngModel)]="filters.entityId" class="form-control"></label>
+      <label>Utilisateur<input type="text" [(ngModel)]="filters.userMatricule" class="form-control"></label>
+      <label>Action<input type="text" [(ngModel)]="filters.action" class="form-control" placeholder="UPDATE"></label>
+      <button class="btn btn-primary" (click)="applyFilters()"><i class="fa-solid fa-filter"></i> Filtrer</button>
+      <button class="btn btn-secondary" (click)="resetFilters()"><i class="fa-solid fa-rotate-left"></i> Réinitialiser</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement…</p>
+    </div>
+  }
+
+  <!-- EMPTY -->
+  @else if (logs().length === 0) {
+    <div class="card"><div class="empty-state">Aucune trace d'audit.</div></div>
+  }
+
+  <!-- TABLE -->
+  @else {
+    <div class="card tbl-card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Entité</th>
+            <th>ID</th>
+            <th>Action</th>
+            <th>Utilisateur</th>
+            <th>Motif</th>
+            <th>Ancien / Nouveau</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td class="nowrap">{{ log.timestamp | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ log.entityType }}</td>
+              <td>{{ log.entityId }}</td>
+              <td><span class="badge badge-neutral">{{ log.action }}</span></td>
+              <td>{{ log.userName || log.userMatricule || '-' }}</td>
+              <td>{{ log.reason || '-' }}</td>
+              <td class="diff-cell">
+                @if (log.oldValues) { <div class="diff-old">- {{ log.oldValues }}</div> }
+                @if (log.newValues) { <div class="diff-new">+ {{ log.newValues }}</div> }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

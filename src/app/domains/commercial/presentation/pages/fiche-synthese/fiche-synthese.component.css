@@ -1,0 +1,29 @@
+.card { padding: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.fs-summary { margin-bottom: var(--sp-4); }
+.fs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--sp-3); }
+.fs-item { background: var(--n50); border-radius: var(--r-md); padding: .75rem 1rem; border-left: 3px solid var(--g); }
+.fs-item-big { border-left-color: #FFD700; }
+.fs-lbl { display: block; font-size: .72rem; color: var(--n500); font-weight: 600; text-transform: uppercase; margin-bottom: .25rem; }
+.fs-val { display: block; font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--n800); }
+.fs-val-big { font-size: 1.3rem; }
+.prod-cell { display: flex; flex-direction: column; }
+.prod-code { font-size: .72rem; font-weight: 700; color: var(--g); }
+.prod-name { font-size: .82rem; color: var(--n700); }
+.fs-table th, .fs-table td { font-size: .82rem; }
+.center { text-align: center; }
+.mono { font-variant-numeric: tabular-nums; }
+.fw-bold { font-weight: 700; }
+.text-success { color: var(--s) !important; }
+.text-warning { color: var(--o) !important; }
+.text-danger { color: var(--r) !important; }
+.text-primary { color: var(--g) !important; }
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .fs-grid { grid-template-columns:1fr; }
+  .fs-table { display:block;overflow-x:auto;white-space:nowrap; }
+}

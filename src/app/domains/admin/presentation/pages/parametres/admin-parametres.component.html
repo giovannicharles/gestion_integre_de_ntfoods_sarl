@@ -1,0 +1,165 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-sliders ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Paramètres Système</h1>
+      <p class="ph-sub">Configuration globale de l'ERP TANTY</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button
+      class="btn btn-primary"
+      [disabled]="!isDirty()"
+      (click)="sauvegarder()"
+    >
+      <i class="fa-solid fa-save"></i> Sauvegarder
+    </button>
+  </div>
+</div>
+
+@if (submitted()) {
+  <div class="success-banner">
+    <i class="fa-solid fa-check-circle"></i>
+    Paramètres enregistrés avec succès !
+  </div>
+}
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-percent"></i> Paramètres Financiers</h2>
+    </div>
+    <div class="param-form">
+      <div class="form-group">
+        <label>Taux TVA (%)</label>
+        <input
+          type="number"
+          class="form-input"
+          [(ngModel)]="form.tvaTaux"
+          (ngModelChange)="onFieldChange()"
+          step="0.01"
+        />
+        <span class="form-hint">Taux appliqué sur toutes les factures</span>
+      </div>
+      <div class="form-group">
+        <label>Prime commerciale (FCFA)</label>
+        <input
+          type="number"
+          class="form-input"
+          [(ngModel)]="form.primeMontant"
+          (ngModelChange)="onFieldChange()"
+        />
+        <span class="form-hint">{{ fCFA(form.primeMontant) }} — versée si objectif atteint</span>
+      </div>
+      <div class="form-group">
+        <label>Seuil alerte stock</label>
+        <input
+          type="number"
+          class="form-input"
+          [(ngModel)]="form.alerteStockSeuil"
+          (ngModelChange)="onFieldChange()"
+        />
+        <span class="form-hint">Alerte déclenchée sous {{ form.alerteStockSeuil }} unités</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-map-location-dot"></i> Zones de Vente</h2>
+    </div>
+    <div class="tags-section">
+      <div class="tags-list">
+        @for (z of zones(); track z) {
+          <div class="tag-item">
+            <span>{{ z }}</span>
+            <button class="tag-remove" (click)="removeZone(z)">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+        }
+      </div>
+      <div class="add-row">
+        <input
+          type="text"
+          class="form-input-sm"
+          [ngModel]="newZone()"
+          (ngModelChange)="newZone.set($event)"
+          placeholder="Nouvelle zone..."
+        />
+        <button class="btn btn-primary btn-sm" (click)="addZone()">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Gammes Produits</h2>
+    </div>
+    <div class="tags-section">
+      <div class="tags-list">
+        @for (g of gammeProduits(); track g) {
+          <div class="tag-item tag-gamme">
+            <span>{{ g }}</span>
+            <button class="tag-remove" (click)="removeGamme(g)">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+        }
+      </div>
+      <div class="add-row">
+        <input
+          type="text"
+          class="form-input-sm"
+          [ngModel]="newGamme()"
+          (ngModelChange)="newGamme.set($event)"
+          placeholder="Nouvelle gamme..."
+        />
+        <button class="btn btn-primary btn-sm" (click)="addGamme()">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-city"></i> Villes</h2>
+    </div>
+    <div class="tags-section">
+      <div class="tags-list">
+        @for (v of villes(); track v) {
+          <div class="tag-item tag-ville">
+            <span>{{ v }}</span>
+            <button class="tag-remove" (click)="removeVille(v)">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+        }
+      </div>
+      <div class="add-row">
+        <input
+          type="text"
+          class="form-input-sm"
+          [ngModel]="newVille()"
+          (ngModelChange)="newVille.set($event)"
+          placeholder="Nouvelle ville..."
+        />
+        <button class="btn btn-primary btn-sm" (click)="addVille()">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isDirty()) {
+  <div class="dirty-warning">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    Modifications non sauvegardées — cliquez sur "Sauvegarder"
+  </div>
+}

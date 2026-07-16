@@ -125,8 +125,8 @@
 }
 
 .notif-info .notif-icon {
-  background: var(--b-gh);
-  color: var(--b);
+  background: var(--y-gh);
+  color: var(--y-d);
 }
 
 .notif-success .notif-icon {
@@ -262,6 +262,18 @@
 .btn i {
   font-size: 14px;
 }
+
+/* Toast */
+.toast-toast { position:fixed;top:20px;right:20px;z-index:9999;padding:14px 20px;border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:var(--sh-lg);animation:slideIn .3s ease; }
+.toast-success { background:var(--g);color:#fff; }
+.toast-error { background:var(--r);color:#fff; }
+@keyframes slideIn { from { transform:translateX(100%);opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+/* Loading */
+.loading-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--n400);gap:14px; }
+.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite; }
+.spinner-lg { width:40px;height:40px; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
 /* Responsive */
 @media (max-width: 768px) {

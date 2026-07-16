@@ -1,0 +1,31 @@
+.page{display:flex;flex-direction:column;gap:22px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;color:var(--n400);text-transform:uppercase;border-bottom:2px solid var(--n150)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--n100);color:var(--n700)}
+.tbl tbody tr:hover{background:var(--n50)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--r-full);font-size:10px;font-weight:700}
+.bg-neutral{background:var(--n150);color:var(--n600)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--n600);margin-bottom:5px}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid var(--n200);border-radius:var(--r-sm);font-size:14px;outline:none}
+.form-input:focus{border-color:var(--mc)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font-b)}
+.btn-sm{padding:6px 10px;font-size:12px}
+.btn-primary{background:var(--mc);color:white}
+.btn-ghost{background:transparent;color:var(--n500);border:1.5px solid var(--n200)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:var(--r-md);font-size:13px;font-weight:600;z-index:1100}
+.toast-success{background:var(--g);color:white}
+.toast-error{background:var(--r);color:white}
+.card{background:white;border:1px solid var(--n150);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-sm)}
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .filter-row { flex-direction:column;align-items:flex-start;width:100%;gap:6px; }
+  .form-grid { grid-template-columns:1fr; }
+  .form-actions { flex-direction:column;gap:8px; }
+  .form-actions .btn { width:100%;justify-content:center; }
+  .modal-overlay { align-items:flex-end;padding:0; }
+  .modal-box { width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0; }
+}

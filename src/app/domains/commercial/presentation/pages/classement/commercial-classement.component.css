@@ -1,0 +1,45 @@
+.card { padding: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.my-pos-card { background: #f1f8f3; border-left: 4px solid var(--g); margin-bottom: var(--sp-4); }
+.my-pos-label { font-size: .78rem; font-weight: 700; color: var(--g); text-transform: uppercase; margin-bottom: .75rem; display: flex; align-items: center; gap: .3rem; }
+.my-pos-body { display: flex; align-items: center; gap: 1.5rem; }
+.my-rank { font-size: 2.5rem; font-weight: 900; color: var(--g); min-width: 60px; }
+.rank-gold { color: #b8860b; }
+.my-info { flex: 1; }
+.my-name { font-size: 1.1rem; font-weight: 700; }
+.my-zone { font-size: .82rem; color: var(--n500); }
+.my-stats { display: flex; gap: 1.5rem; }
+.my-stat { display: flex; flex-direction: column; }
+.my-stat-lbl { font-size: .72rem; color: var(--n500); font-weight: 600; }
+.my-stat-val { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.prime-badge { font-size: .85rem; }
+.ranking-list { display: flex; flex-direction: column; gap: .5rem; }
+.ranking-row { display: flex; align-items: center; gap: .75rem; padding: .75rem; border-radius: var(--r-md); background: var(--n50); }
+.my-row { background: #e8f5e9; border: 2px solid var(--g); }
+.rank-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .82rem; background: var(--n200); color: var(--n600); flex-shrink: 0; }
+.rank-silver { background: #C0C0C0; color: #555; }
+.rank-bronze { background: #CD7F32; color: #fff; }
+.rank-av { width: 36px; height: 36px; border-radius: 50%; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; flex-shrink: 0; }
+.rank-info { min-width: 160px; }
+.rank-name { display: block; font-weight: 600; font-size: .88rem; }
+.rank-zone { display: block; font-size: .72rem; color: var(--n500); }
+.rank-progress { flex: 1; }
+.rank-val { font-weight: 700; font-size: .88rem; margin-bottom: .2rem; font-variant-numeric: tabular-nums; }
+.rank-bar-wrap { height: 6px; background: var(--n200); border-radius: 99px; overflow: hidden; margin-bottom: .2rem; }
+.rank-bar { height: 100%; background: var(--r); border-radius: 99px; }
+.bar-over { background: var(--g); }
+.rank-pct { font-size: .72rem; color: var(--n500); }
+.badge-sm { font-size: .72rem; }
+.text-success { color: var(--s) !important; }
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .my-pos-body { flex-direction:column;gap:.75rem; }
+  .my-stats { flex-wrap:wrap;gap:1rem; }
+  .ranking-row { flex-wrap:wrap;gap:.5rem; }
+  .rank-info { min-width:auto;width:100%; }
+  .rank-progress { width:100%;flex:1 1 100%; }
+}

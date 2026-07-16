@@ -6,6 +6,16 @@
 .vt{display:flex;border:1.5px solid var(--n200);border-radius:var(--r-md);overflow:hidden}
 .vt button{padding:7px 12px;background:transparent;border:none;cursor:pointer;color:var(--n400);font-size:14px;transition:all .15s}
 .vt button.vt-on{background:var(--g);color:white}
+
+/* TYPE TABS */
+.type-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.type-tab{display:flex;align-items:center;gap:7px;padding:9px 18px;background:white;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;font-weight:600;color:var(--n600);cursor:pointer;transition:all .2s}
+.type-tab:hover{border-color:var(--g);color:var(--g)}
+.type-tab.tt-active{background:var(--g);border-color:var(--g);color:white;box-shadow:0 2px 8px rgba(26,107,42,.25)}
+.type-tab.tt-active .tt-count{background:rgba(255,255,255,.25);color:white}
+.tt-count{font-size:11px;font-weight:700;background:var(--n100);color:var(--n500);padding:1px 8px;border-radius:10px;min-width:20px;text-align:center}
+
+/* KPI BAR */
 .kpi-bar{display:flex;align-items:center;padding:16px 24px;flex-wrap:wrap;gap:0}
 .kb-item{display:flex;flex-direction:column;gap:2px;padding:0 20px}
 .kb-item:first-child{padding-left:0}
@@ -14,9 +24,41 @@
 .kb-unit{font-size:12px;font-weight:500;color:var(--n400);margin-left:2px}
 .kb-lbl{font-size:10px;color:var(--n400);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 .kb-sep{width:1px;height:40px;background:var(--n200)}
+
+/* SECTION HEAD */
 .sec-head{display:flex;align-items:center;gap:11px}
 .sec-head h3{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--n800)}
 .sec-sub{font-size:11px;color:var(--n400);margin-top:1px}
 .sh-ico{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .sh-g{background:var(--g-gh);color:var(--g)}
-@media(max-width:640px){.kpi-bar{gap:10px}.kb-sep{display:none}.kb-item{padding:0}}
+
+/* SEARCH & FILTER */
+.search-input{width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);outline:none;background:white}
+.search-input:focus{border-color:var(--g)}
+.filter-select{padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)}
+
+/* LOCATION BADGES */
+.loc-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--n100);color:var(--n600)}
+.loc-central{background:rgba(26,107,42,.12);color:var(--g)}
+.loc-buffer{background:rgba(230,81,0,.12);color:var(--o)}
+.loc-mobile{background:rgba(25,118,210,.12);color:#1976D2}
+
+/* MATERIAL TYPE BADGES */
+.mat-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.mat-fini{background:rgba(26,107,42,.12);color:var(--g)}
+.mat-mp{background:rgba(126,87,194,.12);color:#7E57C2}
+.mat-cons{background:rgba(255,143,0,.12);color:#FF8F00}
+
+/* ICON BUTTONS */
+.icon-btn{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
+.icon-btn-g{background:var(--g-gh);color:var(--g)}.icon-btn-g:hover{background:var(--g);color:white}
+.icon-btn-blue{background:rgba(25,118,210,.12);color:#1976D2}.icon-btn-blue:hover{background:#1976D2;color:white}
+
+/* INVENTORY CARDS */
+.inv-card{background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s;animation:cardIn .3s ease both}
+.inv-card:hover{box-shadow:var(--sh-md);border-color:var(--n300)}
+.inv-card-critical{border-left:4px solid var(--r)}
+.inv-card-low{border-left:4px solid var(--o)}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:640px){.kpi-bar{gap:10px}.kb-sep{display:none}.kb-item{padding:0}.type-tabs{gap:6px}.type-tab{padding:7px 12px;font-size:12px}}

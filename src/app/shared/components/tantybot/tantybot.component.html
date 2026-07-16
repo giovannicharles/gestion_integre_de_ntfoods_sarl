@@ -1,0 +1,87 @@
+<!-- TantyBot Widget -->
+<div class="tantybot-widget">
+
+  <!-- Chat Panel -->
+  @if (isOpen()) {
+    <div class="tb-panel animate-slideUp">
+      <!-- Header -->
+      <div class="tb-header">
+        <div class="tb-header-left">
+          <div class="tb-avatar">
+            <img src="/logo_tanty.jpg" alt="TantyBot" />
+            <span class="tb-status-dot"></span>
+          </div>
+          <div class="tb-header-info">
+            <span class="tb-name">TantyBot</span>
+            <span class="tb-status">{{ isTyping() ? 'En train d\'écrire…' : 'En ligne' }}</span>
+          </div>
+        </div>
+        <button class="tb-close" (click)="toggle()" title="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Messages -->
+      <div class="tb-messages" #msgScroll>
+        @for (msg of messages(); track $index) {
+          <div class="tb-msg" [class.tb-msg-user]="msg.role === 'user'" [class.tb-msg-bot]="msg.role === 'bot'">
+            @if (msg.role === 'bot') {
+              <div class="tb-msg-avatar"><img src="/logo_tanty.jpg" alt="" /></div>
+            }
+            <div class="tb-msg-bubble">
+              <p class="tb-msg-text">{{ msg.content }}</p>
+              <span class="tb-msg-time">{{ msg.time }}</span>
+            </div>
+          </div>
+          @if (msg.quickReplies && msg.quickReplies.length > 0) {
+            <div class="tb-quick-replies">
+              @for (qr of msg.quickReplies; track qr.label) {
+                <button class="tb-quick-btn" (click)="handleQuickReply(qr.action)">{{ qr.label }}</button>
+              }
+            </div>
+          }
+        }
+
+        @if (isTyping()) {
+          <div class="tb-msg tb-msg-bot">
+            <div class="tb-msg-avatar"><img src="/logo_tanty.jpg" alt="" /></div>
+            <div class="tb-typing">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Input -->
+      <div class="tb-input-area">
+        <input
+          type="text"
+          class="tb-input"
+          placeholder="Tapez votre message…"
+          [ngModel]="input()"
+          (ngModelChange)="input.set($event)"
+          (keydown)="onEnter($event)"
+          [disabled]="isTyping()"
+        />
+        <button class="tb-send" (click)="send()" [disabled]="isTyping() || !input().trim()">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- FAB Button -->
+  <button class="tb-fab" (click)="toggle()" [class.tb-fab-active]="isOpen()" title="TantyBot">
+    @if (isOpen()) {
+      <i class="fa-solid fa-xmark"></i>
+    } @else {
+      <div class="tb-fab-icon">
+        <img src="/logo_tanty.jpg" alt="TantyBot" />
+      </div>
+    }
+    @if (!isOpen() && unreadBadge() > 0) {
+      <span class="tb-fab-badge">{{ unreadBadge() }}</span>
+    }
+  </button>
+
+</div>

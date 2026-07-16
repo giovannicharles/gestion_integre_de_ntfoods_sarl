@@ -1,10 +1,16 @@
 <div class="page animate-fadeInUp">
+  @if (toastMsg()) {
+    <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid fa-{{ toastType()==='success'?'circle-check':'circle-xmark' }}"></i>{{ toastMsg() }}
+    </div>
+  }
+
   <div class="page-header">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
       <div>
-        <h1 class="ph-title">Réceptions Fournisseurs</h1>
-        <p class="ph-sub">Historique des entrées marchandises — NTFoods TANTY</p>
+        <h1 class="ph-title">Réceptions</h1>
+        <p class="ph-sub">Historique des entrées marchandises — NTFoods TANTY · Douala</p>
       </div>
     </div>
     <a routerLink="/stock/reception/new" class="btn btn-primary">
@@ -14,116 +20,157 @@
 
   @if (!loading()) {
     <div class="stat-chips">
-      <div class="s-chip sc-total"><i class="fa-solid fa-list"></i>{{ allReceptions().length }} total</div>
-      <div class="s-chip sc-warn"><i class="fa-solid fa-hourglass-half"></i>{{ getStatsByStatut('EN_ATTENTE') }} en attente</div>
-      <div class="s-chip sc-info"><i class="fa-solid fa-user-check"></i>{{ getStatsByStatut('VALIDE_GESTIONNAIRE') }} att. Chef Prod</div>
-      <div class="s-chip sc-ok"><i class="fa-solid fa-check-double"></i>{{ getStatsByStatut('VALIDE_CHEF_PROD') }} validées</div>
-      <div class="s-chip sc-danger"><i class="fa-solid fa-xmark"></i>{{ getStatsByStatut('REJETE') }} rejetées</div>
+      <div class="s-chip sc-total"><i class="fa-solid fa-list"></i>{{ all().length }} total</div>
+      <div class="s-chip sc-warn"><i class="fa-solid fa-hourglass-half"></i>{{ countStatus('PENDING_FIRST_VALIDATION') }} att. 1ère val.</div>
+      <div class="s-chip sc-info"><i class="fa-solid fa-user-check"></i>{{ countStatus('PENDING_SECOND_VALIDATION') }} att. 2ème val.</div>
+      <div class="s-chip sc-ok"><i class="fa-solid fa-check-double"></i>{{ countStatus('VALIDATED') }} validées</div>
+      <div class="s-chip sc-danger"><i class="fa-solid fa-xmark"></i>{{ countStatus('REJECTED') }} rejetées</div>
     </div>
   }
 
-  <div class="card">
+  <!-- FILTRES -->
+  <div class="card" style="overflow:hidden">
     <div class="card-body filters-row">
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Rechercher N° réception, fournisseur, BC…"
+        <input type="text" placeholder="Rechercher N° réception, source, entrepôt…"
                [(ngModel)]="search" (ngModelChange)="applyFilters()">
-        @if (search) { <button class="x-btn" (click)="search=''; applyFilters()"><i class="fa-solid fa-xmark"></i></button> }
+        @if (search) {
+          <button class="x-btn" (click)="search=''; applyFilters()"><i class="fa-solid fa-xmark"></i></button>
+        }
       </div>
       <select class="f-sel" [(ngModel)]="filterStatut" (ngModelChange)="applyFilters()">
         <option value="">Tous statuts</option>
-        <option value="EN_ATTENTE">En attente</option>
-        <option value="VALIDE_GESTIONNAIRE">Att. Chef Production</option>
-        <option value="VALIDE_CHEF_PROD">Validé complet</option>
-        <option value="REJETE">Rejeté</option>
+        <option value="PENDING_FIRST_VALIDATION">Att. 1ère validation</option>
+        <option value="PENDING_SECOND_VALIDATION">Att. 2ème validation</option>
+        <option value="VALIDATED">Validé</option>
+        <option value="REJECTED">Rejeté</option>
       </select>
-      <select class="f-sel" [(ngModel)]="filterMagasin" (ngModelChange)="applyFilters()">
-        <option value="">Tous magasins</option>
-        <option value="MP">Matières Premières</option>
-        <option value="CONSOMMABLES">Consommables</option>
-        <option value="PRODUITS_FINIS">Produits Finis</option>
+      <select class="f-sel" [(ngModel)]="filterType" (ngModelChange)="applyFilters()">
+        <option value="">Tous types</option>
+        <option value="CONSOMMABLE">Consommable</option>
+        <option value="MATIERE_PREMIERE">Matière première</option>
+        <option value="MATERIEL">Matériel</option>
       </select>
-      @if (search || filterStatut || filterMagasin) {
+      @if (search || filterStatut || filterType) {
         <button class="btn btn-ghost btn-sm" (click)="clearFilters()"><i class="fa-solid fa-filter-slash"></i> Effacer</button>
       }
       <span class="badge badge-neutral" style="margin-left:auto">{{ filtered().length }} résultat(s)</span>
     </div>
   </div>
 
+  <!-- TABLE -->
   <div class="card" style="overflow:hidden">
     @if (loading()) {
-      <div class="table-wrapper">
-        <table class="table">
-          <thead><tr><th>N° Réception</th><th>Fournisseur</th><th>Magasin</th><th>Lignes</th><th>Montant</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
-          <tbody>
-            @for (i of skeletonRows; track i) {
-              <tr class="sk-row">@for (j of [1,2,3,4,5,6,7,8]; track j) { <td><div class="sk-c sk-shimmer" [style.width.%]="55+j*5"></div></td> }</tr>
-            }
-          </tbody>
-        </table>
+      <div style="padding:48px;text-align:center;color:var(--n400)">
+        <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement des réceptions…
       </div>
     } @else {
+      @if (error()) {
+        <div class="banner banner-warning" style="margin:20px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
+      }
       <div class="table-wrapper">
         <table class="table">
           <thead>
             <tr>
-              <th>N° Réception</th><th>Fournisseur</th><th>Magasin</th>
-              <th>Lignes</th><th>Montant Total</th><th>Date réception</th>
-              <th>Statut</th><th style="text-align:center">Actions</th>
+              <th>N° Réception</th>
+              <th>Type</th>
+              <th>Destination</th>
+              <th>Lignes</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th style="text-align:center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (rec of paginated(); track rec.id) {
+            @for (r of paginated(); track r.receiptNumber) {
               <tr class="table-row-anim">
                 <td>
-                  <span class="rec-num">{{ rec.receiptNumber }}</span>
-                  @if (rec.bonCommandeNumero) { <span class="rec-bc"><i class="fa-solid fa-file-lines"></i> {{ rec.bonCommandeNumero }}</span> }
-                  @if (hasEcart(rec)) { <span class="ecart-flag"><i class="fa-solid fa-exclamation-triangle"></i> Écart</span> }
-                </td>
-                <td>
-                  <div class="f-cell">
-                    <span class="f-name">{{ rec.fournisseur?.name }}</span>
-                    <span class="f-pays"><i class="fa-solid fa-location-dot"></i>{{ rec.fournisseur?.pays }}</span>
+                  <div class="rec-cell">
+                    <span class="rec-num">{{ r.receiptNumber }}</span>
+                    @if (hasEcart(r)) {
+                      <span class="ecart-flag"><i class="fa-solid fa-exclamation-triangle"></i> Écart</span>
+                    }
                   </div>
                 </td>
-                <td><span class="badge {{ getMagasinClass(rec) }}">{{ getMagasinLabel(rec) }}</span></td>
-                <td><div class="lines-cell"><span class="l-n">{{ rec.items.length }}</span><span class="l-u">art.</span></div></td>
-                <td><span class="amount-v">{{ formatCFA(rec.montantTotal) }}</span></td>
-                <td><div class="date-c"><span class="d-main">{{ rec.creeLe | date:'dd/MM/yyyy' }}</span><span class="d-time">{{ rec.creeLe | date:'HH:mm' }}</span></div></td>
-                <td><span class="badge {{ getStatutClass(rec.status) }}">{{ getStatutLabel(rec.status) }}</span></td>
+                <td>
+                  <span class="badge {{ typeClass(r.receptionType) }}">
+                    <i class="fa-solid {{ typeIcon(r.receptionType) }}"></i> {{ typeLabel(r.receptionType) }}
+                  </span>
+                  <div style="font-size:11px;color:var(--n500);margin-top:2px">{{ r.sourceLabel }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-neutral" style="font-size:10px">
+                    {{ r.destinationLocationName || '—' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="lines-cell">
+                    <span class="l-n">{{ r.items.length }}</span>
+                    <span class="l-u">art.</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="d-main">{{ r.receiptDate | date:'dd/MM/yyyy' }}</span>
+                    <span class="d-time">{{ r.receiptDate | date:'HH:mm' }}</span>
+                  </div>
+                </td>
+                <td><span class="badge {{ sClass(r.status) }}">{{ sLabel(r.status) }}</span></td>
                 <td>
                   <div class="act-btns">
-                    @if (rec.status === 'PENDING_FIRST_VALIDATION' || rec.status === 'PENDING_SECOND_VALIDATION') {
-                      <a routerLink="/stock/validation" class="act-btn ab-validate" title="Valider"><i class="fa-solid fa-check"></i></a>
+                    @if (r.status === 'PENDING_FIRST_VALIDATION' || r.status === 'PENDING_SECOND_VALIDATION') {
+                      <a routerLink="/stock/validation"
+                         class="act-btn ab-validate" title="Valider">
+                        <i class="fa-solid fa-check"></i>
+                      </a>
                     }
-                    <a [routerLink]="['/stock/reception', rec.id]" class="act-btn ab-view" title="Voir"><i class="fa-solid fa-eye"></i></a>
+                    <a [routerLink]="['/stock/reception', r.receiptNumber]"
+                       class="act-btn ab-view" title="Voir détails">
+                      <i class="fa-solid fa-eye"></i>
+                    </a>
                   </div>
                 </td>
               </tr>
             }
             @empty {
-              <tr><td colspan="8" class="empty-td">
-                <div class="empty-box"><i class="fa-solid fa-inbox"></i><p>Aucune réception trouvée</p>
-                  <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Créer</a>
-                </div>
-              </td></tr>
+              <tr>
+                <td colspan="7" style="text-align:center;padding:48px;color:var(--n400)">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+                    <i class="fa-solid fa-inbox" style="font-size:38px;color:var(--n300)"></i>
+                    <p style="font-size:14px">Aucune réception trouvée</p>
+                    <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm">
+                      <i class="fa-solid fa-plus"></i> Créer une réception
+                    </a>
+                  </div>
+                </td>
+              </tr>
             }
           </tbody>
         </table>
       </div>
+
       @if (totalPages() > 1) {
         <div class="pagination-bar">
           <span class="pg-info">{{ (currentPage()-1)*pageSize + 1 }}–{{ getEndIndex() }} sur {{ filtered().length }}</span>
           <div class="pg-controls">
-            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(1)"><i class="fa-solid fa-angles-left"></i></button>
-            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(currentPage()-1)"><i class="fa-solid fa-angle-left"></i></button>
+            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(1)">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(currentPage()-1)">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
             @for (p of pages; track p) {
               @if (p===currentPage()||p===1||p===totalPages()||(p>=currentPage()-1&&p<=currentPage()+1)) {
                 <button class="pg-btn" [class.pg-active]="p===currentPage()" (click)="goToPage(p)">{{ p }}</button>
               }
             }
-            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(currentPage()+1)"><i class="fa-solid fa-angle-right"></i></button>
-            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(totalPages())"><i class="fa-solid fa-angles-right"></i></button>
+            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(currentPage()+1)">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(totalPages())">
+              <i class="fa-solid fa-angles-right"></i>
+            </button>
           </div>
         </div>
       }

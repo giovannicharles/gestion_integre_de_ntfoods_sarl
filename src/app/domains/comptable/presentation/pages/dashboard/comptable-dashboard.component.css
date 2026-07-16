@@ -1,0 +1,23 @@
+.card { padding: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.two-col { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--sp-4); margin-top: var(--sp-4); }
+.btn-badge { background: #fff; color: var(--g); border-radius: 99px; padding: 1px 6px; font-size: .75rem; font-weight: 800; margin-left: .3rem; }
+.pcm-list { display: flex; flex-direction: column; gap: .4rem; }
+.pcm-row { display: flex; align-items: center; gap: .75rem; padding: .5rem .75rem; background: var(--n50); border-radius: var(--r-md); font-size: .85rem; }
+.pcm-ready { background: #f1f8f3; }
+.pcm-id { font-size: .72rem; font-weight: 700; color: var(--n400); min-width: 60px; }
+.pcm-com { font-weight: 600; min-width: 60px; }
+.pcm-lignes { flex: 1; color: var(--n500); }
+.row-alert { background: #fff1f1 !important; }
+.mono { font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .pcm-row { flex-wrap:wrap;gap:.4rem; }
+  .pcm-id { min-width:auto; }
+  .pcm-com { min-width:auto; }
+}

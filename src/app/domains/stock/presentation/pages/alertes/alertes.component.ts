@@ -1,60 +1,450 @@
 import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subject, forkJoin, takeUntil, interval } from 'rxjs';
 import { StockLevelUseCase } from '../../../application/use-cases/inventaire/stock-level.use-case';
-import { StockLevel } from '../../../domain/models/stock.models';
-@Component({ selector:'app-alertes', standalone:true, imports:[CommonModule,DecimalPipe,RouterLink], template:`
-<div class="page animate-fadeInUp">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px">
-    <div style="display:flex;align-items:center;gap:13px"><div style="width:46px;height:46px;background:var(--r-gh);color:var(--r);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px"><i class="fa-solid fa-triangle-exclamation"></i></div><div><h1 style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)">Alertes de Stock</h1><p style="font-size:12px;color:var(--n400);margin-top:2px">Produits sous le seuil de réapprovisionnement</p></div></div>
-    <div style="display:flex;gap:6px">
-      <button class="tab-btn" [class.tb-active]="filter()==='TOUS'" (click)="filter.set('TOUS')">Tous <span>{{ alerts().length }}</span></button>
-      <button class="tab-btn tb-red" [class.tb-active]="filter()==='CRITIQUE'" (click)="filter.set('CRITIQUE')">🔴 Critiques <span>{{ critiques().length }}</span></button>
-      <button class="tab-btn tb-o" [class.tb-active]="filter()==='FAIBLE'" (click)="filter.set('FAIBLE')">🟠 Faibles <span>{{ faibles().length }}</span></button>
-    </div>
-  </div>
-  @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
-  @else if (getFiltered().length===0) {
-    <div class="card"><div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px;text-align:center"><i class="fa-solid fa-circle-check" style="font-size:52px;color:var(--g)"></i><h3 style="font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--n800)">Tous les stocks sont sains !</h3><p style="font-size:13px;color:var(--n400)">Aucune alerte active.</p></div></div>
-  } @else {
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px">
-      @for (sl of getFiltered(); track sl.id) {
-        <div class="al-card" [class.alc-crit]="sl.alertLevel==='CRITIQUE'" [class.alc-faib]="sl.alertLevel==='FAIBLE'">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="al-dot" [class.ald-r]="sl.alertLevel==='CRITIQUE'" [class.ald-o]="sl.alertLevel==='FAIBLE'">@if (sl.alertLevel==='CRITIQUE') { <span class="ring"></span> }</div>
-              <div>
-                <h4 style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--n900)">{{ sl.productName }}</h4>
-                <div style="font-size:10px;color:var(--n400);font-family:monospace">{{ sl.productSku }}</div>
-              </div>
-            </div>
-            <span class="badge" [class.badge-danger]="sl.alertLevel==='CRITIQUE'" [class.badge-warning]="sl.alertLevel==='FAIBLE'">{{ sl.alertLevel }}</span>
-          </div>
-          <span class="badge badge-neutral" style="font-size:10px;align-self:flex-start">{{ sl.warehouseName }}</span>
-          <div class="al-bar-wrap">
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:5px"><span>Stock actuel</span><span style="font-weight:700;" [style.color]="sl.alertLevel==='CRITIQUE'?'var(--r)':'var(--o)'">{{ sl.quantity | number }} / {{ sl.reorderPoint | number }} {{ sl.productUnit }}</span></div>
-            <div style="height:8px;background:var(--n150);border-radius:4px;overflow:hidden"><div [style.width.%]="Math.min(100,(sl.quantity/sl.reorderPoint)*100)" [style.background]="sl.alertLevel==='CRITIQUE'?'var(--r)':'var(--o)'" style="height:100%;border-radius:4px;transition:width 1s"></div></div>
-          </div>
-          @if ((sl.leadTimeDays||0)>=90) { <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#00796B;background:#E0F2F1;padding:4px 10px;border-radius:var(--r-full)"><i class="fa-solid fa-ship"></i>Délai appro.: {{ sl.leadTimeDays }} jours</div> }
-          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;border-top:1px solid rgba(0,0,0,.06)">
-            <span style="font-size:11px;color:var(--n500)">Valeur restante: <strong>{{ fCFA(sl.stockValue||0) }}</strong></span>
-            <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-truck-ramp-box"></i> Commander</a>
-          </div>
-        </div>
-      }
-    </div>
-  }
-</div>
-`, styles:[`.page{display:flex;flex-direction:column;gap:22px}.tab-btn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--n200);background:transparent;color:var(--n500);transition:all .15s;font-family:var(--font-b)}.tab-btn span{background:var(--n200);color:var(--n600);font-size:10px;font-weight:800;padding:1px 6px;border-radius:var(--r-full)}.tab-btn.tb-active{background:var(--n200);color:var(--n800)}.tb-red.tb-active{background:var(--r-gh);color:var(--r);border-color:rgba(198,40,40,.3)}.tb-o.tb-active{background:var(--o-gh);color:var(--o);border-color:rgba(230,81,0,.3)}.al-card{background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh-sm);animation:cardIn .3s ease both}.alc-crit{border-left:4px solid var(--r)}.alc-faib{border-left:4px solid var(--o)}.al-dot{width:14px;height:14px;border-radius:50%;position:relative;flex-shrink:0}.ald-r{background:var(--r)}.ald-o{background:var(--o)}.ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--r);animation:ringOut 1.5s infinite}.al-bar-wrap{background:var(--n50);border-radius:var(--r-sm);padding:10px 12px}`] })
+import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
+import { StockLevel, StockAlertEntity, AlertType } from '../../../domain/models';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { AlertBadgeService } from '../../../../../core/services/alert-badge.service';
+
+@Component({
+  selector: 'app-alertes',
+  standalone: true,
+  imports: [CommonModule, DecimalPipe, DatePipe, FormsModule],
+  templateUrl: './alertes.component.html',
+  styleUrls: ['./alertes.component.css']
+})
 export class AlertesComponent implements OnInit, OnDestroy {
-  private d$=new Subject<void>(); private uc=inject(StockLevelUseCase);
-  loading=signal(true); alerts=signal<StockLevel[]>([]); filter=signal<'TOUS'|'CRITIQUE'|'FAIBLE'>('TOUS');
-  Math=Math;
-  critiques(){return this.alerts().filter(sl=>sl.alertLevel==='CRITIQUE');}
-  faibles(){return this.alerts().filter(sl=>sl.alertLevel==='FAIBLE');}
-  getFiltered(){const f=this.filter();return f==='TOUS'?this.alerts():this.alerts().filter(sl=>sl.alertLevel===f);}
-  ngOnInit(){this.uc.getAlerts().pipe(takeUntil(this.d$)).subscribe({next:r=>{this.alerts.set(r);this.loading.set(false);},error:()=>this.loading.set(false)});}
-  fCFA(n:number){return new Intl.NumberFormat('fr-CM').format(Math.round(n))+' FCFA';}
-  ngOnDestroy(){this.d$.next();this.d$.complete();}
+  private d$ = new Subject<void>();
+  private uc = inject(StockLevelUseCase);
+  private repo = inject(StockApiRepository);
+  private auth = inject(AuthService);
+  private alertBadge = inject(AlertBadgeService);
+  private router = inject(Router);
+
+  loading = signal(true);
+  alerts = signal<StockLevel[]>([]);
+  backendAlerts = signal<StockAlertEntity[]>([]);
+  filter = signal<'TOUS' | 'CRITIQUE' | 'FAIBLE'>('TOUS');
+  source = signal<'dashboard' | 'backend'>('dashboard');
+  typeFilter = signal<AlertType | 'ALL'>('ALL');
+  lastCheck = signal<Date | null>(null);
+  actionMsg = signal<string | null>(null);
+  resolvingId = signal<number | null>(null);
+  orderingId = signal<number | null>(null);
+  ackedLevelIds = signal<Set<number>>(new Set());
+  resolvedLevelIds = signal<Set<number>>(new Set());
+  orderedAlertIds = signal<Set<number>>(new Set());
+  Math = Math;
+  private centralLocationIds = signal<string[]>([]);
+  private bufferLocationIds = signal<string[]>([]);
+
+  critiques() { return this.alerts().filter(sl => sl.alertLevel === 'CRITIQUE'); }
+  faibles() { return this.alerts().filter(sl => sl.alertLevel === 'FAIBLE'); }
+  getFiltered() {
+    const f = this.filter();
+    return f === 'TOUS' ? this.alerts() : this.alerts().filter(sl => sl.alertLevel === f);
+  }
+
+  getFilteredBackend(): StockAlertEntity[] {
+    const tf = this.typeFilter();
+    if (tf === 'ALL') return this.backendAlerts();
+    return this.backendAlerts().filter(a => a.type === tf);
+  }
+
+  countByType(type: AlertType): number {
+    return this.backendAlerts().filter(a => a.type === type).length;
+  }
+
+  countByPriority(priority: string): number {
+    return this.backendAlerts().filter(a => a.priority === priority).length;
+  }
+
+  getUnackCount(): number {
+    return this.backendAlerts().filter(a => !a.acknowledged).length;
+  }
+
+  getFilteredDashboard(): StockLevel[] {
+    const f = this.filter();
+    const resolved = this.resolvedLevelIds();
+    let list = f === 'TOUS' ? this.alerts() : this.alerts().filter(sl => sl.alertLevel === f);
+    return list.filter(sl => !resolved.has(sl.id));
+  }
+
+  isLevelAcked(id: number): boolean { return this.ackedLevelIds().has(id); }
+  isLevelResolved(id: number): boolean { return this.resolvedLevelIds().has(id); }
+
+  ngOnInit() {
+    this.loading.set(true);
+    forkJoin({
+      dashboard: this.uc.getAlerts(),
+      backend: this.repo.getBackendAlerts()
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: r => {
+        this.alerts.set(r.dashboard);
+        this.backendAlerts.set(r.backend);
+        this.lastCheck.set(new Date());
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+
+    interval(60000).pipe(takeUntil(this.d$)).subscribe(() => this.refreshBackend());
+
+    // Charger les IDs de localisations pour distinguer stock central vs tampon
+    forkJoin({
+      central: this.repo.getStockLocationsByType('STOCK_CENTRAL'),
+      buffer: this.repo.getStockLocationsByType('STOCK_BUFFER')
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: r => {
+        this.centralLocationIds.set(r.central.map(l => l.id));
+        this.bufferLocationIds.set(r.buffer.map(l => l.id));
+      },
+      error: () => {}
+    });
+  }
+
+  refreshBackend() {
+    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+      next: r => { this.backendAlerts.set(r); this.lastCheck.set(new Date()); },
+      error: () => {}
+    });
+  }
+
+  triggerCheck() {
+    this.repo.triggerAlertChecks().pipe(takeUntil(this.d$)).subscribe({
+      next: () => {
+        this.lastCheck.set(new Date());
+        this.refreshBackend();
+        this.alertBadge.refresh();
+      },
+      error: () => this.flashMsg('Erreur lors de la vérification des seuils', true)
+    });
+  }
+
+  acknowledge(id: number) {
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+    this.repo.acknowledgeBackendAlert(id, userId).pipe(takeUntil(this.d$)).subscribe({
+      next: () => {
+        this.refreshBackend();
+        this.alertBadge.refresh();
+        this.flashMsg('Alerte acquittée avec succès');
+      },
+      error: () => this.flashMsg('Erreur lors de l\'acquittement', true)
+    });
+  }
+
+  resolve(id: number) {
+    this.repo.resolveBackendAlert(id).pipe(takeUntil(this.d$)).subscribe({
+      next: () => {
+        this.refreshBackend();
+        this.alertBadge.refresh();
+        this.flashMsg('Alerte résolue avec succès');
+      },
+      error: () => this.flashMsg('Erreur lors de la résolution', true)
+    });
+  }
+
+  /**
+   * Détermine si une locationId correspond au stock central
+   */
+  isCentralLocation(locationId: string): boolean {
+    return this.centralLocationIds().includes(locationId);
+  }
+
+  /**
+   * Détermine si une locationId correspond au stock tampon
+   */
+  isBufferLocation(locationId: string): boolean {
+    return this.bufferLocationIds().includes(locationId);
+  }
+
+  /**
+   * Commander un produit en rupture depuis une alerte backend.
+   * - Stock central → acquitte l'alerte en base puis redirige vers le formulaire de commande à la production
+   * - Stock tampon → acquitte l'alerte en base puis redirige vers la page tampon pour réapprovisionnement
+   */
+  orderProduct(a: StockAlertEntity) {
+    const isCentral = this.isCentralLocation(a.locationId);
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+
+    // 1. Acquitter l'alerte en base
+    this.repo.acknowledgeBackendAlert(a.id, userId).pipe(takeUntil(this.d$)).subscribe({
+      next: () => {
+        this.orderedAlertIds.update(s => { const n = new Set(s); n.add(a.id); return n; });
+        this.refreshBackend();
+        this.alertBadge.refresh();
+
+        if (isCentral) {
+          // 2. Stock central → rediriger vers le formulaire de commande à la production
+          const qtyToOrder = Math.max(a.threshold - a.currentQuantity, a.threshold);
+          this.router.navigate(['/stock/commande-production'], {
+            queryParams: { productId: a.productId, qty: qtyToOrder }
+          });
+        } else {
+          // 2. Stock tampon → rediriger vers la page tampon pour réapprovisionnement
+          this.router.navigate(['/stock/tampon']);
+        }
+      },
+      error: () => this.flashMsg('Erreur lors de l\'acquittement de l\'alerte', true)
+    });
+  }
+
+  /**
+   * Commander un produit en rupture depuis une alerte dashboard (niveau de stock).
+   * - Stock central → acquitte l'alerte backend puis redirige vers le formulaire de commande à la production
+   * - Stock tampon → acquitte l'alerte backend puis redirige vers la page tampon pour réapprovisionnement
+   */
+  orderLevel(sl: StockLevel) {
+    const isCentral = (sl.warehouseType || '').toUpperCase().includes('CENTRAL');
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+    const qtyToOrder = Math.max(sl.reorderPoint - sl.quantity, sl.reorderPoint);
+
+    // 1. Trouver et acquitter l'alerte backend correspondante
+    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+      next: (alerts) => {
+        this.backendAlerts.set(alerts);
+        const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
+        if (match) {
+          this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
+            next: () => {
+              this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+              this.refreshBackend();
+              this.alertBadge.refresh();
+              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+            },
+            error: () => {
+              // Même en cas d'erreur, on redirige
+              this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+            }
+          });
+        } else {
+          // Pas d'alerte backend trouvée → rediriger directement
+          this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+          this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+        }
+      },
+      error: () => {
+        // En cas d'erreur → rediriger quand même
+        this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+        this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+      }
+    });
+  }
+
+  isAlertOrdered(id: number): boolean { return this.orderedAlertIds().has(id); }
+
+  /**
+   * Acquitter une alerte de niveau de stock côté backend.
+   * 1. Récupère les alertes backend et trouve celle correspondant au productId
+   * 2. Appelle acknowledge sur cette alerte
+   * 3. Met à jour l'UI
+   */
+  acknowledgeLevel(sl: StockLevel) {
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+      next: (alerts) => {
+        this.backendAlerts.set(alerts);
+        const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
+        if (match) {
+          this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
+            next: () => {
+              this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+              this.refreshBackend();
+              this.alertBadge.refresh();
+              this.flashMsg(`Alerte acquittée : ${sl.productName}`);
+            },
+            error: () => this.flashMsg('Erreur lors de l\'acquittement', true)
+          });
+        } else {
+          // Aucune alerte backend active trouvée → acquitter localement
+          this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+          this.alertBadge.refresh();
+          this.flashMsg(`Niveau de stock acquitté : ${sl.productName}`);
+        }
+      },
+      error: () => this.flashMsg('Erreur lors de la récupération des alertes', true)
+    });
+  }
+
+  /**
+   * Résoudre une alerte de niveau de stock côté backend.
+   * - Stock central → résout l'alerte en base puis redirige vers le formulaire de commande à la production
+   * - Stock tampon → résout l'alerte en base puis redirige vers la page tampon pour réapprovisionnement
+   */
+  resolveLevel(sl: StockLevel) {
+    const isCentral = (sl.warehouseType || '').toUpperCase().includes('CENTRAL');
+    const qtyToOrder = Math.max(sl.reorderPoint - sl.quantity, sl.reorderPoint);
+    this.resolvingId.set(sl.id);
+
+    // 1. Trouver et résoudre l'alerte backend correspondante
+    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+      next: (alerts) => {
+        this.backendAlerts.set(alerts);
+        const match = alerts.find(a => a.productId === sl.productId && a.status !== 'RESOLVED');
+        if (match) {
+          this.repo.resolveBackendAlert(match.id).pipe(takeUntil(this.d$)).subscribe({
+            next: () => {
+              this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+              this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+              this.resolvingId.set(null);
+              this.refreshBackend();
+              this.alertBadge.refresh();
+              this.flashMsg(`Alerte résolue : ${sl.productName}`);
+              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+            },
+            error: () => {
+              this.resolvingId.set(null);
+              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+            }
+          });
+        } else {
+          this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+          this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+          this.resolvingId.set(null);
+          this.alertBadge.refresh();
+          this.flashMsg(`Alerte résolue : ${sl.productName}`);
+          this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+        }
+      },
+      error: () => {
+        this.resolvingId.set(null);
+        this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+      }
+    });
+  }
+
+  /**
+   * Redirige vers la page appropriée après une action d'alerte.
+   * - Stock central → /stock/commande-production avec productId et qty
+   * - Stock tampon → /stock/tampon
+   */
+  private redirectAfterAlertAction(sl: StockLevel, isCentral: boolean, qtyToOrder: number) {
+    if (isCentral) {
+      this.router.navigate(['/stock/commande-production'], {
+        queryParams: { productId: sl.productId, qty: qtyToOrder }
+      });
+    } else {
+      this.router.navigate(['/stock/tampon']);
+    }
+  }
+
+  private flashMsg(msg: string, isError = false) {
+    this.actionMsg.set(msg);
+    setTimeout(() => this.actionMsg.set(null), 3000);
+  }
+
+  getTypeIcon(t: AlertType): string {
+    const m: Record<AlertType, string> = {
+      LOW_STOCK: 'fa-arrow-down', CRITICAL_STOCK: 'fa-circle-exclamation',
+      OVERSTOCK: 'fa-arrow-up', EXPIRATION_SOON: 'fa-clock',
+      EXPIRED: 'fa-skull-crossbones', SLOW_ROTATION: 'fa-rotate',
+      REORDER_NEEDED: 'fa-cart-shopping', BUFFER_INSUFFICIENT: 'fa-layer-group'
+    };
+    return m[t] || 'fa-bell';
+  }
+
+  getTypeLabel(t: AlertType): string {
+    const m: Record<AlertType, string> = {
+      LOW_STOCK: 'Stock bas', CRITICAL_STOCK: 'Stock critique',
+      OVERSTOCK: 'Surstock', EXPIRATION_SOON: 'Péremption imminente',
+      EXPIRED: 'Produit expiré', SLOW_ROTATION: 'Rotation lente',
+      REORDER_NEEDED: 'Réappro requis', BUFFER_INSUFFICIENT: 'Tampon insuffisant'
+    };
+    return m[t] || t;
+  }
+
+  getTypeColor(t: AlertType): string {
+    if (t === 'CRITICAL_STOCK' || t === 'EXPIRED') return 'var(--r)';
+    if (t === 'LOW_STOCK' || t === 'EXPIRATION_SOON' || t === 'BUFFER_INSUFFICIENT') return 'var(--o)';
+    if (t === 'OVERSTOCK' || t === 'SLOW_ROTATION') return '#7C3AED';
+    return 'var(--y-d)';
+  }
+
+  getPriorityClass(p: string): string {
+    if (p === 'CRITICAL') return 'badge-danger';
+    if (p === 'HIGH') return 'badge-warning';
+    if (p === 'MEDIUM') return 'badge-secondary';
+    return 'badge-neutral';
+  }
+
+  getNiveauClass(n: string | undefined): string { return n === 'CRITIQUE' ? 'badge-danger' : 'badge-warning'; }
+
+  getStockPct(al: any): number {
+    if (!al.stockMinimum || al.stockMinimum === 0) return 0;
+    return Math.min(100, Math.round((al.stockActuel / al.stockMinimum) * 100));
+  }
+
+  needsUrgentOrder(al: any): boolean { return (al.leadTimeDays || 0) >= 90; }
+  getMagasinLabel(m: string): string { return m || '—'; }
+  getValeurStockAlert(al: any): number { return al.valeurStock || 0; }
+
+  formatCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }
+  fCFA(n: number) { return this.formatCFA(n); }
+
+  // Inline reappro for buffer alerts
+  showReappro = signal(false);
+  reapproSku = signal('');
+  reapproName = signal('');
+  reapproQty = signal(0);
+  reapproCentralQty = signal(0);
+  reapproUnit = signal('');
+  reapproSaving = signal(false);
+
+  openInlineReappro(sl: StockLevel) {
+    this.reapproSku.set(sl.productSku || '');
+    this.reapproName.set(sl.productName || '');
+    this.reapproUnit.set(sl.productUnit || 'unite');
+    const recommended = Math.max(0, (sl.reorderPoint || 0) - (sl.quantity || 0));
+    this.reapproQty.set(recommended > 0 ? recommended : 10);
+    // Fetch central stock for this SKU
+    this.uc.getAllStockItems().pipe(takeUntil(this.d$)).subscribe({
+      next: (items: any[]) => {
+        const central = items.find(i => i.productSku === sl.productSku && (i.locationType || '').toUpperCase().includes('CENTRAL'));
+        this.reapproCentralQty.set(Number(central?.quantity || 0));
+      },
+      error: () => this.reapproCentralQty.set(0)
+    });
+    this.showReappro.set(true);
+  }
+
+  closeInlineReappro() {
+    this.showReappro.set(false);
+    this.reapproSku.set('');
+    this.reapproName.set('');
+    this.reapproQty.set(0);
+    this.reapproCentralQty.set(0);
+  }
+
+  confirmInlineReappro() {
+    const sku = this.reapproSku();
+    const qty = this.reapproQty();
+    if (!sku || qty <= 0 || this.reapproSaving()) return;
+    if (qty > this.reapproCentralQty()) {
+      this.flashMsg(`Stock central insuffisant: ${this.reapproCentralQty()} ${this.reapproUnit()} disponibles`, true);
+      return;
+    }
+    this.reapproSaving.set(true);
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+    this.uc.replenishBuffer(sku, qty, userId, `Réappro tampon depuis alerte - ${this.reapproName()} (${sku})`)
+      .pipe(takeUntil(this.d$)).subscribe({
+        next: () => {
+          this.reapproSaving.set(false);
+          this.flashMsg(`Réapprovisionnement effectué: ${qty} ${this.reapproUnit()} transférés du central vers le tampon`);
+          this.closeInlineReappro();
+          this.refreshBackend();
+          this.alertBadge.refresh();
+        },
+        error: (err) => {
+          this.reapproSaving.set(false);
+          const msg = err?.error?.message || 'Erreur lors du réapprovisionnement';
+          this.flashMsg(msg, true);
+        }
+      });
+  }
+
+  ngOnDestroy() { this.d$.next(); this.d$.complete(); }
 }

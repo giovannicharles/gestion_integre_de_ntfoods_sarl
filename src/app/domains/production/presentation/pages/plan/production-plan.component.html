@@ -1,0 +1,113 @@
+@if (loading()) {
+  <div class="page-loading">
+    <div class="spinner spinner-lg"></div>
+    <p>Chargement du plan de production…</p>
+  </div>
+} @else {
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-calendar-week ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Plan de Production Hebdomadaire</h1>
+      <p class="ph-sub">{{ pph()?.reference ?? '—' }} — du {{ pph()?.dateDebut ?? '—' }} au {{ pph()?.dateFin ?? '—' }}</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '—' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-industry"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Chef de production</div>
+      <div class="kpi-val">{{ pph()?.matriculeCreateur ?? '—' }}</div>
+      <div class="kpi-meta">responsable semaine</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-seedling"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Matières premières</div>
+      <div class="kpi-val">{{ totalMP() }}</div>
+      <div class="kpi-meta">types planifiés</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Produits réalisés</div>
+      <div class="kpi-val">{{ totalProduitsRealises() }}/{{ totalProduitsPlannifies() }}</div>
+      <div class="kpi-meta">unités produites</div>
+    </div>
+  </div>
+  <div class="kpi-card" [class]="progressionGlobale() >= 80 ? 'kp-g' : 'kp-y'">
+    <div class="kpi-ico" [class]="progressionGlobale() >= 80 ? 'ig' : 'iy'"><i class="fa-solid fa-percent"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Progression globale</div>
+      <div class="kpi-val">{{ progressionGlobale() }}%</div>
+      <div class="kpi-meta">avancement semaine</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-seedling"></i> Matières Premières</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Matière Première</th>
+          <th>Quantité</th>
+          <th>Unité</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ligne of lignesMP(); track $index; let i = $index) {
+          <tr>
+            <td>{{ i + 1 }}</td>
+            <td><strong>{{ ligne.nom }}</strong></td>
+            <td>{{ ligne.quantite }}</td>
+            <td><span class="badge bg-neutral">{{ ligne.unite }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty-state">Aucune matière première planifiée</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-boxes-packing"></i> Produits Finis — Prévisions vs Réalisé</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Désignation</th>
+          <th>Qté prévue</th>
+          <th>Qté réalisée</th>
+          <th>Progression</th>
+          <th>%</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ligne of pph() ? [] : []; track $index) {
+          <tr>
+            <td colspan="6" class="empty-state">Données produits finis disponibles via PPH</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">Aucun produit fini planifié</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}

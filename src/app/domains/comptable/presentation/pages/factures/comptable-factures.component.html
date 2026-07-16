@@ -1,0 +1,180 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-invoice ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Factures & Avoirs</h1>
+      <p class="ph-sub">Gestion de la facturation client</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary" (click)="showForm.set(!showForm())">
+      <i class="fa-solid fa-plus"></i> Émettre Facture
+    </button>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total émis (TTC)</div>
+      <div class="kpi-val">{{ fCFA(totalEmis()) }}</div>
+      <div class="kpi-meta">{{ factures().length }} factures</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total payé (TTC)</div>
+      <div class="kpi-val">{{ fCFA(totalPaye()) }}</div>
+      <div class="kpi-meta">encaissements confirmés</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Factures émises non payées</div>
+      <div class="kpi-val">{{ nbEmises() }}</div>
+      <div class="kpi-meta">en attente règlement</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-rotate-left"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total avoirs</div>
+      <div class="kpi-val">{{ fCFA(totalAvoirs()) }}</div>
+      <div class="kpi-meta">crédits clients</div>
+    </div>
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="card form-card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvelle Facture</h2>
+      <button class="btn btn-ghost btn-sm" (click)="showForm.set(false)">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="form-group">
+        <label>Code Client</label>
+        <input type="text" class="form-input" [(ngModel)]="formCodeClient" placeholder="ex: CLT-001">
+      </div>
+      <div class="form-group">
+        <label>Type de facture</label>
+        <select class="form-input" [(ngModel)]="formTypeFacture">
+          <option value="FACTURE">Facture</option>
+          <option value="AVOIR">Avoir</option>
+        </select>
+      </div>
+    </div>
+    <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">Lignes de facture</h3>
+    @for (l of formLignes(); track $index) {
+      <div style="display:grid;grid-template-columns:1fr 2fr 70px 110px 70px 60px 30px;gap:8px;align-items:end;margin-bottom:8px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">Réf. Article</label>
+          <input type="text" class="form-input" [(ngModel)]="l.referenceArticle" placeholder="SKU">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">Désignation</label>
+          <input type="text" class="form-input" [(ngModel)]="l.designation" placeholder="Désignation">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">Qté</label>
+          <input type="number" class="form-input" [(ngModel)]="l.quantite">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">Prix HT</label>
+          <input type="number" class="form-input" [(ngModel)]="l.prixUnitaireHT">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">TVA %</label>
+          <input type="number" class="form-input" [(ngModel)]="l.tauxTVA">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:10px">Remise %</label>
+          <input type="number" class="form-input" [(ngModel)]="l.remise">
+        </div>
+        <button class="btn btn-ghost btn-sm" (click)="supprimerLigne($index)" style="height:38px">
+          <i class="fa-solid fa-trash" style="color:var(--r)"></i>
+        </button>
+      </div>
+    }
+    <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()" style="margin-bottom:16px">
+      <i class="fa-solid fa-plus"></i> Ajouter une ligne
+    </button>
+    <div style="display:flex;justify-content:flex-end;gap:20px;border-top:1px solid var(--n150);padding-top:14px">
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--n400)">Total HT</div>
+        <div style="font-weight:700">{{ fCFA(formTotalHT) }}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--n400)">Total TVA</div>
+        <div style="font-weight:700">{{ fCFA(formTotalTVA) }}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--n400)">Total TTC</div>
+        <div style="font-weight:800;font-size:16px;color:var(--mc)">{{ fCFA(formTotalTTC) }}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="emettreFacture()" [disabled]="formSaving() || !formCodeClient">
+        @if (formSaving()) { Émission… } @else { Émettre la facture }
+      </button>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-list"></i> Liste des Factures</h2>
+    <span class="badge bg-neutral">{{ factures().length }} documents</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          <th>Type</th>
+          <th>Client</th>
+          <th>Date</th>
+          <th>Montant HT</th>
+          <th>TVA</th>
+          <th>Montant TTC</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of factures(); track f.id) {
+          <tr>
+            <td><strong>{{ f.numero }}</strong></td>
+            <td><span [class]="typeClass(f.type)">{{ f.type }}</span></td>
+            <td>{{ f.clientNom }}</td>
+            <td>{{ f.dateFacture | date:'dd/MM/yyyy' }}</td>
+            <td>{{ fCFA(f.montantHT) }}</td>
+            <td>{{ fCFA(f.tva) }}</td>
+            <td><strong>{{ fCFA(f.montantTTC) }}</strong></td>
+            <td><span [class]="statutClass(f.statut)">{{ f.statut }}</span></td>
+            <td>
+              <div style="display:flex;gap:6px">
+                @if (f.statut === 'EMISE') {
+                  <button class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Marquer payée">
+                    <i class="fa-solid fa-check"></i>
+                  </button>
+                }
+                @if (f.statut !== 'ANNULEE' && f.statut !== 'PAYEE') {
+                  <button class="btn btn-ghost btn-sm" (click)="annuler(f.numero)" title="Annuler">
+                    <i class="fa-solid fa-ban" style="color:var(--r)"></i>
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

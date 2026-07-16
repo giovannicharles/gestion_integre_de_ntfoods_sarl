@@ -1,0 +1,11 @@
+.card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.txt-success { color: #065f46; font-weight: 500; }
+.txt-danger { color: var(--danger); font-weight: 500; }
+.tfoot-total { background: var(--surface-2); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; }
+}

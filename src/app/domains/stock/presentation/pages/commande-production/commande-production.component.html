@@ -1,0 +1,314 @@
+<div class="page animate-fadeInUp">
+  @if (success()) {
+    <div class="success-overlay animate-fadeIn">
+      <div class="success-box">
+        <div class="success-ico"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Commande créée !</h3>
+        <p>{{ successMsg() }}</p>
+        <div class="success-bar"></div>
+      </div>
+    </div>
+  }
+
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" (click)="router.navigate(['/stock/production'])"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
+      <div>
+        <h1 class="ph-title">Commande à la Production</h1>
+        <p class="ph-sub">Saisissez le code produit ou sélectionnez dans la liste — Conditionnement par produit</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement des produits et stocks…</div>
+  } @else if (errorMsg() && !success() && lignes().length === 0) {
+    <div class="banner banner-danger" style="margin:20px 0"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  }
+
+  @else {
+    <!-- WORKFLOW STEPPER -->
+    <div class="card" style="padding:16px 24px">
+      <div class="stepper">
+        <div class="step"><div class="sc-on"><i class="fa-solid fa-pencil"></i></div><div><span class="st">Saisie</span><span class="ss">Vous êtes ici</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="sc-pend">2</div><div><span class="st">Approbation</span><span class="ss">Chef de Production</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="sc-pend">3</div><div><span class="st">Production</span><span class="ss">Déclaration des lots</span></div></div>
+        <div class="step-line"></div>
+        <div class="step"><div class="sc-pend"><i class="fa-solid fa-check"></i></div><div><span class="st">Livraison</span><span class="ss">Stock mis à jour</span></div></div>
+      </div>
+    </div>
+
+    <div class="form-layout">
+      <div class="form-main">
+        <!-- ENTÊTE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-g"><i class="fa-solid fa-file-invoice"></i></span>
+              <div><h3>Informations de la commande</h3></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="banner banner-primary" style="margin-bottom:14px">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Tapez le <strong>code produit (SKU)</strong> directement ou recherchez par nom. Chaque produit peut avoir plusieurs types de conditionnement.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Instructions pour la production <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label>
+              <textarea class="form-control" rows="2" placeholder="Priorité, délais, remarques…" [(ngModel)]="globalNotes"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIGNES -->
+        <div class="card">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span>
+              <div><h3>Produits à commander</h3><p class="sec-sub">Code produit + conditionnement + quantité</p></div>
+            </div>
+            <button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
+          </div>
+          <div class="card-body">
+            @if (productCount() === 0) {
+              <div class="banner banner-danger" style="margin-bottom:16px">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Aucun produit chargé.</strong> Vérifiez que l'API est démarrée et que des produits finis existent en base.</span>
+              </div>
+            }
+            <div style="display:flex;flex-direction:column;gap:14px">
+              @for (l of lignes(); track l.uid; let i = $index) {
+                <div class="lc-card">
+                  <div class="lc-header">
+                    <span class="lc-badge">{{ i + 1 }}</span>
+                    <span class="lc-title">Ligne {{ i + 1 }}</span>
+                    @if (l.productId > 0) {
+                      <span class="lc-sku-tag">{{ l.productSku }}</span>
+                    }
+                    <span style="flex:1"></span>
+                    @if (lignes().length > 1) {
+                      <button class="lc-del" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button>
+                    }
+                  </div>
+
+                  <div class="lc-body">
+                    <!-- SEARCH COMBOBOX -->
+                    <div class="combobox">
+                      <div class="cb-input-wrap">
+                        <i class="fa-solid fa-barcode cb-icon"></i>
+                        <input
+                          type="text"
+                          class="form-control cb-input"
+                          placeholder="Tapez le code produit (ex: PF001) ou le nom…"
+                          [ngModel]="l.searchText"
+                          (ngModelChange)="l.searchText = $event; onSearchInput(l)"
+                          (focus)="onSearchFocus(l)"
+                          (blur)="onSearchBlur(l)"
+                          (keydown)="onSearchKeydown($event, l)"
+                          [class.is-invalid]="l.notFound"
+                        >
+                        @if (l.productId > 0) {
+                          <button type="button" class="cb-clear" (click)="clearProduct(l)">
+                            <i class="fa-solid fa-xmark"></i>
+                          </button>
+                        }
+                      </div>
+
+                      @if (l.showDropdown && l.productId === 0) {
+                        <div class="combobox-dropdown">
+                          @if (getSearchResults(l).length > 0) {
+                            @for (p of getSearchResults(l); track p.id) {
+                              <div class="combobox-item" (mousedown)="$event.preventDefault(); selectProduct(l, p)">
+                                <div class="cb-item-left">
+                                  <span class="cb-sku">{{ p.sku }}</span>
+                                  <span class="cb-name">{{ p.designation || p.sku }}</span>
+                                </div>
+                                <div class="cb-item-right">
+                                  @if (p.packagingType) {
+                                    <span class="cb-pack">{{ getPackagingLabel(p.packagingType) }}</span>
+                                  }
+                                  @if (p.quantityPerCarton) {
+                                    <span class="cb-qpc">{{ p.quantityPerCarton }} u/cart</span>
+                                  }
+                                </div>
+                              </div>
+                            }
+                          } @else if (l.searchText && l.searchText.length >= 2) {
+                            <div class="combobox-empty">
+                              <i class="fa-solid fa-magnifying-glass"></i>
+                              Aucun produit pour « {{ l.searchText }} »
+                            </div>
+                          } @else {
+                            <div class="combobox-empty">
+                              <i class="fa-solid fa-keyboard"></i>
+                              Tapez le code ou le nom du produit
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      @if (l.notFound) {
+                        <div class="cb-notfound">
+                          <i class="fa-solid fa-circle-exclamation"></i> Produit introuvable. Vérifiez le code saisi.
+                        </div>
+                      }
+                    </div>
+
+                    @if (l.productId > 0) {
+                      <!-- PRODUCT INFO BAR -->
+                      <div class="product-info-bar">
+                        <div class="pi-sku">
+                          <span class="pi-sku-label">SKU</span>
+                          <span class="pi-sku-value">{{ l.productSku }}</span>
+                        </div>
+                        <div class="pi-divider"></div>
+                        <div class="pi-name">{{ l.productName }}</div>
+                        <div class="pi-unit">{{ l.productUnit }}</div>
+                      </div>
+
+                      <!-- PACKAGING + STOCK SECTION -->
+                      <div class="pk-section">
+                        <div class="pk-section-head">
+                          <i class="fa-solid fa-boxes-stacked"></i>
+                          <span>Conditionnement & Stock</span>
+                        </div>
+                        <div class="pk-grid">
+                          <!-- PACKAGING SELECTOR -->
+                          <div class="pk-selector">
+                            <label class="pk-label">Type</label>
+                            <select class="form-control pk-select" [ngModel]="l.selectedPackaging" (ngModelChange)="l.selectedPackaging = $event; onPackagingChange(l)">
+                              @for (pk of getAvailablePackagings(l.productId); track pk.packagingType) {
+                                <option [value]="pk.packagingType">
+                                  {{ getPackagingLabel(pk.packagingType) }}
+                                  @if (pk.quantityPerCarton > 0) { — {{ pk.quantityPerCarton }} u/cart }
+                                </option>
+                              }
+                            </select>
+                            <div class="pk-qpc-info">
+                              <span class="pk-qpc-label">Unités/carton</span>
+                              <span class="pk-qpc-value">{{ l.quantityPerCarton || '—' }}</span>
+                            </div>
+                          </div>
+
+                          <!-- STOCK CARDS -->
+                          <div class="pk-stock-wrap">
+                            @if (getProductStock(l.productId); as info) {
+                              @if (info.packagings.length > 0) {
+                                <div class="pk-stock-cards">
+                                  @for (pk of info.packagings; track pk.packagingType) {
+                                    <div class="pk-stock-card" [class.pk-stock-active]="pk.packagingType === l.selectedPackaging">
+                                      <span class="pk-sc-type">{{ getPackagingLabel(pk.packagingType) }}</span>
+                                      <span class="pk-sc-qty" [class.sp-low]="pk.quantity > 0 && pk.quantity <= (info.stockLevel?.reorderPoint || 0)">{{ pk.quantity | number }}</span>
+                                      @if (pk.cartons > 0) {
+                                        <span class="pk-sc-cartons">{{ pk.cartons | number }} cartons</span>
+                                      }
+                                    </div>
+                                  }
+                                </div>
+                              } @else {
+                                <div class="pk-stock-empty">Aucun stock enregistré</div>
+                              }
+                              @if (info.stockLevel) {
+                                <div class="pk-stock-meta">
+                                  <span>Seuil: <strong>{{ info.stockLevel.reorderPoint | number }}</strong></span>
+                                  <span class="badge" [class.badge-danger]="info.stockLevel.alertLevel === 'CRITIQUE'" [class.badge-warning]="info.stockLevel.alertLevel === 'FAIBLE'" [class.badge-success]="info.stockLevel.alertLevel === 'NORMAL'">{{ info.stockLevel.alertLevel }}</span>
+                                </div>
+                              }
+                            }
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- QUANTITY INPUTS -->
+                      <div class="qty-row">
+                        <div class="qty-cell">
+                          <label class="qty-label">Quantité demandée <span class="req">*</span></label>
+                          <input type="number" class="form-control qty-input" min="1" placeholder="0" [ngModel]="l.requestedQty" (ngModelChange)="l.requestedQty = $event; onQtyChange(l)">
+                          <span class="qty-hint">en {{ l.productUnit }}</span>
+                        </div>
+                        <div class="qty-cell">
+                          <label class="qty-label">Cartons <span class="qty-auto">(auto)</span></label>
+                          <input type="number" class="form-control qty-input" min="0" step="0.01" [ngModel]="l.requestedCartons" (ngModelChange)="l.requestedCartons = $event; onCartonsChange(l)" [disabled]="l.quantityPerCarton === 0">
+                          <span class="qty-hint">
+                            @if (l.quantityPerCarton > 0) { {{ l.quantityPerCarton }} u/cart } @else { N/A }
+                          </span>
+                        </div>
+                        <div class="qty-cell qty-notes-cell">
+                          <label class="qty-label">Notes <span class="qty-auto">(opt.)</span></label>
+                          <input type="text" class="form-control qty-input" placeholder="Remarques…" [(ngModel)]="l.notes">
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE -->
+      <div class="form-side">
+        <div class="card" style="position:sticky;top:24px">
+          <div class="card-header">
+            <div class="sec-head">
+              <span class="sh-ico sh-y"><i class="fa-solid fa-receipt"></i></span>
+              <div><h3>Récapitulatif</h3></div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Lignes valides</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getValidLineCount() }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Total quantité</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getTotalRequestedQty() | number }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:13px">
+                <span style="color:var(--n500)">Total cartons</span>
+                <span style="font-weight:600;color:var(--n800)">{{ getTotalCartons() | number }}</span>
+              </div>
+            </div>
+
+            <!-- Détail par conditionnement -->
+            @if (getValidLineCount() > 0) {
+              <div style="background:var(--n50);border-radius:var(--r-md);padding:12px;margin-bottom:16px">
+                <div style="font-size:10px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:8px">Détail par conditionnement</div>
+                @for (l of lignes(); track l.uid) {
+                  @if (l.productId > 0 && l.requestedQty > 0) {
+                    <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--n150)">
+                      <span style="color:var(--n600);font-weight:600">
+                        <span style="font-family:var(--font-d);color:var(--n800)">{{ l.productSku }}</span>
+                        · {{ getPackagingLabel(l.selectedPackaging) }}
+                      </span>
+                      <span style="color:var(--n800);font-weight:700">{{ l.requestedQty | number }} {{ l.productUnit }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+
+            @if (errorMsg()) {
+              <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+            }
+            <div class="banner banner-primary" style="margin-bottom:16px">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>La commande sera soumise au <strong>Chef de Production</strong> pour approbation.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-ghost btn-full" (click)="router.navigate(['/stock/production'])"><i class="fa-solid fa-xmark"></i> Annuler</button>
+              <button class="btn btn-primary btn-full" [disabled]="!isValid()||saving()" (click)="sauvegarder()">
+                @if (saving()) { <div class="spinner spinner-sm"></div> Envoi… } @else { <i class="fa-solid fa-paper-plane"></i> Envoyer la commande }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,89 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-hand-holding-dollar ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Suivi Recouvrement Global</h1>
+      <p class="ph-sub">Créances clients — tous commerciaux confondus</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total créances</div>
+      <div class="kpi-val">{{ fCFA(totalCreances()) }}</div>
+      <div class="kpi-meta">{{ recouvrement().length }} dossiers</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total encaissé</div>
+      <div class="kpi-val">{{ fCFA(totalEncaisse()) }}</div>
+      <div class="kpi-meta">taux {{ tauxRecouvrement() }}%</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-end"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Solde restant dû</div>
+      <div class="kpi-val">{{ fCFA(totalSolde()) }}</div>
+      <div class="kpi-meta">à recouvrir</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-check-circle"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Dossiers apurés</div>
+      <div class="kpi-val">{{ nbApures() }}</div>
+      <div class="kpi-meta">sur {{ recouvrement().length }} dossiers</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-table"></i> Détail des Créances</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Commercial</th>
+          <th>Dette initiale</th>
+          <th>Encaissé</th>
+          <th>Solde restant</th>
+          <th>Dernier encaissement</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of recouvrement(); track r.id) {
+          <tr>
+            <td><strong>{{ r.clientNom }}</strong></td>
+            <td>{{ getCommercialNom(r.commercialId) }}</td>
+            <td>{{ fCFA(r.montantDette) }}</td>
+            <td class="txt-success">{{ fCFA(r.montantEncaisse) }}</td>
+            <td [class]="r.soldeRestant > 0 ? 'txt-danger' : 'txt-success'">
+              {{ fCFA(r.soldeRestant) }}
+            </td>
+            <td>
+              @if (r.dateEncaissement) {
+                {{ r.dateEncaissement | date:'dd/MM/yyyy' }}
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </td>
+            <td><span [class]="statutClass(r.statut)">{{ r.statut }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

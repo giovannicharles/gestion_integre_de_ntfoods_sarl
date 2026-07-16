@@ -1,0 +1,130 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-bullseye"></i></div>
+      <div>
+        <h1 class="ph-title">Objectifs CA — Suivi & Paramétrage</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Objectifs hebdomadaires par commercial et par zone</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      @if (saved()) { <span class="save-banner"><i class="fa-solid fa-check-circle"></i> Objectifs enregistrés</span> }
+      @if (!editMode()) {
+      <button class="btn btn-ghost btn-sm" (click)="toggleEdit()"><i class="fa-solid fa-pen"></i> Modifier objectifs</button>
+      } @else {
+      <button class="btn btn-ghost btn-sm" (click)="toggleEdit()"><i class="fa-solid fa-xmark"></i> Annuler</button>
+      <button class="btn btn-primary" (click)="saveObjectifs()"><i class="fa-solid fa-floppy-disk"></i> Enregistrer</button>
+      }
+    </div>
+  </div>
+
+  <!-- KPI RÉSUMÉ -->
+  <div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-bullseye"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Objectif Total Équipe</span>
+        <span class="kpi-val">{{ fCFA(totalObjectif()) }}</span>
+        <div class="kpi-meta">{{ objectifs().length }} objectifs définis</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Réalisé Global</span>
+        <span class="kpi-val">{{ fCFA(totalCA()) }}</span>
+        <div class="kpi-meta">Taux global : {{ tauxAtteinte(totalCA(), totalObjectif()) }}%</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-award"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Éligibles Primes</span>
+        <span class="kpi-val">{{ nbEligibles() }}</span>
+        <div class="kpi-meta">sur {{ objectifs().length }} objectifs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU OBJECTIFS -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-table"></i> Objectifs par Commercial</span>
+      @if (editMode()) { <span class="edit-badge"><i class="fa-solid fa-pen"></i> Mode édition actif</span> }
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Commercial</th>
+            <th>Zone</th>
+            <th>Objectif Hebdo</th>
+            <th>CA Réalisé</th>
+            <th>Écart</th>
+            <th>Taux</th>
+            <th>Progression</th>
+            <th>Prime</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of objectifs(); track o.id; let i = $index) {
+          <tr>
+            <td>
+              <div class="com-cell">
+                <div class="com-av">{{ o.matriculeCommercial.charAt(0) }}</div>
+                <div>
+                  <div class="com-name">{{ o.matriculeCommercial }}</div>
+                  <div class="com-tel">{{ o.semaineDebut }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="zone-chip">{{ o.semaineDebut }}</span></td>
+            <td>
+              @if (editMode()) {
+              <input type="number" class="objectif-input" [(ngModel)]="o.objectifGlobal" step="100000" min="0" />
+              } @else {
+              <span class="mono fw-bold">{{ fCFA(o.objectifGlobal) }}</span>
+              }
+            </td>
+            <td class="mono">{{ fCFA(o.objectifFarines) }}</td>
+            <td class="mono" [class.text-danger]="o.objectifFarines < o.objectifGlobal" [class.text-success]="o.objectifFarines >= o.objectifGlobal">
+              {{ fCFA(o.objectifFarines - o.objectifGlobal) }}
+            </td>
+            <td>
+              <span class="taux-chip" [class.taux-ok]="o.objectifGlobal > 0" [class.taux-warn]="o.objectifGlobal === 0">
+                {{ o.objectifGlobal > 0 ? 'Défini' : 'À définir' }}
+              </span>
+            </td>
+            <td class="progress-cell">
+              <div class="prog-bar-wrap">
+                <div class="prog-bar" [style.width.%]="o.objectifGlobal > 0 ? 100 : 0" [class.prog-ok]="o.objectifGlobal > 0"></div>
+              </div>
+            </td>
+            <td>
+              @if (o.objectifGlobal > 0) { <span class="badge bg-success">Défini ✓</span> }
+              @else { <span class="badge bg-neutral">À définir</span> }
+            </td>
+          </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="tfoot-total">
+            <td colspan="2"><strong>TOTAL</strong></td>
+            <td class="mono fw-bold">{{ fCFA(totalObjectif()) }}</td>
+            <td class="mono fw-bold">{{ fCFA(totalCA()) }}</td>
+            <td class="mono" [class.text-success]="totalCA()>=totalObjectif()" [class.text-danger]="totalCA()<totalObjectif()">
+              {{ totalCA()>=totalObjectif()?'+':'' }}{{ fCFA(totalCA()-totalObjectif()) }}
+            </td>
+            <td><span class="taux-chip" [class.taux-ok]="tauxAtteinte(totalCA(),totalObjectif())>=100" [class.taux-warn]="tauxAtteinte(totalCA(),totalObjectif())<100">{{ tauxAtteinte(totalCA(),totalObjectif()) }}%</span></td>
+            <td></td><td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,383 @@
+<div class="page animate-fadeInUp">
+  @if (toastMsg()) {
+    <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid fa-{{ toastType()==='success'?'circle-check':'circle-xmark' }}"></i>{{ toastMsg() }}
+    </div>
+  }
+
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-hand-holding"></i></div>
+      <div>
+        <h1 class="ph-title">Dotations</h1>
+        <p class="ph-sub">Workflow: Précommande → Paiement → Quantités → Approbation → Livraison</p>
+      </div>
+    </div>
+    <a routerLink="/stock/dotations/new" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Nouvelle Dotation
+    </a>
+  </div>
+
+  @if (!loading()) {
+    <div class="stat-chips">
+      <div class="s-chip sc-total"><i class="fa-solid fa-list"></i>{{ all().length }} total</div>
+      <div class="s-chip sc-warn"><i class="fa-solid fa-hourglass-half"></i>{{ countStatus('PENDING') }} en attente paiement</div>
+      <div class="s-chip sc-info"><i class="fa-solid fa-money-check-dollar"></i>{{ countStatus('PAYMENT_VERIFIED') }} paiement vérifié</div>
+      <div class="s-chip sc-info"><i class="fa-solid fa-calculator"></i>{{ countStatus('QUANTITY_VALIDATED') }} quantités validées</div>
+      <div class="s-chip sc-info"><i class="fa-solid fa-clipboard-check"></i>{{ countStatus('REVIEWED') }} révisées</div>
+      <div class="s-chip sc-ok"><i class="fa-solid fa-check-circle"></i>{{ countStatus('APPROVED') }} approuvées</div>
+      <div class="s-chip sc-danger"><i class="fa-solid fa-xmark"></i>{{ countStatus('REJECTED') }} rejetées</div>
+    </div>
+  }
+
+  <!-- FILTRES -->
+  <div class="card" style="overflow:hidden">
+    <div class="card-body filters-row">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Rechercher référence, commercial…"
+               [(ngModel)]="search" (ngModelChange)="applyFilters()">
+        @if (search) {
+          <button class="x-btn" (click)="search=''; applyFilters()"><i class="fa-solid fa-xmark"></i></button>
+        }
+      </div>
+      <select class="f-sel" [(ngModel)]="filterStatut" (ngModelChange)="applyFilters()">
+        <option value="">Tous statuts</option>
+        <option value="PENDING">En attente paiement</option>
+        <option value="PAYMENT_VERIFIED">Paiement vérifié</option>
+        <option value="QUANTITY_VALIDATED">Quantités validées</option>
+        <option value="REVIEWED">Révisé</option>
+        <option value="APPROVED">Approuvé</option>
+        <option value="REJECTED">Rejeté</option>
+        <option value="COMPLETED">Livré</option>
+      </select>
+      @if (search || filterStatut) {
+        <button class="btn btn-ghost btn-sm" (click)="clearFilters()"><i class="fa-solid fa-filter-slash"></i> Effacer</button>
+      }
+      <span class="badge badge-neutral" style="margin-left:auto">{{ filtered().length }} résultat(s)</span>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card" style="overflow:hidden">
+    @if (loading()) {
+      <div style="padding:48px;text-align:center;color:var(--n400)">
+        <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement des dotations…
+      </div>
+    } @else {
+      @if (error()) {
+        <div class="banner banner-warning" style="margin:20px"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
+      }
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Commercial</th>
+              <th>Articles</th>
+              <th>Progression</th>
+              <th>Date prévue</th>
+              <th>Statut</th>
+              <th style="text-align:center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of paginated(); track d.id) {
+              <tr class="table-row-anim">
+                <td>
+                  <span class="rec-num">{{ d.referenceNumber }}</span>
+                </td>
+                <td>
+                  <div style="font-weight:600">{{ d.commercialName || '—' }}</div>
+                  <div style="font-size:11px;color:var(--n500)">{{ d.commercialMatricule }}</div>
+                </td>
+                <td>
+                  <div class="lines-cell">
+                    <span class="l-n">{{ d.items.length }}</span>
+                    <span class="l-u">art.</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="mini-progress">
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 0" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#0277D5"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 1" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#D97706"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 2" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#7C3AED"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 3" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#14532D"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 4" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#15803D"></div>
+                    <span class="mp-pct">{{ getProgressPct(d.status) }}%</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="d-main">{{ d.scheduledDate | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge {{ sClass(d.status) }}">
+                    <i class="fa-solid {{ sIcon(d.status) }}"></i> {{ sLabel(d.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="act-btns">
+                    <button class="act-btn ab-view" (click)="openDetail(d)" title="Détails">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="7" style="text-align:center;padding:48px;color:var(--n400)">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+                    <i class="fa-solid fa-inbox" style="font-size:38px;color:var(--n300)"></i>
+                    <p style="font-size:14px">Aucune dotation trouvée</p>
+                    <a routerLink="/stock/dotations/new" class="btn btn-primary btn-sm">
+                      <i class="fa-solid fa-plus"></i> Créer une dotation
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="pagination-bar">
+          <span class="pg-info">{{ (currentPage()-1)*pageSize + 1 }}–{{ getEndIndex() }} sur {{ filtered().length }}</span>
+          <div class="pg-controls">
+            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(1)">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+            <button class="pg-btn" [disabled]="currentPage()===1" (click)="goToPage(currentPage()-1)">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
+            @for (p of pages; track p) {
+              @if (p===currentPage()||p===1||p===totalPages()||(p>=currentPage()-1&&p<=currentPage()+1)) {
+                <button class="pg-btn" [class.pg-active]="p===currentPage()" (click)="goToPage(p)">{{ p }}</button>
+              }
+            }
+            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(currentPage()+1)">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+            <button class="pg-btn" [disabled]="currentPage()===totalPages()" (click)="goToPage(totalPages())">
+              <i class="fa-solid fa-angles-right"></i>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL + ACTIONS -->
+@if (selected(); as d) {
+  <div class="modal-overlay animate-fadeIn" (click)="closeDetail()">
+    <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()" style="max-width:720px">
+      <div class="modal-header" style="background:var(--n50)">
+        <div class="modal-title" style="color:var(--n800)">
+          <i class="fa-solid fa-hand-holding"></i>
+          {{ d.referenceNumber }}
+        </div>
+        <button class="modal-close" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        @if (actionMode() === null) {
+          <!-- DÉTAIL -->
+          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+              <div><span style="color:var(--n500)">Commercial:</span> <strong>{{ d.commercialName }}</strong></div>
+              <div><span style="color:var(--n500)">Matricule:</span> <strong>{{ d.commercialMatricule }}</strong></div>
+              <div><span style="color:var(--n500)">Statut:</span> <span class="badge {{ sClass(d.status) }}">{{ sLabel(d.status) }}</span></div>
+              <div><span style="color:var(--n500)">Date prévue:</span> <strong>{{ d.scheduledDate | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+              <div><span style="color:var(--n500)">Justification:</span> <strong>{{ d.justification || 'Aucune' }}</strong></div>
+              @if (d.paymentVerifiedBy) {
+                <div><span style="color:var(--n500)">Paiement vérifié par:</span> <strong>{{ d.paymentVerifiedBy }}</strong></div>
+              }
+              @if (d.quantityValidatedBy) {
+                <div><span style="color:var(--n500)">Quantités validées par:</span> <strong>{{ d.quantityValidatedBy }}</strong></div>
+              }
+              @if (d.quantityValidationComments) {
+                <div style="grid-column:1/3"><span style="color:var(--n500)">Commentaires comptable:</span> <strong>{{ d.quantityValidationComments }}</strong></div>
+              }
+              @if (d.reviewComments) {
+                <div style="grid-column:1/3"><span style="color:var(--n500)">Commentaires:</span> <strong>{{ d.reviewComments }}</strong></div>
+              }
+              @if (d.deliveredBy) {
+                <div><span style="color:var(--n500)">Livré par:</span> <strong>{{ d.deliveredBy }}</strong></div>
+              }
+            </div>
+          </div>
+
+          <!-- WORKFLOW STEPPER PRO -->
+          <div class="wf-stepper">
+            <div class="wf-header">
+              <span class="wf-title"><i class="fa-solid fa-diagram-project"></i> Workflow de validation</span>
+              <span class="wf-progress">{{ getProgressPct(d.status) }}%</span>
+            </div>
+            <div class="wf-track">
+              @for (step of getWorkflowSteps(d); track step.label; let i = $index) {
+                <div class="wf-step" [class.wf-done]="step.done" [class.wf-current]="step.current" [class.wf-rejected]="d.status === 'REJECTED'">
+                  <div class="wf-node" [style.border-color]="step.done ? step.color : 'var(--n200)'" [style.background]="step.done ? step.color : 'white'">
+                    @if (step.done && !step.current) {
+                      <i class="fa-solid fa-check" style="color:#fff;font-size:11px"></i>
+                    } @else if (step.current) {
+                      <i class="fa-solid {{ step.icon }}" style="color:#fff;font-size:12px"></i>
+                    } @else {
+                      <i class="fa-solid {{ step.icon }}" style="color:var(--n300);font-size:12px"></i>
+                    }
+                    @if (step.current) { <span class="wf-pulse"></span> }
+                  </div>
+                  @if (i < getWorkflowSteps(d).length - 1) {
+                    <div class="wf-connector" [class.wf-connector-done]="step.done"></div>
+                  }
+                </div>
+              }
+            </div>
+            <div class="wf-labels">
+              @for (step of getWorkflowSteps(d); track step.label) {
+                <div class="wf-label-item" [class.wf-label-active]="step.current">
+                  <span class="wf-label-text">{{ step.label }}</span>
+                  <span class="wf-label-actor">{{ step.actor }}</span>
+                </div>
+              }
+            </div>
+            @if (d.status === 'REJECTED') {
+              <div class="wf-rejected-banner">
+                <i class="fa-solid fa-xmark-circle"></i> Demande rejetée — {{ d.reviewComments || 'Sans motif' }}
+              </div>
+            }
+          </div>
+
+          <h4 style="font-family:var(--font-d);font-size:14px;margin-bottom:10px">Articles</h4>
+          <table class="table" style="margin-bottom:16px">
+            <thead>
+              <tr><th>Produit</th><th>Qté demandée</th><th>Qté approuvée</th><th>Conditionnement</th></tr>
+            </thead>
+            <tbody>
+              @for (item of d.items; track item.productSku) {
+                <tr>
+                  <td>{{ item.productName }} ({{ item.productSku }})</td>
+                  <td>{{ item.requestedQuantity | number }}</td>
+                  <td>{{ item.approvedQuantity || item.requestedQuantity | number }}</td>
+                  <td>{{ item.packagingType || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" (click)="downloadFicheSynthese(d.id ?? 0)">
+              <i class="fa-solid fa-file-pdf"></i> Fiche de synthèse (PDF)
+            </button>
+            @if (d.status === 'PENDING') {
+              <button class="btn btn-success btn-sm" (click)="openAction('verifyPayment')"><i class="fa-solid fa-money-check-dollar"></i> Vérifier le paiement</button>
+              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              <button class="btn btn-danger btn-sm" (click)="openAction('delete')"><i class="fa-solid fa-trash"></i> Supprimer</button>
+            }
+            @if (d.status === 'PAYMENT_VERIFIED') {
+              <button class="btn btn-primary btn-sm" (click)="openAction('validateQuantities')"><i class="fa-solid fa-calculator"></i> Valider les quantités</button>
+              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+            }
+            @if (d.status === 'QUANTITY_VALIDATED') {
+              <button class="btn btn-success btn-sm" (click)="openAction('reviewAndApprove')"><i class="fa-solid fa-clipboard-check"></i> Réviser & approuver</button>
+              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+            }
+            @if (d.status === 'APPROVED') {
+              <button class="btn btn-primary btn-sm" (click)="openAction('execute')"><i class="fa-solid fa-truck-fast"></i> Marquer comme livré</button>
+            }
+          </div>
+        } @else if (actionMode() === 'validateQuantities') {
+          <!-- VALIDATION QUANTITÉS PAR LE COMPTABLE -->
+          <div class="banner banner-primary" style="margin-bottom:16px">
+            <i class="fa-solid fa-calculator"></i>
+            <span>Validez ou ajustez les quantités demandées par le commercial.</span>
+          </div>
+          <table class="table" style="margin-bottom:16px">
+            <thead>
+              <tr><th>Produit</th><th>Qté demandée</th><th>Qté approuvée</th></tr>
+            </thead>
+            <tbody>
+              @for (item of editedItems(); track $index; let i = $index) {
+                <tr>
+                  <td>{{ item.productName }} ({{ item.productSku }})</td>
+                  <td>{{ item.requestedQuantity | number }}</td>
+                  <td>
+                    <input type="number" class="form-control" style="width:100px" min="0"
+                           [value]="item.approvedQuantity || item.requestedQuantity"
+                           (input)="updateApprovedQty(i, +$any($event.target).value)">
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="form-group">
+            <label class="form-label">Commentaires (optionnel)</label>
+            <textarea class="form-control" rows="2" placeholder="Ex: Quantité ajustée pour raison de stock…"
+                      [(ngModel)]="validationComments"></textarea>
+          </div>
+        } @else if (actionMode() === 'reviewAndApprove') {
+          <!-- RÉVISION + APPROBATION PAR LE GESTIONNAIRE DE STOCK -->
+          <div class="banner banner-primary" style="margin-bottom:16px">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span><strong>Révision et approbation du gestionnaire de stock</strong><br>Modifiez les quantités à livrer si nécessaire, puis approuvez.</span>
+          </div>
+          <table class="table" style="margin-bottom:16px">
+            <thead>
+              <tr><th>Produit</th><th>Qté demandée</th><th>Qté à livrer</th></tr>
+            </thead>
+            <tbody>
+              @for (item of editedItems(); track $index; let i = $index) {
+                <tr>
+                  <td>{{ item.productName }} ({{ item.productSku }})</td>
+                  <td>{{ item.requestedQuantity | number }}</td>
+                  <td>
+                    <input type="number" class="form-control" style="width:100px" min="0"
+                           [value]="item.approvedQuantity || item.requestedQuantity"
+                           (input)="updateApprovedQty(i, +$any($event.target).value)">
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="form-group">
+            <label class="form-label">Commentaires (optionnel)</label>
+            <textarea class="form-control" rows="2" placeholder="Ex: stock insuffisant, livraison partielle…"
+                      [(ngModel)]="validationComments"></textarea>
+          </div>
+        } @else {
+          <!-- CONFIRMATION D'ACTION -->
+          <div class="banner" [class.banner-danger]="actionMode()==='reject'||actionMode()==='delete'" [class.banner-primary]="actionMode()==='verifyPayment'||actionMode()==='approve'" [class.banner-warning]="actionMode()==='execute'">
+            <i class="fa-solid fa-{{ actionMode()==='delete'?'trash':actionMode()==='reject'?'xmark-circle':actionMode()==='execute'?'truck-fast':actionMode()==='verifyPayment'?'money-check-dollar':'check-circle' }}"></i>
+            <span>
+              @if (actionMode()==='verifyPayment') { Confirmer que le commercial a déposé l'argent du précédent ? }
+              @else if (actionMode()==='approve') { Confirmer l'approbation de cette dotation ? Le stock sera vérifié. }
+              @else if (actionMode()==='reject') { Confirmer le rejet de cette dotation ? }
+              @else if (actionMode()==='execute') { Marquer cette dotation comme livrée ? Le transfert de stock sera effectué. }
+              @else if (actionMode()==='delete') { Supprimer définitivement cette dotation ? }
+            </span>
+          </div>
+          @if (actionMode()==='reject') {
+            <div class="form-group">
+              <label class="form-label">Motif du rejet <span class="req">*</span></label>
+              <textarea class="form-control" rows="2" placeholder="Raison du rejet…" [(ngModel)]="rejectReason"></textarea>
+            </div>
+          }
+        }
+      </div>
+      @if (actionMode() !== null) {
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="actionMode.set(null)">Retour</button>
+          <button class="btn" [class.btn-primary]="actionMode()==='verifyPayment'||actionMode()==='validateQuantities'||actionMode()==='reviewAndApprove'||actionMode()==='approve'||actionMode()==='execute'"
+                  [class.btn-danger]="actionMode()==='reject'||actionMode()==='delete'"
+                  [disabled]="(actionMode()==='reject'&&!rejectReason)||processing()"
+                  (click)="confirmAction()">
+            @if (processing()) { <div class="spinner spinner-sm"></div> Traitement… }
+            @else { <i class="fa-solid fa-check"></i> Confirmer }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

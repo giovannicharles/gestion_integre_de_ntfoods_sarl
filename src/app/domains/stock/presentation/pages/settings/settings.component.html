@@ -10,22 +10,29 @@
     </div>
   </div>
 
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
   <!-- TABS -->
   <div class="settings-tabs">
-    <button class="tab-btn" [class.active]="activeTab === 'profile'" (click)="setActiveTab('profile')">
+    <button class="tab-btn" [class.active]="activeTab() === 'profile'" (click)="setActiveTab('profile')">
       <i class="fa-solid fa-user"></i> Profil
     </button>
-    <button class="tab-btn" [class.active]="activeTab === 'notifications'" (click)="setActiveTab('notifications')">
+    <button class="tab-btn" [class.active]="activeTab() === 'notifications'" (click)="setActiveTab('notifications')">
       <i class="fa-solid fa-bell"></i> Notifications
     </button>
-    <button class="tab-btn" [class.active]="activeTab === 'security'" (click)="setActiveTab('security')">
+    <button class="tab-btn" [class.active]="activeTab() === 'security'" (click)="setActiveTab('security')">
       <i class="fa-solid fa-shield-halved"></i> Sécurité
     </button>
   </div>
 
   <!-- CONTENT -->
   <div class="settings-content">
-    @if (activeTab === 'profile') {
+    @if (activeTab() === 'profile') {
     <div class="card">
       <div class="card-header">
         <h3>Informations du Profil</h3>
@@ -51,12 +58,17 @@
             <input type="tel" class="form-control" formControlName="phone" />
           </div>
           <div class="form-group">
+            <label class="form-label">Matricule</label>
+            <input type="text" class="form-control" formControlName="matricule" [disabled]="true" />
+          </div>
+          <div class="form-group">
             <label class="form-label">Rôle</label>
             <input type="text" class="form-control" formControlName="role" [disabled]="true" />
           </div>
           <div class="form-actions">
-            <button type="button" class="btn btn-primary" (click)="saveProfile()">
-              <i class="fa-solid fa-save"></i> Enregistrer
+            <button type="button" class="btn btn-primary" (click)="saveProfile()" [disabled]="saving()">
+              <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+              {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
             </button>
           </div>
         </form>
@@ -64,7 +76,7 @@
     </div>
     }
 
-    @if (activeTab === 'notifications') {
+    @if (activeTab() === 'notifications') {
     <div class="card">
       <div class="card-header">
         <h3>Préférences de Notification</h3>
@@ -122,8 +134,9 @@
             </label>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn btn-primary" (click)="saveNotifications()">
-              <i class="fa-solid fa-save"></i> Enregistrer
+            <button type="button" class="btn btn-primary" (click)="saveNotifications()" [disabled]="saving()">
+              <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+              {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
             </button>
           </div>
         </form>
@@ -131,7 +144,7 @@
     </div>
     }
 
-    @if (activeTab === 'security') {
+    @if (activeTab() === 'security') {
     <div class="card">
       <div class="card-header">
         <h3>Changer le Mot de Passe</h3>
@@ -150,9 +163,13 @@
             <label class="form-label">Confirmer le mot de passe</label>
             <input type="password" class="form-control" formControlName="confirmPassword" />
           </div>
+          @if (passwordError()) {
+            <div class="alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ passwordError() }}</div>
+          }
           <div class="form-actions">
-            <button type="button" class="btn btn-primary" (click)="changePassword()">
-              <i class="fa-solid fa-key"></i> Changer le mot de passe
+            <button type="button" class="btn btn-primary" (click)="changePassword()" [disabled]="saving()">
+              <i class="fa-solid" [class.fa-key]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+              {{ saving() ? 'Modification…' : 'Changer le mot de passe' }}
             </button>
           </div>
         </form>

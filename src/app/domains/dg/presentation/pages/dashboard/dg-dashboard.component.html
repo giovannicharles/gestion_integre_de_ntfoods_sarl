@@ -1,0 +1,385 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-chart-line"></i></div>
+      <div>
+        <h1 class="ph-title">Tableau de Bord — Direction Générale</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Yaoundé</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <div class="period-selector">
+        <button class="period-btn" [class.active]="selectedPeriod()==='today'" (click)="setPeriod('today')">Aujourd'hui</button>
+        <button class="period-btn" [class.active]="selectedPeriod()==='week'" (click)="setPeriod('week')">Cette semaine</button>
+        <button class="period-btn" [class.active]="selectedPeriod()==='month'" (click)="setPeriod('month')">Ce mois</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" (click)="refreshNow()" title="Rafraîchir les données">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+        @if (lastRefresh()) { {{ lastRefresh() | date:'HH:mm:ss' }} }
+      </button>
+      <a routerLink="/dg/reporting" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-column"></i> Reporting</a>
+      <a routerLink="/dg/classement" class="btn btn-primary"><i class="fa-solid fa-ranking-star"></i> Classement</a>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="sk-kpi-grid">
+    @for (i of [1,2,3,4]; track i) {
+    <div class="card sk-kpi-card"><div class="sk-shimmer sk-ico"></div><div class="sk-lines"><div class="sk-shimmer sk-s"></div><div class="sk-shimmer sk-l"></div></div></div>
+    }
+  </div>
+  }
+
+  @if (!loading()) {
+  <!-- KPI GRID -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA du Jour</span>
+        <span class="kpi-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-calendar"></i> CA Mois N-1: {{ fCFA(kpis()?.caMoisN1 ?? 0) }}</div>
+      </div>
+      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+22.8%</div>
+    </div>
+
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Créances Total</span>
+        <span class="kpi-val">{{ fCFA(kpis()?.tresorerie ?? 0) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-percent"></i> Taux recouvrement {{ tauxRecouvrement() }}%</div>
+      </div>
+      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+5.1%</div>
+    </div>
+
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Alertes Rouges</span>
+        <span class="kpi-val" [style.color]="alertesRouges()>0?'var(--r)':''">{{ alertesRouges() }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-clock"></i> {{ versementsEnAttente() }} ventes ce mois</div>
+      </div>
+    </div>
+
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-calendar-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Cumul Mois</span>
+        <span class="kpi-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-users"></i> {{ kpis()?.commerciauxActifs ?? 0 }} commerciaux actifs</div>
+      </div>
+      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+18.4%</div>
+    </div>
+
+  </div><!-- /kpi-grid -->
+
+  <!-- KPI STRATÉGIQUES (marge, stock, production, occupation) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Marge Globale</span>
+        <span class="kpi-val">{{ margeGlobale() }}%</span>
+        <div class="kpi-meta"><i class="fa-solid fa-coins"></i> Rentabilité réelle des opérations</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-warehouse"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Valorisation Stock (3 magasins)</span>
+        <span class="kpi-val">{{ fCFA(valoStock()) }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i> MP · Consommables · Produits finis</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-industry"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Taux Réalisation Objectif</span>
+        <span class="kpi-val">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span>
+        <div class="kpi-meta"><i class="fa-solid fa-gauge-high"></i> Objectif global de vente</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-map-location-dot"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Occupation Marchés</span>
+        <span class="kpi-val">{{ occupationMoyenne() }}%</span>
+        <div class="kpi-meta"><i class="fa-solid fa-store"></i> Boutiques livrées / répertoriées</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCK DOUGHNUT + OBJECTIF GAUGE + FINANCE BAR -->
+  <div class="charts-row-3">
+    <div class="card chart-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition Stock</span>
+      </div>
+      <div class="chart-wrap-sm"><canvas #stockDoughnutCanvas></canvas></div>
+      <div class="chart-legend-mini">
+        <span><i class="dot-g"></i> MP: {{ fCFA(stockMP()) }}</span>
+        <span><i class="dot-y"></i> Conso: {{ fCFA(stockConso()) }}</span>
+        <span><i class="dot-b"></i> PF: {{ fCFA(stockPF()) }}</span>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-gauge-high"></i> Objectif Global</span>
+      </div>
+      <div class="gauge-wrap">
+        <canvas #objectifGaugeCanvas></canvas>
+        <div class="gauge-overlay">
+          <span class="gauge-val" [class.gauge-ok]="tauxRealisationObj()>=80" [class.gauge-warn]="tauxRealisationObj()>=50 && tauxRealisationObj()<80" [class.gauge-danger]="tauxRealisationObj()<50">{{ tauxRealisationObj() }}%</span>
+          <span class="gauge-lbl">Réalisation</span>
+        </div>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-area"></i> Synthèse Financière</span>
+      </div>
+      <div class="chart-wrap-sm"><canvas #financeBarCanvas></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="charts-row">
+    <div class="card chart-card chart-big">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-column"></i> CA par Zone — Réalisé vs Objectif</span>
+      </div>
+      <div class="chart-wrap"><canvas #caZoneCanvas></canvas></div>
+    </div>
+    <div class="card chart-card chart-sm">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution CA · N vs N-1</span>
+      </div>
+      <div class="chart-wrap"><canvas #caMensuelCanvas></canvas></div>
+    </div>
+  </div>
+
+  <!-- VERSEMENTS + FICHE SYNTHÈSE -->
+  <div class="section-row">
+
+    <!-- VERSEMENTS DU JOUR -->
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-money-bill-wave"></i> Versements du Jour</span>
+        <a routerLink="/secretaire/versements" class="btn btn-ghost btn-sm">Voir tout</a>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Commercial</th><th>Attendu</th><th>Versé</th><th>Écart</th><th>Statut</th></tr></thead>
+          <tbody>
+            <tr>
+              <td colspan="5" class="empty-state">Données versements disponibles via le module comptable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TOP COMMERCIAUX -->
+    <div class="card ranking-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-trophy"></i> Top Commerciaux Semaine</span>
+        <a routerLink="/dg/classement" class="btn btn-ghost btn-sm">Détail</a>
+      </div>
+      <div class="ranking-list">
+        @for (com of commerciaux(); track com.matricule) {
+        <div class="ranking-row">
+          <div class="rank-num" [class.rank-gold]="com.rang===1" [class.rank-silver]="com.rang===2" [class.rank-bronze]="com.rang===3">
+            {{ com.rang }}
+          </div>
+          <div class="rank-av">{{ com.nomComplet.charAt(0) }}</div>
+          <div class="rank-info">
+            <span class="rank-name">{{ com.nomComplet }}</span>
+            <span class="rank-zone">{{ com.nbVentes }} ventes</span>
+          </div>
+          <div class="rank-ca">
+            <span class="rank-val">{{ fCFA(com.caRealise) }}</span>
+            <div class="rank-bar-wrap"><div class="rank-bar" [style.width.%]="tauxRealisationCom(com)" [class.bar-over]="tauxRealisationCom(com)>=100"></div></div>
+          </div>
+          @if (tauxRealisationCom(com) >= 100) { <span class="badge bg-success badge-sm">Prime ✓</span> }
+        </div>
+        }
+      </div>
+    </div>
+
+  </div><!-- /section-row -->
+
+  <!-- FICHE SYNTHÈSE CONDENSÉE -->
+  <div class="card fiche-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse — {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
+      <a routerLink="/stock/commercial" class="btn btn-ghost btn-sm"><i class="fa-solid fa-external-link-alt"></i> Stock</a>
+    </div>
+    <div class="fiche-kpis">
+      <div class="fiche-kpi"><span class="fk-lbl">CA Total</span><span class="fk-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">CA Mois N-1</span><span class="fk-val text-success">{{ fCFA(kpis()?.caMoisN1 ?? 0) }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Trésorerie</span><span class="fk-val text-warning">{{ fCFA(kpis()?.tresorerie ?? 0) }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Valeur Stock</span><span class="fk-val text-primary">{{ fCFA(valoStock()) }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Ventes Mois</span><span class="fk-val">{{ kpis()?.ventesCount ?? 0 }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Marge Globale</span><span class="fk-val text-primary">{{ fCFA(kpis()?.margeGlobale ?? 0) }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Commerciaux</span><span class="fk-val">{{ kpis()?.commerciauxActifs ?? 0 }}</span></div>
+      <div class="fiche-kpi"><span class="fk-lbl">Tx Réalisation</span><span class="fk-val text-success">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span></div>
+    </div>
+  </div>
+
+  <!-- OCCUPATION MARCHÉS + ANOMALIES -->
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-map-location-dot"></i> Taux d'occupation des marchés</span>
+        <a routerLink="/rp/zones" class="btn btn-ghost btn-sm">Zones RP</a>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Zone</th><th>Livrées</th><th>Répertoriées</th><th>Occupation</th></tr></thead>
+          <tbody>
+            @for (o of occupation(); track o.secteur) {
+            <tr>
+              <td class="fw-bold">{{ o.secteur }}</td>
+              <td class="mono">{{ o.clientsLivres }}</td>
+              <td class="mono">{{ o.boutiquesRecensees }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="prog-bar-wrap" style="max-width:110px"><div class="prog-bar" [class.prog-r]="tauxOccupation(o)<45" [class.prog-y]="tauxOccupation(o)>=45 && tauxOccupation(o)<70" [style.width.%]="tauxOccupation(o)"></div></div>
+                  <span class="mono fw-bold">{{ tauxOccupation(o) }}%</span>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card ranking-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-user-secret"></i> Anomalies & demandes bizarres</span>
+        <span class="badge bg-red badge-sm">{{ anomaliesElevees() }} détectée(s)</span>
+      </div>
+      <div style="padding:0 var(--sp-4) var(--sp-4);display:flex;flex-direction:column;gap:10px">
+        @for (a of anomalies(); track a.reference) {
+        <div style="padding:11px 12px;background:var(--n50);border-radius:var(--r-md)">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <span class="fw-bold" style="font-size:12px">{{ a.categorie }}</span>
+            <span class="badge bg-red badge-sm">{{ a.reference }}</span>
+          </div>
+          <div style="font-size:11px;color:var(--n500);margin-top:3px">{{ a.description }}</div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ARBITRAGE PRIX (LOCK NUMÉRIQUE) -->
+  <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="kpi-ico iy"><i class="fa-solid fa-unlock-keyhole"></i></div>
+      <div>
+        <div class="fw-bold">Déblocage des prix exceptionnels (Lock numérique)</div>
+        <div style="font-size:12px;color:var(--n500)">Autorisez à distance les ventes hors grille demandées par les commerciaux.</div>
+      </div>
+    </div>
+    <a routerLink="/dg/arbitrage" class="btn btn-primary"><i class="fa-solid fa-scale-balanced"></i> Gérer les arbitrages</a>
+  </div>
+
+  <!-- COMMERCIAL RADAR CHART -->
+  <div class="card chart-card" style="margin-bottom:var(--sp-4)">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-radar"></i> Performance Commerciaux — Vue Radar</span>
+      <a routerLink="/dg/classement" class="btn btn-ghost btn-sm">Détail classement</a>
+    </div>
+    <div class="chart-wrap-radar"><canvas #comRadarCanvas></canvas></div>
+  </div>
+
+  <!-- SECTION PRODUCTION -->
+  <div class="section-header">
+    <h2 class="section-h2"><i class="fa-solid fa-industry"></i> Production</h2>
+    <a routerLink="/stock/production" class="btn btn-ghost btn-sm">Module Production</a>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-file-lines"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Plans de Production (PPH)</span>
+        <span class="kpi-val">{{ totalPPH() }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-clipboard-list"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Ordres de Fabrication (OF)</span>
+        <span class="kpi-val">{{ totalOF() }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Lots Produits</span>
+        <span class="kpi-val">{{ totalLots() }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-weight-hanging"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Quantité Produite</span>
+        <span class="kpi-val">{{ totalQteProduite() }} kg</span>
+        <div class="kpi-meta"><i class="fa-solid fa-percent"></i> Rentabilité: {{ rentabiliteProduction() }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALIDATIONS EN ATTENTE -->
+  <div class="card" style="padding:var(--sp-4);margin-bottom:var(--sp-4)">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Validations en Attente</span>
+      @if (nbValidationsEnAttente() > 0) {
+        <span class="badge bg-warning badge-sm">{{ nbValidationsEnAttente() }} en attente</span>
+      }
+    </div>
+    @if (nbValidationsEnAttente() === 0) {
+      <div class="empty-state" style="padding:20px;text-align:center;color:var(--n400)">
+        <i class="fa-solid fa-check-circle" style="font-size:28px;color:var(--s);margin-bottom:8px"></i>
+        <div>Aucune validation en attente</div>
+      </div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>Référence</th><th>Description</th><th>Matricule</th><th>Depuis</th></tr></thead>
+          <tbody>
+            @for (v of validations(); track v.reference) {
+            <tr>
+              <td><span class="badge bg-info badge-sm">{{ v.type }}</span></td>
+              <td class="mono fw-bold">{{ v.reference }}</td>
+              <td>{{ v.description }}</td>
+              <td class="mono">{{ v.matriculeConcerne }}</td>
+              <td class="mono">{{ v.depuis }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  }<!-- /!loading -->
+</div>

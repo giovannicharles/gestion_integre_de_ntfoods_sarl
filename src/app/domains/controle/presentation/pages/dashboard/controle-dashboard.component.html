@@ -1,0 +1,128 @@
+<div class="dash">
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+      <div>
+        <div class="ph-title">Contrôle de Gestion</div>
+        <div class="ph-sub">Audit · Rentabilité réelle · Sécurisation des flux · {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</div>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <a routerLink="/controle/audit" class="btn btn-outline btn-sm"><i class="fa-solid fa-fingerprint"></i> Piste d'audit</a>
+      <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
+    </div>
+  </div>
+
+  <!-- ALERTE ÉCARTS ROUGES -->
+  @if (ecartsRouges() > 0) {
+  <div class="alert-banner-red">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ ecartsRouges() }} alerte(s) rouge(s) — écart entre CA déclaré et cash versé à justifier.
+  </div>
+  }
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-vault"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Trésorerie réelle</span>
+        <span class="kpi-val">{{ fCFA(tresorerie()) }}</span>
+        <span class="kpi-meta">Solde caisse encaissé</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Ventes à crédit</span>
+        <span class="kpi-val">{{ fCFA(ventesCredit()) }}</span>
+        <span class="kpi-meta">Encours clients à surveiller</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-percent"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Marge nette moyenne</span>
+        <span class="kpi-val">{{ margeMoyenne() }}%</span>
+        <span class="kpi-meta">Sur coûts de revient réels</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Valorisation stock (PMP)</span>
+        <span class="kpi-val">{{ fCFA(valoStock()) }}</span>
+        <span class="kpi-meta">3 magasins consolidés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÉCAISSEMENTS EN ATTENTE -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements à valider</span>
+      <span class="badge bg-red badge-sm">{{ decaissementsAttente() }}</span>
+    </div>
+  </div>
+
+  <!-- MARGES PAR PRODUIT -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Marge par produit (coût de revient réel)</span>
+      <a routerLink="/controle/marges" class="btn btn-ghost btn-sm">Détail</a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Prix vente</th><th>Coût revient</th><th>Marge unit.</th><th>Taux marge</th></tr></thead>
+        <tbody>
+          @for (m of marges(); track m.code) {
+          <tr [class.row-alert]="m.margePct < 30">
+            <td class="fw-bold">{{ m.designation }}</td>
+            <td class="mono">{{ fCFA(m.prixVente) }}</td>
+            <td class="mono">{{ fCFA(m.coutRevient) }}</td>
+            <td class="mono">{{ fCFA(m.marge) }}</td>
+            <td>
+              <span class="taux-chip" [class.taux-ok]="m.margePct>=38" [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct }}%</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BUDGET + VARIANCE -->
+  <div class="charts-row-2" style="margin-top:0">
+    <div class="card" style="padding:var(--sp-4)">
+      <div class="card-title" style="margin-bottom:14px"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (standard vs réel)</div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Poste</th><th>Standard</th><th>Réel</th><th>Écart</th></tr></thead>
+          <tbody>
+            @for (v of variances(); track v.poste) {
+            <tr>
+              <td>{{ v.poste }}</td>
+              <td class="mono">{{ v.standard }}</td>
+              <td class="mono">{{ v.reel }}</td>
+              <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANOMALIES -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-user-secret"></i> Anomalies détectées</span>
+      <span class="badge bg-red badge-sm">{{ anomaliesElevees() }} niveau élevé</span>
+    </div>
+  </div>
+</div>

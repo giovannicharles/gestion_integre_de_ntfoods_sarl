@@ -1,0 +1,87 @@
+<div class="layout-root" [class.sidebar-collapsed]="!sidebarOpen()" [class.mobile-open]="mobileOpen()">
+  @if (mobileOpen()) { <div class="mobile-overlay" (click)="closeMobile()"></div> }
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-brand">
+        <div class="brand-content">
+          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          @if (alertCount() > 0) {
+          <a class="logo-alert-badge" routerLink="/stock/alertes" title="{{ alertCount() }} alerte(s) active(s)">
+            <i class="fa-solid fa-bell"></i>
+            <span class="lab-count">{{ alertCount() }}</span>
+          </a>
+          }
+        </div>
+        <button class="sb-collapse-btn" (click)="toggleSidebar()">
+          <i class="fa-solid" [class.fa-chevron-left]="sidebarOpen()" [class.fa-chevron-right]="!sidebarOpen()"></i>
+        </button>
+      </div>
+
+      <div class="sb-user">
+        <div class="sb-av">BL<span class="sb-dot"></span></div>
+        <div class="sb-user-info">
+          <span class="sb-name">Biya Léon</span>
+          <span class="sb-role"><i class="fa-solid fa-magnifying-glass-chart"></i> Contrôleur de Gestion</span>
+        </div>
+      </div>
+
+      <nav class="sb-nav">
+        <span class="sb-section-lbl">CONTRÔLE DE GESTION</span>
+        @for (item of navItems; track item.route) {
+        <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
+          [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
+          <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
+          <span class="sb-lbl">{{ item.label }}</span>
+          @if (item.badge && item.badge > 0) {
+          <span class="sb-badge {{ item.badgeClass || 'bd-neutral' }}">{{ item.badge }}</span>
+          }
+        </a>
+        }
+      </nav>
+
+      <div class="sb-footer">
+        <button class="sb-item sb-logout" (click)="router.navigate(['/auth/login'])">
+          <span class="sb-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
+          <span class="sb-lbl">Déconnexion</span>
+        </button>
+        <div class="sb-version"><span>v3.0 — Sprint 3</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="tb-left">
+        <button class="tb-menu-btn" (click)="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="tb-breadcrumb">
+          <span class="tb-module-chip"><i class="fa-solid fa-magnifying-glass-chart"></i> Contrôle</span>
+          <i class="fa-solid fa-chevron-right tb-sep-icon"></i>
+          <span class="tb-page">{{ currentPageTitle() }}</span>
+        </div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-date">
+          <i class="fa-regular fa-calendar"></i>
+          <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
+        </div>
+        <button class="tb-icon-btn" routerLink="/controle/decaissements" title="Décaissements à valider" [class.tb-alert-pulse]="criticalCount() > 0">
+          <i class="fa-solid fa-money-check-dollar"></i>
+          @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
+        </button>
+        <div class="tb-divider"></div>
+        <div class="tb-user">
+          <div class="tb-av">BL</div>
+          <div class="tb-user-txt">
+            <span class="tb-u-name">Biya Léon</span>
+            <span class="tb-u-role">Contrôleur</span>
+          </div>
+          <i class="fa-solid fa-chevron-down tb-caret"></i>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

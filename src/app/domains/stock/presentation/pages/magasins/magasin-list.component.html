@@ -1,0 +1,212 @@
+<div class="page">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-warehouse"></i></div>
+      <div>
+        <div class="ph-title">Gestion des Magasins</div>
+        <div class="ph-sub">Gérez plusieurs magasins par gestionnaire</div>
+      </div>
+    </div>
+    <div class="ph-right">
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <i class="fa-solid fa-plus"></i> Nouveau Magasin
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stat-chips">
+    <div class="s-chip s-chip-total">
+      <i class="fa-solid fa-warehouse"></i>
+      <span>{{ stats().total }} magasin(s)</span>
+    </div>
+    <div class="s-chip s-chip-active">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ stats().active }} actif(s)</span>
+    </div>
+    <div class="s-chip s-chip-inactive">
+      <i class="fa-solid fa-circle-xmark"></i>
+      <span>{{ stats().inactive }} inactif(s)</span>
+    </div>
+    <div class="s-chip s-chip-items">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>{{ stats().totalItems }} article(s) en stock</span>
+    </div>
+  </div>
+
+  <!-- LOADING / ERROR -->
+  @if (loading()) {
+    <div class="card"><div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des magasins...</div></div>
+  }
+  @if (error()) {
+    <div class="card"><div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div></div>
+  }
+
+  <!-- MAGASIN CARDS -->
+  @if (!loading() && !error()) {
+    @if (magasins().length === 0) {
+      <div class="card">
+        <div class="empty-state">
+          <i class="fa-solid fa-warehouse fa-3x"></i>
+          <h3>Aucun magasin configuré</h3>
+          <p>Créez votre premier magasin pour commencer à gérer son stock.</p>
+          <button class="btn btn-primary" (click)="openCreateForm()"><i class="fa-solid fa-plus"></i> Créer un magasin</button>
+        </div>
+      </div>
+    } @else {
+      <div class="magasin-grid">
+        @for (magasin of magasins(); track magasin.id) {
+          <div class="magasin-card" [class.inactive]="!magasin.active">
+            <!-- Card Header -->
+            <div class="mc-header">
+              <div class="mc-icon">
+                <i class="fa-solid fa-warehouse"></i>
+              </div>
+              <div class="mc-info">
+                <div class="mc-name">{{ magasin.name }}</div>
+                <div class="mc-desc">{{ magasin.description || 'Aucune description' }}</div>
+              </div>
+              <div class="mc-status">
+                @if (magasin.active) {
+                  <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Actif</span>
+                } @else {
+                  <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i> Inactif</span>
+                }
+              </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="mc-body">
+              <div class="mc-row">
+                <i class="fa-solid fa-user-tie"></i>
+                <span class="mc-label">Gestionnaire</span>
+                <span class="mc-value">{{ magasin.managerId || 'Non assigné' }}</span>
+              </div>
+              @if (magasin.address) {
+                <div class="mc-row">
+                  <i class="fa-solid fa-location-dot"></i>
+                  <span class="mc-label">Adresse</span>
+                  <span class="mc-value">{{ magasin.address }}</span>
+                </div>
+              }
+              @if (magasin.phone) {
+                <div class="mc-row">
+                  <i class="fa-solid fa-phone"></i>
+                  <span class="mc-label">Téléphone</span>
+                  <span class="mc-value">{{ magasin.phone }}</span>
+                </div>
+              }
+              @if (magasin.email) {
+                <div class="mc-row">
+                  <i class="fa-solid fa-envelope"></i>
+                  <span class="mc-label">Email</span>
+                  <span class="mc-value">{{ magasin.email }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Card Stats -->
+            <div class="mc-stats">
+              <div class="mc-stat">
+                <div class="mc-stat-num">{{ magasin.itemCount }}</div>
+                <div class="mc-stat-label">Articles en stock</div>
+              </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="mc-actions">
+              <button class="btn btn-ghost btn-sm" (click)="openEditForm(magasin)" title="Modifier">
+                <i class="fa-solid fa-pen"></i> Modifier
+              </button>
+              <button class="btn btn-ghost btn-sm" (click)="openDeactivateModal(magasin)" [class.btn-danger]="magasin.active">
+                <i class="fa-solid {{ magasin.active ? 'fa-toggle-off' : 'fa-trash' }}"></i>
+                {{ magasin.active ? 'Désactiver' : 'Supprimer' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- FORM MODAL -->
+  @if (showForm()) {
+    <div class="modal-overlay" (click)="closeForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ editingId() ? 'Modifier le magasin' : 'Nouveau magasin' }}</h3>
+          <button class="modal-close" (click)="closeForm()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nom du magasin <span class="req">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="form.name" placeholder="Ex: Magasin Central Bonanjo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-input" [(ngModel)]="form.description" placeholder="Ex: Magasin principal de Douala">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gestionnaire (Matricule)</label>
+            <input type="text" class="form-input" [(ngModel)]="form.managerId" placeholder="Ex: M001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse</label>
+            <input type="text" class="form-input" [(ngModel)]="form.address" placeholder="Ex: Rue Bonanjo, Douala">
+          </div>
+          <div class="g2">
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input type="text" class="form-input" [(ngModel)]="form.phone" placeholder="Ex: +237 6XX XXX XXX">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" [(ngModel)]="form.email" placeholder="Ex: magasin@tantyfoods.cm">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeForm()">Annuler</button>
+          <button class="btn btn-primary" (click)="saveMagasin()" [disabled]="saving()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement... }
+            @else { <i class="fa-solid fa-check"></i> {{ editingId() ? 'Mettre à jour' : 'Créer' }} }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- DEACTIVATE CONFIRMATION MODAL -->
+  @if (showDeactivateModal()) {
+    <div class="modal-overlay" (click)="closeDeactivateModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-danger">
+          <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmer la désactivation</h3>
+          <button class="modal-close" (click)="closeDeactivateModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (deactivateTarget(); as m) {
+            <p>Voulez-vous vraiment désactiver le magasin <strong>{{ m.name }}</strong> ?</p>
+            <p class="text-muted">Cette action rendra le magasin inactif. Vous pourrez le réactiver ultérieurement.</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeDeactivateModal()">Annuler</button>
+          <button class="btn btn-danger" (click)="confirmDeactivate()" [disabled]="saving()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Traitement... }
+            @else { <i class="fa-solid fa-trash"></i> Confirmer }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TOAST -->
+  @if (toastMsg()) {
+    <div class="toast toast-{{ toastType() }}">
+      <i class="fa-solid {{ toastType() === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }}"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+</div>

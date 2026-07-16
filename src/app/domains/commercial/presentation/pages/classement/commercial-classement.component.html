@@ -1,0 +1,61 @@
+<div class="dash animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-ranking-star"></i></div>
+      <div>
+        <h1 class="ph-title">Classement Hebdomadaire</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Semaine S26-2026</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MA POSITION -->
+  @for (com of commerciaux(); track com.matricule) {
+  @if (com.matricule === monId) {
+  <div class="card my-pos-card">
+    <div class="my-pos-label"><i class="fa-solid fa-person"></i> Ma Position</div>
+    <div class="my-pos-body">
+      <div class="my-rank" [class.rank-gold]="com.rang===1">{{ com.rang }}e</div>
+      <div class="my-info">
+        <div class="my-name">{{ com.nomComplet }}</div>
+        <div class="my-zone">{{ com.nbVentes }} ventes</div>
+      </div>
+      <div class="my-stats">
+        <div class="my-stat"><span class="my-stat-lbl">CA Réalisé</span><span class="my-stat-val text-success">{{ fCFA(com.caRealise) }}</span></div>
+        <div class="my-stat"><span class="my-stat-lbl">Ventes</span><span class="my-stat-val">{{ com.nbVentes }}</span></div>
+        <div class="my-stat"><span class="my-stat-lbl">Taux</span><span class="my-stat-val" [class.text-success]="tauxRealisation(com)>=100">{{ tauxRealisation(com) }}%</span></div>
+      </div>
+      @if (isEligible(com)) {
+      <span class="badge bg-success prime-badge"><i class="fa-solid fa-award"></i> Prime éligible</span>
+      }
+    </div>
+  </div>
+  }
+  }
+
+  <!-- CLASSEMENT COMPLET -->
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet — Semaine S26</span></div>
+    <div class="ranking-list">
+      @for (com of commerciaux(); track com.matricule) {
+      <div class="ranking-row" [class.my-row]="com.matricule===monId">
+        <div class="rank-num" [class.rank-gold]="com.rang===1" [class.rank-silver]="com.rang===2" [class.rank-bronze]="com.rang===3">
+          @if (com.rang===1){<i class="fa-solid fa-crown"></i>}@else{{{ com.rang }}}
+        </div>
+        <div class="rank-av">{{ com.nomComplet.charAt(0) }}</div>
+        <div class="rank-info">
+          <span class="rank-name">{{ com.nomComplet }}</span>
+          <span class="rank-zone">{{ com.nbVentes }} ventes</span>
+        </div>
+        <div class="rank-progress">
+          <div class="rank-val">{{ fCFA(com.caRealise) }}</div>
+          <div class="rank-bar-wrap"><div class="rank-bar" [style.width.%]="tauxRealisation(com)" [class.bar-over]="tauxRealisation(com)>=100"></div></div>
+          <div class="rank-pct">{{ tauxRealisation(com) }}% · {{ com.nbVentes }} ventes</div>
+        </div>
+        @if (isEligible(com)) { <span class="badge bg-success badge-sm">✓ Prime</span> }
+        @else { <span class="badge bg-neutral badge-sm">—</span> }
+      </div>
+      }
+    </div>
+  </div>
+</div>

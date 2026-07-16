@@ -1,0 +1,192 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-tags"></i></div>
+      <div>
+        <h1 class="ph-title">Classification des Produits</h1>
+        <p class="ph-sub">Marques, gammes, variétés et conditionnements</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="loadClassifications()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+      <button class="btn btn-primary btn-sm" (click)="toggleForm()">
+        <i class="fa-solid" [class.fa-plus]="!showForm()" [class.fa-xmark]="showForm()"></i>
+        {{ showForm() ? 'Fermer' : 'Nouvelle Classification' }}
+      </button>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  <!-- KPI BAR -->
+  <div class="kpi-bar">
+    <div class="kpi-item"><span class="kpi-val">{{ totalClassifications }}</span><span class="kpi-lbl">Classifications</span></div>
+    <div class="kpi-sep"></div>
+    <div class="kpi-item"><span class="kpi-val">{{ totalBrands }}</span><span class="kpi-lbl">Marques</span></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-filter"></i> Filtres</span>
+    </div>
+    <div class="filter-row">
+      <div class="fg">
+        <label>Marque</label>
+        <select class="form-control" [(ngModel)]="selectedBrand" (change)="onBrandChange(); filterByBrand()">
+          <option value="">Toutes</option>
+          @for (brand of brands(); track brand) {
+            <option [value]="brand">{{ brand }}</option>
+          }
+        </select>
+      </div>
+      <div class="fg">
+        <label>Gamme</label>
+        <select class="form-control" [(ngModel)]="selectedRange" (change)="onRangeChange()">
+          <option value="">Toutes</option>
+          @for (range of ranges(); track range) {
+            <option [value]="range">{{ range }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement des classifications…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- CREATE FORM -->
+    @if (showForm()) {
+      <div class="card form-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvelle classification</span>
+        </div>
+        <div class="form-grid">
+          <div class="fg">
+            <label>Marque <span class="req">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.brand" placeholder="Marque">
+          </div>
+          <div class="fg">
+            <label>Gamme</label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.range" placeholder="Gamme">
+          </div>
+          <div class="fg">
+            <label>Variété</label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.variety" placeholder="Variété">
+          </div>
+          <div class="fg">
+            <label>Conditionnement</label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.packaging" placeholder="Conditionnement">
+          </div>
+          <div class="fg">
+            <label>Qté par carton</label>
+            <input type="number" class="form-control" [(ngModel)]="newClassification.quantityPerCarton" min="1">
+          </div>
+          <div class="fg">
+            <label>Poids unitaire</label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.unitWeight" placeholder="Poids">
+          </div>
+          <div class="fg">
+            <label>Volume</label>
+            <input type="text" class="form-control" [(ngModel)]="newClassification.volume" placeholder="Volume">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="createClassification()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Création…' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table"></i> Classifications</span>
+      </div>
+      <div class="tbl-wrap">
+        @if (classifications().length === 0) {
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <p>Aucune classification trouvée</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Marque</th>
+                <th>Gamme</th>
+                <th>Variété</th>
+                <th>Conditionnement</th>
+                <th>Qté/Carton</th>
+                <th>Code</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of classifications(); track c.id) {
+                <tr>
+                  <td class="fw-bold">{{ c.brand }}</td>
+                  <td>{{ c.range }}</td>
+                  <td>{{ c.variety }}</td>
+                  <td>{{ c.packaging }}</td>
+                  <td class="mono">{{ c.quantityPerCarton }}</td>
+                  <td class="mono">{{ c.classificationCode }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="btn btn-sm btn-danger" (click)="openDeleteModal(c)" title="Supprimer">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+  }
+
+  <!-- MODAL: Confirmation suppression -->
+  @if (showDeleteModal()) {
+    <div class="modal-overlay animate-fadeIn" (click)="closeDeleteModal()">
+      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-danger">
+          <div class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Confirmer la suppression</div>
+          <button class="modal-close" (click)="closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (deleteTarget(); as item) {
+            <p class="modal-text">Voulez-vous vraiment supprimer la classification <strong>{{ item.brand }} — {{ item.range }}</strong> ?</p>
+            <p class="modal-text-muted">Cette action est irréversible.</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeDeleteModal()">Annuler</button>
+          <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-trash]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Suppression…' : 'Supprimer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

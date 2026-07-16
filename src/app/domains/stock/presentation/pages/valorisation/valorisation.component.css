@@ -1,0 +1,98 @@
+/* Styles spécifiques — hérite du design system global (styles.css / charte TANTY) */
+
+.dash { display:flex;flex-direction:column;gap:var(--sp-4);padding:24px;max-width:1400px;margin:0 auto; }
+
+/* ── HEADER ── */
+.ph { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px; }
+.ph-left { display:flex;align-items:center;gap:13px; }
+.ph-icon { width:46px;height:46px;background:var(--g-gh);color:var(--g);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px; }
+.ph-title { font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);margin:0; }
+.ph-sub { font-size:12px;color:var(--n400);margin-top:2px; }
+.ph-actions { display:flex;gap:8px;flex-wrap:wrap; }
+
+/* ── KPI GRID ── */
+.kpi-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--sp-3); }
+.kpi-card { background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;box-shadow:var(--sh-sm);transition:transform .15s,box-shadow .15s; }
+.kpi-card:hover { transform:translateY(-2px);box-shadow:var(--sh-md); }
+.kpi-decor { position:absolute;top:0;left:0;width:4px;height:100%;background:var(--g); }
+.kpi-card.kp-y .kpi-decor { background:var(--y); }
+.kpi-card.kp-b .kpi-decor { background:var(--b); }
+.kpi-card.kp-total .kpi-decor { background:linear-gradient(180deg,var(--g),var(--b)); }
+.kpi-ico { width:42px;height:42px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.ig { background:var(--g-gh);color:var(--g); }
+.iy { background:var(--y-gh);color:var(--y); }
+.ib { background:var(--b-gh);color:var(--b); }
+.itotal { background:linear-gradient(135deg,var(--g-gh),var(--b-gh));color:var(--g); }
+.kpi-body { display:flex;flex-direction:column;gap:2px;flex:1;min-width:0; }
+.kpi-lbl { font-size:11px;font-weight:600;color:var(--n500);text-transform:uppercase;letter-spacing:.04em; }
+.kpi-val { font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--n900);font-variant-numeric:tabular-nums; }
+.kpi-total-val { font-size:22px;color:var(--g); }
+.kpi-meta { font-size:11px;color:var(--n400); }
+.kd-y { background:var(--y); }
+.kd-b { background:var(--b); }
+.kd-total { background:linear-gradient(180deg,var(--g),var(--b)); }
+
+/* ── VAL ROW (chart + actions) ── */
+.val-row { display:grid;grid-template-columns:1.4fr 1fr;gap:var(--sp-4); }
+.card { background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-sm); }
+.card-hd { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+.card-title { font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--n800);display:flex;align-items:center;gap:8px; }
+.card-title i { color:var(--g); }
+.chart-wrap { height:260px;position:relative; }
+
+/* ── QUICK ACTIONS ── */
+.quick-actions { display:flex;flex-direction:column;gap:10px; }
+.per-type-result { margin-top:14px;padding:14px;background:var(--n50);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between; }
+.per-type-label { font-size:13px;font-weight:600;color:var(--n600); }
+.per-type-value { font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--g);font-variant-numeric:tabular-nums; }
+
+/* ── PRICE PANEL ── */
+.price-panel { margin-bottom:0; }
+.price-rows { display:flex;flex-direction:column;gap:10px;margin-bottom:12px; }
+.price-row { display:flex;gap:10px;align-items:center; }
+.price-row .form-control { flex:1;padding:8px 10px;border:1.5px solid var(--n200);border-radius:var(--r-sm);font-size:13px; }
+.form-control:focus { outline:none;border-color:var(--g); }
+
+/* ── TABLE ── */
+.tbl-wrap { overflow-x:auto; }
+.data-table { width:100%;border-collapse:collapse;font-size:13px; }
+.data-table th { text-align:left;padding:10px 12px;background:var(--n50);color:var(--n700);font-weight:700;border-bottom:2px solid var(--n200);white-space:nowrap; }
+.data-table td { padding:10px 12px;border-bottom:1px solid var(--n150); }
+.data-table tbody tr:hover { background:var(--n50); }
+.tfoot-total td { padding:12px;background:var(--n50);border-top:2px solid var(--n200);font-weight:700; }
+.mono { font-family:var(--font-m);font-variant-numeric:tabular-nums; }
+.fw-bold { font-weight:700; }
+
+/* ── BADGES ── */
+.badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600; }
+.badge.bg-success { background:var(--g-gh);color:var(--g); }
+.badge.bg-info { background:var(--b-gh);color:var(--b); }
+
+/* ── TOAST ── */
+.toast-toast { position:fixed;top:20px;right:20px;z-index:9999;padding:14px 20px;border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:var(--sh-lg);animation:slideIn .3s ease; }
+.toast-success { background:var(--g);color:#fff; }
+.toast-error { background:var(--r);color:#fff; }
+@keyframes slideIn { from { transform:translateX(100%);opacity:0; } to { transform:translateX(0);opacity:1; } }
+
+/* ── ALERT ERROR ── */
+.alert-error { padding:14px 18px;background:var(--r-gh);color:var(--r);border-radius:var(--r-md);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600; }
+
+/* ── LOADING ── */
+.loading-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--n400);gap:14px; }
+.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite; }
+.spinner-lg { width:40px;height:40px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── ANIMATION ── */
+.animate-fadeInUp { animation:fadeInUp .4s ease; }
+@keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .val-row { grid-template-columns:1fr; }
+  .kpi-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns:1fr; }
+  .price-row { flex-wrap:wrap; }
+}

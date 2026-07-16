@@ -1,0 +1,90 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-scroll ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Audit Trail</h1>
+      <p class="ph-sub">Journal de toutes les actions système</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-download"></i> Exporter CSV
+    </button>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-list"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Total événements</div>
+      <div class="kpi-val">{{ auditLog().length }}</div>
+      <div class="kpi-meta">depuis aujourd'hui</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Alertes</div>
+      <div class="kpi-val">{{ nbAlertes() }}</div>
+      <div class="kpi-meta">actions critiques</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-exclamation-circle"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Importants</div>
+      <div class="kpi-val">{{ nbImportants() }}</div>
+      <div class="kpi-meta">à surveiller</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-filter"></i> Journal d'Audit</h2>
+    <div class="filter-row">
+      <label>Niveau :</label>
+      <div class="niveau-btns">
+        @for (n of niveaux; track n) {
+          <button
+            class="niveau-btn"
+            [class.active]="filtreNiveau() === n"
+            (click)="filtreNiveau.set(n)"
+          >
+            {{ n }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Horodatage</th>
+          <th>Utilisateur</th>
+          <th>Rôle</th>
+          <th>Action</th>
+          <th>Détails</th>
+          <th>IP</th>
+          <th>Niveau</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of logsFiltres(); track log.id) {
+          <tr [class]="!log.succes ? 'row-alerte' : log.typeAction === 'IMPORTANT' ? 'row-important' : ''">
+            <td><span class="ts-cell">{{ log.horodatage | date:'dd/MM HH:mm:ss' }}</span></td>
+            <td><strong>{{ log.matricule }}</strong></td>
+            <td><span class="badge bg-neutral">{{ log.role }}</span></td>
+            <td><code class="action-code">{{ log.typeAction }}</code></td>
+            <td class="details-cell">{{ log.details }}</td>
+            <td><span class="ip-code">{{ log.adresseIp }}</span></td>
+            <td><span [class]="niveauClass(log.typeAction)">{{ log.typeAction }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">{{ logsFiltres().length }} entrées affichées</div>
+</div>

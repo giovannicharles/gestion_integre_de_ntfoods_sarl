@@ -1,0 +1,181 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-coins"></i></div>
+      <div>
+        <h1 class="ph-title">Valorisation Financière du Stock</h1>
+        <p class="ph-sub">Calcul de la valeur patrimoniale du stock par emplacement</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()">
+        <i class="fa-solid fa-tag"></i> Prix unitaires
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="calculateTotal()" [disabled]="calculating()">
+        <i class="fa-solid fa-calculator" [class.fa-spin]="calculating()"></i> Valorisation totale
+      </button>
+    </div>
+  </div>
+
+  @if (toastMsg()) {
+    <div class="toast-toast" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-check-circle]="toastType()==='success'" [class.fa-exclamation-circle]="toastType()==='error'"></i>
+      {{ toastMsg() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert-error">
+      <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement de la valorisation automatique…</p>
+    </div>
+  }
+
+  @if (!loading()) {
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      @if (summary()) {
+        <div class="kpi-card kp-g">
+          <div class="kpi-decor"></div>
+          <div class="kpi-ico ig"><i class="fa-solid fa-building-circle-check"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-lbl">Stock Central</span>
+            <span class="kpi-val">{{ fCFA(summary()!.centralValue) }}</span>
+          </div>
+        </div>
+        <div class="kpi-card kp-y">
+          <div class="kpi-decor kd-y"></div>
+          <div class="kpi-ico iy"><i class="fa-solid fa-warehouse"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-lbl">Stock Tampon</span>
+            <span class="kpi-val">{{ fCFA(summary()!.bufferValue) }}</span>
+          </div>
+        </div>
+        <div class="kpi-card kp-b">
+          <div class="kpi-decor kd-b"></div>
+          <div class="kpi-ico ib"><i class="fa-solid fa-truck-field"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-lbl">Stock Mobile</span>
+            <span class="kpi-val">{{ fCFA(summary()!.mobileValue) }}</span>
+          </div>
+        </div>
+        <div class="kpi-card kp-total">
+          <div class="kpi-decor kd-total"></div>
+          <div class="kpi-ico itotal"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-lbl">VALEUR TOTALE</span>
+            <span class="kpi-val kpi-total-val">{{ fCFA(summary()!.totalValue) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- DOUGHNUT CHART + ACTIONS -->
+    <div class="val-row">
+      <div class="card chart-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition de la valeur</span>
+        </div>
+        <div class="chart-wrap"><canvas #doughnutCanvas></canvas></div>
+      </div>
+
+      <div class="card actions-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-bolt"></i> Calculs rapides</span>
+        </div>
+        <div class="quick-actions">
+          <button class="btn btn-primary" (click)="calculateTotal()" [disabled]="calculating()">
+            <i class="fa-solid fa-calculator"></i> Valorisation totale
+          </button>
+          <button class="btn btn-ghost" (click)="calculateByType('central')" [disabled]="calculating()">
+            <i class="fa-solid fa-building"></i> Stock Central
+          </button>
+          <button class="btn btn-ghost" (click)="calculateByType('buffer')" [disabled]="calculating()">
+            <i class="fa-solid fa-warehouse"></i> Stock Tampon
+          </button>
+          <button class="btn btn-ghost" (click)="calculateByType('mobile')" [disabled]="calculating()">
+            <i class="fa-solid fa-truck"></i> Stock Mobile
+          </button>
+        </div>
+        @if (perTypeValue()) {
+          <div class="per-type-result">
+            <span class="per-type-label">{{ perTypeValue()!.label }}</span>
+            <span class="per-type-value">{{ fCFA(perTypeValue()!.value) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- PRICE PANEL (collapsible) -->
+    @if (showPricePanel()) {
+      <div class="card price-panel">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-tags"></i> Prix unitaires par SKU</span>
+          <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="price-rows">
+          @for (row of unitPricesArray; track $index) {
+            <div class="price-row">
+              <input type="text" [(ngModel)]="row.sku" placeholder="SKU produit" class="form-control">
+              <input type="number" [(ngModel)]="row.price" placeholder="Prix unitaire (FCFA)" class="form-control">
+              <button class="btn btn-danger btn-sm" (click)="removePriceRow($index)"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          }
+        </div>
+        <button class="btn btn-secondary btn-sm" (click)="addPriceRow()"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
+      </div>
+    }
+
+    <!-- DETAIL TABLE WITH LOCATION SELECTOR -->
+    @if (currentDetail && currentDetail!.items && currentDetail!.items.length > 0) {
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-table"></i> Détail de la valorisation automatique</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <select class="form-control" style="width:auto;padding:6px 12px;font-size:12px" [ngModel]="selectedDetailLocation()" (ngModelChange)="selectedDetailLocation.set($event)">
+              <option value="central">Stock Central</option>
+              <option value="buffer">Stock Tampon</option>
+              <option value="mobile">Stock Mobile</option>
+            </select>
+            <span class="badge bg-success">{{ currentDetail!.itemCount }} produits</span>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>SKU</th><th>Quantité</th><th>Prix Unitaire</th><th>Valeur Totale</th><th>Type Prix</th></tr>
+            </thead>
+            <tbody>
+              @for (item of currentDetail!.items; track item.productSku) {
+                <tr>
+                  <td>{{ item.productSku }}</td>
+                  <td class="mono">{{ item.quantity | number:'1.0-2' }}</td>
+                  <td class="mono">{{ fCFA(item.unitPrice) }}</td>
+                  <td class="mono fw-bold">{{ fCFA(item.totalValue) }}</td>
+                  <td><span class="badge bg-info">{{ item.priceType }}</span></td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="tfoot-total">
+                <td colspan="3"><strong>TOTAL</strong></td>
+                <td class="mono fw-bold">{{ fCFA(currentDetail!.totalValue) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    }
+
+  }
+</div>

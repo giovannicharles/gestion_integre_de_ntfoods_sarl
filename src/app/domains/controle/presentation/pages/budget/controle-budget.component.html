@@ -1,0 +1,59 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <div>
+        <div class="ph-title">Contrôle Budgétaire & Achats</div>
+        <div class="ph-sub">Engagement budgétaire · Alertes seuils critiques</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-grid-3">
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Budget total</span><span class="kpi-val">{{ fCFA(totalBudget()) }}</span></div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-file-signature"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Engagé</span><span class="kpi-val">{{ fCFA(totalEngage()) }}</span><span class="kpi-meta">{{ pct(totalEngage(),totalBudget()) }}% du budget</span></div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Postes dépassés</span><span class="kpi-val">{{ nbDepasse() }}</span><span class="kpi-meta">Dépassement budgétaire</span></div>
+    </div>
+  </div>
+
+  @if (nbDepasse() > 0) {
+  <div class="alert-banner-red"><i class="fa-solid fa-triangle-exclamation"></i> {{ nbDepasse() }} poste(s) en dépassement budgétaire — validation des achats requise.</div>
+  }
+
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-check"></i> Engagement par poste</span></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Poste budgétaire</th><th>Budget</th><th>Engagé</th><th>Réalisé</th><th>Consommation</th></tr></thead>
+        <tbody>
+          @for (b of budget(); track b.poste) {
+          <tr [class.row-alert]="b.engage > b.budget">
+            <td class="fw-bold">{{ b.poste }}</td>
+            <td class="mono">{{ fCFA(b.budget) }}</td>
+            <td class="mono">{{ fCFA(b.engage) }}</td>
+            <td class="mono">{{ fCFA(b.realise) }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="prog-bar-wrap" style="max-width:130px"><div class="prog-bar" [class.prog-r]="b.engage>b.budget" [class.prog-y]="pct(b.engage,b.budget)>=90 && b.engage<=b.budget" [style.width.%]="Math.min(pct(b.engage,b.budget),100)"></div></div>
+                <span class="mono fw-bold" [class.text-danger]="b.engage>b.budget">{{ pct(b.engage,b.budget) }}%</span>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+        <tfoot><tr class="tfoot-total"><td class="fw-bold">Total</td><td class="mono fw-bold">{{ fCFA(totalBudget()) }}</td><td class="mono fw-bold">{{ fCFA(totalEngage()) }}</td><td class="mono fw-bold">{{ fCFA(totalRealise()) }}</td><td class="mono fw-bold">{{ pct(totalEngage(),totalBudget()) }}%</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>

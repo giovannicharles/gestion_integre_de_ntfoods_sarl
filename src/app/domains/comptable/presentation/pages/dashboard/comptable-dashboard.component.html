@@ -1,0 +1,243 @@
+<div class="dash animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
+      <div>
+        <h1 class="ph-title">Tableau de Bord Comptable</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <a routerLink="/comptable/commandes" class="btn btn-primary">
+        <i class="fa-solid fa-clipboard-check"></i> Valider commandes
+        @if (commandesEnAttente() > 0) { <span class="btn-badge">{{ commandesEnAttente() }}</span> }
+      </a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-money-bill-wave"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Versements du Jour</span>
+        <span class="kpi-val">{{ fCFA(totalVersements()) }}</span>
+        <div class="kpi-meta">{{ versementsValides() }} validés · {{ fiche.nbVersementsEnAttente }} en attente · {{ fiche.nbAlertesRouges }} alertes</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Commandes à Valider</span>
+        <span class="kpi-val" [style.color]="commandesEnAttente()>0?'var(--o)':''">{{ commandesEnAttente() }}</span>
+        <div class="kpi-meta">Précommandes J+1 — délai 17h00</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Facturation du Jour</span>
+        <span class="kpi-val">{{ fCFA(totalFacture()) }}</span>
+        <div class="kpi-meta">{{ facturesEmises() }} factures émises</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Créances en Cours</span>
+        <span class="kpi-val" [style.color]="totalDettes()>0?'var(--r)':''">{{ fCFA(totalDettes()) }}</span>
+        <div class="kpi-meta">{{ dossierActifs() }} dossiers actifs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPTE D'EXPLOITATION (trésorerie · charges · résultat) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-vault"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Trésorerie (encaissé)</span>
+        <span class="kpi-val">{{ fCFA(fiche.sCaisse) }}</span>
+        <div class="kpi-meta">Entrées {{ fCFA(fiche.totalEntrees) }} · Sorties {{ fCFA(fiche.totalSorties) }}</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Charges (mois)</span>
+        <span class="kpi-val">{{ fCFA(totalCharges()) }}</span>
+        <div class="kpi-meta">Dépenses opérationnelles consolidées</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-scale-balanced"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Résultat (mois)</span>
+        <span class="kpi-val" [class.text-success]="resultat()>0" [class.text-danger]="resultat()<0">{{ fCFA(resultat()) }}</span>
+        <div class="kpi-meta">Marge nette {{ margeNette() }}% · CA {{ fCFA(caMois) }}</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">DSO — délai paiement</span>
+        <span class="kpi-val">{{ dso() }} j</span>
+        <div class="kpi-meta">CA réel facturé {{ fCFA(caFactureReel()) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- VERSEMENTS -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-money-bill-wave"></i> Versements du Jour</span>
+        <a routerLink="/secretaire/versements" class="btn btn-ghost btn-sm">Voir tout</a>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Commercial</th><th>Montant</th><th>Type</th><th>Statut</th></tr></thead>
+          <tbody>
+            @for (v of versements; track v.id) {
+            <tr [class.row-alert]="v.alerteRouge">
+              <td>COM-{{ v.commercialId }}</td>
+              <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '—' }}</td>
+              <td>{{ v.typeVersement ?? '—' }}</td>
+              <td>
+                @if (v.statut==='VALIDE') { <span class="badge bg-success">Validé</span> }
+                @else if (v.statut==='EN_ATTENTE') { <span class="badge bg-neutral">Att.</span> }
+                @else if (v.alerteRouge) { <span class="badge bg-red">Alerte</span> }
+                @else { <span class="badge bg-orange">À valider</span> }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMMANDES EN ATTENTE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Commandes à Valider</span>
+        <a routerLink="/comptable/commandes" class="btn btn-primary btn-sm">Valider</a>
+      </div>
+      <div class="pcm-list">
+        @for (p of precommandes; track p.id) {
+        <div class="pcm-row" [class.pcm-ready]="p.statut==='VALIDEE_COMPTABLE'">
+          <div class="pcm-id">{{ p.id }}</div>
+          <div class="pcm-com">COM-{{ p.commercialId }}</div>
+          <div class="pcm-lignes">{{ p.lignes.length }} produit(s)</div>
+          @if (p.statut==='VALIDEE_COMPTABLE') { <span class="badge bg-success">Validée ✓</span> }
+          @else if (p.statut==='VALIDEE_SECRETAIRE') { <span class="badge bg-orange">Att. comptable</span> }
+          @else { <span class="badge bg-neutral">Att. secrétaire</span> }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGES + VARIANCE -->
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-receipt"></i> Ventilation des charges</span></div>
+      <div style="padding:0 var(--sp-4) var(--sp-4)">
+        @for (c of charges; track c.categorie) {
+        <div style="margin-bottom:13px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span class="fw-bold">{{ c.categorie }}</span>
+            <span class="mono">{{ fCFA(c.montant) }} · {{ c.part }}%</span>
+          </div>
+          <div class="prog-track-wide"><div class="prog-bar" [style.width.%]="c.part"></div></div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="card ranking-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (coûts)</span></div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Poste</th><th>Standard</th><th>Réel</th><th>Écart</th></tr></thead>
+          <tbody>
+            @for (v of variance; track v.poste) {
+            <tr>
+              <td style="font-size:12px">{{ v.poste }}</td>
+              <td class="mono">{{ v.standard }}</td>
+              <td class="mono">{{ v.reel }}</td>
+              <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FACTURES DOIT/AVOIR -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-file-invoice"></i> Facturation Doit / Avoir</span>
+      <a routerLink="/comptable/factures" class="btn btn-ghost btn-sm">Gérer</a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Numéro</th><th>Client</th><th>Type</th><th>Montant HT</th><th>TTC</th><th>Statut</th></tr></thead>
+        <tbody>
+          @for (f of factures; track f.id) {
+          <tr>
+            <td class="mono fw-bold">{{ f.numero }}</td>
+            <td>{{ f.clientNom }}</td>
+            <td>@if (f.type === 'AVOIR') { <span class="badge bg-orange badge-sm">Avoir</span> } @else { <span class="badge bg-neutral badge-sm">Facture</span> }</td>
+            <td class="mono">{{ fCFA(f.montantHT) }}</td>
+            <td class="mono">{{ fCFA(f.montantTTC) }}</td>
+            <td>@if (f.statut === 'PAYEE') { <span class="badge bg-success badge-sm">Payée</span> } @else { <span class="badge bg-neutral badge-sm">Émise</span> }</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ADMINISTRATION & FISCALITÉ -->
+  <div class="section-row">
+    <div class="card ranking-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-landmark"></i> Éléments DSF & Social (CNPS)</span></div>
+      <div class="fiche-kpis" style="padding:0 var(--sp-4) var(--sp-4)">
+        <div class="fiche-kpi"><span class="fk-lbl">CA déclarable (mois)</span><span class="fk-val">{{ fCFA(caMois) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Charges déductibles</span><span class="fk-val">{{ fCFA(totalCharges()) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Résultat fiscal</span><span class="fk-val">{{ fCFA(resultat()) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">TVA collectée (19,25%)</span><span class="fk-val">{{ fCFA(caFactureReel() * 0.1925) }}</span></div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-award"></i> Calcul des primes hebdomadaires</span>
+        <span class="badge badge-secondary badge-sm">{{ fCFA(totalPrimes()) }}</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Commercial</th><th>Taux global</th><th>Gammes ≥75%</th><th>Prime ({{ fCFA(primeMontant) }})</th></tr></thead>
+          <tbody>
+            @for (p of primes; track p.commercialId) {
+            <tr [class.row-winner]="p.eligible">
+              <td class="fw-bold">{{ p.nom }}</td>
+              <td class="mono">{{ p.tauxGlobal }}%</td>
+              <td class="mono">{{ p.gammesValidees }}/{{ p.gammesTotal }}</td>
+              <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">—</span> }</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
