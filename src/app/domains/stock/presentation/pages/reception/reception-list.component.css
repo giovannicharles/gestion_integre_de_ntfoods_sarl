@@ -3,6 +3,12 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
+  animation: recListFadeIn 0.35s ease-out;
+}
+
+@keyframes recListFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Page header */
@@ -29,7 +35,9 @@
   justify-content: center;
   font-size: 19px;
   box-shadow: var(--sh-g);
+  transition: transform .2s;
 }
+.ph-icon:hover { transform: scale(1.05); }
 .ph-title {
   font-family: var(--font-d);
   font-size: 20px;
@@ -42,7 +50,7 @@
   margin-top: 2px;
 }
 
-/* Stat chips — utilisation des tokens charte TANTY */
+/* Stat chips */
 .stat-chips {
   display: flex;
   gap: 8px;
@@ -57,7 +65,9 @@
   font-size: 12px;
   font-weight: 600;
   border: 1.5px solid transparent;
+  transition: transform .15s, box-shadow .15s;
 }
+.s-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
 .s-chip i {
   font-size: 12px;
 }
@@ -67,7 +77,7 @@
 .sc-ok     { background: var(--s-gh); color: var(--s);  border-color: rgba(30,122,66,.2); }
 .sc-danger { background: var(--r-gh); color: var(--r);  border-color: rgba(194,43,43,.2); }
 
-/* Filters — tokens charte TANTY */
+/* Filters */
 .filters-row {
   display: flex;
   align-items: center;
@@ -87,7 +97,9 @@
   left: 12px;
   color: var(--n400);
   font-size: 13px;
+  transition: color .15s;
 }
+.search-box:focus-within i { color: var(--g); }
 .search-box input {
   width: 100%;
   padding: 9px 36px;
@@ -98,7 +110,7 @@
   color: var(--n800);
   outline: none;
   background: white;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .search-box input:focus {
   border-color: var(--g);
@@ -116,6 +128,7 @@
   color: var(--n400);
   font-size: 12px;
   padding: 4px;
+  transition: color .15s;
 }
 .x-btn:hover { color: var(--n700); }
 .f-sel {
@@ -128,9 +141,10 @@
   cursor: pointer;
   outline: none;
   font-family: var(--font-b);
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.f-sel:focus { border-color: var(--g); }
+.f-sel:hover { border-color: var(--g-pale); }
+.f-sel:focus { border-color: var(--g); box-shadow: 0 0 0 3px rgba(20,83,45,.08); }
 
 /* Receipt number cell */
 .rec-cell {
@@ -194,21 +208,23 @@
 .act-btns {
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
 }
 .act-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--r-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   text-decoration: none;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   border: none;
 }
+.act-btn:hover { transform: translateY(-2px); }
+.act-btn:active { transform: translateY(0) scale(0.92); }
 .ab-validate {
   background: var(--g-gh);
   color: var(--g);
@@ -216,6 +232,7 @@
 .ab-validate:hover {
   background: var(--g);
   color: white;
+  box-shadow: 0 3px 10px rgba(20,83,45,.2);
 }
 .ab-view {
   background: var(--n100);
@@ -232,4 +249,6 @@
   .filters-row { flex-direction: column; align-items: stretch; }
   .search-box { min-width: 100%; }
   .f-sel { width: 100%; }
+  .stat-chips { gap: 6px; }
+  .s-chip { padding: 5px 10px; font-size: 11px; }
 }

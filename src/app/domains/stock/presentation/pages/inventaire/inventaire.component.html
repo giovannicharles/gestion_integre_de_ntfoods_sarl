@@ -380,7 +380,14 @@
           </div>
           <div class="form-group" style="margin-bottom:16px">
             <label class="form-label">Nouvelle quantité <span class="req">*</span></label>
-            <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité après inventaire physique">
+            <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty"
+                   [style.border-color]="ajustQty < 0 ? 'var(--r)' : ''"
+                   placeholder="Quantité après inventaire physique">
+            @if (ajustQty < 0) {
+              <div style="font-size:11px;color:var(--r);margin-top:4px">
+                <i class="fa-solid fa-circle-exclamation"></i> La quantité ne peut pas être négative
+              </div>
+            }
           </div>
           <div class="form-group" style="margin-bottom:16px">
             <label class="form-label">Motif <span class="req">*</span></label>
@@ -397,7 +404,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="closeAjust()">Annuler</button>
-          <button class="btn btn-primary" [disabled]="!ajustMotif || ajustSaving()" (click)="sauverAjust()">
+          <button class="btn btn-primary" [disabled]="!ajustMotif || ajustQty < 0 || ajustSaving()" (click)="sauverAjust()">
             @if (ajustSaving()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-check"></i> Confirmer }
           </button>
         </div>

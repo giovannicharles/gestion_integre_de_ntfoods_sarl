@@ -14,6 +14,12 @@ export const routes: Routes = [
     data: { roles: ['GESTIONNAIRE_STOCK', 'ADMIN', 'COMMERCIAL', 'CHEF_PRODUCTION', 'DIRECTEUR_GENERAL'] },
     loadChildren: () => import('./domains/stock/presentation/stock.routes').then(m => m.STOCK_ROUTES)
   },
+  {
+    path: 'commercial',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['COMMERCIAL', 'ADMIN', 'GESTIONNAIRE_STOCK'] },
+    loadChildren: () => import('./domains/commercial/presentation/commercial.routes').then(m => m.COMMERCIAL_ROUTES)
+  },
   { path: 'dg', canActivate: [authGuard, roleGuard], data: { roles: ['DIRECTEUR_GENERAL', 'ADMIN'] }, loadChildren: () => import('./domains/dg/presentation/dg.routes').then(m => m.DG_ROUTES) },
   { path: 'controle', canActivate: [authGuard, roleGuard], data: { roles: ['CONTROLEUR_GENERAL', 'ADMIN', 'DIRECTEUR_GENERAL'] }, loadChildren: () => import('./domains/controle/presentation/controle.routes').then(m => m.CONTROLE_ROUTES) },
   { path: 'comptable', canActivate: [authGuard, roleGuard], data: { roles: ['COMPTABLE', 'ADMIN', 'DIRECTEUR_GENERAL'] }, loadChildren: () => import('./domains/comptable/presentation/comptable.routes').then(m => m.COMPTABLE_ROUTES) },

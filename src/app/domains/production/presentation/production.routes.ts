@@ -12,6 +12,7 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'saisie', loadComponent: () => import('./pages/saisie/production-saisie.component').then(m => m.ProductionSaisieComponent) },
       { path: 'lots', loadComponent: () => import('./pages/lots/production-lots.component').then(m => m.ProductionLotsComponent) },
       { path: 'employes', loadComponent: () => import('./pages/employes/production-employes.component').then(m => m.ProductionEmployesComponent) },
+      { path: 'declaration-lot', loadComponent: () => import('../../stock/presentation/pages/declaration-lot/declaration-lot.component').then(m => m.DeclarationLotComponent) },
     ]
   }
 ];

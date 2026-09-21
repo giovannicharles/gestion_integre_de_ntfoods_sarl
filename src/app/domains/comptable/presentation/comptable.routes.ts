@@ -19,6 +19,7 @@ export const COMPTABLE_ROUTES: Routes = [
         loadComponent: () => import('../../stock/presentation/pages/validation/validation.component').then(m => m.ValidationComponent),
         data: { filterType: 'MATIERE_PREMIERE' }
       },
+      { path: 'alertes', loadComponent: () => import('../../stock/presentation/pages/alertes/alertes.component').then(m => m.AlertesComponent) },
     ]
   }
 ];

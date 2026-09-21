@@ -1,0 +1,303 @@
+<div class="page animate-fadeInUp">
+  @if (toastMsg()) {
+    <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'">
+      <i class="fa-solid" [class.fa-circle-check]="toastType()==='success'" [class.fa-triangle-exclamation]="toastType()==='error'"></i>{{ toastMsg() }}
+    </div>
+  }
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div>
+        <h1 class="ph-title">Inventaire Physique</h1>
+        <p class="ph-sub">Comptage · Écarts · Validation des corrections</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary btn-sm" (click)="openCreateForm()"><i class="fa-solid fa-plus"></i> Nouvel inventaire</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div style="padding:60px;text-align:center;color:var(--n400)">
+      <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…
+    </div>
+  } @else if (!showDetail()) {
+    <!-- STOCK FREEZE WARNING -->
+    @if (hasActiveInventory()) {
+      <div class="freeze-banner">
+        <i class="fa-solid fa-snowflake"></i>
+        <div>
+          <strong>Stock gelé</strong> — Un inventaire physique est en cours sur {{ activeInventoryLocation() }}.
+          Les mouvements de stock sur cet emplacement sont temporairement bloqués.
+        </div>
+      </div>
+    }
+
+    <!-- LIST VIEW -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <input class="input" style="flex:1;min-width:200px" placeholder="Rechercher (réf, emplacement, comptable)…" [(ngModel)]="search">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" [class.btn-primary]="filterStatus()==='ALL'" (click)="filterStatus.set('ALL')">Tous</button>
+          <button class="btn btn-sm" [class.btn-primary]="filterStatus()==='IN_PROGRESS'" (click)="filterStatus.set('IN_PROGRESS')">En cours</button>
+          <button class="btn btn-sm" [class.btn-primary]="filterStatus()==='COMPLETED'" (click)="filterStatus.set('COMPLETED')">Complétés</button>
+          <button class="btn btn-sm" [class.btn-primary]="filterStatus()==='VALIDATED'" (click)="filterStatus.set('VALIDATED')">Validés</button>
+        </div>
+      </div>
+    </div>
+
+    @if (filteredInventories().length === 0) {
+      <div class="card" style="padding:40px;text-align:center;color:var(--n400)">
+        <i class="fa-solid fa-clipboard-list" style="font-size:32px;margin-bottom:8px;display:block"></i>
+        Aucun inventaire physique. Cliquez sur « Nouvel inventaire » pour commencer.
+      </div>
+    } @else {
+      <div class="inv-grid">
+        @for (inv of filteredInventories(); track inv.id) {
+          <div class="card inv-card" (click)="openDetail(inv)">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+              <div>
+                <div style="font-weight:700;font-size:14px">{{ inv.reference }}</div>
+                <div style="font-size:12px;color:var(--n500)"><i class="fa-solid fa-warehouse"></i> {{ inv.locationName }}</div>
+              </div>
+              <span class="badge" [class]="getStatusClass(inv.status)">{{ getStatusLabel(inv.status) }}</span>
+            </div>
+            <div class="inv-meta">
+              <span><i class="fa-solid fa-user"></i> {{ inv.countedBy }}</span>
+              <span><i class="fa-solid fa-calendar"></i> {{ inv.startedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div class="inv-stats">
+              <span><i class="fa-solid fa-boxes-stacked"></i> {{ inv.totalItems }} articles</span>
+              @if (inv.discrepancyCount !== null && inv.discrepancyCount !== undefined && inv.discrepancyCount > 0) {
+                <span class="disc-badge"><i class="fa-solid fa-triangle-exclamation"></i> {{ inv.discrepancyCount }} écart(s)</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  } @else {
+    <!-- DETAIL VIEW -->
+    <div class="ph">
+      <div class="ph-left">
+        <button class="btn btn-ghost btn-sm" (click)="closeDetail()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <div>
+          <h1 class="ph-title" style="font-size:18px">{{ selectedInventory()?.reference }}</h1>
+          <p class="ph-sub">{{ selectedInventory()?.locationName }} — {{ getStatusLabel(selectedInventory()?.status || '') }}</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        @if (selectedInventory()?.status === 'IN_PROGRESS') {
+          <button class="btn btn-primary btn-sm" (click)="completeInventory()" [disabled]="completing()">
+            <i class="fa-solid fa-check-double"></i> {{ completing() ? '…' : 'Finaliser le comptage' }}
+          </button>
+        }
+        @if (selectedInventory()?.status === 'COMPLETED' && isDG()) {
+          <button class="btn btn-success btn-sm" (click)="openValidateModal()">
+            <i class="fa-solid fa-shield-check"></i> Valider
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    @if (selectedInventory()?.status === 'IN_PROGRESS') {
+      <div class="freeze-banner" style="margin-bottom:16px">
+        <i class="fa-solid fa-snowflake"></i>
+        <div><strong>Stock gelé</strong> — Les mouvements de stock sur cet emplacement sont bloqués jusqu'à la validation de l'inventaire.</div>
+      </div>
+    }
+
+    @if (summary()) {
+      <div class="summary-grid">
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(26,107,42,.1);color:#1A6B2A"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div><div class="stat-val">{{ summary()!.totalItems }}</div><div class="stat-lbl">Total articles</div></div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(37,99,235,.1);color:#2563EB"><i class="fa-solid fa-check"></i></div>
+          <div><div class="stat-val">{{ summary()!.countedItems }}</div><div class="stat-lbl">Comptés</div></div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,.1);color:#f59e0b"><i class="fa-solid fa-clock"></i></div>
+          <div><div class="stat-val">{{ summary()!.pendingItems }}</div><div class="stat-lbl">En attente</div></div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(220,38,38,.1);color:#dc2626"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div><div class="stat-val">{{ summary()!.totalDiscrepancies }}</div><div class="stat-lbl">Écarts</div></div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-icon" style="background:rgba(124,58,237,.1);color:#7c3aed"><i class="fa-solid fa-coins"></i></div>
+          <div><div class="stat-val" style="font-size:14px">{{ fCFA(summary()!.discrepancyValue) }}</div><div class="stat-lbl">Valeur écarts</div></div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="card" style="margin-bottom:16px;padding:12px 16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:600">Progression du comptage</span>
+          <span style="font-size:13px;font-weight:700;color:#1A6B2A">{{ getProgress() }}%</span>
+        </div>
+        <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,#1A6B2A,#4ade80);border-radius:4px;transition:width .3s" [style.width.%]="getProgress()"></div>
+        </div>
+      </div>
+    }
+
+    <!-- ITEMS TABLE -->
+    <div class="card" style="overflow-x:auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Produit</th>
+            <th>Conditionnement</th>
+            <th style="text-align:right">Qté Système</th>
+            <th style="text-align:right">Qté Comptée</th>
+            <th style="text-align:right">Écart</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of inventoryItems(); track item.id) {
+            <tr [class.row-validated]="item.status==='VALIDATED'">
+              <td style="font-weight:600">{{ item.productSku }}</td>
+              <td>{{ item.productName }}</td>
+              <td>{{ item.packagingType }}</td>
+              <td style="text-align:right">{{ item.systemQuantity | number:'1.0-2' }}</td>
+              <td style="text-align:right">
+                @if (item.countedQuantity !== null && item.countedQuantity !== undefined) {
+                  {{ item.countedQuantity | number:'1.0-2' }}
+                } @else { — }
+              </td>
+              <td style="text-align:right;font-weight:600" [class]="getDiscrepancyClass(item.discrepancy)">
+                @if (item.discrepancy !== null && item.discrepancy !== undefined && item.discrepancy !== 0) {
+                  {{ getDiscrepancySign(item.discrepancy) }}{{ item.discrepancy | number:'1.0-2' }}
+                } @else { 0 }
+              </td>
+              <td><span class="badge badge-sm" [class]="getItemStatusClass(item.status)">{{ item.status }}</span></td>
+              <td>
+                @if (item.status !== 'VALIDATED' && selectedInventory()?.status === 'IN_PROGRESS') {
+                  <button class="btn btn-ghost btn-xs" (click)="openCounting(item); $event.stopPropagation()">
+                    <i class="fa-solid fa-pen"></i> Compter
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- CREATE MODAL -->
+  @if (showCreateForm()) {
+    <div class="modal-overlay" (click)="closeCreateForm()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2><i class="fa-solid fa-plus-circle"></i> Nouvel Inventaire Physique</h2>
+          <button class="modal-close" (click)="closeCreateForm()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Emplacement à inventorier</label>
+          <select class="input" [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event)">
+            @for (loc of locations(); track loc.id) {
+              <option [value]="loc.id">{{ loc.name }} ({{ loc.typeLabel }})</option>
+            }
+          </select>
+          <label class="form-label" style="margin-top:12px">Notes (optionnel)</label>
+          <textarea class="input" rows="3" [(ngModel)]="notes" placeholder="Ex: Inventaire mensuel de fin de mois…"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeCreateForm()">Annuler</button>
+          <button class="btn btn-primary" (click)="createInventory()" [disabled]="creating()">
+            <i class="fa-solid fa-check"></i> {{ creating() ? 'Création…' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- COUNTING MODAL -->
+  @if (countingItem(); as ci) {
+    <div class="modal-overlay" (click)="closeCounting()">
+      <div class="modal" style="max-width:480px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2><i class="fa-solid fa-pen-to-square"></i> Comptage — {{ ci.productSku }}</h2>
+          <button class="modal-close" (click)="closeCounting()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:4px">{{ ci.productName }}</div>
+            <div style="font-size:13px;color:var(--n500)">
+              Qté système: <b>{{ ci.systemQuantity | number:'1.0-2' }}</b> {{ ci.packagingType }}
+            </div>
+          </div>
+          <label class="form-label">Quantité comptée <span class="req" style="color:var(--r)">*</span></label>
+          <input class="input" type="number" step="0.01" min="0" [(ngModel)]="countedQty"
+                 [style.border-color]="countedQty < 0 ? 'var(--r)' : ''"
+                 placeholder="0">
+          @if (countedQty < 0) {
+            <div style="font-size:12px;color:var(--r);margin-top:4px">
+              <i class="fa-solid fa-circle-exclamation"></i> La quantité comptée ne peut pas être négative
+            </div>
+          }
+          <label class="form-label" style="margin-top:12px">Notes (optionnel)</label>
+          <textarea class="input" rows="2" [(ngModel)]="countedNotes" placeholder="Ex: Carton endommagé, produit manquant…"></textarea>
+          @if (countedQty !== ci.systemQuantity) {
+            <div style="margin-top:12px;padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600"
+                 [style.background]="countedQty > ci.systemQuantity ? 'rgba(34,197,94,.1)' : 'rgba(220,38,38,.1)'"
+                 [style.color]="countedQty > ci.systemQuantity ? '#16a34a' : '#dc2626'">
+              <i class="fa-solid" [class.fa-arrow-up]="countedQty > ci.systemQuantity" [class.fa-arrow-down]="countedQty < ci.systemQuantity"></i>
+              Écart: {{ getDiscrepancySign(countedQty - ci.systemQuantity) }}{{ (countedQty - ci.systemQuantity) | number:'1.0-2' }} {{ ci.packagingType }}
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeCounting()">Annuler</button>
+          <button class="btn btn-primary" (click)="saveCount()" [disabled]="counting() || countedQty < 0">
+            <i class="fa-solid fa-check"></i> {{ counting() ? '…' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- VALIDATE MODAL -->
+  @if (showValidateModal()) {
+    <div class="modal-overlay" (click)="closeValidateModal()">
+      <div class="modal" style="max-width:480px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2><i class="fa-solid fa-shield-check"></i> Validation de l'inventaire</h2>
+          <button class="modal-close" (click)="closeValidateModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom:16px">Confirmez la validation de <b>{{ selectedInventory()?.reference }}</b>.</p>
+          @if (summary() && summary()!.totalDiscrepancies > 0) {
+            <div style="padding:12px;background:rgba(220,38,38,.08);border-radius:8px;margin-bottom:16px">
+              <div style="font-weight:600;color:#dc2626;margin-bottom:4px">
+                <i class="fa-solid fa-triangle-exclamation"></i> {{ summary()!.totalDiscrepancies }} écart(s) détecté(s)
+              </div>
+              <div style="font-size:13px;color:var(--n600)">
+                Valeur totale des écarts: <b>{{ fCFA(summary()!.discrepancyValue) }}</b>
+              </div>
+            </div>
+          }
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" [(ngModel)]="applyCorrections" style="width:18px;height:18px">
+            <span>Appliquer les corrections au stock (ajuste les quantités réelles)</span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="closeValidateModal()">Annuler</button>
+          <button class="btn btn-success" (click)="validateInventory()" [disabled]="validating()">
+            <i class="fa-solid fa-check"></i> {{ validating() ? '…' : 'Valider' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

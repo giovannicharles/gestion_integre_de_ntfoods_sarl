@@ -1,0 +1,192 @@
+.page-wrap { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+.ia-online-badge, .ia-offline-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+.ia-online-badge { background: #f0fdf4; color: #1A6B2A; border: 1px solid #bbf7d0; }
+.ia-offline-badge { background: #fef2f2; color: #C22B2B; border: 1px solid #fecaca; }
+
+/* ── DOMAIN SELECTOR ── */
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.domain-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.domain-card:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.domain-card.active { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+.domain-ico {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px;
+  flex-shrink: 0;
+}
+.domain-info { display: flex; flex-direction: column; gap: 3px; }
+.domain-label { font-weight: 700; font-size: 14px; color: #1e293b; }
+.domain-desc { font-size: 11px; color: #64748b; line-height: 1.3; }
+
+/* ── ANALYSIS AREA ── */
+.analysis-area { min-height: 400px; }
+
+.analysis-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #fff;
+  border-radius: 16px;
+  border: 2px dashed #e5e7eb;
+}
+.analysis-empty i { font-size: 48px; color: #1A6B2A; margin-bottom: 16px; }
+.analysis-empty h3 { font-size: 18px; color: #1e293b; margin: 0 0 8px 0; }
+.analysis-empty p { font-size: 13px; color: #64748b; max-width: 400px; margin: 0 0 24px 0; line-height: 1.5; }
+
+.btn-run {
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: none;
+  background: #1A6B2A;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s;
+}
+.btn-run:hover { background: #14532D; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,107,42,0.3); }
+
+.analysis-loading {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 60px;
+  font-size: 14px; color: #64748b;
+}
+.loader-orb {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 4px solid #e5e7eb;
+  border-top-color: #1A6B2A;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESULTS ── */
+.analysis-result { display: flex; flex-direction: column; gap: 16px; }
+
+.result-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.result-card-header {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 15px; color: #1e293b;
+  margin-bottom: 14px;
+}
+.result-card-header i { color: #1A6B2A; font-size: 17px; }
+
+.result-summary { border-left: 4px solid #1A6B2A; }
+.summary-text { font-size: 14px; line-height: 1.6; color: #334155; margin: 0; }
+.fallback-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 10px; padding: 4px 10px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: #fef3c7; color: #92400e;
+}
+
+.insight-list { list-style: none; padding: 0; margin: 0; }
+.insight-list li {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 0;
+  font-size: 13px; color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+.insight-list li:last-child { border-bottom: none; }
+.insight-list li i { color: #22c55e; margin-top: 3px; flex-shrink: 0; }
+
+.reco-list { display: flex; flex-direction: column; gap: 12px; }
+.reco-item {
+  display: flex; gap: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+.reco-prio {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  height: fit-content;
+}
+.prio-high { background: #fef2f2; color: #C22B2B; }
+.prio-medium { background: #fef3c7; color: #B8860B; }
+.prio-low { background: #f0fdf4; color: #1A6B2A; }
+
+.reco-body { display: flex; flex-direction: column; gap: 4px; }
+.reco-action { font-weight: 700; font-size: 13px; color: #1e293b; }
+.reco-product { font-size: 11px; color: #64748b; }
+.reco-detail { font-size: 12px; color: #475569; margin: 0; line-height: 1.5; }
+
+.chart-data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.chart-data-item {
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cd-label { font-size: 12px; color: #64748b; font-weight: 600; }
+.cd-value { font-size: 20px; font-weight: 800; color: #1A6B2A; }
+.cd-type { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+
+.result-actions { display: flex; justify-content: center; padding: 8px; }
+.btn-rerun {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: 1px solid #1A6B2A;
+  background: #fff;
+  color: #1A6B2A;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s;
+}
+.btn-rerun:hover { background: #1A6B2A; color: #fff; }
+
+/* ── IA TABS ── */
+.ia-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb; padding-bottom: 0;
+}
+.ia-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border: none; background: transparent;
+  font-size: 14px; font-weight: 600; color: #6b7280;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; transition: all 0.2s;
+}
+.ia-tab:hover { color: #1A6B2A; }
+.ia-tab.active {
+  color: #1A6B2A; border-bottom-color: #1A6B2A;
+}
+
+@media (max-width: 768px) {
+  .domain-grid { grid-template-columns: 1fr; }
+  .ia-tabs { flex-wrap: wrap; }
+  .ia-tab { font-size: 12px; padding: 8px 14px; }
+}

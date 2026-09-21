@@ -206,7 +206,14 @@
                       <div class="qty-row">
                         <div class="qty-cell">
                           <label class="qty-label">Quantité conditionnée <span class="req">*</span></label>
-                          <input type="number" class="form-control qty-input" min="1" placeholder="Ex: 50" [(ngModel)]="l.conditioningQty">
+                          <input type="number" class="form-control qty-input" min="1" placeholder="Ex: 50"
+                                 [style.border-color]="l.conditioningQty <= 0 ? 'var(--r)' : ''"
+                                 [(ngModel)]="l.conditioningQty">
+                          @if (l.conditioningQty <= 0) {
+                            <div style="font-size:11px;color:var(--r);margin-top:4px">
+                              <i class="fa-solid fa-circle-exclamation"></i> Veuillez entrer une quantité valide supérieure à 0
+                            </div>
+                          }
                           <span class="qty-hint">{{ getConditioningLabel(l.conditioningType) }}</span>
                         </div>
                         <div class="qty-cell">

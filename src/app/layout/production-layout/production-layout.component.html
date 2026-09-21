@@ -17,7 +17,7 @@
       </div>
       <nav class="sb-nav">
         <span class="sb-section-lbl">MODULE PRODUCTION</span>
-        @for (item of navItems; track item.route) {
+        @for (item of filteredNav(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>

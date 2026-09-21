@@ -1,4 +1,5 @@
 .page{display:flex;flex-direction:column;gap:22px}
+.page .card{overflow:visible}
 .ph{display:flex;align-items:center;gap:14px}
 .back-btn{width:36px;height:36px;border-radius:var(--r-md);background:var(--n100);border:1.5px solid var(--n200);color:var(--n600);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
 .back-btn:hover{background:var(--g-gh);color:var(--g)}
@@ -31,7 +32,7 @@
 .success-bar::after{content:'';display:block;height:100%;background:var(--g);animation:progressFw 2.5s linear forwards}
 @media(max-width:960px){.form-layout{grid-template-columns:1fr}}
 
-.lc-card{border:1.5px solid var(--n200);border-radius:var(--r-md);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.lc-card{border:1.5px solid var(--n200);border-radius:var(--r-md);transition:border-color .2s,box-shadow .2s}
 .lc-card:hover{border-color:var(--n300);box-shadow:var(--sh-sm)}
 .lc-header{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--n50);border-bottom:1px solid var(--n150)}
 .lc-badge{width:22px;height:22px;border-radius:50%;background:var(--y-d);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -47,13 +48,13 @@
 .cb-input{padding-left:36px!important;padding-right:32px!important}
 .cb-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:24px;height:24px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;transition:all .15s}
 .cb-clear:hover{background:var(--n150);color:var(--n700)}
-.combobox-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--n200);border-radius:var(--r-md);box-shadow:var(--sh-lg);max-height:280px;overflow-y:auto;z-index:100;padding:4px}
-.combobox-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background .12s}
-.combobox-item:hover{background:var(--n50)}
+.combobox-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:2px solid var(--g);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(0,0,0,.25);max-height:360px;overflow-y:auto;z-index:10000;padding:6px;min-width:100%}
+.combobox-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--r-sm);cursor:pointer;transition:background .12s;border:1px solid transparent}
+.combobox-item:hover{background:var(--g-gh);border-color:var(--g-pale)}
 .cb-item-left{display:flex;align-items:center;gap:10px;overflow:hidden}
 .cb-item-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.cb-sku{font-family:var(--font-d);font-size:12px;font-weight:800;color:var(--g);background:var(--g-gh);padding:2px 8px;border-radius:4px;white-space:nowrap}
-.cb-name{font-size:13px;font-weight:600;color:var(--n800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cb-sku{font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--g);background:var(--g-gh);padding:3px 10px;border-radius:6px;white-space:nowrap;min-width:60px;text-align:center}
+.cb-name{font-size:14px;font-weight:600;color:var(--n900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cb-pack{font-size:10px;font-weight:600;color:var(--n600);background:var(--n100);padding:2px 8px;border-radius:4px;white-space:nowrap}
 .cb-qpc{font-size:10px;color:var(--n400);white-space:nowrap}
 .combobox-empty{padding:20px 16px;text-align:center;font-size:12px;color:var(--n400);display:flex;flex-direction:column;align-items:center;gap:8px}

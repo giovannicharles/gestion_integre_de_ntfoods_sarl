@@ -28,7 +28,12 @@
   align-items: center;
   justify-content: center;
   font-size: 19px;
-  box-shadow: var(--sh-g);
+}
+.ph-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .ph-title {
   font-family: var(--font-d);
@@ -298,6 +303,11 @@
   border-color: var(--g);
   box-shadow: 0 0 0 3px var(--g-glow);
 }
+
+.badge-central { background: #1A6B2A; color: #fff; }
+.badge-buffer { background: #C49200; color: #fff; }
+.badge-mobile { background: #2563EB; color: #fff; }
+.badge-magasin { background: #6B7280; color: #fff; }
 
 /* Toast */
 .toast {

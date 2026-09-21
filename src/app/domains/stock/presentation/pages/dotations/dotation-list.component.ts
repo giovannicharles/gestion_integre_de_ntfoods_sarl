@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -46,6 +46,13 @@ export class DotationListComponent implements OnInit, OnDestroy {
   toastType = signal<'success' | 'error'>('success');
 
   Math = Math;
+
+  // Role-based action visibility
+  userRoles = computed(() => this.auth.getCurrentUser()?.roles || []);
+  canVerifyPayment = computed(() => this.userRoles().some(r => ['SECRETAIRE', 'ADMIN'].includes(r)));
+  canValidateQuantities = computed(() => this.userRoles().some(r => ['COMPTABLE', 'ADMIN'].includes(r)));
+  canManageStock = computed(() => this.userRoles().some(r => ['GESTIONNAIRE_STOCK', 'ADMIN'].includes(r)));
+  canCreateDotation = computed(() => this.userRoles().some(r => ['COMMERCIAL', 'ADMIN'].includes(r)));
 
   get pages() {
     return Array.from({ length: this.totalPages() }, (_, i) => i + 1);

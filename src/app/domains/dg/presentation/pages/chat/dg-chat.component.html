@@ -1,0 +1,68 @@
+<div class="page-wrap animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-comments"></i></div>
+      <div>
+        <h1 class="ph-title">Assistant IA — Direction Générale</h1>
+        <p class="ph-sub">Posez vos questions sur tous les aspects de l'entreprise · TantyAI</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="chat-loading">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>Chargement du contexte entreprise...</span>
+    </div>
+  } @else {
+    <div class="chat-container">
+      <div class="chat-side">
+        <div class="side-card">
+          <div class="side-card-header">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Vue 360° Entreprise</span>
+          </div>
+          <p class="side-card-desc">
+            Cet assistant IA a accès aux données en temps réel de tous les modules :
+            stock, production, commercial, financier et administration.
+          </p>
+          <div class="side-tags">
+            <span class="side-tag"><i class="fa-solid fa-warehouse"></i> Stock</span>
+            <span class="side-tag"><i class="fa-solid fa-industry"></i> Production</span>
+            <span class="side-tag"><i class="fa-solid fa-handshake"></i> Commercial</span>
+            <span class="side-tag"><i class="fa-solid fa-coins"></i> Financier</span>
+            <span class="side-tag"><i class="fa-solid fa-chart-line"></i> Reporting</span>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-card-header">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>Suggestions de questions</span>
+          </div>
+          <ul class="suggestion-list">
+            <li>"Quelle est la valeur totale du stock ?"</li>
+            <li>"Quels produits sont en rupture ?"</li>
+            <li>"Quel est le CA du mois ?"</li>
+            <li>"Combien de lots en attente ?"</li>
+            <li>"Y a-t-il des alertes critiques ?"</li>
+            <li>"Analyse la rentabilité de la production"</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="chat-main">
+        <app-ai-chat
+          domain="dg"
+          title="TantyAI — Assistant DG"
+          subtitle="Vision stratégique 360°"
+          accent="green"
+          [contextData]="contextData()"
+          welcomeMessage="Bonjour Monsieur le Directeur. Je suis TantyAI, votre assistant stratégique. J'ai accès aux données de tous les modules de l'entreprise. Posez-moi vos questions sur le stock, la production, le commercial, le financier ou toute autre préoccupation."
+          [quickReplies]="quickReplies"
+          (quickReplyAction)="onQuickReply($event)"
+        />
+      </div>
+    </div>
+  }
+</div>

@@ -25,6 +25,9 @@
       <button class="btn btn-ghost btn-sm" [class.active-refresh]="autoRefresh()" (click)="toggleAutoRefresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> {{ autoRefresh() ? 'Auto 30s' : 'Actualiser' }}
       </button>
+      <button class="btn btn-ia-dash" (click)="runIaInsight()" [disabled]="loading() || iaInsightLoading()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Analyse IA
+      </button>
       <a routerLink="/stock/reception/new" class="btn btn-primary">
         <i class="fa-solid fa-plus"></i> Nouvelle Réception
       </a>
@@ -34,6 +37,98 @@
   <!-- ERROR -->
   @if (error()) {
     <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
+  }
+
+  <!-- ═══ INSIGHTS IA ═══ -->
+  @if (showIaInsight()) {
+    <div class="card ia-insight-card animate-fadeInUp">
+      <div class="ia-insight-head">
+        <div class="ia-insight-title">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Analyse IA du stock — TantyAI</span>
+          @if (iaConfigured()) {
+            <span class="badge badge-success" style="font-size:10px">GPT-OSS 120B</span>
+          } @else {
+            <span class="badge badge-neutral" style="font-size:10px">Mode hors-ligne</span>
+          }
+        </div>
+        <button class="btn btn-ghost btn-sm" (click)="closeIaInsight()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="ia-insight-body">
+        @if (iaInsightLoading()) {
+          <div class="ia-insight-loading">
+            <div class="spinner spinner-sm"></div>
+            <span>TantyAI analyse vos données de stock…</span>
+          </div>
+        } @else if (iaInsight()) {
+          <p class="ia-insight-summary">{{ iaInsight()!.summary }}</p>
+
+          @if (iaInsight()!.insights.length > 0) {
+            <div class="ia-insight-list">
+              @for (item of iaInsight()!.insights; track $index) {
+                <div class="ia-insight-item"><i class="fa-solid fa-lightbulb" style="color:var(--y-d)"></i><span>{{ item }}</span></div>
+              }
+            </div>
+          }
+
+          @if (iaInsight()!.recommendations.length > 0) {
+            <div class="ia-insight-recs">
+              @for (rec of iaInsight()!.recommendations; track $index) {
+                <div class="ia-insight-rec">
+                  <span class="badge" [class]="getIaPriorityClass(rec.priority)">{{ rec.priority }}</span>
+                  <div>
+                    <strong>{{ rec.action }}</strong>
+                    @if (rec.product) { <span class="ia-insight-rec-product"> — {{ rec.product }}</span> }
+                    <p>{{ rec.detail }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <div class="ia-insight-loading">
+            <i class="fa-solid fa-circle-exclamation" style="color:var(--n400)"></i>
+            <span>Impossible de récupérer l'analyse IA. Vérifiez que le serveur backend est démarré.</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ═══ CONSEILS IA PROACTIFS ═══ -->
+  @if (!loading() && (iaSuggestions().length > 0 || iaSuggestionsLoading())) {
+    <div class="ia-tips-row">
+      <div class="ia-tips-head">
+        <span class="ia-tips-title"><i class="fa-solid fa-lightbulb"></i> Conseils TantyAI pour le gestionnaire</span>
+        <button class="btn btn-ghost btn-sm" (click)="refreshIaSuggestions()" [disabled]="iaSuggestionsLoading()">
+          <i class="fa-solid fa-rotate-right" [class.fa-spin]="iaSuggestionsLoading()"></i>
+        </button>
+      </div>
+      @if (iaSuggestionsLoading()) {
+        <div class="ia-tips-grid">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="ia-tip-card ia-tip-skeleton">
+              <div class="sk-shimmer" style="height:14px;width:60%;border-radius:4px"></div>
+              <div class="sk-shimmer" style="height:32px;width:100%;border-radius:4px;margin-top:8px"></div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="ia-tips-grid">
+          @for (tip of iaSuggestions(); track $index) {
+            <div class="ia-tip-card" [style.border-left-color]="getIaCategoryColor(tip.category)">
+              <div class="ia-tip-top">
+                <i class="fa-solid" [class]="'fa-solid ' + (tip.icon || 'fa-lightbulb')" [style.color]="getIaCategoryColor(tip.category)"></i>
+                <span class="ia-tip-title">{{ tip.title }}</span>
+                <span class="badge" [class]="getIaPriorityClass(tip.priority)" style="font-size:9px">{{ tip.priority }}</span>
+              </div>
+              <p class="ia-tip-msg">{{ tip.message }}</p>
+              <span class="ia-tip-cat" [style.color]="getIaCategoryColor(tip.category)">{{ tip.category }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
   }
 
   <!-- SKELETON -->
@@ -340,7 +435,7 @@
                 </div>
                 <div class="health-bd-bar">
                   <div class="health-bd-fill" [style.width.%]="item.score"
-                    [style.background]="item.score >= 70 ? 'linear-gradient(90deg,#14532D,#15803D)' : item.score >= 40 ? 'linear-gradient(90deg,#D97706,#F59E0B)' : 'linear-gradient(90deg,#C22B2B,#EF4444)'"></div>
+                    [style.background]="item.score >= 70 ? 'linear-gradient(90deg,var(--g),var(--g-l))' : item.score >= 40 ? 'linear-gradient(90deg,var(--y-d),var(--y))' : 'linear-gradient(90deg,var(--r),var(--r-l))'"></div>
                 </div>
                 <span class="health-bd-score">{{ item.score }}/100</span>
               </div>
@@ -399,6 +494,7 @@
                   </div>
                   <div class="pred-body">
                     <span class="pred-name">{{ pred.productName }}</span>
+                    @if (pred.sku) { <span style="font-size:9px;font-weight:700;color:var(--n500);font-family:monospace;display:block">{{ pred.sku }}</span> }
                     <span class="pred-meta">Stock: {{ pred.currentQty }} · Conso: {{ pred.dailyConsumption }}/jour</span>
                   </div>
                   <div class="pred-days">
@@ -625,6 +721,7 @@
               <div class="critical-ico"><i class="fa-solid fa-exclamation-circle"></i></div>
               <div class="critical-body">
                 <span class="critical-name">{{ item.productName || item.productSku }}</span>
+                @if (item.productSku) { <span style="font-size:9px;font-weight:700;color:var(--n500);font-family:monospace;display:block">{{ item.productSku }}</span> }
                 <span class="critical-qty">{{ item.quantity }} / {{ item.reorderPoint }}</span>
               </div>
               <div class="critical-pct {{ getCriticalClass(item) }}">
@@ -676,9 +773,22 @@
         <button class="btn btn-ghost btn-sm" (click)="toggleProductSort()">
           <i class="fa-solid fa-arrow-down-wide-short"></i> {{ productSortLabel() }}
         </button>
+        <div class="display-mode-toggle">
+          <button class="dm-btn" [class.active]="displayMode() === 'table'" (click)="setDisplayMode('table')" title="Tableau">
+            <i class="fa-solid fa-table"></i>
+          </button>
+          <button class="dm-btn" [class.active]="displayMode() === 'grid'" (click)="setDisplayMode('grid')" title="Grille">
+            <i class="fa-solid fa-table-cells"></i>
+          </button>
+          <button class="dm-btn" [class.active]="displayMode() === 'cards'" (click)="setDisplayMode('cards')" title="Cartes">
+            <i class="fa-solid fa-id-card"></i>
+          </button>
+        </div>
       </div>
     </div>
     <div class="no-pad">
+      <!-- Table view -->
+      @if (displayMode() === 'table') {
       <div class="table-wrapper inv-table-wrap">
         <table class="table inv-table">
           <thead>
@@ -694,16 +804,16 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of filteredProducts(); track item.id; let i = $index) {
+            @for (item of paginatedProducts(); track item.id; let i = $index) {
             <tr class="table-row-anim inv-row" [class.inv-row-critical]="item.alertLevel === 'CRITIQUE'">
               <td>
                 <div class="inv-prod-cell">
-                  <div class="inv-prod-ico" [style.background]="getColor(item) + '22'" [style.color]="getColor(item)">
+                  <div class="inv-prod-ico" [style.background]="getBgColor(item)" [style.color]="getColor(item)">
                     <i class="fa-solid fa-cube"></i>
                   </div>
                   <div class="inv-prod-info">
                     <span class="inv-prod-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</span>
-                    <span class="inv-prod-cat">{{ item.productCategory || '—' }} · {{ item.productUnit || 'unité' }}</span>
+                    <span class="inv-prod-cat">{{ item.productCategory || '—' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || 'unité' }}</span>
                   </div>
                 </div>
               </td>
@@ -711,7 +821,7 @@
               <td><span class="badge {{ getWBadge(item.warehouseName) }}">{{ getWShort(item.warehouseName) }}</span></td>
               <td class="inv-qty-cell">
                 <span class="inv-qty-val">{{ item.quantity | number }}</span>
-                <span class="inv-qty-unit">{{ item.productUnit || '' }}</span>
+                <span class="inv-qty-unit">{{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</span>
               </td>
               <td><span class="inv-reorder">{{ item.reorderPoint | number }}</span></td>
               <td>
@@ -736,6 +846,86 @@
           </tbody>
         </table>
       </div>
+      }
+      <!-- Grid view -->
+      @if (displayMode() === 'grid') {
+      <div class="inv-grid">
+        @for (item of paginatedProducts(); track item.id) {
+        <div class="inv-grid-card" [class.inv-row-critical]="item.alertLevel === 'CRITIQUE'">
+          <div class="inv-grid-head">
+            <div class="inv-prod-ico" [style.background]="getBgColor(item)" [style.color]="getColor(item)">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+            <span class="badge {{ getNAlertClass(item.alertLevel || 'NORMAL') }}">{{ item.alertLevel || 'NORMAL' }}</span>
+          </div>
+          <div class="inv-grid-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</div>
+          <div class="inv-grid-sku">{{ item.productSku || '—' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</div>
+          <div class="inv-grid-qty">{{ item.quantity | number }} <span>{{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</span></div>
+          <div class="inv-grid-val">{{ formatCFA(item.stockValue || 0) }}</div>
+          <div class="inv-bar-wrap">
+            <div class="inv-bar" [style.width.%]="getPct(item)" [style.background]="getBarGradient(item)"></div>
+          </div>
+        </div>
+        } @empty {
+          <div class="empty-critical"><i class="fa-solid fa-box-open"></i><span>Aucun produit trouvé</span></div>
+        }
+      </div>
+      }
+      <!-- Cards view -->
+      @if (displayMode() === 'cards') {
+      <div class="inv-cards">
+        @for (item of paginatedProducts(); track item.id) {
+        <div class="inv-card-item" [class.inv-row-critical]="item.alertLevel === 'CRITIQUE'">
+          <div class="inv-card-top">
+            <div class="inv-prod-ico" [style.background]="getBgColor(item)" [style.color]="getColor(item)">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+            <div class="inv-card-info">
+              <span class="inv-prod-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</span>
+              <span class="inv-prod-cat">{{ item.productSku || '—' }} · {{ item.warehouseName || '—' }}</span>
+            </div>
+            <span class="badge {{ getNAlertClass(item.alertLevel || 'NORMAL') }}">{{ item.alertLevel || 'NORMAL' }}</span>
+          </div>
+          <div class="inv-card-mid">
+            <div class="inv-card-stat">
+              <span class="inv-card-stat-label">Quantité</span>
+              <span class="inv-card-stat-val">{{ item.quantity | number }} {{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</span>
+            </div>
+            <div class="inv-card-stat">
+              <span class="inv-card-stat-label">Seuil</span>
+              <span class="inv-card-stat-val">{{ item.reorderPoint | number }}</span>
+            </div>
+            <div class="inv-card-stat">
+              <span class="inv-card-stat-label">Valeur</span>
+              <span class="inv-card-stat-val">{{ formatCFA(item.stockValue || 0) }}</span>
+            </div>
+          </div>
+          <div class="inv-bar-wrap">
+            <div class="inv-bar" [style.width.%]="getPct(item)" [style.background]="getBarGradient(item)"></div>
+            <span class="inv-bar-pct">{{ getPct(item) }}%</span>
+          </div>
+        </div>
+        } @empty {
+          <div class="empty-critical"><i class="fa-solid fa-box-open"></i><span>Aucun produit trouvé</span></div>
+        }
+      </div>
+      }
+      <!-- Pagination -->
+      @if (invTotalPages() > 1) {
+      <div class="pagination">
+        <button class="page-btn" (click)="setInvPage(1)" [disabled]="invPage() === 1"><i class="fa-solid fa-angles-left"></i></button>
+        <button class="page-btn" (click)="setInvPage(invPage() - 1)" [disabled]="invPage() === 1"><i class="fa-solid fa-angle-left"></i></button>
+        @for (p of invPageRange(); track p) {
+          @if (p <= 5 || p >= invTotalPages() - 1 || absDiff(p, invPage()) <= 1) {
+            <button class="page-btn" [class.active]="invPage() === p" (click)="setInvPage(p)">{{ p }}</button>
+          } @else if (p === 6 && invPage() > 4) {
+            <span class="page-ellipsis">…</span>
+          }
+        }
+        <button class="page-btn" (click)="setInvPage(invPage() + 1)" [disabled]="invPage() === invTotalPages()"><i class="fa-solid fa-angle-right"></i></button>
+        <button class="page-btn" (click)="setInvPage(invTotalPages())" [disabled]="invPage() === invTotalPages()"><i class="fa-solid fa-angles-right"></i></button>
+      </div>
+      }
       @if (filteredProducts().length < stockLevels().length) {
         <div class="inv-footer">
           <span>{{ filteredProducts().length }} / {{ stockLevels().length }} produits affichés</span>

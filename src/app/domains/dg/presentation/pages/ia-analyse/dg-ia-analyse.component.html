@@ -1,0 +1,299 @@
+<div class="page-wrap animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-brain"></i></div>
+      <div>
+        <h1 class="ph-title">Analyse IA — Entreprise 360°</h1>
+        <p class="ph-sub">Analyses intelligentes par domaine · TantyAI</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      @if (!iaConfigured()) {
+        <span class="ia-offline-badge"><i class="fa-solid fa-circle-xmark"></i> IA hors ligne</span>
+      } @else {
+        <span class="ia-online-badge"><i class="fa-solid fa-circle-check"></i> IA active</span>
+      }
+    </div>
+  </div>
+
+  <!-- DOMAIN SELECTOR -->
+  <div class="domain-grid">
+    @for (d of domains; track d.key) {
+      <button
+        class="domain-card"
+        [class.active]="selectedDomain() === d.key"
+        (click)="selectDomain(d.key)"
+        [style.border-color]="selectedDomain() === d.key ? d.color : ''"
+      >
+        <div class="domain-ico" [style.background]="d.color">
+          <i class="fa-solid {{ d.icon }}"></i>
+        </div>
+        <div class="domain-info">
+          <span class="domain-label">{{ d.label }}</span>
+          <span class="domain-desc">{{ d.description }}</span>
+        </div>
+      </button>
+    }
+  </div>
+
+  <!-- TAB NAVIGATION -->
+  <div class="ia-tabs">
+    <button class="ia-tab" [class.active]="activeTab() === 'analysis'" (click)="selectTab('analysis')">
+      <i class="fa-solid fa-chart-line"></i> Analyse
+    </button>
+    <button class="ia-tab" [class.active]="activeTab() === 'suggestions'" (click)="selectTab('suggestions')">
+      <i class="fa-solid fa-lightbulb"></i> Suggestions
+    </button>
+    <button class="ia-tab" [class.active]="activeTab() === 'predictions'" (click)="selectTab('predictions')">
+      <i class="fa-solid fa-crystal-ball"></i> Prédictions
+    </button>
+  </div>
+
+  <!-- ANALYSIS AREA -->
+  <div class="analysis-area">
+    @if (activeTab() === 'analysis') {
+      @if (!result() && !loading()) {
+        <div class="analysis-empty">
+          <i class="fa-solid fa-magnifying-glass-chart"></i>
+          <h3>Analyse IA — {{ getDomainLabel() }}</h3>
+          <p>L'IA va automatiquement récupérer les données réelles de votre entreprise et les analyser.</p>
+          <button class="btn-run" (click)="runAnalysis()">
+            <i class="fa-solid fa-play"></i> Lancer l'analyse
+          </button>
+        </div>
+      }
+
+      @if (loading() && activeTab() === 'analysis') {
+        <div class="analysis-loading">
+          <div class="loader-orb"></div>
+          <span>Analyse en cours... L'IA traite vos données réelles.</span>
+        </div>
+      }
+
+      @if (result() && !loading()) {
+        <div class="analysis-result animate-fadeInUp">
+          <div class="result-card result-summary">
+            <div class="result-card-header">
+              <i class="fa-solid fa-clipboard-list"></i>
+              <span>Résumé Exécutif</span>
+            </div>
+            <p class="summary-text">{{ result()!.summary }}</p>
+            @if (result()!.usingFallback) {
+              <span class="fallback-badge"><i class="fa-solid fa-info-circle"></i> Mode hors-ligne</span>
+            }
+          </div>
+
+          @if (result()!.insights.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Insights Clés</span>
+              </div>
+              <ul class="insight-list">
+                @for (insight of result()!.insights; track $index) {
+                  <li><i class="fa-solid fa-check-circle"></i> {{ insight }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (result()!.recommendations.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Recommandations</span>
+              </div>
+              <div class="reco-list">
+                @for (rec of result()!.recommendations; track $index) {
+                  <div class="reco-item">
+                    <div class="reco-prio {{ getPriorityClass(rec.priority) }}">{{ rec.priority }}</div>
+                    <div class="reco-body">
+                      <span class="reco-action">{{ rec.action }}</span>
+                      @if (rec.product) { <span class="reco-product">{{ rec.product }}</span> }
+                      <p class="reco-detail">{{ rec.detail }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (result()!.chartData.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-chart-bar"></i>
+                <span>Données Graphiques</span>
+              </div>
+              <div class="chart-data-grid">
+                @for (cd of result()!.chartData; track $index) {
+                  <div class="chart-data-item">
+                    <span class="cd-label">{{ cd.label }}</span>
+                    <span class="cd-value">{{ cd.value | number }}</span>
+                    <span class="cd-type">{{ cd.type }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="result-actions">
+            <button class="btn-rerun" (click)="runAnalysis()">
+              <i class="fa-solid fa-rotate"></i> Relancer l'analyse
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @if (activeTab() === 'suggestions') {
+      @if (!suggestions() && !loading()) {
+        <div class="analysis-empty">
+          <i class="fa-solid fa-lightbulb"></i>
+          <h3>Suggestions IA — {{ getDomainLabel() }}</h3>
+          <p>Obtenez des recommandations proactives basées sur les données réelles de votre entreprise.</p>
+          <button class="btn-run" (click)="runSuggestions()">
+            <i class="fa-solid fa-play"></i> Générer des suggestions
+          </button>
+        </div>
+      }
+
+      @if (loading() && activeTab() === 'suggestions') {
+        <div class="analysis-loading">
+          <div class="loader-orb"></div>
+          <span>Génération des suggestions... L'IA analyse vos données.</span>
+        </div>
+      }
+
+      @if (suggestions() && !loading()) {
+        <div class="analysis-result animate-fadeInUp">
+          @if (suggestions()!.suggestions.length === 0) {
+            <div class="result-card result-summary">
+              <p class="summary-text">Aucune suggestion disponible pour le moment.</p>
+            </div>
+          } @else {
+            @for (s of suggestions()!.suggestions; track $index) {
+              <div class="result-card">
+                <div class="result-card-header">
+                  <i class="fa-solid {{ s.icon }}"></i>
+                  <span>{{ s.title }}</span>
+                  <span class="reco-prio {{ getPriorityClass(s.priority) }}">{{ s.priority }}</span>
+                </div>
+                <p class="summary-text">{{ s.message }}</p>
+                <span class="cd-type">Catégorie: {{ s.category }}</span>
+              </div>
+            }
+          }
+          @if (suggestions()!.usingFallback) {
+            <span class="fallback-badge"><i class="fa-solid fa-info-circle"></i> Mode hors-ligne</span>
+          }
+          <div class="result-actions">
+            <button class="btn-rerun" (click)="runSuggestions()">
+              <i class="fa-solid fa-rotate"></i> Régénérer
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @if (activeTab() === 'predictions') {
+      @if (!predictions() && !loading()) {
+        <div class="analysis-empty">
+          <i class="fa-solid fa-crystal-ball"></i>
+          <h3>Prédictions IA — Ruptures de stock</h3>
+          <p>L'IA analyse vos données de stock réelles pour prédire les ruptures, détecter les patterns saisonniers et optimiser les seuils.</p>
+          <button class="btn-run" (click)="runPredictions()">
+            <i class="fa-solid fa-play"></i> Lancer les prédictions
+          </button>
+        </div>
+      }
+
+      @if (loading() && activeTab() === 'predictions') {
+        <div class="analysis-loading">
+          <div class="loader-orb"></div>
+          <span>Calcul des prédictions... L'IA analyse les tendances.</span>
+        </div>
+      }
+
+      @if (predictions() && !loading()) {
+        <div class="analysis-result animate-fadeInUp">
+          <div class="result-card result-summary">
+            <div class="result-card-header">
+              <i class="fa-solid fa-clipboard-list"></i>
+              <span>Résumé Prédictif</span>
+            </div>
+            <p class="summary-text">{{ predictions()!.summary }}</p>
+            @if (predictions()!.usingFallback) {
+              <span class="fallback-badge"><i class="fa-solid fa-info-circle"></i> Mode hors-ligne</span>
+            }
+          </div>
+
+          @if (predictions()!.rupturePredictions.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Prédictions de Rupture</span>
+              </div>
+              <div class="reco-list">
+                @for (rp of predictions()!.rupturePredictions; track $index) {
+                  <div class="reco-item">
+                    <div class="reco-prio {{ getPriorityClass(rp.severity) }}">{{ rp.severity }}</div>
+                    <div class="reco-body">
+                      <span class="reco-action">{{ rp.productName }} ({{ rp.productSku }})</span>
+                      <p class="reco-detail">Rupture dans {{ rp.daysUntilRupture }} jours · Probabilité: {{ rp.probability }}%</p>
+                      <p class="reco-detail">{{ rp.recommendedAction }} (Qté suggérée: {{ rp.suggestedQuantity }})</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (predictions()!.seasonalPatterns.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-calendar-week"></i>
+                <span>Patterns Saisonniers</span>
+              </div>
+              <div class="reco-list">
+                @for (sp of predictions()!.seasonalPatterns; track $index) {
+                  <div class="reco-item">
+                    <div class="reco-body">
+                      <span class="reco-action">{{ sp.productSku }}</span>
+                      <p class="reco-detail">{{ sp.pattern }} · Pic: {{ sp.peakMonth }} · Creux: {{ sp.lowMonth }} · Variation: {{ sp.variationPercent }}%</p>
+                      <p class="reco-detail">{{ sp.recommendation }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (predictions()!.anomalies.length > 0) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <i class="fa-solid fa-bug"></i>
+                <span>Anomalies Détectées</span>
+              </div>
+              <div class="reco-list">
+                @for (an of predictions()!.anomalies; track $index) {
+                  <div class="reco-item">
+                    <div class="reco-body">
+                      <span class="reco-action">{{ an.type }} — {{ an.productSku }}</span>
+                      <p class="reco-detail">{{ an.description }}</p>
+                      <p class="reco-detail">Action: {{ an.suggestedAction }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="result-actions">
+            <button class="btn-rerun" (click)="runPredictions()">
+              <i class="fa-solid fa-rotate"></i> Relancer les prédictions
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>

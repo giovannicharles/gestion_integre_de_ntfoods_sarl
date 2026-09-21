@@ -102,7 +102,22 @@ export class ValidationComponent implements OnInit, OnDestroy {
     return this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN', 'DIRECTEUR_GENERAL']);
   }
   canValidateSecond() {
-    return this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'COMPTABLE', 'CONTROLEUR_GENERAL', 'ADMIN', 'DIRECTEUR_GENERAL']);
+    return this.auth.hasAnyRole(['CONTROLEUR_GENERAL', 'COMPTABLE', 'ADMIN', 'DIRECTEUR_GENERAL']);
+  }
+  canValidateSecondFor(r: Receipt): boolean {
+    if (this.auth.hasAnyRole(['ADMIN', 'DIRECTEUR_GENERAL'])) return true;
+    const type = r.receptionType;
+    if (type === 'CONSOMMABLE' || type === 'MATERIEL') {
+      return this.auth.hasRole('CONTROLEUR_GENERAL');
+    }
+    if (type === 'MATIERE_PREMIERE') {
+      return this.auth.hasRole('COMPTABLE');
+    }
+    return false;
+  }
+  canReject(r: Receipt): boolean {
+    if (this.auth.hasAnyRole(['ADMIN', 'DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK'])) return true;
+    return this.canValidateSecondFor(r);
   }
   isSecondRoleOnly() {
     return !this.canValidateFirst() && this.canValidateSecond();

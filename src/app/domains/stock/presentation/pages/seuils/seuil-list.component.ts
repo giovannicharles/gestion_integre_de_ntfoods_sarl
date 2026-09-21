@@ -5,6 +5,7 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { StockApiRepository, StockLocationDto, StockThresholdDto } from '../../../infrastructure/repositories/stock-api.repository';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { Product } from '../../../domain/models/stock.models';
+import { StockRulesDomainService } from '../../../domain/services/stock-rules.domain.service';
 
 interface StockItemThreshold {
   id: number;
@@ -34,6 +35,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private repo = inject(StockApiRepository);
   private auth = inject(AuthService);
+  private rules = inject(StockRulesDomainService);
 
   loading = signal(true);
   saving = signal(false);
@@ -65,6 +67,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
   showBatchModal = signal(false);
   batchReorderPoint = 20;
   batchSafetyStock = 10;
+  batchMaxStock = 0;
 
   showCreateModal = signal(false);
   createProductSearch = '';
@@ -82,7 +85,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
   searchTerm = '';
 
   ngOnInit() {
-    this.isDG.set(this.auth.hasRole('DIRECTEUR_GENERAL') || this.auth.hasRole('GESTIONNAIRE_STOCK') || this.auth.hasRole('ADMIN'));
+    this.isDG.set(this.auth.hasRole('DIRECTEUR_GENERAL') || this.auth.hasRole('ADMIN'));
     this.loadLocations();
     this.loadProducts();
   }
@@ -160,7 +163,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
           notes: t.notes || '',
           reorderPoint: Number(t.reorderThreshold || item.reorderPoint || 0),
           safetyStock: Number(t.minimumThreshold || item.safetyStock || 0),
-          alertLevel: this.computeAlertLevel(item.quantity, Number(t.reorderThreshold || 0), Number(t.minimumThreshold || 0))
+          alertLevel: this.computeAlertLevel(item.quantity, Number(t.reorderThreshold || 0), Number(t.minimumThreshold || 0), Number(t.maximumThreshold || 0))
         };
       }
       return item;
@@ -175,15 +178,21 @@ export class SeuilListComponent implements OnInit, OnDestroy {
       quantity: Number(item.quantity || 0),
       reorderPoint: Number(item.reorderPoint || 0),
       safetyStock: Number(item.safetyStock || 0),
-      unit: item.productUnit || item.unit || 'unite',
-      alertLevel: this.computeAlertLevel(Number(item.quantity || 0), Number(item.reorderPoint || 0), Number(item.safetyStock || 0))
+      unit: this.resolveUnit(item.packagingType) || item.productUnit || item.unit || 'unités',
+      alertLevel: this.computeAlertLevel(Number(item.quantity || 0), Number(item.reorderPoint || 0), Number(item.safetyStock || 0), Number(item.maximumThreshold || 0))
     }));
   }
 
-  private computeAlertLevel(qty: number, reorder: number, safety: number): string {
+  private computeAlertLevel(qty: number, reorder: number, safety: number, max?: number): string {
     if (safety > 0 && qty <= safety) return 'CRITIQUE';
     if (reorder > 0 && qty <= reorder) return 'FAIBLE';
+    if (max && max > 0 && qty > max) return 'SURSTOCK';
     return 'NORMAL';
+  }
+
+  private resolveUnit(packagingType?: string): string {
+    if (!packagingType) return '';
+    return this.rules.getConditioningLabel(packagingType.toUpperCase());
   }
 
   switchTab(tab: 'CENTRAL' | 'BUFFER') {
@@ -264,7 +273,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
           this.saving.set(false);
           this.closeEditModal();
           this.loadItems();
-          this.successMsg.set(`Seuils mis à jour pour ${item.productName}`);
+          this.successMsg.set(`Seuils mis à jour pour ${item.productName} (synchronisés sur tous les emplacements)`);
           setTimeout(() => this.successMsg.set(''), 3000);
         },
         error: () => {
@@ -362,7 +371,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
         this.saving.set(false);
         this.closeCreateModal();
         this.loadItems();
-        this.successMsg.set(`Seuils créés pour ${this.createSelectedProductName}`);
+        this.successMsg.set(`Seuils créés pour ${this.createSelectedProductName} (synchronisés sur tous les emplacements)`);
         setTimeout(() => this.successMsg.set(''), 3000);
       },
       error: () => {
@@ -390,7 +399,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
       next: () => {
         this.closeDeleteModal();
         this.loadItems();
-        this.successMsg.set(`Seuils supprimés pour ${item.productName}`);
+        this.successMsg.set(`Seuils supprimés pour ${item.productName} (tous emplacements)`);
         setTimeout(() => this.successMsg.set(''), 3000);
       },
       error: () => {
@@ -409,6 +418,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
     if (!this.isDG()) return;
     this.batchReorderPoint = 20;
     this.batchSafetyStock = 10;
+    this.batchMaxStock = 0;
     this.showBatchModal.set(true);
   }
 
@@ -422,13 +432,13 @@ export class SeuilListComponent implements OnInit, OnDestroy {
 
     this.saving.set(true);
     this.errorMsg.set('');
-    this.repo.setDefaultThresholds(locationId, this.batchReorderPoint, this.batchSafetyStock)
+    this.repo.setDefaultThresholds(locationId, this.batchReorderPoint, this.batchSafetyStock, this.batchMaxStock || undefined)
       .pipe(takeUntil(this.d$)).subscribe({
         next: () => {
           this.saving.set(false);
           this.closeBatchModal();
           this.loadItems();
-          this.successMsg.set(`Seuils par défaut appliqués (${this.batchReorderPoint} / ${this.batchSafetyStock})`);
+          this.successMsg.set(`Seuils par défaut appliqués (réappro: ${this.batchReorderPoint}, sécurité: ${this.batchSafetyStock}, max: ${this.batchMaxStock || '—'})`);
           setTimeout(() => this.successMsg.set(''), 3000);
         },
         error: () => {
@@ -436,6 +446,11 @@ export class SeuilListComponent implements OnInit, OnDestroy {
           this.errorMsg.set('Erreur lors de l\'application des seuils par défaut.');
         }
       });
+  }
+
+  get overstockCount(): number {
+    const items = this.activeTab() === 'CENTRAL' ? this.centralItems() : this.bufferItems();
+    return items.filter(i => i.alertLevel === 'SURSTOCK').length;
   }
 
   get criticalCount(): number {

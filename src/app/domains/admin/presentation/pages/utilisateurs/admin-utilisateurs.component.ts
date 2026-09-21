@@ -23,6 +23,22 @@ export class AdminUtilisateursComponent implements OnInit {
   today = new Date();
   ROLE_LABELS = ROLE_LABELS;
   loading = signal(false);
+  showCreate = signal(false);
+  saving = signal(false);
+  toastMsg = signal<string | null>(null);
+
+  newUser = {
+    prenom: '',
+    nom: '',
+    email: '',
+    motDePasse: '',
+    role: 'COMMERCIAL',
+    telephone: '',
+    residence: '',
+    cni: '',
+    dateEmbauche: '',
+    sexe: 'M',
+  };
 
   users = signal<UserUI[]>([]);
   filtreRole = signal<string>('TOUS');
@@ -41,6 +57,8 @@ export class AdminUtilisateursComponent implements OnInit {
 
   nbActifs = computed(() => this.users().filter(u => u.actif).length);
   nbInactifs = computed(() => this.users().filter(u => !u.actif).length);
+
+  rolesPourCreation = this.rolesDisponibles.filter(r => r !== 'TOUS');
 
   ngOnInit(): void {
     this.loading.set(true);
@@ -64,6 +82,31 @@ export class AdminUtilisateursComponent implements OnInit {
       next: u => this.users.update(list =>
         list.map(usr => usr.matricule === matricule ? this.mapU(u) : usr)
       ),
+    });
+  }
+
+  creerUser(): void {
+    if (!this.newUser.prenom || !this.newUser.nom || !this.newUser.email || !this.newUser.motDePasse) return;
+    this.saving.set(true);
+    this.svc.creerUtilisateur(this.newUser).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showCreate.set(false);
+        this.toastMsg.set('Utilisateur créé avec succès');
+        setTimeout(() => this.toastMsg.set(null), 3000);
+        this.newUser = {
+          prenom: '', nom: '', email: '', motDePasse: '', role: 'COMMERCIAL',
+          telephone: '', residence: '', cni: '', dateEmbauche: '', sexe: 'M',
+        };
+        this.svc.getUtilisateurs().subscribe({
+          next: list => this.users.set(list.map(this.mapU)),
+        });
+      },
+      error: () => {
+        this.saving.set(false);
+        this.toastMsg.set('Erreur lors de la création');
+        setTimeout(() => this.toastMsg.set(null), 3000);
+      },
     });
   }
 

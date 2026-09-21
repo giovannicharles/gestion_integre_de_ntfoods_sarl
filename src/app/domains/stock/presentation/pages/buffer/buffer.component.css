@@ -23,7 +23,7 @@
 .kb-sep{width:1px;height:40px;background:var(--n200)}
 
 /* CARDS */
-.card{background:var(--n0);border:1px solid var(--n200);border-radius:var(--r-lg);overflow:hidden}
+.card{background:var(--w);border:1px solid var(--n200);border-radius:var(--r-lg);overflow:hidden}
 .card-header{padding:16px 20px;border-bottom:1px solid var(--n150);background:var(--n50)}
 .card-body{padding:16px 20px}
 

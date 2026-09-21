@@ -43,4 +43,9 @@ export class ApiService {
   getBlob(url: string, params?: Record<string, string>): Observable<Blob> {
     return this.download(url, params);
   }
+
+  /** Télécharge un fichier binaire via POST (Blob). */
+  postBlob(url: string, body: unknown): Observable<Blob> {
+    return this.http.post(`${this.base}/${url}`, body, { responseType: 'blob' });
+  }
 }

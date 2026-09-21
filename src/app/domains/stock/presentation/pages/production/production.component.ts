@@ -1,17 +1,15 @@
 // ═══ FICHIER : src/app/domains/stock/presentation/pages/production/production.component.ts ═══
 // REMPLACE : le fichier existant — StockMockRepository → StockApiRepository
-import { Component, OnInit, signal, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ProductionBatchUseCase } from '../../../application/use-cases/production/production-batch.use-case';
-import { InternalOrderUseCase } from '../../../application/use-cases/orders/internal-order.use-case';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockRulesDomainService } from '../../../domain/services/stock-rules.domain.service';
-import { ProductionBatch, Product, InternalOrder, StockLevel } from '../../../domain/models';
-import { AuthService } from '../../../../../core/auth/auth.service';
+import { ProductionBatch, Product, StockLevel } from '../../../domain/models';
 
 Chart.register(...registerables);
 
@@ -25,10 +23,8 @@ Chart.register(...registerables);
 export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private readonly batchUC  = inject(ProductionBatchUseCase);
-  private readonly orderUC  = inject(InternalOrderUseCase);
   private readonly repo     = inject(StockApiRepository);
   private readonly rules    = inject(StockRulesDomainService);
-  private readonly auth     = inject(AuthService);
   private readonly router   = inject(Router);
 
   @ViewChild('trendCanvas') trendCanvas!: ElementRef<HTMLCanvasElement>;
@@ -37,10 +33,9 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   Math=Math;
   loading   = signal(true);
   error     = signal('');
-  activeTab = signal<'pending'|'all'|'orders'>('pending');
+  activeTab = signal<'pending'|'all'>('pending');
   batches   = signal<ProductionBatch[]>([]);
   pending   = signal<ProductionBatch[]>([]);
-  orders    = signal<InternalOrder[]>([]);
   pfLevels  = signal<StockLevel[]>([]);
   products  = signal<Product[]>([]);
 
@@ -52,17 +47,37 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   validationNotes = ''; rejectionReason = '';
   processing = signal(false);
 
-  // Détail / livraison / annulation commande
-  selectedOrder = signal<InternalOrder | null>(null);
-  showOrderDetail = signal(false);
-  deliveryForm = { productId: 0, deliveredQty: 0 };
-  delivering = signal(false);
-  cancelReason = '';
-  cancelling = signal(false);
-
   toastMsg  = signal(''); toastType = signal<'success'|'error'>('success');
   today     = new Date();
   batchStats = signal<Record<string, unknown>>({});
+
+  // ── Pagination lots ──
+  batchPage = signal(1);
+  readonly batchPageSize = 10;
+  batchSearch = '';
+  batchStatusFilter = signal<string>('ALL');
+
+  filteredBatches = computed<ProductionBatch[]>(() => {
+    let list = this.batches();
+    const filter = this.batchStatusFilter();
+    if (filter !== 'ALL') {
+      list = list.filter(b => b.status === filter);
+    }
+    const q = this.batchSearch?.toLowerCase().trim();
+    if (q) {
+      list = list.filter(b =>
+        (b.productName || '').toLowerCase().includes(q) ||
+        (b.productSku || '').toLowerCase().includes(q) ||
+        (b.declaredByName || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  });
+  batchTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredBatches().length / this.batchPageSize)));
+  paginatedBatches = computed<ProductionBatch[]>(() => {
+    const start = (this.batchPage() - 1) * this.batchPageSize;
+    return this.filteredBatches().slice(start, start + this.batchPageSize);
+  });
 
   ngOnInit() { this.loadAll(); }
 
@@ -73,15 +88,13 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.error.set('');
     forkJoin({
       all:    this.batchUC.getAll(),
-      orders: this.orderUC.getAll(),
       levels: this.repo.getStockLevels(),
       prods:  this.batchUC.getFinishedProducts(),
       stats:  this.batchUC.getStats(),
     }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: ({ all, orders, levels, prods, stats }) => {
+      next: ({ all, levels, prods, stats }) => {
         this.batches.set(all);
         this.pending.set(all.filter((b: ProductionBatch) => b.status === 'DECLARED_BY_PRODUCTION'));
-        this.orders.set(orders);
         this.pfLevels.set(levels.filter((sl: StockLevel) => prods.some(p => p.id === sl.productId)));
         this.products.set(prods);
         this.batchStats.set(stats || {});
@@ -155,71 +168,14 @@ export class ProductionComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Déclaration lot → page dédiée ───────────────────────
   openDeclareModal() { this.router.navigate(['/stock/declaration-lot']); }
 
-  // ── Commande interne ─────────────────────────────────────
-  openOrderModal() { this.router.navigate(['/stock/commande-production']); }
-
-  approveOrder(id: number) {
-    const user = this.auth.getCurrentUser();
-    if (!user) { this.showToast('Session expirée.', 'error'); return; }
-    this.orderUC.approve(id, user.matricule, `${user.firstname} ${user.lastname}`)
-      .pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => { this.showToast('Commande approuvée par le Chef de Production.', 'success'); this.loadAll(); },
-      error: () => this.showToast('Erreur.', 'error')
-    });
-  }
-
-  openOrderDetail(o: InternalOrder) {
-    this.selectedOrder.set(o);
-    this.showOrderDetail.set(true);
-    this.deliveryForm = { productId: 0, deliveredQty: 0 };
-    this.cancelReason = '';
-  }
-  closeOrderDetail() { this.showOrderDetail.set(false); this.selectedOrder.set(null); }
-
-  cancelOrder(id: number) {
-    if (!this.cancelReason || this.cancelling()) return;
-    const user = this.auth.getCurrentUser();
-    if (!user) { this.showToast('Session expirée.', 'error'); return; }
-    this.cancelling.set(true);
-    this.orderUC.cancel(id, user.matricule, this.cancelReason)
-      .pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => { this.cancelling.set(false); this.closeOrderDetail(); this.showToast('Commande annulée.', 'error'); this.loadAll(); },
-      error: () => { this.cancelling.set(false); this.showToast('Erreur.', 'error'); }
-    });
-  }
-
-  deliverOrder(orderId: number) {
-    if (!this.deliveryForm.productId || !this.deliveryForm.deliveredQty || this.delivering()) return;
-    this.delivering.set(true);
-    this.orderUC.deliver(orderId, this.deliveryForm.productId, this.deliveryForm.deliveredQty)
-      .pipe(takeUntil(this.destroy$)).subscribe({
-      next: (updated) => {
-        this.delivering.set(false);
-        this.selectedOrder.set(updated);
-        this.deliveryForm = { productId: 0, deliveredQty: 0 };
-        this.showToast(`Livraison enregistrée. Statut: ${this.getOStatusLabel(updated.status)}`, 'success');
-        this.loadAll();
-      },
-      error: () => { this.delivering.set(false); this.showToast('Erreur de livraison.', 'error'); }
-    });
-  }
-
-  getDeliveryPct(o: InternalOrder): number {
-    if (!o.items || o.items.length === 0) return 0;
-    const totalRequested = o.items.reduce((s, i) => s + i.requestedQty, 0);
-    const totalDelivered = o.items.reduce((s, i) => s + (i.deliveredQty || 0), 0);
-    return totalRequested > 0 ? Math.round((totalDelivered / totalRequested) * 100) : 0;
-  }
-
-  countOrderStatus(status: string): number {
-    return this.orders().filter(o => o.status === status).length;
-  }
-
   // ── Helpers ───────────────────────────────────────────────
+  applyBatchFilter() { this.batchPage.set(1); }
+  goToBatchPage(p: number) { if (p >= 1 && p <= this.batchTotalPages()) this.batchPage.set(p); }
+  nextBatchPage() { this.goToBatchPage(this.batchPage() + 1); }
+  prevBatchPage() { this.goToBatchPage(this.batchPage() - 1); }
+
   getStatusLabel(s: string) { const m:Record<string,string>={DECLARED_BY_PRODUCTION:'Déclaré — Att. validation stock',VALIDATED_BY_STOCK:'Validé — Stock PF mis à jour',REJECTED:'Rejeté'}; return m[s]||s; }
   getStatusClass(s: string) { return s==='VALIDATED_BY_STOCK'?'badge-success':s==='REJECTED'?'badge-danger':'badge-warning'; }
-  getOStatusLabel(s: string) { const m:Record<string,string>={DRAFT:'Brouillon — Att. approbation',APPROVED:'Approuvé — En production',PARTIALLY_DELIVERED:'Partiellement livré',DELIVERED:'Livré complet',CANCELLED:'Annulé'}; return m[s]||s; }
-  getOStatusClass(s: string) { const m:Record<string,string>={DRAFT:'badge-warning',APPROVED:'badge-primary',PARTIALLY_DELIVERED:'badge-secondary',DELIVERED:'badge-success',CANCELLED:'badge-danger'}; return m[s]||'badge-neutral'; }
   formatCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }
   showToast(msg: string, type: 'success'|'error') { this.toastMsg.set(msg); this.toastType.set(type); setTimeout(() => this.toastMsg.set(''), 5000); }
   ngOnDestroy() { this.chart?.destroy(); this.destroy$.next(); this.destroy$.complete(); }

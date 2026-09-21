@@ -10,6 +10,10 @@
       </div>
     </div>
     <div class="ph-actions">
+      <span class="ia-status-badge" [class.ia-online]="iaConfigured()" [class.ia-offline]="!iaConfigured()">
+        <i class="fa-solid {{ iaConfigured() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>
+        {{ iaConfigured() ? 'IA Active' : 'Mode hors-ligne' }}
+      </span>
       <button class="btn btn-ghost btn-sm" (click)="refresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
@@ -28,134 +32,239 @@
   }
 
   @if (!loading()) {
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
-      <div class="kpi-card kp-ai">
-        <div class="kpi-decor" style="background:linear-gradient(135deg,#7C3AED,#2563EB)"></div>
-        <div class="kpi-ico" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="fa-solid fa-chart-line"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Produits analysés</span>
-          <span class="kpi-val">{{ stats().total }}</span>
-        </div>
-      </div>
-      <div class="kpi-card kp-crit">
-        <div class="kpi-decor" style="background:var(--r)"></div>
-        <div class="kpi-ico" style="background:var(--r-gh);color:var(--r)"><i class="fa-solid fa-circle-exclamation"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Réappro urgent</span>
-          <span class="kpi-val" style="color:var(--r)">{{ stats().critical }}</span>
-        </div>
-      </div>
-      <div class="kpi-card kp-high">
-        <div class="kpi-decor" style="background:var(--o)"></div>
-        <div class="kpi-ico" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Priorité haute</span>
-          <span class="kpi-val" style="color:var(--o)">{{ stats().high }}</span>
-        </div>
-      </div>
-      <div class="kpi-card kp-conf">
-        <div class="kpi-decor" style="background:var(--g)"></div>
-        <div class="kpi-ico" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-gauge-high"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Confiance moyenne</span>
-          <span class="kpi-val" style="color:var(--g)">{{ stats().avgConfidence }}%</span>
-        </div>
-      </div>
+    <!-- NAVIGATION VERS AUTRES PAGES IA -->
+    <div class="ia-nav-cards">
+      <a class="ia-nav-card" routerLink="/stock/ia-reappro">
+        <i class="fa-solid fa-robot"></i>
+        <div><span class="ia-nav-title">Réapprovisionnement IA</span><span class="ia-nav-desc">Recommandations de commande automatiques</span></div>
+      </a>
+      <a class="ia-nav-card" routerLink="/stock/ia-transferts">
+        <i class="fa-solid fa-shuffle"></i>
+        <div><span class="ia-nav-title">Optimisation Transferts</span><span class="ia-nav-desc">Répartition optimale Central → Tampon → Mobile</span></div>
+      </a>
     </div>
 
-    <!-- CHARTS ROW 1 -->
-    <div class="charts-row">
-      <div class="card chart-card-lg">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> Tendance &amp; Prévisions par produit</span>
-        </div>
-        <div class="chart-wrap-lg"><canvas #trendCanvas></canvas></div>
-      </div>
-      <div class="card chart-card-sm">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-circle-half-stroke" style="color:#7C3AED"></i> Répartition urgence</span>
-        </div>
-        <div class="chart-wrap-sm"><canvas #urgencyCanvas></canvas></div>
-      </div>
+    <!-- TAB NAVIGATION -->
+    <div class="tab-nav">
+      <button class="tab-btn" [class.active]="activeTab() === 'predictions'" (click)="setTab('predictions')">
+        <i class="fa-solid fa-chart-line"></i> Prédictions
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'ia-analysis'" (click)="setTab('ia-analysis')">
+        <i class="fa-solid fa-brain"></i> Analyse IA
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'ia-chat'" (click)="setTab('ia-chat')">
+        <i class="fa-solid fa-comments"></i> Assistant IA
+      </button>
     </div>
 
-    <!-- CHARTS ROW 2 -->
-    <div class="charts-row">
-      <div class="card chart-card-md">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-chart-column" style="color:#2563EB"></i> Prévisions comparées (actuel vs 30j vs 90j)</span>
+    <!-- TAB: PREDICTIONS -->
+    @if (activeTab() === 'predictions') {
+      <div class="kpi-grid">
+        <div class="kpi-card kp-ai">
+          <div class="kpi-decor" style="background:linear-gradient(135deg,#7C3AED,#2563EB)"></div>
+          <div class="kpi-ico" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="kpi-body"><span class="kpi-lbl">Produits analysés</span><span class="kpi-val">{{ stats().total }}</span></div>
         </div>
-        <div class="chart-wrap-md"><canvas #forecastCanvas></canvas></div>
-      </div>
-      <div class="card chart-card-md">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-fire" style="color:#EA580C"></i> Top 10 consommateurs (conso/jour)</span>
+        <div class="kpi-card kp-crit">
+          <div class="kpi-decor" style="background:var(--r)"></div>
+          <div class="kpi-ico" style="background:var(--r-gh);color:var(--r)"><i class="fa-solid fa-circle-exclamation"></i></div>
+          <div class="kpi-body"><span class="kpi-lbl">Réappro urgent</span><span class="kpi-val" style="color:var(--r)">{{ stats().critical }}</span></div>
         </div>
-        <div class="chart-wrap-md"><canvas #consumptionCanvas></canvas></div>
+        <div class="kpi-card kp-high">
+          <div class="kpi-decor" style="background:var(--o)"></div>
+          <div class="kpi-ico" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="kpi-body"><span class="kpi-lbl">Priorité haute</span><span class="kpi-val" style="color:var(--o)">{{ stats().high }}</span></div>
+        </div>
+        <div class="kpi-card kp-conf">
+          <div class="kpi-decor" style="background:var(--g)"></div>
+          <div class="kpi-ico" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-gauge-high"></i></div>
+          <div class="kpi-body"><span class="kpi-lbl">Confiance moyenne</span><span class="kpi-val" style="color:var(--g)">{{ stats().avgConfidence }}%</span></div>
+        </div>
       </div>
-    </div>
 
-    <!-- PREDICTIONS TABLE -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-table" style="color:#7C3AED"></i> Prédictions détaillées par produit</span>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          @for (f of ['ALL','CRITICAL','HIGH','MEDIUM','LOW']; track f) {
-            <button class="filter-chip" [class.active]="filterUrgency()===f" (click)="setFilterUrgency(f)">
-              {{ f === 'ALL' ? 'Tous' : f === 'CRITICAL' ? 'Critique' : f === 'HIGH' ? 'Élevé' : f === 'MEDIUM' ? 'Moyen' : 'Faible' }}
-            </button>
+      <div class="charts-row">
+        <div class="card chart-card-lg">
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> Tendance &amp; Prévisions par produit</span></div>
+          <div class="chart-wrap-lg"><canvas #trendCanvas></canvas></div>
+        </div>
+        <div class="card chart-card-sm">
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-circle-half-stroke" style="color:#7C3AED"></i> Répartition urgence</span></div>
+          <div class="chart-wrap-sm"><canvas #urgencyCanvas></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="card chart-card-md">
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-column" style="color:#2563EB"></i> Prévisions comparées (actuel vs 30j vs 90j)</span></div>
+          <div class="chart-wrap-md"><canvas #forecastCanvas></canvas></div>
+        </div>
+        <div class="card chart-card-md">
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-fire" style="color:#EA580C"></i> Top 10 consommateurs (conso/jour)</span></div>
+          <div class="chart-wrap-md"><canvas #consumptionCanvas></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-table" style="color:#7C3AED"></i> Prédictions détaillées par produit</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            @for (f of ['ALL','CRITICAL','HIGH','MEDIUM','LOW']; track f) {
+              <button class="filter-chip" [class.active]="filterUrgency()===f" (click)="setFilterUrgency(f)">
+                {{ f === 'ALL' ? 'Tous' : f === 'CRITICAL' ? 'Critique' : f === 'HIGH' ? 'Élevé' : f === 'MEDIUM' ? 'Moyen' : 'Faible' }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="pred-table">
+            <thead>
+              <tr><th>SKU</th><th>Stock actuel</th><th>Conso./jour</th><th>Jours restants</th><th>Prévision 30j</th><th>Prévision 90j</th><th>Tendance</th><th>Confiance</th><th>Urgence</th><th>Recommandation</th></tr>
+            </thead>
+            <tbody>
+              @for (p of filteredPredictions(); track p.sku) {
+                <tr>
+                  <td class="mono fw-bold">{{ p.sku }}</td>
+                  <td class="mono">{{ p.currentQty | number }}</td>
+                  <td class="mono">{{ p.avgDailyConsumption | number:'1.0-1' }}</td>
+                  <td class="mono">
+                    @if (p.daysOfStockLeft >= 999) { <span style="color:var(--g)">&infin;</span> }
+                    @else { <span [style.color]="p.daysOfStockLeft <= 7 ? 'var(--r)' : p.daysOfStockLeft <= 15 ? 'var(--o)' : 'var(--n700)'">{{ p.daysOfStockLeft }}j</span> }
+                  </td>
+                  <td class="mono" [style.color]="p.predictedStock30d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock30d | number }}</td>
+                  <td class="mono" [style.color]="p.predictedStock90d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock90d | number }}</td>
+                  <td><i class="fa-solid {{ getTrendIcon(p.trend) }}" [style.color]="getTrendColor(p.trend)"></i></td>
+                  <td>
+                    <div class="conf-bar">
+                      <div class="conf-fill" [style.width.%]="p.confidence" [style.background]="p.confidence >= 70 ? 'var(--g)' : p.confidence >= 50 ? 'var(--o)' : 'var(--r)'"></div>
+                      <span>{{ p.confidence }}%</span>
+                    </div>
+                  </td>
+                  <td><span class="urg-badge {{ getUrgencyClass(p.urgency) }}"><i class="fa-solid {{ getUrgencyIcon(p.urgency) }}"></i> {{ p.urgency }}</span></td>
+                  <td style="font-size:12px;color:var(--n600)">{{ p.recommendation }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ai-info-note">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Les prédictions sont basées sur l'historique des mouvements des 30 derniers jours. La confiance augmente avec le volume de données disponibles.</span>
+      </div>
+    }
+
+    <!-- TAB: IA ANALYSIS -->
+    @if (activeTab() === 'ia-analysis') {
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-brain" style="color:#7C3AED"></i> Analyse IA avancée</span>
+          <button class="btn btn-primary btn-sm" (click)="runIaAnalysis()" [disabled]="iaAnalyzing()">
+            <i class="fa-solid fa-brain" [class.fa-spin]="iaAnalyzing()"></i>
+            {{ iaAnalyzing() ? 'Analyse en cours…' : 'Lancer l\'analyse' }}
+          </button>
+        </div>
+
+        @if (iaError()) {
+          <div class="alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ iaError() }}</div>
+        }
+
+        @if (iaAnalyzing()) {
+          <div class="loading-state">
+            <div class="spinner spinner-lg"></div>
+            <p>L'IA analyse vos données de stock…</p>
+          </div>
+        }
+
+        @if (iaAnalysis() && !iaAnalyzing()) {
+          <div class="ia-analysis-result">
+            <div class="ia-summary-box">
+              <h3><i class="fa-solid fa-lightbulb"></i> Synthèse</h3>
+              <p>{{ iaAnalysis()!.summary }}</p>
+            </div>
+
+            @if (iaAnalysis()!.insights.length > 0) {
+              <div class="ia-insights">
+                <h3><i class="fa-solid fa-eye"></i> Observations clés</h3>
+                <ul>
+                  @for (insight of iaAnalysis()!.insights; track insight) {
+                    <li><i class="fa-solid fa-circle-dot"></i> {{ insight }}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (iaAnalysis()!.recommendations.length > 0) {
+              <div class="ia-recommendations">
+                <h3><i class="fa-solid fa-list-check"></i> Recommandations</h3>
+                <div class="rec-list">
+                  @for (rec of iaAnalysis()!.recommendations; track rec.action) {
+                    <div class="rec-item">
+                      <span class="rec-priority {{ getPriorityClass(rec.priority) }}">{{ rec.priority }}</span>
+                      <div class="rec-content">
+                        <strong>{{ rec.action }}</strong>
+                        @if (rec.product) { <span class="rec-product">{{ rec.product }}</span> }
+                        <p>{{ rec.detail }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (iaAnalysis()!.chartData.length > 0) {
+              <div class="ia-chart-section">
+                <h3><i class="fa-solid fa-chart-bar"></i> Visualisation</h3>
+                <div class="chart-wrap-lg"><canvas #iaChartCanvas></canvas></div>
+              </div>
+            }
+
+            <div class="ia-model-info">
+              <i class="fa-solid fa-microchip"></i> Modèle: {{ iaAnalysis()!.model }}
+              @if (iaAnalysis()!.usingFallback) { <span class="badge badge-warning">Mode hors-ligne</span> }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- TAB: IA CHAT -->
+    @if (activeTab() === 'ia-chat') {
+      <div class="card ia-chat-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-comments" style="color:#7C3AED"></i> Assistant IA — TantyAI</span>
+          <span class="ia-status-badge" [class.ia-online]="iaConfigured()" [class.ia-offline]="!iaConfigured()">
+            {{ iaConfigured() ? 'IA Active' : 'Mode hors-ligne' }}
+          </span>
+        </div>
+        <div class="chat-messages" #chatScroll>
+          @for (msg of chatMessages(); track $index) {
+            <div class="chat-msg" [class.chat-msg-user]="msg.role === 'user'" [class.chat-msg-ai]="msg.role === 'ai'">
+              <div class="chat-avatar">
+                <i class="fa-solid {{ msg.role === 'user' ? 'fa-user' : 'fa-robot' }}"></i>
+              </div>
+              <div class="chat-bubble">
+                <div class="chat-text">{{ msg.content }}</div>
+                <div class="chat-time">{{ msg.time }}</div>
+              </div>
+            </div>
+          }
+          @if (chatLoading()) {
+            <div class="chat-msg chat-msg-ai">
+              <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
+              <div class="chat-bubble"><div class="chat-typing"><span></span><span></span><span></span></div></div>
+            </div>
           }
         </div>
+        <div class="chat-input-area">
+          <input type="text" class="chat-input" placeholder="Posez une question sur votre stock…"
+            [value]="chatInput()" (input)="chatInput.set($any($event.target).value)"
+            (keydown)="onChatEnter($event)" [disabled]="chatLoading()">
+          <button class="btn btn-primary" (click)="sendChat()" [disabled]="chatLoading() || !chatInput().trim()">
+            <i class="fa-solid fa-paper-plane"></i> Envoyer
+          </button>
+        </div>
       </div>
-      <div class="tbl-wrap">
-        <table class="pred-table">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Stock actuel</th>
-              <th>Conso./jour</th>
-              <th>Jours restants</th>
-              <th>Prévision 30j</th>
-              <th>Prévision 90j</th>
-              <th>Tendance</th>
-              <th>Confiance</th>
-              <th>Urgence</th>
-              <th>Recommandation</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of filteredPredictions(); track p.sku) {
-              <tr>
-                <td class="mono fw-bold">{{ p.sku }}</td>
-                <td class="mono">{{ p.currentQty | number }}</td>
-                <td class="mono">{{ p.avgDailyConsumption | number:'1.0-1' }}</td>
-                <td class="mono">
-                  @if (p.daysOfStockLeft >= 999) { <span style="color:var(--g)">∞</span> }
-                  @else { <span [style.color]="p.daysOfStockLeft <= 7 ? 'var(--r)' : p.daysOfStockLeft <= 15 ? 'var(--o)' : 'var(--n700)'">{{ p.daysOfStockLeft }}j</span> }
-                </td>
-                <td class="mono" [style.color]="p.predictedStock30d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock30d | number }}</td>
-                <td class="mono" [style.color]="p.predictedStock90d === 0 ? 'var(--r)' : 'var(--n700)'">{{ p.predictedStock90d | number }}</td>
-                <td><i class="fa-solid {{ getTrendIcon(p.trend) }}" [style.color]="getTrendColor(p.trend)"></i></td>
-                <td>
-                  <div class="conf-bar">
-                    <div class="conf-fill" [style.width.%]="p.confidence" [style.background]="p.confidence >= 70 ? 'var(--g)' : p.confidence >= 50 ? 'var(--o)' : 'var(--r)'"></div>
-                    <span>{{ p.confidence }}%</span>
-                  </div>
-                </td>
-                <td><span class="urg-badge {{ getUrgencyClass(p.urgency) }}"><i class="fa-solid {{ getUrgencyIcon(p.urgency) }}"></i> {{ p.urgency }}</span></td>
-                <td style="font-size:12px;color:var(--n600)">{{ p.recommendation }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- INFO NOTE -->
-    <div class="ai-info-note">
-      <i class="fa-solid fa-circle-info"></i>
-      <span>Les prédictions sont basées sur l'historique des mouvements des 30 derniers jours. La confiance augmente avec le volume de données disponibles.</span>
-    </div>
+    }
   }
 </div>

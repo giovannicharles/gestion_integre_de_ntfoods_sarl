@@ -80,6 +80,23 @@ export class ClassificationListComponent implements OnInit {
   }
 
   onRangeChange(): void {
+    if (this.selectedRange) {
+      this.loading.set(true);
+      this.api.get<Classification[]>(`stock/product-classifications/brand/${this.selectedBrand}/range/${this.selectedRange}`).subscribe({
+        next: (data) => {
+          this.classifications.set(data || []);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.showToast('Erreur lors du filtrage par gamme', 'error');
+        }
+      });
+    } else if (this.selectedBrand) {
+      this.filterByBrand();
+    } else {
+      this.loadClassifications();
+    }
   }
 
   filterByBrand(): void {

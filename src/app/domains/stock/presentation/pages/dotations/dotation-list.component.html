@@ -13,9 +13,16 @@
         <p class="ph-sub">Workflow: Précommande → Paiement → Quantités → Approbation → Livraison</p>
       </div>
     </div>
-    <a routerLink="/stock/dotations/new" class="btn btn-primary">
-      <i class="fa-solid fa-plus"></i> Nouvelle Dotation
-    </a>
+    <div style="display:flex;gap:10px;align-items:center">
+      <a routerLink="/stock/mobile-stock" class="btn btn-ghost">
+        <i class="fa-solid fa-truck-field"></i> Stock Mobile
+      </a>
+      @if (canCreateDotation()) {
+        <a routerLink="/stock/dotations/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Nouvelle Dotation
+        </a>
+      }
+    </div>
   </div>
 
   @if (!loading()) {
@@ -253,7 +260,7 @@
           <h4 style="font-family:var(--font-d);font-size:14px;margin-bottom:10px">Articles</h4>
           <table class="table" style="margin-bottom:16px">
             <thead>
-              <tr><th>Produit</th><th>Qté demandée</th><th>Qté approuvée</th><th>Conditionnement</th></tr>
+              <tr><th>Produit</th><th>Qté demandée</th><th>Qté approuvée</th><th>Conditionnement</th><th>Qté/carton</th></tr>
             </thead>
             <tbody>
               @for (item of d.items; track item.productSku) {
@@ -262,6 +269,7 @@
                   <td>{{ item.requestedQuantity | number }}</td>
                   <td>{{ item.approvedQuantity || item.requestedQuantity | number }}</td>
                   <td>{{ item.packagingType || '—' }}</td>
+                  <td>{{ item.quantityPerCarton || '—' }}</td>
                 </tr>
               }
             </tbody>
@@ -272,20 +280,34 @@
               <i class="fa-solid fa-file-pdf"></i> Fiche de synthèse (PDF)
             </button>
             @if (d.status === 'PENDING') {
-              <button class="btn btn-success btn-sm" (click)="openAction('verifyPayment')"><i class="fa-solid fa-money-check-dollar"></i> Vérifier le paiement</button>
-              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
-              <button class="btn btn-danger btn-sm" (click)="openAction('delete')"><i class="fa-solid fa-trash"></i> Supprimer</button>
+              @if (canVerifyPayment()) {
+                <button class="btn btn-success btn-sm" (click)="openAction('verifyPayment')"><i class="fa-solid fa-money-check-dollar"></i> Vérifier le paiement</button>
+              }
+              @if (canVerifyPayment() || canManageStock()) {
+                <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              }
+              @if (canManageStock()) {
+                <button class="btn btn-danger btn-sm" (click)="openAction('delete')"><i class="fa-solid fa-trash"></i> Supprimer</button>
+              }
             }
             @if (d.status === 'PAYMENT_VERIFIED') {
-              <button class="btn btn-primary btn-sm" (click)="openAction('validateQuantities')"><i class="fa-solid fa-calculator"></i> Valider les quantités</button>
-              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              @if (canValidateQuantities()) {
+                <button class="btn btn-primary btn-sm" (click)="openAction('validateQuantities')"><i class="fa-solid fa-calculator"></i> Valider les quantités</button>
+              }
+              @if (canValidateQuantities() || canManageStock()) {
+                <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              }
             }
             @if (d.status === 'QUANTITY_VALIDATED') {
-              <button class="btn btn-success btn-sm" (click)="openAction('reviewAndApprove')"><i class="fa-solid fa-clipboard-check"></i> Réviser & approuver</button>
-              <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              @if (canManageStock()) {
+                <button class="btn btn-success btn-sm" (click)="openAction('reviewAndApprove')"><i class="fa-solid fa-clipboard-check"></i> Réviser & approuver</button>
+                <button class="btn btn-ghost btn-sm" (click)="openAction('reject')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+              }
             }
             @if (d.status === 'APPROVED') {
-              <button class="btn btn-primary btn-sm" (click)="openAction('execute')"><i class="fa-solid fa-truck-fast"></i> Marquer comme livré</button>
+              @if (canManageStock()) {
+                <button class="btn btn-primary btn-sm" (click)="openAction('execute')"><i class="fa-solid fa-truck-fast"></i> Marquer comme livré</button>
+              }
             }
           </div>
         } @else if (actionMode() === 'validateQuantities') {

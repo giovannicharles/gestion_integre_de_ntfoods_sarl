@@ -157,4 +157,21 @@ export class DgService {
     return this.api.get<ApiResponse<DashboardProductionDgBE>>('dg/dashboard-production')
       .pipe(map(r => r.donnees!));
   }
+
+  getAiContext(): Observable<Record<string, unknown>> {
+    return this.api.get<ApiResponse<Record<string, unknown>>>('dg/ai-context')
+      .pipe(map(r => r.donnees ?? {}));
+  }
+
+  approverValidation(type: string, reference: string, matricule: string): Observable<ValidationEnAttenteBE> {
+    return this.api.post<ApiResponse<ValidationEnAttenteBE>>('dg/validations/approuver', {
+      type, reference, matricule
+    }).pipe(map(r => r.donnees!));
+  }
+
+  refuserValidation(type: string, reference: string, matricule: string, motif?: string): Observable<ValidationEnAttenteBE> {
+    return this.api.post<ApiResponse<ValidationEnAttenteBE>>('dg/validations/refuser', {
+      type, reference, matricule, motif: motif || 'Refusé par le DG'
+    }).pipe(map(r => r.donnees!));
+  }
 }

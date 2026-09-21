@@ -174,7 +174,7 @@ export class InventaireComponent implements OnInit, AfterViewInit, OnDestroy {
             quantity: qty,
             reorderPoint: reorder,
             safetyStock: safety,
-            unit: raw.productUnit || raw.unit || 'unite',
+            unit: this.formatUnit(raw.packagingType || raw.productUnit || raw.unit),
             locationId: locId,
             locationName: locName,
             locationType: locType,
@@ -198,7 +198,7 @@ export class InventaireComponent implements OnInit, AfterViewInit, OnDestroy {
               quantity: Number(sl.quantity || 0),
               reorderPoint: Number(sl.reorderPoint || 0),
               safetyStock: 0,
-              unit: sl.productUnit || 'unite',
+              unit: this.formatUnit(sl.packagingType || sl.productUnit),
               locationId: '',
               locationName: sl.warehouseName || '',
               locationType: (sl.warehouseType || '').toUpperCase().includes('CENTRAL') ? 'CENTRAL' :
@@ -223,6 +223,25 @@ export class InventaireComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showToast('Erreur lors du chargement de l\'inventaire', 'error');
       }
     });
+  }
+
+  private formatUnit(unit: string | undefined | null): string {
+    if (!unit) return 'unité';
+    const u = unit.trim().toLowerCase();
+    const labels: Record<string, string> = {
+      'sachet': 'sachet',
+      'seau': 'seau',
+      'etui': 'étui',
+      'bouteille': 'bouteille',
+      'doypack': 'doypack',
+      'boite': 'boîte',
+      'carton': 'carton',
+      'unite': 'unité',
+      'kg': 'kg',
+      'g': 'g',
+      'l': 'L',
+    };
+    return labels[u] || u;
   }
 
   private getLocationType(locId: string, central: StockLocationDto[], buffer: StockLocationDto[], mobile: StockLocationDto[]): string {
@@ -323,6 +342,26 @@ export class InventaireComponent implements OnInit, AfterViewInit, OnDestroy {
     this.chart?.destroy();
     const top = [...this.filtered()].sort((a, b) => b.stockValue - a.stockValue).slice(0, 8);
     const ctx = this.valueCanvas.nativeElement.getContext('2d')!;
+
+    const dataLabelPlugin = {
+      id: 'dataLabels',
+      afterDatasetsDraw(chart: any) {
+        const { ctx } = chart;
+        ctx.save();
+        chart.data.datasets[0].data.forEach((value: number, index: number) => {
+          const meta = chart.getDatasetMeta(0);
+          const bar = meta.data[index];
+          if (!bar) return;
+          ctx.font = '600 11px Inter, sans-serif';
+          ctx.fillStyle = '#374151';
+          ctx.textAlign = 'center';
+          const text = new Intl.NumberFormat('fr-CM', { notation: 'compact' }).format(Math.round(value));
+          ctx.fillText(text, bar.x, bar.y - 6);
+        });
+        ctx.restore();
+      }
+    };
+
     this.chart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -336,9 +375,14 @@ export class InventaireComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${new Intl.NumberFormat('fr-CM').format(Math.round(c.parsed.y ?? 0))} FCFA` } } },
+        layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => ` ${new Intl.NumberFormat('fr-CM').format(Math.round(c.parsed.y ?? 0))} FCFA` } }
+        },
         scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'DM Sans', size: 11 }, callback: v => new Intl.NumberFormat('fr-CM', { notation: 'compact' }).format(+v) } }, x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 10 }, maxRotation: 30 } } }
-      }
+      },
+      plugins: [dataLabelPlugin]
     });
   }
 

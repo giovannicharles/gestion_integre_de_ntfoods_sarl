@@ -121,30 +121,99 @@
                         <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Sélectionner</label>
                         <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
                           <option [value]="0">— Choisir —</option>
-                          @for (p of getFilteredProducts(); track p.id) {
-                            <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                          <optgroup label="Produits Finis">
+                            @for (p of getFinishedProducts(); track p.id) {
+                              <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                            }
+                          </optgroup>
+                          @if (getRawMaterials().length > 0) {
+                            <optgroup label="Matières Premières (kg)">
+                              @for (p of getRawMaterials(); track p.id) {
+                                <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                              }
+                            </optgroup>
+                          }
+                          @if (getConsommables().length > 0) {
+                            <optgroup label="Consommables">
+                              @for (p of getConsommables(); track p.id) {
+                                <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                              }
+                            </optgroup>
+                          }
+                          @if (getMateriels().length > 0) {
+                            <optgroup label="Matériels">
+                              @for (p of getMateriels(); track p.id) {
+                                <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
+                              }
+                            </optgroup>
                           }
                         </select>
                       </div>
-                      <div>
+                      <div style="position:relative">
                         <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Ou taper le code</label>
-                        <input type="text" class="form-control" placeholder="Ex: RBSA" [(ngModel)]="l.skuInput" (ngModelChange)="onSkuInput(l, $event)" [ngModelOptions]="{updateOn:'blur'}">
+                        <input type="text" class="form-control" placeholder="Ex: RBSA"
+                               [(ngModel)]="l.skuInput" (ngModelChange)="onSkuInput(l, $event)">
+                        @if (l.skuInput && l.skuInput.trim() && !l.productId) {
+                          @let matches = searchProductsBySku(l.skuInput);
+                          @if (matches.length > 0) {
+                            <div style="position:absolute;top:100%;left:0;right:0;z-index:10;background:#fff;border:1px solid var(--n200);border-radius:var(--r-sm);box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;margin-top:2px">
+                              @for (p of matches.slice(0, 8); track p.id) {
+                                <div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--n100);font-size:12px;display:flex;align-items:center;gap:8px"
+                                     (click)="onSkuInput(l, p.sku); l.productId = p.id; l.packagingType = p.packagingType || l.packagingType; l.skuInput = p.sku">
+                                  <span style="font-weight:700;color:var(--n800)">{{ p.sku }}</span>
+                                  <span style="color:var(--n500)">{{ p.designation }}</span>
+                                </div>
+                              }
+                            </div>
+                          } @else {
+                            <div style="position:absolute;top:100%;left:0;right:0;z-index:10;background:#fff;border:1px solid var(--n200);border-radius:var(--r-sm);box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:2px;padding:8px 12px;font-size:12px;color:var(--n400)">
+                              Aucun produit trouvé pour "{{ l.skuInput }}"
+                            </div>
+                          }
+                        }
                       </div>
                     </div>
                     @if (l.productId) {
                       @let avail = getBufferStockForLine(l);
+                      @let breakdown = getBufferBreakdownForLine(l);
+                      @let p = findProduct(l.productId);
                       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-                        <span class="badge" [class.badge-success]="avail > 0" [class.badge-danger]="avail === 0" style="font-size:12px"><i class="fa-solid fa-warehouse"></i> Stock tampon : {{ avail | number }}</span>
+                        <span class="badge" [class.badge-success]="avail > 0" [class.badge-danger]="avail === 0" style="font-size:12px"><i class="fa-solid fa-warehouse"></i> Stock tampon : {{ avail | number }} {{ isRawMaterial(p) ? 'kg' : '' }}</span>
+                        @if (avail === 0) {
+                          @let central = getCentralStockForLine(l);
+                          @if (central > 0) {
+                            <span class="badge badge-primary" style="font-size:12px"><i class="fa-solid fa-warehouse"></i> Stock central : {{ central | number }} {{ isRawMaterial(p) ? 'kg' : '' }}</span>
+                            <span class="badge badge-warning" style="font-size:11px"><i class="fa-solid fa-circle-info"></i> Transfert tampon requis</span>
+                          }
+                        }
                         @if (isStockInsufficient(l)) {
-                          <span class="badge badge-danger" style="font-size:12px"><i class="fa-solid fa-circle-exclamation"></i> Insuffisant (demande {{ l.requestedQty | number }})</span>
+                          <span class="badge badge-danger" style="font-size:12px"><i class="fa-solid fa-circle-exclamation"></i> Insuffisant (demande {{ l.requestedQty | number }} {{ isRawMaterial(p) ? 'kg' : '' }})</span>
                         }
                       </div>
+                      @if (breakdown.length > 1) {
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+                          @for (bd of breakdown; track bd.pkg) {
+                            <span style="font-size:11px;background:var(--n100);color:var(--n600);padding:2px 8px;border-radius:var(--r-sm);font-weight:600">{{ bd.pkg }}: {{ bd.qty | number }}</span>
+                          }
+                        </div>
+                      }
                     }
                   </div>
                   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
                     <div class="form-group">
-                      <label class="form-label">Qté demandée <span class="req">*</span></label>
-                      <input type="number" class="form-control" min="0" style="border-color:var(--g-pale);background:var(--g-sf)" [(ngModel)]="l.requestedQty">
+                      <label class="form-label">Qté demandée <span class="req">*</span> @if (l.productId) { @let p2 = findProduct(l.productId); <span style="font-weight:400;color:var(--n400)">({{ isRawMaterial(p2) ? 'kg' : (l.packagingType || p2?.packagingType || 'unités') }})</span> }</label>
+                      <input type="number" class="form-control" min="0" step="{{ isRawMaterial(findProduct(l.productId)) ? '0.5' : '1' }}"
+                             [style.border-color]="l.requestedQty <= 0 ? 'var(--r)' : (isStockInsufficient(l) ? 'var(--r)' : '')"
+                             style="background:var(--g-sf)" [(ngModel)]="l.requestedQty">
+                      @if (l.requestedQty <= 0) {
+                        <div style="font-size:11px;color:var(--r);margin-top:4px">
+                          <i class="fa-solid fa-circle-exclamation"></i> Veuillez entrer une quantité valide supérieure à 0
+                        </div>
+                      } @else if (isStockInsufficient(l)) {
+                        <div style="font-size:11px;color:var(--r);margin-top:4px">
+                          <i class="fa-solid fa-triangle-exclamation"></i> Stock tampon insuffisant : {{ getBufferStockForLine(l) | number }} disponible(s) seulement
+                        </div>
+                      }
                     </div>
                     <div class="form-group">
                       <label class="form-label">Conditionnement</label>

@@ -67,17 +67,66 @@ export class MagasinListComponent implements OnInit {
   loadMagasins(): void {
     this.loading.set(true);
     this.error.set('');
-    this.api.get<Magasin[]>('stock/locations/magasins').subscribe({
+    this.api.get<Magasin[]>('stock/locations').subscribe({
       next: (data) => {
         this.magasins.set(data || []);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Erreur lors du chargement des magasins');
+        this.error.set('Erreur lors du chargement des emplacements');
         this.loading.set(false);
-        this.showToast('Erreur lors du chargement des magasins', 'error');
+        this.showToast('Erreur lors du chargement des emplacements', 'error');
       }
     });
+  }
+
+  initializeDefaults(): void {
+    this.saving.set(true);
+    this.api.post('stock/locations/initialize', {}).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.loadMagasins();
+        this.showToast('Emplacements par défaut initialisés', 'success');
+      },
+      error: () => {
+        this.saving.set(false);
+        this.showToast('Erreur lors de l\'initialisation', 'error');
+      }
+    });
+  }
+
+  getTypeLabel(type: string): string {
+    const m: Record<string, string> = {
+      STOCK_CENTRAL: 'Stock Central',
+      STOCK_BUFFER: 'Stock Tampon',
+      STOCK_MOBILE: 'Stock Mobile',
+      MAGASIN: 'Magasin'
+    };
+    return m[type] || type;
+  }
+
+  getTypeClass(type: string): string {
+    const m: Record<string, string> = {
+      STOCK_CENTRAL: 'badge-central',
+      STOCK_BUFFER: 'badge-buffer',
+      STOCK_MOBILE: 'badge-mobile',
+      MAGASIN: 'badge-magasin'
+    };
+    return m[type] || 'badge-neutral';
+  }
+
+  getTypeIcon(type: string): string {
+    const m: Record<string, string> = {
+      STOCK_CENTRAL: 'fa-warehouse',
+      STOCK_BUFFER: 'fa-boxes-stacked',
+      STOCK_MOBILE: 'fa-truck',
+      MAGASIN: 'fa-store'
+    };
+    return m[type] || 'fa-warehouse';
+  }
+
+  isSystemLocation(type: string): boolean {
+    return type === 'STOCK_CENTRAL' || type === 'STOCK_BUFFER';
   }
 
   openCreateForm(): void {
@@ -91,6 +140,10 @@ export class MagasinListComponent implements OnInit {
       email: ''
     };
     this.showForm.set(true);
+  }
+
+  canEdit(magasin: Magasin): boolean {
+    return !this.isSystemLocation(magasin.type);
   }
 
   openEditForm(magasin: Magasin): void {

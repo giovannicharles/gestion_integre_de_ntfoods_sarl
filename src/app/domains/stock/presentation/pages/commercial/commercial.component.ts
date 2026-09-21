@@ -71,6 +71,8 @@ export class CommercialComponent implements OnInit, AfterViewInit, OnDestroy {
     const user=this.auth.getCurrentUser();if(!user){this.showToast('Utilisateur non authentifié','error');return;}
     const items:DotationItem[]=this.dotationLines.filter(l=>l.qty>0).map(l=>({productId:l.productId,productSku:l.productSku,productName:l.productName,requestedQuantity:l.qty*l.unitsPerPack,packagingType:l.unitType}));
     if(items.length===0){this.showToast('Aucune ligne de dotation','error');return;}
+    const overStock=this.dotationLines.filter((l,i)=>l.qty>0 && this.pfLevels()[i] && l.qty>this.pfLevels()[i].quantity);
+    if(overStock.length>0){const names=overStock.map(l=>l.productName).join(', ');this.showToast(`Stock PF insuffisant pour: ${names}`,'error');return;}
     const payload:CreateDotationRequest={commercialId:comm.matricule,commercialMatricule:comm.matricule,commercialName:comm.name,justification:`Dotation depuis module commercial — ${this.today.toLocaleDateString('fr-CM')}`,items};
     this.dotationSaving.set(true);
     this.dotationUC.create(payload).pipe(takeUntil(this.d$)).subscribe({

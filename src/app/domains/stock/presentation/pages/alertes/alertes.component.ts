@@ -1,13 +1,15 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, forkJoin, takeUntil, interval } from 'rxjs';
+import { Subject, forkJoin, takeUntil, interval, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { StockLevelUseCase } from '../../../application/use-cases/inventaire/stock-level.use-case';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevel, StockAlertEntity, AlertType } from '../../../domain/models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { AlertBadgeService } from '../../../../../core/services/alert-badge.service';
+import { StockRulesDomainService } from '../../../domain/services/stock-rules.domain.service';
 
 @Component({
   selector: 'app-alertes',
@@ -17,6 +19,7 @@ import { AlertBadgeService } from '../../../../../core/services/alert-badge.serv
   styleUrls: ['./alertes.component.css']
 })
 export class AlertesComponent implements OnInit, OnDestroy {
+  private rules = inject(StockRulesDomainService);
   private d$ = new Subject<void>();
   private uc = inject(StockLevelUseCase);
   private repo = inject(StockApiRepository);
@@ -38,6 +41,48 @@ export class AlertesComponent implements OnInit, OnDestroy {
   resolvedLevelIds = signal<Set<number>>(new Set());
   orderedAlertIds = signal<Set<number>>(new Set());
   Math = Math;
+
+  canManageAlerts = computed(() => this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'ADMIN']));
+  isReadOnly = computed(() => !this.canManageAlerts());
+
+  cartonsFor(sl: StockLevel): number {
+    const qpc = sl.quantityPerCarton || 1;
+    return Math.floor((sl.quantity || 0) / qpc);
+  }
+  reorderCartonsFor(sl: StockLevel): number {
+    const qpc = sl.quantityPerCarton || 1;
+    return Math.floor((sl.reorderPoint || 0) / qpc);
+  }
+  safetyCartonsFor(sl: StockLevel): number {
+    const qpc = sl.quantityPerCarton || 1;
+    return Math.floor((sl.safetyStock || 0) / qpc);
+  }
+  remainingUnits(sl: StockLevel): number {
+    const qpc = sl.quantityPerCarton || 1;
+    return (sl.quantity || 0) % qpc;
+  }
+  pkgLabel(sl: StockLevel): string {
+    const pkg = sl.packagingType?.toUpperCase();
+    if (pkg) return this.rules.getConditioningLabel(pkg);
+    return sl.productUnit || 'unités';
+  }
+  private pluralMap: Record<string, string> = {
+    'CARTON': 'cartons', 'CARTON_ASSORTI': 'cartons d\'assortis',
+    'SEAU': 'seaux', 'SEAU_1L': 'seaux 1L', 'SEAU_2L': 'seaux 2L', 'SEAU_5L': 'seaux 5L', 'SEAU_10L': 'seaux 10L',
+    'SACHET': 'sachets', 'SACHET_42G': 'sachets 42g', 'SACHET_60G': 'sachets 60g', 'SACHET_62G': 'sachets 62g',
+    'ETUI': 'étuis', 'BOITE': 'boîtes', 'BOUTEILLE': 'bouteilles', 'BIDON': 'bidons',
+    'DOYPACK': 'doypacks', 'DOYPACK_80G': 'doypacks 80g', 'DOYPACK_140G': 'doypacks 140g', 'DOYPACK_350G': 'doypacks 350g',
+    'SAC': 'sacs', 'GAINE': 'gaines',
+  };
+  pkgLabelPlural(sl: StockLevel): string {
+    const pkg = sl.packagingType?.toUpperCase();
+    if (pkg && this.pluralMap[pkg]) return this.pluralMap[pkg];
+    if (pkg) {
+      const label = this.rules.getConditioningLabel(pkg).toLowerCase();
+      return label + 's';
+    }
+    return sl.productUnit || 'unités';
+  }
   private centralLocationIds = signal<string[]>([]);
   private bufferLocationIds = signal<string[]>([]);
 
@@ -69,15 +114,43 @@ export class AlertesComponent implements OnInit, OnDestroy {
   getFilteredDashboard(): StockLevel[] {
     const f = this.filter();
     const resolved = this.resolvedLevelIds();
+    const backendAlerts = this.backendAlerts();
     let list = f === 'TOUS' ? this.alerts() : this.alerts().filter(sl => sl.alertLevel === f);
-    return list.filter(sl => !resolved.has(sl.id));
+    return list.filter(sl => {
+      if (resolved.has(sl.id)) return false;
+      // Exclure aussi si l'alerte backend correspondante est RESOLVED
+      const backend = backendAlerts.find(a => a.productId === sl.productId);
+      if (backend && backend.status === 'RESOLVED') return false;
+      return true;
+    });
   }
 
-  isLevelAcked(id: number): boolean { return this.ackedLevelIds().has(id); }
-  isLevelResolved(id: number): boolean { return this.resolvedLevelIds().has(id); }
+  isLevelAcked(id: number): boolean {
+    if (this.ackedLevelIds().has(id)) return true;
+    // Vérifier aussi l'état backend: si une alerte ACKNOWLEDGED ou RESOLVED existe pour ce productId
+    const sl = this.alerts().find(s => s.id === id);
+    if (sl) {
+      const backend = this.backendAlerts().find(a => a.productId === sl.productId);
+      if (backend && (backend.status === 'ACKNOWLEDGED' || backend.status === 'RESOLVED')) return true;
+    }
+    return false;
+  }
+  isLevelResolved(id: number): boolean {
+    if (this.resolvedLevelIds().has(id)) return true;
+    // Vérifier aussi l'état backend
+    const sl = this.alerts().find(s => s.id === id);
+    if (sl) {
+      const backend = this.backendAlerts().find(a => a.productId === sl.productId);
+      if (backend && backend.status === 'RESOLVED') return true;
+    }
+    return false;
+  }
 
   ngOnInit() {
     this.loading.set(true);
+    // Load dashboard + backend alerts directly.
+    // Do NOT call triggerAlertChecks() here — it recreates resolved alerts on every refresh.
+    // The scheduled task (@Scheduled in StockAlertService) handles threshold checks automatically.
     forkJoin({
       dashboard: this.uc.getAlerts(),
       backend: this.repo.getBackendAlerts()
@@ -85,6 +158,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
       next: r => {
         this.alerts.set(r.dashboard);
         this.backendAlerts.set(r.backend);
+        this.syncLevelStatesFromBackend(r.dashboard, r.backend);
         this.lastCheck.set(new Date());
         this.loading.set(false);
       },
@@ -107,10 +181,43 @@ export class AlertesComponent implements OnInit, OnDestroy {
   }
 
   refreshBackend() {
-    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
-      next: r => { this.backendAlerts.set(r); this.lastCheck.set(new Date()); },
+    forkJoin({
+      dashboard: this.uc.getAlerts(),
+      backend: this.repo.getBackendAlerts()
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: r => {
+        this.alerts.set(r.dashboard);
+        this.backendAlerts.set(r.backend);
+        this.syncLevelStatesFromBackend(r.dashboard, r.backend);
+        this.lastCheck.set(new Date());
+      },
       error: () => {}
     });
+  }
+
+  /**
+   * Synchronise les signaux ackedLevelIds et resolvedLevelIds depuis l'état réel des alertes backend.
+   * Permet de restaurer l'état après actualisation de la page.
+   */
+  private syncLevelStatesFromBackend(dashboard: StockLevel[], backend: StockAlertEntity[]) {
+    const acked = new Set<number>();
+    const resolved = new Set<number>();
+    for (const sl of dashboard) {
+      const match = backend.find(a => a.productId === sl.productId);
+      if (match) {
+        if (match.status === 'ACKNOWLEDGED' || match.status === 'RESOLVED') {
+          acked.add(sl.id);
+        }
+        if (match.status === 'RESOLVED') {
+          resolved.add(sl.id);
+        }
+      }
+    }
+    // Fusionner avec les états locaux (actions en cours non encore synchronisées)
+    this.ackedLevelIds().forEach(id => acked.add(id));
+    this.resolvedLevelIds().forEach(id => resolved.add(id));
+    this.ackedLevelIds.set(acked);
+    this.resolvedLevelIds.set(resolved);
   }
 
   triggerCheck() {
@@ -181,11 +288,13 @@ export class AlertesComponent implements OnInit, OnDestroy {
           // 2. Stock central → rediriger vers le formulaire de commande à la production
           const qtyToOrder = Math.max(a.threshold - a.currentQuantity, a.threshold);
           this.router.navigate(['/stock/commande-production'], {
-            queryParams: { productId: a.productId, qty: qtyToOrder }
+            queryParams: { productId: a.productId, qty: qtyToOrder, alertId: a.id }
           });
         } else {
           // 2. Stock tampon → rediriger vers la page tampon pour réapprovisionnement
-          this.router.navigate(['/stock/tampon']);
+          this.router.navigate(['/stock/tampon'], {
+            queryParams: { productId: a.productId, alertId: a.id }
+          });
         }
       },
       error: () => this.flashMsg('Erreur lors de l\'acquittement de l\'alerte', true)
@@ -202,36 +311,39 @@ export class AlertesComponent implements OnInit, OnDestroy {
     const userId = this.auth.getCurrentUser()?.matricule || 'system';
     const qtyToOrder = Math.max(sl.reorderPoint - sl.quantity, sl.reorderPoint);
 
-    // 1. Trouver et acquitter l'alerte backend correspondante
-    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
-      next: (alerts) => {
-        this.backendAlerts.set(alerts);
-        const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
-        if (match) {
-          this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
-            next: () => {
-              this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-              this.refreshBackend();
-              this.alertBadge.refresh();
-              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-            },
-            error: () => {
-              // Même en cas d'erreur, on redirige
-              this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-            }
-          });
-        } else {
-          // Pas d'alerte backend trouvée → rediriger directement
+    // 1. Déclencher la vérification pour créer les alertes manquantes
+    this.repo.triggerAlertChecks().pipe(
+      takeUntil(this.d$),
+      catchError(() => of(void 0))
+    ).subscribe(() => {
+      // 2. Trouver et acquitter l'alerte backend correspondante
+      this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+        next: (alerts) => {
+          this.backendAlerts.set(alerts);
+          const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
+          if (match) {
+            this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
+              next: () => {
+                this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+                this.refreshBackend();
+                this.alertBadge.refresh();
+                this.redirectAfterAlertAction(sl, isCentral, qtyToOrder, match.id);
+              },
+              error: () => {
+                this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+                this.redirectAfterAlertAction(sl, isCentral, qtyToOrder, match.id);
+              }
+            });
+          } else {
+            this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+            this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+          }
+        },
+        error: () => {
           this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
           this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
         }
-      },
-      error: () => {
-        // En cas d'erreur → rediriger quand même
-        this.orderedAlertIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-        this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-      }
+      });
     });
   }
 
@@ -245,90 +357,101 @@ export class AlertesComponent implements OnInit, OnDestroy {
    */
   acknowledgeLevel(sl: StockLevel) {
     const userId = this.auth.getCurrentUser()?.matricule || 'system';
-    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
-      next: (alerts) => {
-        this.backendAlerts.set(alerts);
-        const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
-        if (match) {
-          this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
-            next: () => {
-              this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-              this.refreshBackend();
-              this.alertBadge.refresh();
-              this.flashMsg(`Alerte acquittée : ${sl.productName}`);
-            },
-            error: () => this.flashMsg('Erreur lors de l\'acquittement', true)
-          });
-        } else {
-          // Aucune alerte backend active trouvée → acquitter localement
-          this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-          this.alertBadge.refresh();
-          this.flashMsg(`Niveau de stock acquitté : ${sl.productName}`);
-        }
-      },
-      error: () => this.flashMsg('Erreur lors de la récupération des alertes', true)
+    // D'abord déclencher la vérification pour créer les alertes manquantes
+    this.repo.triggerAlertChecks().pipe(
+      takeUntil(this.d$),
+      catchError(() => of(void 0))
+    ).subscribe(() => {
+      this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+        next: (alerts) => {
+          this.backendAlerts.set(alerts);
+          // Chercher une alerte ACTIVE non acquittée pour ce produit
+          const match = alerts.find(a => a.productId === sl.productId && a.status === 'ACTIVE' && !a.acknowledged);
+          if (match) {
+            this.repo.acknowledgeBackendAlert(match.id, userId).pipe(takeUntil(this.d$)).subscribe({
+              next: () => {
+                this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+                this.refreshBackend();
+                this.alertBadge.refresh();
+                this.flashMsg(`Alerte acquittée : ${sl.productName}`);
+              },
+              error: () => this.flashMsg('Erreur lors de l\'acquittement', true)
+            });
+          } else {
+            // Aucune alerte backend active trouvée → acquitter localement
+            this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+            this.alertBadge.refresh();
+            this.flashMsg(`Niveau de stock acquitté : ${sl.productName}`);
+          }
+        },
+        error: () => this.flashMsg('Erreur lors de la récupération des alertes', true)
+      });
     });
   }
 
   /**
    * Résoudre une alerte de niveau de stock côté backend.
-   * - Stock central → résout l'alerte en base puis redirige vers le formulaire de commande à la production
-   * - Stock tampon → résout l'alerte en base puis redirige vers la page tampon pour réapprovisionnement
+   * Marque l'alerte comme résolue sans rediriger. L'utilisateur a déjà pris
+   * une action (commande, réappro) ou a traité manuellement le problème.
    */
   resolveLevel(sl: StockLevel) {
-    const isCentral = (sl.warehouseType || '').toUpperCase().includes('CENTRAL');
-    const qtyToOrder = Math.max(sl.reorderPoint - sl.quantity, sl.reorderPoint);
     this.resolvingId.set(sl.id);
 
-    // 1. Trouver et résoudre l'alerte backend correspondante
-    this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
-      next: (alerts) => {
-        this.backendAlerts.set(alerts);
-        const match = alerts.find(a => a.productId === sl.productId && a.status !== 'RESOLVED');
-        if (match) {
-          this.repo.resolveBackendAlert(match.id).pipe(takeUntil(this.d$)).subscribe({
-            next: () => {
-              this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-              this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-              this.resolvingId.set(null);
-              this.refreshBackend();
-              this.alertBadge.refresh();
-              this.flashMsg(`Alerte résolue : ${sl.productName}`);
-              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-            },
-            error: () => {
-              this.resolvingId.set(null);
-              this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-            }
-          });
-        } else {
-          this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
-          this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+    // D'abord déclencher la vérification pour créer les alertes manquantes
+    this.repo.triggerAlertChecks().pipe(
+      takeUntil(this.d$),
+      catchError(() => of(void 0))
+    ).subscribe(() => {
+      // Trouver et résoudre l'alerte backend correspondante
+      this.repo.getBackendAlerts().pipe(takeUntil(this.d$)).subscribe({
+        next: (alerts) => {
+          this.backendAlerts.set(alerts);
+          const match = alerts.find(a => a.productId === sl.productId && a.status !== 'RESOLVED');
+          if (match) {
+            this.repo.resolveBackendAlert(match.id).pipe(takeUntil(this.d$)).subscribe({
+              next: () => {
+                this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+                this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+                this.resolvingId.set(null);
+                this.refreshBackend();
+                this.alertBadge.refresh();
+                this.flashMsg(`Alerte résolue : ${sl.productName}`);
+              },
+              error: () => {
+                this.resolvingId.set(null);
+                this.flashMsg('Erreur lors de la résolution', true);
+              }
+            });
+          } else {
+            this.resolvedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+            this.ackedLevelIds.update(s => { const n = new Set(s); n.add(sl.id); return n; });
+            this.resolvingId.set(null);
+            this.alertBadge.refresh();
+            this.flashMsg(`Alerte résolue : ${sl.productName}`);
+          }
+        },
+        error: () => {
           this.resolvingId.set(null);
-          this.alertBadge.refresh();
-          this.flashMsg(`Alerte résolue : ${sl.productName}`);
-          this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
+          this.flashMsg('Erreur lors de la récupération des alertes', true);
         }
-      },
-      error: () => {
-        this.resolvingId.set(null);
-        this.redirectAfterAlertAction(sl, isCentral, qtyToOrder);
-      }
+      });
     });
   }
 
   /**
-   * Redirige vers la page appropriée après une action d'alerte.
-   * - Stock central → /stock/commande-production avec productId et qty
-   * - Stock tampon → /stock/tampon
+   * Redirige vers la page appropriée après une action d'alerte (commande/réappro).
+   * - Stock central → /stock/commande-production avec productId, qty et alertId
+   * - Stock tampon → /stock/tampon avec productId et alertId
    */
-  private redirectAfterAlertAction(sl: StockLevel, isCentral: boolean, qtyToOrder: number) {
+  private redirectAfterAlertAction(sl: StockLevel, isCentral: boolean, qtyToOrder: number, alertId?: number) {
+    const queryParams: any = { productId: sl.productId };
     if (isCentral) {
-      this.router.navigate(['/stock/commande-production'], {
-        queryParams: { productId: sl.productId, qty: qtyToOrder }
-      });
+      queryParams.qty = qtyToOrder;
+      if (alertId) queryParams.alertId = alertId;
+      this.router.navigate(['/stock/commande-production'], { queryParams });
     } else {
-      this.router.navigate(['/stock/tampon']);
+      if (alertId) queryParams.alertId = alertId;
+      this.router.navigate(['/stock/tampon'], { queryParams });
     }
   }
 
@@ -393,17 +516,24 @@ export class AlertesComponent implements OnInit, OnDestroy {
   reapproCentralQty = signal(0);
   reapproUnit = signal('');
   reapproSaving = signal(false);
+  reapproProductId = signal(0);
+
+  reapproBufferQty = signal(0);
 
   openInlineReappro(sl: StockLevel) {
     this.reapproSku.set(sl.productSku || '');
     this.reapproName.set(sl.productName || '');
-    this.reapproUnit.set(sl.productUnit || 'unite');
+    this.reapproUnit.set(this.pkgLabel(sl));
+    this.reapproProductId.set(sl.productId || 0);
+    this.reapproBufferQty.set(sl.quantity || 0);
     const recommended = Math.max(0, (sl.reorderPoint || 0) - (sl.quantity || 0));
     this.reapproQty.set(recommended > 0 ? recommended : 10);
-    // Fetch central stock for this SKU
+    const centralIds = this.centralLocationIds();
     this.uc.getAllStockItems().pipe(takeUntil(this.d$)).subscribe({
       next: (items: any[]) => {
-        const central = items.find(i => i.productSku === sl.productSku && (i.locationType || '').toUpperCase().includes('CENTRAL'));
+        const central = items.find(i =>
+          i.productSku === sl.productSku && centralIds.includes(i.locationId)
+        );
         this.reapproCentralQty.set(Number(central?.quantity || 0));
       },
       error: () => this.reapproCentralQty.set(0)
@@ -417,6 +547,8 @@ export class AlertesComponent implements OnInit, OnDestroy {
     this.reapproName.set('');
     this.reapproQty.set(0);
     this.reapproCentralQty.set(0);
+    this.reapproBufferQty.set(0);
+    this.reapproProductId.set(0);
   }
 
   confirmInlineReappro() {
@@ -432,11 +564,40 @@ export class AlertesComponent implements OnInit, OnDestroy {
     this.uc.replenishBuffer(sku, qty, userId, `Réappro tampon depuis alerte - ${this.reapproName()} (${sku})`)
       .pipe(takeUntil(this.d$)).subscribe({
         next: () => {
+          // Résoudre les alertes backend pour ce produit après le réappro
+          const productId = this.reapproProductId();
+          const productSku = this.reapproSku();
+          if (productId > 0) {
+            this.repo.resolveAlertsByProduct(productId).pipe(takeUntil(this.d$)).subscribe({
+              next: (resolvedCount) => {
+                console.log(`[Alertes] ${resolvedCount} alerte(s) résolue(s) pour productId=${productId}`);
+                this.refreshBackend();
+                this.alertBadge.refresh();
+              },
+              error: () => {
+                this.refreshBackend();
+                this.alertBadge.refresh();
+              }
+            });
+          } else if (productSku) {
+            this.repo.resolveAlertsByProductSku(productSku).pipe(takeUntil(this.d$)).subscribe({
+              next: (resolvedCount) => {
+                console.log(`[Alertes] ${resolvedCount} alerte(s) résolue(s) pour productSku=${productSku}`);
+                this.refreshBackend();
+                this.alertBadge.refresh();
+              },
+              error: () => {
+                this.refreshBackend();
+                this.alertBadge.refresh();
+              }
+            });
+          } else {
+            this.refreshBackend();
+            this.alertBadge.refresh();
+          }
           this.reapproSaving.set(false);
           this.flashMsg(`Réapprovisionnement effectué: ${qty} ${this.reapproUnit()} transférés du central vers le tampon`);
           this.closeInlineReappro();
-          this.refreshBackend();
-          this.alertBadge.refresh();
         },
         error: (err) => {
           this.reapproSaving.set(false);

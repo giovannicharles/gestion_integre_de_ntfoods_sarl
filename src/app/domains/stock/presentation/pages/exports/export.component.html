@@ -131,6 +131,44 @@
       </div>
     </div>
 
+    <!-- RAPPORTS AVANCÉS -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-file-chart-column"></i> Rapports analytiques avancés (PDF)</span>
+      </div>
+      <div class="card-body">
+        <p class="card-hint">Rapports PDF détaillés avec tableaux professionnels, logo et zones de signature.</p>
+        <div class="filter-row">
+          <div class="fg">
+            <label>Type de stock</label>
+            <select class="form-control" [(ngModel)]="reportLocationType">
+              <option value="STOCK_CENTRAL">Stock Central</option>
+              <option value="STOCK_BUFFER">Stock Tampon</option>
+              <option value="STOCK_MOBILE">Stock Mobile</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Période début (rotation, réceptions, dotations, transferts)</label>
+            <input type="date" class="form-control" [(ngModel)]="reportPeriodStart">
+          </div>
+          <div class="fg">
+            <label>Période fin</label>
+            <input type="date" class="form-control" [(ngModel)]="reportPeriodEnd">
+          </div>
+        </div>
+        <div class="export-actions export-wrap">
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('valorisation')"><i class="fa-solid fa-coins"></i> Valorisation</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('alertes')"><i class="fa-solid fa-bell"></i> Alertes stock</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('inventaire')"><i class="fa-solid fa-clipboard-list"></i> Inventaire complet</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('rotation')"><i class="fa-solid fa-arrows-rotate"></i> Rotation stock</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('receptions')"><i class="fa-solid fa-truck-ramp-box"></i> Réceptions</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('dotations')"><i class="fa-solid fa-box-open"></i> Dotations</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('reappro')"><i class="fa-solid fa-parachute-box"></i> Réappro tampon</button>
+          <button class="btn btn-danger" (click)="downloadAdvancedReport('transferts')"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transferts</button>
+        </div>
+      </div>
+    </div>
+
     <!-- FICHE NTFOODS -->
     <div class="card">
       <div class="card-hd">

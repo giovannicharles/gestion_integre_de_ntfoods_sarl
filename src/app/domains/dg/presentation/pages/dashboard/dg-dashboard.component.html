@@ -224,7 +224,7 @@
   <div class="card fiche-card">
     <div class="card-hd">
       <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse — {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
-      <a routerLink="/stock/commercial" class="btn btn-ghost btn-sm"><i class="fa-solid fa-external-link-alt"></i> Stock</a>
+      <a routerLink="/dg/stock-dashboard" class="btn btn-ghost btn-sm"><i class="fa-solid fa-external-link-alt"></i> Stock</a>
     </div>
     <div class="fiche-kpis">
       <div class="fiche-kpi"><span class="fk-lbl">CA Total</span><span class="fk-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span></div>
@@ -310,7 +310,7 @@
   <!-- SECTION PRODUCTION -->
   <div class="section-header">
     <h2 class="section-h2"><i class="fa-solid fa-industry"></i> Production</h2>
-    <a routerLink="/stock/production" class="btn btn-ghost btn-sm">Module Production</a>
+    <a routerLink="/dg/production" class="btn btn-ghost btn-sm">Module Production</a>
   </div>
   <div class="kpi-grid">
     <div class="kpi-card kp-g">

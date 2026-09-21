@@ -9,6 +9,36 @@
     </div>
   </div>
 
+  <div class="kpi-grid-3">
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Marge totale générée</span>
+        <span class="kpi-val">{{ fCFA(margeTotale()) }}</span>
+        <span class="kpi-meta">{{ marges().length }} produits analysés</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Produits sous 30%</span>
+        <span class="kpi-val">{{ nbSous30() }}</span>
+        <span class="kpi-meta">Marge critique à revoir</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-percent"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Marge moyenne pondérée</span>
+        <span class="kpi-val">{{ margeMoyenne() }}%</span>
+        <span class="kpi-meta">Sur coût de revient réel</span>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-hd"><span class="card-title"><i class="fa-solid fa-tags"></i> Marge par produit</span></div>
     <div class="tbl-wrap">

@@ -4,11 +4,14 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-warehouse"></i></div>
       <div>
-        <div class="ph-title">Gestion des Magasins</div>
-        <div class="ph-sub">Gérez plusieurs magasins par gestionnaire</div>
+        <div class="ph-title">Gestion des Emplacements de Stock</div>
+        <div class="ph-sub">Stock Central, Tampon Production & Magasins</div>
       </div>
     </div>
     <div class="ph-right">
+      <button class="btn btn-ghost" (click)="initializeDefaults()" [disabled]="saving()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser par défaut
+      </button>
       <button class="btn btn-primary" (click)="openCreateForm()">
         <i class="fa-solid fa-plus"></i> Nouveau Magasin
       </button>
@@ -49,9 +52,9 @@
       <div class="card">
         <div class="empty-state">
           <i class="fa-solid fa-warehouse fa-3x"></i>
-          <h3>Aucun magasin configuré</h3>
-          <p>Créez votre premier magasin pour commencer à gérer son stock.</p>
-          <button class="btn btn-primary" (click)="openCreateForm()"><i class="fa-solid fa-plus"></i> Créer un magasin</button>
+          <h3>Aucun emplacement configuré</h3>
+          <p>Initialisez les emplacements par défaut (Stock Central, Tampon) ou créez un magasin personnalisé.</p>
+          <button class="btn btn-primary" (click)="initializeDefaults()"><i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser les emplacements par défaut</button>
         </div>
       </div>
     } @else {
@@ -61,17 +64,18 @@
             <!-- Card Header -->
             <div class="mc-header">
               <div class="mc-icon">
-                <i class="fa-solid fa-warehouse"></i>
+                <i class="fa-solid {{ getTypeIcon(magasin.type) }}"></i>
               </div>
               <div class="mc-info">
                 <div class="mc-name">{{ magasin.name }}</div>
                 <div class="mc-desc">{{ magasin.description || 'Aucune description' }}</div>
               </div>
               <div class="mc-status">
+                <span class="badge {{ getTypeClass(magasin.type) }}">{{ getTypeLabel(magasin.type) }}</span>
                 @if (magasin.active) {
-                  <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Actif</span>
+                  <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i></span>
                 } @else {
-                  <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i> Inactif</span>
+                  <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i></span>
                 }
               </div>
             </div>
@@ -116,13 +120,17 @@
 
             <!-- Card Actions -->
             <div class="mc-actions">
-              <button class="btn btn-ghost btn-sm" (click)="openEditForm(magasin)" title="Modifier">
-                <i class="fa-solid fa-pen"></i> Modifier
-              </button>
-              <button class="btn btn-ghost btn-sm" (click)="openDeactivateModal(magasin)" [class.btn-danger]="magasin.active">
-                <i class="fa-solid {{ magasin.active ? 'fa-toggle-off' : 'fa-trash' }}"></i>
-                {{ magasin.active ? 'Désactiver' : 'Supprimer' }}
-              </button>
+              @if (canEdit(magasin)) {
+                <button class="btn btn-ghost btn-sm" (click)="openEditForm(magasin)" title="Modifier">
+                  <i class="fa-solid fa-pen"></i> Modifier
+                </button>
+                <button class="btn btn-ghost btn-sm" (click)="openDeactivateModal(magasin)" [class.btn-danger]="magasin.active">
+                  <i class="fa-solid {{ magasin.active ? 'fa-toggle-off' : 'fa-trash' }}"></i>
+                  {{ magasin.active ? 'Désactiver' : 'Supprimer' }}
+                </button>
+              } @else {
+                <span style="color: var(--n400); font-size: 0.8rem; font-style: italic">Emplacement système — non modifiable</span>
+              }
             </div>
           </div>
         }

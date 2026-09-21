@@ -6,6 +6,10 @@ import { StockApiRepository, ReportData, GenerateReportRequest } from '../../../
 export class ReportUseCase {
   private repo = inject(StockApiRepository);
 
+  getAll(): Observable<ReportData[]> {
+    return this.repo.getAllReports();
+  }
+
   getByUser(generatedBy: string): Observable<ReportData[]> {
     return this.repo.getReportsByUser(generatedBy);
   }

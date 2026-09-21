@@ -1,17 +1,22 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-users-gear ph-ico"></i>
-    <div>
-      <h1 class="ph-title">Gestion Utilisateurs</h1>
-      <p class="ph-sub">Comptes, rôles et accès système</p>
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-users-gear"></i></div>
+      <div>
+        <div class="ph-title">Gestion Utilisateurs</div>
+        <div class="ph-sub">Comptes, rôles et accès système</div>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="showCreate.set(true)">
+        <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
+      </button>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary">
-      <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
-    </button>
-  </div>
-</div>
+
+  @if (toastMsg()) {
+    <div class="toast toast-success">{{ toastMsg() }}</div>
+  }
 
 <div class="kpi-grid">
   <div class="kpi-card kp-b">
@@ -112,3 +117,70 @@
     {{ usersFiltres().length }} utilisateur(s) affichés
   </div>
 </div>
+</div>
+
+@if (showCreate()) {
+  <div class="modal-overlay" (click)="showCreate.set(false)">
+    <div class="modal-box" style="max-width:560px" (click)="$event.stopPropagation()">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur</span>
+        <button class="btn btn-ghost btn-sm" (click)="showCreate.set(false)"><i class="fa-solid fa-times"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="form-group">
+          <label>Prénom <span class="req">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="newUser.prenom" placeholder="Prénom">
+        </div>
+        <div class="form-group">
+          <label>Nom <span class="req">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="newUser.nom" placeholder="Nom">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" class="form-input" [(ngModel)]="newUser.email" placeholder="email@tanty.com">
+        </div>
+        <div class="form-group">
+          <label>Mot de passe <span class="req">*</span></label>
+          <input type="password" class="form-input" [(ngModel)]="newUser.motDePasse" placeholder="••••••">
+        </div>
+        <div class="form-group">
+          <label>Rôle <span class="req">*</span></label>
+          <select class="form-input" [(ngModel)]="newUser.role">
+            @for (r of rolesPourCreation; track r) {
+              <option [value]="r">{{ getRoleLabel(r) }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="text" class="form-input" [(ngModel)]="newUser.telephone" placeholder="+237...">
+        </div>
+        <div class="form-group">
+          <label>Sexe</label>
+          <select class="form-input" [(ngModel)]="newUser.sexe">
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>CNI</label>
+          <input type="text" class="form-input" [(ngModel)]="newUser.cni" placeholder="N° CNI">
+        </div>
+        <div class="form-group">
+          <label>Date embauche</label>
+          <input type="date" class="form-input" [(ngModel)]="newUser.dateEmbauche">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Résidence</label>
+          <input type="text" class="form-input" [(ngModel)]="newUser.residence" placeholder="Ville de résidence">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+        <button class="btn btn-ghost" (click)="showCreate.set(false)">Annuler</button>
+        <button class="btn btn-primary" (click)="creerUser()" [disabled]="saving() || !newUser.prenom || !newUser.nom || !newUser.email || !newUser.motDePasse">
+          @if (saving()) { Création… } @else { <i class="fa-solid fa-check"></i> Créer }
+        </button>
+      </div>
+    </div>
+  </div>
+}

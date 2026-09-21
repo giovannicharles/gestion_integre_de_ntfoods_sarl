@@ -1,0 +1,186 @@
+<div class="ia-transferts-page">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-title-zone">
+      <h1><i class="fa-solid fa-shuffle"></i> Optimisation des Transferts IA</h1>
+      <p class="page-subtitle">Analyse intelligente des répartitions entre Stock Central, Tampon et Mobile</p>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" (click)="refresh()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-primary" (click)="runIaOptimization()" [disabled]="iaLoading()">
+        <i class="fa-solid fa-brain" [class.fa-spin]="iaLoading()"></i>
+        {{ iaLoading() ? 'Optimisation IA…' : 'Optimiser avec IA' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- IA STATUS -->
+  @if (!iaConfigured()) {
+    <div class="ia-status-warning">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>IA non configurée — Les suggestions locales sont affichées. Configurez OPENAI_API_KEY pour l'optimisation avancée.</span>
+    </div>
+  }
+
+  <!-- FLOW DIAGRAM -->
+  <div class="flow-diagram">
+    <div class="flow-node flow-central">
+      <i class="fa-solid fa-warehouse"></i>
+      <span>Stock Central</span>
+    </div>
+    <div class="flow-arrow">
+      <i class="fa-solid fa-arrow-right"></i>
+      <span class="flow-label">Transfert</span>
+    </div>
+    <div class="flow-node flow-buffer">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>Stock Tampon</span>
+    </div>
+    <div class="flow-arrow">
+      <i class="fa-solid fa-arrow-right"></i>
+      <span class="flow-label">Dotation</span>
+    </div>
+    <div class="flow-node flow-mobile">
+      <i class="fa-solid fa-truck-field"></i>
+      <span>Stock Mobile</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon stat-total"><i class="fa-solid fa-list-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().total }}</span>
+        <span class="stat-label">Transferts suggérés</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-high"><i class="fa-solid fa-bolt"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().high }}</span>
+        <span class="stat-label">Priorité haute</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-selected"><i class="fa-solid fa-check-circle"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().selected }}</span>
+        <span class="stat-label">Sélectionnés</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-units"><i class="fa-solid fa-box"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().totalUnits }}</span>
+        <span class="stat-label">Unités à transférer</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IA SUMMARY -->
+  @if (iaSummary()) {
+    <div class="ia-summary">
+      <div class="ia-summary-header">
+        <i class="fa-solid fa-brain"></i>
+        <span>Analyse IA</span>
+      </div>
+      <p>{{ iaSummary() }}</p>
+    </div>
+  }
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Analyse des niveaux de stock…</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-state">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <!-- CONTROLS -->
+  @if (!loading() && suggestions().length > 0) {
+    <div class="controls-bar">
+      <div class="filter-group">
+        <button class="filter-btn" [class.active]="filterPriority() === 'ALL'" (click)="setFilter('ALL')">Tous</button>
+        <button class="filter-btn" [class.active]="filterPriority() === 'HIGH'" (click)="setFilter('HIGH')">
+          <i class="fa-solid fa-bolt"></i> Haute
+        </button>
+        <button class="filter-btn" [class.active]="filterPriority() === 'MEDIUM'" (click)="setFilter('MEDIUM')">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i> Moyenne
+        </button>
+        <button class="filter-btn" [class.active]="filterPriority() === 'LOW'" (click)="setFilter('LOW')">
+          <i class="fa-solid fa-circle-info"></i> Faible
+        </button>
+      </div>
+      <div class="bulk-actions">
+        <button class="btn btn-sm btn-ghost" (click)="selectAll()">Tout sélectionner</button>
+        <button class="btn btn-sm btn-ghost" (click)="selectHigh()">Priorité haute</button>
+        <button class="btn btn-sm btn-ghost" (click)="deselectAll()">Tout désélectionner</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+      <table class="transfert-table">
+        <thead>
+          <tr>
+            <th class="col-check"><input type="checkbox" [checked]="stats().selected === suggestions().length" (change)="stats().selected === suggestions().length ? deselectAll() : selectAll()"></th>
+            <th>Produit</th>
+            <th>De</th>
+            <th>Vers</th>
+            <th class="col-num">Stock source</th>
+            <th class="col-num">Stock dest.</th>
+            <th class="col-num">Qté à transférer</th>
+            <th>Priorité</th>
+            <th>Motif</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filteredSuggestions(); track item.productSku + item.fromWarehouse + item.toWarehouse) {
+            <tr [class.row-high]="item.priority === 'HIGH'">
+              <td class="col-check"><input type="checkbox" [checked]="item.selected" (change)="toggleSelect(item)"></td>
+              <td>
+                <div class="prod-cell">
+                  <span class="prod-sku">{{ item.productSku }}</span>
+                  <span class="prod-name">{{ item.productName }}</span>
+                </div>
+              </td>
+              <td><span class="warehouse-chip from-chip">{{ item.fromWarehouse }}</span></td>
+              <td><span class="warehouse-chip to-chip">{{ item.toWarehouse }}</span></td>
+              <td class="col-num">{{ item.fromQty }} {{ item.unit }}</td>
+              <td class="col-num">{{ item.toQty }} {{ item.unit }}</td>
+              <td class="col-num"><strong>{{ item.suggestedQty }} {{ item.unit }}</strong></td>
+              <td>
+                <span class="prio-badge {{ getPriorityClass(item.priority) }}">
+                  <i class="fa-solid {{ getPriorityIcon(item.priority) }}"></i>
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+              </td>
+              <td class="reason-cell">{{ item.reason }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-row">Aucun transfert suggéré pour ce filtre</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- EMPTY -->
+  @if (!loading() && suggestions().length === 0) {
+    <div class="empty-state">
+      <i class="fa-solid fa-circle-check"></i>
+      <h3>Répartition optimale</h3>
+      <p>Aucun transfert n'est nécessaire actuellement. Les stocks sont bien répartis entre les magasins.</p>
+    </div>
+  }
+</div>

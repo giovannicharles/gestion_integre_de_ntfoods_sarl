@@ -25,6 +25,8 @@ export class ControleCreditsComponent implements OnInit {
   totalCredit = computed(() =>
     this.recouvrements().reduce((s, r) => s + r.montantRestant, 0)
   );
+  nbDebiteurs = computed(() => this.debiteurs().length);
+  nbRisqueEleve = computed(() => this.debiteurs().filter(d => d.montantRestant > 300000).length);
 
   parCommercial = computed(() => this.commerciaux().map(com => ({
     nom: com.nomComplet,

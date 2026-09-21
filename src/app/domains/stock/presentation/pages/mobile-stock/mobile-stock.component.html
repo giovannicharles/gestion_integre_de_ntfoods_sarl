@@ -20,10 +20,39 @@
         <div class="kpi-info"><div class="kpi-value">{{ totalItems | number }}</div><div class="kpi-label">Articles en stock mobile</div></div>
       </div>
       <div class="kpi-card" style="border-left:4px solid var(--o)">
-        <div class="kpi-info"><div class="kpi-value">{{ totalStockValue | number }}</div><div class="kpi-label">Valeur du stock mobile</div></div>
+        <div class="kpi-info"><div class="kpi-value">{{ avgStockPerCommercial | number }}</div><div class="kpi-label">Moyenne / commercial</div></div>
       </div>
       <div class="kpi-card" style="border-left:4px solid var(--p)">
-        <div class="kpi-info"><div class="kpi-value">{{ totalOut | number }}</div><div class="kpi-label">Sorties cumulées</div></div>
+        <div class="kpi-info"><div class="kpi-value">{{ totalIn | number }}</div><div class="kpi-label">Entrées (dotations)</div></div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid var(--r)">
+        <div class="kpi-info"><div class="kpi-value">{{ totalOut | number }}</div><div class="kpi-label">Sorties (ventes)</div></div>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUES -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header"><i class="fa-solid fa-chart-pie"></i> Distribution stock par commercial</div>
+        <div class="chart-body"><canvas #distributionCanvas></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><i class="fa-solid fa-arrow-right-arrow-left"></i> Rotation: Entrées vs Sorties</div>
+        <div class="chart-body"><canvas #rotationCanvas></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><i class="fa-solid fa-ranking-star"></i> Top produits en stock mobile</div>
+        <div class="chart-body"><canvas #topProductsCanvas></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><i class="fa-solid fa-hourglass-half"></i> Stock dormant — ventes faibles</div>
+        <div class="chart-body">
+          @if (slowStocks().length > 0) {
+            <canvas #slowStockCanvas></canvas>
+          } @else {
+            <div class="chart-empty"><i class="fa-solid fa-circle-check"></i><p>Aucun stock dormant détecté</p></div>
+          }
+        </div>
       </div>
     </div>
 

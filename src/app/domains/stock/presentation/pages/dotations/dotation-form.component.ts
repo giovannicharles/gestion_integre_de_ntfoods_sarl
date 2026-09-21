@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { DotationUseCase } from '../../../application/use-cases/dotation/dotation.use-case';
 import { Product, Commercial, DotationRequest, StockLevel } from '../../../domain/models';
+import { BufferValuationItem } from '../../../infrastructure/repositories/stock-api.repository';
 
 interface LineForm {
   uid: string;
@@ -38,6 +39,7 @@ export class DotationFormComponent implements OnInit, OnDestroy {
   products = signal<Product[]>([]);
   commercials = signal<Commercial[]>([]);
   stockLevels = signal<StockLevel[]>([]);
+  bufferItems = signal<BufferValuationItem[]>([]);
 
   selectedCommercialMatricule = '';
   selectedCommercialName = '';
@@ -55,12 +57,14 @@ export class DotationFormComponent implements OnInit, OnDestroy {
     forkJoin({
       products: this.uc.getProducts(),
       commercials: this.uc.getCommercials(),
-      stockLevels: this.uc.getStockLevels()
+      stockLevels: this.uc.getStockLevels(),
+      bufferItems: this.uc.getBufferStockItems()
     }).pipe(takeUntil(this.d$)).subscribe({
-      next: ({ products, commercials, stockLevels }) => {
+      next: ({ products, commercials, stockLevels, bufferItems }) => {
         this.products.set(products);
         this.commercials.set(commercials);
         this.stockLevels.set(stockLevels || []);
+        this.bufferItems.set(bufferItems || []);
         this.loading.set(false);
       },
       error: () => {
@@ -75,13 +79,39 @@ export class DotationFormComponent implements OnInit, OnDestroy {
     return this.products().filter(p => p.active !== false);
   }
 
+  getFinishedProducts(): Product[] {
+    return this.getFilteredProducts().filter(p => !p.materialType || p.materialType === 'PRODUIT_FINI');
+  }
+
+  getRawMaterials(): Product[] {
+    return this.getFilteredProducts().filter(p => p.materialType === 'MATIERE_PREMIERE');
+  }
+
+  getConsommables(): Product[] {
+    return this.getFilteredProducts().filter(p => p.materialType === 'CONSOMMABLE');
+  }
+
+  getMateriels(): Product[] {
+    return this.getFilteredProducts().filter(p => p.materialType === 'MATERIEL');
+  }
+
   findProduct(productId: any): Product | undefined {
     const id = Number(productId);
     return this.products().find(p => p.id === id);
   }
 
   findProductBySku(sku: string): Product | undefined {
-    return this.products().find(p => p.sku?.toLowerCase() === sku?.toLowerCase().trim());
+    const s = sku?.toLowerCase().trim();
+    if (!s) return undefined;
+    return this.products().find(p => p.sku?.toLowerCase().trim() === s);
+  }
+
+  searchProductsBySku(sku: string): Product[] {
+    const s = sku?.toLowerCase().trim();
+    if (!s) return [];
+    return this.getFilteredProducts().filter(p =>
+      p.sku?.toLowerCase().includes(s) || (p.designation || '').toLowerCase().includes(s)
+    );
   }
 
   isBufferLevel(level: StockLevel): boolean {
@@ -91,14 +121,91 @@ export class DotationFormComponent implements OnInit, OnDestroy {
   }
 
   getBufferStock(sku: string): number {
-    const levels = this.stockLevels().filter(sl => this.isBufferLevel(sl) && sl.productSku?.toLowerCase() === sku?.toLowerCase().trim());
+    const s = sku?.toLowerCase().trim();
+    if (!s) return 0;
+    const fromBuffer = this.bufferItems().find(bi => bi.productSku?.toLowerCase().trim() === s);
+    if (fromBuffer) return fromBuffer.quantity || 0;
+    const levels = this.stockLevels().filter(sl => this.isBufferLevel(sl) && sl.productSku?.toLowerCase() === s);
     return levels.reduce((sum, sl) => sum + (sl.availableQty ?? sl.quantity ?? 0), 0);
+  }
+
+  isCentralLevel(level: StockLevel): boolean {
+    return (level.warehouseType || '').includes('CENTRAL')
+      || (level.warehouseName || '').toLowerCase().includes('central')
+      || (level.warehouseName || '').toLowerCase().includes('principal');
+  }
+
+  getCentralStock(sku: string): number {
+    const s = sku?.toLowerCase().trim();
+    if (!s) return 0;
+    const levels = this.stockLevels().filter(sl => this.isCentralLevel(sl) && sl.productSku?.toLowerCase() === s);
+    return levels.reduce((sum, sl) => sum + (sl.availableQty ?? sl.quantity ?? 0), 0);
+  }
+
+  getCentralStockForLine(l: LineForm): number {
+    const p = this.findProduct(l.productId);
+    if (!p) return 0;
+    return this.getCentralStock(p.sku);
+  }
+
+  getBufferStockByPackaging(sku: string, packagingType: string): number {
+    if (!packagingType) return this.getBufferStock(sku);
+    const levels = this.stockLevels().filter(sl =>
+      this.isBufferLevel(sl)
+      && sl.productSku?.toLowerCase() === sku?.toLowerCase().trim()
+      && (sl.packagingType || '').toUpperCase() === packagingType.toUpperCase()
+    );
+    return levels.reduce((sum, sl) => sum + (sl.availableQty ?? sl.quantity ?? 0), 0);
+  }
+
+  getBufferStockForLineByPkg(l: LineForm): number {
+    const p = this.findProduct(l.productId);
+    if (!p) return 0;
+    const pkg = l.packagingType || p.packagingType || '';
+    const byPkg = this.getBufferStockByPackaging(p.sku, pkg);
+    return byPkg > 0 ? byPkg : this.getBufferStock(p.sku);
+  }
+
+  getBufferBreakdown(sku: string): { pkg: string; qty: number }[] {
+    const s = sku?.toLowerCase().trim();
+    if (!s) return [];
+    const levels = this.stockLevels().filter(sl => this.isBufferLevel(sl) && sl.productSku?.toLowerCase() === s);
+    const map = new Map<string, number>();
+    for (const sl of levels) {
+      const pkg = (sl.packagingType || '—').toUpperCase();
+      map.set(pkg, (map.get(pkg) || 0) + (sl.availableQty ?? sl.quantity ?? 0));
+    }
+    if (map.size === 0 && this.bufferItems().some(bi => bi.productSku?.toLowerCase().trim() === s)) {
+      const bi = this.bufferItems().find(b => b.productSku?.toLowerCase().trim() === s)!;
+      map.set('TOTAL', bi.quantity || 0);
+    }
+    return Array.from(map.entries()).map(([pkg, qty]) => ({ pkg, qty })).sort((a, b) => b.qty - a.qty);
+  }
+
+  getBufferBreakdownForLine(l: LineForm): { pkg: string; qty: number }[] {
+    const p = this.findProduct(l.productId);
+    if (!p) return [];
+    return this.getBufferBreakdown(p.sku);
+  }
+
+  isRawMaterial(p: Product | undefined): boolean {
+    return p?.materialType === 'MATIERE_PREMIERE';
+  }
+
+  isMateriel(p: Product | undefined): boolean {
+    return p?.materialType === 'MATERIEL';
+  }
+
+  productUnitLabel(p: Product | undefined): string {
+    if (!p) return '';
+    if (this.isRawMaterial(p)) return 'kg';
+    return p.packagingType || 'unité';
   }
 
   getBufferStockForLine(l: LineForm): number {
     const p = this.findProduct(l.productId);
     if (!p) return 0;
-    return this.getBufferStock(p.sku);
+    return this.getBufferStockForLineByPkg(l);
   }
 
   isStockInsufficient(l: LineForm): boolean {
@@ -198,12 +305,14 @@ export class DotationFormComponent implements OnInit, OnDestroy {
 
   onSkuInput(l: LineForm, sku: string) {
     l.skuInput = sku;
-    if (!sku) { l.productId = 0; return; }
+    if (!sku || !sku.trim()) { l.productId = 0; return; }
     const p = this.findProductBySku(sku);
     if (p) {
       l.productId = p.id;
       l.packagingType = p.packagingType || l.packagingType;
       l.quantityPerCarton = p.quantityPerCarton ?? l.quantityPerCarton;
+    } else {
+      l.productId = 0;
     }
   }
 

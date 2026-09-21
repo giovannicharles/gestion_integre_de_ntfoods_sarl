@@ -3,6 +3,7 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { ProductionService, LotBE } from '../../../infrastructure/production.service';
 import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
 import { StockRulesDomainService } from '../../../../stock/domain/services/stock-rules.domain.service';
@@ -49,19 +50,18 @@ export class ProductionLotsComponent implements OnInit {
     forkJoin({
       lots: this.svc.getLots(),
       prods: this.repo.getFinishedProducts(),
-    }).subscribe({
+    }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: ({ lots, prods }) => {
         this.lots.set(lots.map(l => this.mapL(l)));
         this.products.set(prods);
-        this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => {},
     });
   }
 
   // ── Déclaration lot → page dédiée ───────────────────────
   openDeclareModal() {
-    this.router.navigate(['/stock/declaration-lot']);
+    this.router.navigate(['/production/declaration-lot']);
   }
 
   getProduitDesignation(sku: string): string {

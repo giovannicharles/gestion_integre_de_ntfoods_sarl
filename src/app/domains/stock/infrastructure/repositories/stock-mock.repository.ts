@@ -196,6 +196,7 @@ export class StockMockRepository {
       leadTimeDays: p?.leadTimeDays,
       warehouseName: w?.name || '—',
       warehouseType: w?.type || '—',
+      materialType: p?.materialType || 'PRODUIT_FINI',
       variantName: v?.name,
       productLineName: l?.name,
       brandName: b?.name,

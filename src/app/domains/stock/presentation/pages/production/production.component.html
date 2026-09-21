@@ -9,12 +9,12 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
       <div>
-        <h1 class="ph-title">Lots de Production & Commandes</h1>
+        <h1 class="ph-title">Lots de Production</h1>
         <p class="ph-sub">Workflow : Chef Prod déclare → Gestionnaire Stock valide → Stock PF mis à jour</p>
       </div>
     </div>
     <div class="hdr-actions">
-      <button class="btn btn-ghost btn-sm" (click)="openOrderModal()"><i class="fa-solid fa-cart-plus"></i> Commander à la prod.</button>
+      <a class="btn btn-ghost btn-sm" routerLink="/stock/commande-production"><i class="fa-solid fa-cart-plus"></i> Commander à la prod.</a>
       <button class="btn btn-secondary" (click)="openDeclareModal()"><i class="fa-solid fa-plus"></i> Déclarer un lot</button>
     </div>
   </div>
@@ -104,7 +104,7 @@
           @for (sl of pfLevels(); track sl.id) {
             <div class="pfl-row">
               <div class="pfl-info">
-                <span class="pfl-name">{{ sl.productSku }}</span>
+                <span class="pfl-name">{{ sl.productName || sl.productSku }}</span>
                 <span class="pfl-sku">{{ sl.productSku }}</span>
               </div>
               <div class="pfl-bar-wrap">
@@ -133,9 +133,6 @@
     <button class="tab-pill" [class.t-active]="activeTab()==='all'" (click)="activeTab.set('all')">
       <i class="fa-solid fa-list"></i> Tous les lots <span class="tab-count">{{ batches().length }}</span>
     </button>
-    <button class="tab-pill" [class.t-active]="activeTab()==='orders'" (click)="activeTab.set('orders')">
-      <i class="fa-solid fa-cart-plus"></i> Commandes Stock→Prod. <span class="tab-count">{{ orders().length }}</span>
-    </button>
   </div>
 
   <!-- PENDING BATCHES (attente validation stock) -->
@@ -153,7 +150,7 @@
               </div>
               <span style="font-size:11px;color:var(--n400)">{{ b.createdAt | date:'dd/MM HH:mm' }}</span>
             </div>
-            <h3 class="bc-prod-name">{{ b.productSku }}</h3>
+            <h3 class="bc-prod-name">{{ b.productName || b.productSku }}</h3>
             <span style="font-size:10px;color:var(--n400);font-family:monospace">{{ b.productSku }}</span>
 
             <div class="bc-metro">
@@ -188,14 +185,31 @@
 
   <!-- ALL BATCHES -->
   @if (activeTab() === 'all') {
+    <!-- Filtres -->
+    <div class="card">
+      <div class="card-body" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="position:relative;flex:1;min-width:220px;display:flex;align-items:center">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;color:var(--n400);font-size:13px"></i>
+          <input type="text" class="form-control" placeholder="Rechercher (produit, SKU, déclarant)…" style="padding-left:34px" [(ngModel)]="batchSearch" (ngModelChange)="applyBatchFilter()">
+        </div>
+        <select class="form-control" [(ngModel)]="batchStatusFilter" (ngModelChange)="applyBatchFilter()" style="width:auto">
+          <option value="ALL">Tous les statuts</option>
+          <option value="DECLARED_BY_PRODUCTION">En attente validation</option>
+          <option value="VALIDATED_BY_STOCK">Validés</option>
+          <option value="REJECTED">Rejetés</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" (click)="loadAll()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+      </div>
+    </div>
+
     <div class="card" style="overflow:hidden">
       <div class="table-wrapper">
         <table class="table">
           <thead><tr><th>Produit</th><th>Qté déclarée</th><th>→ Unités</th><th>Date prod.</th><th>Date lot</th><th>Déclaré par</th><th>Validé par (Stock)</th><th>Statut</th><th class="text-center">Actions</th></tr></thead>
           <tbody>
-            @for (b of batches(); track b.id) {
+            @for (b of paginatedBatches(); track b.id) {
               <tr class="table-row-anim">
-                <td><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800);font-family:monospace">{{ b.productSku }}</span></div></td>
+                <td><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ b.productName || b.productSku }}</span><span style="font-size:10px;color:var(--n400);font-family:monospace">{{ b.productSku }}</span></div></td>
                 <td><span style="font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--n800)">{{ b.declaredQuantityKg | number }} <span style="font-size:11px;color:var(--n400)">kg</span></span></td>
                 <td><span style="font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--g)">{{ b.equivalentUnits | number }}</span><span style="font-size:10px;color:var(--n400);margin-left:3px">{{ b.productUnit }}</span></td>
                 <td><span style="font-size:12px;color:var(--n600)">{{ b.productionDate | date:'dd/MM/yyyy' }}</span></td>
@@ -216,73 +230,25 @@
           </tbody>
         </table>
       </div>
-    </div>
-  }
-
-  <!-- ORDERS -->
-  @if (activeTab() === 'orders') {
-    @if (orders().length === 0) {
-      <div class="card empty-state-card"><div class="es"><i class="fa-solid fa-inbox es-ico es-g"></i><h3>Aucune commande interne</h3><p>Le gestionnaire de stock n'a pas encore créé de commande vers la production.</p><button class="btn btn-primary btn-sm" (click)="openOrderModal()"><i class="fa-solid fa-cart-plus"></i> Créer une commande</button></div></div>
-    } @else {
-      <!-- KPIs commandes -->
-      <div class="ord-kpis">
-        <div class="ord-kpi"><span class="ok-val ok-warn">{{ countOrderStatus('DRAFT') }}</span><span class="ok-lbl">En attente approbation</span></div>
-        <div class="ord-kpi"><span class="ok-val ok-info">{{ countOrderStatus('APPROVED') }}</span><span class="ok-lbl">Approuvées</span></div>
-        <div class="ord-kpi"><span class="ok-val ok-blue">{{ countOrderStatus('PARTIALLY_DELIVERED') }}</span><span class="ok-lbl">Partiellement livrées</span></div>
-        <div class="ord-kpi"><span class="ok-val ok-ok">{{ countOrderStatus('DELIVERED') }}</span><span class="ok-lbl">Livrées complètes</span></div>
-        <div class="ord-kpi"><span class="ok-val ok-danger">{{ countOrderStatus('CANCELLED') }}</span><span class="ok-lbl">Annulées</span></div>
-      </div>
-
-      <div class="card" style="overflow:hidden">
-        <div class="table-wrapper">
-          <table class="table">
-            <thead><tr><th>N° Commande</th><th>Date</th><th>Produits demandés</th><th>Livraison</th><th>Demandé par</th><th>Approuvé par</th><th>Statut</th><th class="text-center">Actions</th></tr></thead>
-            <tbody>
-              @for (o of orders(); track o.id) {
-                <tr class="table-row-anim">
-                  <td><span style="font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--g)">{{ o.orderNumber }}</span></td>
-                  <td><span style="font-size:12px;color:var(--n600)">{{ o.orderDate | date:'dd/MM/yyyy' }}</span></td>
-                  <td>
-                    <div style="display:flex;flex-direction:column;gap:3px">
-                      @for (item of o.items; track item.id) {
-                        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-                          <span style="font-weight:600;color:var(--n700)">{{ item.productName }}</span>
-                          <span style="color:var(--n400)">→</span>
-                          <span style="font-family:var(--font-d);font-weight:800;color:var(--g)">{{ item.requestedQty | number }}</span>
-                          <span style="color:var(--n400);font-size:10px">{{ item.productUnit }}</span>
-                          @if (item.deliveredQty > 0) {
-                            <span style="font-size:10px;color:var(--s);background:var(--s-gh);padding:1px 6px;border-radius:var(--r-full)"><i class="fa-solid fa-check"></i> {{ item.deliveredQty | number }} livrés</span>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </td>
-                  <td>
-                    <div style="display:flex;flex-direction:column;gap:4px;min-width:100px">
-                      <div style="height:6px;background:var(--n150);border-radius:3px;overflow:hidden">
-                        <div [style.width.%]="getDeliveryPct(o)" [style.background]="getDeliveryPct(o)===100?'var(--g)':getDeliveryPct(o)>0?'var(--y-d)':'var(--n200)'" style="height:100%;border-radius:3px;transition:width .5s"></div>
-                      </div>
-                      <span style="font-size:11px;font-weight:700;color:var(--n600)">{{ getDeliveryPct(o) }}%</span>
-                    </div>
-                  </td>
-                  <td><span style="font-size:12px;color:var(--n600)">{{ o.requestedByName }}</span></td>
-                  <td>@if (o.approvedByName) { <span style="font-size:12px;color:var(--s);font-weight:600">{{ o.approvedByName }}</span> } @else { <span style="font-size:11px;color:var(--n400);font-style:italic">—</span> }</td>
-                  <td><span class="badge {{ getOStatusClass(o.status) }}" style="font-size:10px">{{ getOStatusLabel(o.status) }}</span></td>
-                  <td class="text-center">
-                    <div style="display:flex;gap:4px;justify-content:center">
-                      <button style="width:28px;height:28px;border-radius:6px;background:var(--n100);color:var(--n500);border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center" (click)="openOrderDetail(o)" title="Détails"><i class="fa-solid fa-eye"></i></button>
-                      @if (o.status === 'DRAFT') {
-                        <button style="width:28px;height:28px;border-radius:6px;background:var(--g-gh);color:var(--g);border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center" (click)="approveOrder(o.id)" title="Approuver"><i class="fa-solid fa-check"></i></button>
-                      }
-                    </div>
-                  </td>
-                </tr>
+      @if (batchTotalPages() > 1) {
+        <div style="padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--n150)">
+          <span style="font-size:12px;color:var(--n400)">{{ filteredBatches().length }} lot(s) · Page {{ batchPage() }}/{{ batchTotalPages() }}</span>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-ghost btn-sm" [disabled]="batchPage()===1" (click)="prevBatchPage()"><i class="fa-solid fa-chevron-left"></i></button>
+            @for (p of [1,2,3,4,5]; track p) {
+              @if (p <= batchTotalPages()) {
+                <button class="btn btn-sm" [class.btn-primary]="batchPage()===p" [class.btn-ghost]="batchPage()!==p" (click)="goToBatchPage(p)">{{ p }}</button>
               }
-            </tbody>
-          </table>
+            }
+            @if (batchTotalPages() > 6) { <span style="padding:4px 8px;color:var(--n400)">…</span> }
+            @if (batchTotalPages() > 5) {
+              <button class="btn btn-sm" [class.btn-primary]="batchPage()===batchTotalPages()" [class.btn-ghost]="batchPage()!==batchTotalPages()" (click)="goToBatchPage(batchTotalPages())">{{ batchTotalPages() }}</button>
+            }
+            <button class="btn btn-ghost btn-sm" [disabled]="batchPage()===batchTotalPages()" (click)="nextBatchPage()"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
-      </div>
-    }
+      }
+    </div>
   }
 
   <!-- MODAL: Valider / Rejeter lot -->
@@ -338,149 +304,4 @@
 
   <!-- MODAL: Déclarer un lot → désormais page dédiée /stock/declaration-lot -->
   <!-- MODAL: Commander à la production → désormais page dédiée /stock/commande-production -->
-
-  <!-- MODAL: Détail commande interne -->
-  @if (showOrderDetail() && selectedOrder(); as ord) {
-    <div class="modal-overlay animate-fadeIn" (click)="closeOrderDetail()">
-      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()" style="max-width:680px">
-        <div class="modal-header" style="background:var(--n50)">
-          <div class="modal-title" style="color:var(--n800)">
-            <i class="fa-solid fa-cart-plus"></i> {{ ord.orderNumber }}
-          </div>
-          <button class="modal-close" (click)="closeOrderDetail()"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal-body">
-          <!-- Infos générales -->
-          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
-              <div><span style="color:var(--n500)">Date:</span> <strong>{{ ord.orderDate | date:'dd/MM/yyyy' }}</strong></div>
-              <div><span style="color:var(--n500)">Statut:</span> <span class="badge {{ getOStatusClass(ord.status) }}">{{ getOStatusLabel(ord.status) }}</span></div>
-              <div><span style="color:var(--n500)">Demandé par:</span> <strong>{{ ord.requestedByName }}</strong></div>
-              <div><span style="color:var(--n500)">Approuvé par:</span> <strong>{{ ord.approvedByName || '—' }}</strong></div>
-              @if (ord.notes) { <div style="grid-column:1/3"><span style="color:var(--n500)">Notes:</span> <strong>{{ ord.notes }}</strong></div> }
-              @if (ord.cancelledReason) { <div style="grid-column:1/3"><span style="color:var(--r)">Motif annulation:</span> <strong>{{ ord.cancelledReason }}</strong></div> }
-            </div>
-          </div>
-
-          <!-- Progression livraison -->
-          <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span style="font-size:12px;font-weight:700;color:var(--n700)">Progression livraison</span>
-              <span style="font-family:var(--font-d);font-size:18px;font-weight:800" [style.color]="getDeliveryPct(ord)===100?'var(--g)':'var(--n700)'">{{ getDeliveryPct(ord) }}%</span>
-            </div>
-            <div style="height:10px;background:var(--n150);border-radius:5px;overflow:hidden">
-              <div [style.width.%]="getDeliveryPct(ord)" [style.background]="getDeliveryPct(ord)===100?'var(--g)':'var(--y-d)'" style="height:100%;border-radius:5px;transition:width .5s"></div>
-            </div>
-          </div>
-
-          <!-- Détail articles -->
-          <h4 style="font-family:var(--font-d);font-size:14px;margin-bottom:10px">Articles commandés</h4>
-          <table class="table" style="margin-bottom:16px">
-            <thead>
-              <tr><th>Produit</th><th>SKU</th><th>Demandé</th><th>Livré</th><th>Reste</th><th>Statut</th></tr>
-            </thead>
-            <tbody>
-              @for (item of ord.items; track item.id) {
-                <tr>
-                  <td>{{ item.productName }}</td>
-                  <td style="font-family:monospace;font-size:11px">{{ item.productSku }}</td>
-                  <td style="font-family:var(--font-d);font-weight:700">{{ item.requestedQty | number }} <span style="font-size:10px;color:var(--n400)">{{ item.productUnit }}</span></td>
-                  <td style="font-weight:600;color:var(--s)">{{ item.deliveredQty | number }}</td>
-                  <td style="font-weight:600;color:var(--o)">{{ (item.requestedQty - (item.deliveredQty || 0)) | number }}</td>
-                  <td>
-                    @if (item.fullyDelivered) {
-                      <span class="badge badge-success" style="font-size:9px"><i class="fa-solid fa-check"></i> Complet</span>
-                    } @else if ((item.deliveredQty || 0) > 0) {
-                      <span class="badge badge-warning" style="font-size:9px">Partiel</span>
-                    } @else {
-                      <span class="badge badge-neutral" style="font-size:9px">En attente</span>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-
-          <!-- Actions selon statut -->
-          @if (ord.status === 'DRAFT') {
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-primary btn-sm" (click)="approveOrder(ord.id); closeOrderDetail()">
-                <i class="fa-solid fa-check"></i> Approuver la commande
-              </button>
-              <button class="btn btn-ghost btn-sm" (click)="cancelReason = ''; $any(null)">
-                <i class="fa-solid fa-xmark"></i> Annuler
-              </button>
-            </div>
-            @if (!cancelReason && cancelling() === false) {
-              <div class="form-group" style="margin-top:12px">
-                <label class="form-label">Motif d'annulation <span class="req">*</span></label>
-                <textarea class="form-control" rows="2" placeholder="Raison de l'annulation…" [(ngModel)]="cancelReason"></textarea>
-              </div>
-            }
-            @if (cancelReason) {
-              <button class="btn btn-danger btn-sm" style="margin-top:8px" [disabled]="cancelling()" (click)="cancelOrder(ord.id)">
-                @if (cancelling()) { <div class="spinner spinner-sm"></div> Annulation… }
-                @else { <i class="fa-solid fa-xmark"></i> Confirmer l'annulation }
-              </button>
-            }
-          }
-
-          @if (ord.status === 'APPROVED' || ord.status === 'PARTIALLY_DELIVERED') {
-            <!-- Formulaire de livraison -->
-            <div style="border:1.5px solid var(--n200);border-radius:var(--r-md);padding:14px;margin-bottom:12px">
-              <div style="font-size:12px;font-weight:700;color:var(--n700);margin-bottom:10px">
-                <i class="fa-solid fa-truck-fast"></i> Enregistrer une livraison
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end">
-                <div class="form-group" style="margin:0">
-                  <label class="form-label">Produit</label>
-                  <select class="form-control" [(ngModel)]="deliveryForm.productId">
-                    <option [value]="0">— Sélectionner —</option>
-                    @for (item of ord.items; track item.id) {
-                      @if (!item.fullyDelivered) {
-                        <option [value]="item.productId">{{ item.productName }} (reste: {{ (item.requestedQty - (item.deliveredQty || 0)) | number }} {{ item.productUnit }})</option>
-                      }
-                    }
-                  </select>
-                </div>
-                <div class="form-group" style="margin:0">
-                  <label class="form-label">Quantité livrée</label>
-                  <input type="number" class="form-control" min="1" placeholder="0" [(ngModel)]="deliveryForm.deliveredQty">
-                </div>
-                <button class="btn btn-primary btn-sm" [disabled]="!deliveryForm.productId || !deliveryForm.deliveredQty || delivering()" (click)="deliverOrder(ord.id)">
-                  @if (delivering()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-paper-plane"></i> Livrer }
-                </button>
-              </div>
-            </div>
-
-            <button class="btn btn-ghost btn-sm" (click)="cancelReason = ''">
-              <i class="fa-solid fa-xmark"></i> Annuler la commande
-            </button>
-            @if (cancelReason !== '' || cancelling()) {
-              <div class="form-group" style="margin-top:8px">
-                <label class="form-label">Motif d'annulation <span class="req">*</span></label>
-                <textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="cancelReason"></textarea>
-              </div>
-              <button class="btn btn-danger btn-sm" [disabled]="!cancelReason || cancelling()" (click)="cancelOrder(ord.id)">
-                @if (cancelling()) { <div class="spinner spinner-sm"></div> Annulation… }
-                @else { <i class="fa-solid fa-xmark"></i> Confirmer l'annulation }
-              </button>
-            }
-          }
-
-          @if (ord.status === 'DELIVERED') {
-            <div class="banner banner-success" style="margin-top:8px">
-              <i class="fa-solid fa-circle-check"></i><span>Commande entièrement livrée. Tous les produits ont été reçus.</span>
-            </div>
-          }
-
-          @if (ord.status === 'CANCELLED') {
-            <div class="banner banner-danger" style="margin-top:8px">
-              <i class="fa-solid fa-xmark-circle"></i><span>Cette commande a été annulée. {{ ord.cancelledReason }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  }
 </div>

@@ -14,6 +14,8 @@ export const CONTROLE_ROUTES: Routes = [
       { path: 'valorisation', loadComponent: () => import('./pages/valorisation/controle-valorisation.component').then(m => m.ControleValorisationComponent) },
       { path: 'budget', loadComponent: () => import('./pages/budget/controle-budget.component').then(m => m.ControleBudgetComponent) },
       { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },
+      { path: 'alertes', loadComponent: () => import('../../stock/presentation/pages/alertes/alertes.component').then(m => m.AlertesComponent) },
+      { path: 'inventaire', loadComponent: () => import('../../stock/presentation/pages/inventaire/inventaire.component').then(m => m.InventaireComponent) },
     ]
   }
 ];

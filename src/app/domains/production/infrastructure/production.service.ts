@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -99,7 +99,7 @@ export class ProductionService {
   getLots(statut?: string): Observable<LotBE[]> {
     return this.api.get<LotBE[]>('v1/stock/production/batches').pipe(
       map((list: LotBE[]) => statut ? list.filter(b => b.status === statut) : list),
-      catchError(() => [])
+      catchError(() => of([]))
     );
   }
 
@@ -107,7 +107,7 @@ export class ProductionService {
     const params: Record<string, string> = {};
     if (statut) params['statut'] = statut;
     return this.api.get<ApiResponse<OFBE[]>>('production/ordres-fabrication', params)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   declarerLot(req: {
@@ -120,7 +120,7 @@ export class ProductionService {
 
   getLotsAValider(): Observable<LotBE[]> {
     return this.api.get<LotBE[]>('v1/stock/production/batches/pending').pipe(
-      catchError(() => [])
+      catchError(() => of([]))
     );
   }
 
@@ -141,7 +141,7 @@ export class ProductionService {
     const params: Record<string, string> = {};
     if (statut) params['statut'] = statut;
     return this.api.get<ApiResponse<PPHBE[]>>('production/pph', params)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getPPHEnCours(): Observable<PPHBE> {
@@ -187,7 +187,7 @@ export class ProductionService {
     if (params.debut) p['debut'] = params.debut;
     if (params.fin) p['fin'] = params.fin;
     return this.api.get<ApiResponse<SessionBroyageBE[]>>('production/broyage/sessions', p)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getSessionBroyage(id: number): Observable<SessionBroyageBE> {
@@ -256,17 +256,17 @@ export class ProductionService {
 
   getSessionsDosageParPPH(reference: string): Observable<SessionDosageBE[]> {
     return this.api.get<ApiResponse<SessionDosageBE[]>>(`production/dosage/pph/${encodeURIComponent(reference)}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getSessionsDosageParDate(date: string): Observable<SessionDosageBE[]> {
     return this.api.get<ApiResponse<SessionDosageBE[]>>(`production/dosage/date/${date}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getFichesParPPH(referencePPH: string): Observable<FicheProductionBE[]> {
     return this.api.get<ApiResponse<FicheProductionBE[]>>(`production/fiches/pph/${encodeURIComponent(referencePPH)}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getFiche(referencePPH: string, date: string): Observable<FicheProductionBE> {
@@ -299,7 +299,7 @@ export class ProductionService {
     if (params.debut) p['debut'] = params.debut;
     if (params.fin) p['fin'] = params.fin;
     return this.api.get<ApiResponse<AffectationBE[]>>('production/affectations', p)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 
   getAffectation(id: number): Observable<AffectationBE> {
@@ -341,6 +341,6 @@ export class ProductionService {
     if (params.debut) p['debut'] = params.debut;
     if (params.fin) p['fin'] = params.fin;
     return this.api.get<ApiResponse<RegistreProductionBE[]>>('production/registres', p)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => r.donnees ?? []), catchError(() => of([])));
   }
 }

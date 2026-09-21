@@ -13,7 +13,7 @@
 .card { background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);box-shadow:var(--sh-sm); }
 .card-hd { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--n150); }
 .card-title { font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--n800);display:flex;align-items:center;gap:8px; }
-.card-title i { color:var(--b); }
+.card-title i { color:var(--g); }
 .card-body { padding:18px 20px; }
 .card-hint { font-size:12px;color:var(--n500);margin:0 0 14px; }
 
@@ -23,7 +23,7 @@
 .fg { display:flex;flex-direction:column;gap:5px; }
 .fg label { font-size:12px;font-weight:600;color:var(--n600); }
 .form-control { padding:8px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n800);outline:none;background:#fff; }
-.form-control:focus { border-color:var(--b); }
+.form-control:focus { border-color:var(--g); }
 
 /* ── EXPORT ACTIONS ── */
 .export-actions { display:flex;gap:10px;flex-wrap:wrap; }
@@ -31,12 +31,12 @@
 
 /* ── BUTTONS ── */
 .btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border:none;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font-b); }
-.btn-primary { background:var(--b);color:#fff; }
-.btn-primary:hover { background:var(--b-d); }
+.btn-primary { background:var(--g);color:#fff; }
+.btn-primary:hover { background:var(--g-d); }
 .btn-success { background:var(--g);color:#fff; }
 .btn-success:hover { background:var(--g-d); }
 .btn-danger { background:var(--r);color:#fff; }
-.btn-danger:hover { background:var(--r-d); }
+.btn-danger:hover { background:var(--r-l); }
 .btn:disabled { opacity:.5;cursor:not-allowed; }
 
 /* ── TOAST ── */
@@ -47,7 +47,7 @@
 
 /* ── LOADING ── */
 .loading-state { display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--n400);gap:14px; }
-.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--b);border-radius:50%;animation:spin .8s linear infinite; }
+.spinner { width:32px;height:32px;border:3px solid var(--n200);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite; }
 .spinner-lg { width:40px;height:40px; }
 @keyframes spin { to { transform:rotate(360deg); } }
 

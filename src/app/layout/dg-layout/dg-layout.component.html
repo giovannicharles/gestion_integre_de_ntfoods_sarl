@@ -8,7 +8,7 @@
         <div class="brand-content">
           <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
           @if (alertCount() > 0) {
-          <a class="logo-alert-badge" routerLink="/stock/alertes" title="{{ alertCount() }} alerte(s) active(s)">
+          <a class="logo-alert-badge" routerLink="/dg/alertes" title="{{ alertCount() }} alerte(s) active(s)">
             <i class="fa-solid fa-bell"></i>
             <span class="lab-count">{{ alertCount() }}</span>
           </a>
@@ -128,7 +128,7 @@
                     <span>Aucune notification active</span>
                   </div>
                 } @else {
-                  <a class="notif-item notif-danger" routerLink="/stock/alertes" (click)="closeNotifPanel()">
+                  <a class="notif-item notif-danger" routerLink="/dg/alertes" (click)="closeNotifPanel()">
                     <div class="notif-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <div class="notif-content">
                       <span class="notif-title">{{ alertCount() }} alerte(s) stock</span>
@@ -136,7 +136,7 @@
                     </div>
                   </a>
                   @if (criticalCount() > 0) {
-                    <a class="notif-item notif-danger" routerLink="/stock/alertes" (click)="closeNotifPanel()">
+                    <a class="notif-item notif-danger" routerLink="/dg/alertes" (click)="closeNotifPanel()">
                       <div class="notif-ico"><i class="fa-solid fa-fire"></i></div>
                       <div class="notif-content">
                         <span class="notif-title">{{ criticalCount() }} alerte(s) critique(s)</span>
@@ -161,7 +161,7 @@
                 }
               </div>
               <div class="notif-panel-footer">
-                <a routerLink="/stock/alertes" (click)="closeNotifPanel()" class="notif-view-all">Voir toutes les alertes</a>
+                <a routerLink="/dg/alertes" (click)="closeNotifPanel()" class="notif-view-all">Voir toutes les alertes</a>
               </div>
             </div>
           }
@@ -174,6 +174,13 @@
         <button class="tb-icon-btn" routerLink="/dg/decaissements" title="Décaissements en attente">
           <i class="fa-solid fa-money-bill-transfer"></i>
           <span class="tb-badge tb-badge-red">2</span>
+        </button>
+        <div class="tb-divider"></div>
+        <button class="tb-icon-btn" routerLink="/dg/chat" title="Assistant IA" style="color:#1A6B2A">
+          <i class="fa-solid fa-robot"></i>
+        </button>
+        <button class="tb-icon-btn" routerLink="/dg/ia-analyse" title="Analyse IA 360°" style="color:#B8860B">
+          <i class="fa-solid fa-brain"></i>
         </button>
         <div class="tb-divider"></div>
         <div class="tb-user">
@@ -191,4 +198,10 @@
       <router-outlet />
     </main>
   </div>
+
+  <!-- FLOATING AI BUTTON -->
+  <a class="fab-ai" routerLink="/dg/chat" title="Assistant IA TantyAI">
+    <i class="fa-solid fa-robot"></i>
+    <span class="fab-pulse"></span>
+  </a>
 </div>

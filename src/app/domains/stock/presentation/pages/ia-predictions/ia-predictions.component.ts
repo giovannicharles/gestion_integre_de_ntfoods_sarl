@@ -4,10 +4,14 @@ import {
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevel, StockMovement } from '../../../domain/models';
+import {
+  IaService, AnalysisResponse, ChatResponse
+} from '../../../../../core/services/ia.service';
 
 Chart.register(...registerables);
 
@@ -28,13 +32,14 @@ interface PredictionItem {
 @Component({
   selector: 'app-ia-predictions',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, RouterLink],
   templateUrl: './ia-predictions.component.html',
   styleUrls: ['./ia-predictions.component.css']
 })
 export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy {
   private d$ = new Subject<void>();
   private repo = inject(StockApiRepository);
+  private iaService = inject(IaService);
 
   @ViewChild('trendCanvas') trendCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('forecastCanvas') forecastCanvas!: ElementRef<HTMLCanvasElement>;
@@ -52,6 +57,22 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
   predictions = signal<PredictionItem[]>([]);
   selectedHorizon = signal<30 | 60 | 90>(30);
   filterUrgency = signal<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+
+  // IA Analysis state
+  iaConfigured = signal(false);
+  iaModel = signal('');
+  iaAnalyzing = signal(false);
+  iaAnalysis = signal<AnalysisResponse | null>(null);
+  iaError = signal('');
+  activeTab = signal<'predictions' | 'ia-analysis' | 'ia-chat'>('predictions');
+
+  // IA Chat state
+  chatMessages = signal<{ role: 'user' | 'ai'; content: string; time: string }[]>([]);
+  chatInput = signal('');
+  chatLoading = signal(false);
+  @ViewChild('chatScroll') chatScroll?: ElementRef<HTMLDivElement>;
+  @ViewChild('iaChartCanvas') iaChartCanvas?: ElementRef<HTMLCanvasElement>;
+  private iaChart?: Chart;
 
   Math = Math;
 
@@ -79,6 +100,8 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   ngOnInit(): void {
     this.loadData();
+    this.checkIaStatus();
+    this.initChat();
   }
 
   ngAfterViewInit(): void {
@@ -92,6 +115,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
     this.forecastChart?.destroy();
     this.urgencyChart?.destroy();
     this.consumptionChart?.destroy();
+    this.iaChart?.destroy();
   }
 
   private loadData(): void {
@@ -309,5 +333,211 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   refresh(): void {
     this.loadData();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  IA Integration
+  // ═══════════════════════════════════════════════════════════
+
+  private checkIaStatus(): void {
+    this.iaService.getStatus().pipe(
+      catchError(() => of({ configured: false, model: '', service: 'TantyAI' }))
+    ).subscribe(status => {
+      this.iaConfigured.set(status.configured);
+      this.iaModel.set(status.model);
+    });
+  }
+
+  runIaAnalysis(): void {
+    if (this.iaAnalyzing()) return;
+    this.iaAnalyzing.set(true);
+    this.iaError.set('');
+
+    const preds = this.predictions();
+    const levels = this.stockLevels();
+    const movements = this.movements();
+
+    const stockSummary = {
+      totalProducts: levels.length,
+      totalQuantity: levels.reduce((s, l) => s + l.quantity, 0),
+      totalValue: levels.reduce((s, l) => s + (l.stockValue || 0), 0),
+      criticalCount: preds.filter(p => p.urgency === 'CRITICAL').length,
+      highCount: preds.filter(p => p.urgency === 'HIGH').length,
+      avgDaysOfStock: preds.length > 0
+        ? Math.round(preds.reduce((s, p) => s + (p.daysOfStockLeft >= 999 ? 90 : p.daysOfStockLeft), 0) / preds.length)
+        : 0
+    };
+
+    const topAtRisk = preds
+      .filter(p => p.urgency === 'CRITICAL' || p.urgency === 'HIGH')
+      .slice(0, 10)
+      .map(p => ({ sku: p.sku, qty: p.currentQty, daysLeft: p.daysOfStockLeft, urgency: p.urgency }));
+
+    const movementSummary = {
+      total: movements.length,
+      outQty: movements.filter(m => ['TRANSFER', 'ADJUSTMENT', 'TRANSFER_BUFFER_TO_MOBILE'].includes(m.type)).reduce((s, m) => s + m.quantity, 0),
+      inQty: movements.filter(m => ['RECEIPT', 'TRANSFER_CENTRAL_TO_BUFFER'].includes(m.type)).reduce((s, m) => s + m.quantity, 0),
+    };
+
+    this.iaService.analyze({
+      analysisType: 'STOCK_PREDICTION',
+      period: '30 derniers jours',
+      stockData: stockSummary,
+      movementData: movementSummary,
+      alertData: { critical: stockSummary.criticalCount, high: stockSummary.highCount, atRisk: topAtRisk }
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: (resp) => {
+        const cleaned = {
+          ...resp,
+          summary: this.cleanText(resp.summary),
+          insights: (resp.insights || []).map(i => this.cleanText(i)),
+          recommendations: (resp.recommendations || []).map(r => ({
+            ...r,
+            action: this.cleanText(r.action),
+            detail: this.cleanText(r.detail)
+          }))
+        };
+        this.iaAnalysis.set(cleaned);
+        this.iaAnalyzing.set(false);
+        setTimeout(() => this.buildIaChart(), 100);
+      },
+      error: (err) => {
+        this.iaError.set('Erreur lors de l\'analyse IA: ' + (err.message || 'connexion refusée'));
+        this.iaAnalyzing.set(false);
+      }
+    });
+  }
+
+  private buildIaChart(): void {
+    if (this.iaChart) { this.iaChart.destroy(); this.iaChart = undefined; }
+    if (!this.iaChartCanvas?.nativeElement) return;
+    const analysis = this.iaAnalysis();
+    if (!analysis || !analysis.chartData || analysis.chartData.length === 0) return;
+
+    const colors = ['#7C3AED', '#2563EB', '#EA580C', '#1A6B2A', '#DC2626', '#F59E0B', '#0891B2', '#8B5CF6'];
+    this.iaChart = new Chart(this.iaChartCanvas.nativeElement.getContext('2d')!, {
+      type: 'bar',
+      data: {
+        labels: analysis.chartData.map(d => d.label),
+        datasets: [{
+          label: 'Valeur',
+          data: analysis.chartData.map(d => d.value),
+          backgroundColor: analysis.chartData.map((_, i) => colors[i % colors.length] + 'BB'),
+          borderRadius: 6, borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { font: { size: 10, family: 'Inter' }, maxRotation: 45 } },
+          y: { beginAtZero: true, ticks: { font: { size: 11, family: 'Inter' } } }
+        }
+      }
+    });
+  }
+
+  setTab(tab: 'predictions' | 'ia-analysis' | 'ia-chat'): void {
+    this.activeTab.set(tab);
+    if (tab === 'ia-analysis' && !this.iaAnalysis() && !this.iaAnalyzing()) {
+      this.runIaAnalysis();
+    }
+    if (tab === 'ia-chat') {
+      setTimeout(() => this.scrollChatToBottom(), 100);
+    }
+  }
+
+  getPriorityClass(p: string): string {
+    const m: Record<string, string> = { HIGH: 'urg-high', CRITICAL: 'urg-critical', MEDIUM: 'urg-medium', LOW: 'urg-low' };
+    return m[p?.toUpperCase()] || 'urg-low';
+  }
+
+  private cleanText(text: string): string {
+    if (!text) return '';
+    let cleaned = text.trim();
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    if (cleaned.startsWith('```')) {
+      const nl = cleaned.indexOf('\n');
+      if (nl > 0) cleaned = cleaned.substring(nl + 1);
+      if (cleaned.endsWith('```')) cleaned = cleaned.substring(0, cleaned.length - 3);
+      cleaned = cleaned.trim();
+    }
+    if (cleaned.startsWith('{') || cleaned.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(cleaned);
+        if (parsed.summary && typeof parsed.summary === 'string') return parsed.summary;
+        if (parsed.message && typeof parsed.message === 'string') return parsed.message;
+        if (typeof parsed === 'string') return parsed;
+      } catch { /* not JSON */ }
+    }
+    return cleaned;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  IA Chat
+  // ═══════════════════════════════════════════════════════════
+
+  private initChat(): void {
+    this.chatMessages.set([{
+      role: 'ai',
+      content: 'Bonjour ! Je suis TantyAI, votre assistant IA pour l\'analyse de stock. ' +
+        'Posez-moi des questions sur vos données, ou demandez une analyse. ' +
+        (this.iaConfigured() ? '' : '(Mode hors-ligne — configurez OPENAI_API_KEY pour l\'IA complète)'),
+      time: this.nowStr()
+    }]);
+  }
+
+  sendChat(): void {
+    const text = this.chatInput().trim();
+    if (!text || this.chatLoading()) return;
+    this.chatMessages.update(list => [...list, { role: 'user', content: text, time: this.nowStr() }]);
+    this.chatInput.set('');
+    this.chatLoading.set(true);
+    setTimeout(() => this.scrollChatToBottom(), 50);
+
+    const context = this.buildChatContext();
+    const history = this.chatMessages().slice(-8).map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+    this.iaService.chat({ message: text, context, conversationHistory: history }).pipe(
+      takeUntil(this.d$),
+      catchError(() => of({
+        reply: 'Désolé, je n\'ai pas pu traiter votre demande. Vérifiez que le backend est démarré et que la clé API est configurée.',
+        model: 'fallback', usingFallback: true
+      } as ChatResponse))
+    ).subscribe(resp => {
+      this.chatLoading.set(false);
+      this.chatMessages.update(list => [...list, { role: 'ai', content: resp.reply, time: this.nowStr() }]);
+      setTimeout(() => this.scrollChatToBottom(), 50);
+    });
+  }
+
+  private buildChatContext(): string {
+    const preds = this.predictions();
+    const critical = preds.filter(p => p.urgency === 'CRITICAL');
+    const high = preds.filter(p => p.urgency === 'HIGH');
+    return JSON.stringify({
+      totalProducts: preds.length,
+      criticalCount: critical.length,
+      highCount: high.length,
+      topAtRisk: [...critical, ...high].slice(0, 5).map(p => ({ sku: p.sku, qty: p.currentQty, daysLeft: p.daysOfStockLeft })),
+      avgConfidence: this.stats().avgConfidence
+    });
+  }
+
+  onChatEnter(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendChat();
+    }
+  }
+
+  private scrollChatToBottom(): void {
+    if (this.chatScroll?.nativeElement) {
+      this.chatScroll.nativeElement.scrollTop = this.chatScroll.nativeElement.scrollHeight;
+    }
+  }
+
+  private nowStr(): string {
+    return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
 }

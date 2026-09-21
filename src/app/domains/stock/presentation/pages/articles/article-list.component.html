@@ -6,7 +6,7 @@
       <div class="ph-icon"><i class="fa-solid fa-box-open"></i></div>
       <div>
         <h1 class="ph-title">Gestion des Articles de Stock</h1>
-        <p class="ph-sub">Articles par emplacement — ajustements, édition, suivi des seuils</p>
+        <p class="ph-sub">Suivi des quantités, ajustements et seuils par emplacement</p>
       </div>
     </div>
     <div class="ph-actions">
@@ -177,9 +177,21 @@
           <span class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvel article</span>
         </div>
         <div class="form-grid">
+          <div class="fg" style="grid-column: 1 / -1">
+            <label>Produit <span class="req">*</span></label>
+            <select class="form-control" [ngModel]="newItemSelectedProductId()" (ngModelChange)="onProductSelected($event)">
+              <option [ngValue]="null" disabled>— Sélectionner un produit —</option>
+              @for (p of getAvailableProducts(); track p.id) {
+                <option [value]="p.id">[{{ p.sku }}] {{ p.designation || p.sku }}{{ p.packagingType ? ' (' + p.packagingType + ')' : '' }}</option>
+              }
+            </select>
+            @if (getAvailableProducts().length === 0) {
+              <small style="color: var(--n400); margin-top: 4px; display: block">Tous les produits connus sont déjà dans cet emplacement.</small>
+            }
+          </div>
           <div class="fg">
-            <label>SKU Produit <span class="req">*</span></label>
-            <input type="text" class="form-control" [(ngModel)]="newItem.productSku" placeholder="Ex: TANTY-001">
+            <label>SKU</label>
+            <input type="text" class="form-control" [ngModel]="newItem.productSku" readonly placeholder="Auto-rempli">
           </div>
           <div class="fg">
             <label>Quantité <span class="req">*</span></label>
@@ -203,6 +215,11 @@
               <option value="UNIT">Unité</option>
               <option value="CARTON">Carton</option>
               <option value="ASSORTIMENT">Assortiment</option>
+              <option value="SACHET">Sachet</option>
+              <option value="SEAU">Seau</option>
+              <option value="SAC">Sac</option>
+              <option value="BIDON">Bidon</option>
+              <option value="DOYPACK">Doypack</option>
             </select>
           </div>
           <div class="fg">

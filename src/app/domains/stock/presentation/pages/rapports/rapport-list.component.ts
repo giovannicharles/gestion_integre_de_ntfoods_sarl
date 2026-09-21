@@ -5,8 +5,9 @@ import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ReportUseCase } from '../../../application/use-cases/rapports/report.use-case';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { StockApiRepository, ReportData, GenerateReportRequest } from '../../../infrastructure/repositories/stock-api.repository';
-import { StockLevel, StockMovement, DashboardStatsResponse } from '../../../domain/models';
+import { StockApiRepository, ReportData, GenerateReportRequest, StockLocationDto, CustomReportCriteriaDto } from '../../../infrastructure/repositories/stock-api.repository';
+import { StockLevel, StockMovement, DashboardStatsResponse, Product } from '../../../domain/models';
+import { IaService, MeetingReportResponse } from '../../../../../core/services/ia.service';
 
 Chart.register(...registerables);
 
@@ -32,6 +33,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   private uc = inject(ReportUseCase);
   private repo = inject(StockApiRepository);
   private auth = inject(AuthService);
+  private iaService = inject(IaService);
 
   @ViewChild('rptMaterialChart') rptMaterialCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('rptAlertChart') rptAlertCanvas!: ElementRef<HTMLCanvasElement>;
@@ -44,19 +46,37 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   showAnalysis = signal(true);
   analysisView = signal<'material' | 'alerts' | 'warehouse' | 'movements'>('material');
+  analysisViewLabel = computed(() => {
+    const v = this.analysisView();
+    if (v === 'material') return 'Répartition par type de matériel';
+    if (v === 'alerts') return "Niveaux d'alerte";
+    if (v === 'warehouse') return 'Stock par entrepôt';
+    return 'Mouvements par type';
+  });
   stockLevels = signal<StockLevel[]>([]);
   movements = signal<StockMovement[]>([]);
   dashboardStats = signal<DashboardStatsResponse | null>(null);
   analysisLoading = signal(false);
 
   // Computed distributions
+  private materialTypeLabel(mt: string): string {
+    const labels: Record<string, string> = {
+      PRODUIT_FINI: 'Produit Fini',
+      MATIERE_PREMIERE: 'Matière Première',
+      CONSOMMABLE: 'Consommable',
+      MATERIEL: 'Matériel'
+    };
+    return labels[mt] || mt || 'Autre';
+  }
+
   materialAnalysis = computed(() => {
     const levels = this.stockLevels();
     const counts: Record<string, number> = {};
     const qtys: Record<string, number> = {};
     const values: Record<string, number> = {};
     levels.forEach(sl => {
-      const cat = sl.warehouseType || sl.product?.category || 'Autre';
+      const rawMt = sl.materialType || sl.product?.materialType || 'Autre';
+      const cat = this.materialTypeLabel(rawMt);
       counts[cat] = (counts[cat] || 0) + 1;
       qtys[cat] = (qtys[cat] || 0) + sl.quantity;
       values[cat] = (values[cat] || 0) + (sl.stockValue || 0);
@@ -74,9 +94,9 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       counts[lvl] = (counts[lvl] || 0) + 1;
     });
     return [
-      { label: 'Critique', value: counts['CRITIQUE'], color: '#dc2626' },
-      { label: 'Faible', value: counts['FAIBLE'], color: '#ea580c' },
-      { label: 'Normal', value: counts['NORMAL'], color: '#1A6B2A' }
+      { label: 'Critique', value: counts['CRITIQUE'], color: '#C22B2B' },
+      { label: 'Faible', value: counts['FAIBLE'], color: '#F6B60B' },
+      { label: 'Normal', value: counts['NORMAL'], color: '#14532D' }
     ];
   });
 
@@ -108,10 +128,25 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   topStockProducts = computed(() => {
-    return [...this.stockLevels()]
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 10)
-      .map(sl => ({ name: sl.productName || sl.productSku || 'N/A', qty: sl.quantity, value: sl.stockValue || 0 }));
+    const bySku = new Map<string, { name: string; sku: string; qty: number; value: number }>();
+    for (const sl of this.stockLevels()) {
+      const sku = sl.productSku || sl.productName || `id-${sl.id}`;
+      const existing = bySku.get(sku);
+      if (existing) {
+        existing.qty += sl.quantity;
+        existing.value += sl.stockValue || 0;
+      } else {
+        bySku.set(sku, {
+          name: sl.productName || sl.productSku || 'N/A',
+          sku: sl.productSku || '',
+          qty: sl.quantity,
+          value: sl.stockValue || 0
+        });
+      }
+    }
+    return Array.from(bySku.values())
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 10);
   });
 
   totalStockValue = computed(() => this.stockLevels().reduce((s, sl) => s + (sl.stockValue || 0), 0));
@@ -120,6 +155,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   reports = signal<ReportData[]>([]);
   loading = signal(true);
   error = signal('');
+  viewMode = signal<'all' | 'mine'>('mine');
   showForm = signal(false);
   generating = signal(false);
   selectedReport = signal<ReportData | null>(null);
@@ -133,13 +169,65 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   docPeriodStart = signal<string>(this.today);
   docPeriodEnd = signal<string>(this.today);
 
+  // ── Export integration ──
+  locations = signal<StockLocationDto[]>([]);
+  selectedLocationId = signal('');
+  excelLocationType = signal('STOCK_CENTRAL');
+  ntFoodsMotif = signal('Production');
+  ntFoodsNom = signal('');
+  ntFoodsVille = signal('');
+  ntFoodsZone = signal('');
+  ntFoodsColis = signal<number | null>(null);
+  showExports = signal(false);
+  showNtFoodsForm = signal(false);
+
+  // ── Custom Report Builder ──
+  showCustomReport = signal(false);
+  customGenerating = signal(false);
+  customReport = signal<ReportData | null>(null);
+  customFilters = {
+    locationTypes: ['STOCK_CENTRAL', 'STOCK_BUFFER', 'STOCK_MOBILE'] as string[],
+    materialTypes: [] as string[],
+    alertLevels: [] as string[],
+    productSku: '',
+    minQuantity: null as number | null,
+    maxQuantity: null as number | null,
+    minValue: null as number | null,
+    maxValue: null as number | null,
+    format: 'PDF' as string
+  };
+
+  // IA Meeting Report state
+  showMeetingForm = signal(false);
+  meetingGenerating = signal(false);
+  meetingResult = signal<MeetingReportResponse | null>(null);
+  iaConfigured = signal(false);
+  iaModel = signal('');
+  meetingForm = {
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    location: '',
+    participants: '',
+    agenda: '',
+    notes: '',
+    decisions: '',
+    actionItems: ''
+  };
+
   reportTypes = [
     { value: 'STOCK_CENTRAL_STATUS', label: 'État du stock central', icon: 'fa-building-circle-check', category: 'stock' },
     { value: 'STOCK_BUFFER_STATUS', label: 'État du magasin tampon', icon: 'fa-warehouse', category: 'stock' },
     { value: 'STOCK_MOVEMENTS', label: 'Mouvements de stock', icon: 'fa-right-left', category: 'stock' },
+    { value: 'STOCK_MOBILE_STATUS', label: 'État du stock mobile', icon: 'fa-truck-field', category: 'stock' },
+    { value: 'STOCK_ROTATION', label: 'Rotation du stock', icon: 'fa-rotate', category: 'stock' },
+    { value: 'STOCK_VALUATION', label: 'Valorisation du stock', icon: 'fa-coins', category: 'stock' },
     { value: 'COMMERCIAL_PERFORMANCE', label: 'Performance commerciale', icon: 'fa-chart-line', category: 'commercial' },
     { value: 'DOTATIONS_VS_SALES', label: 'Dotations vs ventes', icon: 'fa-scale-balanced', category: 'commercial' },
     { value: 'INVENTORY', label: 'Rapport d\'inventaire', icon: 'fa-clipboard-list', category: 'stock' },
+    { value: 'STOCK_VALUATION_FINANCIAL', label: 'Valorisation financière', icon: 'fa-money-bill-trend-up', category: 'finance' },
+    { value: 'STOCK_COSTS', label: 'Coûts de stockage', icon: 'fa-file-invoice-dollar', category: 'finance' },
+    { value: 'PRODUCTION_VS_CONSUMPTION', label: 'Production vs consommation', icon: 'fa-industry', category: 'production' },
+    { value: 'PRODUCTION_YIELD', label: 'Rendement production', icon: 'fa-gauge-high', category: 'production' },
   ];
 
   documentTemplates: DocumentTemplate[] = [];
@@ -156,7 +244,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.documentTemplates = [
       {
         id: 'ntfoods', label: 'Fiche Info Produits TANTY', description: 'Grille vierge codes + quantités pour terrain',
-        icon: 'fa-file-pdf', color: 'var(--g)', action: () => this.downloadNTFoods(), needsPeriod: false
+        icon: 'fa-file-pdf', color: 'var(--g)', action: () => this.showNtFoodsForm.set(true), needsPeriod: false
       },
       {
         id: 'stock-central', label: 'Fiche Stock Central', description: 'Stock central avec sorties par produit',
@@ -184,7 +272,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       {
         id: 'movements-excel', label: 'Rapport Mouvements Excel', description: 'Export Excel des mouvements',
-        icon: 'fa-file-excel', color: '#1D6F42', action: () => this.downloadMovementsExcel(), needsPeriod: false
+        icon: 'fa-file-excel', color: 'var(--g-m)', action: () => this.downloadMovementsExcel(), needsPeriod: false
       },
       {
         id: 'valorisation-central', label: 'Valorisation Stock Central', description: 'Poids et conditionnement par produit',
@@ -196,7 +284,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       {
         id: 'alertes-central', label: 'Rapport d\'Alertes', description: 'Produits sous seuil de réappro',
-        icon: 'fa-triangle-exclamation', color: '#dc2626', action: () => this.downloadAlertes('central'), needsPeriod: false
+        icon: 'fa-triangle-exclamation', color: 'var(--r)', action: () => this.downloadAlertes('central'), needsPeriod: false
       },
       {
         id: 'inventaire-central', label: 'Inventaire Complet', description: 'Tous les champs: cartons, poids, volume, seuils',
@@ -205,6 +293,38 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       {
         id: 'rotation-central', label: 'Rotation du Stock', description: 'Entrées, sorties et taux de rotation',
         icon: 'fa-rotate', color: 'var(--p)', action: () => this.downloadRotation('central'), needsPeriod: true
+      },
+      {
+        id: 'receptions', label: 'Rapport Réceptions', description: 'Réceptions par produit avec écarts',
+        icon: 'fa-truck-ramp-box', color: 'var(--b)', action: () => this.downloadReceptions(), needsPeriod: true
+      },
+      {
+        id: 'dotations', label: 'Rapport Dotations', description: 'Dotations par commercial et par produit',
+        icon: 'fa-hand-holding-dollar', color: 'var(--g)', action: () => this.downloadDotations(), needsPeriod: true
+      },
+      {
+        id: 'reappro', label: 'Réappro. Tampon', description: 'État du tampon et transferts depuis le central',
+        icon: 'fa-arrows-rotate', color: 'var(--o)', action: () => this.downloadReappro(), needsPeriod: false
+      },
+      {
+        id: 'transferts-central', label: 'Rapport Transferts', description: 'Transferts internes par produit',
+        icon: 'fa-right-left', color: 'var(--t)', action: () => this.downloadTransferts('central'), needsPeriod: true
+      },
+      {
+        id: 'hebdo-central', label: 'Fiche Hebdomadaire', description: 'KPIs, graphique sorties, entrées/sorties/stock, alertes',
+        icon: 'fa-calendar-week', color: 'var(--b)', action: () => this.downloadHebdo('central'), needsPeriod: true
+      },
+      {
+        id: 'hebdo-buffer', label: 'Fiche Hebdo Tampon', description: 'Rapport hebdomadaire du stock tampon',
+        icon: 'fa-calendar-week', color: 'var(--y)', action: () => this.downloadHebdo('buffer'), needsPeriod: true
+      },
+      {
+        id: 'auto-weekly', label: 'Rapport Auto (Hebdo)', description: 'Génère et sauvegarde un rapport hebdomadaire automatique',
+        icon: 'fa-clock-rotate-left', color: 'var(--g)', action: () => this.triggerAutoReport('weekly'), needsPeriod: true
+      },
+      {
+        id: 'auto-daily', label: 'Rapport Auto (Quotidien)', description: 'Génère et sauvegarde un rapport quotidien automatique',
+        icon: 'fa-clock', color: 'var(--o)', action: () => this.triggerAutoReport('daily'), needsPeriod: true
       }
     ];
   }
@@ -212,6 +332,18 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.loadReports();
     this.loadAnalysisData();
+    this.loadLocations();
+    this.checkIaStatus();
+  }
+
+  private loadLocations(): void {
+    this.repo.getLocations().pipe(takeUntil(this.d$)).subscribe({
+      next: (data) => {
+        this.locations.set(data || []);
+        if (data && data.length > 0) this.selectedLocationId.set(data[0].id);
+      },
+      error: () => this.showToast('Erreur chargement emplacements', 'error')
+    });
   }
 
   ngAfterViewInit(): void {
@@ -232,10 +364,28 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     forkJoin({
       levels: this.repo.getStockLevels(),
       movements: this.repo.getMovements(),
-      stats: this.repo.getDashboard()
+      stats: this.repo.getDashboard(),
+      products: this.repo.getProducts().pipe(catchError(() => of([] as Product[])))
     }).pipe(takeUntil(this.d$)).subscribe({
-      next: ({ levels, movements, stats }) => {
-        this.stockLevels.set(levels);
+      next: ({ levels, movements, stats, products }) => {
+        const productMap = new Map<number, Product>();
+        products.forEach(p => productMap.set(p.id, p));
+        const enriched = levels.map(sl => {
+          const p = productMap.get(sl.productId);
+          return {
+            ...sl,
+            product: p || sl.product,
+            productName: sl.productName || p?.designation || p?.sku || sl.productSku || '—',
+            productSku: sl.productSku || p?.sku || '—',
+            materialType: sl.materialType || p?.materialType || 'Autre',
+            productUnit: sl.productUnit || p?.unit || '—',
+            unitPrice: sl.unitPrice || p?.unitPriceAmount || 0,
+            stockValue: sl.stockValue || ((p?.unitPriceAmount || 0) * sl.quantity),
+            quantityPerCarton: sl.quantityPerCarton || p?.quantityPerCarton || 1,
+            packagingType: sl.packagingType || p?.packagingType || '—',
+          } as StockLevel;
+        });
+        this.stockLevels.set(enriched);
         this.movements.set(movements);
         this.dashboardStats.set(stats);
         this.analysisLoading.set(false);
@@ -260,7 +410,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.materialChart) { this.materialChart.destroy(); this.materialChart = undefined; }
     if (!this.rptMaterialCanvas?.nativeElement) return;
     const dist = this.materialAnalysis();
-    const colors = ['#1A6B2A', '#EA580C', '#2563EB', '#7c3aed', '#0891b2', '#dc2626'];
+    const colors = ['#14532D', '#F6B60B', '#0277BD', '#1E7A42', '#D84315', '#C22B2B'];
     this.materialChart = new Chart(this.rptMaterialCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {
@@ -307,7 +457,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       type: 'bar',
       data: {
         labels: dist.map(d => d.name),
-        datasets: [{ label: 'Quantité', data: dist.map(d => d.qty), backgroundColor: 'rgba(26,107,42,.7)', borderWidth: 0, borderRadius: 6 }]
+        datasets: [{ label: 'Quantité', data: dist.map(d => d.qty), backgroundColor: 'rgba(20,83,45,.7)', borderWidth: 0, borderRadius: 6 }]
       },
       options: {
         indexAxis: 'y',
@@ -325,7 +475,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.movementChart) { this.movementChart.destroy(); this.movementChart = undefined; }
     if (!this.rptMovementCanvas?.nativeElement) return;
     const dist = this.movementTypeDist();
-    const colors = ['#1A6B2A', '#EA580C', '#2563EB', '#7c3aed', '#0891b2', '#dc2626', '#f59e0b', '#8b5cf6'];
+    const colors = ['#14532D', '#F6B60B', '#0277BD', '#1E7A42', '#D84315', '#C22B2B', '#FFC845', '#2A9D5F'];
     this.movementChart = new Chart(this.rptMovementCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {
@@ -350,6 +500,10 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  toggleExports(): void {
+    this.showExports.update(v => !v);
+  }
+
   setAnalysisView(view: 'material' | 'alerts' | 'warehouse' | 'movements'): void {
     this.analysisView.set(view);
     setTimeout(() => this.buildCharts(), 50);
@@ -363,13 +517,22 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     const user = this.auth.getCurrentUser();
     const generatedBy = user?.matricule || 'system';
 
-    this.uc.getByUser(generatedBy).pipe(
+    const obs$ = this.viewMode() === 'all'
+      ? this.uc.getAll()
+      : this.uc.getByUser(generatedBy);
+
+    obs$.pipe(
       takeUntil(this.d$),
       catchError(() => of([] as ReportData[]))
     ).subscribe(r => {
       this.reports.set(r);
       this.loading.set(false);
     });
+  }
+
+  setViewMode(mode: 'all' | 'mine'): void {
+    this.viewMode.set(mode);
+    this.loadReports();
   }
 
   filteredReports() {
@@ -450,11 +613,18 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getReportColor(type: string): string {
     const found = this.reportTypes.find(t => t.value === type);
-    return found ? (found.category === 'stock' ? 'var(--g)' : 'var(--b)') : 'var(--n500)';
+    if (!found) return 'var(--n500)';
+    if (found.category === 'stock') return 'var(--g)';
+    if (found.category === 'commercial') return 'var(--b)';
+    if (found.category === 'finance') return '#7c3aed';
+    if (found.category === 'production') return 'var(--o)';
+    return 'var(--n500)';
   }
 
   downloadReport(report: ReportData): void {
-    this.showToast(`Téléchargement ${report.format} du rapport ${report.title || this.getReportTypeLabel(report.type)}`, 'success');
+    const filename = (report.title || this.getReportTypeLabel(report.type))
+      .replaceAll(/[^a-zA-Z0-9_-]/g, '_') + '.pdf';
+    this.downloadBlob(this.repo.downloadReportFile(report.id), filename);
   }
 
   openDetail(report: ReportData): void {
@@ -486,7 +656,12 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  downloadNTFoods(): void { this.downloadBlob(this.repo.exportFicheSyntheseNTFoods('Terrain'), `fiche_infos_produits_tanty_${this.today}.pdf`); }
+  downloadNTFoods(): void {
+    this.downloadBlob(
+      this.repo.exportFicheSyntheseNTFoods(this.ntFoodsMotif(), this.ntFoodsNom() || undefined, this.ntFoodsVille() || undefined, this.ntFoodsZone() || undefined, this.ntFoodsColis() ?? undefined),
+      `fiche_infos_produits_tanty_${this.ntFoodsMotif().toLowerCase()}_${this.today}.pdf`
+    );
+  }
   downloadStockFiche(locationType: string): void { this.downloadBlob(this.repo.exportFicheSyntheseStock(locationType), `fiche_synthese_stock_${locationType}_${this.today}.pdf`); }
   downloadSorties(): void { this.downloadBlob(this.repo.exportFicheSyntheseSorties(this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `fiche_synthese_sorties_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
   downloadEntrees(): void { this.downloadBlob(this.repo.exportFicheSyntheseEntrees(this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `fiche_synthese_entrees_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
@@ -497,10 +672,265 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   downloadAlertes(locationType: string): void { this.downloadBlob(this.repo.exportRapportAlertes(locationType), `rapport_alertes_${locationType}_${this.today}.pdf`); }
   downloadInventaire(locationType: string): void { this.downloadBlob(this.repo.exportInventaireComplet(locationType), `inventaire_complet_${locationType}_${this.today}.pdf`); }
   downloadRotation(locationType: string): void { this.downloadBlob(this.repo.exportRapportRotation(locationType, this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `rapport_rotation_${locationType}_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
+  downloadReceptions(): void { this.downloadBlob(this.repo.exportRapportReceptions(this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `rapport_receptions_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
+  downloadDotations(): void { this.downloadBlob(this.repo.exportRapportDotations(this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `rapport_dotations_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
+  downloadReappro(): void { this.downloadBlob(this.repo.exportRapportReapprovisionnement(), `rapport_reapprovisionnement_tampon_${this.today}.pdf`); }
+  downloadTransferts(locationType: string): void { this.downloadBlob(this.repo.exportRapportTransferts(locationType, this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `rapport_transferts_${locationType}_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
+  downloadHebdo(locationType: string): void { this.downloadBlob(this.repo.exportFicheHebdomadaire(locationType, this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `fiche_hebdomadaire_${locationType}_${this.docPeriodStart()}_${this.docPeriodEnd()}.pdf`); }
+
+  triggerAutoReport(mode: 'weekly' | 'daily'): void {
+    const locType = this.excelLocationType();
+    const ps = this.toISODateTime(this.docPeriodStart());
+    const pe = this.toISODateTime(this.docPeriodEnd(), true);
+    const obs$ = mode === 'weekly'
+      ? this.repo.triggerAutoWeekly(locType, ps, pe)
+      : this.repo.triggerAutoDaily(locType, ps, pe);
+    this.generating.set(true);
+    obs$.pipe(takeUntil(this.d$)).subscribe({
+      next: (res: any) => {
+        this.generating.set(false);
+        this.showToast(`Rapport ${mode === 'weekly' ? 'hebdomadaire' : 'quotidien'} généré et sauvegardé (id: ${res?.id ?? '—'})`, 'success');
+        this.loadReports();
+      },
+      error: () => {
+        this.generating.set(false);
+        this.showToast(`Erreur lors de la génération du rapport ${mode}`, 'error');
+      }
+    });
+  }
+
+  // ── Quick exports (CSV/Excel/PDF by location) ──
+  exportItemsByLocation(format: string): void {
+    const locId = this.selectedLocationId();
+    if (!locId) { this.showToast('Sélectionnez un emplacement', 'error'); return; }
+    const ext = format === 'excel' ? 'xlsx' : format;
+    this.downloadBlob(this.repo.exportStockItems(locId, format), `stock_items_${locId}.${ext}`);
+  }
+
+  exportMovementsCsv(): void {
+    this.downloadBlob(this.repo.exportStockMovements('csv'), `stock_movements_${this.today}.csv`);
+  }
+
+  // ── Excel with charts ──
+  downloadExcelChart(type: string): void {
+    const locType = this.excelLocationType();
+    switch (type) {
+      case 'items':
+        this.downloadBlob(this.repo.exportExcelItems(locType), `stock_items_${locType.toLowerCase()}_${this.today}.xlsx`);
+        break;
+      case 'movements':
+        this.downloadBlob(this.repo.exportExcelMovements(), `stock_movements_${this.today}.xlsx`);
+        break;
+      case 'valorisation':
+        this.downloadBlob(this.repo.exportExcelValorisation(locType), `valorisation_${locType.toLowerCase()}_${this.today}.xlsx`);
+        break;
+      case 'global':
+        this.downloadBlob(this.repo.exportExcelGlobal(locType, this.toISODateTime(this.docPeriodStart()), this.toISODateTime(this.docPeriodEnd(), true)), `rapport_global_${locType.toLowerCase()}_${this.today}.xlsx`);
+        break;
+    }
+  }
+
+  onLocationChange(value: string): void { this.selectedLocationId.set(value); }
+
+  toggleCustomReport(): void {
+    this.showCustomReport.update(v => !v);
+    if (!this.showCustomReport()) this.customReport.set(null);
+  }
+
+  toggleLocationType(type: string): void {
+    const idx = this.customFilters.locationTypes.indexOf(type);
+    if (idx >= 0) this.customFilters.locationTypes.splice(idx, 1);
+    else this.customFilters.locationTypes.push(type);
+  }
+
+  toggleMaterialType(type: string): void {
+    const idx = this.customFilters.materialTypes.indexOf(type);
+    if (idx >= 0) this.customFilters.materialTypes.splice(idx, 1);
+    else this.customFilters.materialTypes.push(type);
+  }
+
+  toggleAlertLevel(level: string): void {
+    const idx = this.customFilters.alertLevels.indexOf(level);
+    if (idx >= 0) this.customFilters.alertLevels.splice(idx, 1);
+    else this.customFilters.alertLevels.push(level);
+  }
+
+  generateCustomReport(): void {
+    this.customGenerating.set(true);
+    this.customReport.set(null);
+    const user = this.auth.getCurrentUser();
+    const criteria: CustomReportCriteriaDto = {
+      locationTypes: this.customFilters.locationTypes.length > 0 ? this.customFilters.locationTypes : undefined,
+      materialTypes: this.customFilters.materialTypes.length > 0 ? this.customFilters.materialTypes : undefined,
+      alertLevels: this.customFilters.alertLevels.length > 0 ? this.customFilters.alertLevels : undefined,
+      productSku: this.customFilters.productSku || undefined,
+      minQuantity: this.customFilters.minQuantity ?? undefined,
+      maxQuantity: this.customFilters.maxQuantity ?? undefined,
+      minValue: this.customFilters.minValue ?? undefined,
+      maxValue: this.customFilters.maxValue ?? undefined,
+      generatedBy: user?.matricule || 'system',
+      format: this.customFilters.format
+    };
+    this.repo.generateCustomReport(criteria).pipe(takeUntil(this.d$)).subscribe({
+      next: (report) => {
+        this.customGenerating.set(false);
+        this.customReport.set(report);
+        this.showToast('Rapport personnalisé généré', 'success');
+        this.loadReports();
+      },
+      error: () => {
+        this.customGenerating.set(false);
+        this.showToast('Erreur lors de la génération du rapport', 'error');
+      }
+    });
+  }
+
+  downloadCustomReport(): void {
+    const report = this.customReport();
+    if (!report) return;
+    this.downloadReport(report);
+  }
 
   showToast(msg: string, type: 'success' | 'error'): void {
     this.toastMsg.set(msg);
     this.toastType.set(type);
     setTimeout(() => this.toastMsg.set(''), 4000);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  IA Meeting Report
+  // ═══════════════════════════════════════════════════════════
+
+  private checkIaStatus(): void {
+    this.iaService.getStatus().pipe(
+      catchError(() => of({ configured: false, model: '', service: 'TantyAI' }))
+    ).subscribe(s => {
+      this.iaConfigured.set(s.configured);
+      this.iaModel.set(s.model);
+    });
+  }
+
+  toggleMeetingForm(): void {
+    this.showMeetingForm.update(v => !v);
+    if (!this.showMeetingForm()) {
+      this.meetingResult.set(null);
+    }
+  }
+
+  generateMeetingReport(): void {
+    if (!this.meetingForm.title.trim()) {
+      this.showToast('Veuillez saisir un titre', 'error');
+      return;
+    }
+    this.meetingGenerating.set(true);
+    this.meetingResult.set(null);
+
+    const participants = this.meetingForm.participants
+      .split(',').map(p => p.trim()).filter(p => p.length > 0);
+
+    this.iaService.generateMeetingReport({
+      title: this.meetingForm.title,
+      date: this.meetingForm.date,
+      location: this.meetingForm.location,
+      participants,
+      agenda: this.meetingForm.agenda,
+      notes: this.meetingForm.notes,
+      decisions: this.meetingForm.decisions,
+      actionItems: this.meetingForm.actionItems
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: (resp) => {
+        this.meetingResult.set(resp);
+        this.meetingGenerating.set(false);
+        this.showToast('Compte-rendu généré', 'success');
+      },
+      error: () => {
+        this.meetingGenerating.set(false);
+        this.showToast('Erreur lors de la génération du compte-rendu IA', 'error');
+      }
+    });
+  }
+
+  copyMeetingReport(): void {
+    const content = this.meetingResult()?.formattedReport || '';
+    navigator.clipboard.writeText(content).then(() => {
+      this.showToast('Compte-rendu copié dans le presse-papiers', 'success');
+    }).catch(() => {
+      this.showToast('Impossible de copier', 'error');
+    });
+  }
+
+  downloadMeetingReport(): void {
+    const content = this.meetingResult()?.formattedReport || '';
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compte_rendu_${this.meetingForm.title.replace(/\s+/g, '_').toLowerCase()}_${this.meetingForm.date}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    this.showToast('Compte-rendu téléchargé (Markdown)', 'success');
+  }
+
+  downloadMeetingReportPdf(): void {
+    const participants = this.meetingForm.participants
+      .split(',').map(p => p.trim()).filter(p => p.length > 0);
+    this.iaService.exportMeetingReportPdf({
+      title: this.meetingForm.title,
+      date: this.meetingForm.date,
+      location: this.meetingForm.location,
+      participants,
+      agenda: this.meetingForm.agenda,
+      notes: this.meetingForm.notes,
+      decisions: this.meetingForm.decisions,
+      actionItems: this.meetingForm.actionItems
+    }).pipe(takeUntil(this.d$)).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `compte_rendu_${this.meetingForm.title.replace(/\s+/g, '_').toLowerCase()}_${this.meetingForm.date}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.showToast('Compte-rendu PDF téléchargé', 'success');
+      },
+      error: () => this.showToast('Erreur lors de la génération du PDF', 'error')
+    });
+  }
+
+  downloadMeetingReportWord(): void {
+    const content = this.meetingResult()?.formattedReport || '';
+    const header = `<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Compte-rendu</title></head><body style='font-family:Calibri,sans-serif;font-size:11pt;line-height:1.6'>`;
+    const body = content.split('\n').map((line: string) => {
+      const t = line.trim();
+      if (t.startsWith('# ')) return `<h1 style='color:#14532D;font-size:16pt'>${t.substring(2)}</h1>`;
+      if (t.startsWith('## ')) return `<h2 style='color:#1E7A42;font-size:13pt'>${t.substring(3)}</h2>`;
+      if (t.startsWith('### ')) return `<h3 style='color:#1F2937;font-size:12pt'>${t.substring(4)}</h3>`;
+      if (t.startsWith('- ') || t.startsWith('* ')) return `<p style='margin-left:20px'>• ${t.substring(2)}</p>`;
+      if (t === '') return '<br/>';
+      return `<p>${t}</p>`;
+    }).join('\n');
+    const footer = `</body></html>`;
+    const blob = new Blob(['\ufeff', header + body + footer], { type: 'application/msword;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compte_rendu_${this.meetingForm.title.replace(/\s+/g, '_').toLowerCase()}_${this.meetingForm.date}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    this.showToast('Compte-rendu Word téléchargé', 'success');
+  }
+
+  resetMeetingForm(): void {
+    this.meetingForm = {
+      title: '', date: new Date().toISOString().split('T')[0],
+      location: '', participants: '', agenda: '', notes: '', decisions: '', actionItems: ''
+    };
+    this.meetingResult.set(null);
   }
 }

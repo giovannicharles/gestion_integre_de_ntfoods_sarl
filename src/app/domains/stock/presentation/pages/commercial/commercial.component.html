@@ -159,8 +159,15 @@
                 <div style="display:flex;flex-direction:column;gap:8px;padding:10px 14px;background:var(--n50);border-radius:var(--r-md)">
                   <div style="display:flex;justify-content:space-between;align-items:center">
                     <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ sl.productName }}</span><span style="font-size:10px;color:var(--n400)">Stock PF: {{ sl.quantity | number }} {{ sl.productUnit }}</span></div>
-                    <input type="number" min="0" [max]="sl.quantity" style="width:80px;padding:8px 10px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-d);font-size:15px;font-weight:800;text-align:center;outline:none" [(ngModel)]="line.qty" placeholder="0">
+                    <input type="number" min="0" [max]="sl.quantity" style="width:80px;padding:8px 10px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-d);font-size:15px;font-weight:800;text-align:center;outline:none"
+                           [style.border-color]="line.qty > sl.quantity ? 'var(--r)' : ''"
+                           [(ngModel)]="line.qty" placeholder="0">
                   </div>
+                  @if (line.qty > sl.quantity) {
+                    <div style="font-size:11px;color:var(--r);margin-top:-2px">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Stock insuffisant : {{ sl.quantity | number }} {{ sl.productUnit }} disponible(s)
+                    </div>
+                  }
                   <div style="display:flex;gap:8px;align-items:center">
                     <select class="form-control" style="flex:1;padding:6px 10px;font-size:11px" [(ngModel)]="line.unitType">
                       <option value="SACHET_42G">Sachet 42g</option>

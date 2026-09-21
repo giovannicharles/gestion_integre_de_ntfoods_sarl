@@ -152,12 +152,13 @@
         <div class="tbl-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>SKU</th><th>Quantité</th><th>Prix Unitaire</th><th>Valeur Totale</th><th>Type Prix</th></tr>
+              <tr><th>SKU</th><th>Produit</th><th>Quantité</th><th>Prix Unitaire</th><th>Valeur Totale</th><th>Type Prix</th></tr>
             </thead>
             <tbody>
               @for (item of currentDetail!.items; track item.productSku) {
                 <tr>
-                  <td>{{ item.productSku }}</td>
+                  <td><strong>{{ item.productSku }}</strong></td>
+                  <td>{{ item.productName || '—' }}</td>
                   <td class="mono">{{ item.quantity | number:'1.0-2' }}</td>
                   <td class="mono">{{ fCFA(item.unitPrice) }}</td>
                   <td class="mono fw-bold">{{ fCFA(item.totalValue) }}</td>
@@ -167,7 +168,7 @@
             </tbody>
             <tfoot>
               <tr class="tfoot-total">
-                <td colspan="3"><strong>TOTAL</strong></td>
+                <td colspan="4"><strong>TOTAL</strong></td>
                 <td class="mono fw-bold">{{ fCFA(currentDetail!.totalValue) }}</td>
                 <td></td>
               </tr>

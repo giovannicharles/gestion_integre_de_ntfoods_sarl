@@ -7,9 +7,14 @@
       </a>
       <h1><i class="fa-solid fa-chart-line"></i> Statistiques & Analyses Avancées</h1>
     </div>
-    <button class="btn-refresh" (click)="loadAll()" [disabled]="loading()">
-      <i class="fa-solid fa-rotate" [class.spinning]="loading()"></i> Actualiser
-    </button>
+    <div class="header-actions">
+      <button class="btn-print" (click)="printPage()" [disabled]="loading()">
+        <i class="fa-solid fa-print"></i> Imprimer
+      </button>
+      <button class="btn-refresh" (click)="loadAll()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.spinning]="loading()"></i> Actualiser
+      </button>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -36,52 +41,109 @@
   }
 
   @if (!loading() && !error()) {
-    <!-- KPIs animés -->
-    <section class="card kpi-section">
-      <h2><i class="fa-solid fa-gauge-high"></i> Indicateurs clés (année {{ statYear() }})</h2>
-      <div class="kpi-grid">
-        @for (kpi of statKPIs(); track kpi.label) {
-          <div class="kpi-card" [style.border-left-color]="kpi.color">
-            <div class="kpi-icon" [style.color]="kpi.color"><i class="fa-solid" [class]="kpi.icon"></i></div>
-            <div class="kpi-info">
-              <div class="kpi-value">{{ kpi.value | number }}</div>
-              <div class="kpi-label">{{ kpi.label }}</div>
-              <div class="kpi-unit">{{ kpi.unit }}</div>
+    <!-- ═══ BENTO HERO ROW: KPIs + Radar ═══ -->
+    <div class="bento-hero">
+      <!-- KPIs -->
+      <section class="card kpi-section">
+        <div class="section-header">
+          <h2><i class="fa-solid fa-gauge-high"></i> Indicateurs clés — {{ statYear() }}</h2>
+          <select class="year-select" [value]="statYear()" (change)="setStatYear(+$any($event.target).value)">
+            @for (y of availableYears(); track y) { <option [value]="y">{{ y }}</option> }
+          </select>
+        </div>
+        <div class="kpi-grid">
+          @for (kpi of statKPIs(); track kpi.label) {
+            <div class="kpi-card" [style.border-left-color]="kpi.color">
+              <div class="kpi-icon" [style.color]="kpi.color"><i class="fa-solid" [class]="kpi.icon"></i></div>
+              <div class="kpi-info">
+                <div class="kpi-value">{{ kpi.value | number }}</div>
+                <div class="kpi-label">{{ kpi.label }}</div>
+                <div class="kpi-unit">{{ kpi.unit }}</div>
+              </div>
             </div>
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- Year selector -->
-    <section class="card year-selector-section">
-      <div class="year-selector">
-        <label>Année:</label>
-        <select [value]="statYear()" (change)="setStatYear(+$any($event.target).value)">
-          @for (y of availableYears(); track y) {
-            <option [value]="y">{{ y }}</option>
           }
-        </select>
-      </div>
-    </section>
+        </div>
+      </section>
 
-    <!-- Monthly Evolution Chart -->
-    <section class="card chart-section">
-      <h2><i class="fa-solid fa-chart-column"></i> Évolution mensuelle — Entrées vs Sorties</h2>
-      <div class="chart-container">
-        <canvas #evolutionCanvas></canvas>
-      </div>
-    </section>
+      <!-- Radar Performance -->
+      <section class="card radar-section">
+        <h2><i class="fa-solid fa-bullseye"></i> Performance multidimensionnelle</h2>
+        <div class="chart-container-sm">
+          <canvas #radarCanvas></canvas>
+        </div>
+        <div class="radar-legend">
+          @for (m of radarMetrics(); track m.label) {
+            <div class="radar-tag">
+              <span class="radar-dot" [style.background]="m.value >= 70 ? '#1A6B2A' : m.value >= 40 ? '#f59e0b' : '#dc2626'"></span>
+              {{ m.label }}: {{ m.value }}%
+            </div>
+          }
+        </div>
+      </section>
+    </div>
 
-    <!-- Quarterly Chart -->
-    <section class="card chart-section">
-      <h2><i class="fa-solid fa-chart-bar"></i> Évolution trimestrielle</h2>
-      <div class="chart-container">
-        <canvas #quarterlyCanvas></canvas>
-      </div>
-    </section>
+    <!-- ═══ ROW 2: Evolution + Trend Line ═══ -->
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-chart-column"></i> Évolution mensuelle — Entrées vs Sorties</h2>
+        <div class="chart-container">
+          <canvas #evolutionCanvas></canvas>
+        </div>
+      </section>
 
-    <!-- Executive Summary -->
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-chart-area"></i> Tendance cumulée (année {{ statYear() }})</h2>
+        <div class="chart-container">
+          <canvas #trendLineCanvas></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ ROW 3: Doughnut + Top Products ═══ -->
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-chart-pie"></i> Répartition du stock par catégorie</h2>
+        <div class="chart-container">
+          <canvas #doughnutCanvas></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-trophy"></i> Top 8 produits par valeur</h2>
+        <div class="chart-container">
+          <canvas #topProductsCanvas></canvas>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#dc2626"></span> Critique</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#EA580C"></span> Faible</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#1A6B2A"></span> Normal</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ ROW 4: Quarterly + ABC Pareto ═══ -->
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-chart-bar"></i> Évolution trimestrielle</h2>
+        <div class="chart-container">
+          <canvas #quarterlyCanvas></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-layer-group"></i> Analyse ABC / Pareto (top 15)</h2>
+        <div class="chart-container">
+          <canvas #abcCanvas></canvas>
+        </div>
+        <div class="abc-legend">
+          <span class="abc-tag abc-a">Classe A (80% valeur)</span>
+          <span class="abc-tag abc-b">Classe B (80-95%)</span>
+          <span class="abc-tag abc-c">Classe C (95-100%)</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ Executive Summary ═══ -->
     <section class="card summary-section">
       <h2><i class="fa-solid fa-clipboard-check"></i> Synthèse exécutive</h2>
       <div class="summary-list">
@@ -94,82 +156,236 @@
       </div>
     </section>
 
-    <!-- Stock Aging -->
+    <!-- ═══ ROW 5: Dotation Analysis ═══ -->
+    <div class="bento-row-2">
+      <section class="card">
+        <h2><i class="fa-solid fa-hand-holding-dollar"></i> Dotations par commercial</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Commercial</th><th>Demandes</th><th>Qté totale</th><th>En attente</th></tr>
+            </thead>
+            <tbody>
+              @for (item of paginatedDotation(); track item.commercial) {
+                <tr>
+                  <td style="font-weight:600">{{ item.commercial }}</td>
+                  <td>{{ item.count }}</td>
+                  <td>{{ item.totalQty | number }}</td>
+                  <td>
+                    @if (item.pending > 0) {
+                      <span class="badge badge-warning">{{ item.pending }}</span>
+                    } @else {
+                      <span class="badge badge-success">0</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-state">Aucune dotation</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          @for (p of pageRange(dotationByCommercial().length); track p) {
+            <button class="page-btn" [class.active]="dotationPage() === p" (click)="setPage(dotationPage, p)">{{ p }}</button>
+          }
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><i class="fa-solid fa-circle-check"></i> Statut des dotations</h2>
+        <div class="dotation-status-grid">
+          @for (item of dotationByStatus(); track item.status) {
+            <div class="dotation-status-card" [style.border-left-color]="item.color">
+              <div class="ds-count" [style.color]="item.color">{{ item.count }}</div>
+              <div class="ds-label">{{ item.status }}</div>
+            </div>
+          } @empty {
+            <div class="empty-state">Aucune dotation</div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ Display Mode Toggle ═══ -->
+    <div class="display-mode-bar">
+      <div class="display-mode-toggle">
+        <button class="dm-btn" [class.active]="displayMode() === 'table'" (click)="setDisplayMode('table')">
+          <i class="fa-solid fa-table"></i> Tableau
+        </button>
+        <button class="dm-btn" [class.active]="displayMode() === 'grid'" (click)="setDisplayMode('grid')">
+          <i class="fa-solid fa-table-cells"></i> Grille
+        </button>
+        <button class="dm-btn" [class.active]="displayMode() === 'cards'" (click)="setDisplayMode('cards')">
+          <i class="fa-solid fa-id-card"></i> Cartes
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ NEW: Impressive Stats Row ═══ -->
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-percentage"></i> Concentration du stock</h2>
+        <div class="concentration-list">
+          @for (item of stockConcentration(); track item.label) {
+            <div class="concentration-item">
+              <div class="conc-label">{{ item.label }}</div>
+              <div class="conc-bar">
+                <div class="conc-fill" [style.width.%]="item.pct" [style.background]="item.color"></div>
+              </div>
+              <div class="conc-value">{{ item.pct }}% — {{ formatCFA(item.value) }}</div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-heart-pulse"></i> Santé financière du stock</h2>
+        <div class="financial-health-list">
+          @for (item of stockFinancialHealth(); track item.label) {
+            <div class="fh-item">
+              <div class="fh-label">{{ item.label }}</div>
+              <div class="fh-bar">
+                <div class="fh-fill" [style.width.%]="roundPct(item.value, item.max)" [style.background]="item.color"></div>
+              </div>
+              <div class="fh-value">{{ formatCFA(item.value) }}</div>
+            </div>
+          }
+        </div>
+        <div class="turnover-score">
+          <span class="ts-label">Score de rotation</span>
+          <span class="ts-value" [style.color]="stockTurnoverScore() >= 50 ? '#1A6B2A' : stockTurnoverScore() >= 25 ? '#f59e0b' : '#dc2626'">{{ stockTurnoverScore() }}/100</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ NEW: Stock Aging Buckets + Depreciation Risk ═══ -->
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Distribution de l'âge du stock</h2>
+        <div class="aging-buckets">
+          @for (bucket of stockAgingBuckets(); track bucket.label) {
+            <div class="bucket-item">
+              <div class="bucket-bar" [style.background]="bucket.color" [style.height.px]="bucketHeight(bucket.count)"></div>
+              <div class="bucket-label">{{ bucket.label }}</div>
+              <div class="bucket-count">{{ bucket.count }} ({{ bucket.pct }}%)</div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> Risques de dépréciation</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Produit</th><th>Qté</th><th>Âge (j)</th><th>Perte potentielle</th></tr>
+            </thead>
+            <tbody>
+              @for (item of topDepreciationRisk(); track item.sku) {
+                <tr>
+                  <td style="font-weight:600">{{ item.productName }}</td>
+                  <td>{{ item.qty }}</td>
+                  <td>{{ item.ageDays }}</td>
+                  <td style="color:#dc2626;font-weight:600">{{ formatCFA(item.potentialLoss) }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="empty-state">Aucun risque</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ Stock Aging ═══ -->
     <section class="card aging-section">
       <h2><i class="fa-solid fa-hourglass-half"></i> Analyse de l'âge du stock</h2>
       <div class="table-wrapper">
         <table>
           <thead>
-            <tr>
-              <th>Produit</th><th>Âge moyen (jours)</th><th>Âge max (jours)</th><th>Quantité</th><th>Risque</th>
-            </tr>
+            <tr><th>Produit</th><th>Âge moyen (j)</th><th>Âge max (j)</th><th>Quantité</th><th>Unité</th><th>Risque</th></tr>
           </thead>
           <tbody>
-            @for (item of stockAging(); track item.sku) {
+            @for (item of paginatedAging(); track item.sku) {
               <tr>
                 <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
                 <td>{{ item.avgAgeDays }}</td>
                 <td>{{ item.oldestAgeDays }}</td>
                 <td>{{ item.qty }}</td>
+                <td>{{ item.unit }}</td>
                 <td><span class="badge" [class]="getRiskClass(item.riskLevel)">{{ getRiskLabel(item.riskLevel) }}</span></td>
               </tr>
             }
           </tbody>
         </table>
       </div>
-    </section>
-
-    <!-- Reorder Suggestions -->
-    <section class="card reorder-section">
-      <h2><i class="fa-solid fa-lightbulb"></i> Recommandations de réapprovisionnement</h2>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Produit</th><th>Stock actuel</th><th>Qté suggérée</th><th>Conso. /jour</th><th>Urgence</th><th>Motif</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of reorderSuggestions(); track item.sku) {
-              <tr>
-                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
-                <td>{{ item.currentQty }}</td>
-                <td>{{ item.suggestedQty }}</td>
-                <td>{{ item.dailyConsumption }}</td>
-                <td><span class="badge" [class]="getUrgencyClass(item.urgency)">{{ getUrgencyLabel(item.urgency) }}</span></td>
-                <td>{{ item.reason }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="pagination">
+        @for (p of pageRange(stockAging().length); track p) {
+          <button class="page-btn" [class.active]="agingPage() === p" (click)="setPage(agingPage, p)">{{ p }}</button>
+        }
       </div>
     </section>
 
-    <!-- Velocity Matrix -->
-    <section class="card velocity-section">
-      <h2><i class="fa-solid fa-gauge"></i> Matrice de vélocité des produits</h2>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Produit</th><th>Vélocité</th><th>Qté /mois</th><th>Tendance</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of velocityMatrix(); track item.sku) {
-              <tr>
-                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
-                <td><span class="badge" [class]="getVelocityClass(item.velocity)">{{ getVelocityLabel(item.velocity) }}</span></td>
-                <td>{{ item.monthlyQty }}</td>
-                <td><i class="fa-solid" [class]="getTrendIcon(item.trend)" [style.color]="getTrendColor(item.trend)"></i></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <!-- ═══ Reorder + Velocity ═══ -->
+    <div class="bento-row-2">
+      <section class="card reorder-section">
+        <h2><i class="fa-solid fa-lightbulb"></i> Recommandations de réapprovisionnement</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Produit</th><th>Stock</th><th>Suggéré</th><th>Conso/j</th><th>Urgence</th></tr>
+            </thead>
+            <tbody>
+              @for (item of paginatedReorder(); track item.sku) {
+                <tr>
+                  <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                  <td>{{ item.currentQty }}</td>
+                  <td>{{ item.suggestedQty }}</td>
+                  <td>{{ item.dailyConsumption }}</td>
+                  <td><span class="badge" [class]="getUrgencyClass(item.urgency)">{{ getUrgencyLabel(item.urgency) }}</span></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="empty-state">Aucun réappro nécessaire</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          @for (p of pageRange(reorderSuggestions().length); track p) {
+            <button class="page-btn" [class.active]="reorderPage() === p" (click)="setPage(reorderPage, p)">{{ p }}</button>
+          }
+        </div>
+      </section>
 
-    <!-- Warehouse Capacity -->
+      <section class="card velocity-section">
+        <h2><i class="fa-solid fa-gauge"></i> Matrice de vélocité</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Produit</th><th>Vélocité</th><th>Qté/mois</th><th>Tendance</th></tr>
+            </thead>
+            <tbody>
+              @for (item of paginatedVelocity(); track item.sku) {
+                <tr>
+                  <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                  <td><span class="badge" [class]="getVelocityClass(item.velocity)">{{ getVelocityLabel(item.velocity) }}</span></td>
+                  <td>{{ item.monthlyQty }}</td>
+                  <td><i class="fa-solid" [class]="getTrendIcon(item.trend)" [style.color]="getTrendColor(item.trend)"></i></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          @for (p of pageRange(velocityMatrix().length); track p) {
+            <button class="page-btn" [class.active]="velocityPage() === p" (click)="setPage(velocityPage, p)">{{ p }}</button>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ Warehouse Capacity ═══ -->
     <section class="card capacity-section">
       <h2><i class="fa-solid fa-warehouse"></i> Capacité des entrepôts</h2>
       <div class="capacity-grid">
@@ -190,18 +406,16 @@
       </div>
     </section>
 
-    <!-- Demand Forecast -->
+    <!-- ═══ Demand Forecast ═══ -->
     <section class="card forecast-section">
       <h2><i class="fa-solid fa-chart-line"></i> Prévisions de demande (30 jours)</h2>
       <div class="table-wrapper">
         <table>
           <thead>
-            <tr>
-              <th>Produit</th><th>Stock actuel</th><th>Prévision 30j</th><th>Confiance</th><th>Tendance</th>
-            </tr>
+            <tr><th>Produit</th><th>Stock actuel</th><th>Prévision 30j</th><th>Confiance</th><th>Tendance</th></tr>
           </thead>
           <tbody>
-            @for (item of demandForecast(); track item.sku) {
+            @for (item of paginatedForecast(); track item.sku) {
               <tr>
                 <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
                 <td>{{ item.currentQty }}</td>
@@ -218,42 +432,88 @@
           </tbody>
         </table>
       </div>
-    </section>
-
-    <!-- Report Generation -->
-    <section class="card report-section">
-      <h2><i class="fa-solid fa-file-export"></i> Génération de rapports</h2>
-      <div class="report-controls">
-        <div class="control-group">
-          <label>Période:</label>
-          <select [value]="statPeriod()" (change)="setPeriod($any($event.target).value)">
-            <option value="monthly">Mensuel</option>
-            <option value="quarterly">Trimestriel</option>
-          </select>
-        </div>
-        @if (statPeriod() === 'monthly') {
-          <div class="control-group">
-            <label>Mois:</label>
-            <select [value]="statMonth()" (change)="setStatMonth(+$any($event.target).value)">
-              @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
-                <option [value]="m">{{ m }}</option>
-              }
-            </select>
-          </div>
-        } @else {
-          <div class="control-group">
-            <label>Trimestre:</label>
-            <select [value]="statQuarter()" (change)="setStatQuarter(+$any($event.target).value)">
-              @for (q of [1,2,3,4]; track q) {
-                <option [value]="q">T{{ q }}</option>
-              }
-            </select>
-          </div>
+      <div class="pagination">
+        @for (p of pageRange(demandForecast().length); track p) {
+          <button class="page-btn" [class.active]="forecastPage() === p" (click)="setPage(forecastPage, p)">{{ p }}</button>
         }
       </div>
     </section>
 
-    <!-- Link to Reports component -->
+    <!-- ═══ ABC Detail Table ═══ -->
+    <section class="card abc-section">
+      <h2><i class="fa-solid fa-layer-group"></i> Classification ABC détaillée</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>SKU</th><th>Désignation</th><th>Valeur</th><th>% cumulé</th><th>Classe</th></tr>
+          </thead>
+          <tbody>
+            @for (item of paginatedABC(); track item.sku) {
+              <tr>
+                <td style="font-family:monospace;font-weight:600">{{ item.sku }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ formatCFA(item.value) }}</td>
+                <td>{{ item.cumPct }}%</td>
+                <td><span class="badge" [class]="item.class === 'A' ? 'badge-success' : item.class === 'B' ? 'badge-warning' : 'badge-danger'">{{ item.class }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        @for (p of pageRange(abcAnalysis().length); track p) {
+          <button class="page-btn" [class.active]="abcPage() === p" (click)="setPage(abcPage, p)">{{ p }}</button>
+        }
+      </div>
+    </section>
+
+    <!-- ═══ Per-Sector Statistics ═══ -->
+    <div class="sector-section-title">
+      <h2><i class="fa-solid fa-diagram-project"></i> Statistiques par secteur du module Stock</h2>
+    </div>
+
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-industry"></i> Production — Lots par statut</h2>
+        <div class="chart-container">
+          <canvas #sectorProductionCanvas></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-truck-ramp-box"></i> Réceptions par statut</h2>
+        <div class="chart-container">
+          <canvas #sectorReceptionCanvas></canvas>
+        </div>
+      </section>
+    </div>
+
+    <div class="bento-row-2">
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> Alertes par type</h2>
+        <div class="chart-container">
+          <canvas #sectorAlertsCanvas></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-section">
+        <h2><i class="fa-solid fa-clipboard-list"></i> Commandes production par statut</h2>
+        <div class="chart-container">
+          <canvas #sectorOrdersCanvas></canvas>
+        </div>
+      </section>
+    </div>
+
+    <div class="bento-row-2">
+      <section class="card chart-section" style="grid-column: 1 / -1">
+        <h2><i class="fa-solid fa-arrows-up-down"></i> Mouvements par type</h2>
+        <div class="chart-container">
+          <canvas #sectorMovementsCanvas></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ Report Link ═══ -->
     <section class="card" style="text-align:center;padding:24px">
       <h2 style="font-family:var(--font-d);font-size:16px;margin-bottom:8px"><i class="fa-solid fa-file-lines" style="color:var(--g)"></i> Besoin de documents PDF/Excel ?</h2>
       <p style="color:var(--n500);font-size:13px;margin-bottom:16px">Générez fiches de synthèse, rapports de mouvements, exports Excel et plus encore.</p>

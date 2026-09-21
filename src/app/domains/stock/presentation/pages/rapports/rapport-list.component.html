@@ -15,13 +15,106 @@
       <button class="btn btn-ghost btn-sm" (click)="toggleAnalysis()">
         <i class="fa-solid fa-chart-pie"></i> {{ showAnalysis() ? 'Masquer' : 'Analyse' }}
       </button>
+      <button class="btn btn-ghost btn-sm" (click)="toggleExports()">
+        <i class="fa-solid fa-file-export"></i> {{ showExports() ? 'Masquer' : 'Exports' }}
+      </button>
+      <button class="btn btn-ghost btn-sm" (click)="toggleCustomReport()">
+        <i class="fa-solid fa-filter"></i> {{ showCustomReport() ? 'Masquer' : 'Rapport personnalisé' }}
+      </button>
       <button class="btn btn-primary" (click)="toggleForm()"><i class="fa-solid fa-plus"></i> Nouveau rapport</button>
+      <button class="btn btn-ia" (click)="toggleMeetingForm()"><i class="fa-solid fa-wand-magic-sparkles"></i> Compte-rendu IA</button>
     </div>
   </div>
 
   @if (loading()) {
     <div style="padding:48px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
   } @else {
+
+    <!-- ═══ CUSTOM REPORT BUILDER ═══ -->
+    @if (showCustomReport()) {
+      <div class="card rpt-custom-card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:700;margin:0"><i class="fa-solid fa-filter" style="color:var(--g)"></i> Rapport personnalisé multi-critères</h3>
+        </div>
+
+        <div class="rpt-custom-grid">
+          <!-- Location types -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Emplacements</label>
+            <div class="rpt-chips">
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.locationTypes.includes('STOCK_CENTRAL')" (click)="toggleLocationType('STOCK_CENTRAL')">Central</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.locationTypes.includes('STOCK_BUFFER')" (click)="toggleLocationType('STOCK_BUFFER')">Tampon</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.locationTypes.includes('STOCK_MOBILE')" (click)="toggleLocationType('STOCK_MOBILE')">Mobile</button>
+            </div>
+          </div>
+
+          <!-- Material types -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Type de produit</label>
+            <div class="rpt-chips">
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.materialTypes.includes('PRODUIT_FINI')" (click)="toggleMaterialType('PRODUIT_FINI')">Produit fini</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.materialTypes.includes('MATIERE_PREMIERE')" (click)="toggleMaterialType('MATIERE_PREMIERE')">Matière première</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.materialTypes.includes('CONSOMMABLE')" (click)="toggleMaterialType('CONSOMMABLE')">Consommable</button>
+            </div>
+          </div>
+
+          <!-- Alert levels -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Niveau d'alerte</label>
+            <div class="rpt-chips">
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.alertLevels.includes('CRITIQUE')" (click)="toggleAlertLevel('CRITIQUE')">Critique</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.alertLevels.includes('FAIBLE')" (click)="toggleAlertLevel('FAIBLE')">Faible</button>
+              <button class="rpt-chip" [class.rpt-chip-on]="customFilters.alertLevels.includes('NORMAL')" (click)="toggleAlertLevel('NORMAL')">Normal</button>
+            </div>
+          </div>
+
+          <!-- Quantity range -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Quantité</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="input" type="number" placeholder="Min" [(ngModel)]="customFilters.minQuantity" style="width:80px">
+              <span>—</span>
+              <input class="input" type="number" placeholder="Max" [(ngModel)]="customFilters.maxQuantity" style="width:80px">
+            </div>
+          </div>
+
+          <!-- Value range -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Valeur (FCFA)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="input" type="number" placeholder="Min" [(ngModel)]="customFilters.minValue" style="width:100px">
+              <span>—</span>
+              <input class="input" type="number" placeholder="Max" [(ngModel)]="customFilters.maxValue" style="width:100px">
+            </div>
+          </div>
+
+          <!-- Product SKU search -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Recherche SKU</label>
+            <input class="input" placeholder="Ex: PF001…" [(ngModel)]="customFilters.productSku">
+          </div>
+
+          <!-- Format -->
+          <div class="rpt-filter-group">
+            <label class="rpt-filter-label">Format</label>
+            <select class="input" [(ngModel)]="customFilters.format">
+              <option value="PDF">PDF</option>
+              <option value="EXCEL">Excel</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:16px;align-items:center">
+          <button class="btn btn-primary" (click)="generateCustomReport()" [disabled]="customGenerating()">
+            @if (customGenerating()) { <div class="spinner spinner-sm"></div> Génération… } @else { <i class="fa-solid fa-bolt"></i> Générer le rapport }
+          </button>
+          @if (customReport()) {
+            <button class="btn btn-ghost" (click)="downloadCustomReport()"><i class="fa-solid fa-download"></i> Télécharger</button>
+            <span style="font-size:13px;color:var(--g);font-weight:600"><i class="fa-solid fa-circle-check"></i> {{ customReport()?.title }}</span>
+          }
+        </div>
+      </div>
+    }
 
     <!-- ═══ VISUAL ANALYSIS SECTION ═══ -->
     @if (showAnalysis()) {
@@ -50,19 +143,19 @@
           <!-- KPI cards -->
           <div class="rpt-analysis-kpis">
             <div class="rpt-kpi-card">
-              <div class="rpt-kpi-icon" style="background:rgba(26,107,42,.1);color:#1A6B2A"><i class="fa-solid fa-boxes-stacked"></i></div>
+              <div class="rpt-kpi-icon" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-boxes-stacked"></i></div>
               <div><div class="rpt-kpi-val">{{ stockLevels().length }}</div><div class="rpt-kpi-lbl">Références</div></div>
             </div>
             <div class="rpt-kpi-card">
-              <div class="rpt-kpi-icon" style="background:rgba(37,99,235,.1);color:#2563eb"><i class="fa-solid fa-cube"></i></div>
+              <div class="rpt-kpi-icon" style="background:var(--b-gh);color:var(--b)"><i class="fa-solid fa-cube"></i></div>
               <div><div class="rpt-kpi-val">{{ totalStockQty() | number }}</div><div class="rpt-kpi-lbl">Quantité totale</div></div>
             </div>
             <div class="rpt-kpi-card">
-              <div class="rpt-kpi-icon" style="background:rgba(234,88,12,.1);color:#ea580c"><i class="fa-solid fa-coins"></i></div>
+              <div class="rpt-kpi-icon" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-coins"></i></div>
               <div><div class="rpt-kpi-val">{{ formatCFA(totalStockValue()) }}</div><div class="rpt-kpi-lbl">Valeur stock</div></div>
             </div>
             <div class="rpt-kpi-card">
-              <div class="rpt-kpi-icon" style="background:rgba(220,38,38,.1);color:#dc2626"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div class="rpt-kpi-icon" style="background:var(--r-gh);color:var(--r)"><i class="fa-solid fa-triangle-exclamation"></i></div>
               <div><div class="rpt-kpi-val">{{ alertDistribution()[0].value }}</div><div class="rpt-kpi-lbl">Alertes critiques</div></div>
             </div>
           </div>
@@ -74,7 +167,7 @@
               <div class="rpt-chart-header">
                 <span class="rpt-chart-title">
                   <i class="fa-solid" [class.fa-boxes-stacked]="analysisView()==='material'" [class.fa-triangle-exclamation]="analysisView()==='alerts'" [class.fa-warehouse]="analysisView()==='warehouse'" [class.fa-right-left]="analysisView()==='movements'"></i>
-                  {{ analysisView() === 'material' ? 'Répartition par type de matériel' : analysisView() === 'alerts' ? 'Niveaux d\\'alerte' : analysisView() === 'warehouse' ? 'Stock par entrepôt' : 'Mouvements par type' }}
+                  {{ analysisViewLabel() }}
                 </span>
               </div>
               <div class="rpt-chart-body">
@@ -100,10 +193,15 @@
               </div>
               <div class="rpt-chart-body">
                 <div class="rpt-top-list">
-                  @for (p of topStockProducts(); track p.name; let idx = $index) {
+                  @for (p of topStockProducts(); track p.sku || p.name; let idx = $index) {
                     <div class="rpt-top-row">
                       <span class="rpt-top-rank">{{ idx + 1 }}</span>
-                      <span class="rpt-top-name">{{ p.name }}</span>
+                      <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                        <span class="rpt-top-name">{{ p.name }}</span>
+                        @if (p.sku && p.sku !== p.name) {
+                          <span style="font-size:9px;font-weight:700;color:#555;font-family:monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;width:fit-content">{{ p.sku }}</span>
+                        }
+                      </div>
                       <span class="rpt-top-qty">{{ p.qty | number }}</span>
                     </div>
                   } @empty {
@@ -119,7 +217,7 @@
             <div class="rpt-breakdown-table">
               <table class="rpt-table">
                 <thead>
-                  <tr><th>Type</th><th>Nombre produits</th><th>Quantité totale</th><th>Valeur stock</th></tr>
+                  <tr><th>Type de matériel</th><th>Nb produits</th><th>Quantité totale</th><th>Valeur stock</th></tr>
                 </thead>
                 <tbody>
                   @for (d of materialAnalysis(); track d.label) {
@@ -250,11 +348,76 @@
       </div>
     </div>
 
+    <!-- ═══ QUICK EXPORTS SECTION ═══ -->
+    @if (showExports()) {
+      <div class="rpt-section">
+        <div class="rpt-section-head"><span class="sh-ico sh-b"><i class="fa-solid fa-file-export"></i></span><h2>Exports rapides</h2></div>
+
+        <!-- Items by location -->
+        <div class="rpt-export-card">
+          <div class="rpt-export-card-hd"><i class="fa-solid fa-box-open"></i> Articles de stock</div>
+          <div class="rpt-export-card-body">
+            <div class="rpt-export-filter">
+              <label>Emplacement</label>
+              <select class="form-control" [ngModel]="selectedLocationId()" (ngModelChange)="onLocationChange($event)">
+                @for (loc of locations(); track loc.id) {
+                  <option [value]="loc.id">{{ loc.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="rpt-export-btns">
+              <button class="btn btn-sm btn-outline" (click)="exportItemsByLocation('csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
+              <button class="btn btn-sm btn-success" (click)="exportItemsByLocation('excel')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+              <button class="btn btn-sm btn-danger" (click)="exportItemsByLocation('pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movements -->
+        <div class="rpt-export-card">
+          <div class="rpt-export-card-hd"><i class="fa-solid fa-right-left"></i> Mouvements de stock</div>
+          <div class="rpt-export-card-body">
+            <div class="rpt-export-btns">
+              <button class="btn btn-sm btn-outline" (click)="exportMovementsCsv()"><i class="fa-solid fa-file-csv"></i> CSV</button>
+              <button class="btn btn-sm btn-success" (click)="downloadMovementsExcel()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+              <button class="btn btn-sm btn-danger" (click)="downloadMovementsPdf()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Excel with charts -->
+        <div class="rpt-export-card">
+          <div class="rpt-export-card-hd"><i class="fa-solid fa-chart-column"></i> Rapports Excel avec graphiques</div>
+          <div class="rpt-export-card-body">
+            <p class="rpt-export-hint">Fichiers .xlsx avec graphiques intégrés pour analyse visuelle dans Excel.</p>
+            <div class="rpt-export-filter">
+              <label>Type de stock</label>
+              <select class="form-control" [ngModel]="excelLocationType()" (ngModelChange)="excelLocationType.set($event)">
+                <option value="STOCK_CENTRAL">Stock Central</option>
+                <option value="STOCK_BUFFER">Stock Tampon</option>
+                <option value="STOCK_MOBILE">Stock Mobile</option>
+              </select>
+            </div>
+            <div class="rpt-export-btns rpt-export-wrap">
+              <button class="btn btn-sm btn-success" (click)="downloadExcelChart('items')"><i class="fa-solid fa-file-excel"></i> Stock avec graphique</button>
+              <button class="btn btn-sm btn-success" (click)="downloadExcelChart('movements')"><i class="fa-solid fa-file-excel"></i> Mouvements avec graphique</button>
+              <button class="btn btn-sm btn-success" (click)="downloadExcelChart('valorisation')"><i class="fa-solid fa-file-excel"></i> Valorisation avec graphique</button>
+              <button class="btn btn-sm btn-success" (click)="downloadExcelChart('global')"><i class="fa-solid fa-file-excel"></i> Rapport global multi-feuilles</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- REPORT LIST -->
     <div class="card">
       <div class="card-header">
         <div class="sec-head"><span class="sh-ico sh-b"><i class="fa-solid fa-clock-rotate-left"></i></span><div><h3>Rapports générés</h3><p class="sec-sub">{{ filteredReports().length }} rapport(s) dans l'historique</p></div></div>
         <div class="rpt-list-controls">
+          <div class="rpt-view-toggle">
+            <button class="rpt-view-btn" [class.active]="viewMode()==='mine'" (click)="setViewMode('mine')">Mes rapports</button>
+            <button class="rpt-view-btn" [class.active]="viewMode()==='all'" (click)="setViewMode('all')">Tous les rapports</button>
+          </div>
           <div class="rpt-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="form-control" placeholder="Rechercher..." [(ngModel)]="search" (input)="search.set($any($event.target).value)"></div>
           <select class="form-control" [(ngModel)]="filterType">
             <option value="ALL">Tous les types</option>
@@ -329,6 +492,128 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeDetail()">Fermer</button>
         <button class="btn btn-primary" (click)="downloadReport(sr)"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showNtFoodsForm()) {
+  <div class="modal-overlay" (click)="showNtFoodsForm.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:560px">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-clipboard-list"></i> Fiche NTFoods — Infos Produits TANTY</div>
+        <button class="modal-close" (click)="showNtFoodsForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px;color:var(--n500);margin:0 0 16px">Modèle vierge avec cases de quantités. Seul le motif change selon le type d'opération.</p>
+        <div class="rpt-form-grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="form-group"><label class="form-label">Motif</label>
+            <select class="form-control" [ngModel]="ntFoodsMotif()" (ngModelChange)="ntFoodsMotif.set($any($event))">
+              <option value="Vente">Vente</option>
+              <option value="Promo">Promo</option>
+              <option value="Dotation">Dotation</option>
+              <option value="EV">EV</option>
+              <option value="AV">AV</option>
+              <option value="Production">Production</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Nom</label><input type="text" class="form-control" [ngModel]="ntFoodsNom()" (ngModelChange)="ntFoodsNom.set($event)" placeholder="Nom"></div>
+          <div class="form-group"><label class="form-label">Ville</label><input type="text" class="form-control" [ngModel]="ntFoodsVille()" (ngModelChange)="ntFoodsVille.set($event)" placeholder="Ville"></div>
+          <div class="form-group"><label class="form-label">Zone</label><input type="text" class="form-control" [ngModel]="ntFoodsZone()" (ngModelChange)="ntFoodsZone.set($event)" placeholder="Zone"></div>
+          <div class="form-group"><label class="form-label">Nbre de colis</label><input type="number" class="form-control" [ngModel]="ntFoodsColis()" (ngModelChange)="ntFoodsColis.set($event)" placeholder="—"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="showNtFoodsForm.set(false)">Annuler</button>
+        <button class="btn btn-primary" (click)="showNtFoodsForm.set(false); downloadNTFoods()"><i class="fa-solid fa-file-pdf"></i> Télécharger la fiche</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ IA MEETING REPORT MODAL ═══ -->
+@if (showMeetingForm()) {
+  <div class="modal-overlay" (click)="toggleMeetingForm()">
+    <div class="modal-box rpt-meeting-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header rpt-meeting-header">
+        <div class="modal-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Compte-rendu de réunion IA</div>
+        <button class="modal-close" (click)="toggleMeetingForm()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body rpt-meeting-body">
+
+        @if (!iaConfigured()) {
+          <div class="rpt-ia-warn">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>IA en mode hors-ligne. Le compte-rendu sera généré avec un modèle basique. Configurez <code>OPENAI_API_KEY</code> pour l'IA GPT-OSS 120B.</span>
+          </div>
+        }
+
+        @if (!meetingResult()) {
+          <div class="rpt-meeting-form">
+            <div class="rpt-form-row">
+              <div class="form-group" style="flex:2">
+                <label class="form-label">Titre de la réunion <span style="color:var(--r)">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="meetingForm.title" placeholder="Ex: Réunion hebdomadaire de stock">
+              </div>
+              <div class="form-group" style="flex:1">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" [(ngModel)]="meetingForm.date">
+              </div>
+            </div>
+            <div class="rpt-form-row">
+              <div class="form-group" style="flex:1">
+                <label class="form-label">Lieu</label>
+                <input type="text" class="form-control" [(ngModel)]="meetingForm.location" placeholder="Ex: Salle de conférence">
+              </div>
+              <div class="form-group" style="flex:2">
+                <label class="form-label">Participants (séparés par des virgules)</label>
+                <input type="text" class="form-control" [(ngModel)]="meetingForm.participants" placeholder="Ex: Jean Dupont, Marie Martin, Paul Durand">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ordre du jour</label>
+              <textarea class="form-control rpt-textarea" [(ngModel)]="meetingForm.agenda" rows="3" placeholder="Points à discuter..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes / Discussions</label>
+              <textarea class="form-control rpt-textarea" [(ngModel)]="meetingForm.notes" rows="4" placeholder="Résumé des discussions..."></textarea>
+            </div>
+            <div class="rpt-form-row">
+              <div class="form-group" style="flex:1">
+                <label class="form-label">Décisions prises</label>
+                <textarea class="form-control rpt-textarea" [(ngModel)]="meetingForm.decisions" rows="3" placeholder="Décisions..."></textarea>
+              </div>
+              <div class="form-group" style="flex:1">
+                <label class="form-label">Actions à mener</label>
+                <textarea class="form-control rpt-textarea" [(ngModel)]="meetingForm.actionItems" rows="3" placeholder="Actions avec responsables et échéances..."></textarea>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="rpt-meeting-result">
+            @if (meetingResult()?.usingFallback) {
+              <div class="rpt-ia-warn"><i class="fa-solid fa-circle-info"></i><span>Compte-rendu généré en mode hors-ligne.</span></div>
+            }
+            <div class="rpt-meeting-result-actions">
+              <button class="btn btn-sm btn-ghost" (click)="copyMeetingReport()"><i class="fa-solid fa-copy"></i> Copier</button>
+              <button class="btn btn-sm btn-danger" (click)="downloadMeetingReportPdf()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+              <button class="btn btn-sm btn-outline" (click)="downloadMeetingReportWord()"><i class="fa-solid fa-file-word"></i> Word</button>
+              <button class="btn btn-sm btn-ghost" (click)="downloadMeetingReport()"><i class="fa-solid fa-file-lines"></i> Markdown</button>
+            </div>
+            <pre class="rpt-meeting-result-content">{{ meetingResult()?.formattedReport }}</pre>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        @if (!meetingResult()) {
+          <button class="btn btn-ghost" (click)="toggleMeetingForm()">Annuler</button>
+          <button class="btn btn-ia" (click)="generateMeetingReport()" [disabled]="meetingGenerating()">
+            @if (meetingGenerating()) { <div class="spinner spinner-sm"></div> Génération IA... } @else { <i class="fa-solid fa-wand-magic-sparkles"></i> Générer le compte-rendu }
+          </button>
+        } @else {
+          <button class="btn btn-ghost" (click)="resetMeetingForm()">Nouveau compte-rendu</button>
+          <button class="btn btn-ia" (click)="toggleMeetingForm()">Fermer</button>
+        }
       </div>
     </div>
   </div>

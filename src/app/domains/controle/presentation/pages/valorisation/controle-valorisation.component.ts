@@ -11,6 +11,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
 })
 export class ControleValorisationComponent implements OnInit {
   fCFA = fCFA;
+  Math = Math;
   private readonly stkSvc = inject(StockService);
 
   stocks = signal<NiveauStockBE[]>([]);

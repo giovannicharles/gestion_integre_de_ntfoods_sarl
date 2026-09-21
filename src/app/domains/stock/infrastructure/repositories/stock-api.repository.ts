@@ -38,10 +38,16 @@ export interface GenerateReportRequest {
 
 export interface StockLocationDto {
   id: string;
-  type: 'STOCK_CENTRAL' | 'STOCK_BUFFER' | 'STOCK_MOBILE';
+  type: 'STOCK_CENTRAL' | 'STOCK_BUFFER' | 'STOCK_MOBILE' | 'MAGASIN';
   typeLabel: string;
   name: string;
   description?: string;
+  managerId?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  active?: boolean;
+  itemCount?: number;
 }
 
 export interface StockThresholdDto {
@@ -96,12 +102,20 @@ export class StockApiRepository {
   getBrands(): Observable<Brand[]> {
     return this.api.get<Brand[]>('stock/product-classifications/brands').pipe(catchError(() => of([] as Brand[])));
   }
-  getLines(): Observable<ProductLine[]> { return of([]); }
-  getVariants(): Observable<ProductVariant[]> { return of([]); }
+  getLines(brandId?: number): Observable<ProductLine[]> {
+    return this.api.get<ProductLine[]>('stock/product-classifications/lines', brandId ? { brandId: String(brandId) } : undefined)
+      .pipe(catchError(() => of([] as ProductLine[])));
+  }
+  getVariants(productLineId?: number): Observable<ProductVariant[]> {
+    return this.api.get<ProductVariant[]>('stock/product-classifications/variants', productLineId ? { productLineId: String(productLineId) } : undefined)
+      .pipe(catchError(() => of([] as ProductVariant[])));
+  }
   getWarehouses(): Observable<Warehouse[]> {
     return this.api.get<any[]>('stock/locations').pipe(catchError(() => of([])));
   }
-  getSuppliers(): Observable<Supplier[]> { return of([]); }
+  getSuppliers(): Observable<Supplier[]> {
+    return this.api.get<Supplier[]>('v1/stock/suppliers').pipe(catchError(() => of([] as Supplier[])));
+  }
 
   // ── DASHBOARD (/api/v1/stock/dashboard/...) ───────────────
   getDashboard(): Observable<DashboardStatsResponse> {
@@ -131,7 +145,7 @@ export class StockApiRepository {
   }
 
   adjustStock(stockLevelId: number, newQuantity: number, reason: string, requestedBy?: string): Observable<StockLevel> {
-    return this.api.post('stock/adjust', { stockLevelId, newQuantity, reason, requestedBy });
+    return this.api.post('stock/items/adjust', { stockLevelId, newQuantity, reason, requestedBy });
   }
 
   transferToBuffer(id: number, quantity: number): Observable<void> {
@@ -261,13 +275,13 @@ export class StockApiRepository {
   // ── COMMERCIALS ───────────────────────────────────────────
   getCommercials(): Observable<Commercial[]> {
     return this.api.get<MobileStockSummary[]>('stock/mobile-tracking/all').pipe(
-      catchError(() => of([])),
+      catchError(() => of([] as MobileStockSummary[])),
       map(list => list.map(s => ({
         id: this.matriculeToId(s.commercialMatricule),
         matricule: s.commercialMatricule,
-        name: s.commercialMatricule,
-        phone: '',
-        vehicle: '',
+        name: s.commercialName || s.commercialMatricule,
+        phone: s.phone || '',
+        vehicle: s.vehicle || '',
         active: true
       })))
     );
@@ -367,6 +381,9 @@ export class StockApiRepository {
   }
 
   // ── REPORTS (/api/stock/reports/...) ──────────────────────
+  getAllReports(): Observable<ReportData[]> {
+    return this.api.get<ReportData[]>('stock/reports').pipe(catchError(() => of([])));
+  }
   getReportsByUser(generatedBy: string): Observable<ReportData[]> {
     return this.api.get<ReportData[]>(`stock/reports/user/${generatedBy}`).pipe(catchError(() => of([])));
   }
@@ -381,6 +398,9 @@ export class StockApiRepository {
   }
   deleteReport(id: number): Observable<void> {
     return this.api.delete(`stock/reports/${id}`);
+  }
+  downloadReportFile(id: number): Observable<Blob> {
+    return this.api.getBlob(`stock/reports/${id}/download`);
   }
 
   // ── EXPORTS PDF (/api/stock/export/...) ───────────────────
@@ -432,6 +452,59 @@ export class StockApiRepository {
 
   exportRapportRotation(locationType: string, periodStart: string, periodEnd: string, motif?: string): Observable<Blob> {
     return this.api.getBlob(`stock/export/rotation/${locationType}`, { periodStart, periodEnd, ...(motif ? { motif } : {}) });
+  }
+
+  // ── NOUVEAUX RAPPORTS (réceptions, dotations, réappro, transferts) ──
+  exportRapportReceptions(periodStart: string, periodEnd: string, motif?: string): Observable<Blob> {
+    return this.api.getBlob('stock/export/receptions', { periodStart, periodEnd, ...(motif ? { motif } : {}) });
+  }
+
+  exportRapportDotations(periodStart: string, periodEnd: string, motif?: string): Observable<Blob> {
+    return this.api.getBlob('stock/export/dotations', { periodStart, periodEnd, ...(motif ? { motif } : {}) });
+  }
+
+  exportRapportReapprovisionnement(motif?: string): Observable<Blob> {
+    return this.api.getBlob('stock/export/reapprovisionnement', motif ? { motif } : undefined);
+  }
+
+  exportRapportTransferts(locationType: string, periodStart: string, periodEnd: string, motif?: string): Observable<Blob> {
+    return this.api.getBlob(`stock/export/transferts/${locationType}`, { periodStart, periodEnd, ...(motif ? { motif } : {}) });
+  }
+
+  // ── FICHE HEBDOMADAIRE ────────────────────────────────────
+  exportFicheHebdomadaire(locationType: string, periodStart: string, periodEnd: string): Observable<Blob> {
+    return this.api.getBlob(`stock/export/fiche-hebdomadaire/${locationType}`, { periodStart, periodEnd });
+  }
+
+  // ── RAPPORTS AUTOMATIQUES (manual trigger) ────────────────
+  triggerAutoWeekly(locationType: string, periodStart: string, periodEnd: string): Observable<any> {
+    return this.api.post(`stock/export/auto/weekly/${locationType}`, null, { periodStart, periodEnd });
+  }
+
+  triggerAutoDaily(locationType: string, periodStart: string, periodEnd: string): Observable<any> {
+    return this.api.post(`stock/export/auto/daily/${locationType}`, null, { periodStart, periodEnd });
+  }
+
+  // ── EXPORTS EXCEL WITH CHARTS (/api/stock/export/excel/...) ──
+  exportExcelItems(locationType: string): Observable<Blob> {
+    return this.api.getBlob(`stock/export/excel/items/${locationType}`);
+  }
+
+  exportExcelMovements(): Observable<Blob> {
+    return this.api.getBlob('stock/export/excel/movements');
+  }
+
+  exportExcelValorisation(locationType: string): Observable<Blob> {
+    return this.api.getBlob(`stock/export/excel/valorisation/${locationType}`);
+  }
+
+  exportExcelGlobal(locationType: string, periodStart: string, periodEnd: string): Observable<Blob> {
+    return this.api.getBlob(`stock/export/excel/global/${locationType}`, { periodStart, periodEnd });
+  }
+
+  // ── LOCATIONS (/api/stock/locations) ──────────────────────
+  getLocations(): Observable<StockLocationDto[]> {
+    return this.api.get<StockLocationDto[]>('stock/locations').pipe(catchError(() => of([])));
   }
 
   getStockAlerts(): Observable<StockAlert[]> {
@@ -539,6 +612,14 @@ export class StockApiRepository {
     return this.api.post(`stock/alerts/${id}/resolve`, {});
   }
 
+  resolveAlertsByProduct(productId: number): Observable<number> {
+    return this.api.post<number>(`stock/alerts/resolve-by-product?productId=${productId}`, null);
+  }
+
+  resolveAlertsByProductSku(productSku: string): Observable<number> {
+    return this.api.post<number>(`stock/alerts/resolve-by-sku?productSku=${encodeURIComponent(productSku)}`, null);
+  }
+
   triggerAlertChecks(): Observable<void> {
     return this.api.post('stock/alerts/check-thresholds', {});
   }
@@ -548,12 +629,12 @@ export class StockApiRepository {
   }
 
   // ── THRESHOLDS (/api/stock/items/...) ─────────────────────
-  setThresholds(locationId: string, productSku: string, reorderPoint: number, safetyStock: number): Observable<unknown> {
-    return this.api.put(`stock/items/location/${locationId}/sku/${encodeURIComponent(productSku)}/thresholds`, { reorderPoint, safetyStock });
+  setThresholds(locationId: string, productSku: string, reorderPoint: number, safetyStock: number, maxStock?: number): Observable<unknown> {
+    return this.api.put(`stock/items/location/${locationId}/sku/${encodeURIComponent(productSku)}/thresholds`, { reorderPoint, safetyStock, maxStock });
   }
 
-  setDefaultThresholds(locationId: string, reorderPoint: number, safetyStock: number): Observable<unknown> {
-    return this.api.put(`stock/items/location/${locationId}/thresholds/batch`, { reorderPoint, safetyStock });
+  setDefaultThresholds(locationId: string, reorderPoint: number, safetyStock: number, maxStock?: number): Observable<unknown> {
+    return this.api.put(`stock/items/location/${locationId}/thresholds/batch`, { reorderPoint, safetyStock, maxStock });
   }
 
   getItemsWithThresholds(locationId: string): Observable<unknown[]> {
@@ -579,4 +660,151 @@ export class StockApiRepository {
   checkAllThresholds(): Observable<unknown> {
     return this.api.post('stock/thresholds/check', {});
   }
+
+  // ── PHYSICAL INVENTORY (/api/stock/physical-inventory) ────
+  createPhysicalInventory(locationId: string, countedBy: string, notes?: string): Observable<PhysicalInventory> {
+    return this.api.post<PhysicalInventory>('stock/physical-inventory', { locationId, countedBy, notes });
+  }
+
+  getPhysicalInventories(status?: string, countedBy?: string): Observable<PhysicalInventory[]> {
+    let url = 'stock/physical-inventory';
+    const params: string[] = [];
+    if (status) params.push(`status=${encodeURIComponent(status)}`);
+    if (countedBy) params.push(`countedBy=${encodeURIComponent(countedBy)}`);
+    if (params.length) url += '?' + params.join('&');
+    return this.api.get<PhysicalInventory[]>(url).pipe(catchError(() => of([])));
+  }
+
+  getPhysicalInventory(id: number): Observable<PhysicalInventory> {
+    return this.api.get<PhysicalInventory>(`stock/physical-inventory/${id}`);
+  }
+
+  getPhysicalInventoryItems(id: number): Observable<PhysicalInventoryItem[]> {
+    return this.api.get<PhysicalInventoryItem[]>(`stock/physical-inventory/${id}/items`).pipe(catchError(() => of([])));
+  }
+
+  getPhysicalInventoryDiscrepancies(id: number): Observable<PhysicalInventoryItem[]> {
+    return this.api.get<PhysicalInventoryItem[]>(`stock/physical-inventory/${id}/discrepancies`).pipe(catchError(() => of([])));
+  }
+
+  getPhysicalInventorySummary(id: number): Observable<PhysicalInventorySummary> {
+    return this.api.get<PhysicalInventorySummary>(`stock/physical-inventory/${id}/summary`);
+  }
+
+  countPhysicalInventoryItem(itemId: number, countedQuantity: number, notes?: string): Observable<PhysicalInventoryItem> {
+    return this.api.put<PhysicalInventoryItem>(`stock/physical-inventory/items/${itemId}/count`, { countedQuantity, notes });
+  }
+
+  completePhysicalInventory(id: number): Observable<PhysicalInventory> {
+    return this.api.put<PhysicalInventory>(`stock/physical-inventory/${id}/complete`, {});
+  }
+
+  validatePhysicalInventory(id: number, validatedBy: string, applyCorrections: boolean): Observable<PhysicalInventory> {
+    return this.api.put<PhysicalInventory>(`stock/physical-inventory/${id}/validate`, { validatedBy, applyCorrections });
+  }
+
+  // ── CUSTOM REPORT (/api/stock/reports/custom) ──────────────
+  generateCustomReport(criteria: CustomReportCriteriaDto): Observable<ReportData> {
+    return this.api.post<ReportData>('stock/reports/custom', criteria);
+  }
+
+  // ── Physical Inventory ──
+  // createPhysicalInventory(locationId: string, countedBy: string, notes?: string): Observable<PhysicalInventory> {
+  //   return this.api.post<PhysicalInventory>('stock/physical-inventory', { locationId, countedBy, notes: notes || '' });
+  // }
+
+  getAllPhysicalInventories(status?: string): Observable<PhysicalInventory[]> {
+    const params = status ? `?status=${status}` : '';
+    return this.api.get<PhysicalInventory[]>(`stock/physical-inventory${params}`);
+  }
+
+  // getPhysicalInventory(id: number): Observable<PhysicalInventory> {
+  //   return this.api.get<PhysicalInventory>(`stock/physical-inventory/${id}`);
+  // }
+
+  // getPhysicalInventoryItems(id: number): Observable<PhysicalInventoryItem[]> {
+  //   return this.api.get<PhysicalInventoryItem[]>(`stock/physical-inventory/${id}/items`);
+  // }
+
+  // getPhysicalInventoryDiscrepancies(id: number): Observable<PhysicalInventoryItem[]> {
+  //   return this.api.get<PhysicalInventoryItem[]>(`stock/physical-inventory/${id}/discrepancies`);
+  // }
+
+  // getPhysicalInventorySummary(id: number): Observable<PhysicalInventorySummary> {
+  //   return this.api.get<PhysicalInventorySummary>(`stock/physical-inventory/${id}/summary`);
+  // }
+
+  countInventoryItem(itemId: number, countedQuantity: number, notes?: string): Observable<PhysicalInventoryItem> {
+    return this.api.put<PhysicalInventoryItem>(`stock/physical-inventory/items/${itemId}/count`, { countedQuantity, notes });
+  }
+
+  // completePhysicalInventory(id: number): Observable<PhysicalInventory> {
+  //   return this.api.put<PhysicalInventory>(`stock/physical-inventory/${id}/complete`, {});
+  // }
+
+  // validatePhysicalInventory(id: number, validatedBy: string, applyCorrections: boolean): Observable<PhysicalInventory> {
+  //   return this.api.put<PhysicalInventory>(`stock/physical-inventory/${id}/validate`, { validatedBy, applyCorrections });
+  // }
+}
+
+export interface PhysicalInventory {
+  id: number;
+  reference: string;
+  locationId: string;
+  locationName: string;
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'VALIDATED';
+  countedBy: string;
+  validatedBy?: string;
+  startedAt: string;
+  completedAt?: string;
+  validatedAt?: string;
+  totalItems?: number;
+  countedItems?: number;
+  discrepancyCount?: number;
+  notes?: string;
+}
+
+export interface PhysicalInventoryItem {
+  id: number;
+  inventoryId: number;
+  stockItemId?: number;
+  productId: number;
+  productSku: string;
+  productName: string;
+  packagingType: string;
+  systemQuantity: number;
+  countedQuantity?: number;
+  discrepancy?: number;
+  status: 'PENDING' | 'COUNTED' | 'VALIDATED';
+  countedAt?: string;
+  notes?: string;
+}
+
+export interface PhysicalInventorySummary {
+  inventoryId: number;
+  reference: string;
+  status: string;
+  totalItems: number;
+  countedItems: number;
+  pendingItems: number;
+  positiveDiscrepancies: number;
+  negativeDiscrepancies: number;
+  totalDiscrepancies: number;
+  discrepancyValue: number;
+}
+
+export interface CustomReportCriteriaDto {
+  locationTypes?: string[];
+  materialTypes?: string[];
+  alertLevels?: string[];
+  productSku?: string;
+  productName?: string;
+  minQuantity?: number;
+  maxQuantity?: number;
+  minValue?: number;
+  maxValue?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  generatedBy: string;
+  format?: string;
 }

@@ -1,10 +1,11 @@
 import { Component, OnInit, signal, computed, inject, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ProductService } from '../../../application/services/product.service';
 import { PriceType } from '../../../domain/models/product.models';
+import { IaService, AnalysisResponse } from '../../../../../core/services/ia.service';
 
 Chart.register(...registerables);
 
@@ -18,6 +19,7 @@ Chart.register(...registerables);
 export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   private d$ = new Subject<void>();
   private svc = inject(ProductService);
+  private iaService = inject(IaService);
 
   @ViewChild('materialChart') materialChartCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('categoryChart') categoryChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -29,6 +31,11 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = signal(true);
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
+  displayMode = signal<'table' | 'grid' | 'cards'>('table');
+
+  setDisplayMode(mode: 'table' | 'grid' | 'cards') {
+    this.displayMode.set(mode);
+  }
 
   // Data
   brands = signal<any[]>([]);
@@ -45,6 +52,15 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   filterBrandId = signal<number | null>(null);
   filterLineId = signal<number | null>(null);
 
+  // Pagination
+  ps = 10;
+  cp = signal(1);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredProducts().length / this.ps)));
+  paginatedProducts = computed(() => {
+    const s = (this.cp() - 1) * this.ps;
+    return this.filteredProducts().slice(s, s + this.ps);
+  });
+
   // Filtered computed
   filteredProducts = computed(() => {
     let r = this.products();
@@ -52,7 +68,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (fm !== 'ALL') r = r.filter(p => (p.materialType || 'PRODUIT_FINI') === fm);
     if (this.searchProduct) {
       const q = this.searchProduct.toLowerCase();
-      r = r.filter(p => (p.sku || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q));
+      r = r.filter(p => (p.sku || '').toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q) || (p.designation || '').toLowerCase().includes(q));
     }
     return r;
   });
@@ -95,6 +111,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   formCartonsPerAssort: number | null = null;
   formMaterialType = 'PRODUIT_FINI';
   formVariantId: number | null = null;
+  formDesignation = '';
 
   // Price form
   priceProductId: number | null = null;
@@ -109,6 +126,12 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   showPriceModal = signal(false);
   priceModalProduct = signal<any>(null);
   productPrices = signal<any[]>([]);
+
+  // ── Insights IA (TantyAI) ──
+  iaConfigured = signal(false);
+  iaInsight = signal<AnalysisResponse | null>(null);
+  iaInsightLoading = signal(false);
+  showIaInsight = signal(false);
 
   // Stats computed
   productCount = computed(() => this.products().length);
@@ -201,7 +224,67 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
     { value: 'CONSOMMABLE', label: 'Consommable', icon: 'fa-box-open', color: 'var(--g)' }
   ];
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.iaService.getStatus().pipe(
+      takeUntil(this.d$),
+      catchError(() => of({ configured: false, model: '', service: 'TantyAI' }))
+    ).subscribe(s => this.iaConfigured.set(s.configured));
+  }
+
+  // ── Analyse IA du catalogue produits ──
+  runIaInsight() {
+    if (this.iaInsightLoading()) return;
+    this.showIaInsight.set(true);
+    this.iaInsightLoading.set(true);
+    this.iaInsight.set(null);
+
+    const stockData: Record<string, unknown> = {
+      totalProduits: this.productCount(),
+      produitsActifs: this.activeProductCount(),
+      produitsInactifs: this.inactiveProductCount(),
+      lignes: this.lineCount(),
+      variantes: this.variantCount(),
+      prixMoyen: Math.round(this.avgPrice()),
+      prixMax: this.maxPrice(),
+      prixMin: this.minPrice(),
+      repartitionMateriaux: this.materialDistribution().map(m => ({ type: m.label, nombre: m.value })),
+      topCategories: this.categoryDistribution(),
+      conditionnements: this.packagingDistribution()
+    };
+
+    this.iaService.analyze({
+      analysisType: 'catalogue_produits',
+      stockData,
+      products: this.products().slice(0, 30).map(p => ({
+        sku: p.sku,
+        designation: p.designation,
+        categorie: p.category,
+        type: p.materialType,
+        prixUnitaire: p.unitPriceAmount,
+        actif: p.active,
+        stockSecurite: p.safetyStock,
+        delaiReappro: p.leadTime
+      }))
+    }).pipe(
+      takeUntil(this.d$),
+      catchError(() => of(null))
+    ).subscribe(resp => {
+      this.iaInsightLoading.set(false);
+      this.iaInsight.set(resp);
+    });
+  }
+
+  closeIaInsight() {
+    this.showIaInsight.set(false);
+  }
+
+  getIaPriorityClass(priority: string): string {
+    const p = (priority || '').toUpperCase();
+    if (p === 'HIGH' || p === 'HAUTE' || p === 'CRITICAL') return 'badge-danger';
+    if (p === 'MEDIUM' || p === 'MOYENNE') return 'badge-warning';
+    return 'badge-success';
+  }
 
   ngAfterViewInit(): void {
     setTimeout(() => this.buildCharts(), 300);
@@ -345,6 +428,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.formMaterialType = item.materialType || 'PRODUIT_FINI';
       this.formVariantId = item.variantId ?? null;
       this.formActive = item.active;
+      this.formDesignation = item.designation || '';
     }
     this.showModal.set(true);
   }
@@ -374,6 +458,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.formCartonsPerAssort = null;
     this.formMaterialType = 'PRODUIT_FINI';
     this.formVariantId = null;
+    this.formDesignation = '';
   }
 
   saveModal() {
@@ -401,7 +486,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
         unitPriceAmount: this.formUnitPrice, leadTimeDays: this.formLeadTime, safetyStockDays: this.formSafetyStock,
         packagingType: this.formPackagingType, quantityPerCarton: this.formQtyPerCarton, unitWeight: this.formUnitWeight,
         volume: this.formVolume, cartonsPerAssortiment: this.formCartonsPerAssort, materialType: this.formMaterialType,
-        variantId: this.formVariantId, active: this.formActive
+        variantId: this.formVariantId, active: this.formActive, designation: this.formDesignation
       };
       if (mode === 'create') {
         this.svc.createProduct(payload).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Produit créé', 'success'); this.closeModal(); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
@@ -511,6 +596,12 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   setTab(tab: 'lines' | 'variants' | 'products' | 'prices') {
     this.activeTab.set(tab);
     this.filterLineId.set(null);
+    this.cp.set(1);
+  }
+
+  goTo(page: number) {
+    const n = Math.max(1, Math.min(page, this.totalPages()));
+    this.cp.set(n);
   }
 
   ngOnDestroy() {

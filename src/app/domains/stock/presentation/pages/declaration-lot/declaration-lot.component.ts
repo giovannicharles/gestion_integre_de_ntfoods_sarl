@@ -119,8 +119,6 @@ export class DeclarationLotComponent implements OnInit, OnDestroy {
   }
 
   onSearchInput(line: LotLineForm) {
-    const searchText = line.searchText || '';
-
     if (line.productId > 0) {
       this.patchLine(line.uid, {
         productId: 0,
@@ -136,23 +134,7 @@ export class DeclarationLotComponent implements OnInit, OnDestroy {
       this.patchLine(line.uid, { showDropdown: true, notFound: false });
     }
 
-    const clean = searchText.replace(/[\[\]]/g, '').trim().toUpperCase();
-    if (clean.length >= 1) {
-      const exact = this.products().find(p => (p.sku || '').toUpperCase() === clean);
-      if (exact) {
-        this.selectProduct(line, exact);
-        return;
-      }
-      const normalized = clean.replace(/[-_\s]/g, '');
-      const found = this.products().find(p =>
-        (p.sku || '').toUpperCase().replace(/[-_\s]/g, '') === normalized
-      );
-      if (found) {
-        this.selectProduct(line, found);
-        return;
-      }
-    }
-
+    const searchText = line.searchText || '';
     const results = this.getSearchResults(line);
     if (results.length === 0 && searchText.length >= 2) {
       this.patchLine(line.uid, { notFound: true });
@@ -277,7 +259,7 @@ export class DeclarationLotComponent implements OnInit, OnDestroy {
         productName: l.productName,
         productUnit: l.productUnit,
         declaredQuantityKg: kg,
-        equivalentUnits: units,
+        equivalentUnits: l.conditioningQty,
         productionDate: l.productionDate,
         notes: l.notes || this.globalNotes || undefined,
         conditioningType: l.conditioningType,

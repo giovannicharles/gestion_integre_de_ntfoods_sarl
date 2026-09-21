@@ -1,9 +1,11 @@
 import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, PreCommandeBE } from '../../../infrastructure/commercial.service';
+import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
+import { Product } from '../../../../stock/domain/models/stock.models';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface LigneUI { produitCode: string; designation: string; quantite: number }
@@ -23,6 +25,7 @@ interface PrecommandeUI {
 export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(CommercialService);
+  private readonly stockRepo = inject(StockApiRepository);
   private readonly d$ = new Subject<void>();
 
   today = new Date();

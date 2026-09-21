@@ -111,11 +111,12 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of filtered(); track item.id) {
+            @for (item of paginated(); track item.id) {
               <tr class="table-row-anim" [style.background]="item.alertLevel==='CRITIQUE' ? 'rgba(198,40,40,.03)' : (item.alertLevel==='FAIBLE' ? 'rgba(230,81,0,.03)' : 'transparent')">
                 <td>
                   <div style="display:flex;flex-direction:column;gap:2px">
-                    <span style="font-size:13px;font-weight:600;color:var(--n800)">{{ item.productSku }}</span>
+                    <span style="font-size:13px;font-weight:600;color:var(--n800)">{{ item.productName }}</span>
+                    <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace;background:var(--n100);padding:1px 6px;border-radius:4px;width:fit-content">{{ item.productSku }}</span>
                   </div>
                 </td>
                 <td>
@@ -210,6 +211,24 @@
           </tbody>
         </table>
       </div>
+      @if (totalPages() > 1) {
+        <div style="padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--n150)">
+          <span style="font-size:12px;color:var(--n400)">{{ filtered().length }} résultat(s) · Page {{ cp() }}/{{ totalPages() }}</span>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-ghost btn-sm" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            @for (p of [1,2,3,4,5]; track p) {
+              @if (p <= totalPages()) {
+                <button class="btn btn-sm" [class.btn-primary]="cp()===p" [class.btn-ghost]="cp()!==p" (click)="goTo(p)">{{ p }}</button>
+              }
+            }
+            @if (totalPages() > 6) { <span style="padding:4px 8px;color:var(--n400)">…</span> }
+            @if (totalPages() > 5) {
+              <button class="btn btn-sm" [class.btn-primary]="cp()===totalPages()" [class.btn-ghost]="cp()!==totalPages()" (click)="goTo(totalPages())">{{ totalPages() }}</button>
+            }
+            <button class="btn btn-ghost btn-sm" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- TRANSFER HISTORY -->
@@ -227,7 +246,12 @@
             @for (m of movements(); track m.id) {
               <tr>
                 <td>{{ (m.requestedAt || m.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ m.productSku || m.product?.sku || '—' }}</td>
+                <td>
+                  <div style="display:flex;flex-direction:column;gap:1px">
+                    <span style="font-size:12px;font-weight:600;color:var(--n800)">{{ m.product?.designation || m.productSku || '—' }}</span>
+                    <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace">{{ m.productSku || m.product?.sku || '—' }}</span>
+                  </div>
+                </td>
                 <td><span style="font-weight:800;color:var(--g)">{{ m.quantity | number }}</span></td>
                 <td><span style="font-family:var(--font-d)">{{ m.referenceNumber || m.reference || '—' }}</span></td>
               </tr>
@@ -253,7 +277,8 @@
           <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div>
-                <div style="font-weight:700;color:var(--n800);font-size:14px">{{ item.productSku }}</div>
+                <div style="font-weight:700;color:var(--n800);font-size:14px">{{ item.productName }}</div>
+                <div style="font-size:11px;color:var(--n500);font-family:monospace;font-weight:600">{{ item.productSku }}</div>
                 <div style="font-size:12px;color:var(--n400)">{{ getMaterialLabel(item.materialType) }}</div>
                 @if (item.productLineName) {
                   <div style="font-size:11px;color:var(--n500);margin-top:2px">Gamme: {{ item.productLineName }}</div>
@@ -306,10 +331,16 @@
           <!-- Input -->
           <div class="form-group" style="margin-bottom:16px">
             <label class="form-label">Quantité à transférer <span class="req">*</span></label>
-            <input type="number" class="form-control" min="1" [max]="item.centralQty" [(ngModel)]="reapproQty" placeholder="Quantité à transférer">
-            @if (reapproQty > item.centralQty) {
+            <input type="number" class="form-control" min="1" [max]="item.centralQty" [(ngModel)]="reapproQty"
+                   [style.border-color]="(reapproQty<=0 || reapproQty>item.centralQty) ? 'var(--r)' : ''"
+                   placeholder="Entrez la quantité à transférer">
+            @if (reapproQty <= 0) {
               <div style="font-size:11px;color:var(--r);margin-top:4px">
-                <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant ({{ item.centralQty | number }} {{ item.unit }})
+                <i class="fa-solid fa-circle-exclamation"></i> Veuillez entrer une quantité valide supérieure à 0
+              </div>
+            } @else if (reapproQty > item.centralQty) {
+              <div style="font-size:11px;color:var(--r);margin-top:4px">
+                <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant : {{ item.centralQty | number }} {{ item.unit }} disponible(s) seulement
               </div>
             }
           </div>
@@ -335,7 +366,7 @@
           <button class="btn btn-ghost" (click)="closeReappro()">Annuler</button>
           <button class="btn btn-primary" [disabled]="reapproQty<=0 || reapproQty>item.centralQty || reapproSaving()" (click)="confirmReappro()">
             @if (reapproSaving()) { <div class="spinner spinner-sm"></div> }
-            @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirmer }
+            @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirmer le transfert }
           </button>
         </div>
       </div>
@@ -368,8 +399,8 @@
                      style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--n100);display:flex;justify-content:space-between;align-items:center"
                      [style.background]="addBufferSelectedSku()===p.productSku ? 'rgba(26,107,42,.08)' : 'transparent'">
                   <div>
-                    <div style="font-weight:600;font-size:13px;color:var(--n800)">{{ p.productSku }}</div>
-                    <div style="font-size:11px;color:var(--n400)">{{ p.productName }} · {{ p.packagingType }}</div>
+                    <div style="font-weight:600;font-size:13px;color:var(--n800)">{{ p.productName }}</div>
+                    <div style="font-size:11px;color:var(--n500);font-family:monospace;font-weight:600">{{ p.productSku }} · {{ p.packagingType }}</div>
                   </div>
                   <div style="text-align:right">
                     <div style="font-size:13px;font-weight:700;color:var(--g)">{{ p.quantity | number }}</div>
@@ -381,12 +412,26 @@
           }
 
           @if (addBufferSelectedSku()) {
-            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--n600)">
-              <i class="fa-solid fa-circle-info"></i> Produit sélectionné: <strong>{{ addBufferSelectedSku() }}</strong>
+            <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--n600);display:flex;justify-content:space-between;align-items:center">
+              <span><i class="fa-solid fa-circle-info"></i> Produit sélectionné: <strong>{{ addBufferSelectedSku() }}</strong></span>
+              @if (addBufferSelectedProduct(); as sp) {
+                <span style="font-size:11px;color:var(--g);font-weight:700">{{ sp.quantity | number }} {{ sp.unit }} dispo.</span>
+              }
             </div>
             <div class="form-group" style="margin-bottom:12px">
               <label class="form-label">Quantité à transférer <span class="req">*</span></label>
-              <input type="number" class="form-control" min="1" [(ngModel)]="addBufferQty" placeholder="Quantité">
+              <input type="number" class="form-control" min="1"
+                     [style.border-color]="addBufferQty<=0 ? 'var(--r)' : (addBufferSelectedProduct() && addBufferQty > addBufferSelectedProduct()!.quantity ? 'var(--r)' : '')"
+                     [(ngModel)]="addBufferQty" placeholder="Entrez la quantité à transférer">
+              @if (addBufferQty <= 0) {
+                <div style="font-size:11px;color:var(--r);margin-top:4px">
+                  <i class="fa-solid fa-circle-exclamation"></i> Veuillez entrer une quantité valide supérieure à 0
+                </div>
+              } @else if (addBufferSelectedProduct() && addBufferQty > addBufferSelectedProduct()!.quantity) {
+                <div style="font-size:11px;color:var(--r);margin-top:4px">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant : {{ addBufferSelectedProduct()!.quantity | number }} {{ addBufferSelectedProduct()!.unit }} disponible(s) seulement
+                </div>
+              }
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label">Notes</label>

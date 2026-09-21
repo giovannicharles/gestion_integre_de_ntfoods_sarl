@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
@@ -41,7 +41,7 @@ interface ProductWithStock {
 @Component({
   selector: 'app-commande-production',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DecimalPipe],
+  imports: [CommonModule, FormsModule, RouterLink, DecimalPipe, DatePipe],
   templateUrl: './commande-production.component.html',
   styleUrls: ['./commande-production.component.css']
 })
@@ -59,6 +59,9 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   errorMsg = signal('');
   successMsg = signal('');
 
+  // Onglets: 'new' = formulaire, 'history' = historique commandes
+  activeTab = signal<'new' | 'history'>('new');
+
   products = signal<Product[]>([]);
   pfLevels = signal<StockLevel[]>([]);
   allStockItems = signal<any[]>([]);
@@ -69,6 +72,50 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   lignes = signal<OrderLineForm[]>([]);
   globalNotes = '';
   productCount = signal(0);
+  prefillAlertId: string | null = null;
+
+  // ── Historique des commandes ──
+  orders = signal<InternalOrder[]>([]);
+  orderFilter = signal<string>('ALL');
+  orderSearch = '';
+  currentPage = signal(1);
+  readonly pageSize = 8;
+
+  filteredOrders = computed<InternalOrder[]>(() => {
+    let list = this.orders();
+    const filter = this.orderFilter();
+    if (filter !== 'ALL') {
+      list = list.filter(o => o.status === filter);
+    }
+    const q = this.orderSearch?.toLowerCase().trim();
+    if (q) {
+      list = list.filter(o =>
+        (o.orderNumber || '').toLowerCase().includes(q) ||
+        (o.requestedByName || '').toLowerCase().includes(q) ||
+        (o.approvedByName || '').toLowerCase().includes(q) ||
+        o.items.some(i => (i.productName || '').toLowerCase().includes(q) || (i.productSku || '').toLowerCase().includes(q))
+      );
+    }
+    return list;
+  });
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredOrders().length / this.pageSize)));
+  paginatedOrders = computed<InternalOrder[]>(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredOrders().slice(start, start + this.pageSize);
+  });
+
+  // ── Détail commande ──
+  selectedOrder = signal<InternalOrder | null>(null);
+  showOrderDetail = signal(false);
+  deliveryForm = { productId: 0, deliveredQty: 0 };
+  delivering = signal(false);
+  cancelReason = '';
+  cancelling = signal(false);
+  actionLoading = signal(false);
+
+  // ── Toast ──
+  toastMsg = signal('');
+  toastType = signal<'success' | 'error'>('success');
 
   // Helper: immutably patch a line so the signal triggers change detection
   private patchLine(uid: string, patch: Partial<OrderLineForm>) {
@@ -81,6 +128,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const prefillProductId = this.route.snapshot.queryParamMap.get('productId');
     const prefillQty = this.route.snapshot.queryParamMap.get('qty');
+    this.prefillAlertId = this.route.snapshot.queryParamMap.get('alertId');
 
     forkJoin({
       products: this.orderUC.getFinishedProducts(),
@@ -94,6 +142,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
         console.log('[CmdProd] Produits chargés:', products.length, products.slice(0, 3).map(p => ({ sku: p.sku, designation: p.designation, category: p.category })));
         this.pfLevels.set(levels.filter((sl: StockLevel) => products.some(p => p.id === sl.productId)));
         this.existingOrders.set(orders);
+        this.orders.set(orders);
         this.allStockItems.set(stockItems as any[]);
 
         const map = new Map<number, ProductWithStock>();
@@ -430,16 +479,172 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
 
     this.orderUC.create(payload as any).pipe(takeUntil(this.d$)).subscribe({
       next: (order) => {
+        // Résoudre les alertes pour les produits commandés
+        const productIds = validLines.map(l => l.productId);
+        productIds.forEach(pid => {
+          this.repo.resolveAlertsByProduct(pid).pipe(takeUntil(this.d$)).subscribe({
+            next: (count) => console.log(`[CmdProd] ${count} alerte(s) résolue(s) pour productId=${pid}`),
+            error: () => {}
+          });
+        });
+
         this.saving.set(false);
         this.success.set(true);
         this.successMsg.set(`Commande ${order.orderNumber} créée. En attente d'approbation du Chef de Production.`);
-        setTimeout(() => this.router.navigate(['/stock/production']), 2500);
+        this.loadOrders();
+        setTimeout(() => {
+          this.success.set(false);
+          this.activeTab.set('history');
+        }, 2000);
       },
       error: (err) => {
         this.saving.set(false);
         this.errorMsg.set(err?.error?.message || 'Erreur lors de la création de la commande.');
       }
     });
+  }
+
+  // ── Gestion des commandes (historique) ───────────────────
+  loadOrders() {
+    this.orderUC.getAll().pipe(takeUntil(this.d$)).subscribe({
+      next: (orders) => {
+        this.orders.set(orders);
+        this.existingOrders.set(orders);
+      },
+      error: () => this.showToast('Erreur lors du chargement des commandes.', 'error')
+    });
+  }
+
+  applyOrderFilter() {
+    this.currentPage.set(1);
+  }
+
+  goToPage(p: number) {
+    if (p >= 1 && p <= this.totalPages()) this.currentPage.set(p);
+  }
+
+  nextPage() { this.goToPage(this.currentPage() + 1); }
+  prevPage() { this.goToPage(this.currentPage() - 1); }
+
+  countOrderStatus(status: string): number {
+    return this.orders().filter(o => o.status === status).length;
+  }
+
+  getDeliveryPct(o: InternalOrder): number {
+    if (!o.items || o.items.length === 0) return 0;
+    const totalRequested = o.items.reduce((s, i) => s + i.requestedQty, 0);
+    const totalDelivered = o.items.reduce((s, i) => s + (i.deliveredQty || 0), 0);
+    return totalRequested > 0 ? Math.round((totalDelivered / totalRequested) * 100) : 0;
+  }
+
+  getOStatusLabel(s: string): string {
+    const m: Record<string, string> = {
+      DRAFT: 'Brouillon — Att. approbation',
+      APPROVED: 'Approuvé — En production',
+      PARTIALLY_DELIVERED: 'Partiellement livré',
+      DELIVERED: 'Livré complet',
+      CANCELLED: 'Annulé'
+    };
+    return m[s] || s;
+  }
+
+  getOStatusClass(s: string): string {
+    const m: Record<string, string> = {
+      DRAFT: 'badge-warning',
+      APPROVED: 'badge-primary',
+      PARTIALLY_DELIVERED: 'badge-secondary',
+      DELIVERED: 'badge-success',
+      CANCELLED: 'badge-danger'
+    };
+    return m[s] || 'badge-neutral';
+  }
+
+  // ── Timeline d'une commande ──
+  getOrderTimeline(o: InternalOrder): { label: string; date?: string; done: boolean; icon: string }[] {
+    const steps = [
+      { label: 'Commande créée', date: o.createdAt, done: true, icon: 'fa-file-circle-plus' },
+      { label: 'Approbation Chef Prod.', date: o.approvedAt, done: !!o.approvedAt, icon: 'fa-check' },
+      { label: 'En production', date: o.approvedAt, done: o.status === 'APPROVED' || o.status === 'PARTIALLY_DELIVERED' || o.status === 'DELIVERED', icon: 'fa-industry' },
+      { label: 'Livraison', date: o.status === 'DELIVERED' ? o.orderDate : undefined, done: o.status === 'DELIVERED', icon: 'fa-truck-fast' },
+    ];
+    if (o.status === 'CANCELLED') {
+      return [
+        { label: 'Commande créée', date: o.createdAt, done: true, icon: 'fa-file-circle-plus' },
+        { label: 'Annulée', date: o.cancelledAt, done: true, icon: 'fa-xmark' },
+      ];
+    }
+    return steps;
+  }
+
+  // ── Actions sur commande ──
+  openOrderDetail(o: InternalOrder) {
+    this.selectedOrder.set(o);
+    this.showOrderDetail.set(true);
+    this.deliveryForm = { productId: 0, deliveredQty: 0 };
+    this.cancelReason = '';
+  }
+  closeOrderDetail() {
+    this.showOrderDetail.set(false);
+    this.selectedOrder.set(null);
+  }
+
+  approveOrder(id: number) {
+    const user = this.auth.getCurrentUser();
+    if (!user) { this.showToast('Session expirée.', 'error'); return; }
+    this.actionLoading.set(true);
+    this.orderUC.approve(id, user.matricule, `${user.firstname} ${user.lastname}`)
+      .pipe(takeUntil(this.d$)).subscribe({
+      next: (updated) => {
+        this.actionLoading.set(false);
+        this.updateOrderInList(updated);
+        this.showToast('Commande approuvée par le Chef de Production.', 'success');
+      },
+      error: () => { this.actionLoading.set(false); this.showToast('Erreur lors de l\'approbation.', 'error'); }
+    });
+  }
+
+  cancelOrder(id: number) {
+    if (!this.cancelReason || this.cancelling()) return;
+    const user = this.auth.getCurrentUser();
+    if (!user) { this.showToast('Session expirée.', 'error'); return; }
+    this.cancelling.set(true);
+    this.orderUC.cancel(id, user.matricule, this.cancelReason)
+      .pipe(takeUntil(this.d$)).subscribe({
+      next: (updated) => {
+        this.cancelling.set(false);
+        this.updateOrderInList(updated);
+        this.showToast('Commande annulée.', 'error');
+      },
+      error: () => { this.cancelling.set(false); this.showToast('Erreur lors de l\'annulation.', 'error'); }
+    });
+  }
+
+  deliverOrder(orderId: number) {
+    if (!this.deliveryForm.productId || !this.deliveryForm.deliveredQty || this.delivering()) return;
+    this.delivering.set(true);
+    this.orderUC.deliver(orderId, this.deliveryForm.productId, this.deliveryForm.deliveredQty)
+      .pipe(takeUntil(this.d$)).subscribe({
+      next: (updated) => {
+        this.delivering.set(false);
+        this.updateOrderInList(updated);
+        this.selectedOrder.set(updated);
+        this.deliveryForm = { productId: 0, deliveredQty: 0 };
+        this.showToast(`Livraison enregistrée. Statut: ${this.getOStatusLabel(updated.status)}`, 'success');
+      },
+      error: () => { this.delivering.set(false); this.showToast('Erreur de livraison.', 'error'); }
+    });
+  }
+
+  private updateOrderInList(updated: InternalOrder) {
+    this.orders.update(list => list.map(o => o.id === updated.id ? updated : o));
+    this.existingOrders.update(list => list.map(o => o.id === updated.id ? updated : o));
+  }
+
+  // ── Helpers ──
+  showToast(msg: string, type: 'success' | 'error') {
+    this.toastMsg.set(msg);
+    this.toastType.set(type);
+    setTimeout(() => this.toastMsg.set(''), 5000);
   }
 
   ngOnDestroy() { this.d$.next(); this.d$.complete(); }

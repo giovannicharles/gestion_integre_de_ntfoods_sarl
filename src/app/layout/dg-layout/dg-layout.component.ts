@@ -32,6 +32,12 @@ export class DgLayoutComponent implements OnInit {
 
   navGroups: NavGroup[] = [
     {
+      label: 'Intelligence IA', icon: 'fa-brain', children: [
+        { label: 'Assistant IA Chat', icon: 'fa-comments', route: '/dg/chat' },
+        { label: 'Analyse IA 360°', icon: 'fa-magnifying-glass-chart', route: '/dg/ia-analyse' },
+      ]
+    },
+    {
       label: 'Commercial', icon: 'fa-handshake', children: [
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/dg/classement' },
         { label: 'Objectifs CA', icon: 'fa-bullseye', route: '/dg/objectifs' },
@@ -46,11 +52,13 @@ export class DgLayoutComponent implements OnInit {
     },
     {
       label: 'Stock & Production', icon: 'fa-warehouse', children: [
-        { label: 'Stock Central', icon: 'fa-warehouse', route: '/stock/dashboard' },
-        { label: 'Inventaire', icon: 'fa-boxes-packing', route: '/stock/inventaire' },
-        { label: 'Lots Production', icon: 'fa-industry', route: '/stock/production' },
-        { label: 'Seuils Stock', icon: 'fa-ruler', route: '/stock/seuils' },
-        { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/stock/alertes' },
+        { label: 'Stock Central', icon: 'fa-warehouse', route: '/dg/stock-dashboard' },
+        { label: 'Inventaire', icon: 'fa-boxes-packing', route: '/dg/inventaire' },
+        { label: 'Lots Production', icon: 'fa-industry', route: '/dg/production' },
+        { label: 'Seuils Stock', icon: 'fa-ruler', route: '/dg/seuils' },
+        { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/dg/alertes' },
+        { label: 'Produits', icon: 'fa-boxes-stacked', route: '/dg/produits' },
+        { label: 'Statistiques', icon: 'fa-chart-line', route: '/dg/statistiques' },
       ]
     },
     {
@@ -67,7 +75,7 @@ export class DgLayoutComponent implements OnInit {
     { label: 'Paramètres', icon: 'fa-sliders', route: '/dg/parametres' },
   ];
 
-  expandedGroup = signal<string | null>('Commercial');
+  expandedGroup = signal<string | null>('Intelligence IA');
   showNotifPanel = signal(false);
 
   ngOnInit() {

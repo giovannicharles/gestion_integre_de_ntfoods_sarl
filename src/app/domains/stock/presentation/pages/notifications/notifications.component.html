@@ -5,11 +5,17 @@
       <div class="ph-icon"><i class="fa-solid fa-bell"></i></div>
       <div>
         <h1 class="ph-title">Notifications</h1>
-        <p class="ph-sub">{{ unreadCount }} non lue{{ unreadCount > 1 ? 's' : '' }}</p>
+        <p class="ph-sub">{{ unreadCount() }} non lue{{ unreadCount() > 1 ? 's' : '' }} sur {{ totalCount() }}</p>
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm" (click)="markAllAsRead()" [disabled]="unreadCount === 0">
+      @if (lastRefresh()) {
+        <span class="last-refresh"><i class="fa-solid fa-clock"></i> {{ lastRefresh() | date:'HH:mm:ss' }}</span>
+      }
+      <button class="btn btn-ghost btn-sm" (click)="refresh()" title="Rafraichir">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button class="btn btn-ghost btn-sm" (click)="markAllAsRead()" [disabled]="unreadCount() === 0">
         <i class="fa-solid fa-check-double"></i> Tout marquer comme lu
       </button>
     </div>
@@ -22,19 +28,48 @@
     </div>
   }
 
+  <!-- KPI CARDS -->
+  @if (!loading()) {
+    <div class="notif-kpis">
+      <div class="nk-card nk-total">
+        <div class="nk-ico"><i class="fa-solid fa-bell"></i></div>
+        <div class="nk-info"><span class="nk-val">{{ totalCount() }}</span><span class="nk-lbl">Total</span></div>
+      </div>
+      <div class="nk-card nk-unread">
+        <div class="nk-ico"><i class="fa-solid fa-envelope"></i></div>
+        <div class="nk-info"><span class="nk-val">{{ unreadCount() }}</span><span class="nk-lbl">Non lues</span></div>
+      </div>
+      <div class="nk-card nk-warn">
+        <div class="nk-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="nk-info"><span class="nk-val">{{ warningCount() }}</span><span class="nk-lbl">Alertes</span></div>
+      </div>
+      <div class="nk-card nk-err">
+        <div class="nk-ico"><i class="fa-solid fa-exclamation-circle"></i></div>
+        <div class="nk-info"><span class="nk-val">{{ errorCount() }}</span><span class="nk-lbl">Urgentes</span></div>
+      </div>
+      <div class="nk-card nk-ok">
+        <div class="nk-ico"><i class="fa-solid fa-check-circle"></i></div>
+        <div class="nk-info"><span class="nk-val">{{ successCount() }}</span><span class="nk-lbl">Succès</span></div>
+      </div>
+    </div>
+  }
+
   <!-- FILTERS -->
   <div class="notification-filters">
     <button class="filter-btn" [class.active]="filterType() === 'all'" (click)="setFilter('all')">
-      Toutes
+      Toutes <span class="fb-count">{{ totalCount() }}</span>
     </button>
     <button class="filter-btn" [class.active]="filterType() === 'unread'" (click)="setFilter('unread')">
-      Non lues
+      Non lues <span class="fb-count">{{ unreadCount() }}</span>
     </button>
     <button class="filter-btn" [class.active]="filterType() === 'warning'" (click)="setFilter('warning')">
-      Alertes
+      Alertes <span class="fb-count">{{ warningCount() }}</span>
+    </button>
+    <button class="filter-btn" [class.active]="filterType() === 'error'" (click)="setFilter('error')">
+      Urgentes <span class="fb-count">{{ errorCount() }}</span>
     </button>
     <button class="filter-btn" [class.active]="filterType() === 'success'" (click)="setFilter('success')">
-      Succès
+      Succès <span class="fb-count">{{ successCount() }}</span>
     </button>
   </div>
 
@@ -55,10 +90,18 @@
         </div>
         <div class="notif-content">
           <div class="notif-header">
-            <span class="notif-title">{{ notification.title }}</span>
+            <div class="notif-title-wrap">
+              <span class="notif-cat-badge">{{ notification.category }}</span>
+              <span class="notif-title">{{ notification.title }}</span>
+            </div>
             <span class="notif-time">{{ notification.time }}</span>
           </div>
           <p class="notif-message">{{ notification.message }}</p>
+          @if (notification.priority && notification.priority !== 'LOW') {
+            <span class="notif-prio {{ getPriorityClass(notification.priority) }}">
+              <i class="fa-solid fa-flag"></i> {{ getPriorityLabel(notification.priority) }}
+            </span>
+          }
         </div>
         <div class="notif-actions">
           @if (!notification.read) {

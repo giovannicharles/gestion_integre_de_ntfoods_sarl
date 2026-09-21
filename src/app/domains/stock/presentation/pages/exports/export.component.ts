@@ -155,6 +155,79 @@ export class ExportComponent implements OnInit {
     setTimeout(() => this.toastMsg.set(''), 4000);
   }
 
+  // ── RAPPORTS AVANCÉS (PDF) ──
+
+  reportLocationType = 'STOCK_CENTRAL';
+  reportPeriodStart = '';
+  reportPeriodEnd = '';
+
+  downloadAdvancedReport(type: string): void {
+    this.loading.set(true);
+    let url = '';
+    let filename = '';
+    const params: Record<string, string> = {};
+    const today = new Date().toISOString().split('T')[0];
+    const start = (this.reportPeriodStart || today) + 'T00:00:00';
+    const end = (this.reportPeriodEnd || today) + 'T23:59:59';
+
+    switch (type) {
+      case 'valorisation':
+        url = `stock/export/valorisation/${this.reportLocationType}`;
+        filename = `rapport_valorisation_${this.reportLocationType.toLowerCase()}.pdf`;
+        break;
+      case 'alertes':
+        url = `stock/export/alertes/${this.reportLocationType}`;
+        filename = `rapport_alertes_${this.reportLocationType.toLowerCase()}.pdf`;
+        break;
+      case 'inventaire':
+        url = `stock/export/inventaire/${this.reportLocationType}`;
+        filename = `inventaire_complet_${this.reportLocationType.toLowerCase()}.pdf`;
+        break;
+      case 'rotation':
+        url = `stock/export/rotation/${this.reportLocationType}`;
+        filename = `rapport_rotation_${this.reportLocationType.toLowerCase()}.pdf`;
+        params['periodStart'] = start;
+        params['periodEnd'] = end;
+        break;
+      case 'receptions':
+        url = `stock/export/receptions`;
+        filename = `rapport_receptions.pdf`;
+        params['periodStart'] = start;
+        params['periodEnd'] = end;
+        break;
+      case 'dotations':
+        url = `stock/export/dotations`;
+        filename = `rapport_dotations.pdf`;
+        params['periodStart'] = start;
+        params['periodEnd'] = end;
+        break;
+      case 'reappro':
+        url = `stock/export/reapprovisionnement`;
+        filename = `rapport_reapprovisionnement_tampon.pdf`;
+        break;
+      case 'transferts':
+        url = `stock/export/transferts/${this.reportLocationType}`;
+        filename = `rapport_transferts_${this.reportLocationType.toLowerCase()}.pdf`;
+        params['periodStart'] = start;
+        params['periodEnd'] = end;
+        break;
+      default:
+        return;
+    }
+
+    this.api.getBlob(url, params).subscribe({
+      next: (blob: Blob) => {
+        this.downloadFile(blob, filename);
+        this.loading.set(false);
+        this.showToast('Rapport téléchargé', 'success');
+      },
+      error: () => {
+        this.loading.set(false);
+        this.showToast('Erreur lors du téléchargement', 'error');
+      }
+    });
+  }
+
   downloadExcelChart(type: string): void {
     this.loading.set(true);
     const locType = this.excelLocationType;

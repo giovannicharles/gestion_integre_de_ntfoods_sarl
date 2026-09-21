@@ -53,7 +53,7 @@
                 <span style="font-size:10px;font-weight:700;color:var(--n400);text-transform:uppercase">Détail lignes</span>
                 @for (item of r.items; track item.productSku) {
                   <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--n150)">
-                    <span style="flex:1;font-weight:600;color:var(--n700);font-family:monospace">{{ item.productSku }}</span>
+                    <span style="flex:1;font-weight:600;color:var(--n700)">{{ item.productName || item.productSku }}</span>
                     <span style="color:var(--n600)">Reçu: <strong>{{ item.receivedQty | number }}</strong> {{ item.productUnit }}</span>
                     @if (item.deviation && item.deviation!==0) {
                       <span style="padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700" [style.background]="item.deviation<0?'var(--r-gh)':'var(--g-gh)'" [style.color]="item.deviation<0?'var(--r)':'var(--g)'">{{ item.deviation>0?'+':'' }}{{ item.deviation }}</span>
@@ -66,7 +66,9 @@
               <span style="font-size:11px;color:var(--n400)"><i class="fa-regular fa-clock"></i> {{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</span>
               <div style="display:flex;gap:6px">
                 <button class="btn btn-primary btn-sm" (click)="openAction(r,'v1')"><i class="fa-solid fa-check"></i> Valider</button>
-                <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+                @if (canReject(r)) {
+                  <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+                }
               </div>
             </div>
           </div>
@@ -80,6 +82,7 @@
       </h3>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px">
         @for (r of secondPending(); track r.receiptNumber) {
+          @if (canValidateSecondFor(r) || canReject(r)) {
           <div class="rec-card">
             <div class="rc-head">
               <div><span class="rc-num">{{ r.receiptNumber }}</span><span style="font-size:11px;color:var(--n400)"> · {{ r.receptionTypeLabel }}</span></div>
@@ -104,11 +107,16 @@
             <div class="rc-footer">
               <span style="font-size:11px;color:var(--n400)"><i class="fa-regular fa-clock"></i> {{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</span>
               <div style="display:flex;gap:6px">
-                <button class="btn btn-secondary btn-sm" (click)="openAction(r,'v2')"><i class="fa-solid fa-check-double"></i> Valider (final)</button>
-                <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+                @if (canValidateSecondFor(r)) {
+                  <button class="btn btn-secondary btn-sm" (click)="openAction(r,'v2')"><i class="fa-solid fa-check-double"></i> Valider (final)</button>
+                }
+                @if (canReject(r)) {
+                  <button class="btn btn-ghost btn-sm" (click)="openAction(r,'rej')"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+                }
               </div>
             </div>
           </div>
+          }
         }
       </div>
     }

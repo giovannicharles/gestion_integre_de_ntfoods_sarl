@@ -1,13 +1,14 @@
 // ═══ FICHIER : src/app/domains/stock/presentation/pages/reception/reception-list.component.ts ═══
 // Réécrit : aligné sur le nouveau contrat backend (receptionType au lieu de source,
 // destinationLocationName au lieu de warehouseName, receiptNumber comme identifiant).
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt.use-case';
 import { Receipt } from '../../../domain/models';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-reception-list',
@@ -19,6 +20,9 @@ import { Receipt } from '../../../domain/models';
 export class ReceptionListComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private uc = inject(ReceiptUseCase);
+  private auth = inject(AuthService);
+
+  canCreate = computed(() => this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'ADMIN']));
 
   loading = signal(true);
   error = signal('');

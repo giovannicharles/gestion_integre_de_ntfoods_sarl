@@ -94,11 +94,14 @@ export interface StockLevel {
   productCategory?: string;
   warehouseName?: string;
   warehouseType?: string;
+  materialType?: string;
   unitPrice?: number;
   leadTimeDays?: number;
   variantName?: string;
   productLineName?: string;
   brandName?: string;
+  quantityPerCarton?: number;
+  packagingType?: string;
 }
 
 // ── SUPPLIER ──────────────────────────────────────────────
@@ -268,6 +271,9 @@ export interface CommercialStock { id: number; commercialId: number; productId: 
 
 export interface MobileStockSummary {
   commercialMatricule: string;
+  commercialName?: string;
+  phone?: string;
+  vehicle?: string;
   locationId: string;
   stockItems: StockLevel[];
   totalValue: number;

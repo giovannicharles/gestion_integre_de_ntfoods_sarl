@@ -13,9 +13,11 @@
         <p class="ph-sub">Historique des entrées marchandises — NTFoods TANTY · Douala</p>
       </div>
     </div>
-    <a routerLink="/stock/reception/new" class="btn btn-primary">
-      <i class="fa-solid fa-plus"></i> Nouvelle Réception
-    </a>
+    @if (canCreate()) {
+      <a routerLink="/stock/reception/new" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Nouvelle Réception
+      </a>
+    }
   </div>
 
   @if (!loading()) {
@@ -139,9 +141,11 @@
                   <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
                     <i class="fa-solid fa-inbox" style="font-size:38px;color:var(--n300)"></i>
                     <p style="font-size:14px">Aucune réception trouvée</p>
-                    <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm">
-                      <i class="fa-solid fa-plus"></i> Créer une réception
-                    </a>
+                    @if (canCreate()) {
+                      <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-plus"></i> Créer une réception
+                      </a>
+                    }
                   </div>
                 </td>
               </tr>

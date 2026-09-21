@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/http/api.service';
+import { IaService } from '../../../core/services/ia.service';
+import { catchError, of } from 'rxjs';
 
 interface BotMessage {
   role: 'user' | 'bot';
@@ -29,19 +31,25 @@ export class TantybotComponent implements AfterViewChecked {
 
   private api = inject(ApiService);
   private router = inject(Router);
+  private iaService = inject(IaService);
+  private iaConfigured = signal(false);
+  private conversationHistory: { role: string; content: string }[] = [];
 
   constructor() {
     this.messages.set([{
       role: 'bot',
-      content: 'Bonjour ! Je suis TantyBot, votre assistant TANTY ERP. Comment puis-je vous aider aujourd\'hui ?',
+      content: 'Bonjour ! Je suis TantyBot, votre assistant IA TANTY ERP. Je peux analyser votre stock, répondre à vos questions et vous guider. Comment puis-je vous aider ?',
       time: this.now(),
       quickReplies: [
         { label: 'Voir le stock', action: 'stock' },
         { label: 'Alertes actives', action: 'alertes' },
-        { label: 'Créer une dotation', action: 'dotation' },
-        { label: 'Prédictions IA', action: 'ia' }
+        { label: 'Prédictions IA', action: 'ia' },
+        { label: 'Rapports', action: 'rapports' }
       ]
     }]);
+    this.iaService.getStatus().pipe(
+      catchError(() => of({ configured: false, model: '', service: 'TantyAI' }))
+    ).subscribe(s => this.iaConfigured.set(s.configured));
   }
 
   toggle(): void {
@@ -79,49 +87,76 @@ export class TantybotComponent implements AfterViewChecked {
     this.isTyping.set(true);
     const q = query.toLowerCase();
 
-    setTimeout(() => {
-      this.isTyping.set(false);
+    const navKeywords = ['dotation', 'valor', 'rapport', 'report', 'mouvement', 'dashboard', 'tableau', 'ia', 'prédiction', 'prediction', 'prévision', 'prevision'];
+    const isNavQuery = navKeywords.some(kw => q.includes(kw));
+    const isGreeting = q.includes('bonjour') || q.includes('salut') || q.includes('hello') || q.includes('hi');
+    const isHelp = q.includes('aide') || q.includes('help');
+    const isThanks = q.includes('merci') || q.includes('thanks');
 
-      if (q.includes('stock') && !q.includes('mouvement') && !q.includes('valor')) {
-        this.fetchStockSummary();
-      } else if (q.includes('alerte')) {
-        this.fetchAlertSummary();
-      } else if (q.includes('dotation')) {
-        this.reply('Pour créer une dotation, accédez au module Dotations. Vous y pouvez sélectionner les produits, les quantités et soumettre la demande.',
-          [{ label: 'Aller aux dotations', action: 'dotation' }]);
-      } else if (q.includes('ia') || q.includes('prédiction') || q.includes('prediction') || q.includes('prévision') || q.includes('prevision')) {
-        this.reply('Le module IA Prédictions analyse vos mouvements de stock pour prévoir les ruptures, calculer la consommation moyenne et recommander des réapprovisionnements.',
-          [{ label: 'Ouvrir IA Prédictions', action: 'ia' }]);
-      } else if (q.includes('valor')) {
-        this.reply('La valorisation financière calcule automatiquement la valeur de votre stock (central, tampon, mobile) en utilisant les prix produits de la base.',
-          [{ label: 'Voir la valorisation', action: 'valorisation' }]);
-      } else if (q.includes('rapport') || q.includes('report')) {
-        this.reply('Vous pouvez générer des rapports détaillés (PDF, Excel) avec graphiques depuis le module Rapports. Plusieurs modèles sont disponibles : stock, mouvements, valorisation, alertes, inventaire, rotation.',
-          [{ label: 'Aller aux rapports', action: 'rapports' }]);
-      } else if (q.includes('mouvement')) {
-        this.reply('Les mouvements de stock (entrées, sorties, transferts) sont tracés dans le module Mouvements avec audit trail complet.',
-          [{ label: 'Voir les mouvements', action: 'mouvements' }]);
-      } else if (q.includes('dashboard') || q.includes('tableau')) {
-        this.reply('Le tableau de bord affiche les KPIs en temps réel : valeur du stock, alertes, dotations en cours, graphiques de tendance.',
-          [{ label: 'Ouvrir le dashboard', action: 'dashboard' }]);
-      } else if (q.includes('bonjour') || q.includes('salut') || q.includes('hello') || q.includes('hi')) {
-        this.reply('Bonjour ! Je peux vous aider avec le stock, les alertes, les dotations, les prédictions IA, les rapports et plus. Que souhaitez-vous faire ?',
-          [{ label: 'Voir le stock', action: 'stock' }, { label: 'Alertes', action: 'alertes' }, { label: 'Prédictions IA', action: 'ia' }]);
-      } else if (q.includes('merci') || q.includes('thanks')) {
-        this.reply('Avec plaisir ! N\'hésitez pas si vous avez d\'autres questions. 😊');
-      } else if (q.includes('aide') || q.includes('help')) {
-        this.reply('Je peux vous aider avec :\n• État du stock\n• Alertes actives\n• Création de dotations\n• Prédictions IA\n• Valorisation financière\n• Rapports et exports\n• Mouvements de stock\n\nChoisissez une option ci-dessous.',
-          [{ label: 'Voir le stock', action: 'stock' }, { label: 'Alertes', action: 'alertes' }, { label: 'Prédictions IA', action: 'ia' }, { label: 'Rapports', action: 'rapports' }]);
-      } else {
-        this.reply('Je n\'ai pas compris votre demande. Tapez "aide" pour voir ce que je peux faire.',
-          [{ label: 'Aide', action: 'aide' }]);
-      }
-    }, 600 + Math.random() * 400);
+    if (isGreeting || isHelp || isThanks) {
+      setTimeout(() => {
+        this.isTyping.set(false);
+        if (isGreeting) {
+          this.reply('Bonjour ! Je peux analyser votre stock, répondre à vos questions et vous guider. Que souhaitez-vous faire ?',
+            [{ label: 'Voir le stock', action: 'stock' }, { label: 'Alertes', action: 'alertes' }, { label: 'Prédictions IA', action: 'ia' }]);
+        } else if (isHelp) {
+          this.reply('Je peux vous aider avec :\n• État du stock\n• Alertes actives\n• Prédictions IA\n• Rapports et exports\n• Mouvements de stock\n• Analyse IA de vos données\n\nPosez-moi une question ou choisissez une option.',
+            [{ label: 'Voir le stock', action: 'stock' }, { label: 'Alertes', action: 'alertes' }, { label: 'Prédictions IA', action: 'ia' }, { label: 'Rapports', action: 'rapports' }]);
+        } else {
+          this.reply('Avec plaisir ! N\'hésitez pas si vous avez d\'autres questions.');
+        }
+      }, 400);
+      return;
+    }
+
+    if (q.includes('stock') && !q.includes('mouvement') && !q.includes('valor')) {
+      this.fetchStockSummary();
+    } else if (q.includes('alerte')) {
+      this.fetchAlertSummary();
+    } else if (isNavQuery) {
+      setTimeout(() => {
+        this.isTyping.set(false);
+        if (q.includes('dotation')) {
+          this.reply('Pour créer une dotation, accédez au module Dotations.', [{ label: 'Aller aux dotations', action: 'dotation' }]);
+        } else if (q.includes('ia') || q.includes('prédiction') || q.includes('prediction') || q.includes('prévision') || q.includes('prevision')) {
+          this.reply('Le module IA Prédictions analyse vos mouvements de stock pour prévoir les ruptures et recommander des réapprovisionnements.', [{ label: 'Ouvrir IA Prédictions', action: 'ia' }]);
+        } else if (q.includes('valor')) {
+          this.reply('La valorisation calcule la valeur de votre stock en utilisant les prix produits.', [{ label: 'Voir la valorisation', action: 'valorisation' }]);
+        } else if (q.includes('rapport') || q.includes('report')) {
+          this.reply('Générez des rapports PDF/Excel avec graphiques depuis le module Rapports. Comptes-rendus de réunions IA également disponibles.', [{ label: 'Aller aux rapports', action: 'rapports' }]);
+        } else if (q.includes('mouvement')) {
+          this.reply('Les mouvements de stock sont tracés dans le module Mouvements avec audit trail complet.', [{ label: 'Voir les mouvements', action: 'mouvements' }]);
+        } else if (q.includes('dashboard') || q.includes('tableau')) {
+          this.reply('Le tableau de bord affiche les KPIs en temps réel.', [{ label: 'Ouvrir le dashboard', action: 'dashboard' }]);
+        }
+      }, 400);
+    } else {
+      this.queryIa(query);
+    }
+  }
+
+  private queryIa(query: string): void {
+    this.isTyping.set(true);
+    this.conversationHistory.push({ role: 'user', content: query });
+
+    this.iaService.chat({
+      message: query,
+      conversationHistory: this.conversationHistory.slice(-10)
+    }).pipe(
+      catchError(() => of({
+        reply: 'Désolé, je n\'ai pas pu traiter votre demande. Le service IA est peut-être indisponible. Tapez "aide" pour voir les options disponibles.',
+        model: 'fallback', usingFallback: true
+      }))
+    ).subscribe(resp => {
+      this.isTyping.set(false);
+      this.conversationHistory.push({ role: 'assistant', content: resp.reply });
+      this.reply(resp.reply, [{ label: 'Voir le stock', action: 'stock' }, { label: 'Prédictions IA', action: 'ia' }]);
+    });
   }
 
   private fetchStockSummary(): void {
     this.isTyping.set(true);
-    this.api.get<any>('stock/dashboard').subscribe({
+    this.api.get<any>('v1/stock/dashboard/stats').subscribe({
       next: (data: any) => {
         this.isTyping.set(false);
         const totalProducts = data?.totalProducts ?? '—';
@@ -140,7 +175,7 @@ export class TantybotComponent implements AfterViewChecked {
 
   private fetchAlertSummary(): void {
     this.isTyping.set(true);
-    this.api.get<any[]>('stock/alerts').subscribe({
+    this.api.get<any[]>('stock/alerts/active/priority').subscribe({
       next: (alerts: any[]) => {
         this.isTyping.set(false);
         const active = alerts.filter((a: any) => a.status === 'ACTIVE');

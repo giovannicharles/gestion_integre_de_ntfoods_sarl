@@ -140,7 +140,7 @@ export class ValorisationComponent implements OnInit, AfterViewInit, OnDestroy {
     this.calculating.set(true);
     this.error.set('');
     const labels: Record<string, string> = { central: 'Stock Central', buffer: 'Stock Tampon', mobile: 'Stock Mobile' };
-    this.api.post<number>(`stock/valuation/${type}`, { unitPrices: this.buildUnitPrices() }).subscribe({
+    this.api.post<number>(`stock/valuation/${type}`, this.buildUnitPrices()).subscribe({
       next: (value) => {
         const numValue = typeof value === 'number' ? value : (value as any)?.value || 0;
         this.perTypeValue.set({ type, label: labels[type] || type, value: numValue });
@@ -197,7 +197,16 @@ export class ValorisationComponent implements OnInit, AfterViewInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } }
+          legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx: any) => {
+                const total = (ctx.dataset.data as number[]).reduce((a, v) => a + v, 0);
+                const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0';
+                return ` ${ctx.label}: ${new Intl.NumberFormat('fr-CM').format(Math.round(ctx.parsed))} FCFA (${pct}%)`;
+              }
+            }
+          }
         },
         cutout: '62%'
       }

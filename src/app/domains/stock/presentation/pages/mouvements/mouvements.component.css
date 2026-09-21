@@ -3,11 +3,67 @@
 .ph-left{display:flex;align-items:center;gap:13px}
 .ph-icon{width:46px;height:46px;background:var(--g-gh);color:var(--g);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px}
 .ph-title{font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)}.ph-sub{font-size:12px;color:var(--n400);margin-top:2px}
+.ph-actions{display:flex;gap:8px;flex-wrap:wrap}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap}
 .kc{display:flex;align-items:center;gap:9px;padding:10px 16px;background:white;border-radius:var(--r-md);border:1.5px solid var(--n200);flex:1;min-width:130px}
 .kc i{font-size:18px;flex-shrink:0}
 .kc div{display:flex;flex-direction:column;gap:1px}
 .kc div span:first-child{font-family:var(--font-d);font-size:18px;font-weight:800;line-height:1}
 .kc div span:last-child{font-size:10px;color:var(--n400);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.kc-g i{color:var(--s)}.kc-t i,.kc-o i{color:var(--y-d)}.kc-b i{color:var(--o)}.kc-n i{color:var(--n400)}.kc-p i{color:#7B1FA2}
+.kc-g i{color:var(--s)}.kc-t i,.kc-o i{color:var(--y-d)}.kc-b i{color:var(--o)}.kc-n i{color:var(--n400)}.kc-p i{color:#7B1FA2}.kc-w i{color:var(--y-d)}.kc-w{border-color:var(--y-d);background:var(--y-gh)}
 .mov-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .mc-g{background:var(--s-gh);color:var(--s)}.mc-t{background:var(--y-gh);color:var(--y-d)}.mc-b{background:var(--o-gh);color:var(--o)}.mc-n{background:var(--n100);color:var(--n500)}.mc-p{background:#F3E5F5;color:#7B1FA2}.mc-o{background:var(--o-gh);color:var(--o)}
+
+/* Filter Card */
+.filter-card{padding:14px 20px}
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search-box{position:relative;flex:1;min-width:200px;display:flex;align-items:center}
+.search-box i{position:absolute;left:11px;color:var(--n400);font-size:13px;pointer-events:none}
+.search-box input{width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;font-family:var(--font-b);color:var(--n800);outline:none;background:white}
+.search-box input:focus{border-color:var(--g)}
+.filter-select{padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)}
+
+/* Table Card */
+.table-card{overflow:hidden}
+
+/* Movement Type Cell */
+.mov-type-cell{display:flex;align-items:center;gap:8px}
+.mov-type-label{font-size:12px;font-weight:600;color:var(--n700)}
+
+/* Product Cell */
+.prod-cell{display:flex;flex-direction:column;gap:1px}
+.prod-name{font-size:12px;font-weight:600;color:var(--n800)}
+.prod-sku{font-size:10px;color:var(--n400);font-family:monospace}
+
+/* Warehouse Chip */
+.warehouse-chip{display:inline-block;padding:2px 8px;border-radius:6px;background:var(--n100);font-size:10px;font-weight:500;color:var(--n600)}
+
+/* Quantity Display */
+.qty-before{font-size:12px;color:var(--n400)}
+.qty-movement{font-family:var(--font-d);font-size:14px;font-weight:800}
+.qty-movement.qty-in{color:var(--s)}
+.qty-movement.qty-out{color:var(--r)}
+.qty-after{font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--n800)}
+
+/* Reference Code */
+.ref-code{font-size:11px;color:var(--n500);font-family:monospace}
+
+/* Date Cell */
+.date-cell{display:flex;flex-direction:column;gap:1px}
+.date-main{font-size:11px;font-weight:600;color:var(--n700)}
+.date-time{font-size:10px;color:var(--n400)}
+
+/* Empty Row */
+.empty-row{text-align:center;padding:48px;color:var(--n400)}
+.empty-row i{font-size:28px;display:block;margin-bottom:8px}
+.empty-row p{margin:0}
+
+/* Loading State */
+.loading-state{padding:60px;text-align:center;color:var(--n400)}
+.loading-state .spinner{margin:0 auto 12px}
+
+/* Modal Header Variants */
+.modal-header-warning{background:var(--g-gh)}
+.modal-header-warning .modal-title{color:var(--g)}
+.modal-header-teal{background:#E0F2F1}
+.modal-header-teal .modal-title{color:#00796B}

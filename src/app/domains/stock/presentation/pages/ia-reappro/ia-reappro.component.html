@@ -1,0 +1,170 @@
+<div class="ia-reappro-page">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-title-zone">
+      <h1><i class="fa-solid fa-robot"></i> Réapprovisionnement Automatique IA</h1>
+      <p class="page-subtitle">Recommandations intelligentes de commande basées sur l'analyse des seuils et prédictions IA</p>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" (click)="refresh()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-primary" (click)="runIaAnalysis()" [disabled]="iaLoading()">
+        <i class="fa-solid fa-brain" [class.fa-spin]="iaLoading()"></i>
+        {{ iaLoading() ? 'Analyse IA en cours…' : 'Lancer l\'analyse IA' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- IA STATUS BADGE -->
+  @if (!iaConfigured()) {
+    <div class="ia-status-warning">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>IA non configurée — Les recommandations locales sont affichées. Configurez OPENAI_API_KEY pour l'analyse prédictive avancée.</span>
+    </div>
+  }
+
+  <!-- STATS CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card stat-critical">
+      <div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().critical }}</span>
+        <span class="stat-label">Critiques</span>
+      </div>
+    </div>
+    <div class="stat-card stat-high">
+      <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().high }}</span>
+        <span class="stat-label">Élevés</span>
+      </div>
+    </div>
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().total }}</span>
+        <span class="stat-label">Total produits</span>
+      </div>
+    </div>
+    <div class="stat-card stat-selected">
+      <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats().selected }}</span>
+        <span class="stat-label">Sélectionnés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Chargement des données de stock…</p>
+    </div>
+  }
+
+  <!-- ERROR -->
+  @if (error()) {
+    <div class="error-state">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <!-- IA RESULT SUMMARY -->
+  @if (iaResult() && !iaResult()!.usingFallback) {
+    <div class="ia-summary">
+      <div class="ia-summary-header">
+        <i class="fa-solid fa-brain"></i>
+        <span>Analyse IA — {{ iaResult()!.model }}</span>
+      </div>
+      <p>{{ iaResult()!.summary }}</p>
+    </div>
+  }
+
+  <!-- CONTROLS -->
+  @if (!loading() && reapproItems().length > 0) {
+    <div class="controls-bar">
+      <div class="filter-group">
+        <button class="filter-btn" [class.active]="filterSeverity() === 'ALL'" (click)="setFilter('ALL')">Tous</button>
+        <button class="filter-btn" [class.active]="filterSeverity() === 'CRITICAL'" (click)="setFilter('CRITICAL')">
+          <i class="fa-solid fa-circle-exclamation"></i> Critiques
+        </button>
+        <button class="filter-btn" [class.active]="filterSeverity() === 'HIGH'" (click)="setFilter('HIGH')">
+          <i class="fa-solid fa-triangle-exclamation"></i> Élevés
+        </button>
+        <button class="filter-btn" [class.active]="filterSeverity() === 'MEDIUM'" (click)="setFilter('MEDIUM')">
+          <i class="fa-solid fa-circle-info"></i> Moyens
+        </button>
+      </div>
+      <input type="text" class="search-input" placeholder="Rechercher (SKU, nom)…" [(ngModel)]="search">
+      <div class="bulk-actions">
+        <button class="btn btn-sm btn-ghost" (click)="selectAll()">Tout sélectionner</button>
+        <button class="btn btn-sm btn-ghost" (click)="selectCritical()">Critiques seulement</button>
+        <button class="btn btn-sm btn-ghost" (click)="deselectAll()">Tout désélectionner</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrapper">
+      <table class="reappro-table">
+        <thead>
+          <tr>
+            <th class="col-check"><input type="checkbox" [checked]="stats().selected === reapproItems().length" (change)="stats().selected === reapproItems().length ? deselectAll() : selectAll()"></th>
+            <th>Produit</th>
+            <th>Magasin</th>
+            <th class="col-num">Stock actuel</th>
+            <th class="col-num">Seuil sécurité</th>
+            <th class="col-num">Qté suggérée</th>
+            <th class="col-num">Jours avant rupture</th>
+            <th>Sévérité</th>
+            <th>Action recommandée</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filteredItems(); track item.productSku + item.warehouse) {
+            <tr [class.row-critical]="item.severity === 'CRITICAL'" [class.row-high]="item.severity === 'HIGH'">
+              <td class="col-check"><input type="checkbox" [checked]="item.selected" (change)="toggleSelect(item)"></td>
+              <td>
+                <div class="prod-cell">
+                  <span class="prod-sku">{{ item.productSku }}</span>
+                  <span class="prod-name">{{ item.productName }}</span>
+                </div>
+              </td>
+              <td><span class="warehouse-chip">{{ item.warehouse }}</span></td>
+              <td class="col-num">{{ item.currentQty }} {{ item.unit }}</td>
+              <td class="col-num">{{ item.safetyStock }} {{ item.unit }}</td>
+              <td class="col-num"><strong>{{ item.suggestedQty }} {{ item.unit }}</strong></td>
+              <td class="col-num">
+                @if (item.daysUntilRupture < 999) {
+                  <span class="days-chip" [class.days-urgent]="item.daysUntilRupture <= 7">{{ item.daysUntilRupture }}j</span>
+                } @else {
+                  <span class="days-chip">—</span>
+                }
+              </td>
+              <td>
+                <span class="sev-badge {{ getSeverityClass(item.severity) }}">
+                  <i class="fa-solid {{ getSeverityIcon(item.severity) }}"></i>
+                  {{ getSeverityLabel(item.severity) }}
+                </span>
+              </td>
+              <td class="action-cell">{{ item.recommendedAction }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-row">Aucun produit à réapprovisionner pour ce filtre</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @if (!loading() && reapproItems().length === 0) {
+    <div class="empty-state">
+      <i class="fa-solid fa-circle-check"></i>
+      <h3>Tous les stocks sont au niveau optimal</h3>
+      <p>Aucun produit ne nécessite de réapprovisionnement actuellement.</p>
+    </div>
+  }
+</div>

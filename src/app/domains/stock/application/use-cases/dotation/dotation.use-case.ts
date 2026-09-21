@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
+import { Observable, map } from 'rxjs';
+import { StockApiRepository, BufferValuationItem } from '../../../infrastructure/repositories/stock-api.repository';
 import {
   DotationRequest, CreateDotationRequest, DotationStatus,
   Commercial, Product, StockLevel
@@ -84,5 +84,11 @@ export class DotationUseCase {
 
   getStockLevels(): Observable<StockLevel[]> {
     return this.repo.getStockLevels();
+  }
+
+  getBufferStockItems(): Observable<BufferValuationItem[]> {
+    return this.repo.getBufferValuation().pipe(
+      map(r => r.items || [])
+    );
   }
 }

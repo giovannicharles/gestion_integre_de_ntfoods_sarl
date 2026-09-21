@@ -40,9 +40,42 @@ export class DgObjectifsComponent implements OnInit {
   toggleEdit() { this.editMode.update(v => !v); this.saved.set(false); }
 
   saveObjectifs() {
-    this.editMode.set(false);
-    this.saved.set(true);
-    setTimeout(() => this.saved.set(false), 3000);
+    const today = new Date();
+    const lundi = new Date(today);
+    lundi.setDate(today.getDate() - today.getDay() + 1);
+    const semaineDebut = lundi.toISOString().split('T')[0];
+
+    let remaining = this.objectifs().length;
+    if (remaining === 0) {
+      this.editMode.set(false);
+      this.saved.set(true);
+      setTimeout(() => this.saved.set(false), 3000);
+      return;
+    }
+
+    this.objectifs().forEach(o => {
+      this.cptSvc.definirObjectif({
+        matriculeCommercial: o.matriculeCommercial,
+        semaineDebut: o.semaineDebut || semaineDebut,
+        objectifGlobal: o.objectifGlobal,
+        objectifFarines: o.objectifFarines,
+        objectifEaux: o.objectifEaux,
+        objectifJus: o.objectifJus,
+        objectifSnacks: o.objectifSnacks,
+        objectifBiscuits: o.objectifBiscuits,
+        objectifConfiseries: o.objectifConfiseries,
+      }).subscribe({
+        next: () => {
+          remaining--;
+          if (remaining === 0) {
+            this.editMode.set(false);
+            this.saved.set(true);
+            setTimeout(() => this.saved.set(false), 3000);
+          }
+        },
+        error: () => { remaining--; },
+      });
+    });
   }
 
   totalObjectif() { return this.objectifs().reduce((s, o) => s + o.objectifGlobal, 0); }

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { StockApiRepository, StockLocationDto, BufferValuationResponse } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevelUseCase } from '../../../application/use-cases/inventaire/stock-level.use-case';
@@ -16,6 +17,7 @@ interface PackagingDetail {
 
 interface BufferItem {
   id: number;
+  productId: number;
   productSku: string;
   productName: string;
   quantity: number;
@@ -47,6 +49,7 @@ export class BufferComponent implements OnInit, OnDestroy {
   private repo = inject(StockApiRepository);
   private uc = inject(StockLevelUseCase);
   private auth = inject(AuthService);
+  private route = inject(ActivatedRoute);
 
   loading = signal(true);
   allItems = signal<BufferItem[]>([]);
@@ -59,6 +62,15 @@ export class BufferComponent implements OnInit, OnDestroy {
   filterMaterial = signal<'ALL' | 'PRODUIT_FINI' | 'MATIERE_PREMIERE' | 'CONSOMMABLE'>('ALL');
   sortBy = signal<'name' | 'qty' | 'alert'>('name');
   sortDir = signal<'asc' | 'desc'>('asc');
+
+  // Pagination
+  ps = 10;
+  cp = signal(1);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / this.ps)));
+  paginated = computed(() => {
+    const s = (this.cp() - 1) * this.ps;
+    return this.filtered().slice(s, s + this.ps);
+  });
 
   // Modal
   showReappro = signal(false);
@@ -92,8 +104,10 @@ export class BufferComponent implements OnInit, OnDestroy {
   Math = Math;
   private centralLocationIds: string[] = [];
   private bufferLocationIds: string[] = [];
+  private prefillProductId: string | null = null;
 
   ngOnInit() {
+    this.prefillProductId = this.route.snapshot.queryParamMap.get('productId');
     this.load();
   }
 
@@ -159,6 +173,7 @@ export class BufferComponent implements OnInit, OnDestroy {
 
         return {
           id: first.id,
+          productId: first.productId || 0,
           productSku: sku,
           productName: first.productName || sku || 'Produit',
           quantity: totalQty,
@@ -183,6 +198,15 @@ export class BufferComponent implements OnInit, OnDestroy {
       this.applyFilters();
       this.movements.set(movements.filter(m => m.type === 'TRANSFER_CENTRAL_TO_BUFFER').slice(0, 20));
       this.loading.set(false);
+
+      // Si arrivé depuis une alerte, ouvrir automatiquement le modal de réappro
+      if (this.prefillProductId) {
+        const target = mapped.find(i => String(i.productId) === this.prefillProductId);
+        if (target) {
+          this.openReappro(target);
+        }
+        this.prefillProductId = null;
+      }
     });
   }
 
@@ -219,6 +243,7 @@ export class BufferComponent implements OnInit, OnDestroy {
     });
 
     this.filtered.set(r);
+    this.cp.set(1);
   }
 
   setSort(field: 'name' | 'qty' | 'alert') {
@@ -256,6 +281,11 @@ export class BufferComponent implements OnInit, OnDestroy {
     this.uc.replenishBuffer(item.productSku, this.reapproQty, userId, this.reapproNotes)
       .pipe(takeUntil(this.d$)).subscribe({
         next: () => {
+          // Résoudre les alertes pour ce produit après réappro
+          this.repo.resolveAlertsByProduct(item.productId).pipe(takeUntil(this.d$)).subscribe({
+            next: (count) => console.log(`[Buffer] ${count} alerte(s) résolue(s) pour productId=${item.productId}`),
+            error: () => {}
+          });
           this.reapproSaving.set(false);
           this.showToast(`Réapprovisionnement effectué: ${this.reapproQty} ${item.unit} transférés du central vers le tampon`, 'success');
           this.closeReappro();
@@ -313,6 +343,12 @@ export class BufferComponent implements OnInit, OnDestroy {
     this.addBufferSelectedSku.set(sku);
     this.addBufferQty = 0;
   }
+
+  addBufferSelectedProduct = computed(() => {
+    const sku = this.addBufferSelectedSku();
+    if (!sku) return null;
+    return this.centralProductsNotInBuffer().find(p => p.productSku === sku) || null;
+  });
 
   confirmAddBuffer() {
     const sku = this.addBufferSelectedSku();
@@ -372,6 +408,11 @@ export class BufferComponent implements OnInit, OnDestroy {
           }
         });
     });
+  }
+
+  goTo(page: number) {
+    const n = Math.max(1, Math.min(page, this.totalPages()));
+    this.cp.set(n);
   }
 
   getAlertClass(level: string): string {

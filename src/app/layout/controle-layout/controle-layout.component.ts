@@ -1,10 +1,12 @@
-import { Component, OnInit, signal, inject, HostListener } from '@angular/core';
+import { Component, OnInit, signal, inject, HostListener, computed } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { ROLE_LABELS } from '../../core/models/user.models';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
@@ -18,12 +20,36 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 export class ControleLayoutComponent implements OnInit {
   router = inject(Router);
   alertBadge = inject(AlertBadgeService);
+  authService = inject(AuthService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());
   currentPageTitle = signal('Tableau de Bord Contrôle');
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
+
+  currentUser = computed(() => this.authService.getCurrentUser());
+  userInitials = computed(() => {
+    const u = this.currentUser();
+    if (!u) return '??';
+    return ((u.firstname?.[0] || '') + (u.lastname?.[0] || '')).toUpperCase();
+  });
+  userFullName = computed(() => {
+    const u = this.currentUser();
+    if (!u) return 'Utilisateur';
+    return `${u.firstname} ${u.lastname}`;
+  });
+  userShortName = computed(() => {
+    const u = this.currentUser();
+    if (!u) return 'Utilisateur';
+    return `${u.firstname} ${u.lastname?.[0]}.`;
+  });
+  userRoleLabel = computed(() => {
+    const u = this.currentUser();
+    if (!u) return '';
+    const r = u.roles?.[0] || '';
+    return ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r;
+  });
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },

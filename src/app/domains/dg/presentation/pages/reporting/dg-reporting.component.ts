@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, sig
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
-import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE } from '../../../infrastructure/dg.service';
+import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE, KpisDgBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 Chart.register(...registerables);
@@ -55,6 +55,20 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   totalVentesZones = computed(() => this.zones().reduce((s, z) => s + z.nombreVentesMoisCourant, 0));
 
   ngOnInit() {
+    this.dgSvc.getKpis().subscribe({
+      next: k => {
+        const now = new Date();
+        const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const m1 = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const m2 = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        this.caMensuel.set([
+          { mois: moisLabels[m2.getMonth()], n: k.caMoisN2, nMoins1: Math.round(k.caMoisN2 * 0.85) },
+          { mois: moisLabels[m1.getMonth()], n: k.caMoisN1, nMoins1: Math.round(k.caMoisN1 * 0.85) },
+          { mois: moisLabels[now.getMonth()], n: k.caTotal, nMoins1: k.caMoisN1 },
+        ]);
+      },
+      error: () => {},
+    });
     this.dgSvc.getZones().subscribe({
       next: z => this.zones.set(z),
       error: () => {},

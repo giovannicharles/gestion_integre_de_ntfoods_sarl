@@ -1,6 +1,7 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
+import { ROLE_HOMES, UserRole } from '../../core/models/user.models';
 
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -20,6 +21,9 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  router.navigate(['/auth/login']);
+  const user = authService.getCurrentUser();
+  const primaryRole = user?.roles?.[0] as UserRole ?? 'GESTIONNAIRE_STOCK';
+  const homeRoute = ROLE_HOMES[primaryRole] ?? '/auth/login';
+  router.navigate([homeRoute]);
   return false;
 };

@@ -2,11 +2,11 @@
 // REMPLACE : le fichier existant â€” Dashboard puissant, connectÃ© au backend, KPIs avancÃ©s
 import {
   Component, OnInit, signal, inject, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, ChangeDetectorRef
+  ViewChild, ElementRef, ChangeDetectorRef, computed
 } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, forkJoin, takeUntil } from 'rxjs';
+import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 
 import { GetDashboardUseCase } from '../../../application/use-cases/dashboard/get-dashboard.use-case';
@@ -17,6 +17,7 @@ import {
   DashboardStatsResponse, StockLevel, Receipt, StockMovement,
   ProductionBatch, InternalOrder, DotationRequest
 } from '../../../domain/models';
+import { IaService, AnalysisResponse, IaSuggestion } from '../../../../../core/services/ia.service';
 
 Chart.register(...registerables);
 
@@ -34,6 +35,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   private readonly rules = inject(StockRulesDomainService);
   private readonly dotationUC = inject(DotationUseCase);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly iaService = inject(IaService);
 
   // Chart references
   @ViewChild('stockBarCanvas') stockBarCanvas!: ElementRef<HTMLCanvasElement>;
@@ -77,7 +79,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   // 1. Score de santÃ© stock (0-100)
   healthScore = signal(0);
   healthLabel = signal('â€”');
-  healthColor = signal('#14532D');
+  healthColor = signal('var(--g)');
   healthBreakdown = signal<{ label: string; score: number; weight: number }[]>([]);
 
   // 2. Analyse ABC / Pareto
@@ -96,15 +98,191 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   // 6. Taux de rotation
   turnoverRates = signal<{ productName: string; sku: string; turnoverRate: number; daysOfCover: number }[]>([]);
 
-  // 7. Inventaire produits â€” recherche, filtre, tri
+  // 7. Inventaire produits — recherche, filtre, tri
   productSearch = signal('');
   warehouseFilter = signal('');
   alertFilter = signal('');
   productSort = signal<'value' | 'name' | 'qty' | 'alert'>('value');
   productSortDir = signal<'asc' | 'desc'>('desc');
+  displayMode = signal<'table' | 'grid' | 'cards'>('table');
+  invPage = signal(1);
+  invPageSize = 12;
+
+  paginatedProducts = computed(() => {
+    const start = (this.invPage() - 1) * this.invPageSize;
+    return this.filteredProducts().slice(start, start + this.invPageSize);
+  });
+  invTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredProducts().length / this.invPageSize)));
+  invPageRange = computed(() => Array.from({ length: this.invTotalPages() }, (_, i) => i + 1));
+
+  setDisplayMode(mode: 'table' | 'grid' | 'cards') {
+    this.displayMode.set(mode);
+  }
+  setInvPage(page: number) {
+    this.invPage.set(page);
+  }
+
+  // 8. Insights IA (TantyAI — GPT-OSS via OpenRouter)
+  iaConfigured = signal(false);
+  iaInsight = signal<AnalysisResponse | null>(null);
+  iaInsightLoading = signal(false);
+  showIaInsight = signal(false);
+
+  // 9. Conseils IA proactifs pour le gestionnaire de stock
+  iaSuggestions = signal<IaSuggestion[]>([]);
+  iaSuggestionsLoading = signal(false);
+  private iaSuggestionsLoaded = false;
 
   ngOnInit() {
     this.loadAll();
+    this.iaService.getStatus().pipe(
+      takeUntil(this.destroy$),
+      catchError(() => of({ configured: false, model: '', service: 'TantyAI' }))
+    ).subscribe(s => this.iaConfigured.set(s.configured));
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  INNOVATION 8: Insights IA du dashboard (TantyAI)
+  // ═══════════════════════════════════════════════════════════
+
+  runIaInsight() {
+    if (this.iaInsightLoading()) return;
+    this.showIaInsight.set(true);
+    this.iaInsightLoading.set(true);
+    this.iaInsight.set(null);
+
+    const levels = this.stockLevels();
+    const stats = this.stats();
+    const movs = this.movements();
+
+    const stockData: Record<string, unknown> = {
+      totalReferences: levels.length,
+      valeurTotaleStock: this.totalValue(),
+      alertesCritiques: this.criticalCount(),
+      alertesFaibles: this.lowCount(),
+      surplus: this.surplusCount(),
+      scoreSante: this.healthScore(),
+      mouvementsDuJour: stats?.todayMovements ?? 0,
+      topProduits: this.topProducts().map(sl => ({
+        produit: sl.productName || sl.productSku,
+        quantite: sl.quantity,
+        valeur: sl.stockValue,
+        alerte: sl.alertLevel
+      })),
+      repartitionEntrepots: this.avgStockByWarehouse()
+    };
+
+    const movementData: Record<string, unknown> = {
+      derniersMovements: movs.slice(0, 10).map(m => ({
+        type: m.type, quantite: m.quantity, date: m.requestedAt || m.createdAt
+      })),
+      predictionsRupture: this.stockOutPredictions().map(p => ({
+        produit: p.productName, joursRestants: p.daysLeft, urgence: p.urgency
+      }))
+    };
+
+    this.iaService.analyze({
+      analysisType: 'dashboard',
+      domain: 'stock',
+      period: this.selectedPeriod(),
+      stockData,
+      movementData
+    }).pipe(
+      takeUntil(this.destroy$),
+      catchError(() => of(null))
+    ).subscribe(resp => {
+      this.iaInsightLoading.set(false);
+      this.iaInsight.set(resp);
+    });
+  }
+
+  closeIaInsight() {
+    this.showIaInsight.set(false);
+  }
+
+  /** Conseils IA proactifs : chargés une seule fois après le 1er chargement des données */
+  private loadIaSuggestions() {
+    if (this.iaSuggestionsLoaded) return;
+    this.iaSuggestionsLoaded = true;
+    this.iaSuggestionsLoading.set(true);
+
+    this.iaService.getSuggestions({
+      domain: 'stock',
+      role: 'gestionnaire de stock',
+      maxSuggestions: 4,
+      data: {
+        alertesCritiques: this.criticalCount(),
+        alertesFaibles: this.lowCount(),
+        surplus: this.surplusCount(),
+        scoreSante: this.healthScore(),
+        valeurTotaleStock: this.totalValue(),
+        totalReferences: this.stockLevels().length,
+        predictionsRupture: this.stockOutPredictions().slice(0, 5).map(p => ({
+          produit: p.productName, joursRestants: p.daysLeft, urgence: p.urgency
+        })),
+        tauxRotation: this.turnoverRates().slice(0, 5)
+      }
+    }).pipe(
+      takeUntil(this.destroy$),
+      catchError(() => of(null))
+    ).subscribe(resp => {
+      this.iaSuggestionsLoading.set(false);
+      const suggestions = (resp?.suggestions ?? []).map(s => ({
+        ...s,
+        message: this.cleanSuggestionMessage(s.message),
+        title: this.cleanSuggestionMessage(s.title) || s.title
+      }));
+      this.iaSuggestions.set(suggestions);
+    });
+  }
+
+  refreshIaSuggestions() {
+    this.iaSuggestionsLoaded = false;
+    this.loadIaSuggestions();
+  }
+
+  getIaCategoryColor(category: string): string {
+    const c = (category || '').toUpperCase();
+    if (c === 'ALERTE') return 'var(--r)';
+    if (c === 'REAPPRO') return 'var(--y-d)';
+    if (c === 'ORGANISATION') return 'var(--b)';
+    if (c === 'FORMATION') return 'var(--g-m)';
+    return 'var(--g)';
+  }
+
+  getIaPriorityClass(priority: string): string {
+    const p = (priority || '').toUpperCase();
+    if (p === 'HIGH' || p === 'HAUTE' || p === 'CRITICAL') return 'badge-danger';
+    if (p === 'MEDIUM' || p === 'MOYENNE') return 'badge-warning';
+    return 'badge-success';
+  }
+
+  private cleanSuggestionMessage(text: string): string {
+    if (!text) return '';
+    let cleaned = text.trim();
+    // Strip <think>...</think> blocks
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    // Strip markdown code fences
+    if (cleaned.startsWith('```')) {
+      const nl = cleaned.indexOf('\n');
+      if (nl > 0) cleaned = cleaned.substring(nl + 1);
+      if (cleaned.endsWith('```')) cleaned = cleaned.substring(0, cleaned.length - 3);
+      cleaned = cleaned.trim();
+    }
+    // If the text looks like JSON, try to extract readable content
+    if (cleaned.startsWith('{') || cleaned.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(cleaned);
+        if (parsed.message && typeof parsed.message === 'string') return parsed.message;
+        if (parsed.summary && typeof parsed.summary === 'string') return parsed.summary;
+        if (Array.isArray(parsed.suggestions) && parsed.suggestions.length > 0) {
+          return parsed.suggestions.map((s: any) => s.title || s.message || '').filter(Boolean).join(' • ');
+        }
+      } catch {
+        // Not valid JSON, return as-is
+      }
+    }
+    return cleaned;
   }
 
   setPeriod(period: 'today' | 'week' | 'month') {
@@ -152,7 +330,19 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.criticalCount.set(levels.filter(sl => sl.alertLevel === 'CRITIQUE').length);
         this.lowCount.set(levels.filter(sl => sl.alertLevel === 'FAIBLE').length);
         this.surplusCount.set(levels.filter(sl => sl.alertLevel === 'SURPLUS').length);
-        this.topProducts.set([...levels].sort((a, b) => (b.stockValue || 0) - (a.stockValue || 0)).slice(0, 5));
+        // Top 5 par valeur — agrégé par SKU pour éviter les doublons
+        const topBySku = new Map<string, StockLevel>();
+        for (const sl of levels) {
+          const sku = sl.productSku || `id-${sl.id}`;
+          const existing = topBySku.get(sku);
+          if (existing) {
+            existing.quantity = (existing.quantity || 0) + (sl.quantity || 0);
+            existing.stockValue = (existing.stockValue || 0) + (sl.stockValue || 0);
+          } else {
+            topBySku.set(sku, { ...sl });
+          }
+        }
+        this.topProducts.set([...topBySku.values()].sort((a, b) => (b.stockValue || 0) - (a.stockValue || 0)).slice(0, 5));
 
         // Valeur par entrepÃ´t
         const whMap = new Map<string, number>();
@@ -173,6 +363,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.loading.set(false);
         this.cdr.detectChanges();
         setTimeout(() => this.buildCharts(), 120);
+        this.loadIaSuggestions();
       },
       error: (err) => {
         this.loading.set(false);
@@ -229,7 +420,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         scales: {
           y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'Inter', size: 11 } } },
           x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, maxRotation: 35 } }
-        }
+        },
+        animation: { duration: 1200, easing: 'easeOutQuart', delay: (ctx: any) => ctx.dataIndex * 80 }
       }
     }));
   }
@@ -266,7 +458,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
               }
             }
           }
-        }
+        },
+        animation: { duration: 1200, easing: 'easeOutQuart', animateRotate: true, animateScale: true }
       }
     }));
   }
@@ -301,7 +494,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         scales: {
           x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'Inter', size: 11 } } },
           y: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
-        }
+        },
+        animation: { duration: 1000, easing: 'easeOutQuart', delay: (ctx: any) => ctx.dataIndex * 80 }
       }
     }));
   }
@@ -331,7 +525,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 10, weight: 500 }, padding: 10 } },
           tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.r} article(s)` } }
         },
-        scales: { r: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { family: 'Inter', size: 10 }, stepSize: 1 } } }
+        scales: { r: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { family: 'Inter', size: 10 }, stepSize: 1 } } },
+        animation: { duration: 1200, easing: 'easeOutQuart', animateRotate: true, animateScale: true }
       }
     }));
   }
@@ -372,7 +567,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         scales: {
           y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'Inter', size: 11 } } },
           x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } }
-        }
+        },
+        animation: { duration: 1200, easing: 'easeInOutCubic' }
       }
     }));
   }
@@ -402,7 +598,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     this.healthScore.set(score);
     this.healthLabel.set(score >= 80 ? 'Excellent' : score >= 60 ? 'Bon' : score >= 40 ? 'Moyen' : score >= 20 ? 'Faible' : 'Critique');
-    this.healthColor.set(score >= 80 ? '#14532D' : score >= 60 ? '#15803D' : score >= 40 ? '#D97706' : score >= 20 ? '#C2410C' : '#C22B2B');
+    this.healthColor.set(score >= 80 ? 'var(--g)' : score >= 60 ? 'var(--g-l)' : score >= 40 ? 'var(--y-d)' : score >= 20 ? 'var(--o)' : 'var(--r)');
     this.healthBreakdown.set([
       { label: 'Couverture stock', score: coverageScore, weight: 40 },
       { label: 'Niveau d\u2019alertes', score: alertScore, weight: 30 },
@@ -427,7 +623,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '78%',
-        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        animation: { duration: 1500, easing: 'easeOutQuart' }
       }
     }));
   }
@@ -481,7 +678,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'Inter', size: 11 } } },
           y1: { type: 'linear', position: 'right', beginAtZero: true, max: 100, grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 }, callback: v => v + '%' } },
           x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } }
-        }
+        },
+        animation: { duration: 1200, easing: 'easeOutQuart', delay: (ctx: any) => ctx.dataIndex * 80 }
       }
     }));
   }
@@ -529,20 +727,21 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // INNOVATION 4: Pipeline visuel du workflow dotation
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   private computeDotationPipeline(dotations: DotationRequest[]) {
     this.totalDotations.set(dotations.length);
     this.dotationPipeline.set([
-      { step: 'PENDING', label: 'En attente', icon: 'fa-clock', count: dotations.filter(d => d.status === 'PENDING').length, color: '#6B7280' },
-      { step: 'PAYMENT_VERIFIED', label: 'Paiement vÃ©rifiÃ©', icon: 'fa-money-check-dollar', count: dotations.filter(d => d.status === 'PAYMENT_VERIFIED').length, color: '#0277D5' },
-      { step: 'QUANTITY_VALIDATED', label: 'QtÃ©s validÃ©es', icon: 'fa-clipboard-check', count: dotations.filter(d => d.status === 'QUANTITY_VALIDATED').length, color: '#D97706' },
-      { step: 'APPROVED', label: 'ApprouvÃ©es', icon: 'fa-circle-check', count: dotations.filter(d => d.status === 'APPROVED').length, color: '#14532D' },
-      { step: 'COMPLETED', label: 'LivrÃ©es', icon: 'fa-truck-fast', count: dotations.filter(d => d.status === 'COMPLETED').length, color: '#15803D' },
+      { step: 'PENDING', label: 'En attente', icon: 'fa-clock', count: dotations.filter(d => d.status === 'PENDING').length, color: 'var(--n500)' },
+      { step: 'PAYMENT_VERIFIED', label: 'Paiement vÃrifiÃ', icon: 'fa-money-check-dollar', count: dotations.filter(d => d.status === 'PAYMENT_VERIFIED').length, color: 'var(--b)' },
+      { step: 'QUANTITY_VALIDATED', label: 'QtÃs validÃes', icon: 'fa-clipboard-check', count: dotations.filter(d => d.status === 'QUANTITY_VALIDATED').length, color: 'var(--y-d)' },
+      { step: 'APPROVED', label: 'ApprouvÃes', icon: 'fa-circle-check', count: dotations.filter(d => d.status === 'APPROVED').length, color: 'var(--g)' },
+      { step: 'COMPLETED', label: 'LivrÃes', icon: 'fa-truck-fast', count: dotations.filter(d => d.status === 'COMPLETED').length, color: 'var(--g-l)' },
     ]);
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // INNOVATION 5: Flux de stock (Central â†’ Buffer â†’ Mobile)
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   private computeStockFlow(levels: StockLevel[], movements: StockMovement[]) {
     // Valeur par type d'entrepÃ´t
@@ -587,7 +786,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         scales: {
           x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: 'Inter', size: 11 } } },
           y: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 } } }
-        }
+        },
+        animation: { duration: 1000, easing: 'easeOutQuart', delay: (ctx: any) => ctx.dataIndex * 60 }
       }
     }));
   }
@@ -628,13 +828,18 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   getTopLevels() { return [...this.stockLevels()].sort((a, b) => (b.stockValue || 0) - (a.stockValue || 0)).slice(0, 6); }
   getPct(sl: StockLevel) { return Math.min(100, Math.round((sl.quantity / (sl.reorderPoint * 6 || 1)) * 100)); }
   getColor(sl: StockLevel): string {
-    if (sl.alertLevel === 'CRITIQUE') return '#C22B2B';
-    if (sl.alertLevel === 'FAIBLE') return '#D84315';
-    return '#14532D';
+    if (sl.alertLevel === 'CRITIQUE') return 'var(--r)';
+    if (sl.alertLevel === 'FAIBLE') return 'var(--o)';
+    return 'var(--g)';
+  }
+  getBgColor(sl: StockLevel): string {
+    if (sl.alertLevel === 'CRITIQUE') return 'var(--r-gh)';
+    if (sl.alertLevel === 'FAIBLE') return 'var(--o-gh)';
+    return 'var(--g-gh)';
   }
   getBarGradient(sl: StockLevel): string {
     const c = this.getColor(sl);
-    return `linear-gradient(90deg, ${c}cc, ${c})`;
+    return `linear-gradient(90deg, ${c}, ${c})`;
   }
 
   // â”€â”€ Inventaire produits : filtre, tri, recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -693,6 +898,10 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.productSearch.set('');
     this.warehouseFilter.set('');
     this.alertFilter.set('');
+    this.invPage.set(1);
+  }
+  absDiff(a: number, b: number): number {
+    return Math.abs(a - b);
   }
   getPendingBatches() { return this.batches().filter(b => b.status === 'DECLARED_BY_PRODUCTION'); }
   getCriticalItems() { return this.stockLevels().filter(sl => sl.alertLevel === 'CRITIQUE').slice(0, 5); }
@@ -716,6 +925,11 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   getMLabel(t: string) { const m: Record<string, string> = { RECEPTION_PRODUCTION: 'Entrée production', RECEPTION_CONSOMMABLE: 'Réception consommable', RECEPTION_RAW_MATERIAL: 'Réception MP', RECEPTION_MATERIEL: 'Réception matériel', TRANSFER_CENTRAL_TO_BUFFER: 'Transfert central→tampon', TRANSFER_BUFFER_TO_MOBILE: 'Dotation (tampon→mobile)', TRANSFER_MOBILE_TO_CENTRAL: 'Retour mobile→central', SALE: 'Vente', ADJUSTMENT: 'Ajustement', LOSS: 'Perte/Casse', EXPIRATION: 'Expiration' }; return m[t] || t; }
   formatCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }
   getNAlertClass(n: string) { const m: Record<string, string> = { CRITIQUE: 'badge-danger', FAIBLE: 'badge-warning', NORMAL: 'badge-success', SURPLUS: 'badge-secondary' }; return m[n] || 'badge-neutral'; }
+
+  getPackagingLabel(packagingType?: string): string {
+    if (!packagingType) return '';
+    return this.rules.getConditioningLabel(packagingType.toUpperCase());
+  }
 
   getMouvementValue(m: StockMovement): number {
     return (m.quantity || 0) * ((m.product?.unitPriceAmount) || 0);

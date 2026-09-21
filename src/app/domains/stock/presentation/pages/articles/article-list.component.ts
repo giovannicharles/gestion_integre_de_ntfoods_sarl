@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { ApiService } from '../../../../../core/http/api.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { Product } from '../../../domain/models';
 
 Chart.register(...registerables);
 
@@ -65,6 +66,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   items = signal<StockItem[]>([]);
   filtered = signal<StockItem[]>([]);
   locations = signal<StockLocation[]>([]);
+  products = signal<Product[]>([]);
   selectedLocationId = signal('');
   loading = signal(true);
   showForm = signal(false);
@@ -72,6 +74,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   search = signal('');
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
+  newItemSelectedProductId = signal<number | null>(null);
 
   sortKey = signal<SortKey>('productSku');
   sortDir = signal<SortDir>('asc');
@@ -112,6 +115,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.newItem.updatedBy = this.auth.getCurrentUser()?.matricule || 'system';
     this.loadLocations();
+    this.loadProducts();
   }
 
   ngAfterViewInit(): void {
@@ -140,6 +144,31 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showToast('Erreur chargement emplacements', 'error');
       }
     });
+  }
+
+  loadProducts(): void {
+    this.api.get<Product[]>('v1/stock/products').subscribe({
+      next: (data) => this.products.set(data || []),
+      error: () => this.products.set([])
+    });
+  }
+
+  onProductSelected(productId: number): void {
+    const p = this.products().find(x => x.id === productId);
+    if (!p) return;
+    this.newItemSelectedProductId.set(productId);
+    this.newItem.productId = String(productId);
+    this.newItem.productSku = p.sku;
+    this.newItem.packagingType = p.packagingType || 'UNIT';
+    this.newItem.quantityPerCarton = p.quantityPerCarton || 1;
+    this.newItem.unitWeight = p.unitWeight ? p.unitWeight / 1000 : 1;
+    this.newItem.volume = p.volume || '';
+    this.newItem.cartonsPerAssortiment = p.cartonsPerAssortiment ? String(p.cartonsPerAssortiment) : '';
+  }
+
+  getAvailableProducts(): Product[] {
+    const existingSkus = new Set(this.items().map(i => i.productSku));
+    return this.products().filter(p => p.active !== false && !existingSkus.has(p.sku));
   }
 
   loadItems(): void {
@@ -358,8 +387,12 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   createItem(): void {
-    if (!this.newItem.productSku || this.newItem.quantity < 0) {
-      this.showToast('SKU requis et quantité valide', 'error');
+    if (!this.newItemSelectedProductId() || !this.newItem.productSku) {
+      this.showToast('Veuillez sélectionner un produit', 'error');
+      return;
+    }
+    if (this.newItem.quantity < 0) {
+      this.showToast('Quantité invalide', 'error');
       return;
     }
     this.newItem.locationId = this.selectedLocationId();
@@ -512,6 +545,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   resetForm(): void {
+    this.newItemSelectedProductId.set(null);
     this.newItem = {
       locationId: this.selectedLocationId(),
       productId: '',
