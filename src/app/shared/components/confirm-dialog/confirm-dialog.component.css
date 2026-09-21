@@ -1,0 +1,187 @@
+/* ══════════════════════════════════════════════════════════
+   CONFIRM DIALOG — Composant de confirmation réutilisable
+   ══════════════════════════════════════════════════════════ */
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirm-container {
+  background: var(--w);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-xl);
+  max-width: 480px;
+  width: 100%;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 24px 16px;
+}
+
+.confirm-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.confirm-default .confirm-icon {
+  background: var(--b-gh);
+  color: var(--b);
+}
+
+.confirm-danger .confirm-icon {
+  background: var(--r-gh);
+  color: var(--r);
+}
+
+.confirm-warning .confirm-icon {
+  background: var(--y-gh);
+  color: var(--y-d);
+}
+
+.confirm-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--n800);
+  font-family: var(--font-d);
+}
+
+/* ── BODY ───────────────────────────────────────────────── */
+.confirm-body {
+  padding: 0 24px 24px;
+}
+
+.confirm-message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--n600);
+  line-height: 1.5;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.confirm-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--n50);
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.btn {
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: var(--font-b);
+}
+
+.btn-secondary {
+  background: var(--w);
+  color: var(--n700);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--n50);
+  border-color: var(--n300);
+}
+
+.btn-primary {
+  background: var(--g);
+  color: var(--w);
+}
+
+.btn-primary:hover {
+  background: var(--g-d);
+}
+
+.confirm-danger .btn-primary {
+  background: var(--r);
+}
+
+.confirm-danger .btn-primary:hover {
+  background: var(--r-l);
+}
+
+.confirm-warning .btn-primary {
+  background: var(--y);
+  color: var(--ink);
+}
+
+.confirm-warning .btn-primary:hover {
+  background: var(--y-d);
+}
+
+/* ── ANIMATIONS ───────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── DARK MODE ───────────────────────────────────────────── */
+:root.dark-mode .confirm-container {
+  background: var(--n100);
+}
+
+:root.dark-mode .confirm-title {
+  color: var(--n900);
+}
+
+:root.dark-mode .confirm-message {
+  color: var(--n400);
+}
+
+:root.dark-mode .confirm-footer {
+  background: var(--n200);
+  border-color: var(--n300);
+}
+
+:root.dark-mode .btn-secondary {
+  background: var(--n200);
+  color: var(--n300);
+  border-color: var(--n300);
+}
+
+:root.dark-mode .btn-secondary:hover {
+  background: var(--n300);
+}

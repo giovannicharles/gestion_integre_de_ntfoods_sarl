@@ -9,6 +9,7 @@ import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ApiService } from '../../core/http/api.service';
 import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
+import { ThemeService } from '../../core/services/theme.service';
 import { Subject, takeUntil, timer } from 'rxjs';
 
 registerLocaleData(localeFr);
@@ -36,8 +37,9 @@ interface NotifItem {
 })
 export class StockLayoutComponent implements OnInit, OnDestroy {
   router = inject(Router);
-  authService = inject(AuthService);
-  network = inject(NetworkService);
+  private readonly api = inject(ApiService);
+  readonly network = inject(NetworkService);
+  readonly theme = inject(ThemeService);
   alertBadge = inject(AlertBadgeService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
@@ -51,10 +53,10 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   private notifPollTimer: any;
   private badgePollTimer: any;
   private destroy$ = new Subject<void>();
-  private api = inject(ApiService);
 
   // === Utilisateur dynamique depuis AuthService ===
-  currentUser = computed(() => this.authService.getCurrentUser());
+  private readonly authSvc = inject(AuthService);
+  currentUser = computed(() => this.authSvc.getCurrentUser());
   userInitials = computed(() => {
     const u = this.currentUser();
     if (!u) return '??';
@@ -114,6 +116,9 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Dotations', icon: 'fa-hand-holding', route: '/stock/dotations', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
         { label: 'Mouvements Stock', icon: 'fa-right-left', route: '/stock/mouvements' },
         { label: 'Session du Jour', icon: 'fa-calendar-check', route: '/stock/session', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
+        // Le comptage est l'acte du dépôt, pas du commercial : celui-ci déclare
+        // ses invendus depuis le terminal, le gestionnaire les confronte ici.
+        { label: 'Comptage Invendus', icon: 'fa-clipboard-list', route: '/stock/invendus', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
       ]
     },
     {
@@ -220,30 +225,41 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   private loadSidebarBadges() {
-    // Pending production lots (DECLARED_BY_PRODUCTION)
-    this.api.get<any[]>('v1/stock/production/batches/pending')
+    // Pending production lots — receptions from production with statut EN_ATTENTE_VALIDATION_1
+    this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_1', source: 'PRODUCTION' })
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (data) => this.pendingLotsCount.set(data?.length || 0), error: () => {} });
+      .subscribe({ next: (res) => this.pendingLotsCount.set(res?.donnees?.length || 0), error: () => {} });
 
     // Pending dotations — all non-completed/rejected statuses
-    this.api.get<any[]>('stock/dotations')
+    this.api.get<any>('stock/dotations')
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => this.pendingDotationsCount.set(
-          (data || []).filter((d: any) => !['COMPLETED', 'REJECTED'].includes(d.status)).length
-        ),
+        next: (res) => {
+          const data = res?.donnees ?? [];
+          this.pendingDotationsCount.set(
+            (Array.isArray(data) ? data : []).filter((d: any) => !['COMPLETED', 'REJECTED', 'ANNULEE', 'TERMINEE', 'REJETEE'].includes(d.status || d.statut)).length
+          );
+        },
         error: () => {}
       });
 
     // Active internal orders (not COMPLETED/CANCELLED)
-    this.api.get<any[]>('stock/internal-orders/active')
+    this.api.get<any>('stock/internal-orders/active')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (data) => this.pendingOrdersCount.set(data?.length || 0), error: () => {} });
+      .subscribe({ next: (res) => this.pendingOrdersCount.set(res?.donnees?.length || 0), error: () => {} });
 
-    // Pending movement validations
-    this.api.get<any[]>('stock/movements/pending')
+    // Pending validation count — receptions awaiting 1st or 2nd validation
+    this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_1' })
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (data) => this.pendingValidationCount.set(data?.length || 0), error: () => {} });
+      .subscribe({ next: (res) => {
+        const c1 = res?.donnees?.length || 0;
+        this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_2' })
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({ next: (res2) => {
+            const c2 = res2?.donnees?.length || 0;
+            this.pendingValidationCount.set(c1 + c2);
+          }, error: () => this.pendingValidationCount.set(c1) });
+      }, error: () => {} });
   }
 
   private loadNotifCount() {
@@ -258,13 +274,12 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   closeNotifPanel() { this.showNotifPanel.set(false); }
 
   private loadRecentNotifs() {
-    const user = this.authService.getCurrentUser();
-    const matricule = user?.matricule || 'system';
-    this.api.get<any[]>(`stock/notifications/user/${matricule}`)
+    this.api.get<any>('stock/notifications/historique')
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
-          this.recentNotifs.set((data || []).slice(0, 10).map(n => this.mapNotif(n)));
+        next: (res) => {
+          const data = res?.donnees ?? [];
+          this.recentNotifs.set((Array.isArray(data) ? data : []).slice(0, 10).map(n => this.mapNotif(n)));
         },
         error: () => {}
       });
@@ -313,7 +328,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   markNotifAsRead(n: NotifItem) {
-    this.api.post(`stock/notifications/${n.id}/mark-read`, {}).pipe(takeUntil(this.destroy$)).subscribe({
+    this.api.patch(`stock/notifications/historique/${n.id}/lu`, {}).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.recentNotifs.update(list => list.map(x => x.id === n.id ? { ...x, read: true } : x));
         this.alertBadge.refresh();
@@ -323,15 +338,8 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   markAllNotifsAsRead() {
-    const user = this.authService.getCurrentUser();
-    const matricule = user?.matricule || 'system';
-    this.api.post(`stock/notifications/user/${matricule}/mark-all-read`, {}).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.recentNotifs.update(list => list.map(x => ({ ...x, read: true })));
-        this.alertBadge.refresh();
-      },
-      error: () => {}
-    });
+    // No backend endpoint for mark-all-read; mark each individually
+    this.recentNotifs.update(list => list.map(x => ({ ...x, read: true })));
   }
 
   @HostListener('window:resize', ['$event'])
@@ -348,7 +356,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   closeMobile() { this.mobileOpen.set(false); }
 
   logout() {
-    this.authService.logout();
+    this.authSvc.logout();
     this.router.navigate(['/auth/login']);
   }
 

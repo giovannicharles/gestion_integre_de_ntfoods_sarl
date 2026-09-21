@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { ThemeService } from '../../core/services/theme.service';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
@@ -18,6 +19,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 export class ComptableLayoutComponent implements OnInit {
   router = inject(Router);
   alertBadge = inject(AlertBadgeService);
+  readonly theme = inject(ThemeService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());
@@ -28,18 +30,18 @@ export class ComptableLayoutComponent implements OnInit {
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/comptable/dashboard' },
     { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes', badge: 4, badgeClass: 'bd-orange' },
-    { label: 'Validation Matières Premières', icon: 'fa-truck-ramp-box', route: '/comptable/validation-mp' },
     { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
     { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
+    { label: 'Fins de Tournée', icon: 'fa-route', route: '/comptable/sessions' },
     { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement' },
     { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
     { label: 'Objectifs', icon: 'fa-bullseye', route: '/comptable/objectifs' },
+    { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
   ];
 
   ngOnInit() {
     setInterval(() => this.currentTime.set(new Date()), 30000);
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
-    this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const cur = this.navItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);

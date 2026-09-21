@@ -1,0 +1,30 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-table-list ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Référentiel des Postes</h1>
+      <p class="ph-sub">Base des calculs — configurable dans Administration &gt; Postes production</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Poste</th><th>Unité</th><th>Effectif de référence</th><th>Production / heure</th><th>Production / jour</th></tr>
+      </thead>
+      <tbody>
+        @for (p of postes(); track p.code) {
+          <tr>
+            <td><strong>{{ p.libelle }}</strong></td>
+            <td><span class="badge bg-neutral">{{ p.unite }}</span></td>
+            <td>{{ p.effectifReference }}</td>
+            <td>{{ p.productionParHeure }}</td>
+            <td>{{ p.productionJournaliere }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

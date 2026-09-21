@@ -1,0 +1,129 @@
+<div class="page">
+
+  <header class="ph">
+    <div>
+      <h1 class="ph-title">Zones de vente</h1>
+      <p class="ph-sub">
+        Le potentiel client d'une zone sert de dénominateur à son taux d'occupation :
+        une zone mal calibrée paraîtra saturée ou sous-exploitée à tort.
+      </p>
+    </div>
+    <button class="btn btn-primary" (click)="formulaireOuvert.set(!formulaireOuvert())">
+      {{ formulaireOuvert() ? 'Fermer' : 'Nouvelle zone' }}
+    </button>
+  </header>
+
+  @if (message(); as m) {
+    <div class="alerte" [class.alerte-ok]="m.type === 'succes'" [class.alerte-ko]="m.type === 'erreur'">
+      {{ m.texte }}
+    </div>
+  }
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-lbl">Zones actives</div>
+      <div class="kpi-val">{{ zonesActives().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Potentiel total</div>
+      <div class="kpi-val">{{ potentielTotal() }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Non calibrées</div>
+      <div class="kpi-val" [class.alerte-val]="nonCalibrees() > 0">{{ nonCalibrees() }}</div>
+    </div>
+  </div>
+
+  @if (formulaireOuvert()) {
+  <section class="card">
+    <div class="card-hd"><h2>Nouvelle zone</h2></div>
+    <div class="form">
+      <div class="champ">
+        <label for="nom">Nom</label>
+        <input id="nom" type="text" [ngModel]="nom()" (ngModelChange)="nom.set($event)"
+               placeholder="Marché Mokolo" />
+      </div>
+      <div class="champ">
+        <label for="type">Type</label>
+        <select id="type" [ngModel]="type()" (ngModelChange)="type.set($event)">
+          @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div class="champ">
+        <label for="potentiel">Clients potentiels</label>
+        <input id="potentiel" type="number" min="0" step="1"
+               [ngModel]="clientsPotentiels()" (ngModelChange)="clientsPotentiels.set($event)" />
+      </div>
+      <div class="champ champ-large">
+        <label for="desc">Description</label>
+        <input id="desc" type="text" [ngModel]="description()" (ngModelChange)="description.set($event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <p class="note">Le potentiel reste modifiable à tout moment par recalibrage.</p>
+      <button class="btn btn-primary"
+              [disabled]="!formulaireValide() || traitementEnCours() === 'creation'"
+              (click)="creer()">
+        {{ traitementEnCours() === 'creation' ? 'Création…' : 'Créer la zone' }}
+      </button>
+    </div>
+  </section>
+  }
+
+  @if (loading()) { <p class="chargement">Chargement…</p> }
+
+  <section class="card">
+    <div class="card-hd"><h2>Zones enregistrées</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Zone</th><th>Type</th><th>Description</th>
+            <th>Clients potentiels</th><th>Créée le</th><th>État</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (z of zones(); track z.nom) {
+            <tr [class.ligne-inactive]="!z.actif">
+              <td class="fw-bold">{{ z.nom }}</td>
+              <td class="mono">{{ z.type }}</td>
+              <td>{{ z.description || '—' }}</td>
+              <td>
+                @if (calibrage() === z.nom) {
+                  <input type="number" min="0" step="1" class="saisie"
+                         [attr.aria-label]="'Potentiel client de ' + z.nom"
+                         [ngModel]="brouillonPotentiel()" (ngModelChange)="brouillonPotentiel.set($event)" />
+                } @else {
+                  <span [class.non-calibre]="z.clientsPotentiels <= 0">
+                    {{ z.clientsPotentiels > 0 ? z.clientsPotentiels : 'à calibrer' }}
+                  </span>
+                }
+              </td>
+              <td>{{ z.dateCreation | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="z.actif" [class.bg-neutral]="!z.actif">
+                  {{ z.actif ? 'Active' : 'Désactivée' }}
+                </span>
+              </td>
+              <td class="actions">
+                @if (calibrage() === z.nom) {
+                  <button class="btn btn-sm btn-valider"
+                          [disabled]="!calibrageValide(z) || traitementEnCours() === z.nom"
+                          (click)="calibrer(z)">
+                    {{ traitementEnCours() === z.nom ? '…' : 'Enregistrer' }}
+                  </button>
+                  <button class="btn btn-sm btn-ghost" (click)="annulerCalibrage()">Annuler</button>
+                } @else {
+                  <button class="btn btn-sm btn-ghost" (click)="ouvrirCalibrage(z)">Calibrer</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="vide">Aucune zone enregistrée.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

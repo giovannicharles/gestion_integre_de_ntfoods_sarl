@@ -1,0 +1,304 @@
+<!-- EN-TÊTE -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="pi-ph-ico"><i class="fa-solid fa-users"></i></div>
+    <div>
+      <h1 class="ph-title">Production Individuelle</h1>
+      <p class="ph-sub">Saisie de la production par employé et par poste</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+@if (message()) {
+  <div class="pi-toast pi-toast-ok">
+    <i class="fa-solid fa-circle-check"></i> {{ message() }}
+    <button class="pi-toast-close" (click)="message.set('')">×</button>
+  </div>
+}
+@if (erreur()) {
+  <div class="pi-toast pi-toast-err">
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
+    <button class="pi-toast-close" (click)="erreur.set('')">×</button>
+  </div>
+}
+
+<!-- Sélecteur PPH -->
+<div class="card">
+  <div class="pi-selector-row">
+    <div class="pi-selector-lbl"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
+    <select class="input pi-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
+      @for (p of pphs(); track p.id) {
+        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+      }
+    </select>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+  </div>
+</div>
+
+@if (loading()) {
+  @for (i of [1,2,3]; track i) {
+    <div class="skeleton skeleton-row" style="margin:6px 0"></div>
+  }
+} @else {
+
+  @if (!affectation()) {
+    <div class="pi-empty">
+      <div class="pi-empty-ico"><i class="fa-solid fa-calendar-xmark"></i></div>
+      <div class="pi-empty-title">Aucune affectation pour aujourd'hui</div>
+      <p class="pi-empty-sub">Créez d'abord une affectation depuis la page <strong>Affectation des Employés</strong>.</p>
+    </div>
+  } @else {
+
+  <!-- ═══ FORMULAIRE SAISIE ═══ -->
+  <div class="card pi-form-card">
+    <div class="pi-form-header">
+      <div class="pi-form-ico"><i class="fa-solid fa-pen-to-square"></i></div>
+      <div>
+        <div class="pi-form-title">Saisir les productions individuelles</div>
+        <div class="pi-form-sub">Choisissez un poste — les employés affectés sont pré-remplis automatiquement</div>
+      </div>
+    </div>
+
+    <div class="pi-form-body">
+
+      <!-- Sélecteur de poste -->
+      <div class="pi-field">
+        <label class="pi-label"><i class="fa-solid fa-briefcase"></i> Poste</label>
+        @if (postesDisponibles().length === 0) {
+          <div class="pi-all-done">
+            <i class="fa-solid fa-circle-check"></i>
+            Toutes les productions individuelles ont été enregistrées pour aujourd'hui.
+          </div>
+        } @else {
+          <select class="input pi-select-poste"
+                  [ngModel]="posteChoisi"
+                  (ngModelChange)="onPosteChange($event)">
+            <option value="">— Choisir un poste —</option>
+            @for (l of postesDisponibles(); track l.codePoste) {
+              <option [value]="l.codePoste">{{ l.libellePoste }}</option>
+            }
+          </select>
+        }
+      </div>
+
+      <!-- Info poste choisi -->
+      @if (posteChoisi) {
+        <div class="pi-poste-info-row">
+          @if (saisiePosteChoisi(); as s) {
+            <div class="pi-info-chip pi-info-chip-g">
+              <i class="fa-solid fa-chart-bar"></i>
+              Production enregistrée : <strong>{{ s.quantiteRealisee | number:'1.1-1' }} {{ s.unite }}</strong>
+            </div>
+            <div class="pi-info-chip pi-info-chip-b">
+              <i class="fa-solid fa-percent"></i>
+              Taux : <strong>{{ s.pctRealisation | number:'1.0-0' }}%</strong>
+            </div>
+          } @else {
+            @if (lignePoste(posteChoisi); as lgn) {
+              <div class="pi-info-chip pi-info-chip-y">
+                <i class="fa-solid fa-bullseye"></i>
+                Objectif : <strong>{{ lgn.objectifAjuste | number:'1.1-1' }} {{ lgn.unite }}</strong>
+              </div>
+            }
+          }
+          <div class="pi-info-chip"
+               [class.pi-info-chip-err]="depassement()"
+               [class.pi-info-chip-g]="!depassement() && totalSaisi() > 0">
+            <i class="fa-solid fa-sigma"></i>
+            Total saisi : <strong>{{ totalSaisi() | number:'1.1-1' }} {{ unitePosteChoisi() }}</strong>
+            @if (maxPoste() > 0) {
+              / {{ maxPoste() | number:'1.1-1' }}
+            }
+          </div>
+        </div>
+
+        @if (depassement()) {
+          <div class="pi-warn-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Le total individuel dépasse la production réalisée pour ce poste ({{ maxPoste() | number:'1.1-1' }} {{ unitePosteChoisi() }}).
+          </div>
+        }
+
+        <!-- Tableau des employés -->
+        <div class="pi-table-wrap">
+          <table class="pi-table">
+            <thead>
+              <tr>
+                <th>Matricule</th>
+                <th>Nom / Prénom</th>
+                <th>Quantité <span class="pi-unit-hint">({{ unitePosteChoisi() }})</span></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of lignes; track $index; let i = $index) {
+                <tr>
+                  <td>
+                    <input class="input pi-input"
+                           [(ngModel)]="l.matricule"
+                           placeholder="ex : AGP001">
+                  </td>
+                  <td>
+                    <input class="input pi-input"
+                           [(ngModel)]="l.nom"
+                           placeholder="Nom de l'employé">
+                  </td>
+                  <td>
+                    <input type="number" class="input pi-input pi-input-qty"
+                           [(ngModel)]="l.quantite"
+                           [max]="maxPoste()"
+                           min="0" step="0.1"
+                           placeholder="0.0">
+                  </td>
+                  <td>
+                    @if (lignes.length > 1) {
+                      <button class="pi-remove-btn" (click)="retirerLigne(i)" title="Retirer">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-ghost btn-sm pi-add-btn" (click)="ajouterLigne()">
+          <i class="fa-solid fa-plus"></i> Ajouter un employé
+        </button>
+      }
+
+    </div>
+
+    @if (posteChoisi && postesDisponibles().length > 0) {
+      <div class="pi-form-footer">
+        <button class="btn pi-btn-submit"
+                (click)="enregistrer()"
+                [disabled]="saving() || depassement() || totalSaisi() === 0">
+          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les productions }
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- ═══ RÉCAP PRODUCTIONS DU JOUR ═══ -->
+  @if (affectation()!.saisies.length) {
+    <div class="card">
+      <div class="pi-recap-header">
+        <div class="pi-recap-title">
+          <div class="pi-recap-ico"><i class="fa-solid fa-chart-pie"></i></div>
+          <span>Productions individuelles du jour</span>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th>Employé</th>
+              <th class="text-right">Quantité réalisée</th>
+              <th class="text-right">Objectif poste</th>
+              <th>Taux</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of affectation()!.saisies; track s.codePoste) {
+              @if (s.productionsIndividuelles && s.productionsIndividuelles.length > 0) {
+                @for (pi of s.productionsIndividuelles; track pi.matriculeEmploye; let first = $first) {
+                  <tr>
+                    @if (first) {
+                      <td [attr.rowspan]="s.productionsIndividuelles.length" class="pi-poste-cell">
+                        <strong>{{ s.libellePoste }}</strong>
+                      </td>
+                    }
+                    <td>
+                      <span class="pi-mat-tag">{{ pi.matriculeEmploye }}</span>
+                      {{ pi.nomEmploye }}
+                    </td>
+                    <td class="text-right mono">
+                      {{ pi.quantiteRealisee | number:'1.1-1' }}
+                      <span class="text-muted">{{ pi.unite }}</span>
+                    </td>
+                    @if (first) {
+                      <td class="text-right mono text-muted" [attr.rowspan]="s.productionsIndividuelles.length">
+                        {{ s.objectifAjuste | number:'1.1-1' }}
+                      </td>
+                      <td [attr.rowspan]="s.productionsIndividuelles.length">
+                        <div class="pi-prog-wrap">
+                          <div class="pi-prog-track">
+                            <div class="pi-prog-bar"
+                                 [style.width.%]="s.pctRealisation > 100 ? 100 : s.pctRealisation"
+                                 [class.pi-prog-g]="s.pctRealisation >= 100"
+                                 [class.pi-prog-y]="s.pctRealisation >= 50 && s.pctRealisation < 100"
+                                 [class.pi-prog-r]="s.pctRealisation < 50">
+                            </div>
+                          </div>
+                          <span class="pi-prog-pct">{{ s.pctRealisation | number:'1.0-0' }}%</span>
+                        </div>
+                      </td>
+                    }
+                  </tr>
+                }
+              }
+            }
+            @if (!aSaisiesIndividuelles()) {
+              <tr>
+                <td colspan="5" class="empty-state-block">
+                  <i class="fa-solid fa-inbox"></i> Aucune production individuelle saisie
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ═══ AGENT DOSEUR (lecture seule) ═══ -->
+  <div class="card">
+    <div class="pi-recap-header">
+      <div class="pi-recap-title">
+        <div class="pi-recap-ico pi-ico-dosage"><i class="fa-solid fa-flask"></i></div>
+        <span>Agent Doseur — référence lecture seule</span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Matricule agent</th>
+            <th>PPH</th>
+            <th class="text-right">Fûts nets</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of sessionsDoseur(); track s.id) {
+            <tr>
+              <td><span class="pi-mat-tag">{{ s.matriculeAgentDoseur }}</span></td>
+              <td class="mono">{{ s.referencePPH }}</td>
+              <td class="text-right mono">{{ s.nbFutsNets }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="s.cloturee" [class.badge-warning]="!s.cloturee">
+                  {{ s.cloturee ? 'Clôturée' : 'Ouverte' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="empty-state-block">
+                <i class="fa-solid fa-inbox"></i> Aucune session de dosage aujourd'hui
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  }<!-- fin affectation -->
+}<!-- fin loading -->

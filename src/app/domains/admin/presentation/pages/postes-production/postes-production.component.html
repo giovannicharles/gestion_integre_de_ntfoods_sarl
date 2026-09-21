@@ -1,0 +1,97 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-industry ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Postes de production</h1>
+      <p class="ph-sub">Effectifs de référence et objectifs par poste</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) {
+  <div class="{{ message()!.type === 'succes' ? 'success-banner' : 'dirty-warning' }}">
+    {{ message()!.texte }}
+  </div>
+}
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-plus-circle"></i> Ajouter un poste</h2>
+  </div>
+  <div class="param-form">
+    <div class="form-group">
+      <label>Code</label>
+      <input type="text" class="form-input" [(ngModel)]="nouveau.code" placeholder="Ex: CARAMEL" />
+    </div>
+    <div class="form-group">
+      <label>Libellé</label>
+      <input type="text" class="form-input" [(ngModel)]="nouveau.libelle" placeholder="Ex: Caramel" />
+    </div>
+    <div class="form-group">
+      <label>Effectif réf.</label>
+      <input type="number" class="form-input" [(ngModel)]="nouveau.effectifReference" />
+    </div>
+    <div class="form-group">
+      <label>Prod. / heure</label>
+      <input type="number" class="form-input" [(ngModel)]="nouveau.productionParHeure" />
+    </div>
+    <div class="form-group">
+      <label>Prod. / journée</label>
+      <input type="number" class="form-input" [(ngModel)]="nouveau.productionJournaliere" />
+    </div>
+    <div class="form-group">
+      <label>Unité</label>
+      <input type="text" class="form-input" [(ngModel)]="nouveau.unite" />
+    </div>
+    <div class="form-group">
+      <button class="btn btn-primary" [disabled]="!nouveau.code.trim() || !nouveau.libelle.trim()" (click)="ajouter()">
+        <i class="fa-solid fa-plus"></i> Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-list"></i> Postes existants</h2>
+  </div>
+  @if (loading()) {
+    <p>Chargement...</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Libellé</th>
+          <th>Effectif</th>
+          <th>Prod./h</th>
+          <th>Prod./jour</th>
+          <th>Unité</th>
+          <th>Actif</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of postes(); track p.code) {
+          <tr>
+            <td><strong>{{ p.code }}</strong></td>
+            <td>{{ p.libelle }}</td>
+            <td>{{ p.effectifReference }}</td>
+            <td>{{ p.productionParHeure }}</td>
+            <td>{{ p.productionJournaliere }}</td>
+            <td>{{ p.unite }}</td>
+            <td>{{ p.actif ? 'Oui' : 'Non' }}</td>
+            <td>
+              <button class="btn btn-sm" (click)="basculerActif(p)">
+                {{ p.actif ? 'Désactiver' : 'Activer' }}
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="supprimer(p.id)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

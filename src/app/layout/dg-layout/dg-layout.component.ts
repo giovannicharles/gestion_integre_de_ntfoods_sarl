@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { ThemeService } from '../../core/services/theme.service';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
@@ -19,6 +20,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 export class DgLayoutComponent implements OnInit {
   router = inject(Router);
   alertBadge = inject(AlertBadgeService);
+  readonly theme = inject(ThemeService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());
@@ -42,6 +44,9 @@ export class DgLayoutComponent implements OnInit {
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/dg/classement' },
         { label: 'Objectifs CA', icon: 'fa-bullseye', route: '/dg/objectifs' },
         { label: 'Arbitrage Prix', icon: 'fa-scale-balanced', route: '/dg/arbitrage', badge: 3, badgeClass: 'bd-orange' },
+        { label: 'Promotions', icon: 'fa-tags', route: '/dg/promotions' },
+        { label: 'Tarification', icon: 'fa-money-check-dollar', route: '/dg/tarification' },
+        { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/dg/zones' },
       ]
     },
     {
@@ -50,15 +55,14 @@ export class DgLayoutComponent implements OnInit {
         { label: 'Reporting N / N-1', icon: 'fa-chart-column', route: '/dg/reporting' },
       ]
     },
+    // Les sept écrans de stock que cette version dupliquait sous /dg n'ont pas
+    // été repris : le Directeur Général accède déjà au module Stock, dont les
+    // routes lui sont ouvertes dans app.routes.ts. Les dupliquer aurait créé un
+    // second endroit à maintenir — et, en l'état, sept entrées de menu pointant
+    // vers des routes qui n'existent pas.
     {
       label: 'Stock & Production', icon: 'fa-warehouse', children: [
-        { label: 'Stock Central', icon: 'fa-warehouse', route: '/dg/stock-dashboard' },
-        { label: 'Inventaire', icon: 'fa-boxes-packing', route: '/dg/inventaire' },
-        { label: 'Lots Production', icon: 'fa-industry', route: '/dg/production' },
-        { label: 'Seuils Stock', icon: 'fa-ruler', route: '/dg/seuils' },
-        { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/dg/alertes' },
-        { label: 'Produits', icon: 'fa-boxes-stacked', route: '/dg/produits' },
-        { label: 'Statistiques', icon: 'fa-chart-line', route: '/dg/statistiques' },
+        { label: 'Module Stock', icon: 'fa-warehouse', route: '/stock/dashboard' },
       ]
     },
     {
@@ -73,6 +77,11 @@ export class DgLayoutComponent implements OnInit {
     { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/dg/utilisateurs' },
     { label: 'Journal d\'Audit', icon: 'fa-clipboard-list', route: '/dg/audit' },
     { label: 'Paramètres', icon: 'fa-sliders', route: '/dg/parametres' },
+    { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/dg/codes-observation' },
+    { label: 'Postes production', icon: 'fa-industry', route: '/dg/postes-production' },
+    // Barèmes de prime, seuils de caisse, jours ouvrés, seuil de photo d'avarie :
+    // les paramétrages datés, que seul le DG administre.
+    { label: 'Règles métier', icon: 'fa-scale-balanced', route: '/dg/regles-metier' },
   ];
 
   expandedGroup = signal<string | null>('Intelligence IA');

@@ -1,0 +1,133 @@
+/* ═══════════════════════════════════════════════════════════
+   VALIDATION BC — Chef de Production
+   Charte TANTY DIGITAL : Vert var(--g) · Jaune var(--y)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Skeleton row ─────────────────────────────────────────── */
+.skeleton-row { height: 42px; margin: 4px 16px; border-radius: 6px; }
+
+/* ── Retard ───────────────────────────────────────────────── */
+.row-alert td { background: var(--r-gh, var(--r-gh)) !important; }
+
+/* ── Modal ────────────────────────────────────────────────── */
+.val-modal {
+  max-width: 700px;
+  width: 96vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-title-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md, 10px);
+  background: var(--g, var(--g));
+  color: var(--y, var(--y));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.val-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Bloc de confirmation ─────────────────────────────────── */
+.confirm-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--g-sf, var(--g-sf));
+  border: 1.5px solid var(--g, var(--g));
+  border-radius: var(--r-md, 12px);
+  padding: 16px;
+}
+
+.confirm-ico {
+  font-size: 24px;
+  color: var(--g, var(--g));
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.confirm-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--n700, var(--n700));
+}
+
+.confirm-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--n500, var(--n500));
+  line-height: 1.55;
+}
+
+/* ── Grille récap ─────────────────────────────────────────── */
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.recap-item {
+  background: var(--n50, var(--n50));
+  border: 1px solid var(--n200, var(--n200));
+  border-radius: var(--r-sm, 8px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recap-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--n400, var(--n400));
+}
+
+.recap-lbl i { color: var(--g, var(--g)); margin-right: 3px; }
+
+.recap-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--n700, var(--n700));
+}
+
+/* ── Séparateur section lignes ────────────────────────────── */
+.val-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--n500, var(--n500));
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--n200, var(--n200));
+}
+
+.val-section-title i { color: var(--g, var(--g)); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .recap-grid { grid-template-columns: 1fr 1fr; }
+  .val-body { padding: 14px; }
+}
+
+@media (max-width: 400px) {
+  .recap-grid { grid-template-columns: 1fr; }
+}

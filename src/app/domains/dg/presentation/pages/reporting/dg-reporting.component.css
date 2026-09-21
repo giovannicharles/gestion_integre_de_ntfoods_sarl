@@ -9,8 +9,8 @@
 .chart-wrap { height: 300px; position: relative; }
 .chart-wrap-lg { height: 320px; position: relative; }
 .taux-chip { padding: 3px 10px; border-radius: 99px; font-size: .8rem; font-weight: 700; }
-.taux-ok { background: #e8f5e9; color: #1b5e20; }
-.taux-warn { background: #ffebee; color: var(--r); }
+.taux-ok { background: var(--s-gh); color: var(--g-m); }
+.taux-warn { background: var(--r-gh); color: var(--r); }
 .tfoot-total td { font-weight: 700; border-top: 2px solid var(--n200); background: var(--n50); }
 .text-success { color: var(--s) !important; }
 .text-danger { color: var(--r) !important; }

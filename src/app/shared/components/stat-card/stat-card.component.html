@@ -1,0 +1,25 @@
+<div class="stat-card {{ variantClass }} {{ sizeClass }}" [class.clickable]="clickable()">
+  @if (loading()) {
+    <div class="stat-card-loading">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+    </div>
+  } @else {
+    <div class="stat-card-header">
+      @if (icon()) {
+        <div class="stat-card-icon">
+          <i class="fa-solid {{ icon() }}"></i>
+        </div>
+      }
+      <span class="stat-card-title">{{ title() }}</span>
+    </div>
+    <div class="stat-card-body">
+      <span class="stat-card-value">{{ value() }}</span>
+      @if (trend()) {
+        <div class="stat-card-trend {{ trendClass() }}">
+          <i class="fa-solid {{ trendIcon() }}"></i>
+          <span>{{ Math.abs(trend()!.value) }}%</span>
+        </div>
+      }
+    </div>
+  }
+</div>

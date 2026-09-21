@@ -1,0 +1,43 @@
+/* Styles spécifiques au dashboard Chef Machiniste — le reste vient des classes globales (kpi-card, card, etc.) */
+.alert { padding: var(--sp-3, 0.75rem); border-radius: 8px; margin-bottom: var(--sp-3, 0.75rem); }
+.alert-error { background: var(--danger-bg, var(--r-gh)); color: var(--danger-text, var(--r)); border: 1px solid var(--danger-border, var(--r-gh)); }
+
+.dash-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--n500, var(--n500));
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: var(--sp-4, 1rem) 0 var(--sp-3, 0.75rem);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-section-title:first-of-type { margin-top: 0; }
+.dash-section-title i { color: var(--g, var(--g-m)); }
+
+.kpi-card.featured {
+  background: linear-gradient(135deg, var(--w) 0%, var(--n50, var(--n50)) 100%);
+  border-width: 1px;
+}
+.kpi-card.featured .kpi-val { font-size: 22px; }
+.kpi-card.featured .kpi-ico { width: 42px; height: 42px; font-size: 18px; }
+
+/* Dashboard compact : réduit la taille des KPI pour mettre les graphiques en avant */
+:host .kpi-grid { gap: 10px; }
+:host .kpi-card { padding: 12px; gap: 8px; }
+:host .kpi-card .kpi-ico { width: 36px; height: 36px; font-size: 15px; }
+:host .kpi-card .kpi-val { font-size: 17px; }
+:host .kpi-card .kpi-lbl { font-size: 9.5px; }
+
+.dash-section-title { margin: var(--sp-3, 0.75rem) 0 var(--sp-2, 0.5rem); font-size: 0.8rem; }
+
+/* Graphiques en avant : hauteurs augmentées et alignement */
+.charts-row-tall .card { min-height: 340px; }
+.donut-wrap { display: flex; align-items: center; justify-content: center; min-height: 260px; }
+.chart-card-wide { margin-top: var(--sp-3, 0.75rem); }
+
+@media (max-width: 1024px) {
+  .charts-row-tall .card { min-height: auto; }
+  .donut-wrap { min-height: 220px; }
+}

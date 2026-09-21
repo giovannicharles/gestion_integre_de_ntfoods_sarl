@@ -1,0 +1,72 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-clipboard-list ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Indicateurs Journaliers</h1>
+      <p class="ph-sub">Quantité nette broyée, pertes et pourcentage global de pertes</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs (jour)</div><div class="kpi-val">{{ maisJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja (jour)</div><div class="kpi-val">{{ sojaJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide (jour)</div><div class="kpi-val">{{ arachideJour() | number:'1.1-1' }} kg</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flag-checkered"></i> Clôturer une session — saisie des indicateurs</h2></div>
+  <div style="padding: var(--sp-4)">
+    <div class="form-grid">
+      <label>Session à clôturer
+        <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="cloture.sessionId">
+          <option [ngValue]="0">— Choisir —</option>
+          @for (s of sessionsJour(); track s.id) {
+            <option [ngValue]="s.id" [disabled]="s.statut === 'CLOTUREE'">
+              {{ s.referencePPH }} — {{ s.typePoudreLibelle }} {{ s.statut === 'CLOTUREE' ? '(déjà clôturée)' : '' }}
+            </option>
+          }
+        </select>
+      </label>
+      <label>Quantité nette broyée (kg)<input type="number" class="input" [(ngModel)]="cloture.quantiteNetteBroyeeKg"></label>
+      <label>Pertes (kg)<input type="number" class="input" [(ngModel)]="cloture.pertesKg"></label>
+    </div>
+
+    <div class="kpi-grid" style="margin-top:var(--sp-3)">
+      <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">% global des pertes (recalculé)</div><div class="kpi-val">{{ pctPertesCalcule() }}%</div></div></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="cloturerSession()"><i class="fa-solid fa-check"></i> Enregistrer & clôturer</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list"></i> Sessions du jour</h2></div>
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>PPH</th><th>Type</th><th>Nette broyée</th><th>Pertes</th><th>% pertes</th><th>Statut</th></tr></thead>
+        <tbody>
+          @for (s of sessionsJour(); track s.id) {
+            <tr>
+              <td class="mono">{{ s.referencePPH }}</td>
+              <td>{{ s.typePoudreLibelle }}</td>
+              <td>{{ s.quantiteNetteBroyeeKg ?? '—' }}</td>
+              <td>{{ s.pertesKg ?? '—' }}</td>
+              <td>{{ s.pctPertes != null ? (s.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
+              <td><span [class]="s.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

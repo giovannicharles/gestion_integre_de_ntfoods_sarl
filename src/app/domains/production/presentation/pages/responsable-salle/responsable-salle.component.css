@@ -1,0 +1,70 @@
+.rs-container { padding: 1rem; max-width: 1200px; margin: 0 auto; font-family: system-ui, sans-serif; }
+.rs-header { margin-bottom: 1rem; }
+.rs-header h1 { margin: 0; }
+.subtitle { color: var(--n500); margin-top: 0.25rem; }
+
+.rs-toolbar { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+.rs-toolbar input { padding: 0.35rem; }
+
+.alert { padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; }
+.alert-error { background: var(--r-gh); color: var(--r); }
+.alert-success { background: var(--s-gh); color: var(--g-d); }
+.loading { color: var(--n500); margin-bottom: 1rem; }
+
+.rs-pph { margin-bottom: 1rem; }
+.pph-list { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.pph-card { border: 1px solid var(--n300); border-radius: 6px; padding: 0.75rem; cursor: pointer; min-width: 160px; display: flex; flex-direction: column; }
+.pph-card.active { border-color: var(--b); background: var(--b-gh); }
+.pph-card strong { font-size: 0.95rem; }
+.pph-card span { font-size: 0.8rem; color: var(--n500); }
+
+.rs-tabs { display: flex; gap: 0.25rem; border-bottom: 2px solid var(--n200); margin-bottom: 1rem; }
+.rs-tabs button { padding: 0.6rem 1rem; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; }
+.rs-tabs button.active { border-bottom-color: var(--b); color: var(--b); font-weight: 600; }
+
+.tab-panel h3 { margin-top: 0; }
+.empty { color: var(--n500); padding: 1rem 0; }
+.form-block { background: var(--n50); padding: 1rem; border-radius: 6px; margin-top: 1rem; }
+.form-block .row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+.form-block input { flex: 1; padding: 0.4rem; }
+
+.affectation-detail, .saisie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+.card { border: 1px solid var(--n300); border-radius: 6px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.card strong { font-size: 0.95rem; }
+.card span { font-size: 0.85rem; color: var(--n600); }
+.card button { margin-top: 0.5rem; }
+
+.classement { margin-top: 1rem; background: var(--n50); padding: 1rem; border-radius: 6px; }
+.classement .row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
+
+.warnings { margin-top: 0.25rem; }
+.warning { display: inline-block; background: var(--w)3cd; color: var(--y-d); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.75rem; }
+
+.table { display: flex; flex-direction: column; border: 1px solid var(--n300); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
+.thead, .tbody { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 0.6rem 0.75rem; }
+.thead { background: var(--n100); font-weight: 600; }
+.tbody { border-top: 1px solid var(--n200); }
+.tbody span { font-size: 0.9rem; }
+
+button { padding: 0.5rem 0.75rem; border: 1px solid var(--n300); border-radius: 4px; background: var(--w); cursor: pointer; }
+button.primary { background: var(--b); color: var(--w); border-color: var(--b); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-link { background: transparent; border: none; color: var(--b); text-decoration: underline; padding: 0; }
+
+.badge { display: inline-block; background: var(--n50); color: var(--n700); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+.btn-danger-sm { background: var(--r-gh); color: var(--r); border-color: var(--r-gh); padding: 0.3rem 0.6rem; }
+
+.form-block select { padding: 0.4rem; }
+.form-block .row { align-items: center; }
+
+.table .thead.cols-4, .table .tbody.cols-4 { grid-template-columns: 1fr 2fr 1fr 1fr; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+.modal-card { background: var(--w); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal-hd { padding: 1rem; border-bottom: 1px solid var(--n200); }
+.modal-hd h3 { margin: 0; }
+.modal-body { padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.modal-body label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; font-weight: 500; }
+.modal-body .input { padding: 0.4rem; border: 1px solid var(--n300); border-radius: 4px; }
+.modal-body .row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+.modal-ft { padding: 1rem; border-top: 1px solid var(--n200); display: flex; justify-content: flex-end; gap: 0.5rem; }

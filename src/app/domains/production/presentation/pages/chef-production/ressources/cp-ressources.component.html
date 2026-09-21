@@ -1,0 +1,55 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-boxes-stacked ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion des Ressources</h1>
+      <p class="ph-sub">Consommation des matières premières et utilisation des machines (7 derniers jours)</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>Pas d'entité stock/équipement côté backend Production : cette vue montre la <strong>consommation réelle</strong>, pas la disponibilité ni les alertes de rupture (nécessiterait un module Stock).</div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Matières premières consommées</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-donut-chart title="" unit="kg" [data]="donutMatieres()" /></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Utilisation des machines</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Machine</th><th>Nombre de sessions</th></tr></thead>
+        <tbody>
+          @for (m of machinesUtilisees(); track m.machine) { <tr><td>{{ m.machine }}</td><td>{{ m.nbSessions }}</td></tr> }
+          @empty { <tr><td colspan="2" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (rapport(); as r) {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Pertes par type de poudre</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Type</th><th>Pertes (kg)</th><th>% pertes</th></tr></thead>
+      <tbody>
+        @for (k of objectKeys(r.pertesParTypePoudre); track k) {
+          <tr><td>{{ k }}</td><td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td><td>{{ r.pctPertesParTypePoudre[k] ?? 0 | number:'1.1-1' }}%</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
+
+}

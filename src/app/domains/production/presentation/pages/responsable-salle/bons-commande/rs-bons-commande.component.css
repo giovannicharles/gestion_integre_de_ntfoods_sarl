@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════
+   RS — BONS DE COMMANDE
+   Charte TANTY DIGITAL : Vert var(--g) · Jaune var(--y)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Badge compteur ──────────────────────────────────────── */
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--g-sf, var(--g-sf));
+  border: 1px solid var(--g, var(--g));
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--g, var(--g));
+}
+.badge-count-num { font-size: 14px; font-weight: 700; }
+
+/* ── Icône en-tête ───────────────────────────────────────── */
+.ph-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md, 10px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.ph-icon-g { background: var(--g, var(--g)); color: var(--y, var(--y)); }
+
+/* ── Modal ───────────────────────────────────────────────── */
+.rs-modal {
+  background: var(--w);
+  border-radius: var(--r-xl, 18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  width: 100%;
+  max-width: 660px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rs-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--n100, var(--n100));
+  background: var(--g, var(--g));
+  flex-shrink: 0;
+}
+
+.rs-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rs-modal-ico {
+  width: 38px; height: 38px;
+  border-radius: var(--r-md, 10px);
+  background: rgba(246,182,11,.18);
+  color: var(--y, var(--y));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+
+.rs-modal-ref {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--w);
+}
+
+.rs-modal-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.65);
+  margin-top: 2px;
+}
+
+.rs-modal-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.15);
+  color: var(--w);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: background .15s;
+}
+.rs-modal-close:hover { background: rgba(255,255,255,.25); }
+
+.rs-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rs-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid var(--n100, var(--n100));
+  flex-shrink: 0;
+}
+
+/* ── Grille récap ─────────────────────────────────────────── */
+.rs-recap-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.rs-recap-item {
+  background: var(--n50, var(--n50));
+  border: 1px solid var(--n200, var(--n200));
+  border-radius: var(--r-sm, 8px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rs-recap-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--n400, var(--n400));
+}
+.rs-recap-lbl i { color: var(--g, var(--g)); margin-right: 3px; }
+
+.rs-recap-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--n700, var(--n700));
+}
+
+/* ── Séparateur section ───────────────────────────────────── */
+.rs-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--n500, var(--n500));
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--n200, var(--n200));
+}
+.rs-section-title i { color: var(--g, var(--g)); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .rs-recap-grid { grid-template-columns: 1fr 1fr; }
+  .rs-modal-body { padding: 14px; }
+}
+@media (max-width: 380px) {
+  .rs-recap-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,183 @@
+/* ═══════════════════════════════════════════════════════════
+   RS — PLANS PPH
+   Charte TANTY DIGITAL : Vert var(--g) · Jaune var(--y)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Icône en-tête ───────────────────────────────────────── */
+.ph-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md, 10px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.ph-icon-g { background: var(--g, var(--g)); color: var(--y, var(--y)); }
+
+/* ── Modal ───────────────────────────────────────────────── */
+.pph-modal {
+  background: var(--w);
+  border-radius: var(--r-xl, 18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  width: 100%;
+  max-width: 740px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header vert TANTY */
+.pph-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--g, var(--g));
+  flex-shrink: 0;
+}
+
+.pph-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pph-modal-ico {
+  width: 40px; height: 40px;
+  border-radius: var(--r-md, 10px);
+  background: rgba(246,182,11,.18);
+  color: var(--y, var(--y));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+
+.pph-modal-ref {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--w);
+}
+
+.pph-modal-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.65);
+  margin-top: 2px;
+}
+
+.pph-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pph-modal-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.15);
+  color: var(--w);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: background .15s;
+}
+.pph-modal-close:hover { background: rgba(255,255,255,.28); }
+
+/* Body */
+.pph-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Footer */
+.pph-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 24px;
+  border-top: 1px solid var(--n100, var(--n100));
+  flex-shrink: 0;
+}
+
+/* ── Grille récap ─────────────────────────────────────────── */
+.pph-recap-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.pph-recap-item {
+  background: var(--n50, var(--n50));
+  border: 1px solid var(--n200, var(--n200));
+  border-radius: var(--r-sm, 8px);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pph-recap-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--n400, var(--n400));
+}
+.pph-recap-lbl i { color: var(--g, var(--g)); margin-right: 3px; }
+
+.pph-recap-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--n700, var(--n700));
+}
+
+/* ── Section avec titre ───────────────────────────────────── */
+.pph-section { display: flex; flex-direction: column; gap: 10px; }
+
+.pph-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--n500, var(--n500));
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--n200, var(--n200));
+}
+.pph-section-title i { color: var(--g, var(--g)); }
+
+/* ── Barre de progression ─────────────────────────────────── */
+.pph-prog-track {
+  height: 8px;
+  background: var(--n100, var(--n100));
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100px;
+}
+
+.pph-prog-bar { height: 100%; border-radius: 4px; transition: width .3s; min-width: 2px; }
+.pph-prog-g { background: var(--g-l); }
+.pph-prog-y { background: var(--y-d); }
+.pph-prog-r { background: var(--r-l); }
+
+/* ── Séparateurs de jour dans le détail produit/jour ──────── */
+.pph-detail-day-start td {
+  border-top: 2px solid var(--n200, var(--n200));
+}
+.pph-detail-day-start td:first-child strong {
+  color: var(--g, var(--g));
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .pph-recap-grid { grid-template-columns: 1fr 1fr; }
+  .pph-modal-body { padding: 14px; }
+  .pph-prog-track { width: 60px; }
+}
+
+@media (max-width: 400px) {
+  .pph-recap-grid { grid-template-columns: 1fr; }
+}

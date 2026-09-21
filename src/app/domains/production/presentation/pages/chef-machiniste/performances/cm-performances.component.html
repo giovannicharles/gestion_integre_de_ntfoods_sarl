@@ -1,0 +1,59 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-simple ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Performances des Machinistes</h1>
+      <p class="ph-sub">{{ classement()?.periode }}</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-ghost" (click)="exporterCsv()"><i class="fa-solid fa-download"></i> Exporter CSV</button>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <input class="input search-input" placeholder="Rechercher un machiniste..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
+    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Rang</th><th>Machiniste</th><th>Quantité produite</th><th>Objectif</th><th>Taux réalisation</th><th>Efficacité</th><th>Jours</th></tr></thead>
+        <tbody>
+          @for (c of lignesPage(); track c.machinisteMatricule) {
+            <tr>
+              <td>#{{ c.rang }}</td>
+              <td>{{ c.nomMachiniste }} <span class="text-muted">({{ c.machinisteMatricule }})</span></td>
+              <td>{{ c.productiviteKg | number:'1.1-1' }} kg</td>
+              <td>{{ c.objectifTotalKg | number:'1.1-1' }} kg</td>
+              <td><span [class]="c.tauxRealisationMoyen >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span></td>
+              <td>{{ c.efficacite | number:'1.1-1' }}%</td>
+              <td>{{ c.nbJours }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée sur cette période</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span class="text-muted">{{ lignesFiltrees().length }} machiniste(s) — page {{ page() }} / {{ totalPages() }}</span>
+      <div class="pagination-btns">
+        <button (click)="allerPage(page()-1)" [disabled]="page()===1"><i class="fa-solid fa-chevron-left"></i></button>
+        @for (p of [].constructor(totalPages()); track $index) {
+          <button [class.active]="page()===$index+1" (click)="allerPage($index+1)">{{ $index+1 }}</button>
+        }
+        <button (click)="allerPage(page()+1)" [disabled]="page()===totalPages()"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  }
+</div>

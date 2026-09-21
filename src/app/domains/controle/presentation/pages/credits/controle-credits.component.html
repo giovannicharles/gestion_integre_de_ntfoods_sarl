@@ -9,36 +9,6 @@
     </div>
   </div>
 
-  <div class="kpi-grid-3">
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-coins"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Total encours crédit</span>
-        <span class="kpi-val">{{ fCFA(totalCredit()) }}</span>
-        <span class="kpi-meta">À recouvrer</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-decor kd-y"></div>
-      <div class="kpi-ico iy"><i class="fa-solid fa-users"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Clients débiteurs</span>
-        <span class="kpi-val">{{ nbDebiteurs() }}</span>
-        <span class="kpi-meta">Encours > 0 FCFA</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Clients > 300K FCFA</span>
-        <span class="kpi-val">{{ nbRisqueEleve() }}</span>
-        <span class="kpi-meta">Risque élevé</span>
-      </div>
-    </div>
-  </div>
-
   <div class="section-row">
     <div class="card table-card">
       <div class="card-hd"><span class="card-title"><i class="fa-solid fa-users"></i> Encours par client</span></div>

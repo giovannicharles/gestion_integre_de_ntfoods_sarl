@@ -1,14 +1,17 @@
 import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, PreCommandeBE } from '../../../infrastructure/commercial.service';
 import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
-import { Product } from '../../../../stock/domain/models/stock.models';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface LigneUI { produitCode: string; designation: string; quantite: number }
+
+interface ProduitUI {
+  code: string; designation: string; gamme: string; prixHT: number; unite: string;
+}
 
 interface PrecommandeUI {
   id: string; commercialId: string; dateCommande: Date; statut: string;
@@ -29,15 +32,15 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
   private readonly d$ = new Subject<void>();
 
   today = new Date();
-  produits = signal<{ code: string; designation: string; gamme: string; prixHT: number; unite: string }[]>([]);
   precommandes = signal<PrecommandeUI[]>([]);
   loading = signal(false);
   showForm = signal(false);
   submitted = signal(false);
-  fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
   lignes = signal<LigneUI[]>([
     { produitCode: '', designation: '', quantite: 0 },
   ]);
+  produits = signal<ProduitUI[]>([]);
+  fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
 
   ngOnInit(): void {
     const demain = this.fmtDate(new Date(Date.now() + 86_400_000));
@@ -54,6 +57,19 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
       },
       error: () => this.loading.set(false),
     });
+    this.stockRepo.getProducts().subscribe(list => {
+      this.produits.set(list.map(p => ({
+        code: p.sku,
+        designation: p.designation ?? p.sku,
+        gamme: p.variant?.name ?? '—',
+        prixHT: p.unitPriceAmount,
+        unite: p.unit ?? 'u',
+      })));
+    });
+  }
+
+  getProduit(code: string): ProduitUI | undefined {
+    return this.produits().find(p => p.code === code);
   }
 
   soumettre(): void {
@@ -65,7 +81,7 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
       dateSoumission: this.fmtDate(new Date()),
       lignes: valid.map(l => ({
         codeProduit: l.produitCode,
-        designation: l.designation,
+        designation: this.getProduit(l.produitCode)?.designation ?? l.produitCode,
         conditionnement: 'CARTON',
         quantite: l.quantite,
       })),
@@ -155,9 +171,5 @@ addLigne(): void { this.lignes.update(l => [...l, { produitCode: '', designation
 
   private fmtDate(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
-  getProduit(code: string) {
-    return this.produits().find(p => p.code === code);
   }
 }

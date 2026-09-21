@@ -6,6 +6,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -21,6 +22,7 @@ export class ControleLayoutComponent implements OnInit {
   router = inject(Router);
   alertBadge = inject(AlertBadgeService);
   authService = inject(AuthService);
+  readonly theme = inject(ThemeService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());

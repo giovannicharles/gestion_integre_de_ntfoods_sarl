@@ -1,0 +1,344 @@
+/* ══════════════════════════════════════════════════════════════
+   PAGE HEADER ICON
+══════════════════════════════════════════════════════════════ */
+.af-ph-ico {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--g, var(--g)), var(--g-m));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--w);
+  font-size: 1.15rem;
+  box-shadow: 0 4px 12px rgba(20,83,45,.25);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CARD HEADER
+══════════════════════════════════════════════════════════════ */
+.af-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border, var(--n200));
+  display: flex; align-items: center; gap: 12px;
+}
+
+.af-header-success {
+  background: linear-gradient(135deg, rgba(20,83,45,.06), rgba(20,83,45,.02));
+  border-bottom-color: rgba(20,83,45,.15);
+}
+
+.af-card-title {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 600; font-size: .95rem; color: var(--text, var(--n900));
+}
+
+.af-card-ico {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--g, var(--g)), var(--g-m));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--w); font-size: .8rem; flex-shrink: 0;
+}
+
+.af-card-ico.af-ico-success {
+  background: linear-gradient(135deg, var(--g-m), var(--g-l));
+}
+
+.af-ref-chip {
+  margin-left: 8px;
+  font-size: .78rem;
+  background: rgba(20,83,45,.1);
+  color: var(--g, var(--g));
+  border: 1px solid rgba(20,83,45,.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM BODY
+══════════════════════════════════════════════════════════════ */
+.af-form-body {
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* ── Meta Row (PPH + Date) ── */
+.af-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .af-meta-row { grid-template-columns: 1fr; }
+}
+
+.af-meta-field {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.af-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-muted, var(--n500));
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  display: flex; align-items: center; gap: 5px;
+}
+
+.af-select {
+  width: 100%;
+}
+
+.af-hint {
+  font-size: .78rem;
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 3px;
+}
+
+.af-hint-warn {
+  color: var(--o);
+}
+
+/* ── Date readonly ── */
+.af-date-readonly {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-subtle, var(--n50));
+  border: 1px solid var(--border, var(--n200));
+  border-radius: 6px;
+  font-size: .9rem;
+  min-height: 36px;
+}
+
+.af-date-ico {
+  color: var(--text-muted, var(--n400));
+  font-size: .78rem;
+}
+
+.af-date-badge {
+  margin-left: auto;
+  font-size: .72rem;
+  background: rgba(20,83,45,.1);
+  color: var(--g, var(--g));
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SECTION TITLE
+══════════════════════════════════════════════════════════════ */
+.af-section-title {
+  font-size: .82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--g, var(--g));
+  display: flex; align-items: center; gap: 7px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid rgba(20,83,45,.15);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AGENTS LOADING
+══════════════════════════════════════════════════════════════ */
+.af-agents-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted, var(--n500));
+  font-size: .88rem;
+  padding: 12px 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGNE CARDS
+══════════════════════════════════════════════════════════════ */
+.af-lines-wrap {
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.af-ligne-card {
+  border: 1px solid var(--border, var(--n200));
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  transition: box-shadow .18s;
+}
+
+.af-ligne-card:hover {
+  box-shadow: 0 3px 10px rgba(0,0,0,.08);
+}
+
+.af-ligne-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(20,83,45,.06), rgba(20,83,45,.02));
+  border-bottom: 1px solid rgba(20,83,45,.1);
+}
+
+.af-ligne-num {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--g, var(--g));
+}
+
+.af-remove-btn {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid rgba(220,38,38,.25);
+  background: rgba(220,38,38,.06);
+  color: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: .8rem;
+  transition: background .15s;
+}
+
+.af-remove-btn:hover {
+  background: rgba(220,38,38,.15);
+}
+
+.af-ligne-body {
+  display: grid;
+  grid-template-columns: 1fr .5fr .5fr;
+  gap: 12px;
+  padding: 14px;
+}
+
+@media (max-width: 700px) {
+  .af-ligne-body { grid-template-columns: 1fr; }
+}
+
+.af-field {
+  display: flex; flex-direction: column; gap: 5px;
+}
+
+.af-field-sm { min-width: 120px; }
+
+/* ── Objectif indicatif ── */
+.af-objectif {
+  display: flex; align-items: baseline; gap: 5px;
+  padding: 7px 10px;
+  background: linear-gradient(135deg, rgba(246,182,11,.08), rgba(246,182,11,.03));
+  border: 1px solid rgba(246,182,11,.25);
+  border-radius: 6px;
+  min-height: 36px;
+}
+
+.af-objectif-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--y, var(--y));
+  font-variant-numeric: tabular-nums;
+}
+
+.af-objectif-unit {
+  font-size: .72rem;
+  color: var(--text-muted, var(--n500));
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AGENTS SECTION (multi-select)
+══════════════════════════════════════════════════════════════ */
+.af-agents-section {
+  padding: 12px 14px;
+  background: var(--bg-subtle, var(--n50));
+  border-top: 1px solid var(--border, var(--n200));
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* Tags */
+.af-tags-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  min-height: 30px; align-items: center;
+}
+
+.af-tags-empty {
+  font-size: .8rem;
+  color: var(--text-muted, var(--n400));
+  font-style: italic;
+}
+
+.af-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(20,83,45,.1), rgba(20,83,45,.06));
+  border: 1px solid rgba(20,83,45,.2);
+  border-radius: 20px;
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--g, var(--g));
+}
+
+.af-tag i { font-size: .7rem; }
+
+.af-tag-remove {
+  background: none; border: none; cursor: pointer;
+  font-size: .9rem; line-height: 1;
+  color: var(--g, var(--g));
+  opacity: .6;
+  padding: 0 0 0 2px;
+  transition: opacity .15s;
+}
+
+.af-tag-remove:hover { opacity: 1; }
+
+/* Dropdown */
+.af-add-agent-row { display: flex; }
+
+.af-agent-select {
+  max-width: 380px;
+  color: var(--g, var(--g));
+  font-weight: 500;
+  border-style: dashed;
+  background: var(--w);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS ROW
+══════════════════════════════════════════════════════════════ */
+.af-actions-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESULT TABLE
+══════════════════════════════════════════════════════════════ */
+.af-objectif-result {
+  font-size: .95rem;
+  color: var(--g, var(--g));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST (reuse from ajustement-plan)
+══════════════════════════════════════════════════════════════ */
+.aj-toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: .88rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+}
+
+.aj-toast-ok {
+  background: rgba(20,83,45,.08);
+  border-color: rgba(20,83,45,.2);
+  color: var(--g);
+}
+
+.aj-toast-err {
+  background: rgba(220,38,38,.07);
+  border-color: rgba(220,38,38,.2);
+  color: var(--r);
+}
+
+.aj-toast-close {
+  margin-left: auto; background: none; border: none;
+  cursor: pointer; font-size: 1rem; opacity: .6;
+  color: inherit;
+}
+
+.aj-toast-close:hover { opacity: 1; }

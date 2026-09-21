@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { PageResponse, PageParams } from '../../../core/models/page-response.model';
@@ -45,20 +46,64 @@ export interface DecaissementBE {
   dateExecution?: string; motifAnnulation?: string;
 }
 
-export interface ObjectifCommercialBE {
-  id: number; matriculeCommercial: string;
-  semaineDebut: string; semaineFin: string;
-  objectifGlobal: number; objectifFarines: number;
-  objectifEaux: number; objectifJus: number;
-  objectifSnacks: number; objectifBiscuits: number;
-  objectifConfiseries: number;
-  matriculeDefinisseur: string; dateDefinition: string;
+/**
+ * Objectif hebdomadaire d'un commercial.
+ *
+ * Les gammes sont un dictionnaire libre côté serveur, pas une liste de colonnes
+ * figées : la version précédente de ce DTO déclarait `objectifGlobal`,
+ * `objectifFarines`, `objectifEaux`… dont aucun n'existait dans la réponse, si
+ * bien que l'écran des objectifs affichait des valeurs indéfinies.
+ *
+ * `objectifGlobalInitialFCFA` conserve la cible d'origine : une prime calculée
+ * sur un objectif abaissé en cours de semaine doit rester lisible comme telle.
+ */
+export interface RevisionObjectifBE {
+  id: number;
+  objectifGlobalAvantFCFA: number;
+  objectifGlobalApresFCFA: number;
+  variationFCFA: number;
+  abaissement: boolean;
+  objectifsParGammeAvantFCFA: Record<string, number>;
+  matriculeAuteur: string;
+  motif: string | null;
+  dateRevision: string;
 }
 
+export interface ObjectifCommercialBE {
+  id: number;
+  matriculeCommercial: string;
+  semaineDebut: string;
+  semaineFin: string;
+  objectifGlobalFCFA: number;
+  objectifGlobalInitialFCFA: number;
+  objectifsParGammeFCFA: Record<string, number>;
+  matriculeAuteur: string;
+  revise: boolean;
+  revisions: RevisionObjectifBE[];
+}
+
+export interface PrimeSemaineBE {
+  id: number; referencePrime: string; matriculeCommercial: string;
+  semaineDebut: string; semaineFin: string;
+  objectifGlobalFCFA: number; totalVentesGlobalFCFA: number;
+  tauxRealisationGlobalPourcent: number;
+  eligible: boolean; montantPrimeFCFA: number;
+  statut: string;
+}
+
+/**
+ * Réconciliation d'une journée de tournée. Les noms de champs suivent exactement
+ * ceux du serveur : la version précédente déclarait `caDeclare`, `valeurRetoursValides`
+ * et `resultatNet`, dont aucun n'existait dans la réponse.
+ *
+ * Les invendus n'entrent plus dans ce calcul : n'ayant jamais été vendus, ils ne
+ * figurent pas au chiffre d'affaires et n'ont donc pas à en être déduits.
+ */
 export interface ReconciliationBE {
-  matricule: string; date: string;
-  caDeclare: number; valeurRetoursValides: number;
-  resultatNet: number;
+  matriculeCommercial: string;
+  date: string;
+  caDeclareFCFA: number;
+  montantAttenduFCFA: number;
 }
 
 export interface DashboardComptabiliteBE {
@@ -184,9 +229,24 @@ export class ComptableService {
 
   // ── Caisse ──────────────────────────────────────────────────
 
+  /**
+   * Journal de caisse d'une journée, ou `null` si la caisse n'a pas encore été
+   * ouverte ce jour-là.
+   *
+   * Le serveur répond 404 tant qu'aucun journal n'existe pour la date — ce qui
+   * est le cas normal de chaque matin avant l'ouverture, pas une panne. Seul
+   * ce 404 est traduit en absence ; **toute autre erreur remonte**, pour qu'un
+   * serveur injoignable ou un refus d'accès ne se présente jamais comme une
+   * caisse simplement non ouverte. Les écrans qui rattrapaient l'erreur en bloc
+   * affichaient « caisse non ouverte » sur un backend éteint.
+   */
   getCaisse(date: string): Observable<CaisseBE | null> {
-    return this.api.get<ApiResponse<CaisseBE>>(`comptabilite/caisse/${date}`)
-      .pipe(map(r => r.donnees ?? null));
+    return this.api.get<ApiResponse<CaisseBE>>(`comptabilite/caisse/${date}`).pipe(
+      map(r => r.donnees ?? null),
+      catchError((err: HttpErrorResponse) => err?.status === 404
+        ? of(null)
+        : throwError(() => err))
+    );
   }
 
   ouvrirCaisse(req: { soldeInitial: number; date?: string }): Observable<CaisseBE> {
@@ -289,12 +349,30 @@ export class ComptableService {
       .pipe(map(r => r.donnees ?? []));
   }
 
+  /**
+   * Primes de la semaine. Porte la réalisation effective de chaque commercial
+   * (`totalVentesGlobalFCFA`) et le taux d'atteinte calculé par le serveur : ces
+   * valeurs ne sont jamais recalculées côté client.
+   */
+  getPrimesParSemaine(semaineDebut: string): Observable<PrimeSemaineBE[]> {
+    return this.api.get<ApiResponse<PrimeSemaineBE[]>>('comptabilite/primes/semaine', { semaineDebut })
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  /**
+   * Définit ou révise un objectif hebdomadaire.
+   *
+   * Redéfinir une semaine déjà pourvue est une révision : le `motif` devient
+   * obligatoire côté serveur et la valeur remplacée est inscrite au journal.
+   * `semaineFin` est requise — son absence faisait échouer la validation.
+   */
   definirObjectif(req: {
-    matriculeCommercial: string; semaineDebut: string;
-    objectifGlobal: number; objectifFarines: number;
-    objectifEaux: number; objectifJus: number;
-    objectifSnacks: number; objectifBiscuits: number;
-    objectifConfiseries: number;
+    matriculeCommercial: string;
+    semaineDebut: string;
+    semaineFin: string;
+    objectifGlobalFCFA: number;
+    objectifsParGammeFCFA: Record<string, number>;
+    motif?: string;
   }): Observable<ObjectifCommercialBE> {
     return this.api.post<ApiResponse<ObjectifCommercialBE>>('comptabilite/objectifs', req)
       .pipe(map(r => r.donnees!));

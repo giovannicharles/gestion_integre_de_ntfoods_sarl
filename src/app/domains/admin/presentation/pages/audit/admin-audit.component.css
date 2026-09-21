@@ -5,7 +5,7 @@
 
 .niveau-btns { display: flex; gap: var(--sp-1); }
 .niveau-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; background: transparent; cursor: pointer; font-size: 0.8rem; }
-.niveau-btn.active { background: var(--g); color: #fff; border-color: var(--g); }
+.niveau-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
 .ts-cell { font-family: monospace; font-size: 0.8rem; white-space: nowrap; }
 .action-code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; white-space: nowrap; }

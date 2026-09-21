@@ -16,9 +16,6 @@ export class DgArbitrageComponent implements OnInit {
 
   validations = signal<ValidationEnAttenteBE[]>([]);
   filterStatut = signal<'all' | 'EN_ATTENTE' | 'APPROUVE' | 'REFUSE'>('all');
-  loading = signal(false);
-  toastMsg = signal('');
-  toastType = signal<'success' | 'error'>('success');
 
   demandes = computed(() => {
     const f = this.filterStatut();
@@ -36,42 +33,9 @@ export class DgArbitrageComponent implements OnInit {
   }
 
   approuver(ref: string) {
-    const item = this.validations().find(a => a.reference === ref);
-    if (!item) return;
-    this.loading.set(true);
-    this.dgSvc.approverValidation(item.type, ref, item.matriculeConcerne || '').subscribe({
-      next: () => {
-        this.validations.update(list => list.filter(a => a.reference !== ref));
-        this.showToast('Demande approuvée avec succès', 'success');
-        this.loading.set(false);
-      },
-      error: () => {
-        this.showToast("Erreur lors de l'approbation", 'error');
-        this.loading.set(false);
-      },
-    });
+    this.validations.update(list => list.map(a => a.reference === ref ? { ...a, type: 'APPROUVE' } : a));
   }
-
   refuser(ref: string) {
-    const item = this.validations().find(a => a.reference === ref);
-    if (!item) return;
-    this.loading.set(true);
-    this.dgSvc.refuserValidation(item.type, ref, item.matriculeConcerne || '').subscribe({
-      next: () => {
-        this.validations.update(list => list.filter(a => a.reference !== ref));
-        this.showToast('Demande refusée', 'success');
-        this.loading.set(false);
-      },
-      error: () => {
-        this.showToast('Erreur lors du refus', 'error');
-        this.loading.set(false);
-      },
-    });
-  }
-
-  private showToast(msg: string, type: 'success' | 'error') {
-    this.toastMsg.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => this.toastMsg.set(''), 3000);
+    this.validations.update(list => list.map(a => a.reference === ref ? { ...a, type: 'REFUSE' } : a));
   }
 }

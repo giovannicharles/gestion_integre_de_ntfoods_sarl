@@ -1,0 +1,407 @@
+<!-- ═══════════════════════════════════════════════════════
+     EN-TÊTE DE PAGE
+     ═══════════════════════════════════════════════════════ -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="ph-icon"><i class="fa-solid fa-file-invoice"></i></div>
+    <div>
+      <h1 class="ph-title">Bons de Commande</h1>
+      <p class="ph-sub">Création et suivi des commandes fournisseurs</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary" (click)="ouvrirFormulaire()">
+      <i class="fa-solid fa-plus"></i> Nouveau BC
+    </button>
+  </div>
+</div>
+
+<!-- Toasts ─────────────────────────────────────────────── -->
+@if (successMsg()) {
+  <div class="toast toast-success animate-fadeInUp">
+    <i class="fa-solid fa-circle-check"></i> {{ successMsg() }}
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
+     LISTE DES BONS DE COMMANDE
+     ═══════════════════════════════════════════════════════ -->
+<div class="card">
+  <!-- Barre de filtres -->
+  <div class="toolbar-row">
+    <input class="input search-input"
+           placeholder="Rechercher par numéro…"
+           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <select class="input" style="min-width:160px"
+            [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)">
+      <option value="">Tous les statuts</option>
+      <option value="BROUILLON">Brouillon</option>
+      <option value="VALIDE">Validé</option>
+      <option value="ENVOYE">Envoyé</option>
+      <option value="RECEPTIONNE">Réceptionné</option>
+      <option value="CLOTURE">Clôturé</option>
+      <option value="ANNULE">Annulé</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+  </div>
+
+  @if (loading()) {
+    @for (i of [1,2,3,4]; track i) {
+      <div class="sk-shimmer skeleton-row"></div>
+    }
+  } @else {
+    @if (error()) {
+      <div class="banner banner-warning" style="margin:1rem">
+        <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+      </div>
+    }
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° BC</th>
+            <th>Date commande</th>
+            <th>Livraison prévue</th>
+            <th>Nb lignes</th>
+            <th>Montant HT</th>
+            <th>Réalisation prod.</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (bc of bcsFiltres(); track bc.id) {
+            <tr class="table-row-anim" [class.row-alert]="bc.enRetard">
+              <td><strong>{{ bc.numero }}</strong></td>
+              <td>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</td>
+              <td>
+                {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}
+                @if (bc.enRetard) {
+                  <span class="taux-chip taux-warn" style="margin-left:6px">
+                    <i class="fa-solid fa-clock"></i> Retard
+                  </span>
+                }
+              </td>
+              <td>{{ bc.lignes.length }} ligne(s)</td>
+              <td class="text-right mono">
+                {{ montantTotal(bc) > 0 ? ((montantTotal(bc) | number:'1.0-0') + ' FCFA') : '—' }}
+              </td>
+              <td>
+                <div class="progress-cell">
+                  <div class="prog-bar-wrap">
+                    <div class="prog-bar" [style.width.%]="bc.tauxRealisation"
+                         [class.prog-ok]="bc.tauxRealisation >= 100"
+                         [class.prog-y]="bc.tauxRealisation >= 50 && bc.tauxRealisation < 100"
+                         [class.prog-r]="bc.tauxRealisation < 50"></div>
+                  </div>
+                  <span class="prog-pct">{{ bc.tauxRealisation }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="statutClass(bc.statut)">{{ bc.statutLibelle }}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(bc)">
+                  <i class="fa-solid fa-eye"></i> Détail
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>Aucun bon de commande trouvé</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — CRÉER UN BON DE COMMANDE
+     ═══════════════════════════════════════════════════════ -->
+@if (showForm()) {
+<div class="modal-overlay" (click)="fermerFormulaire()">
+  <div class="modal-box bc-modal" (click)="$event.stopPropagation()">
+
+    <!-- En-tête -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-ico"><i class="fa-solid fa-file-invoice"></i></div>
+        Nouveau Bon de Commande
+      </div>
+      <button class="modal-close" (click)="fermerFormulaire()" [disabled]="saving()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Corps -->
+    <div class="modal-body bc-body">
+
+      <!-- Bloc infos générales -->
+      <div class="bc-section">
+        <div class="bc-section-title">
+          <i class="fa-solid fa-circle-info"></i> Informations générales
+        </div>
+        <div class="bc-fields-row">
+          <div class="form-group">
+            <label class="form-label">Date de commande <span class="req">*</span></label>
+            <input type="date" class="form-control" [(ngModel)]="formDateCommande" name="dateCmd">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date de livraison prévue</label>
+            <input type="date" class="form-control" [(ngModel)]="formDateLivraison" name="dateLiv">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc lignes -->
+      <div class="bc-section">
+        <div class="bc-section-title">
+          <i class="fa-solid fa-list"></i> Lignes de commande <span class="req">*</span>
+          <button class="btn btn-sm btn-outline" style="margin-left:auto" (click)="ajouterLigne()">
+            <i class="fa-solid fa-plus"></i> Ajouter une ligne
+          </button>
+        </div>
+
+        <div class="lignes-list">
+          @for (ligne of lignesForm; track $index; let i = $index) {
+            <div class="ligne-card">
+              <!-- Numéro de ligne -->
+              <div class="ligne-num">{{ i + 1 }}</div>
+
+              <div class="ligne-fields">
+                <!-- Sélection produit depuis catalogue -->
+                <div class="form-group ligne-select">
+                  <label class="form-label">
+                    <i class="fa-solid fa-box-archive" style="color:var(--g)"></i>
+                    Produit du catalogue
+                  </label>
+                  <select class="form-control"
+                          [name]="'prod-' + i"
+                          [ngModel]="ligne.produitCode"
+                          (ngModelChange)="ligne.produitCode = $event; selectionnerProduit($event, i)">
+                    <option value="">— Sélectionner un produit —</option>
+                    @for (grp of groupesProduits; track grp.label) {
+                      <optgroup [label]="grp.label">
+                        @for (p of grp.produits; track p.code) {
+                          <option [value]="p.code">{{ p.designation }}</option>
+                        }
+                      </optgroup>
+                    }
+                  </select>
+                </div>
+
+                <div class="ligne-fields-row2">
+                  <!-- Code produit (pré-rempli, éditable) -->
+                  <div class="form-group">
+                    <label class="form-label">Code produit <span class="req">*</span></label>
+                    <div class="input-with-badge">
+                      <input type="text" class="form-control code-input"
+                             placeholder="TBS-SAC-001"
+                             [(ngModel)]="ligne.codeProduit"
+                             [name]="'code-' + i"
+                             [class.pre-filled]="!!ligne.produitCode">
+                      @if (ligne.produitCode) {
+                        <span class="pre-fill-chip">
+                          <i class="fa-solid fa-check"></i>
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- SKU (pré-rempli, éditable) -->
+                  <div class="form-group">
+                    <label class="form-label">Conditionnement (SKU)</label>
+                    <input type="text" class="form-control"
+                           placeholder="Ex: 25 sachets x 57g"
+                           [(ngModel)]="ligne.sku"
+                           [name]="'sku-' + i">
+                  </div>
+
+                  <!-- Quantité -->
+                  <div class="form-group qty-field">
+                    <label class="form-label">Qté commandée <span class="req">*</span></label>
+                    <input type="number" class="form-control"
+                           placeholder="0" min="1"
+                           [(ngModel)]="ligne.quantiteCommandee"
+                           [name]="'qty-' + i">
+                  </div>
+
+                  <!-- Prix unitaire -->
+                  <div class="form-group prix-field">
+                    <label class="form-label">Prix unitaire HT (FCFA)</label>
+                    <input type="number" class="form-control"
+                           placeholder="0" min="0" step="0.01"
+                           [(ngModel)]="ligne.prixUnitaireHT"
+                           [name]="'pu-' + i">
+                  </div>
+                </div>
+
+                <!-- Désignation (lecture seule si pré-remplie) -->
+                @if (ligne.designation) {
+                  <div class="designation-preview">
+                    <i class="fa-solid fa-tag"></i>
+                    {{ ligne.designation }}
+                  </div>
+                }
+              </div>
+
+              <!-- Bouton supprimer -->
+              <button class="btn-remove-ligne" [disabled]="lignesForm.length <= 1"
+                      (click)="supprimerLigne(i)" title="Supprimer cette ligne">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Récap lignes -->
+        @if (lignesForm.length > 0) {
+          <div class="lignes-recap">
+            <span>{{ lignesForm.length }} ligne(s)</span>
+            @if (aLignesAvecPrix) {
+              <span class="recap-montant">
+                Total estimé :
+                <strong>{{ totalEstimeHT | number:'1.0-0' }} FCFA</strong>
+              </span>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Message d'erreur -->
+      @if (error()) {
+        <div class="banner banner-warning">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+        </div>
+      }
+
+    </div><!-- /modal-body -->
+
+    <!-- Pied -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="fermerFormulaire()" [disabled]="saving()">
+        Annuler
+      </button>
+      <button class="btn btn-primary" (click)="soumettre()"
+              [disabled]="saving() || !formulaireValide()">
+        @if (saving()) {
+          <span class="spinner spinner-sm"></span> Enregistrement…
+        } @else {
+          <i class="fa-solid fa-check"></i> Créer le bon de commande
+        }
+      </button>
+    </div>
+
+  </div>
+</div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL — DÉTAIL D'UN BC
+     ═══════════════════════════════════════════════════════ -->
+@if (bcDetail(); as bc) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="modal-box bc-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-ico"><i class="fa-solid fa-file-invoice"></i></div>
+        {{ bc.numero }}
+      </div>
+      <span class="badge" [ngClass]="statutClass(bc.statut)" style="margin-right:8px">{{ bc.statutLibelle }}</span>
+      <button class="modal-close" (click)="fermerDetail()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="modal-body bc-body">
+      <!-- KPIs détail -->
+      <div class="detail-kpis">
+        <div class="fiche-kpi">
+          <span class="fk-lbl"><i class="fa-solid fa-calendar"></i> Date commande</span>
+          <span class="fk-val">{{ bc.dateCommande | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="fiche-kpi">
+          <span class="fk-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
+          <span class="fk-val">{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</span>
+        </div>
+        <div class="fiche-kpi">
+          <span class="fk-lbl"><i class="fa-solid fa-user"></i> Créateur</span>
+          <span class="fk-val">{{ bc.matriculeCreateur }}</span>
+        </div>
+        <div class="fiche-kpi" style="border-left-color:var(--y)">
+          <span class="fk-lbl"><i class="fa-solid fa-coins"></i> Montant HT</span>
+          <span class="fk-val">{{ montantTotal(bc) | number:'1.0-0' }} FCFA</span>
+        </div>
+        <div class="fiche-kpi" style="border-left-color:var(--g)">
+          <span class="fk-lbl"><i class="fa-solid fa-chart-pie"></i> Réalisation prod.</span>
+          <span class="fk-val">{{ bc.tauxRealisation }}%</span>
+        </div>
+      </div>
+
+      <!-- Table des lignes -->
+      <div class="bc-section-title" style="margin-top:var(--sp-4)">
+        <i class="fa-solid fa-list"></i> Lignes de commande
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Code produit</th>
+              <th>Désignation</th>
+              <th>SKU</th>
+              <th class="text-right">Qté commandée</th>
+              <th class="text-right">Qté reçue</th>
+              <th class="text-right">Qté produite</th>
+              <th class="text-right">Réalisation</th>
+              <th class="text-right">Prix unitaire HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of bc.lignes; track l.id; let idx = $index) {
+              <tr>
+                <td class="text-center" style="color:var(--n400);font-size:11px">{{ idx + 1 }}</td>
+                <td><strong class="mono" style="color:var(--g)">{{ l.codeProduit }}</strong></td>
+                <td>{{ l.designation ?? '—' }}</td>
+                <td><span class="zone-chip">{{ l.sku ?? '—' }}</span></td>
+                <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
+                <td class="text-right mono">{{ l.quantiteRecue }}</td>
+                <td class="text-right mono">{{ l.quantiteProduite }}</td>
+                <td class="text-right mono">
+                  <div class="progress-cell">
+                    <div class="prog-bar-wrap">
+                      <div class="prog-bar" [style.width.%]="l.tauxRealisation"
+                           [class.prog-ok]="l.tauxRealisation >= 100"
+                           [class.prog-y]="l.tauxRealisation >= 50 && l.tauxRealisation < 100"
+                           [class.prog-r]="l.tauxRealisation < 50"></div>
+                    </div>
+                    <span class="prog-pct">{{ l.tauxRealisation }}%</span>
+                  </div>
+                </td>
+                <td class="text-right mono">
+                  {{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="fermerDetail()">
+        <i class="fa-solid fa-xmark"></i> Fermer
+      </button>
+    </div>
+
+  </div>
+</div>
+}

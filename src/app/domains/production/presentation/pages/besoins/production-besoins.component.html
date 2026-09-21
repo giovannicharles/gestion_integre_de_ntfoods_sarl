@@ -1,0 +1,184 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-triangle-exclamation ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Expressions de Besoin</h1>
+      <p class="ph-sub">Signalement des ruptures de matières premières ou d'emballages</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary" (click)="ouvrirSignaler()">
+      <i class="fa-solid fa-plus"></i> Signaler un besoin
+    </button>
+  </div>
+</div>
+
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">En attente</div>
+      <div class="kpi-val">{{ nbEnAttente() }}</div>
+      <div class="kpi-meta">à traiter</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Validés</div>
+      <div class="kpi-val">{{ nbValides() }}</div>
+      <div class="kpi-meta">approvisionnement lancé</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-xmark"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Rejetés</div>
+      <div class="kpi-val">{{ nbRejetes() }}</div>
+      <div class="kpi-meta">non retenus</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des besoins</h2>
+    <div class="filter-row" style="display:flex;gap:var(--sp-2)">
+      <select class="input" [ngModel]="filtreStatut()" (ngModelChange)="changerFiltre($event)">
+        <option value="">Tous les statuts</option>
+        @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>N°</th><th>Type</th><th>Produit</th><th>PPH</th><th>Qté demandée</th>
+          <th>Date besoin</th><th>Demandeur</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of besoins(); track b.numero) {
+          <tr>
+            <td><a href="javascript:void(0)" (click)="voirDetail(b.numero)"><strong>{{ b.numero }}</strong></a></td>
+            <td><span class="badge bg-neutral">{{ typeLabel(b.type) }}</span></td>
+            <td><span class="badge bg-neutral">{{ b.codeProduit }}</span> {{ b.designationProduit }}</td>
+            <td class="mono">{{ b.referencePPH ?? '—' }}</td>
+            <td><strong>{{ b.quantiteDemandee }} {{ b.unite }}</strong></td>
+            <td>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ b.matriculeDemandeur }}</td>
+            <td>
+              <span [class]="statutClass(b.statut)">{{ b.statut }}</span>
+              @if (b.statut === 'REJETE' && b.motifRejet) {
+                <div class="text-muted" style="font-size:11px;margin-top:2px">{{ b.motifRejet }}</div>
+              }
+            </td>
+            <td>
+              @if (b.statut === 'EN_ATTENTE') {
+                <div class="row-actions">
+                  <button class="btn btn-sm btn-primary" (click)="valider(b)">Valider</button>
+                  <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(b)">Rejeter</button>
+                </div>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9" class="text-center text-muted">Aucun besoin signalé</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showSignaler()) {
+<div class="modal-overlay" (click)="showSignaler.set(false)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-plus"></i> Signaler un besoin</h3>
+      <button class="modal-hd-close" (click)="showSignaler.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label>Numéro<input class="input" [(ngModel)]="nouveauBesoin.numero"></label>
+        <label>Type
+          <select class="input" [(ngModel)]="nouveauBesoin.type">
+            @for (t of typesBesoin; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
+          </select>
+        </label>
+        <label>PPH (optionnel)
+          <select class="input" [(ngModel)]="nouveauBesoin.referencePPH">
+            <option value="">— Aucun —</option>
+            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+          </select>
+        </label>
+        <label>Code produit<input class="input" [(ngModel)]="nouveauBesoin.codeProduit"></label>
+        <label>Désignation<input class="input" [(ngModel)]="nouveauBesoin.designationProduit"></label>
+        <label>Quantité demandée<input type="number" class="input" [(ngModel)]="nouveauBesoin.quantiteDemandee"></label>
+        <label>Unité<input class="input" [(ngModel)]="nouveauBesoin.unite"></label>
+        <label>Date du besoin<input type="date" class="input" [(ngModel)]="nouveauBesoin.dateBesoin"></label>
+        <label style="grid-column: 1 / -1">Motif<textarea class="input" rows="2" [(ngModel)]="nouveauBesoin.motif"></textarea></label>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" (click)="showSignaler.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="signaler()">Signaler</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showRejeter()) {
+<div class="modal-overlay" (click)="showRejeter.set(null)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-xmark"></i> Rejeter le besoin {{ showRejeter()?.numero }}</h3>
+      <button class="modal-hd-close" (click)="showRejeter.set(null)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <label class="form-group">Motif du rejet
+        <textarea class="input" rows="3" [(ngModel)]="motifRejet"></textarea>
+      </label>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" (click)="showRejeter.set(null)">Annuler</button>
+      <button class="btn btn-danger" (click)="confirmerRejet()">Confirmer le rejet</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showDetail()) {
+<div class="modal-overlay" (click)="showDetail.set(null)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-circle-info"></i> Détail besoin {{ showDetail()!.numero }}</h3>
+      <button class="modal-hd-close" (click)="showDetail.set(null)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-detail-grid">
+        <div class="modal-detail-row"><span class="modal-detail-label">Type</span><span class="modal-detail-value">{{ typeLabel(showDetail()!.type) }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Produit</span><span class="modal-detail-value">{{ showDetail()!.codeProduit }} — {{ showDetail()!.designationProduit }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Quantité demandée</span><span class="modal-detail-value">{{ showDetail()!.quantiteDemandee }} {{ showDetail()!.unite }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">PPH</span><span class="modal-detail-value">{{ showDetail()!.referencePPH ?? '—' }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Demandeur</span><span class="modal-detail-value">{{ showDetail()!.matriculeDemandeur }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Motif</span><span class="modal-detail-value">{{ showDetail()!.motif ?? '—' }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Statut</span><span class="modal-detail-value"><span [class]="statutClass(showDetail()!.statut)">{{ showDetail()!.statut }}</span></span></div>
+        @if (showDetail()!.matriculeValidateur) {
+          <div class="modal-detail-row"><span class="modal-detail-label">Traité par</span><span class="modal-detail-value">{{ showDetail()!.matriculeValidateur }}</span></div>
+        }
+        @if (showDetail()!.motifRejet) {
+          <div class="modal-detail-row"><span class="modal-detail-label">Motif de rejet</span><span class="modal-detail-value">{{ showDetail()!.motifRejet }}</span></div>
+        }
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-primary" (click)="showDetail.set(null)">Fermer</button>
+    </div>
+  </div>
+</div>
+}

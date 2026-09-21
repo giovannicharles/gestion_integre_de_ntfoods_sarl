@@ -1,0 +1,60 @@
+.card { padding: 26px; margin-bottom: var(--sp-4); border-radius: 16px; background: var(--surface, var(--w)); box-shadow: 0 2px 10px rgba(0,0,0,.04); border: 1px solid var(--n200, var(--n200)); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.card-title { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--n800, var(--n800)); }
+.card-title i { color: var(--g, var(--g)); }
+
+.alert { padding: 12px 16px; border-radius: 10px; margin-bottom: var(--sp-3); border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); }
+
+/* ── Onglets ───────────────────────────────────────────────── */
+.rp-tabs {
+  display: inline-flex; gap: 6px;
+  background: var(--n100, var(--n100)); border-radius: 12px;
+  padding: 6px; margin-bottom: 24px;
+  flex-wrap: wrap; border: none;
+}
+.rp-tabs button {
+  padding: 10px 18px; border: none; border-radius: 10px;
+  background: transparent; cursor: pointer; font-weight: 600; font-size: .86rem;
+  color: var(--n500, var(--n500)); transition: all .18s ease;
+}
+.rp-tabs button:hover { background: rgba(255,255,255,.55); color: var(--n700, var(--n700)); }
+.rp-tabs button.active {
+  background: var(--w); color: var(--g, var(--g));
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/* ── Filtres ───────────────────────────────────────────────── */
+.filter-row {
+  display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap;
+  padding: 0 0 4px; margin-bottom: 6px;
+}
+.filter-row label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--n500, var(--n500)); min-width: 140px;
+}
+.filter-row .input {
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--n300, var(--n300)); background: var(--w); color: var(--text, var(--n900));
+  font-size: .9rem; min-height: 40px; transition: border-color .18s, box-shadow .18s;
+}
+.filter-row .input:focus { outline: none; border-color: var(--g, var(--g)); box-shadow: 0 0 0 3px rgba(20,83,45,.1); }
+.filter-row .btn { min-height: 40px; padding: 10px 20px; border-radius: 10px; font-weight: 600; }
+
+/* ── Empty state ───────────────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 32px; color: var(--n400, var(--n400));
+  font-size: .9rem; background: var(--n50, var(--n50)); border-radius: 10px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width:767px) {
+  .card { padding: 18px; border-radius: 14px; }
+  .card-hd { flex-direction:column; align-items:flex-start; gap:10px; }
+  .rp-tabs { width: 100%; }
+  .rp-tabs button { flex: 1 1 auto; justify-content: center; }
+  .filter-row { flex-direction:column; align-items:stretch; width:100%; gap:12px; }
+  .filter-row label { min-width: auto; }
+  .filter-row .input, .filter-row .btn { width: 100%; }
+}

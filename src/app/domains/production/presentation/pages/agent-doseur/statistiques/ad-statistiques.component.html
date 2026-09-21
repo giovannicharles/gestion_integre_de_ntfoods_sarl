@@ -1,0 +1,63 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Statistiques</h1>
+      <p class="ph-sub">Production et comparaisons — journalier, hebdomadaire, mensuel</p>
+    </div>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+} @else {
+
+<div class="two-col">
+  @if (statsSemaine(); as s) {
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Semaine N vs N-1</h2></div>
+      <div class="kpi-grid">
+        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ s.nbFutsNets }}</div><div class="kpi-meta">N-1 : {{ s.comparaison.nbFutsNetsPeriodePrecedente }}</div></div></div>
+        <div class="kpi-card" [class.kp-g]="s.comparaison.variationPourcentage>=0" [class.kp-r]="s.comparaison.variationPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ s.comparaison.variationPourcentage>0?'+':'' }}{{ s.comparaison.variationPourcentage | number:'1.1-1' }}%</div></div></div>
+      </div>
+    </div>
+  }
+  @if (statsMois(); as s) {
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Mois N vs N-1</h2></div>
+      <div class="kpi-grid">
+        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ s.nbFutsNets }}</div><div class="kpi-meta">N-1 : {{ s.comparaison.nbFutsNetsPeriodePrecedente }}</div></div></div>
+        <div class="kpi-card" [class.kp-g]="s.comparaison.variationPourcentage>=0" [class.kp-r]="s.comparaison.variationPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ s.comparaison.variationPourcentage>0?'+':'' }}{{ s.comparaison.variationPourcentage | number:'1.1-1' }}%</div></div></div>
+      </div>
+    </div>
+  }
+</div>
+
+@if (statsJour(); as s) {
+<div class="kpi-grid">
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Production journalière (fûts nets)</div><div class="kpi-val">{{ s.nbFutsNets }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Sessions du jour</div><div class="kpi-val">{{ s.nbSessions }}</div></div></div>
+</div>
+}
+
+@if (erreurEvolution()) {
+  <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Les graphiques d'évolution jour par jour dépendent de <code>/dosage/periode</code>, non autorisé pour Agent Doseur actuellement.</div></div>
+} @else {
+  <div class="two-col">
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des fûts produits (7 jours)</h2></div>
+      <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionFuts()" [height]="200" /></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution des matières consommées</h2></div>
+      <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels7j()" [series]="serieEvolutionMatieres()" [height]="200" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des sessions</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels7j()" [series]="serieEvolutionSessions()" [height]="200" /></div>
+  </div>
+}
+
+}

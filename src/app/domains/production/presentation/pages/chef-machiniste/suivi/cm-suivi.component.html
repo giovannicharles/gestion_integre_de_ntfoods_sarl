@@ -1,0 +1,51 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-eye ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Suivi des Réalisations</h1>
+      <p class="ph-sub">Objectif, réalisé, taux de réalisation et validation par journée</p>
+    </div>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <button class="btn btn-sm" [class.btn-primary]="filtre()==='aujourdhui'" [class.btn-ghost]="filtre()!=='aujourdhui'" (click)="appliquerFiltre('aujourdhui')">Aujourd'hui</button>
+    <button class="btn btn-sm" [class.btn-primary]="filtre()==='semaine'" [class.btn-ghost]="filtre()!=='semaine'" (click)="appliquerFiltre('semaine')">Semaine</button>
+    <button class="btn btn-sm" [class.btn-primary]="filtre()==='mois'" [class.btn-ghost]="filtre()!=='mois'" (click)="appliquerFiltre('mois')">Mois</button>
+    <label>Du <input type="date" class="input" [ngModel]="debutPerso()" (ngModelChange)="debutPerso.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="finPerso()" (ngModelChange)="finPerso.set($event)"></label>
+    <button class="btn btn-sm" [class.btn-primary]="filtre()==='personnalise'" [class.btn-ghost]="filtre()!=='personnalise'" (click)="appliquerPeriodePersonnalisee()">Appliquer</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>PPH</th><th>Type</th><th>Chef machiniste</th><th>Objectif</th><th>Réalisé</th><th>Taux</th><th>Validation</th></tr></thead>
+        <tbody>
+          @for (s of sessions(); track s.id) {
+            <tr>
+              <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
+              <td class="mono">{{ s.referencePPH }}</td>
+              <td>{{ s.typePoudreLibelle }}</td>
+              <td>{{ s.matriculeChefMachiniste }}</td>
+              <td>{{ s.objectifJournalierKg | number:'1.1-1' }} kg</td>
+              <td>{{ (s.quantiteNetteBroyeeKg ?? 0) | number:'1.1-1' }} kg</td>
+              <td><span [class]="tauxRealisation(s) >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ tauxRealisation(s) }}%</span></td>
+              <td>
+                @if (s.journeeValidee) { <span class="badge bg-success"><i class="fa-solid fa-check"></i> Validée</span> }
+                @else { <span class="badge bg-neutral">Non validée</span> }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune réalisation sur la période sélectionnée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

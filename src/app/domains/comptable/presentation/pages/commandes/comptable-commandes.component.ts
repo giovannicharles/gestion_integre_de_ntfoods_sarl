@@ -4,10 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, PreCommandeBE } from '../../../../commercial/infrastructure/commercial.service';
 
+interface LigneUI {
+  produitCode: string;
+  designation: string;
+  quantite: number;
+  quantiteValidee: number;
+}
+
 interface CommandeUI {
-  id: string; commercialId: string; dateCommande: Date; statut: string;
-  lignes: { produitCode: string; designation: string; quantite: number }[];
-  signatureSecretaire: boolean; signatureComptable: boolean;
+  id: string;
+  commercialId: string;
+  commercialName?: string;
+  dateCommande: Date;
+  statut: string;
+  lignes: LigneUI[];
+  signatureSecretaire: boolean;
+  signatureComptable: boolean;
 }
 
 @Component({
@@ -39,15 +51,27 @@ export class ComptableCommandesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading.set(true);
-    this.svc.getPrecommandesAValider().subscribe({
+    this.svc.getPrecommandesAValiderComptable().subscribe({
       next: page => { this.commandes.set(page.contenu.map(this.mapPC)); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
 
+  trackByLigne(index: number, ligne: LigneUI): string {
+    return ligne.produitCode;
+  }
+
   validerCommande(id: string): void {
     const matricule = this.auth.user()?.matricule ?? '';
-    this.svc.validerComptable(id, matricule).subscribe({
+    const cmd = this.commandes().find(c => c.id === id);
+    if (!cmd) return;
+
+    const quantitesValidees: Record<string, number> = {};
+    for (const l of cmd.lignes) {
+      quantitesValidees[l.produitCode] = l.quantiteValidee;
+    }
+
+    this.svc.validerComptable(id, matricule, quantitesValidees).subscribe({
       next: () => {
         this.commandes.update(list =>
           list.map(c => c.id === id
@@ -84,12 +108,14 @@ export class ComptableCommandesComponent implements OnInit {
     return {
       id: pc.numeroPreCommande,
       commercialId: pc.matriculeCommercial,
+      commercialName: pc.nomCommercial,
       dateCommande: new Date(pc.dateSoumission),
       statut: pc.statut,
       lignes: pc.lignes.map(l => ({
         produitCode: l.codeProduit,
         designation: l.designationProduit,
         quantite: l.quantiteDemandee,
+        quantiteValidee: l.quantiteValidee ?? l.quantiteDemandee,
       })),
       signatureSecretaire: !!pc.matriculeValidateurSecretaire,
       signatureComptable: !!pc.matriculeValidateurComptable,

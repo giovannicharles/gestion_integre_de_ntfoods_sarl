@@ -4,11 +4,15 @@ import { map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { PageResponse, PageParams } from '../../../core/models/page-response.model';
+import { ClassementCommercialBE } from '../../dg/infrastructure/dg.service';
+
+export type { ClassementCommercialBE };
 
 export interface ClientBE {
   id: number; codeClient: string; nom: string; telephone: string;
   adresse: string; localite: string; type: string;
   matriculeCommercialReferent: string; actif: boolean;
+  dette?: number;
 }
 
 export interface LignePCBE {
@@ -17,7 +21,7 @@ export interface LignePCBE {
 }
 
 export interface PreCommandeBE {
-  id: number; numeroPreCommande: string; matriculeCommercial: string;
+  id: number; numeroPreCommande: string; matriculeCommercial: string; nomCommercial?: string;
   dateSoumission: string; dateEffet: string; statut: string;
   matriculeValidateurSecretaire?: string; matriculeValidateurComptable?: string;
   motifRefus?: string; soumiseEnSoiree: boolean; lignes: LignePCBE[];
@@ -33,8 +37,8 @@ export interface CarburantBE {
   id: number; referenceCarburant: string; matriculeCommercial: string;
   immatriculation: string; stationPartenaire: string; kilometrage: number;
   litresDemandes: number; montant: number;
-  date: string; statut: string; signatureCommercial?: string;
-  signatureSuperviseur?: string; motifRefus?: string; photoCompteur?: string;
+  date: string; statut: string;
+  motifRefus?: string; photoCompteur?: string;
   caZoneMoisCourantFCFA: number; ratioCarburantSurCaPourcent: number;
 }
 
@@ -81,7 +85,7 @@ export interface LigneFicheSyntheseBE {
 export class CommercialService {
   private readonly api = inject(ApiService);
 
-  // ── Clients / Prospects ─────────────────────────────────────
+  // ── Clients ─────────────────────────────────────────────────
 
   getClients(commercial?: string): Observable<ClientBE[]> {
     const params: Record<string, string> = {};
@@ -109,6 +113,24 @@ export class CommercialService {
       .pipe(map(r => r.donnees!));
   }
 
+  getPrecommandesAValiderComptable(page?: PageParams): Observable<PageResponse<PreCommandeBE>> {
+    const params: Record<string, string> = {};
+    if (page?.page !== undefined) params['page'] = String(page.page);
+    if (page?.size !== undefined) params['size'] = String(page.size);
+    if (page?.sort) params['sort'] = page.sort;
+    return this.api.get<ApiResponse<PageResponse<PreCommandeBE>>>('commercial/precommandes/a-valider-comptable', params)
+      .pipe(map(r => r.donnees!));
+  }
+
+  getPrecommandesALivrer(page?: PageParams): Observable<PageResponse<PreCommandeBE>> {
+    const params: Record<string, string> = {};
+    if (page?.page !== undefined) params['page'] = String(page.page);
+    if (page?.size !== undefined) params['size'] = String(page.size);
+    if (page?.sort) params['sort'] = page.sort;
+    return this.api.get<ApiResponse<PageResponse<PreCommandeBE>>>('commercial/precommandes/a-livrer', params)
+      .pipe(map(r => r.donnees!));
+  }
+
   getPrecommandesParDate(date: string, page?: PageParams): Observable<PageResponse<PreCommandeBE>> {
     const params: Record<string, string> = {};
     if (page?.page !== undefined) params['page'] = String(page.page);
@@ -133,10 +155,10 @@ export class CommercialService {
     ).pipe(map(r => r.donnees!));
   }
 
-  validerComptable(numero: string, matricule: string): Observable<PreCommandeBE> {
+  validerComptable(numero: string, matricule: string, quantitesValidees?: Record<string, number>): Observable<PreCommandeBE> {
     return this.api.patch<ApiResponse<PreCommandeBE>>(
       `commercial/precommandes/${encodeURIComponent(numero)}/valider-comptable?matriculeComptable=${encodeURIComponent(matricule)}`,
-      {}
+      quantitesValidees ?? {}
     ).pipe(map(r => r.donnees!));
   }
 
@@ -176,22 +198,6 @@ export class CommercialService {
   }): Observable<CarburantBE> {
     return this.api.post<ApiResponse<CarburantBE>>('commercial/carburant', req)
       .pipe(map(r => r.donnees!));
-  }
-
-  signerCarburant(reference: string, req: {
-    signatureCommercial: string; signatureSuperviseur: string;
-  }): Observable<CarburantBE> {
-    return this.api.patch<ApiResponse<CarburantBE>>(
-      `commercial/carburant/${encodeURIComponent(reference)}/signer`,
-      req
-    ).pipe(map(r => r.donnees!));
-  }
-
-  refuserCarburant(reference: string, motif: string): Observable<CarburantBE> {
-    return this.api.patch<ApiResponse<CarburantBE>>(
-      `commercial/carburant/${encodeURIComponent(reference)}/refuser?motif=${encodeURIComponent(motif)}`,
-      {}
-    ).pipe(map(r => r.donnees!));
   }
 
   // ── Ventes ─────────────────────────────────────────────────
@@ -256,6 +262,13 @@ export class CommercialService {
     ).pipe(map(r => r.donnees!));
   }
 
+  arbitrerPrecommande(numero: string, lignes: { codeProduit: string; quantiteValidee: number }[], matriculeArbitre: string, motif?: string): Observable<PreCommandeBE> {
+    return this.api.patch<ApiResponse<PreCommandeBE>>(
+      `commercial/precommandes/${encodeURIComponent(numero)}/arbitrer`,
+      { matriculeArbitre, motif: motif || '', lignes }
+    ).pipe(map(r => r.donnees!));
+  }
+
   livrerPrecommande(numero: string): Observable<PreCommandeBE> {
     return this.api.patch<ApiResponse<PreCommandeBE>>(
       `commercial/precommandes/${encodeURIComponent(numero)}/livrer`, {}
@@ -269,5 +282,29 @@ export class CommercialService {
     if (date) params['date'] = date;
     return this.api.get<ApiResponse<FicheSyntheseBE>>('commercial/dashboard/fiche-synthese', params)
       .pipe(map(r => r.donnees!));
+  }
+
+  // ── Classement des commerciaux ─────────────────────────────
+
+  /**
+   * Classement des commerciaux par CA du mois courant.
+   *
+   * Le serveur expose ce classement par **deux** portes qui appellent le même
+   * cas d'usage et renvoient le même DTO :
+   *
+   *   - `/api/dg/classement-commerciaux`, sous le garde de classe du contrôleur
+   *     DG — `hasAnyRole('DIRECTEUR_GENERAL', 'ADMIN')` ;
+   *   - `/api/commercial/dashboard/classement`, gardé par la permission
+   *     `COMMERCIAL_VENTE_CONSULTER`.
+   *
+   * Les écrans du Contrôleur Général, de la Chargée RP et du commercial
+   * passaient par la première : chacun recevait un 403 sur un classement
+   * auquel la seconde lui donne pleinement droit. On emprunte donc la porte
+   * ouverte. Aucun accès n'est élargi — la donnée est rigoureusement la même,
+   * seul le garde diffère.
+   */
+  getClassementCommerciaux(): Observable<ClassementCommercialBE[]> {
+    return this.api.get<ApiResponse<ClassementCommercialBE[]>>('commercial/dashboard/classement')
+      .pipe(map(r => r.donnees ?? []));
   }
 }

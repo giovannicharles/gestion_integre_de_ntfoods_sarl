@@ -11,6 +11,10 @@
   </div>
 </div>
 
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
+
 <div class="kpi-grid">
   <div class="kpi-card kp-b">
     <div class="kpi-ico ib"><i class="fa-solid fa-gear"></i></div>
@@ -38,6 +42,7 @@
   </div>
 </div>
 
+<!-- BROYAGE -->
 <div class="card">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-gears"></i> Registre Broyage</h2>
@@ -59,13 +64,12 @@
       <thead>
         <tr>
           <th>Date</th>
-          <th>Machiniste</th>
+          <th>Chef machiniste</th>
+          <th>Type poudre</th>
+          <th>Objectif (kg)</th>
           <th>Quantité nette (kg)</th>
-          <th>Matières entrées (kg)</th>
-          <th>% Perte</th>
-          <th>Machines</th>
-          <th>Heure début</th>
-          <th>Heure fin</th>
+          <th>% Pertes</th>
+          <th>Statut</th>
         </tr>
       </thead>
       <tbody>
@@ -73,21 +77,99 @@
           <tr>
             <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
             <td><strong>{{ r.matriculeChefMachiniste }}</strong></td>
-            <td class="txt-success"><strong>{{ r.indicateursGlobaux?.totalPoudreKg ?? 0 }}</strong></td>
-            <td>{{ r.realisations.length }} saisies</td>
-            <td>—</td>
-            <td>{{ r.statut }}</td>
-            <td>—</td>
-            <td>—</td>
+            <td>{{ r.typePoudreLibelle }}</td>
+            <td>{{ r.objectifJournalierKg }}</td>
+            <td class="txt-success"><strong>{{ r.quantiteNetteBroyeeKg ?? 0 }}</strong></td>
+            <td>{{ r.pctPertes != null ? (r.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
+            <td>
+              <span [class]="r.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ r.statut }}</span>
+            </td>
           </tr>
-        } @empty {
-          <tr><td colspan="8" class="empty-state">Aucune session de broyage</td></tr>
         }
       </tbody>
     </table>
   </div>
 </div>
 
+<!-- AFFECTATIONS -->
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-users-gear"></i> Affectations du jour</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>PPH</th><th>Date</th><th>Postes</th><th>Saisies</th><th>Statut</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        @for (a of affectations(); track a.id) {
+          <tr>
+            <td><strong>{{ a.referencePPH }}</strong></td>
+            <td>{{ a.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ a.lignes.length }} postes</td>
+            <td>{{ a.saisies.length }} saisies</td>
+            <td><span class="badge bg-neutral">{{ a.statut }}</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(a)">Détail</button>
+                @if (a.statut !== 'VALIDEE') {
+                  <button class="btn btn-sm btn-primary" (click)="validerAffectation(a.id)">Valider</button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (selectedAffectation()) {
+<div class="modal-overlay" (click)="selectedAffectation.set(null)">
+  <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-hd"><h3>Détail affectation {{ selectedAffectation()!.referencePPH }}</h3></div>
+    <div class="modal-body">
+      <h4>Postes</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Poste</th><th>Effectif réf.</th><th>Effectif réel</th><th>Objectif ajusté</th><th>Employés</th></tr></thead>
+          <tbody>
+            @for (l of selectedAffectation()!.lignes; track l.codePoste) {
+              <tr>
+                <td><strong>{{ l.libellePoste }}</strong></td>
+                <td>{{ l.effectifReference }}</td>
+                <td>{{ l.effectifReel }}</td>
+                <td>{{ l.objectifAjuste }} {{ l.unite }}</td>
+                <td>{{ l.matriculesEmployes.join(', ') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <h4 style="margin-top:var(--sp-3)">Saisies</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Poste</th><th>Qté réalisée</th><th>%</th><th>Unité</th></tr></thead>
+          <tbody>
+            @for (s of selectedAffectation()!.saisies; track s.codePoste) {
+              <tr>
+                <td><strong>{{ s.libellePoste }}</strong></td>
+                <td>{{ s.quantiteRealisee }}</td>
+                <td>{{ s.pctRealisation }}%</td>
+                <td>{{ s.unite }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" (click)="selectedAffectation.set(null)">Fermer</button>
+    </div>
+  </div>
+</div>
+}
+<!-- DOSAGE -->
 <div class="card">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-fill-drip"></i> Registre Dosage</h2>
@@ -110,10 +192,10 @@
         <tr>
           <th>Date</th>
           <th>Agent Doseur</th>
-          <th>Nombre Fûts</th>
+          <th>Fûts produits</th>
+          <th>Fûts nets</th>
           <th>Machines</th>
-          <th>Heure début</th>
-          <th>Heure fin</th>
+          <th>Statut</th>
           <th>Matières</th>
         </tr>
       </thead>
@@ -122,18 +204,18 @@
           <tr>
             <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
             <td><strong>{{ r.matriculeAgentDoseur }}</strong></td>
-            <td class="txt-success"><strong>{{ r.futsProduits }}</strong></td>
-            <td>{{ r.machines.join(', ') || '—' }}</td>
-            <td>—</td>
-            <td>—</td>
+            <td class="txt-success"><strong>{{ r.nbFutsProduits }}</strong></td>
+            <td>{{ r.nbFutsNets }}</td>
+            <td>{{ r.machinesMobilisees.join(', ') || '—' }}</td>
+            <td>
+              <span [class]="r.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ r.cloturee ? 'Clôturée' : 'Ouverte' }}</span>
+            </td>
             <td>
               @for (m of r.matieresUtilisees; track m.typeMatiere) {
                 <span class="matiere-tag">{{ m.typeMatiere }}: {{ m.quantiteKg }} kg</span>
               }
             </td>
           </tr>
-        } @empty {
-          <tr><td colspan="7" class="empty-state">Aucune session de dosage</td></tr>
         }
       </tbody>
     </table>

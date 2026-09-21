@@ -119,13 +119,56 @@ export interface AlerteBE {
 export interface SessionCommercialBE {
   id: number;
   numero: string;
+  numeroSession: string;
   matriculeCommercial: string;
+  nomCommercial?: string;
   datePreparation: string;
   dateEffet: string;
+  dateCloture?: string;
+  heureOuverture?: string;
+  heureCloture?: string;
   statut: string;
-  dotations: string[];
+  dotations?: string[];
+  dotationsIds?: string[];
+  nombreDotations?: number;
+  montantTotalVentes?: number;
+  montantTotalVersements?: number;
+  ecartMontant?: number;
+  matriculeCloture?: string;
   matriculeValidateurSecretaire?: string;
   matriculeValidateurComptable?: string;
+  dateCreation?: string;
+}
+
+export interface LigneBonCommandeBE {
+  id?: number;
+  codeProduit: string;
+  sku?: string;
+  designation: string;
+  quantiteCommandee: number;
+  quantiteProduite: number;
+  quantiteRecue?: number;
+  tauxRealisation: number;
+  unite: string;
+  prixUnitaireHT?: number;
+}
+
+export interface BonCommandeBE {
+  id: number;
+  numero: string;
+  codeFournisseur: string;
+  nomFournisseur?: string;
+  statut: string;
+  statutLibelle?: string;
+  dateCreation: string;
+  dateCommande?: string;
+  dateLivraisonPrevue?: string;
+  dateValidation?: string;
+  matriculeCreateur?: string;
+  montantTotalHT?: number;
+  tauxRealisation: number;
+  enRetard?: boolean;
+  lignes: LigneBonCommandeBE[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -314,17 +357,29 @@ export class StockService {
 
   getSessionsParCommercial(matricule: string): Observable<SessionCommercialBE[]> {
     return this.api.get<ApiResponse<SessionCommercialBE[]>>(`stock/sessions/commercial/${encodeURIComponent(matricule)}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => (r.donnees ?? []).map(s => ({
+        ...s,
+        numero: s.numero || s.numeroSession || '',
+        numeroSession: s.numeroSession || s.numero || ''
+      }))));
   }
 
   getSessionsParDate(date: string): Observable<SessionCommercialBE[]> {
     return this.api.get<ApiResponse<SessionCommercialBE[]>>(`stock/sessions/date/${date}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => (r.donnees ?? []).map(s => ({
+        ...s,
+        numero: s.numero || s.numeroSession || '',
+        numeroSession: s.numeroSession || s.numero || ''
+      }))));
   }
 
   getSessionsParStatut(statut: string): Observable<SessionCommercialBE[]> {
     return this.api.get<ApiResponse<SessionCommercialBE[]>>(`stock/sessions/statut/${encodeURIComponent(statut)}`)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => (r.donnees ?? []).map(s => ({
+        ...s,
+        numero: s.numero || s.numeroSession || '',
+        numeroSession: s.numeroSession || s.numero || ''
+      }))));
   }
 
   preparerSession(req: {
@@ -369,4 +424,41 @@ export class StockService {
     if (params.type) p['type'] = params.type;
     return this.api.get('stock/rapports/etat-stock', p) as unknown as Observable<Blob>;
   }
+
+  // ── Bons de commande (pour le module production) ────────────
+
+  getBonsCommande(params: { statut?: string } = {}): Observable<BonCommandeBE[]> {
+    const p: Record<string, string> = {};
+    if (params.statut) p['statut'] = params.statut;
+    return this.api.get<ApiResponse<BonCommandeBE[]>>('stock/bons-commande', p)
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  getBonCommande(numero: string): Observable<BonCommandeBE | null> {
+    return this.api.get<ApiResponse<BonCommandeBE>>(`stock/bons-commande/${encodeURIComponent(numero)}`)
+      .pipe(map(r => r.donnees ?? null));
+  }
+
+  validerBonCommande(numero: string): Observable<BonCommandeBE> {
+    return this.api.post<ApiResponse<BonCommandeBE>>(
+      `stock/bons-commande/${encodeURIComponent(numero)}/valider`, {}
+    ).pipe(map(r => r.donnees!));
+  }
+
+  creerBonCommande(req: {
+    codeFournisseur: string | null;
+    dateCommande: string;
+    dateLivraisonPrevue?: string | null;
+    lignes: {
+      codeProduit: string;
+      designation?: string | null;
+      sku?: string | null;
+      quantiteCommandee: number;
+      prixUnitaireHT?: number | null;
+    }[];
+  }): Observable<BonCommandeBE> {
+    return this.api.post<ApiResponse<BonCommandeBE>>('stock/bons-commande', req)
+      .pipe(map(r => r.donnees!));
+  }
 }
+

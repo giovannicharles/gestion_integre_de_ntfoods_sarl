@@ -1,29 +1,28 @@
-import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
-import { ROLE_HOMES, UserRole } from '../../core/models/user.models';
+import { UserRole } from '../models/user.models';
 
-export const roleGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
+/**
+ * Restreint une route à certains rôles.
+ * Usage : `{ path: '...', canActivate: [authGuard, roleGuard], data: { roles: ['ADMIN'] } }`
+ */
+export const roleGuard: CanActivateFn = (route) => {
+  const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isLoggedIn()) {
-    router.navigate(['/auth/login']);
-    return false;
-  }
+  const allowed = (route.data?.['roles'] as UserRole[] | undefined) ?? [];
+  const currentRole = auth.role();
 
-  const requiredRoles = route.data?.['roles'] as string[] | undefined;
-  if (!requiredRoles || requiredRoles.length === 0) {
+  if (allowed.length === 0 || auth.hasAnyRole(allowed)) {
     return true;
   }
 
-  if (authService.hasAnyRole(requiredRoles)) {
-    return true;
-  }
-
-  const user = authService.getCurrentUser();
-  const primaryRole = user?.roles?.[0] as UserRole ?? 'GESTIONNAIRE_STOCK';
-  const homeRoute = ROLE_HOMES[primaryRole] ?? '/auth/login';
-  router.navigate([homeRoute]);
+  console.warn(
+    `[roleGuard] Accès refusé sur '${route.routeConfig?.path ?? route.url.join('/')}'. ` +
+    `Rôle courant : ${currentRole ?? '<non connecté>'}. ` +
+    `Rôles attendus : [${allowed.join(', ')}]`
+  );
+  router.navigate(['/auth/forbidden']);
   return false;
 };

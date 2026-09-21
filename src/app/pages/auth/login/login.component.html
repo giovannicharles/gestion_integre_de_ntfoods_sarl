@@ -1,62 +1,112 @@
 <div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="logo-section">
-                <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
+    <div class="login-wrapper">
+        <!-- Colonne gauche - Branding -->
+        <div class="login-left">
+            <div class="brand-section">
+                <div class="logo-container">
+                    <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
+                </div>
+                <h1 class="brand-title">NTFOODS TANTY</h1>
+                <p class="brand-subtitle">Système de Gestion Intégré</p>
             </div>
-            <h1>Bienvenue</h1>
-            <p>Connectez-vous à votre espace ERP</p>
+            
+            <div class="features-section">
+                <div class="feature-item">
+                    <i class="fa-solid fa-boxes-stacked feature-icon"></i>
+                    <div class="feature-text">
+                        <h3>Gestion de Stock</h3>
+                        <p>Contrôle optimal des inventaires</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fa-solid fa-industry feature-icon"></i>
+                    <div class="feature-text">
+                        <h3>Production</h3>
+                        <p>Suivi en temps réel de la fabrication</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fa-solid fa-chart-line feature-icon"></i>
+                    <div class="feature-text">
+                        <h3>Commercial</h3>
+                        <p>Optimisation des ventes et relations clients</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fa-solid fa-shield-halved feature-icon"></i>
+                    <div class="feature-text">
+                        <h3>Sécurité</h3>
+                        <p>Contrôle d'accès et permissions avancées</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        @if (error()) {
-            <div class="error-message">
-                <i class="fa-solid fa-circle-exclamation"></i>
-                <span>{{ error() }}</span>
-            </div>
-        }
-
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-            <div class="form-group">
-                <label class="form-label">Matricule</label>
-                <input type="text" class="form-control" formControlName="matricule" placeholder="Ex: ADM-2025-0001"
-                    [class.is-error]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid" />
-                <div class="error-message" *ngIf="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid">
-                    Le matricule est obligatoire
+        <!-- Colonne droite - Formulaire -->
+        <div class="login-right">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Connexion</h2>
+                    <p>Accédez à votre espace de travail</p>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label class="form-label">Mot de passe</label>
-                <div class="password-input">
-                    <input [type]="showPassword ? 'text' : 'password'" class="form-control" formControlName="password"
-                        placeholder="••••••••"
-                        [class.is-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" />
-                    <button type="button" class="toggle-password" (click)="togglePassword()">
-                        <i [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                    </button>
-                </div>
-                <div class="error-message"
-                    *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
-                    Le mot de passe doit contenir au moins 6 caractères
-                </div>
-            </div>
+                @if (error()) {
+                    <div class="error-message">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>{{ error() }}</span>
+                    </div>
+                }
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading()">
-                    @if (!loading()) {
-                        <span>Se connecter</span>
-                    } @else {
-                        <span class="spinner spinner-sm"></span>
-                        <span>Connexion en cours...</span>
-                    }
-                </button>
-            </div>
+                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+                    <div class="form-group">
+                        <label class="form-label">Matricule</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-id-badge input-icon"></i>
+                            <input type="text" class="form-control" formControlName="matricule" placeholder="Ex: ADM-2025-0001"
+                                [class.is-error]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid" />
+                        </div>
+                        <div class="error-message" *ngIf="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid">
+                            Le matricule est obligatoire
+                        </div>
+                    </div>
 
-            <div class="form-footer">
-                <a (click)="goToForgotPassword()" class="forgot-link">
-                    Mot de passe oublié ?
-                </a>
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input [type]="showPassword ? 'text' : 'password'" class="form-control" formControlName="password"
+                                placeholder="••••••••"
+                                [class.is-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" />
+                            <button type="button" class="toggle-password" (click)="togglePassword()">
+                                <i [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            </button>
+                        </div>
+                        <div class="error-message"
+                            *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+                            Le mot de passe doit contenir au moins 6 caractères
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading()">
+                            @if (!loading()) {
+                                <span>Se connecter</span>
+                            } @else {
+                                <span class="spinner spinner-sm"></span>
+                                <span>Connexion en cours...</span>
+                            }
+                        </button>
+                    </div>
+
+                    <div class="form-footer">
+                        <a (click)="goToForgotPassword()" class="forgot-link">
+                            Mot de passe oublié ?
+                        </a>
+                    </div>
+                </form>
+
+
             </div>
-        </form>
+        </div>
     </div>
 </div>

@@ -6,9 +6,9 @@ import { CommercialService, CarburantBE } from '../../../infrastructure/commerci
 
 interface CarburantUI {
   id: string; commercialId: string; dateCreation: Date;
-  immatriculation: string; litresDemandes: number; montant: number;
-  statut: string; signatureCommercial: boolean; signatureSuperviseur: boolean;
-  kmCompteur?: number; station?: string; superviseur?: string;
+  immatriculation: string; kmCompteur: number; station: string;
+  litresDemandes: number; montant: number;
+  statut: string;
 }
 
 @Component({
@@ -19,18 +19,17 @@ interface CarburantUI {
   styleUrls: ['./commercial-carburant.component.css']
 })
 export class CommercialCarburantComponent implements OnInit {
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly svc = inject(CommercialService);
 
   today = new Date();
-  commercial = this.auth.user();
   fiches = signal<CarburantUI[]>([]);
   loading = signal(false);
   showForm = signal(false);
   submitted = signal(false);
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
 
-  form = signal({ kmCompteur: 0, litresDemandes: 0, immatriculation: '', station: '', montant: 0 });
+  form = signal({ kmCompteur: 0, litresDemandes: 0, station: '', immatriculation: '', montant: 0 });
 
   ngOnInit(): void {
     const matricule = this.auth.user()?.matricule;
@@ -58,10 +57,15 @@ export class CommercialCarburantComponent implements OnInit {
         this.fiches.update(list => [this.mapC(c), ...list]);
         this.submitted.set(true);
         this.showForm.set(false);
-        this.form.set({ kmCompteur: 0, litresDemandes: 0, immatriculation: '', station: '', montant: 0 });
+        this.form.set({ kmCompteur: 0, litresDemandes: 0, station: '', immatriculation: '', montant: 0 });
       },
     });
   }
+
+  updateKmCompteur(v: number | string): void { this.form.update(f => ({...f, kmCompteur: +v})); }
+  updateLitresDemandes(v: number | string): void { this.form.update(f => ({...f, litresDemandes: +v})); }
+  updateStation(v: string): void { this.form.update(f => ({...f, station: v})); }
+  updateMontant(v: number | string): void { this.form.update(f => ({...f, montant: +v})); }
 
   private mapC(c: CarburantBE): CarburantUI {
     return {
@@ -69,14 +73,11 @@ export class CommercialCarburantComponent implements OnInit {
       commercialId: c.matriculeCommercial,
       dateCreation: new Date(c.date),
       immatriculation: c.immatriculation,
+      kmCompteur: c.kilometrage,
+      station: c.stationPartenaire,
       litresDemandes: c.litresDemandes,
       montant: c.montant,
       statut: c.statut,
-      signatureCommercial: !!c.signatureCommercial,
-      signatureSuperviseur: !!c.signatureSuperviseur,
-      kmCompteur: c.kilometrage,
-      station: c.stationPartenaire,
-      superviseur: c.signatureSuperviseur ? 'Superviseur' : undefined,
     };
   }
 }

@@ -1,0 +1,75 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-simple ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Prédictions des Produits Finis</h1>
+      <p class="ph-sub">Estimation automatique à partir des fûts nets de la session sélectionnée (vue informative)</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Calculer une prédiction</h2></div>
+  <div class="toolbar-row">
+    <select class="input" (change)="selectionnerSessionDepuisSelect($any($event.target).value)">
+      <option value="">— Choisir une session ouverte —</option>
+      @for (s of contexte.sessionsOuvertes(); track s.id) {
+        <option [value]="s.id" [selected]="contexte.sessionActive()?.id === s.id">#{{ s.id }} — {{ s.referencePPH }} ({{ s.date }})</option>
+      }
+    </select>
+  </div>
+  @if (contexte.sessionActive(); as s) {
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <span class="badge bg-success">Session #{{ s.id }} — PPH {{ s.referencePPH }}</span>
+      <span class="badge bg-neutral" style="margin-left:8px">Fûts nets enregistrés : {{ s.nbFutsNets }}</span>
+    </div>
+  } @else if (contexte.sessionsOuvertes().length === 0) {
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><span class="badge bg-orange">Aucune session ouverte</span></div>
+  }
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+  @if (prediction(); as p) {
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ p.nbFutsNets }}</div></div></div>
+    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poids total poudre</div><div class="kpi-val">{{ p.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Quantités théoriques par conditionnement</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Recette</th><th>Poids unitaire</th><th>Unités de base</th><th>Cartons estimés</th><th>Unités / carton</th></tr></thead>
+        <tbody>
+          @for (l of p.predictions; track l.codeProduit) {
+            <tr>
+              <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designation }}</td>
+              <td>{{ l.recette }}</td>
+              <td>{{ l.poidsUnitaireGrammes }} g</td>
+              <td><strong>{{ l.quantiteUnitesBase }}</strong></td>
+              <td>{{ l.quantiteCartons }}</td>
+              <td>{{ l.nombreUnitesParCarton }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-state-block">
+              <i class="fa-solid fa-inbox"></i>
+              Aucun produit prédit : vérifiez que le BC du PPH contient des produits de catégorie TANTY BOUILLIE DE SOJA avec un conditionnement valide.
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted" style="padding: 0 var(--sp-4) var(--sp-4)">
+      La prédiction est calculée automatiquement dès la sélection d'une session :
+      elle utilise ses fûts nets, résout le PPH associé puis le Bon de Commande,
+      et ne concerne que les produits de la catégorie métier <strong>TANTY BOUILLIE DE SOJA</strong>.
+      Les colonnes "sachets / étuis / gaines" correspondent aux différents types de conditionnement listés
+      ci-dessus selon le produit (chaque référence a son unité propre — sachet, étui, gaine ou carton).
+    </p>
+  </div>
+  }
+}

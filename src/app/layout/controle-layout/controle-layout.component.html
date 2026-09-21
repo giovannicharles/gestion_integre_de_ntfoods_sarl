@@ -4,7 +4,7 @@
     <div class="sidebar-inner">
       <div class="sidebar-brand">
         <div class="brand-content">
-          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          <img src="/logo_tanty.jpg" alt="TANTY" class="brand-logo-image" />
           @if (alertCount() > 0) {
           <a class="logo-alert-badge" routerLink="/controle/alertes" title="{{ alertCount() }} alerte(s) active(s)">
             <i class="fa-solid fa-bell"></i>
@@ -67,6 +67,9 @@
         <button class="tb-icon-btn" routerLink="/controle/decaissements" title="Décaissements à valider" [class.tb-alert-pulse]="criticalCount() > 0">
           <i class="fa-solid fa-money-check-dollar"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
+        </button>
+        <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
+          <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>
         <div class="tb-divider"></div>
         <div class="tb-user">

@@ -1,0 +1,359 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-user-gear ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Espace Chef Machiniste</h1>
+      <p class="ph-sub">Pilotage des poudres — maïs, soja, arachide</p>
+    </div>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Machinistes</div>
+      <div class="kpi-val">{{ machinistes().length }}</div>
+      <div class="kpi-meta">actifs aujourd'hui</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-scale-balanced"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Poudre broyée</div>
+      <div class="kpi-val">{{ totalPoudreJour() | number:'1.2-2' }} kg</div>
+      <div class="kpi-meta">aujourd'hui</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Pertes</div>
+      <div class="kpi-val">{{ totalPertesJour() | number:'1.2-2' }} kg</div>
+      <div class="kpi-meta">aujourd'hui</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-r">
+    <div class="kpi-ico ir"><i class="fa-solid fa-circle-xmark"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Journées non validées</div>
+      <div class="kpi-val">{{ sessionsNonValidees().length }}</div>
+      <div class="kpi-meta">seuil 85 %</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-users-gear"></i> Machinistes</h2>
+    <button class="btn btn-primary" (click)="showFormSession.set(true)"><i class="fa-solid fa-plus"></i> Ouvrir session</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Matricule</th><th>Nom</th><th>Zone</th><th>Compte</th></tr>
+      </thead>
+      <tbody>
+        @for (m of machinistes(); track m.matricule) {
+          <tr>
+            <td>{{ m.matricule }}</td>
+            <td><strong>{{ m.nomComplet }}</strong></td>
+            <td>{{ m.zoneTravail }}</td>
+            <td><span class="badge" [class.bg-success]="m.avecCompte" [class.bg-neutral]="!m.avecCompte">{{ m.avecCompte ? 'Oui' : 'Non' }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty-state">Aucun machiniste</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showFormSession()) {
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-calendar-plus"></i> Nouvelle session de broyage</h2>
+    </div>
+    <div class="form-grid">
+      <label>
+        Référence PPH
+        <input type="text" [(ngModel)]="nouvelleSession.referencePPH" class="form-control">
+      </label>
+      <label>
+        Date
+        <input type="date" [(ngModel)]="nouvelleSession.date" class="form-control">
+      </label>
+      <label>
+        Type de poudre
+        <select [(ngModel)]="nouvelleSession.typePoudre" class="form-control">
+          @for (t of typesPoudre; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </label>
+      <label>
+        Objectif journalier (kg)
+        <input type="number" [(ngModel)]="nouvelleSession.objectifJournalierKg" class="form-control">
+      </label>
+    </div>
+    <div class="card-hd">
+      <h3 class="card-title">Objectifs par machiniste</h3>
+      <button class="btn btn-sm" (click)="ajouterObjectif()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Machiniste</th><th>Opération</th><th>Objectif (kg)</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (o of nouvelleSession.objectifsMachinistes; track $index; let i = $index) {
+            <tr>
+              <td>
+                <select [(ngModel)]="o.machinisteMatricule" (change)="selectionnerMachiniste(i, o.machinisteMatricule)" class="form-control">
+                  <option value="">-- Choisir --</option>
+                  @for (m of machinistes(); track m.matricule) {
+                    <option [value]="m.matricule">{{ m.nomComplet }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <select [(ngModel)]="o.operation" class="form-control">
+                  @for (op of operations; track op) { <option [value]="op">{{ op }}</option> }
+                </select>
+              </td>
+              <td><input type="number" [(ngModel)]="o.objectifKg" class="form-control"></td>
+              <td><button class="btn btn-danger btn-sm" (click)="retirerObjectif(i)"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="ouvrirSession()">Ouvrir</button>
+      <button class="btn btn-neutral" (click)="showFormSession.set(false)">Annuler</button>
+    </div>
+  </div>
+}
+
+@if (showFormRealisation()) {
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-pen-to-square"></i> Réalisation — {{ selectedSession()?.typePoudreLibelle }}</h2>
+    </div>
+    <div class="form-grid">
+      <label>
+        Machiniste
+        <select [(ngModel)]="nouvelleRealisation.machinisteMatricule" (change)="selectionnerMachinisteRealisation(nouvelleRealisation.machinisteMatricule)" class="form-control">
+          <option value="">-- Choisir --</option>
+          @for (m of machinistes(); track m.matricule) {
+            <option [value]="m.matricule">{{ m.nomComplet }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Opération
+        <select [(ngModel)]="nouvelleRealisation.operation" class="form-control">
+          @for (op of operations; track op) { <option [value]="op">{{ op }}</option> }
+        </select>
+      </label>
+      <label>
+        Objectif (kg)
+        <input type="number" [(ngModel)]="nouvelleRealisation.objectifKg" class="form-control">
+      </label>
+      <label>
+        Réalisé (kg)
+        <input type="number" [(ngModel)]="nouvelleRealisation.realiseKg" class="form-control">
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="enregistrerRealisation()">Enregistrer</button>
+      <button class="btn btn-neutral" (click)="showFormRealisation.set(false)">Annuler</button>
+    </div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-calendar-day"></i> Sessions du jour</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Poudre</th><th>Objectif</th><th>Réalisé</th><th>Net</th><th>Pertes</th><th>% Pertes</th><th>Validée</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of sessions(); track s.id) {
+          <tr>
+            <td><strong>{{ s.typePoudreLibelle }}</strong></td>
+            <td>{{ s.objectifJournalierKg | number:'1.2-2' }} kg</td>
+            <td>{{ s.totalRealiseKg | number:'1.2-2' }} kg</td>
+            <td>{{ s.quantiteNetteBroyeeKg ?? 0 | number:'1.2-2' }} kg</td>
+            <td>{{ s.pertesKg ?? 0 | number:'1.2-2' }} kg</td>
+            <td>{{ s.pctPertes ?? 0 | number:'1.2-2' }} %</td>
+            <td>
+              <span class="badge" [class.bg-success]="s.journeeValidee" [class.bg-orange]="!s.journeeValidee">
+                {{ s.journeeValidee ? 'Oui' : 'Non' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-ghost" (click)="voirDetailSession(s.id)">Détails</button>
+              <button class="btn btn-sm btn-primary" (click)="ouvrirRealisation(s)">Réalisation</button>
+              <button class="btn btn-sm btn-neutral" (click)="autoriserDepassement(s)">Dépassement</button>
+              <button class="btn btn-sm btn-warning" (click)="justifierSession(s)">Justifier</button>
+              <button class="btn btn-sm btn-success" (click)="cloturerSession(s)">Clôturer</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-state">Aucune session aujourd'hui</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement hebdomadaire</h2>
+    <span class="text-muted">{{ classementHebdo()?.periode }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Rang</th><th>Machiniste</th><th>Productivité (kg)</th><th>Taux réalisation</th><th>Efficacité</th><th>Jours</th></tr>
+      </thead>
+      <tbody>
+        @for (c of classementHebdo()?.classements || []; track c.machinisteMatricule) {
+          <tr>
+            <td><strong>#{{ c.rang }}</strong></td>
+            <td>{{ c.nomMachiniste }}</td>
+            <td>{{ c.productiviteKg | number:'1.2-2' }}</td>
+            <td>{{ c.tauxRealisationMoyen | number:'1.2-2' }} %</td>
+            <td>{{ c.efficacite | number:'1.2-2' }}</td>
+            <td>{{ c.nbJours }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">Aucun classement</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement mensuel</h2>
+    <span class="text-muted">{{ classementMensuel()?.periode }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Rang</th><th>Machiniste</th><th>Productivité (kg)</th><th>Taux réalisation</th><th>Efficacité</th><th>Jours</th></tr>
+      </thead>
+      <tbody>
+        @for (c of classementMensuel()?.classements || []; track c.machinisteMatricule) {
+          <tr>
+            <td><strong>#{{ c.rang }}</strong></td>
+            <td>{{ c.nomMachiniste }}</td>
+            <td>{{ c.productiviteKg | number:'1.2-2' }}</td>
+            <td>{{ c.tauxRealisationMoyen | number:'1.2-2' }} %</td>
+            <td>{{ c.efficacite | number:'1.2-2' }}</td>
+            <td>{{ c.nbJours }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state">Aucun classement</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="ph" style="margin-top: var(--sp-5)">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div>
+      <h1 class="ph-title" style="font-size:1.1rem">Statistiques Broyage</h1>
+      <p class="ph-sub">Évolution sur les 7 derniers jours</p>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Poudre broyée (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-mini-chart type="line" [labels]="labelsHistorique()" [series]="serieEvolutionPoudre()" [height]="200" />
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Pertes (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-mini-chart type="line" [labels]="labelsHistorique()" [series]="serieEvolutionPertes()" [height]="200" />
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition par type de poudre (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-donut-chart title="" unit="kg" [data]="donutTypePoudre()" />
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement machinistes (semaine)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-mini-chart type="bar" [labels]="labelsClassementHebdo()" [series]="serieClassementHebdo()" [height]="200" />
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-magnifying-glass-chart"></i> Performance individuelle</h2>
+  </div>
+  <div class="filter-row" style="padding: 0 var(--sp-4) var(--sp-3); display:flex; gap:var(--sp-2); align-items:center">
+    <select class="input" [(ngModel)]="performanceMatricule">
+      <option value="">— Choisir un machiniste —</option>
+      @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
+    </select>
+    <button class="btn btn-primary" (click)="rechercherPerformance()">Rechercher (période du mois)</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Date</th><th>Type poudre</th><th>Objectif (kg)</th><th>Réalisé (kg)</th><th>Statut</th></tr>
+      </thead>
+      <tbody>
+        @for (s of performanceSessions(); track s.id) {
+          <tr>
+            <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ s.typePoudreLibelle }}</td>
+            <td>{{ s.objectifJournalierKg | number:'1.2-2' }}</td>
+            <td>{{ s.totalRealiseKg | number:'1.2-2' }}</td>
+            <td><span [class]="s.journeeValidee ? 'badge bg-success' : 'badge bg-orange'">{{ s.journeeValidee ? 'Validée' : 'Non validée' }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-state">Sélectionnez un machiniste puis lancez la recherche</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (detailSession()) {
+<div class="modal-overlay" (click)="detailSession.set(null)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd"><h3><i class="fa-solid fa-circle-info"></i> Détail session {{ detailSession()!.id }}</h3></div>
+    <div class="modal-body">
+      <p><strong>PPH :</strong> {{ detailSession()!.referencePPH }} — <strong>Date :</strong> {{ detailSession()!.date | date:'dd/MM/yyyy' }}</p>
+      <p><strong>Type poudre :</strong> {{ detailSession()!.typePoudreLibelle }}</p>
+      <p><strong>Objectif journalier :</strong> {{ detailSession()!.objectifJournalierKg }} kg — <strong>Réalisé :</strong> {{ detailSession()!.totalRealiseKg }} kg</p>
+      <p><strong>Quantité nette broyée :</strong> {{ detailSession()!.quantiteNetteBroyeeKg ?? '—' }} kg — <strong>Pertes :</strong> {{ detailSession()!.pertesKg ?? '—' }} kg</p>
+      <p><strong>Statut :</strong> {{ detailSession()!.statut }} — <strong>Journée validée :</strong> {{ detailSession()!.journeeValidee ? 'Oui' : 'Non' }}</p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-primary" (click)="detailSession.set(null)">Fermer</button>
+    </div>
+  </div>
+</div>
+}

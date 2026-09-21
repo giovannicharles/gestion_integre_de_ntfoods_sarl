@@ -36,8 +36,8 @@ export class DgSyncComponent implements OnInit, OnDestroy {
     if (this.filterEntityType) params.entityType = this.filterEntityType;
     if (this.filterResult) params.result = this.filterResult;
     this.svc.getHistorique(params).pipe(takeUntil(this.d$)).subscribe({
-      next: (list: SyncLogBE[]) => { this.logs.set(list); this.filtered.set(list); this.loading.set(false); },
-      error: (e: unknown) => { this.loading.set(false); this.showToast(extractApiError(e), 'error'); },
+      next: list => { this.logs.set(list); this.filtered.set(list); this.loading.set(false); },
+      error: (e) => { this.loading.set(false); this.showToast(extractApiError(e), 'error'); },
     });
   }
 

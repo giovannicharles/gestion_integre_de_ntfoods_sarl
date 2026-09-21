@@ -1,0 +1,110 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-calendar-week ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Plans de Production (PPH)</h1>
+      <p class="ph-sub">Consultation des plans reçus, quantités et objectifs de broyage</p>
+    </div>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <input class="input search-input" placeholder="Rechercher un PPH ou un BC..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <select class="input" [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)">
+      <option value="">Tous les états</option>
+      @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
+    </select>
+    <label>Du <input type="date" class="input" [ngModel]="filtreDebut()" (ngModelChange)="filtreDebut.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="filtreFin()" (ngModelChange)="filtreFin.set($event)"></label>
+    <button class="btn btn-ghost btn-sm" (click)="reinitialiserFiltres()">Réinitialiser</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>PPH</th><th>BC</th><th>Semaine</th><th>Période</th><th>Statut</th><th>Lignes</th><th></th></tr></thead>
+        <tbody>
+          @for (p of pphsFiltres(); track p.id) {
+            <tr>
+              <td><strong>{{ p.referencePPH }}</strong></td>
+              <td class="mono">{{ p.referenceBC ?? '—' }}</td>
+              <td>{{ p.semaine }}</td>
+              <td>{{ p.dateDebut }} → {{ p.dateFin }}</td>
+              <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
+              <td>{{ p.lignes.length }}</td>
+              <td><button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(p)">Détails</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun PPH ne correspond aux filtres</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (pphSelectionne(); as p) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="modal-card" (click)="$event.stopPropagation()" style="max-width:720px">
+    <div class="modal-hd"><h3><i class="fa-solid fa-calendar-week"></i> {{ p.referencePPH }} — {{ p.semaine }}</h3></div>
+    <div class="modal-body">
+      <p><strong>BC associé :</strong> {{ p.referenceBC ?? '—' }} — <strong>Statut :</strong> <span [class]="statutClass(p.statut)">{{ p.statut }}</span></p>
+      <p><strong>Période :</strong> {{ p.dateDebut }} → {{ p.dateFin }}</p>
+
+      <h4 style="margin-top:12px">Quantités prévues par produit</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Produit</th><th>Objectif semaine</th><th>Réalisé</th></tr></thead>
+          <tbody>
+            @for (l of p.lignes; track l.codeProduit) {
+              <tr><td>{{ l.nomProduit }}</td><td>{{ l.objectifSemaine }}</td><td>{{ l.productionRealisee }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h4 style="margin-top:12px">Matières premières & objectifs de broyage par jour</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Jour</th><th>Maïs (kg)</th><th>Soja (kg)</th><th>Arachide (kg)</th></tr></thead>
+          <tbody>
+            @for (r of p.repartitionJours; track r.dateJour) {
+              <tr><td>{{ r.dateJour }}</td><td>{{ r.poudreMaisKg | number:'1.1-1' }}</td><td>{{ r.poudreSojaKg | number:'1.1-1' }}</td><td>{{ r.poudreArachideKg | number:'1.1-1' }}</td></tr>
+            } @empty {
+              <tr><td colspan="4" class="text-center text-muted">Aucune répartition journalière</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h4 style="margin-top:12px">Sessions de broyage liées & dépassements autorisés</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Type</th><th>Objectif (kg)</th><th>Dépassement autorisé (kg)</th><th>Statut</th></tr></thead>
+          <tbody>
+            @for (s of sessionsDuPph(p.referencePPH); track s.id) {
+              <tr>
+                <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
+                <td>{{ s.typePoudreLibelle }}</td>
+                <td>{{ s.objectifJournalierKg }}</td>
+                <td>{{ s.depassementAutoriseKg > 0 ? (s.depassementAutoriseKg | number:'1.1-1') : '—' }}</td>
+                <td><span [class]="s.journeeValidee ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="text-center text-muted">Aucune session de broyage pour ce PPH</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-primary" (click)="fermerDetail()">Fermer</button>
+    </div>
+  </div>
+</div>
+}

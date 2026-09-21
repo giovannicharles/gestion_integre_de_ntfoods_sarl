@@ -886,7 +886,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       decisions: this.meetingForm.decisions,
       actionItems: this.meetingForm.actionItems
     }).pipe(takeUntil(this.d$)).subscribe({
-      next: (blob) => {
+      next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

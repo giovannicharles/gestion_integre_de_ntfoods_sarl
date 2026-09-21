@@ -1,0 +1,249 @@
+/* ═══════════════════════════════════════════════════════════
+   BONS DE COMMANDE — Chef de Production
+   Charte TANTY DIGITAL : Vert var(--g) · Jaune var(--y)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Skeleton row ─────────────────────────────────────────── */
+.skeleton-row { height: 42px; margin: 4px 16px; border-radius: 6px; }
+
+/* ── Modal principale ─────────────────────────────────────── */
+.bc-modal {
+  max-width: 820px;
+  width: 96vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Icône dans le titre du modal */
+.modal-title-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md, 10px);
+  background: var(--g, var(--g));
+  color: var(--y, var(--y));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+/* ── Corps scrollable du modal ────────────────────────────── */
+.bc-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Sections intérieures ─────────────────────────────────── */
+.bc-section {
+  background: var(--n50, var(--n50));
+  border: 1px solid var(--n200, var(--n200));
+  border-radius: var(--r-md, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bc-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--n500, var(--n500));
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--n200, var(--n200));
+}
+
+.bc-section-title i { color: var(--g, var(--g)); }
+
+/* ── Grille champs infos générales ───────────────────────── */
+.bc-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Lignes de commande ───────────────────────────────────── */
+.lignes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ligne-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--w, var(--w));
+  border: 1.5px solid var(--n200, var(--n200));
+  border-radius: var(--r-md, 12px);
+  padding: 14px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.ligne-card:focus-within {
+  border-color: var(--g, var(--g));
+  box-shadow: 0 0 0 3px rgba(20, 83, 45, .08);
+}
+
+/* Numéro de ligne */
+.ligne-num {
+  min-width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--g, var(--g));
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 26px;
+}
+
+/* Zone des champs de la ligne */
+.ligne-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Select pleine largeur */
+.ligne-select { width: 100%; }
+
+/* Deuxième rangée de champs */
+.ligne-fields-row2 {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: 10px;
+}
+
+/* Code produit : champ spécial */
+.input-with-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.code-input {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.code-input.pre-filled {
+  border-color: var(--g, var(--g)) !important;
+  background: var(--g-sf, var(--g-sf));
+  color: var(--g, var(--g));
+}
+
+.pre-fill-chip {
+  position: absolute;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--g, var(--g));
+  color: white;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Preview désignation */
+.designation-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--n600, var(--n600));
+  background: var(--g-gh, var(--g-gh));
+  border-radius: var(--r-sm, 8px);
+  padding: 5px 10px;
+}
+
+.designation-preview i { color: var(--g, var(--g)); }
+
+/* Bouton supprimer ligne */
+.btn-remove-ligne {
+  background: none;
+  border: 1.5px solid var(--n200, var(--n200));
+  border-radius: var(--r-sm, 8px);
+  color: var(--n400, var(--n400));
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 22px;
+  transition: all .15s;
+}
+
+.btn-remove-ligne:hover:not(:disabled) {
+  background: var(--r-gh, var(--r-gh));
+  border-color: var(--r, var(--r));
+  color: var(--r, var(--r));
+}
+
+.btn-remove-ligne:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+/* Récapitulatif lignes */
+.lignes-recap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--n100, var(--n100));
+  border-radius: var(--r-sm, 8px);
+  font-size: 12px;
+  color: var(--n500, var(--n500));
+}
+
+.recap-montant { color: var(--g, var(--g)); font-weight: 700; }
+
+/* ── Détail BC — grille KPIs ──────────────────────────────── */
+.detail-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ── Retard badge inline ──────────────────────────────────── */
+.row-alert td { background: var(--r-gh, var(--r-gh)) !important; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .bc-modal { max-height: 96vh; }
+  .bc-fields-row { grid-template-columns: 1fr; }
+  .ligne-fields-row2 { grid-template-columns: 1fr 1fr; }
+  .detail-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .ligne-fields-row2 { grid-template-columns: 1fr; }
+  .detail-kpis { grid-template-columns: 1fr; }
+  .bc-body { padding: 14px; }
+}

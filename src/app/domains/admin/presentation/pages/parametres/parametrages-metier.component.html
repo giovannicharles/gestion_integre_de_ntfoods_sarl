@@ -1,0 +1,258 @@
+<div class="page">
+
+  <header class="ph">
+    <div>
+      <h1 class="ph-title">Règles métier</h1>
+      <p class="ph-sub">
+        Chaque modification prend effet à une date choisie et clôture la version
+        précédente. Les calculs déjà effectués conservent la règle qui leur a été
+        appliquée.
+      </p>
+    </div>
+  </header>
+
+  @if (message(); as m) {
+    <div class="alerte" [class.alerte-ok]="m.type === 'succes'" [class.alerte-ko]="m.type === 'erreur'">
+      {{ m.texte }}
+    </div>
+  }
+
+  <nav class="onglets">
+    <button [class.actif]="onglet() === 'bareme'" (click)="changerOnglet('bareme')">Primes</button>
+    <button [class.actif]="onglet() === 'caisse'" (click)="changerOnglet('caisse')">Caisse &amp; versements</button>
+    <button [class.actif]="onglet() === 'objectif'" (click)="changerOnglet('objectif')">Objectifs</button>
+    <button [class.actif]="onglet() === 'avarie'" (click)="changerOnglet('avarie')">Avaries</button>
+  </nav>
+
+  @if (loading()) {
+    <p class="chargement">Chargement…</p>
+  }
+
+  <!-- ── Barème des primes ────────────────────────────────────────────── -->
+  @if (onglet() === 'bareme') {
+    <section class="bloc">
+      <h2>En vigueur</h2>
+      @if (baremeCourant(); as b) {
+        <dl class="valeurs">
+          <div><dt>Réalisation globale minimale</dt><dd>{{ b.tauxGlobalMinimumPourcent }} %</dd></div>
+          <div><dt>Réalisation minimale par gamme</dt><dd>{{ b.tauxGammeMinimumPourcent }} %</dd></div>
+          <div><dt>Montant par gamme validée</dt><dd>{{ fCFA(b.montantParGammeFCFA) }}</dd></div>
+          <div><dt>Plafond de la prime</dt><dd>{{ fCFA(b.montantMaximumFCFA) }}</dd></div>
+          <div><dt>Depuis le</dt><dd>{{ b.dateDebut | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Défini par</dt><dd>{{ b.matriculeAuteur }}</dd></div>
+        </dl>
+      }
+
+      <h2>Nouveau barème</h2>
+      <form class="formulaire" (ngSubmit)="enregistrerBareme()">
+        <label>Réalisation globale minimale (%)
+          <input type="number" min="0" max="100" [(ngModel)]="formBareme.tauxGlobalMinimumPourcent" name="tg" required>
+        </label>
+        <label>Réalisation minimale par gamme (%)
+          <input type="number" min="0" max="100" [(ngModel)]="formBareme.tauxGammeMinimumPourcent" name="tgm" required>
+        </label>
+        <label>Montant par gamme validée (FCFA)
+          <input type="number" min="0" [(ngModel)]="formBareme.montantParGammeFCFA" name="mpg" required>
+        </label>
+        <label>Plafond de la prime (FCFA)
+          <input type="number" min="0" [(ngModel)]="formBareme.montantMaximumFCFA" name="max" required>
+        </label>
+        <label>Prise d'effet
+          <input type="date" [(ngModel)]="formBareme.dateEffet" name="de" required>
+        </label>
+        <label class="large">Motif
+          <input type="text" [(ngModel)]="formBareme.motif" name="motif" placeholder="Revalorisation annuelle…">
+        </label>
+        <button type="submit" class="btn-principal" [disabled]="loading()">Mettre en vigueur</button>
+      </form>
+
+      <h2>Historique</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Référence</th><th>Global</th><th>Gamme</th><th>Par gamme</th><th>Plafond</th><th>Période</th><th>Auteur</th><th>Motif</th></tr>
+          </thead>
+          <tbody>
+            @for (b of baremeHistorique(); track b.id) {
+              <tr [class.courant]="b.courant">
+                <td>{{ b.reference }}</td>
+                <td>{{ b.tauxGlobalMinimumPourcent }} %</td>
+                <td>{{ b.tauxGammeMinimumPourcent }} %</td>
+                <td>{{ fCFA(b.montantParGammeFCFA) }}</td>
+                <td>{{ fCFA(b.montantMaximumFCFA) }}</td>
+                <td>{{ b.dateDebut | date:'dd/MM/yy' }} → {{ b.dateFin ? (b.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
+                <td>{{ b.matriculeAuteur }}</td>
+                <td>{{ b.motif || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8" class="vide">Aucun barème enregistré : les valeurs historiques s'appliquent.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- ── Caisse et versements ─────────────────────────────────────────── -->
+  @if (onglet() === 'caisse') {
+    <section class="bloc">
+      <h2>En vigueur</h2>
+      @if (caisseCourant(); as c) {
+        <dl class="valeurs">
+          <div><dt>Seuil de sécurisation de la caisse</dt><dd>{{ fCFA(c.seuilSecurisationFCFA) }}</dd></div>
+          <div><dt>Écart déclenchant une alerte rouge</dt><dd>{{ fCFA(c.seuilAlerteRougeVersementFCFA) }}</dd></div>
+          <div><dt>Depuis le</dt><dd>{{ c.dateDebut | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Défini par</dt><dd>{{ c.matriculeAuteur }}</dd></div>
+        </dl>
+      }
+
+      <h2>Nouveaux seuils</h2>
+      <form class="formulaire" (ngSubmit)="enregistrerCaisse()">
+        <label>Seuil de sécurisation (FCFA)
+          <input type="number" min="1" [(ngModel)]="formCaisse.seuilSecurisationFCFA" name="ss" required>
+        </label>
+        <label>Écart d'alerte rouge (FCFA)
+          <input type="number" min="0" [(ngModel)]="formCaisse.seuilAlerteRougeVersementFCFA" name="sar" required>
+        </label>
+        <label>Prise d'effet
+          <input type="date" [(ngModel)]="formCaisse.dateEffet" name="dec" required>
+        </label>
+        <label class="large">Motif
+          <input type="text" [(ngModel)]="formCaisse.motif" name="motifc" placeholder="Ajustement du plafond de caisse…">
+        </label>
+        <button type="submit" class="btn-principal" [disabled]="loading()">Mettre en vigueur</button>
+      </form>
+
+      <h2>Historique</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Référence</th><th>Sécurisation</th><th>Alerte rouge</th><th>Période</th><th>Auteur</th><th>Motif</th></tr>
+          </thead>
+          <tbody>
+            @for (c of caisseHistorique(); track c.id) {
+              <tr [class.courant]="c.courant">
+                <td>{{ c.reference }}</td>
+                <td>{{ fCFA(c.seuilSecurisationFCFA) }}</td>
+                <td>{{ fCFA(c.seuilAlerteRougeVersementFCFA) }}</td>
+                <td>{{ c.dateDebut | date:'dd/MM/yy' }} → {{ c.dateFin ? (c.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
+                <td>{{ c.matriculeAuteur }}</td>
+                <td>{{ c.motif || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="vide">Aucun paramétrage enregistré : les valeurs historiques s'appliquent.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- ── Objectifs ────────────────────────────────────────────────────── -->
+  @if (onglet() === 'objectif') {
+    <section class="bloc">
+      <h2>En vigueur</h2>
+      @if (objectifCourant(); as o) {
+        <dl class="valeurs">
+          <div><dt>Jours ouvrés par semaine</dt><dd>{{ o.nombreJoursOuvres }}</dd></div>
+          <div><dt>Depuis le</dt><dd>{{ o.dateDebut | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Défini par</dt><dd>{{ o.matriculeAuteur }}</dd></div>
+        </dl>
+      }
+      <p class="note">
+        Sert à répartir un objectif hebdomadaire en objectifs quotidiens. Les
+        objectifs déjà définis conservent leur découpage.
+      </p>
+
+      <h2>Nouveau découpage</h2>
+      <form class="formulaire" (ngSubmit)="enregistrerObjectif()">
+        <label>Jours ouvrés (1 à 7)
+          <input type="number" min="1" max="7" [(ngModel)]="formObjectif.nombreJoursOuvres" name="njo" required>
+        </label>
+        <label>Prise d'effet
+          <input type="date" [(ngModel)]="formObjectif.dateEffet" name="deo" required>
+        </label>
+        <label class="large">Motif
+          <input type="text" [(ngModel)]="formObjectif.motif" name="motifo" placeholder="Passage à 5 jours…">
+        </label>
+        <button type="submit" class="btn-principal" [disabled]="loading()">Mettre en vigueur</button>
+      </form>
+
+      <h2>Historique</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Référence</th><th>Jours ouvrés</th><th>Période</th><th>Auteur</th><th>Motif</th></tr></thead>
+          <tbody>
+            @for (o of objectifHistorique(); track o.id) {
+              <tr [class.courant]="o.courant">
+                <td>{{ o.reference }}</td>
+                <td>{{ o.nombreJoursOuvres }}</td>
+                <td>{{ o.dateDebut | date:'dd/MM/yy' }} → {{ o.dateFin ? (o.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
+                <td>{{ o.matriculeAuteur }}</td>
+                <td>{{ o.motif || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vide">Aucun paramétrage enregistré : six jours ouvrés s'appliquent.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- ── Avaries ──────────────────────────────────────────────────────── -->
+  @if (onglet() === 'avarie') {
+    <section class="bloc">
+      <h2>En vigueur</h2>
+      @if (avarieCourantes(); as a) {
+        <dl class="valeurs">
+          <div><dt>Photo obligatoire à partir de</dt><dd>{{ a.quantiteSeuilPhotoObligatoire }} unité(s) de base</dd></div>
+          <div><dt>Depuis le</dt><dd>{{ a.dateDebut | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Défini par</dt><dd>{{ a.matriculeAuteur }}</dd></div>
+        </dl>
+      }
+      <p class="note">
+        Ce seuil est lu par l'application mobile à l'ouverture de l'écran de
+        déclaration : le commercial voit la règle réellement appliquée. Il
+        s'apprécie en <strong>unités de base</strong> et non en colis déclarés :
+        deux cartons de vingt-cinq comptent pour cinquante, de sorte qu'une même
+        perte ne dépende pas de la façon dont elle est énoncée.
+      </p>
+
+      <h2>Nouveau seuil</h2>
+      <form class="formulaire" (ngSubmit)="enregistrerAvarie()">
+        <label>Quantité en unités de base déclenchant la photo
+          <input type="number" min="0" [(ngModel)]="formAvarie.quantiteSeuilPhotoObligatoire" name="qsp" required>
+        </label>
+        <label>Prise d'effet
+          <input type="date" [(ngModel)]="formAvarie.dateEffet" name="dea" required>
+        </label>
+        <label class="large">Motif
+          <input type="text" [(ngModel)]="formAvarie.motif" name="motifa" placeholder="Renforcement du contrôle…">
+        </label>
+        <button type="submit" class="btn-principal" [disabled]="loading()">Mettre en vigueur</button>
+      </form>
+
+      <h2>Historique</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Référence</th><th>Seuil photo</th><th>Période</th><th>Auteur</th><th>Motif</th></tr></thead>
+          <tbody>
+            @for (a of avarieHistorique(); track a.id) {
+              <tr [class.courant]="a.courant">
+                <td>{{ a.reference }}</td>
+                <td>{{ a.quantiteSeuilPhotoObligatoire }}</td>
+                <td>{{ a.dateDebut | date:'dd/MM/yy' }} → {{ a.dateFin ? (a.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
+                <td>{{ a.matriculeAuteur }}</td>
+                <td>{{ a.motif || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vide">Aucune règle enregistrée : le seuil historique de 3 unités s'applique.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+</div>

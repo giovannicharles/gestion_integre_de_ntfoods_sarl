@@ -1,0 +1,89 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-lines ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Fiche Info Produit Journalière</h1>
+      <p class="ph-sub">Produits fabriqués, quantités, comparaison avec les prédictions</p>
+    </div>
+  </div>
+  @if (fiche()) {
+    <div class="ph-actions"><button class="btn btn-ghost" (click)="imprimer()"><i class="fa-solid fa-print"></i> Imprimer / PDF</button></div>
+  }
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+    </select>
+    <input type="date" class="input" [(ngModel)]="date" (ngModelChange)="charger()">
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+  @if (fiche(); as f) {
+
+  <div class="card">
+    <div class="toolbar-row">
+      <label>Nombre de fûts produits (50 kg)</label>
+      <span class="badge bg-blue">{{ f.nbFutsProduits }}</span>
+      <small>Saisi par l'agent doseur</small>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-list"></i> Produits fabriqués — {{ f.date }}</h2>
+      @if (f.verrouillee) { <span class="badge bg-orange">🔒 Verrouillée</span> }
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Quantité réelle</th><th>Prédiction Dosage</th><th>Prédiction Postes</th><th>Écart</th><th>Progression</th></tr></thead>
+        <tbody>
+          @for (l of f.lignes; track l.codeProduit; let i = $index) {
+            <tr>
+              <td>{{ l.nomProduit }}</td>
+              <td><input type="number" class="input" [ngModel]="l.quantiteProduite" (ngModelChange)="modifierQuantite(i, $event)" [disabled]="f.verrouillee" style="width:100px"></td>
+              <td>{{ l.quantitePrediteDosage ?? '—' }}</td>
+              <td>{{ l.quantitePreditePostes ?? '—' }}</td>
+              <td>{{ l.ecart ?? '—' }}</td>
+              <td>
+                @if (l.tauxAvancement != null) {
+                  <div class="rp-prog-wrap">
+                    <div class="rp-prog-track">
+                      <div class="rp-prog-bar" [style.width.%]="l.tauxAvancement"
+                           [class.rp-prog-g]="l.tauxAvancement >= 100"
+                           [class.rp-prog-y]="l.tauxAvancement >= 50 && l.tauxAvancement < 100"
+                           [class.rp-prog-r]="l.tauxAvancement < 50"></div>
+                    </div>
+                    <span class="rp-prog-pct">{{ l.tauxAvancement }}%</span>
+                  </div>
+                } @else { — }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (!f.verrouillee) {
+      <div class="form-actions" style="padding: 0 var(--sp-4) var(--sp-4)">
+        <button class="btn btn-primary" (click)="enregistrerCorrections()">Enregistrer les corrections</button>
+      </div>
+    }
+  </div>
+
+  } @else {
+    <div class="card">
+      <div class="empty-state-block" style="padding: var(--sp-5)">
+        <i class="fa-solid fa-inbox"></i>Aucune fiche pour ce jour
+        <div class="form-actions" style="justify-content:center;margin-top:var(--sp-3)">
+          <button class="btn btn-primary" (click)="genererFiche()">Générer la fiche du jour</button>
+        </div>
+      </div>
+    </div>
+  }
+}

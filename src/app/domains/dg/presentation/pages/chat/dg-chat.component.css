@@ -2,9 +2,9 @@
 
 .chat-loading {
   display: flex; align-items: center; justify-content: center; gap: 12px;
-  padding: 60px; font-size: 15px; color: #64748b;
+  padding: 60px; font-size: 15px; color: var(--n500);
 }
-.chat-loading i { font-size: 22px; color: #1A6B2A; }
+.chat-loading i { font-size: 22px; color: var(--g); }
 
 .chat-container {
   display: grid;
@@ -18,30 +18,30 @@
 .chat-main { min-height: 500px; }
 
 .side-card {
-  background: #fff;
+  background: var(--w);
   border-radius: 14px;
   padding: 18px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--n200);
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .side-card-header {
   display: flex; align-items: center; gap: 8px;
-  font-weight: 700; font-size: 14px; color: #1e293b;
+  font-weight: 700; font-size: 14px; color: var(--n800);
   margin-bottom: 10px;
 }
-.side-card-header i { color: #1A6B2A; font-size: 16px; }
-.side-card-desc { font-size: 12px; color: #64748b; line-height: 1.5; margin: 0 0 14px 0; }
+.side-card-header i { color: var(--g); font-size: 16px; }
+.side-card-desc { font-size: 12px; color: var(--n500); line-height: 1.5; margin: 0 0 14px 0; }
 
 .side-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .side-tag {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 5px 10px;
   border-radius: 20px;
-  background: #f0fdf4;
-  color: #1A6B2A;
+  background: var(--s-gh);
+  color: var(--g);
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #bbf7d0;
+  border: 1px solid var(--g-gh);
 }
 .side-tag i { font-size: 10px; }
 
@@ -49,13 +49,13 @@
 .suggestion-list li {
   padding: 8px 12px;
   font-size: 12px;
-  color: #475569;
+  color: var(--n600);
   border-radius: 8px;
   cursor: default;
   transition: background 0.2s;
   margin-bottom: 4px;
 }
-.suggestion-list li:hover { background: #f8fafc; color: #1A6B2A; }
+.suggestion-list li:hover { background: var(--n50); color: var(--g); }
 .suggestion-list li::before { content: "💬 "; }
 
 @media (max-width: 900px) {

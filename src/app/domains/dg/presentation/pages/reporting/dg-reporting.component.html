@@ -78,55 +78,6 @@
     </div>
   </div>
 
-  <!-- DOUGHNUT + STACKED BAR -->
-  <div class="charts-row-2">
-    <div class="card chart-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition CA par Zone</span>
-      </div>
-      <div class="chart-wrap"><canvas #doughnutCanvas></canvas></div>
-    </div>
-    <div class="card chart-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-layer-group"></i> Comparaison Mensuelle N vs N-1</span>
-      </div>
-      <div class="chart-wrap"><canvas #stackedCanvas></canvas></div>
-    </div>
-  </div>
-
-  <!-- ZONE PERFORMANCE TABLE -->
-  <div class="card" style="margin-bottom:var(--sp-4)">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-map-location-dot"></i> Performance par Zone</span>
-      <a routerLink="/dg/dashboard" class="btn btn-ghost btn-sm">Dashboard</a>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Zone</th><th>CA Mois Courant</th><th>Clients</th><th>Ventes</th><th>CA / Client</th></tr></thead>
-        <tbody>
-          @for (z of zones(); track z.secteur) {
-          <tr>
-            <td class="fw-bold">{{ z.secteur }}</td>
-            <td class="mono fw-bold">{{ fCFA(z.caMoisCourantFCFA) }}</td>
-            <td class="mono">{{ z.nombreClients }}</td>
-            <td class="mono">{{ z.nombreVentesMoisCourant }}</td>
-            <td class="mono">{{ fCFA(z.nombreClients > 0 ? Math.round(z.caMoisCourantFCFA / z.nombreClients) : 0) }}</td>
-          </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr class="tfoot-total">
-            <td><strong>TOTAL</strong></td>
-            <td class="mono fw-bold">{{ fCFA(totalZoneCa()) }}</td>
-            <td class="mono">{{ totalClientsZones() }}</td>
-            <td class="mono">{{ totalVentesZones() }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-
   <!-- TABLEAU MENSUEL DETAIL -->
   <div class="card">
     <div class="card-hd">

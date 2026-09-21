@@ -8,7 +8,7 @@ interface VersementUI {
   id: string; commercialId: string; date: Date; montantAttendu: number;
   cashVerse: number; ecart: number; motifEcart: string | null;
   statut: string; typeVersement: string | null; alerteRouge: boolean;
-  heureVersement?: string;
+  heureVersement: string | null;
 }
 
 @Component({
@@ -65,10 +65,11 @@ export class CommercialVersementsComponent implements OnInit {
   }
 
   private mapV(v: VersementBE): VersementUI {
+    const dateV = new Date(v.date);
     return {
       id: v.referenceVersement,
       commercialId: v.matriculeCommercial,
-      date: new Date(v.date),
+      date: dateV,
       montantAttendu: v.montantAttendu,
       cashVerse: v.cashVerse,
       ecart: v.ecart,
@@ -76,7 +77,9 @@ export class CommercialVersementsComponent implements OnInit {
       statut: v.statut,
       typeVersement: v.typeVersement ?? null,
       alerteRouge: v.alerteRouge,
-      heureVersement: new Date(v.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      heureVersement: dateV.toISOString() !== 'Invalid Date'
+        ? dateV.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        : null,
     };
   }
 }

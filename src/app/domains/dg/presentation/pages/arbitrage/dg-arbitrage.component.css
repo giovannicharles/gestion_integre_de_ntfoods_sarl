@@ -1,16 +1,16 @@
 .ph-icon-orange { background: var(--o) !important; }
-.alert-banner { background: #fff3e0; color: #e65100; border: 1px solid #e65100; padding: .4rem 1rem; border-radius: var(--r-md); font-size: .85rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+.alert-banner { background: var(--o-gh); color: var(--o); border: 1px solid var(--o); padding: .4rem 1rem; border-radius: var(--r-md); font-size: .85rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; }
 .filter-bar { display: flex; gap: .5rem; margin-bottom: var(--sp-4); flex-wrap: wrap; }
 .filter-btn { padding: .4rem 1rem; border-radius: 99px; border: 1.5px solid var(--n300); background: transparent; cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--n600); transition: all .15s; }
-.filter-btn.active, .filter-btn:hover { background: var(--g); color: #fff; border-color: var(--g); }
+.filter-btn.active, .filter-btn:hover { background: var(--g); color: var(--w); border-color: var(--g); }
 .filter-orange.active { background: var(--o) !important; border-color: var(--o) !important; }
 .filter-green.active { background: var(--s) !important; border-color: var(--s) !important; }
 .filter-red.active { background: var(--r) !important; border-color: var(--r) !important; }
 .arb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--sp-4); }
 .arb-card { padding: var(--sp-4); border-left: 4px solid var(--n300); }
 .arb-waiting { border-left-color: var(--o); }
-.arb-ok { border-left-color: var(--s); background: #f1f8f3; }
-.arb-ko { border-left-color: var(--r); background: #fff1f1; }
+.arb-ok { border-left-color: var(--s); background: var(--s-gh); }
+.arb-ko { border-left-color: var(--r); background: var(--r-gh); }
 .arb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .arb-id-badge { font-size: .75rem; font-weight: 700; color: var(--n500); }
 .arb-body { display: flex; flex-direction: column; gap: var(--sp-2); }
@@ -30,6 +30,7 @@
 .arb-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--n200); }
 .empty-state { text-align: center; padding: 3rem; color: var(--n400); grid-column: 1/-1; }
 .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--g); }
+.empty-state p { font-size: 13px; }
 .text-danger { color: var(--r) !important; }
 .fw-bold { font-weight: 700; }
 .mono { font-variant-numeric: tabular-nums; }

@@ -36,3 +36,28 @@
   .modal-overlay { align-items:flex-end;padding:0; }
   .modal-box { width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0; }
 }
+/* ── Révision d'objectif ─────────────────────────────────────────── */
+.alerte { padding: .75rem 1rem; border-radius: 6px; font-size: .875rem; margin-bottom: 1rem; border: 1px solid transparent; }
+.alerte-ok { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.alerte-ko { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.chargement { color: #6b7280; font-size: .875rem; }
+.vide { color: #9ca3af; text-align: center; padding: 1.5rem; }
+
+.lien-journal {
+  display: block; margin-top: .2rem; padding: 0; border: none; background: none;
+  color: #b45309; font-size: .7rem; font-weight: 600; cursor: pointer;
+  font-family: inherit; text-decoration: underline; text-align: left;
+}
+.lien-journal:focus-visible { outline: 2px solid #b45309; outline-offset: 2px; }
+
+.ligne-edition td, .ligne-journal td { background: #f9fafb; padding: .9rem 1.1rem; }
+.motif-zone { width: 100%; min-height: 3.2rem; margin: .35rem 0 .6rem; resize: vertical; }
+.edition-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.note { color: #6b7280; font-size: .78rem; max-width: 60ch; line-height: 1.5; }
+
+.journal-titre { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; font-weight: 700; margin-bottom: .5rem; }
+.journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.journal li { display: flex; gap: .75rem; flex-wrap: wrap; align-items: baseline; font-size: .8rem; }
+.journal-date { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .72rem; color: #6b7280; }
+.journal-auteur { color: #6b7280; font-size: .75rem; }
+.journal-motif { color: #374151; font-style: italic; }

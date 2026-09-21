@@ -1,0 +1,267 @@
+<div class="rs-container">
+  <header class="rs-header">
+    <h1>Responsable de Salle</h1>
+    <p class="subtitle">Gestion journalière des postes, réalisations, fiches et classements.</p>
+  </header>
+
+  <div class="rs-toolbar">
+    <label>Date : <input type="date" [(ngModel)]="date" (change)="selectedPph && selectionnerPph(selectedPph)" /></label>
+    <label>Votre matricule : <input type="text" [(ngModel)]="matriculeAgent" placeholder="RS-..." /></label>
+    <button class="btn-link" (click)="allerEmployes()">Registre employés</button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+  <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+  <div *ngIf="isLoading" class="loading">Chargement...</div>
+
+  <div class="card" *ngIf="dashboardAgent" style="margin-bottom:1rem">
+    <strong>Ma journée ({{ dashboardAgent.date }})</strong>
+    <span>OF en cours : {{ dashboardAgent.ofsEnCours }} — OF planifiés : {{ dashboardAgent.ofsPlanifies }}</span>
+    <span>Fiches cette semaine : {{ dashboardAgent.fichesSemaine }}</span>
+    <span>Fiche du jour : {{ dashboardAgent.ficheJourExistante ? 'déjà enregistrée' : 'non enregistrée' }}</span>
+  </div>
+
+  <section class="rs-pph">
+    <h2>Sélection PPH</h2>
+    <div class="pph-list">
+      <div
+        *ngFor="let pph of pphs"
+        class="pph-card"
+        [class.active]="selectedPph?.referencePPH === pph.referencePPH"
+        (click)="selectionnerPph(pph)"
+      >
+        <strong>{{ pph.referencePPH }}</strong>
+        <span>{{ pph.semaine }} — {{ pph.statut }}</span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="rs-tabs">
+    <button [class.active]="tab === 'affectation'" (click)="tab = 'affectation'">Affectation</button>
+    <button [class.active]="tab === 'saisie'" (click)="tab = 'saisie'">Saisie</button>
+    <button [class.active]="tab === 'fiche'" (click)="tab = 'fiche'">Fiche produit</button>
+    <button [class.active]="tab === 'classement'" (click)="tab = 'classement'">Classement</button>
+    <button [class.active]="tab === 'rapport'" (click)="tab = 'rapport'">Rapport hebdo</button>
+  </nav>
+
+  <div class="rs-content">
+    <div *ngIf="tab === 'affectation'" class="tab-panel">
+      <h3>Affectation journalière</h3>
+      <div *ngIf="!affectation" class="empty">
+        <p>Aucune affectation pour le jour.</p>
+        <div class="form-block">
+          <h4>Créer une affectation</h4>
+          <div *ngFor="let ligne of nouvelleAffectation; let i = index; trackBy: trackByIndex" class="row">
+            <select [(ngModel)]="ligne.poste">
+              <option value="">— Poste —</option>
+              <option *ngFor="let p of codesPoste" [value]="p.code">{{ p.libelle }}</option>
+            </select>
+            <input placeholder="Matricules (séparés par des virgules)" [(ngModel)]="ligne.matriculesEmployesTexte" />
+            <select [(ngModel)]="ligne.duree">
+              <option *ngFor="let d of durees" [value]="d.code">{{ d.libelle }}</option>
+            </select>
+            <button class="btn-danger-sm" (click)="retirerLigneAffectation(i)">×</button>
+          </div>
+          <button (click)="ajouterLigneAffectation()">+ Ajouter un poste</button>
+          <button class="primary" (click)="creerAffectation()" [disabled]="!selectedPph">Créer</button>
+        </div>
+      </div>
+      <div *ngIf="affectation" class="affectation-detail">
+        <div class="rs-toolbar" style="margin-bottom:8px">
+          <span class="badge">{{ affectation.statut }}</span>
+          <button class="primary" *ngIf="affectation.statut === 'BROUILLON'" (click)="validerAffectation()">
+            Valider (verrouiller la journée)
+          </button>
+        </div>
+        <div class="card" *ngFor="let ligne of affectation.lignes">
+          <strong>{{ ligne.codePoste }} — {{ ligne.libellePoste }}</strong>
+          <span>Effectif : {{ ligne.effectifReel }} / {{ ligne.effectifReference }}</span>
+          <span>Objectif ajusté : {{ ligne.objectifAjuste }} {{ ligne.unite }}</span>
+          <span>Durée : {{ ligne.duree }}</span>
+          <span>Employés : {{ ligne.matriculesEmployes.join(', ') }}</span>
+        </div>
+      </div>
+      <div class="form-block">
+        <h4>Consulter une affectation par ID</h4>
+        <div class="row">
+          <input type="number" placeholder="ID affectation" [(ngModel)]="affectationDetailId" />
+          <button (click)="chargerAffectationParId()">Rechercher</button>
+        </div>
+        <div class="card" *ngIf="affectationDetail" style="margin-top:8px">
+          <span>PPH : {{ affectationDetail.referencePPH }} — {{ affectationDetail.date }}</span>
+          <span>Statut : {{ affectationDetail.statut }}</span>
+          <span>{{ affectationDetail.lignes.length }} poste(s), {{ affectationDetail.saisies.length }} saisie(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="tab === 'saisie'" class="tab-panel">
+      <h3>Saisie des réalisations</h3>
+      <div *ngIf="!affectation" class="empty">Aucune affectation à saisir.</div>
+      <div *ngIf="affectation" class="saisie-grid">
+        <div class="card" *ngFor="let ligne of affectation.lignes">
+          <strong>{{ ligne.codePoste }} — {{ ligne.libellePoste }}</strong>
+          <span>Objectif : {{ ligne.objectifAjuste }} {{ ligne.unite }}</span>
+          <button class="primary" (click)="ouvrirSaisie(ligne.codePoste)" [disabled]="affectation.statut === 'VALIDEE'">Saisir</button>
+        </div>
+        <div class="card" *ngFor="let s of affectation.saisies">
+          <strong>{{ s.codePoste }} — {{ s.libellePoste }}</strong>
+          <span>Réalisé : {{ s.quantiteRealisee }} {{ s.unite }}</span>
+          <span>Taux : {{ s.pctRealisation | number:'1.1-1' }}%</span>
+          <div *ngIf="s.productionsIndividuelles?.length">
+            <div *ngFor="let pi of s.productionsIndividuelles">— {{ pi.nomEmploye }} ({{ pi.matriculeEmploye }}) : {{ pi.quantiteRealisee }} {{ pi.unite }}</div>
+          </div>
+          <div class="warnings" *ngIf="s.warnings?.length">
+            <span class="warning" *ngFor="let w of s.warnings">⚠ {{ w }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="affectation?.classement?.length" class="classement">
+        <h4>Classement du jour (par poste)</h4>
+        <div class="row" *ngFor="let c of affectation!.classement">
+          <span>#{{ c.rang }} {{ c.libellePoste }}</span>
+          <span>{{ c.pctRealisation | number:'1.1-1' }}%</span>
+        </div>
+        <app-donut-chart title="Répartition de la production du jour par poste" unit="" [data]="donutPostesJour()" />
+      </div>
+
+      <div class="form-block" style="margin-top:16px">
+        <h4>Comparaison fûts dosés vs production réelle</h4>
+        <button (click)="chargerComparaisonFuts()" [disabled]="!selectedPph">Comparer pour le {{ date }}</button>
+        <div *ngIf="comparaisonFuts" class="card" style="margin-top:8px">
+          <span>Fûts nets : {{ comparaisonFuts.nbFutsNets }}</span>
+          <span>Poids poudre : {{ comparaisonFuts.poidsTotalPoudreKg }} kg</span>
+          <span>Production réelle : {{ comparaisonFuts.productionReelleKg }} {{ comparaisonFuts.uniteProduction }}</span>
+          <span>Écart : {{ comparaisonFuts.ecartKg }} kg ({{ comparaisonFuts.ecartPourcentage | number:'1.1-1' }}%)</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="tab === 'fiche'" class="tab-panel">
+      <h3>Fiche info-produit</h3>
+      <div *ngIf="!fiche" class="empty">
+        <p>Aucune fiche enregistrée.</p>
+        <button class="primary" (click)="enregistrerFiche()" [disabled]="!selectedPph">Initialiser une fiche</button>
+      </div>
+      <div *ngIf="fiche" class="fiche">
+        <div class="table">
+          <div class="thead">
+            <span>Produit</span>
+            <span>Réel</span>
+            <span>Prédit dosage</span>
+            <span>Prédit postes</span>
+            <span>Écart</span>
+          </div>
+          <div class="tbody" *ngFor="let l of fiche.lignes; let i = index">
+            <span>{{ l.nomProduit }}</span>
+            <span><input type="number" [(ngModel)]="l.quantiteProduite" [disabled]="fiche.verrouillee" style="width:80px" /></span>
+            <span>{{ l.quantitePrediteDosage }}</span>
+            <span>{{ l.quantitePreditePostes }}</span>
+            <span>{{ l.ecart }}</span>
+          </div>
+        </div>
+        <div class="rs-toolbar">
+          <span class="badge" *ngIf="fiche.verrouillee">🔒 Verrouillée (lot validé par le stock)</span>
+          <button class="primary" (click)="enregistrerFiche()" [disabled]="fiche.verrouillee">Enregistrer une nouvelle fiche</button>
+          <button (click)="corrigerFiche()" [disabled]="fiche.verrouillee">Corriger les chiffres</button>
+        </div>
+      </div>
+      <div class="form-block" *ngIf="fichesHistorique.length">
+        <h4>Historique des fiches — {{ selectedPph?.referencePPH }}</h4>
+        <div class="row" *ngFor="let f of fichesHistorique">
+          <span>{{ f.date }}</span>
+          <span>{{ f.verrouillee ? '🔒 verrouillée' : 'modifiable' }}</span>
+          <span>{{ f.lignes.length }} ligne(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="tab === 'classement'" class="tab-panel">
+      <h3>Classement hebdomadaire des exécutants</h3>
+      <div class="rs-toolbar">
+        <label>Du <input type="date" [(ngModel)]="classementDebut" /></label>
+        <label>Au <input type="date" [(ngModel)]="classementFin" /></label>
+        <button class="primary" (click)="chargerClassement()">Charger</button>
+      </div>
+      <div class="table" *ngIf="classement.length">
+        <div class="thead">
+          <span>Rang</span><span>Employé</span><span>Quantité totale</span><span>Taux moyen</span><span>Jours affectés</span>
+        </div>
+        <div class="tbody" *ngFor="let c of classement">
+          <span>#{{ c.rang }}</span>
+          <span>{{ c.nomEmploye }} ({{ c.matriculeEmploye }})</span>
+          <span>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</span>
+          <span>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
+          <span>{{ c.nbJoursAffectes }}</span>
+        </div>
+      </div>
+      <div *ngIf="!classement.length" class="empty">Aucune donnée pour cette période.</div>
+      <app-mini-chart *ngIf="classement.length" type="bar" [labels]="labelsClassementExecuteurs()" [series]="serieClassementExecuteurs()" [height]="200" />
+    </div>
+
+    <div *ngIf="tab === 'rapport'" class="tab-panel">
+      <h3>Rapport hebdomadaire (fûts, production, classement)</h3>
+      <div class="rs-toolbar">
+        <label>Du <input type="date" [(ngModel)]="rapportDebut" /></label>
+        <label>Au <input type="date" [(ngModel)]="rapportFin" /></label>
+        <button class="primary" (click)="chargerRapport()">Générer</button>
+      </div>
+      <div *ngIf="rapport" class="fiche">
+        <p>{{ rapport.periodeLibelle }}</p>
+        <div class="row"><span>Fûts nets</span><span>{{ rapport.nbFutsNets }}</span></div>
+        <div class="row"><span>Poids poudre total</span><span>{{ rapport.poidsTotalPoudreKg }} kg</span></div>
+        <div class="row"><span>Production totale</span><span>{{ rapport.productionTotaleKg }} kg</span></div>
+        <div class="row"><span>Sessions dosage</span><span>{{ rapport.nbSessionsDosage }}</span></div>
+        <div class="row"><span>Jours affectés</span><span>{{ rapport.nbJoursAffectes }}</span></div>
+
+        <h4 style="margin-top:12px">Classement exécutants</h4>
+        <div class="table">
+          <div class="thead cols-4"><span>Rang</span><span>Employé</span><span>Quantité</span><span>Taux</span></div>
+          <div class="tbody cols-4" *ngFor="let c of rapport.classementExecuteurs">
+            <span>#{{ c.rang }}</span><span>{{ c.nomEmploye }}</span><span>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</span>
+            <span>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <h4 style="margin-top:12px">Comparaisons journalières</h4>
+        <div class="table">
+          <div class="thead cols-4"><span>Date</span><span>Fûts nets</span><span>Prod. réelle</span><span>Écart %</span></div>
+          <div class="tbody cols-4" *ngFor="let c of rapport.comparaisonsJournalieres">
+            <span>{{ c.date }}</span><span>{{ c.nbFutsNets }}</span><span>{{ c.productionReelleKg }} kg</span>
+            <span>{{ c.ecartPourcentage | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <h4 style="margin-top:16px">Fûts dosés vs Production réelle (par jour)</h4>
+        <app-mini-chart type="bar" [labels]="labelsEcartJournalier()" [series]="serieFutsVsProduction()" [height]="200" />
+
+        <h4 style="margin-top:16px">Écart Prévu / Réalisé (%) par jour</h4>
+        <app-mini-chart type="line" [labels]="labelsEcartJournalier()" [series]="serieEcartJournalier()" [height]="200" />
+      </div>
+      <div *ngIf="!rapport" class="empty">Sélectionnez une période puis cliquez sur Générer.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showSaisieModal" (click)="showSaisieModal = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd"><h3>Saisir la réalisation — {{ libellePoste(saisieCourante?.poste || '') }}</h3></div>
+    <div class="modal-body" *ngIf="saisieCourante">
+      <label>Quantité réalisée totale
+        <input type="number" [(ngModel)]="saisieCourante.quantiteRealisee" class="input" />
+      </label>
+      <h4 style="margin-top:12px">Productions individuelles (optionnel)</h4>
+      <div class="row" *ngFor="let p of saisieCourante.productions; let i = index">
+        <input placeholder="Matricule" [(ngModel)]="p.matriculeEmploye" />
+        <input placeholder="Nom" [(ngModel)]="p.nomEmploye" />
+        <input type="number" placeholder="Quantité" [(ngModel)]="p.quantiteRealisee" style="width:100px" />
+        <button class="btn-danger-sm" (click)="retirerProductionIndividuelle(i)">×</button>
+      </div>
+      <button (click)="ajouterProductionIndividuelle()">+ Ajouter un employé</button>
+    </div>
+    <div class="modal-ft">
+      <button (click)="showSaisieModal = false">Annuler</button>
+      <button class="primary" (click)="confirmerSaisie()">Enregistrer</button>
+    </div>
+  </div>
+</div>

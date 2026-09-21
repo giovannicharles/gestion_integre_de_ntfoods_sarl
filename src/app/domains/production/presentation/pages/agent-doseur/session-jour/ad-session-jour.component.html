@@ -1,0 +1,298 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-flask ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Ma session de dosage</h1>
+      <p class="ph-sub">Ouvrez une session, dosez, enregistrez les fûts sortis et clôturez</p>
+    </div>
+  </div>
+  @if (sessionInfo(); as info) {
+    <div class="ph-badge">
+      @if (info.enPause) {
+        <span class="badge bg-orange"><i class="fa-solid fa-pause"></i> Session #{{ info.id }} en pause</span>
+      } @else if (info.cloturee || info.validee) {
+        <span class="badge bg-success"><i class="fa-solid fa-circle-check"></i> Session #{{ info.id }} terminée</span>
+      } @else {
+        <span class="badge bg-success"><i class="fa-solid fa-circle-check"></i> Session #{{ info.id }} active</span>
+      }
+      <div class="ph-meta">Plan {{ info.referencePPH }} · {{ info.date }}</div>
+      <div class="ph-actions-row">
+        @if (info.enPause) {
+          <button class="btn btn-sm btn-primary" (click)="reprendreActivite()"><i class="fa-solid fa-play"></i> Reprendre</button>
+        } @else if (!info.cloturee && !info.validee) {
+          <button class="btn btn-sm btn-ghost" (click)="mettreEnPause()"><i class="fa-solid fa-pause"></i> Pause</button>
+        }
+        @if (!info.cloturee && !info.validee) {
+          <button class="btn btn-sm btn-success" (click)="aller(5)"><i class="fa-solid fa-flag-checkered"></i> Clôturer</button>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Barre d'étapes -->
+<div class="wiz-steps" [class.wiz-paused]="session()?.enPause">
+  @for (st of [
+    {n:1, t:'Ma session', i:'fa-play'},
+    {n:2, t:'Dosage', i:'fa-calculator'},
+    {n:3, t:'Fûts', i:'fa-bottle-droplet'},
+    {n:4, t:'Machines', i:'fa-gears'},
+    {n:5, t:'Terminer', i:'fa-flag-checkered'}
+  ]; track st.n) {
+    <button class="wiz-step"
+            [class.active]="etape() === st.n"
+            [class.done]="etape() > st.n"
+            [disabled]="!peutAcceder($any(st.n)) || session()?.enPause"
+            (click)="aller($any(st.n))">
+      <span class="wiz-num"><i class="fa-solid" [ngClass]="etape() > st.n ? 'fa-check' : st.i"></i></span>
+      <span class="wiz-txt">{{ st.t }}</span>
+    </button>
+  }
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+<!-- ÉTAPE 1 — MA SESSION -->
+@if (etape() === 1) {
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-play"></i> Démarrer ma session</h2></div>
+    <div class="wiz-body">
+      @if (session(); as s) {
+        <div class="wiz-resume">
+          <i class="fa-solid fa-circle-check"></i>
+          <div>
+            <div class="wiz-resume-t">Session déjà ouverte</div>
+            <div class="wiz-resume-s">Plan <strong>{{ s.referencePPH }}</strong> · {{ s.date }} · {{ s.nbFutsProduits }} fûts sortis</div>
+          </div>
+          <button class="btn-xl btn-primary" (click)="aller(2)">Continuer <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      } @else {
+        <p class="wiz-help">Sélectionnez le plan de production du jour (PPH) pour ouvrir une nouvelle session.</p>
+        <label class="wiz-label">Plan de production (PPH)
+          <select class="input input-xl" [(ngModel)]="referencePPH" [disabled]="!pphs().length">
+            <option value="">— Choisir mon plan —</option>
+            @for (p of pphs(); track p.id) {
+              <option [value]="p.referencePPH">{{ p.referencePPH }} @if (p.referenceBC) { — BC {{ p.referenceBC }} }</option>
+            }
+          </select>
+        </label>
+        @if (!pphs().length) {
+          <div class="gap-note"><i class="fa-solid fa-triangle-exclamation"></i><div>Aucun plan de production disponible. Contactez le chef de production.</div></div>
+        }
+        <button class="btn-xl btn-primary wiz-cta" (click)="ouvrir()" [disabled]="chargement() || !referencePPH">
+          @if (chargement()) { <i class="fa-solid fa-spinner fa-spin"></i> Ouverture... }
+          @else { <i class="fa-solid fa-play"></i> Démarrer ma session }
+        </button>
+      }
+    </div>
+  </div>
+}
+
+<!-- ÉTAPE 2 — DOSAGE -->
+@if (etape() === 2) {
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Dosage automatique</h2></div>
+    <div class="wiz-body">
+      <p class="wiz-help">Choisissez la recette et le nombre de fûts à produire. Les matières premières se calculent instantanément.</p>
+
+      <div class="section-title"><i class="fa-solid fa-book-open"></i> Recette</div>
+      <div class="big-choices" [class.choices-disabled]="!sessionModifiable()">
+        <button class="big-choice" [class.selected]="typeMelange === 'BOUILLIE'" (click)="choisirMelange('BOUILLIE')" [disabled]="!sessionModifiable()">
+          <i class="fa-solid fa-bowl-rice"></i>
+          <span class="big-choice-t">Bouillie</span>
+          <span class="big-choice-s">40 kg maïs · 9 kg soja · 1 kg arachide / fût</span>
+        </button>
+        <button class="big-choice" [class.selected]="typeMelange === 'ARACHIDE'" (click)="choisirMelange('ARACHIDE')" [disabled]="!sessionModifiable()">
+          <i class="fa-solid fa-seedling"></i>
+          <span class="big-choice-t">Mélange Arachide</span>
+          <span class="big-choice-s">40 kg maïs · 9 kg arachide · 1 kg soja / fût</span>
+        </button>
+      </div>
+
+      <div class="section-title"><i class="fa-solid fa-hashtag"></i> Nombre de fûts</div>
+      <div class="stepper-block">
+        <div class="stepper-lbl">Fûts à produire (50 kg de poudre chacun)</div>
+        <div class="stepper" [class.stepper-disabled]="!sessionModifiable()">
+          <button class="step-btn" (click)="incrementerFuts(-1)" aria-label="Moins un fût" [disabled]="!sessionModifiable()">−</button>
+          <input type="number" class="step-val" [(ngModel)]="nbFuts" (input)="declencherDosage()" min="0" [disabled]="!sessionModifiable()">
+          <button class="step-btn" (click)="incrementerFuts(1)" aria-label="Plus un fût" [disabled]="!sessionModifiable()">+</button>
+        </div>
+        @if (enregistre()) { <span class="badge bg-success wiz-saved"><i class="fa-solid fa-check"></i> Dosage enregistré</span> }
+      </div>
+
+      <div class="section-title"><i class="fa-solid fa-scale-balanced"></i> Matières premières nécessaires</div>
+      <div class="kpi-grid wiz-kpis">
+        <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs</div><div class="kpi-val">{{ quantites().mais }}<small>kg</small></div></div></div>
+        <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja</div><div class="kpi-val">{{ quantites().soja }}<small>kg</small></div></div></div>
+        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide</div><div class="kpi-val">{{ quantites().arachide }}<small>kg</small></div></div></div>
+      </div>
+      <div class="wiz-net wiz-net-muted">
+        <span>Total de poudre prévu</span>
+        <strong>{{ poidsTotalPoudre() }} kg</strong>
+      </div>
+
+      <div class="wiz-nav">
+        <button class="btn-xl btn-ghost" (click)="aller(1)"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <button class="btn-xl btn-primary" (click)="aller(3)" [disabled]="!sessionModifiable()">Suivant : fûts sortis <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ÉTAPE 3 — FÛTS -->
+@if (etape() === 3) {
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bottle-droplet"></i> Fûts produits / sortis</h2></div>
+    <div class="wiz-body">
+      <p class="wiz-help">Saisissez le nombre de fûts effectivement sortis. Les fûts produits correspondent aux fûts sortis.</p>
+
+      <div class="stepper-block">
+        <div class="stepper-lbl">Fûts sortis (produits)</div>
+        <div class="stepper" [class.stepper-disabled]="!sessionModifiable()">
+          <button class="step-btn" (click)="incrementerProduits(-1)" aria-label="Moins un fût" [disabled]="!sessionModifiable()">−</button>
+          <input type="number" class="step-val" [(ngModel)]="nbProduits" min="0" [disabled]="!sessionModifiable()">
+          <button class="step-btn" (click)="incrementerProduits(1)" aria-label="Plus un fût" [disabled]="!sessionModifiable()">+</button>
+        </div>
+      </div>
+
+      <div class="wiz-net">
+        <span>Fûts nets (sortis)</span>
+        <strong>{{ futsNets() }}</strong>
+      </div>
+
+      <div class="wiz-nav">
+        <button class="btn-xl btn-ghost" (click)="aller(2)"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <button class="btn-xl btn-primary" (click)="validerFuts()" [disabled]="chargement() || !sessionModifiable()">
+          @if (chargement()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement... }
+          @else { <i class="fa-solid fa-check"></i> Valider les fûts sortis }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ÉTAPE 4 — MACHINES -->
+@if (etape() === 4) {
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Machines mobilisées</h2></div>
+    <div class="wiz-body">
+      <p class="wiz-help">Cette étape est facultative. Ajoutez les machines utilisées, puis passez au récapitulatif.</p>
+      <div class="wiz-machine" [class.wiz-machine-disabled]="!sessionModifiable()">
+        <input class="input input-xl" placeholder="Identifiant machine (ex : DOS-01)" [(ngModel)]="nouvelleMachine" (keydown.enter)="ajouterMachine()" [disabled]="!sessionModifiable()">
+        <button class="btn-xl btn-primary" (click)="ajouterMachine()" [disabled]="chargement() || !nouvelleMachine.trim() || !sessionModifiable()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+      </div>
+
+      @if (session()?.machinesMobilisees?.length) {
+        <div class="section-title"><i class="fa-solid fa-gear"></i> Machines enregistrées</div>
+        <div class="wiz-chips">
+          @for (m of session()!.machinesMobilisees; track m) {
+            <span class="chip"><i class="fa-solid fa-gear"></i> {{ m }}</span>
+          }
+        </div>
+      } @else {
+        <div class="empty-state-block"><i class="fa-solid fa-gears"></i>Aucune machine enregistrée</div>
+      }
+
+      <div class="wiz-nav">
+        <button class="btn-xl btn-ghost" (click)="aller(3)"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <button class="btn-xl btn-primary" (click)="aller(5)" [disabled]="!sessionModifiable()">Récapitulatif <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ÉTAPE 5 — TERMINER -->
+@if (etape() === 5) {
+  @if (terminee()) {
+    <div class="card">
+      <div class="wiz-done">
+        <i class="fa-solid fa-circle-check"></i>
+        <h2>Session clôturée</h2>
+        <p>Votre session est terminée et enregistrée. Vous pouvez en ouvrir une nouvelle.</p>
+        <button class="btn-xl btn-primary" (click)="recommencer()"><i class="fa-solid fa-rotate-right"></i> Nouvelle session</button>
+      </div>
+    </div>
+  } @else {
+    @if (session(); as s) {
+      <div class="card">
+        <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flag-checkered"></i> Récapitulatif de la session</h2></div>
+        <div class="wiz-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="label">Plan de production</div>
+              <div class="value">{{ s.referencePPH }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Date</div>
+              <div class="value">{{ s.date }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Fûts sortis</div>
+              <div class="value">{{ s.nbFutsProduits }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Fûts nets</div>
+              <div class="value">{{ s.nbFutsNets }}</div>
+            </div>
+          </div>
+
+          <div class="section-title"><i class="fa-solid fa-scale-balanced"></i> Matières premières utilisées</div>
+          <div class="wiz-chips">
+            @for (m of s.matieresUtilisees; track m.typeMatiere) {
+              <span class="chip">{{ m.typeMatiere }} : {{ m.quantiteKg }} kg</span>
+            } @empty { <div class="empty-state-block"><i class="fa-solid fa-scale-balanced"></i>Aucune matière enregistrée</div> }
+          </div>
+
+          <div class="section-title"><i class="fa-solid fa-gears"></i> Machines mobilisées</div>
+          <div class="wiz-chips">
+            @for (m of s.machinesMobilisees; track m) {
+              <span class="chip"><i class="fa-solid fa-gear"></i> {{ m }}</span>
+            } @empty { <div class="empty-state-block"><i class="fa-solid fa-gears"></i>Aucune machine enregistrée</div> }
+          </div>
+
+          <div class="wiz-final-actions">
+            <button class="btn-xl btn-ghost" (click)="calculerPrediction()" [disabled]="chargement() || s.nbFutsNets <= 0 || !sessionModifiable()">
+              <i class="fa-solid fa-chart-simple"></i> Estimer les produits finis
+            </button>
+            <button class="btn-xl btn-ghost" (click)="telechargerRegistre()">
+              <i class="fa-solid fa-file-pdf"></i> Registre PDF
+            </button>
+          </div>
+
+          @if (prediction(); as p) {
+            <div class="card wiz-pred">
+              <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Estimation ({{ p.nbFutsNets }} fûts nets)</h2></div>
+              <div class="tbl-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Produit</th><th>Cartons estimés</th><th>Unités de base</th></tr></thead>
+                  <tbody>
+                    @for (l of p.predictions; track l.codeProduit) {
+                      <tr><td>{{ l.designation }}</td><td><strong>{{ l.quantiteCartons }}</strong></td><td>{{ l.quantiteUnitesBase }}</td></tr>
+                    } @empty {
+                      <tr><td colspan="3" class="empty-state-block">Aucun produit fini estimable pour cette session.</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <div class="wiz-cloture-zone" [class.wiz-cloture-paused]="s.enPause">
+            <div class="wiz-cloture-info">
+              <i class="fa-solid" [class.fa-lock]="!s.enPause" [class.fa-pause]="s.enPause"></i>
+              <div>
+                <div class="wiz-cloture-t">{{ s.enPause ? 'Session en pause' : 'Clôturer la session' }}</div>
+                <div class="wiz-cloture-s">{{ s.enPause ? 'Reprenez la session avant de pouvoir la clôturer.' : 'Cette action valide définitivement la session et enregistre les fûts sortis.' }}</div>
+              </div>
+            </div>
+            <button class="btn-xl btn-success" (click)="cloturer()" [disabled]="chargement() || !sessionModifiable()">
+              @if (chargement()) { <i class="fa-solid fa-spinner fa-spin"></i> Clôture... }
+              @else { <i class="fa-solid fa-flag-checkered"></i> Clôturer ma session }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+}

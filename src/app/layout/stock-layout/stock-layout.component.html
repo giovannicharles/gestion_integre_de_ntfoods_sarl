@@ -7,7 +7,7 @@
       <!-- BRAND -->
       <div class="sidebar-brand">
         <div class="brand-content">
-          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          <img src="/logo_tanty.jpg" alt="TANTY" class="brand-logo-image" />
           @if (alertCount() > 0) {
           <a class="logo-alert-badge" routerLink="/stock/alertes" title="{{ alertCount() }} alerte(s) active(s) dont {{ criticalCount() }} critique(s)">
             <i class="fa-solid fa-bell"></i>
@@ -136,6 +136,9 @@
             </div>
           }
         </div>
+        <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
+          <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
+        </button>
         <div class="tb-divider"></div>
         <div class="tb-user">
           <div class="tb-av">{{ userInitials() }}</div>

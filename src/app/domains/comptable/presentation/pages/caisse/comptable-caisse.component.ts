@@ -18,6 +18,8 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
 
   loading = signal(true);
   caisse = signal<CaisseBE | null>(null);
+  /** Motif d'indisponibilité, distinct de « caisse pas encore ouverte ». */
+  erreur = signal<string | null>(null);
   historique = signal<CaisseBE[]>([]);
   today = new Date();
   showOuvrir = signal(false);
@@ -43,8 +45,15 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
   chargerCaisseJour(): void {
     this.loading.set(true);
     this.svc.getCaisse(this.todayStr).pipe(takeUntil(this.d$)).subscribe({
-      next: c => { this.caisse.set(c); this.loading.set(false); },
-      error: () => { this.caisse.set(null); this.loading.set(false); },
+      // `getCaisse` rend `null` quand la caisse n'est pas encore ouverte, et ne
+      // laisse remonter que les vraies erreurs. Les distinguer évite d'afficher
+      // « caisse non ouverte » alors que le serveur est injoignable.
+      next: c => { this.caisse.set(c); this.erreur.set(null); this.loading.set(false); },
+      error: (e) => {
+        this.caisse.set(null);
+        this.erreur.set(e?.error?.erreur || e?.error?.message || 'Journal de caisse indisponible.');
+        this.loading.set(false);
+      },
     });
   }
 

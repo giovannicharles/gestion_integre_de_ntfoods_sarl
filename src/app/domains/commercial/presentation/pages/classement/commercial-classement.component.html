@@ -11,7 +11,7 @@
 
   <!-- MA POSITION -->
   @for (com of commerciaux(); track com.matricule) {
-  @if (com.matricule === monId) {
+  @if (com.matricule === monId()) {
   <div class="card my-pos-card">
     <div class="my-pos-label"><i class="fa-solid fa-person"></i> Ma Position</div>
     <div class="my-pos-body">
@@ -38,7 +38,7 @@
     <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet — Semaine S26</span></div>
     <div class="ranking-list">
       @for (com of commerciaux(); track com.matricule) {
-      <div class="ranking-row" [class.my-row]="com.matricule===monId">
+      <div class="ranking-row" [class.my-row]="com.matricule===monId()">
         <div class="rank-num" [class.rank-gold]="com.rang===1" [class.rank-silver]="com.rang===2" [class.rank-bronze]="com.rang===3">
           @if (com.rang===1){<i class="fa-solid fa-crown"></i>}@else{{{ com.rang }}}
         </div>

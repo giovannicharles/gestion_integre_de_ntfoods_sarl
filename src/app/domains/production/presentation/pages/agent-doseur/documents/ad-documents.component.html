@@ -1,0 +1,55 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-download ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Téléchargement des Documents</h1>
+      <p class="ph-sub">Registre de dosage, documents de session, rapport journalier</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>
+    <strong>Limite backend :</strong> les rapports hebdomadaires/mensuels globaux (<code>/production/rapports/*</code>)
+    n'autorisent pas le rôle Agent Doseur. Seuls le registre de dosage et le pack documents d'une session vous sont
+    directement accessibles ci-dessous ; le rapport journalier est généré côté client à partir des statistiques
+    de fûts (endpoint réellement autorisé).
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-book"></i> Registre & documents d'une session</h2></div>
+  <div style="padding: var(--sp-4)">
+    @if (loading()) {
+      <div class="skeleton skeleton-row"></div>
+    } @else {
+      <div class="form-grid">
+        <label>Session
+          <select id="documents-session-select" class="input" style="min-width:320px"
+                  [value]="sessionSelectionnee()?.id ?? ''"
+                  (change)="selectionnerSessionDepuisSelect($any($event).target.value)">
+            <option value="" disabled>Sélectionner une session...</option>
+            @for (s of sessionsHistorique(); track s.id) {
+              <option [value]="s.id">#{{ s.id }} — {{ s.referencePPH }} — {{ s.date }}</option>
+            }
+          </select>
+        </label>
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn btn-ghost" (click)="telechargerRegistre('pdf')" [disabled]="!sessionSelectionnee()"><i class="fa-solid fa-file-pdf"></i> Registre PDF</button>
+        <button class="btn btn-ghost" (click)="telechargerRegistre('excel')" [disabled]="!sessionSelectionnee()"><i class="fa-solid fa-file-excel"></i> Registre Excel</button>
+        <button class="btn btn-ghost" (click)="telechargerDocumentsSession()" [disabled]="!sessionSelectionnee()"><i class="fa-solid fa-file-zipper"></i> Tous les documents (ZIP)</button>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-day"></i> Rapport journalier</h2></div>
+  <div style="padding: var(--sp-4)">
+    <button class="btn btn-primary" (click)="genererRapportJournalierCsv()"><i class="fa-solid fa-download"></i> Télécharger le rapport du jour (CSV)</button>
+  </div>
+</div>

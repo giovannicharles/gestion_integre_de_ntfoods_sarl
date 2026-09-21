@@ -1,0 +1,248 @@
+<!-- EN-TÊTE -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="ph-icon ph-icon-g"><i class="fa-solid fa-calendar-week"></i></div>
+    <div>
+      <h1 class="ph-title">Plans de Production (PPH)</h1>
+      <p class="ph-sub">Objectifs, quantités prévues, ressources et matières premières</p>
+    </div>
+  </div>
+</div>
+
+<!-- LISTE -->
+<div class="card">
+  <div class="toolbar-row">
+    <input class="input search-input"
+           placeholder="Filtrer par semaine (ex: 2026-W27)…"
+           [ngModel]="filtreSemaine()" (ngModelChange)="filtreSemaine.set($event)">
+    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+  </div>
+
+  @if (loading()) {
+    @for (i of [1,2,3,4]; track i) {
+      <div class="skeleton skeleton-row" style="margin:4px 16px"></div>
+    }
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Référence PPH</th>
+            <th>BC lié</th>
+            <th>Semaine</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pphsFiltres(); track p.id) {
+            <tr>
+              <td><strong>{{ p.referencePPH }}</strong></td>
+              <td class="mono">{{ p.referenceBC ?? '—' }}</td>
+              <td>{{ p.semaine }}</td>
+              <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
+              <td>
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(p)">
+                  <i class="fa-solid fa-eye"></i> Détails
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state-block">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>Aucun PPH pour cette semaine</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL DÉTAIL PPH
+     ═══════════════════════════════════════════════════════ -->
+@if (pphSelectionne(); as p) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="pph-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="pph-modal-header">
+      <div class="pph-modal-title">
+        <div class="pph-modal-ico"><i class="fa-solid fa-calendar-week"></i></div>
+        <div>
+          <div class="pph-modal-ref">{{ p.referencePPH }}</div>
+          <div class="pph-modal-sub">Semaine {{ p.semaine }} · {{ p.dateDebut }} → {{ p.dateFin }}</div>
+        </div>
+      </div>
+      <div class="pph-modal-actions">
+        <span [class]="statutClass(p.statut)">{{ p.statut }}</span>
+        <button class="pph-modal-close" (click)="fermerDetail()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body scrollable -->
+    <div class="pph-modal-body">
+
+      <!-- Méta-données -->
+      <div class="pph-recap-grid">
+        <div class="pph-recap-item">
+          <span class="pph-recap-lbl"><i class="fa-solid fa-link"></i> BC lié</span>
+          <span class="pph-recap-val mono">{{ p.referenceBC ?? '—' }}</span>
+        </div>
+        <div class="pph-recap-item">
+          <span class="pph-recap-lbl"><i class="fa-solid fa-user-tie"></i> Chef production</span>
+          <span class="pph-recap-val">{{ p.matriculeChefProduction }}</span>
+        </div>
+        <div class="pph-recap-item">
+          <span class="pph-recap-lbl"><i class="fa-solid fa-boxes-stacked"></i> Produits planifiés</span>
+          <span class="pph-recap-val">{{ p.lignes.length }} produit(s)</span>
+        </div>
+        <div class="pph-recap-item">
+          <span class="pph-recap-lbl"><i class="fa-solid fa-calendar-check"></i> Soumis le</span>
+          <span class="pph-recap-val">{{ p.dateSoumission ?? '—' }}</span>
+        </div>
+      </div>
+
+      <!-- Section 1 : Objectifs et réalisé -->
+      <div class="pph-section">
+        <div class="pph-section-title">
+          <i class="fa-solid fa-chart-bar"></i> Objectifs et quantités prévues
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Catégorie</th>
+                <th class="text-right">Objectif semaine</th>
+                <th class="text-right">Qté attendue (kg)</th>
+                <th class="text-right">Unités attendues</th>
+                <th class="text-right">Réalisé</th>
+                <th>Progression</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of p.lignes; track l.codeProduit) {
+                <tr>
+                  <td><strong>{{ l.nomProduit }}</strong></td>
+                  <td><span class="badge">{{ l.categorieMetier }}</span></td>
+                  <td class="text-right mono">{{ l.objectifSemaine }}</td>
+                  <td class="text-right mono">{{ l.quantiteAttendueKg | number:'1.1-1' }}</td>
+                  <td class="text-right mono">{{ l.quantiteAttendueUnites | number:'1.0-0' }}</td>
+                  <td class="text-right mono">{{ l.productionRealisee }}</td>
+                  <td>
+                    <div class="pph-prog-track">
+                      <div class="pph-prog-bar"
+                           [style.width.%]="l.objectifSemaine > 0 ? (l.productionRealisee / l.objectifSemaine * 100) : 0"
+                           [class.pph-prog-g]="l.objectifSemaine > 0 && (l.productionRealisee / l.objectifSemaine) >= 1"
+                           [class.pph-prog-y]="l.objectifSemaine > 0 && (l.productionRealisee / l.objectifSemaine) >= .5 && (l.productionRealisee / l.objectifSemaine) < 1"
+                           [class.pph-prog-r]="l.objectifSemaine === 0 || (l.productionRealisee / l.objectifSemaine) < .5">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="empty-state-block">Aucune ligne de production</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 2 : Répartition journalière -->
+      @if (p.repartitionJours && p.repartitionJours.length > 0) {
+        <div class="pph-section">
+          <div class="pph-section-title">
+            <i class="fa-solid fa-seedling"></i> Ressources et matières premières par jour
+          </div>
+          <div class="tbl-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Jour</th>
+                  <th class="text-right">Maïs (kg)</th>
+                  <th class="text-right">Soja (kg)</th>
+                  <th class="text-right">Arachide (kg)</th>
+                  <th class="text-right">Fûts</th>
+                  <th class="text-right">Sachets</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (j of p.repartitionJours; track j.dateJour) {
+                  <tr>
+                    <td><strong>{{ j.dateJour }}</strong></td>
+                    <td class="text-right mono">{{ j.poudreMaisKg | number:'1.1-1' }}</td>
+                    <td class="text-right mono">{{ j.poudreSojaKg | number:'1.1-1' }}</td>
+                    <td class="text-right mono">{{ j.poudreArachideKg | number:'1.1-1' }}</td>
+                    <td class="text-right mono">{{ j.futsPrevus }}</td>
+                    <td class="text-right mono">{{ j.sachetsPrevus }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Section 3 : Détail par produit/jour -->
+      @if (p.lignesDetaillees && p.lignesDetaillees.length > 0) {
+        <div class="pph-section">
+          <div class="pph-section-title">
+            <i class="fa-solid fa-list"></i> Détail par produit et par jour
+          </div>
+          <div class="tbl-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Jour</th>
+                  <th>Produit</th>
+                  <th>Catégorie</th>
+                  <th class="text-right">Qté jour</th>
+                  <th class="text-right">Qté attendue (kg)</th>
+                  <th class="text-right">Unités attendues</th>
+                  <th class="text-right">Poids total (g)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (g of detailsParJour(p); track g.dateJour) {
+                  @for (d of g.lignes; track d.codeProduit + d.dateJour) {
+                    <tr [class.pph-detail-day-start]="$first">
+                      <td>
+                        @if ($first) { <strong>{{ g.dateJour }}</strong> }
+                      </td>
+                      <td>{{ d.nomProduit }}</td>
+                      <td><span class="badge">{{ d.categorieMetier }}</span></td>
+                      <td class="text-right mono">{{ d.quantiteJour }}</td>
+                      <td class="text-right mono">{{ d.quantiteAttendueKg | number:'1.1-1' }}</td>
+                      <td class="text-right mono">{{ d.quantiteAttendueUnites | number:'1.0-0' }}</td>
+                      <td class="text-right mono">{{ d.poidsTotalGrammes | number:'1.0-0' }}</td>
+                    </tr>
+                  }
+                } @empty {
+                  <tr><td colspan="7" class="empty-state-block">Aucun détail</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+    </div>
+
+    <!-- Footer -->
+    <div class="pph-modal-footer">
+      <button class="btn btn-primary" (click)="fermerDetail()">Fermer</button>
+    </div>
+
+  </div>
+</div>
+}

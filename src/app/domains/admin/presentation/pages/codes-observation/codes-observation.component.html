@@ -1,0 +1,85 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-clipboard-list ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Codes observation tournée</h1>
+      <p class="ph-sub">Codes de saisie terrain pour les clients non visités</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) {
+  <div class="{{ message()!.type === 'succes' ? 'success-banner' : 'dirty-warning' }}">
+    {{ message()!.texte }}
+  </div>
+}
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-plus-circle"></i> Ajouter un code</h2>
+  </div>
+  <div class="param-form">
+    <div class="form-group">
+      <label>Code</label>
+      <input type="text" class="form-input" [(ngModel)]="nouveau.code" placeholder="Ex: AB" />
+    </div>
+    <div class="form-group">
+      <label>Libellé</label>
+      <input type="text" class="form-input" [(ngModel)]="nouveau.libelle" placeholder="Ex: Absence responsable" />
+    </div>
+    <div class="form-group">
+      <label>Quantité obligatoire</label>
+      <input type="checkbox" [(ngModel)]="nouveau.requireQuantity" />
+    </div>
+    <div class="form-group">
+      <label>Ordre</label>
+      <input type="number" class="form-input" [(ngModel)]="nouveau.ordre" />
+    </div>
+    <div class="form-group">
+      <button class="btn btn-primary" [disabled]="!nouveau.code.trim() || !nouveau.libelle.trim()" (click)="ajouter()">
+        <i class="fa-solid fa-plus"></i> Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-list"></i> Codes existants</h2>
+  </div>
+  @if (loading()) {
+    <p>Chargement...</p>
+  } @else {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Libellé</th>
+          <th>Qté obligatoire</th>
+          <th>Actif</th>
+          <th>Ordre</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of codes(); track c.id) {
+          <tr>
+            <td><strong>{{ c.code }}</strong></td>
+            <td>{{ c.libelle }}</td>
+            <td>{{ c.requireQuantity ? 'Oui' : 'Non' }}</td>
+            <td>{{ c.actif ? 'Oui' : 'Non' }}</td>
+            <td>{{ c.ordre }}</td>
+            <td>
+              <button class="btn btn-sm" (click)="basculerActif(c)">
+                {{ c.actif ? 'Désactiver' : 'Activer' }}
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="supprimer(c.id)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

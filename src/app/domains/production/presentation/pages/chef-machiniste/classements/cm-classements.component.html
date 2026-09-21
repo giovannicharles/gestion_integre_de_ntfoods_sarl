@@ -1,0 +1,70 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-trophy ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Classements</h1>
+      <p class="ph-sub">Top machinistes — hebdomadaire et mensuel</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-sm" [class.btn-primary]="critere()==='productivite'" [class.btn-ghost]="critere()!=='productivite'" (click)="changerCritere('productivite')">Productivité</button>
+    <button class="btn btn-sm" [class.btn-primary]="critere()==='efficacite'" [class.btn-ghost]="critere()!=='efficacite'" (click)="changerCritere('efficacite')">Efficacité</button>
+    <button class="btn btn-sm" [class.btn-primary]="critere()==='taux'" [class.btn-ghost]="critere()!=='taux'" (click)="changerCritere('taux')">Taux de réalisation</button>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Classement hebdomadaire</h2>
+      <span class="text-muted">{{ classementHebdo()?.periode }}</span>
+    </div>
+    @if (loading()) {
+      <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+    } @else {
+      @for (c of (classementHebdo()?.classements ?? []); track c.machinisteMatricule) {
+        <div class="rank-row">
+          <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ c.nomMachiniste }}</div>
+            <div class="rank-meta">{{ c.nbJours }} jour(s) — {{ c.operations.join(', ') }}</div>
+          </div>
+          <div class="rank-progress-wrap">
+            <div class="prog-bar-wrap"><div class="prog-bar prog-g" [style.width.%]="valeurCritere(c) > 100 ? 100 : valeurCritere(c)"></div></div>
+          </div>
+          <span class="badge bg-success">{{ valeurCritere(c) | number:'1.1-1' }}{{ critere()==='productivite' ? ' kg' : '%' }}</span>
+        </div>
+      } @empty {
+        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée cette semaine</div>
+      }
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Classement mensuel</h2>
+      <span class="text-muted">{{ classementMensuel()?.periode }}</span>
+    </div>
+    @if (loading()) {
+      <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+    } @else {
+      @for (c of (classementMensuel()?.classements ?? []); track c.machinisteMatricule) {
+        <div class="rank-row">
+          <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
+          <div class="rank-info">
+            <div class="rank-name">{{ c.nomMachiniste }}</div>
+            <div class="rank-meta">{{ c.nbJours }} jour(s) — {{ c.operations.join(', ') }}</div>
+          </div>
+          <div class="rank-progress-wrap">
+            <div class="prog-bar-wrap"><div class="prog-bar prog-g" [style.width.%]="valeurCritere(c) > 100 ? 100 : valeurCritere(c)"></div></div>
+          </div>
+          <span class="badge bg-success">{{ valeurCritere(c) | number:'1.1-1' }}{{ critere()==='productivite' ? ' kg' : '%' }}</span>
+        </div>
+      } @empty {
+        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée ce mois</div>
+      }
+    }
+  </div>
+</div>

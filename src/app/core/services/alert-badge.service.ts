@@ -1,15 +1,11 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { StockApiRepository } from '../../domains/stock/infrastructure/repositories/stock-api.repository';
-import { AuthService } from '../auth/auth.service';
-import { ApiService } from '../http/api.service';
 
 @Injectable({ providedIn: 'root' })
 export class AlertBadgeService {
   private repo = inject(StockApiRepository);
-  private auth = inject(AuthService);
-  private api = inject(ApiService);
 
   /** Total active alerts (backend StockAlert entities) */
   activeAlertCount = signal(0);
@@ -58,12 +54,6 @@ export class AlertBadgeService {
       this.totalCount.update(v => Math.max(v, dashboard.length));
     });
 
-    const user = this.auth.getCurrentUser();
-    const matricule = user?.matricule || 'system';
-    this.api.get<number>(`stock/notifications/user/${matricule}/pending/count`).pipe(
-      catchError(() => of(0))
-    ).subscribe(count => {
-      this.notifCount.set(count || 0);
-    });
+    this.notifCount.set(0);
   }
 }

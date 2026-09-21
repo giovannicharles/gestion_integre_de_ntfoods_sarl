@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Agent Doseur — utilitaires composites PROPRES au module.
+   Alignés sur le design system TANTY (tokens --g/--y/--r/--o/--b/--s/--n*).
+   Les badges (.badge, .bg-*), boutons (.btn*), cartes, tables, KPI, page
+   header proviennent du thème global : rien n'est redéfini ici pour éviter
+   toute divergence visuelle.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Formulaires (grilles non couvertes par le thème) ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--sp-3, 12px);
+  margin-bottom: var(--sp-4, 16px);
+}
+.form-grid.mini { grid-template-columns: 1fr 1fr auto; gap: var(--sp-2, 8px); margin-bottom: var(--sp-2, 8px); }
+.form-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--n700); }
+.form-actions { display: flex; gap: var(--sp-3, 12px); justify-content: flex-end; margin-top: var(--sp-4, 16px); }
+
+/* ── Barre d'outils / recherche ── */
+.toolbar-row { display: flex; gap: var(--sp-2, 8px); align-items: center; flex-wrap: wrap; padding: 0 var(--sp-4, 16px) var(--sp-3, 12px); }
+.search-input { flex: 1; min-width: 180px; }
+
+/* ── Pagination (variante module) ── */
+.pagination-row { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3, 12px) var(--sp-4, 16px); border-top: 1px solid var(--n200); flex-wrap: wrap; gap: var(--sp-2, 8px); }
+.pagination-btns { display: flex; gap: 4px; }
+.pagination-btns button { min-width: 32px; height: 32px; border-radius: var(--r-md, 12px); border: 1.5px solid var(--n200); background: var(--w); cursor: pointer; }
+.pagination-btns button.active { background: var(--g); color: #fff; border-color: var(--g); }
+.pagination-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── État vide (variante inline dans un tableau) ── */
+.empty-state-block { text-align: center; padding: var(--sp-8, 32px); color: var(--n400); }
+.empty-state-block i { font-size: 2rem; margin-bottom: var(--sp-2, 8px); display: block; opacity: 0.6; }
+
+/* ── Skeletons ── */
+.skeleton { background: linear-gradient(90deg, var(--n150) 25%, var(--n100) 50%, var(--n150) 75%); background-size: 200% 100%; animation: shimmerA 1.6s infinite; border-radius: 6px; }
+.skeleton-row { height: 42px; margin-bottom: 6px; }
+
+/* ── Notes / alertes contextuelles ── */
+.gap-note { background: var(--o-gh); color: var(--o); border: 1px solid #ffd0b8; border-radius: var(--r-md, 12px); padding: var(--sp-3, 12px); font-size: 12px; margin-bottom: var(--sp-4, 16px); display: flex; gap: 8px; align-items: flex-start; }
+.gap-note i { flex-shrink: 0; margin-top: 1px; }
+
+.alert { padding: var(--sp-3, 12px) var(--sp-4, 16px); border-radius: var(--r-md, 12px); margin-bottom: var(--sp-3, 12px); font-size: 13px; font-weight: 600; }
+.alert-error { background: var(--r-gh); color: var(--r); border: 1px solid #f5c2c0; }
+.alert-info  { background: var(--b-gh); color: var(--b); border: 1px solid #b3e5fc; }
+
+/* ── Modales (famille module : .modal-card, distincte de la .modal-box du thème) ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.modal-card { background: var(--w); border-radius: var(--r-xl, 24px); box-shadow: var(--sh-xl); width: 100%; max-width: 560px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: cardIn .2s ease-out; }
+.modal-hd { padding: 16px 20px; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.modal-hd h3 { margin: 0; font-family: var(--font-d); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.modal-close { background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; line-height: 1; }
+.modal-body { padding: 20px; overflow-y: auto; }
+.modal-body p { margin: 4px 0; color: var(--n700); font-size: 14px; }
+.modal-body h4 { margin: 18px 0 8px; font-size: 14px; color: var(--n800); border-bottom: 1px solid var(--n200); padding-bottom: 6px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0 16px; }
+.info-item { background: var(--n50); border: 1px solid var(--n200); border-radius: var(--r-md, 12px); padding: 12px; }
+.info-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--n500); font-weight: 700; margin-bottom: 4px; }
+.info-item .value { font-size: 16px; font-weight: 700; color: var(--n900); }
+.modal-ft { padding: 16px 20px; border-top: 1px solid var(--n150); display: flex; justify-content: flex-end; background: var(--n50); }
+
+/* ── Note « fûts à zéro » ── */
+.futs-zero-note { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; background: var(--y-gh); border: 1px solid var(--y-l); border-radius: var(--r-md, 12px); color: var(--y-d); font-size: 13px; }
+.futs-zero-note i { margin-top: 2px; }

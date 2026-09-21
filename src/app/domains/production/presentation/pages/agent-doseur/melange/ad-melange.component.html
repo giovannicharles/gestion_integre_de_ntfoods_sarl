@@ -1,0 +1,112 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-blender ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion du Mélange</h1>
+      <p class="ph-sub">Consultation des mélanges réalisés (Bouillie / Arachide)</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <a routerLink="/production/agent-doseur/dosage" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Créer un mélange</a>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>
+    <strong>Limite backend :</strong> aucune entité "Mélange" indépendante n'existe — chaque session de dosage
+    correspond à un mélange. La création se fait depuis la vue <strong>Dosage</strong>. Modifier ou supprimer un
+    mélange déjà enregistré n'est pas possible : le backend n'expose pas de <code>PATCH</code>/<code>DELETE</code>
+    sur une matière déjà ajoutée à une session.
+  </div>
+</div>
+
+@if (erreurAcces()) {
+  <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Impossible de charger les mélanges.</div></div>
+} @else if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+} @else {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-table"></i> Mélanges réalisés (14 derniers jours)</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Type</th><th>PPH</th><th>Date</th><th>Quantité totale</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        @for (m of melanges(); track m.session.id) {
+          <tr>
+            <td><span [class]="m.type==='BOUILLIE' ? 'badge bg-neutral' : 'badge bg-orange'">{{ m.type === 'BOUILLIE' ? 'Bouillie' : 'Mélange Arachide' }}</span></td>
+            <td class="mono">{{ m.session.referencePPH }}</td>
+            <td>{{ m.session.date | date:'dd/MM/yyyy' }}</td>
+            <td>{{ m.quantiteTotale | number:'1.1-1' }} kg</td>
+            <td><span [class]="m.session.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ m.session.cloturee ? 'Clôturé' : 'En cours' }}</span></td>
+            <td><button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(m)">Détails</button></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun mélange sur la période</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
+
+@if (detail(); as m) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-blender"></i> Mélange — session #{{ m.session.id }}</h3>
+      <button class="modal-close" (click)="fermerDetail()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Type</div>
+          <div class="value">{{ m.type === 'BOUILLIE' ? 'Bouillie' : 'Mélange Arachide' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">PPH</div>
+          <div class="value">{{ m.session.referencePPH }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Date</div>
+          <div class="value">{{ m.session.date | date:'dd/MM/yyyy' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Quantité totale</div>
+          <div class="value">{{ m.quantiteTotale | number:'1.1-1' }} kg</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Statut</div>
+          <div class="value">{{ m.session.cloturee ? 'Clôturé' : 'En cours' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Fûts nets</div>
+          <div class="value">{{ m.session.nbFutsNets }}</div>
+        </div>
+      </div>
+
+      <h4>Matières premières</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Matière</th><th>Quantité</th></tr></thead>
+          <tbody>
+            @for (mt of m.session.matieresUtilisees; track mt.typeMatiere) { <tr><td>{{ mt.typeMatiere }}</td><td>{{ mt.quantiteKg }} kg</td></tr> }
+            @empty { <tr><td colspan="2" class="empty-state-block">Aucune matière enregistrée</td></tr> }
+          </tbody>
+        </table>
+      </div>
+
+      @if (m.session.nbFutsNets === 0) {
+        <div class="futs-zero-note">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            <strong>Fûts nets à 0 :</strong> les fûts sont enregistrés dans la vue <strong>Fûts</strong>, pas dans ce détail de mélange.
+            Tant qu'aucun fût n'a été saisi pour cette session, le nombre de fûts nets reste à zéro.
+          </div>
+        </div>
+      }
+    </div>
+    <div class="modal-ft"><button class="btn btn-primary" (click)="fermerDetail()">Fermer</button></div>
+  </div>
+</div>
+}

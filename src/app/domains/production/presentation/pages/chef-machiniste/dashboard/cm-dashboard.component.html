@@ -1,0 +1,131 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Tableau de Bord — Chef Machiniste</h1>
+      <p class="ph-sub">Pilotage du broyage — maïs, soja, arachide</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <a routerLink="/production/chef-machiniste/realisations" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Saisir une réalisation</a>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+@if (loading()) {
+  @for (i of [1,2,3,4]; track i) {
+    <div class="skeleton skeleton-row"></div>
+  }
+} @else {
+
+<!-- Vue d'ensemble production -->
+<h2 class="dash-section-title"><i class="fa-solid fa-industry"></i> Production du jour</h2>
+<div class="kpi-grid">
+  <div class="kpi-card kp-g featured"><div class="kpi-ico ig"><i class="fa-solid fa-weight-hanging"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Poudre broyée (jour)</div><div class="kpi-val">{{ poudreTotaleJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-b featured"><div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Nette confirmée (clôturé)</div><div class="kpi-val">{{ netteBroyeeJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-r featured"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Pertes</div><div class="kpi-val">{{ pertesJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-y featured"><div class="kpi-ico iy"><i class="fa-solid fa-percent"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Taux global de réalisation</div><div class="kpi-val">{{ tauxRealisationGlobal() }}%</div></div></div>
+</div>
+
+<!-- Répartition par type de poudre -->
+<h2 class="dash-section-title"><i class="fa-solid fa-layer-group"></i> Répartition par type de poudre</h2>
+<div class="kpi-grid kpi-grid-3">
+  <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-seedling"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Maïs broyé</div><div class="kpi-val">{{ maisJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-leaf"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Soja broyé</div><div class="kpi-val">{{ sojaJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-jar"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Arachide broyée</div><div class="kpi-val">{{ arachideJour() | number:'1.1-1' }} kg</div></div></div>
+</div>
+
+<!-- Objectifs & ressources -->
+<h2 class="dash-section-title"><i class="fa-solid fa-bullseye"></i> Objectifs & Ressources</h2>
+<div class="kpi-grid kpi-grid-4">
+  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-bullseye"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Objectif du jour</div><div class="kpi-val">{{ objectifsJour() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Objectifs atteints</div><div class="kpi-val">{{ objectifsAtteints() }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Machinistes actifs</div><div class="kpi-val">{{ machinistesActifs() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-gauge"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Productivité moyenne</div><div class="kpi-val">{{ productiviteMoyenne() | number:'1.1-1' }} kg</div></div></div>
+</div>
+
+<!-- Qualité & planning -->
+<h2 class="dash-section-title"><i class="fa-solid fa-clipboard-check"></i> Qualité & Planning</h2>
+<div class="kpi-grid kpi-grid-4">
+  <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-arrow-trend-down"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">% global des pertes</div><div class="kpi-val">{{ pctPertesJour() }}%</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-file-lines"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">PPH reçus</div><div class="kpi-val">{{ nbPphRecus() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-flag-checkered"></i></div>
+    <div class="kpi-body"><div class="kpi-lbl">Productions terminées</div><div class="kpi-val">{{ productionsTerminees() }}</div></div></div>
+</div>
+
+<!-- Graphiques en avant -->
+<div class="two-col charts-row-tall">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution journalière (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      @if (historique30j().length) {
+        <app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionJournaliere()" [height]="280" />
+      } @else {
+        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune session de broyage sur la période.</p>
+      }
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Objectifs vs Réalisations (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      @if (historique30j().length) {
+        <app-mini-chart type="bar" [labels]="labels7j()" [series]="serieObjectifsVsRealise()" [height]="280" />
+      } @else {
+        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucun objectif enregistré sur la période.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="two-col charts-row-tall">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      @if (historique30j().length) {
+        <app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionPertes()" [height]="260" />
+      } @else {
+        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune donnée de pertes à afficher.</p>
+      }
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition Maïs / Soja / Arachide</h2></div>
+    <div class="donut-wrap" style="padding: 0 var(--sp-4) var(--sp-4)">
+      @if (donutRepartitionTypes().length) {
+        <app-donut-chart title="" unit="kg" [data]="donutRepartitionTypes()" />
+      } @else {
+        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune poudre broyée à répartir.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="card chart-card-wide">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Performance des machinistes (semaine)</h2>
+    <a routerLink="/production/chef-machiniste/classements" class="btn btn-ghost btn-sm">Voir classement complet</a>
+  </div>
+  <div style="padding: 0 var(--sp-4) var(--sp-4)">
+    @if (labelsMachinistesHebdo().length) {
+      <app-mini-chart type="bar" [labels]="labelsMachinistesHebdo()" [series]="serieProductiviteHebdo()" [height]="280" />
+    } @else {
+      <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucun classement machiniste pour cette semaine.</p>
+    }
+  </div>
+</div>
+
+}

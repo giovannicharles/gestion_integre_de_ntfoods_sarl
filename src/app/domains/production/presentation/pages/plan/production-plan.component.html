@@ -1,28 +1,40 @@
-@if (loading()) {
-  <div class="page-loading">
-    <div class="spinner spinner-lg"></div>
-    <p>Chargement du plan de production…</p>
-  </div>
-} @else {
 <div class="ph">
   <div class="ph-left">
     <i class="fa-solid fa-calendar-week ph-ico"></i>
     <div>
       <h1 class="ph-title">Plan de Production Hebdomadaire</h1>
-      <p class="ph-sub">{{ pph()?.reference ?? '—' }} — du {{ pph()?.dateDebut ?? '—' }} au {{ pph()?.dateFin ?? '—' }}</p>
+      <p class="ph-sub">
+        {{ pph()?.referencePPH ?? '—' }} — Semaine {{ pph()?.semaine ?? '—' }} du {{ pph()?.dateDebut ?? '—' }} au {{ pph()?.dateFin ?? '—' }}
+        <br><small>Soumis le {{ pph()?.dateSoumission ?? '—' }}</small>
+      </p>
     </div>
   </div>
   <div class="ph-actions">
+    <select class="input" [ngModel]="pph()?.referencePPH" (ngModelChange)="selectionnerPPH($event)">
+      <option value="">PPH en cours</option>
+      @for (p of pphs(); track p.id) {
+        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+      }
+    </select>
     <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '—' }}</span>
+    <button class="btn btn-primary" (click)="showCreerPPH.set(true)"><i class="fa-solid fa-plus"></i> PPH</button>
+    <button class="btn btn-ghost" (click)="ouvrirModifierLignes()" [disabled]="!pph()">Modifier lignes</button>
+    @if (pph()?.statut === 'BROUILLON') { <button class="btn btn-primary" (click)="validerPPH()">Valider</button> }
+    @if (pph()?.statut === 'VALIDE') { <button class="btn btn-primary" (click)="demarrerPPH()">Démarrer</button> }
+    @if (pph()?.statut === 'EN_COURS') { <button class="btn btn-danger" (click)="cloturerPPH()">Clôturer</button> }
   </div>
 </div>
+
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
 
 <div class="kpi-grid">
   <div class="kpi-card kp-b">
     <div class="kpi-ico ib"><i class="fa-solid fa-industry"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Chef de production</div>
-      <div class="kpi-val">{{ pph()?.matriculeCreateur ?? '—' }}</div>
+      <div class="kpi-val">{{ pph()?.matriculeChefProduction ?? '—' }}</div>
       <div class="kpi-meta">responsable semaine</div>
     </div>
   </div>
@@ -39,7 +51,7 @@
     <div class="kpi-body">
       <div class="kpi-lbl">Produits réalisés</div>
       <div class="kpi-val">{{ totalProduitsRealises() }}/{{ totalProduitsPlannifies() }}</div>
-      <div class="kpi-meta">unités produites</div>
+      <div class="kpi-meta">{{ bcLie() ? 'unités commandées (BC)' : 'unités planifiées' }}</div>
     </div>
   </div>
   <div class="kpi-card" [class]="progressionGlobale() >= 80 ? 'kp-g' : 'kp-y'">
@@ -92,22 +104,245 @@
         <tr>
           <th>Code</th>
           <th>Désignation</th>
-          <th>Qté prévue</th>
+          <th>Qté prévue (cartons)</th>
           <th>Qté réalisée</th>
           <th>Progression</th>
-          <th>%</th>
         </tr>
       </thead>
       <tbody>
-        @for (ligne of pph() ? [] : []; track $index) {
+        @for (ligne of pph()?.lignes || []; track ligne.codeProduit) {
           <tr>
-            <td colspan="6" class="empty-state">Données produits finis disponibles via PPH</td>
+            <td>{{ ligne.codeProduit }}</td>
+            <td><strong>{{ ligne.nomProduit }}</strong></td>
+            <td>{{ ligne.objectifSemaine }}</td>
+            <td>{{ ligne.productionRealisee }}</td>
+            <td>
+              <div class="progress-wrap">
+                <div [class]="progressClass(progression(ligne.productionRealisee, ligne.objectifSemaine))" [style.width.%]="progression(ligne.productionRealisee, ligne.objectifSemaine)"></div>
+              </div>
+            </td>
           </tr>
         } @empty {
-          <tr><td colspan="6" class="empty-state">Aucun produit fini planifié</td></tr>
+          <tr><td colspan="5" class="empty-state">Aucun produit planifié</td></tr>
         }
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-link"></i> PPH liés à un Bon de Commande</h2>
+  </div>
+  <div class="card-body" style="padding: 0 var(--sp-4) var(--sp-4)">
+
+    <!-- Filtres : liste déroulante BC + filtre date -->
+    <div class="bc-filter-row">
+      <div class="bc-filter-field">
+        <label class="bc-filter-label"><i class="fa-solid fa-file-invoice"></i> Bon de Commande</label>
+        <select class="input bc-select"
+                [ngModel]="rechercheBC"
+                (ngModelChange)="selectionnerBC($event)">
+          <option value="">— Sélectionner un BC —</option>
+          @for (ref of bcUniques(); track ref) {
+            <option [value]="ref">{{ ref }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="bc-filter-field bc-filter-field-sm">
+        <label class="bc-filter-label"><i class="fa-solid fa-calendar-day"></i> À partir du</label>
+        <input type="date" class="input" [(ngModel)]="filtreDate" [disabled]="!pphsParBC()">
+      </div>
+
+      @if (rechercheBC) {
+        <button class="btn btn-ghost btn-sm bc-reset-btn"
+                (click)="rechercheBC = ''; filtreDate = ''; pphsParBC.set(null)"
+                title="Réinitialiser">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Résultats -->
+    @if (pphsParBCFiltres(); as liste) {
+      <div class="tbl-wrap bc-results-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Référence PPH</th>
+              <th>Semaine</th>
+              <th>Statut</th>
+              <th>Période</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of liste; track p.id) {
+              <tr class="bc-pph-row" (click)="selectionnerPPH(p.referencePPH)"
+                  [class.bc-pph-row-active]="pph()?.referencePPH === p.referencePPH">
+                <td><strong>{{ p.referencePPH }}</strong></td>
+                <td>{{ p.semaine }}</td>
+                <td><span [class]="statutPlanClass(p.statut)">{{ p.statut }}</span></td>
+                <td class="text-muted">{{ p.dateDebut }} → {{ p.dateFin }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state" style="padding:1.5rem 0">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <p>Aucun PPH trouvé pour ce BC{{ filtreDate ? ' à cette date' : '' }}</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else if (!rechercheBC) {
+      <div class="bc-placeholder">
+        <i class="fa-solid fa-hand-pointer"></i>
+        <span>Sélectionnez un bon de commande pour voir ses plans de production</span>
+      </div>
+    }
+
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Répartition journalière</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Jour</th>
+          <th>Poudre maïs (kg)</th>
+          <th>Poudre soja (kg)</th>
+          <th>Poudre arachide (kg)</th>
+          <th>Fûts 50kg</th>
+          <th>Sachets</th>
+          <th>Couvercles</th>
+          <th>Scellés</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (jour of pph()?.repartitionJours || []; track jour.dateJour) {
+          <tr>
+            <td>{{ jour.dateJour }}</td>
+            <td>{{ jour.poudreMaisKg | number:'1.2-2' }}</td>
+            <td>{{ jour.poudreSojaKg | number:'1.2-2' }}</td>
+            <td>{{ jour.poudreArachideKg | number:'1.2-2' }}</td>
+            <td>{{ jour.futsPrevus }}</td>
+            <td>{{ jour.sachetsPrevus }}</td>
+            <td>{{ jour.couverclesPrevus }}</td>
+            <td>{{ jour.scellesPrevus }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8" class="empty-state">Aucune répartition journalière</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showCreerPPH()) {
+<div class="modal-overlay" (click)="showCreerPPH.set(false)">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd"><h3><i class="fa-solid fa-plus"></i> Nouveau PPH</h3></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label>Référence PPH<input class="input" [(ngModel)]="nouveauPPH.referencePPH" placeholder="PPH-..."></label>
+        <label>Référence BC (optionnel)<input class="input" [(ngModel)]="nouveauPPH.referenceBC" placeholder="BC-..."></label>
+        <label>Semaine<input class="input" [(ngModel)]="nouveauPPH.semaine" placeholder="2026-W27"></label>
+        <label>Date début<input type="date" class="input" [(ngModel)]="nouveauPPH.dateDebut"></label>
+        <label>Date fin<input type="date" class="input" [(ngModel)]="nouveauPPH.dateFin"></label>
+      </div>
+      <div class="tbl-wrap" style="margin-top:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>Code produit</th><th>Nom produit</th><th>Objectif semaine</th><th></th></tr></thead>
+          <tbody>
+            @for (l of nouvellesLignesPPH; track $index; let i = $index) {
+              <tr>
+                <td><input class="input" [(ngModel)]="l.codeProduit"></td>
+                <td><input class="input" [(ngModel)]="l.nomProduit"></td>
+                <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:100px"></td>
+                <td><button class="btn btn-sm btn-danger" (click)="retirerLignePPH(i)">×</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:var(--sp-2)" (click)="ajouterLignePPH()">
+        <i class="fa-solid fa-plus"></i> Ajouter une ligne
+      </button>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" (click)="showCreerPPH.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="creerPPH()">Créer</button>
+    </div>
+  </div>
+</div>
+}
+
+@if (showModifierLignes()) {
+<div class="modal-overlay" (click)="showModifierLignes.set(false)">
+  <div class="modal-box" style="max-width:640px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-pen-to-square" style="color:var(--g)"></i>
+        Modifier les objectifs de production
+      </div>
+      <button class="modal-close" (click)="showModifierLignes.set(false)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted" style="margin:0;">
+        <i class="fa-solid fa-circle-info" style="color:var(--info);"></i>
+        Ajustez les objectifs hebdomadaires par produit. La production réalisée reste inchangée.
+      </p>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th class="text-right">Objectif semaine</th>
+              <th class="text-right">Réalisé</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lignesModifiees; track l.codeProduit; let i = $index) {
+              <tr>
+                <td>
+                  <strong>{{ l.nomProduit }}</strong>
+                  <span class="badge bg-neutral" style="font-size:0.75rem;margin-left:6px;">{{ l.codeProduit }}</span>
+                </td>
+                <td class="text-right">
+                  <input type="number" class="input" [(ngModel)]="l.objectifSemaine" min="0" style="width:110px;text-align:right;">
+                </td>
+                <td class="text-right mono text-muted">
+                  {{ pph()?.lignes?.[i]?.productionRealisee ?? 0 }}
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot class="fw-bold" style="background:var(--n50);">
+            <tr>
+              <td>Total</td>
+              <td class="text-right mono">{{ totalObjectifsModifies() }}</td>
+              <td class="text-right mono">{{ totalRealisePPH() }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="showModifierLignes.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="modifierLignes()">
+        <i class="fa-solid fa-check"></i> Enregistrer les objectifs
+      </button>
+    </div>
   </div>
 </div>
 }

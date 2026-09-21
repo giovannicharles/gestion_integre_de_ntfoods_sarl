@@ -1,0 +1,50 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-simple ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Analyse des Performances</h1>
+      <p class="ph-sub">Équipes, machinistes et postes — semaine en cours</p>
+    </div>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Efficacité moyenne machinistes</div><div class="kpi-val">{{ efficaciteMoyenneMachinistes() }}%</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Taux moyen de réalisation (postes)</div><div class="kpi-val">{{ tauxMoyenExecuteurs() }}%</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Performance des machinistes</h2></div>
+  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsMachinistes()" [series]="serieMachinistes()" [height]="220" /></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Taux réalisation</th><th>Efficacité</th></tr></thead>
+      <tbody>
+        @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
+          <tr><td>#{{ c.rang }}</td><td>{{ c.nomMachiniste }}</td><td>{{ c.productiviteKg | number:'1.1-1' }} kg</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.efficacite | number:'1.1-1' }}%</td></tr>
+        } @empty { <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-user-gear"></i> Performance des postes (exécutants)</h2></div>
+  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsExecuteurs()" [series]="serieExecuteurs()" [height]="220" /></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Rang</th><th>Employé</th><th>Quantité</th><th>Taux réalisation</th><th>Jours</th></tr></thead>
+      <tbody>
+        @for (c of classementExecuteurs(); track c.matriculeEmploye) {
+          <tr><td>#{{ c.rang }}</td><td>{{ c.nomEmploye }}</td><td>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.nbJoursAffectes }}</td></tr>
+        } @empty { <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+}

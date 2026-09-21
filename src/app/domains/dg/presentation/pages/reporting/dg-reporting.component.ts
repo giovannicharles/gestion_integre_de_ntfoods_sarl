@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
-import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE, KpisDgBE } from '../../../infrastructure/dg.service';
+import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 Chart.register(...registerables);
@@ -10,7 +9,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-dg-reporting',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink],
+  imports: [CommonModule, DatePipe],
   templateUrl: './dg-reporting.component.html',
   styleUrls: ['./dg-reporting.component.css']
 })
@@ -18,8 +17,6 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('lineCanvas') lineCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('radarCanvas') radarCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('doughnutCanvas') doughnutCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('stackedCanvas') stackedCanvas!: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
 
@@ -42,33 +39,8 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
     if (prev === 0) return 0;
     return Math.round(((this.totalN() - prev) / prev) * 100);
   });
-  totalZoneCa = computed(() => this.zones().reduce((s, z) => s + z.caMoisCourantFCFA, 0));
-  nbZones = computed(() => this.zones().length);
-  nbCommerciaux = computed(() => this.commerciaux().length);
-  totalCaCommerciaux = computed(() => this.commerciaux().reduce((s, c) => s + c.caRealise, 0));
-  caMoyenCom = computed(() => {
-    const n = this.nbCommerciaux();
-    if (n === 0) return 0;
-    return Math.round(this.totalCaCommerciaux() / n);
-  });
-  totalClientsZones = computed(() => this.zones().reduce((s, z) => s + z.nombreClients, 0));
-  totalVentesZones = computed(() => this.zones().reduce((s, z) => s + z.nombreVentesMoisCourant, 0));
 
   ngOnInit() {
-    this.dgSvc.getKpis().subscribe({
-      next: k => {
-        const now = new Date();
-        const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-        const m1 = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const m2 = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-        this.caMensuel.set([
-          { mois: moisLabels[m2.getMonth()], n: k.caMoisN2, nMoins1: Math.round(k.caMoisN2 * 0.85) },
-          { mois: moisLabels[m1.getMonth()], n: k.caMoisN1, nMoins1: Math.round(k.caMoisN1 * 0.85) },
-          { mois: moisLabels[now.getMonth()], n: k.caTotal, nMoins1: k.caMoisN1 },
-        ]);
-      },
-      error: () => {},
-    });
     this.dgSvc.getZones().subscribe({
       next: z => this.zones.set(z),
       error: () => {},
@@ -129,29 +101,6 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
           ]
         },
         options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 120, ticks: { stepSize: 20 } } } }
-      }));
-    }
-    if (this.doughnutCanvas?.nativeElement && zones.length > 0) {
-      this.charts.push(new Chart(this.doughnutCanvas.nativeElement.getContext('2d')!, {
-        type: 'doughnut',
-        data: {
-          labels: zones.map(z => z.secteur),
-          datasets: [{ data: zones.map(z => z.caMoisCourantFCFA), backgroundColor: ['#1A6B2A','#FFD700','#2196F3','#ec4899','#8b5cf6','#f59e0b','#14b8a6','#ef4444'], borderWidth: 0 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 10 } } }, cutout: '60%' }
-      }));
-    }
-    if (this.stackedCanvas?.nativeElement && caMensuel.length > 0) {
-      this.charts.push(new Chart(this.stackedCanvas.nativeElement.getContext('2d')!, {
-        type: 'bar',
-        data: {
-          labels: caMensuel.map(m => m.mois),
-          datasets: [
-            { label: 'CA N (2026)', data: caMensuel.map(m => m.n), backgroundColor: '#1A6B2A', borderRadius: 4 },
-            { label: 'CA N-1 (2025)', data: caMensuel.map(m => m.nMoins1), backgroundColor: '#FFD700', borderRadius: 4 },
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }
       }));
     }
   }

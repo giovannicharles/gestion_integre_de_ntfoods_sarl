@@ -1,0 +1,172 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-lines ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Rapports de Production</h1>
+      <p class="ph-sub">Rapports journaliers et hebdomadaires, exportables</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
+
+<nav class="rp-tabs">
+  <button [class.active]="tab === 'hebdomadaire'" (click)="tab = 'hebdomadaire'">Rapport hebdomadaire</button>
+  <button [class.active]="tab === 'responsable-salle'" (click)="tab = 'responsable-salle'">Responsable de salle</button>
+  <button [class.active]="tab === 'comparatif'" (click)="tab = 'comparatif'">Comparatif BC</button>
+  <button [class.active]="tab === 'lots'" (click)="tab = 'lots'">Export lots</button>
+</nav>
+
+<!-- RAPPORT HEBDOMADAIRE -->
+@if (tab === 'hebdomadaire') {
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Rapport hebdomadaire de production</h2>
+  </div>
+  <div class="filter-row">
+    <label>Du <input type="date" class="input" [(ngModel)]="hebdoDebut"></label>
+    <label>Au <input type="date" class="input" [(ngModel)]="hebdoFin"></label>
+    <button class="btn btn-primary" (click)="genererRapportHebdo()">Générer</button>
+  </div>
+
+  @if (rapportHebdo(); as r) {
+    <div class="kpi-grid" style="margin-top:var(--sp-4)">
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ r.totalFutsNets }}</div><div class="kpi-meta">{{ r.totalFutsProduits }} fûts sortis</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Lots validés</div><div class="kpi-val">{{ r.totalLotsValides }}</div><div class="kpi-meta">{{ r.totalQuantiteLots }} kg</div></div></div>
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux de pertes global</div><div class="kpi-val">{{ r.tauxPertesGlobal | number:'1.1-1' }}%</div><div class="kpi-meta">{{ r.nbSessionsBroyage }} sessions broyage</div></div></div>
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fiches saisies</div><div class="kpi-val">{{ r.nbFiches }}</div><div class="kpi-meta">{{ r.nbSessionsDosage }} sessions dosage</div></div></div>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:var(--sp-4)">
+      <table class="data-table">
+        <thead><tr><th>Référence produit</th><th>Quantité produite</th></tr></thead>
+        <tbody>
+          @for (k of objectKeys(r.quantitesParReference); track k) {
+            <tr><td>{{ k }}</td><td><strong>{{ r.quantitesParReference[k] }}</strong></td></tr>
+          } @empty {
+            <tr><td colspan="2" class="empty-state">Aucune donnée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:var(--sp-3)">
+      <table class="data-table">
+        <thead><tr><th>Bon de commande</th><th>Taux d'avancement</th></tr></thead>
+        <tbody>
+          @for (k of objectKeys(r.tauxAvancementParBC); track k) {
+            <tr><td>{{ k }}</td><td>{{ r.tauxAvancementParBC[k] }}%</td></tr>
+          } @empty {
+            <tr><td colspan="2" class="empty-state">Aucune donnée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:var(--sp-3)">
+      <table class="data-table">
+        <thead><tr><th>Type de poudre</th><th>Quantité broyée (kg)</th><th>Pertes (kg)</th><th>% pertes</th></tr></thead>
+        <tbody>
+          @for (k of objectKeys(r.quantiteBroyeeParTypePoudre); track k) {
+            <tr>
+              <td>{{ k }}</td>
+              <td>{{ r.quantiteBroyeeParTypePoudre[k] | number:'1.2-2' }}</td>
+              <td>{{ r.pertesParTypePoudre[k] ?? 0 | number:'1.2-2' }}</td>
+              <td>{{ r.pctPertesParTypePoudre[k] ?? 0 | number:'1.1-1' }}%</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="empty-state">Aucune donnée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+}
+
+<!-- RAPPORT RESPONSABLE DE SALLE -->
+@if (tab === 'responsable-salle') {
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-user-tie"></i> Rapport du Responsable de Salle</h2>
+  </div>
+  <div class="filter-row">
+    <label>Du <input type="date" class="input" [(ngModel)]="rsDebut"></label>
+    <label>Au <input type="date" class="input" [(ngModel)]="rsFin"></label>
+    <button class="btn btn-primary" (click)="genererRapportResponsableSalle()">Générer</button>
+  </div>
+  @if (rapportRS(); as r) {
+    <div class="kpi-grid" style="margin-top:var(--sp-4)">
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ r.totalFutsNets }}</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Lots validés</div><div class="kpi-val">{{ r.totalLotsValides }}</div><div class="kpi-meta">{{ r.totalQuantiteLots }} kg</div></div></div>
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux de pertes global</div><div class="kpi-val">{{ r.tauxPertesGlobal | number:'1.1-1' }}%</div></div></div>
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fiches saisies</div><div class="kpi-val">{{ r.nbFiches }}</div></div></div>
+    </div>
+  } @else {
+    <p class="text-muted" style="padding: var(--sp-3)">Sélectionnez une période puis générez le rapport.</p>
+  }
+</div>
+}
+
+<!-- RAPPORT COMPARATIF BC -->
+@if (tab === 'comparatif') {
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Rapport comparatif BC vs Production</h2>
+  </div>
+  <div class="filter-row">
+    <input class="input" placeholder="Référence BC..." [(ngModel)]="referenceBC" (keyup.enter)="genererComparatifBC()">
+    <button class="btn btn-primary" (click)="genererComparatifBC()">Générer</button>
+  </div>
+  @if (rapportComparatif(); as r) {
+    <div class="kpi-grid" style="margin-top:var(--sp-4)">
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Quantité planifiée</div><div class="kpi-val">{{ r.totalQuantitePlanifiee }}</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Quantité produite</div><div class="kpi-val">{{ r.totalQuantiteProduite }}</div></div></div>
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Avancement global</div><div class="kpi-val">{{ tauxAvancementComparatif() }}%</div></div></div>
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Cartons / kg validés</div><div class="kpi-val">{{ r.totalCartonsValides }}</div><div class="kpi-meta">{{ r.totalKgValides }} kg</div></div></div>
+    </div>
+    <div class="tbl-wrap" style="margin-top:var(--sp-4)">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Planifié</th><th>Produit</th><th>Cartons validés</th><th>Kg validés</th></tr></thead>
+        <tbody>
+          @for (l of r.lignes; track l.codeProduit) {
+            <tr>
+              <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designation }}</td>
+              <td>{{ l.quantitePlanifiee }}</td>
+              <td>{{ l.quantiteProduite }}</td>
+              <td>{{ l.nbCartonsValides }}</td>
+              <td>{{ l.quantiteLotsValidesKg | number:'1.2-2' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-state">Aucune ligne pour ce BC</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+}
+
+<!-- EXPORT RAPPORT LOTS -->
+@if (tab === 'lots') {
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-file-arrow-down"></i> Export du rapport des lots</h2>
+  </div>
+  <div class="filter-row">
+    <label>Du <input type="date" class="input" [(ngModel)]="lotsDebut"></label>
+    <label>Au <input type="date" class="input" [(ngModel)]="lotsFin"></label>
+    <select class="input" [(ngModel)]="lotsFormat">
+      <option value="xlsx">Excel (.xlsx)</option>
+      <option value="pdf">PDF</option>
+      <option value="csv">CSV</option>
+      <option value="json">JSON</option>
+    </select>
+    <button class="btn btn-primary" (click)="telechargerRapportLots()">
+      <i class="fa-solid fa-download"></i> Télécharger
+    </button>
+  </div>
+</div>
+}

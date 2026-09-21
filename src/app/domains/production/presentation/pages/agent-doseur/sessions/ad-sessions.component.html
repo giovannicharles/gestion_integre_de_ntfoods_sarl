@@ -1,0 +1,94 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-list-check ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion des Sessions</h1>
+      <p class="ph-sub">Ouverture, suivi et clôture des sessions de dosage</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Ouvrir une session</h2></div>
+  <div class="ad-session-form">
+    @if (sessionOuverteActive()) {
+      <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Une session (#{{ sessionOuverteActive()!.id }}) est déjà ouverte. Clôturez-la avant d'en ouvrir une nouvelle.</div></div>
+    }
+    <div class="form-grid">
+      <label>PPH
+        <select class="input" [(ngModel)]="nouvelleSession.referencePPH" [disabled]="!!sessionOuverteActive()">
+          <option value="">— Choisir —</option>
+          @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+        </select>
+      </label>
+      <label>Date<input type="date" class="input" [(ngModel)]="nouvelleSession.date" [disabled]="!!sessionOuverteActive()"></label>
+      <label>Matricule agent doseur
+        <input class="input" [(ngModel)]="nouvelleSession.matriculeAgentDoseur" readonly tabindex="-1">
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="ouvrir()" [disabled]="!!sessionOuverteActive()"><i class="fa-solid fa-check"></i> Ouvrir</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-clock"></i> Sessions de cette visite</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>#</th><th>PPH</th><th>Ouverture</th><th>Clôture</th><th>Durée</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        @for (s of sessionsSession(); track s.id) {
+          <tr>
+            <td>{{ s.id }}</td>
+            <td class="mono">{{ s.referencePPH }}</td>
+            <td>{{ s.dateCreation | date:'dd/MM HH:mm' }}</td>
+            <td>{{ s.cloturee ? (s.dateModification | date:'dd/MM HH:mm') : '—' }}</td>
+            <td>{{ duree(s) }}</td>
+            <td><span [class]="s.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ s.cloturee ? 'Clôturée' : 'Ouverte' }}</span></td>
+            <td>
+              <div class="row-actions">
+                @if (!s.cloturee) { <button class="btn btn-sm btn-success" (click)="cloturer(s)">Clôturer</button> }
+                <button class="btn btn-sm btn-ghost" (click)="selectionner(s)">
+                  {{ contexte.sessionActiveId() === s.id ? '✓ Active' : 'Activer' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session ouverte pendant cette visite</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique (7 derniers jours)</h2></div>
+  @if (erreurHistorique()) {
+    <div class="gap-note"><i class="fa-solid fa-triangle-exclamation"></i><div>Impossible de charger l'historique.</div></div>
+  } @else if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>PPH</th><th>Agent</th><th>Fûts nets</th><th>Statut</th></tr></thead>
+        <tbody>
+          @for (s of historique(); track s.id) {
+            <tr>
+              <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
+              <td class="mono">{{ s.referencePPH }}</td>
+              <td>{{ s.matriculeAgentDoseur }}</td>
+              <td>{{ s.nbFutsNets }}</td>
+              <td><span [class]="s.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ s.cloturee ? 'Clôturée' : 'Ouverte' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session sur les 7 derniers jours</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

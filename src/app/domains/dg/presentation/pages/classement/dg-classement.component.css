@@ -4,22 +4,22 @@
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }
 .rank-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .82rem; background: var(--n200); color: var(--n600); }
-.rk-g { background: #FFD700; color: #7a5f00; }
-.rk-s { background: #C0C0C0; color: #555; }
-.rk-b { background: #CD7F32; color: #fff; }
+.rk-g { background: var(--y); color: var(--y-d); }
+.rk-s { background: var(--n300); color: var(--n600); }
+.rk-b { background: var(--o); color: var(--w); }
 .com-cell { display: flex; align-items: center; gap: .6rem; }
-.com-av { width: 36px; height: 36px; border-radius: 50%; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; flex-shrink: 0; }
+.com-av { width: 36px; height: 36px; border-radius: 50%; background: var(--g); color: var(--w); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; flex-shrink: 0; }
 .com-name { font-weight: 600; font-size: .88rem; color: var(--n800); }
 .com-tel { font-size: .72rem; color: var(--n500); }
 .zone-chip { background: var(--n100); color: var(--n600); padding: 2px 8px; border-radius: 99px; font-size: .75rem; font-weight: 600; }
 .taux-chip { padding: 3px 10px; border-radius: 99px; font-size: .8rem; font-weight: 700; }
-.taux-ok { background: #e8f5e9; color: #1b5e20; }
-.taux-warn { background: #fff3e0; color: #e65100; }
+.taux-ok { background: var(--s-gh); color: var(--s); }
+.taux-warn { background: var(--o-gh); color: var(--o); }
 .progress-cell { min-width: 120px; }
 .prog-bar-wrap { height: 8px; background: var(--n200); border-radius: 99px; overflow: hidden; }
 .prog-bar { height: 100%; background: var(--r); border-radius: 99px; transition: width .5s ease; }
 .prog-ok { background: var(--g); }
-.row-winner { background: #f1f8f3 !important; }
+.row-winner { background: var(--s-gh) !important; }
 .tfoot-total td { font-weight: 700; border-top: 2px solid var(--n200); background: var(--n50); }
 .text-success { color: var(--s) !important; }
 .mono { font-variant-numeric: tabular-nums; }

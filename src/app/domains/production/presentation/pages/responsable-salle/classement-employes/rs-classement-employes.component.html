@@ -1,0 +1,49 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-trophy ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Classement des Employés</h1>
+      <p class="ph-sub">Top employés — hebdomadaire et mensuel</p>
+    </div>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+} @else {
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Classement hebdomadaire</h2></div>
+    @for (c of classementHebdo(); track c.matriculeEmploye) {
+      <div class="rank-row">
+        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
+        <div class="rank-info">
+          <div class="rank-name">{{ c.nomEmploye }}</div>
+          <div class="rank-meta">{{ c.nbJoursAffectes }} jour(s) affectés</div>
+        </div>
+        <span class="badge bg-success">{{ c.quantiteTotaleRealisee }} {{ c.unite }} — {{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
+      </div>
+    } @empty {
+      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée cette semaine</div>
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Classement mensuel</h2></div>
+    @for (c of classementMensuel(); track c.matriculeEmploye) {
+      <div class="rank-row">
+        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
+        <div class="rank-info">
+          <div class="rank-name">{{ c.nomEmploye }}</div>
+          <div class="rank-meta">{{ c.nbJoursAffectes }} jour(s) affectés</div>
+        </div>
+        <span class="badge bg-success">{{ c.quantiteTotaleRealisee }} {{ c.unite }} — {{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
+      </div>
+    } @empty {
+      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée ce mois</div>
+    }
+  </div>
+</div>
+
+}

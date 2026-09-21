@@ -1,0 +1,46 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Tableau de Bord — Responsable de Salle</h1>
+      <p class="ph-sub">Centre de pilotage quotidien de l'atelier</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <a routerLink="/production/responsable-salle-v2/realisations-poste" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Saisir les réalisations</a>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+} @else {
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">BC en cours</div><div class="kpi-val">{{ bcEnCours() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">PPH actifs</div><div class="kpi-val">{{ pphActifs() }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Employés affectés (jour)</div><div class="kpi-val">{{ employesAffectesJour() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Postes actifs</div><div class="kpi-val">{{ postesActifs() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Postes ayant atteint l'objectif</div><div class="kpi-val">{{ postesObjectifAtteint() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Quantité produite (jour)</div><div class="kpi-val">{{ quantiteProduiteJour() | number:'1.1-1' }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Fûts reçus du Doseur</div><div class="kpi-val">{{ dashboardAgent()?.ofsEnCours ?? 0 }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Taux global d'atteinte</div><div class="kpi-val">{{ tauxGlobalObjectifs() }}%</div></div></div>
+  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Écarts détectés</div><div class="kpi-val">{{ ecartsDetectes() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fiches Info Produit générées</div><div class="kpi-val">{{ fichesGenerees() }}</div></div></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Fûts reçus vs Production réalisée (semaine)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsJours()" [series]="serieFutsVsProduction()" [height]="200" /></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Performance des postes (jour)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsClassementPostes()" [series]="serieClassementPostes()" [height]="200" /></div>
+  </div>
+</div>
+
+@if (!pphEnCours()) {
+  <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun PPH en cours actuellement</div>
+}
+
+}

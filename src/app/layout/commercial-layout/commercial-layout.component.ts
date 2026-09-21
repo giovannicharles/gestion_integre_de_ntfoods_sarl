@@ -6,6 +6,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { ThemeService } from '../../core/services/theme.service';
 registerLocaleData(localeFr);
 
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -21,6 +22,7 @@ export class CommercialLayoutComponent implements OnInit {
   router = inject(Router);
   authService = inject(AuthService);
   alertBadge = inject(AlertBadgeService);
+  readonly theme = inject(ThemeService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = signal(new Date());
@@ -39,12 +41,12 @@ export class CommercialLayoutComponent implements OnInit {
     return `${u.firstname} ${u.lastname?.[0]}.`;
   });
 
+  // Prospects retiré : hors périmètre depuis le 16/08. Dotations retiré : la
+  // route n'existe pas dans commercial.routes.ts — l'entrée menait nulle part.
   navItems: NavItem[] = [
     { label: 'Précommandes J+1', icon: 'fa-cart-plus', route: '/commercial/precommandes' },
-    { label: 'Mes Dotations', icon: 'fa-hand-holding', route: '/commercial/dotations' },
     { label: 'Ventes', icon: 'fa-cash-register', route: '/commercial/ventes' },
     { label: 'Carburant', icon: 'fa-gas-pump', route: '/commercial/carburant' },
-    { label: 'Prospects / Clients', icon: 'fa-user-plus', route: '/commercial/prospects' },
     { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/commercial/recouvrement' },
     { label: 'Versements', icon: 'fa-money-bill-wave', route: '/commercial/versements' },
     { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/commercial/classement' },

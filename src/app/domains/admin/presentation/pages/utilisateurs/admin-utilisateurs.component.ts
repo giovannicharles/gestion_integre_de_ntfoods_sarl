@@ -10,6 +10,18 @@ interface UserUI {
   terminalImei: string | null; derniereConnexion: Date | null;
 }
 
+interface NouvelUtilisateurForm {
+  prenom: string; nom: string; email: string; motDePasse: string; role: string;
+  telephone: string; residence: string; cni: string;
+  dateNaissance: string; lieuNaissance: string; dateEmbauche: string; sexe: string;
+}
+
+const FORM_VIDE = (): NouvelUtilisateurForm => ({
+  prenom: '', nom: '', email: '', motDePasse: '', role: '',
+  telephone: '', residence: '', cni: '',
+  dateNaissance: '', lieuNaissance: '', dateEmbauche: '', sexe: '',
+});
+
 @Component({
   selector: 'app-admin-utilisateurs',
   standalone: true,
@@ -22,32 +34,29 @@ export class AdminUtilisateursComponent implements OnInit {
 
   today = new Date();
   ROLE_LABELS = ROLE_LABELS;
-  loading = signal(false);
-  showCreate = signal(false);
-  saving = signal(false);
-  toastMsg = signal<string | null>(null);
-
-  newUser = {
-    prenom: '',
-    nom: '',
-    email: '',
-    motDePasse: '',
-    role: 'COMMERCIAL',
-    telephone: '',
-    residence: '',
-    cni: '',
-    dateEmbauche: '',
-    sexe: 'M',
-  };
+  loading  = signal(false);
+  saving   = signal(false);
+  showModal = signal(false);
+  messageForm = signal('');
+  erreurForm  = signal('');
 
   users = signal<UserUI[]>([]);
   filtreRole = signal<string>('TOUS');
 
+  form: NouvelUtilisateurForm = FORM_VIDE();
+
   rolesDisponibles = [
     'TOUS', 'DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'GESTIONNAIRE_STOCK', 'COMMERCIAL',
     'COMPTABLE', 'SECRETAIRE', 'ADMIN', 'CHARGEE_RP',
-    'CHEF_PRODUCTION', 'AGENT_PRODUCTION', 'CHEF_MACHINISTE', 'MACHINISTE', 'AGENT_DOSEUR',
-    'CONTROLEUR_GENERAL',
+    'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'MACHINISTE',
+    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL',
+  ];
+
+  rolesCreation = [
+    'DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'GESTIONNAIRE_STOCK', 'COMMERCIAL',
+    'COMPTABLE', 'SECRETAIRE', 'ADMIN', 'CHARGEE_RP',
+    'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'MACHINISTE',
+    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL',
   ];
 
   usersFiltres = computed(() => {
@@ -55,16 +64,65 @@ export class AdminUtilisateursComponent implements OnInit {
     return r === 'TOUS' ? this.users() : this.users().filter(u => u.role === r);
   });
 
-  nbActifs = computed(() => this.users().filter(u => u.actif).length);
+  nbActifs   = computed(() => this.users().filter(u => u.actif).length);
   nbInactifs = computed(() => this.users().filter(u => !u.actif).length);
 
-  rolesPourCreation = this.rolesDisponibles.filter(r => r !== 'TOUS');
-
   ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
     this.loading.set(true);
     this.svc.getUtilisateurs().subscribe({
-      next: list => { this.users.set(list.map(this.mapU)); this.loading.set(false); },
+      next: list => { this.users.set(list.map(u => this.mapU(u))); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  ouvrirModal(): void {
+    this.form = FORM_VIDE();
+    this.messageForm.set('');
+    this.erreurForm.set('');
+    this.showModal.set(true);
+  }
+
+  fermerModal(): void {
+    this.showModal.set(false);
+  }
+
+  creerUtilisateur(): void {
+    if (!this.form.prenom.trim() || !this.form.nom.trim() ||
+        !this.form.email.trim() || !this.form.motDePasse.trim() || !this.form.role) {
+      this.erreurForm.set('Les champs Prénom, Nom, Email, Mot de passe et Rôle sont obligatoires.');
+      return;
+    }
+    this.saving.set(true);
+    this.erreurForm.set('');
+    const payload: Record<string, string> = {
+      prenom: this.form.prenom.trim(),
+      nom: this.form.nom.trim(),
+      email: this.form.email.trim(),
+      motDePasse: this.form.motDePasse,
+      role: this.form.role,
+    };
+    if (this.form.telephone)    payload['telephone']    = this.form.telephone;
+    if (this.form.residence)    payload['residence']    = this.form.residence;
+    if (this.form.cni)          payload['cni']          = this.form.cni;
+    if (this.form.dateNaissance) payload['dateNaissance'] = this.form.dateNaissance;
+    if (this.form.lieuNaissance) payload['lieuNaissance'] = this.form.lieuNaissance;
+    if (this.form.dateEmbauche)  payload['dateEmbauche']  = this.form.dateEmbauche;
+    if (this.form.sexe)          payload['sexe']          = this.form.sexe;
+
+    this.svc.creerUtilisateur(payload as any).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.fermerModal();
+        this.charger();
+      },
+      error: (err) => {
+        this.erreurForm.set(err?.error?.message ?? 'Erreur lors de la création du compte.');
+        this.saving.set(false);
+      }
     });
   }
 
@@ -75,9 +133,7 @@ export class AdminUtilisateursComponent implements OnInit {
   toggleActif(matricule: string): void {
     const user = this.users().find(u => u.matricule === matricule);
     if (!user) return;
-    const action$ = user.actif
-      ? this.svc.desactiver(matricule)
-      : this.svc.activer(matricule);
+    const action$ = user.actif ? this.svc.desactiver(matricule) : this.svc.activer(matricule);
     action$.subscribe({
       next: u => this.users.update(list =>
         list.map(usr => usr.matricule === matricule ? this.mapU(u) : usr)
@@ -85,43 +141,12 @@ export class AdminUtilisateursComponent implements OnInit {
     });
   }
 
-  creerUser(): void {
-    if (!this.newUser.prenom || !this.newUser.nom || !this.newUser.email || !this.newUser.motDePasse) return;
-    this.saving.set(true);
-    this.svc.creerUtilisateur(this.newUser).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.showCreate.set(false);
-        this.toastMsg.set('Utilisateur créé avec succès');
-        setTimeout(() => this.toastMsg.set(null), 3000);
-        this.newUser = {
-          prenom: '', nom: '', email: '', motDePasse: '', role: 'COMMERCIAL',
-          telephone: '', residence: '', cni: '', dateEmbauche: '', sexe: 'M',
-        };
-        this.svc.getUtilisateurs().subscribe({
-          next: list => this.users.set(list.map(this.mapU)),
-        });
-      },
-      error: () => {
-        this.saving.set(false);
-        this.toastMsg.set('Erreur lors de la création');
-        setTimeout(() => this.toastMsg.set(null), 3000);
-      },
-    });
-  }
-
   private mapU(u: UtilisateurBE): UserUI {
     return {
-      id: u.matricule,
-      matricule: u.matricule,
-      nom: u.nomComplet,
-      prenom: null,
-      email: u.email,
-      role: u.role,
-      actif: u.actif,
-      dateCreation: new Date(u.dateCreation),
-      terminalImei: null,
-      derniereConnexion: null,
+      id: u.matricule, matricule: u.matricule, nom: u.nomComplet,
+      prenom: null, email: u.email, role: u.role,
+      actif: u.actif, dateCreation: new Date(u.dateCreation),
+      terminalImei: null, derniereConnexion: null,
     };
   }
 }

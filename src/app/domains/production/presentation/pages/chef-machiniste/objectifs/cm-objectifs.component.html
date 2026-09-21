@@ -1,0 +1,140 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-bullseye ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Objectifs des Machinistes</h1>
+      <p class="ph-sub">Définition des objectifs de broyage par PPH, machiniste et poste</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>
+    <strong>Limite backend actuelle :</strong> les objectifs ne peuvent être créés que <em>groupés</em>, à l'ouverture
+    d'une session de broyage. Le backend n'expose pas encore de modification ou de suppression d'un objectif isolé
+    après création — une fois la session ouverte, ses objectifs sont consultables ci-dessous mais non modifiables
+    depuis cette vue tant que l'endpoint correspondant n'existe pas côté serveur.
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-users"></i> Machinistes de l'application</h2></div>
+  @if (loading()) {
+    @for (i of [1,2,3]; track i) { <div class="skeleton skeleton-row"></div> }
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Rôle</th><th>Zone de travail</th><th>Actif</th></tr></thead>
+        <tbody>
+          @for (m of machinistes(); track m.matricule) {
+            <tr>
+              <td class="mono">{{ m.matricule }}</td>
+              <td><strong>{{ m.nom }}</strong></td>
+              <td>{{ m.prenom }}</td>
+              <td>{{ m.role }}</td>
+              <td>{{ m.zoneTravail }}</td>
+              <td><span [class]="m.actif ? 'badge bg-success' : 'badge bg-orange'">{{ m.actif ? 'Oui' : 'Non' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun machiniste trouvé</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Créer des objectifs (nouvelle session)</h2></div>
+  <div class="modal-body" style="padding: var(--sp-4)">
+    <div class="form-grid">
+      <label>PPH
+        <select class="input" [(ngModel)]="nouvelleSession.referencePPH">
+          <option value="">— Choisir —</option>
+          @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+        </select>
+      </label>
+      <label>Date<input type="date" class="input" [(ngModel)]="nouvelleSession.date"></label>
+      <label>Type de poudre
+        <select class="input" [(ngModel)]="nouvelleSession.typePoudre">
+          @for (t of typesPoudre; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
+        </select>
+      </label>
+      <label>Objectif journalier global (kg)<input type="number" class="input" [(ngModel)]="nouvelleSession.objectifJournalierKg"></label>
+    </div>
+
+    <h4 style="margin-top:var(--sp-3)">Objectifs par machiniste</h4>
+    <div class="form-grid">
+      <label>Machiniste
+        <select class="input" [ngModel]="nouvelObjectif.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
+          <option value="">— Choisir —</option>
+          @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
+        </select>
+      </label>
+      <label>Poste
+        <select class="input" [(ngModel)]="nouvelObjectif.operation">
+          @for (o of operations; track o.code) { <option [value]="o.code">{{ o.libelle }}</option> }
+        </select>
+      </label>
+      <label>Objectif (kg)<input type="number" class="input" [(ngModel)]="nouvelObjectif.objectifKg"></label>
+    </div>
+    <button class="btn btn-ghost btn-sm" (click)="ajouterAuBrouillon()"><i class="fa-solid fa-plus"></i> Ajouter à la liste</button>
+
+    @if (brouillonObjectifs().length > 0) {
+      <div class="tbl-wrap" style="margin-top:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>Machiniste</th><th>Poste</th><th>Objectif (kg)</th><th></th></tr></thead>
+          <tbody>
+            @for (o of brouillonObjectifs(); track $index; let i = $index) {
+              <tr>
+                <td>{{ o.nomMachiniste }}</td>
+                <td>{{ libelleOperation(o.operation) }}</td>
+                <td>{{ o.objectifKg }}</td>
+                <td><button class="btn btn-sm btn-danger" (click)="retirerDuBrouillon(i)">×</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted" style="margin-top:var(--sp-2)">Total : <strong>{{ totalObjectifsBrouillon() }} kg</strong></p>
+    }
+
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="creerObjectifs()">
+        <i class="fa-solid fa-check"></i> Créer les objectifs
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list-check"></i> Objectifs existants (7 derniers jours)</h2></div>
+  @if (loading()) {
+    @for (i of [1,2,3]; track i) { <div class="skeleton skeleton-row"></div> }
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>PPH</th><th>Type poudre</th><th>Machiniste</th><th>Poste</th><th>Objectif (kg)</th></tr></thead>
+        <tbody>
+          @for (s of sessions(); track s.id) {
+            @for (o of s.objectifsMachinistes; track o.machinisteMatricule + o.operation) {
+              <tr>
+                <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
+                <td class="mono">{{ s.referencePPH }}</td>
+                <td>{{ s.typePoudreLibelle }}</td>
+                <td>{{ o.nomMachiniste }}</td>
+                <td>{{ o.operationLibelle }}</td>
+                <td><strong>{{ o.objectifKg }}</strong></td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun objectif défini récemment</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

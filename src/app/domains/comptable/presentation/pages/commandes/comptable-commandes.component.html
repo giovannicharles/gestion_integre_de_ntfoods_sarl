@@ -77,7 +77,7 @@
       <div class="cmd-header">
         <div class="cmd-info">
           <strong>{{ cmd.id }}</strong>
-          <span class="cmd-commercial">{{ getCommercialNom(cmd.commercialId) }}</span>
+          <span class="cmd-commercial">{{ cmd.commercialName || cmd.commercialId }}</span>
           <span class="cmd-date">{{ cmd.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
         <div class="cmd-actions">
@@ -102,14 +102,23 @@
           <thead>
             <tr>
               <th>Produit</th>
-              <th>Quantité</th>
+              <th>Qté demandée</th>
+              <th>Qté validée (comptable)</th>
             </tr>
           </thead>
           <tbody>
-            @for (ligne of cmd.lignes; track ligne.produitCode) {
+            @for (ligne of cmd.lignes; track trackByLigne($index, ligne)) {
               <tr>
-                <td>{{ getProduitDesignation(ligne.produitCode) }}</td>
+                <td>{{ ligne.designation || getProduitDesignation(ligne.produitCode) }}</td>
                 <td>{{ ligne.quantite }}</td>
+                <td>
+                  @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
+                    <input type="number" min="0" class="form-control form-control-sm" style="width:90px"
+                           [(ngModel)]="ligne.quantiteValidee" />
+                  } @else {
+                    {{ ligne.quantiteValidee }}
+                  }
+                </td>
               </tr>
             }
           </tbody>

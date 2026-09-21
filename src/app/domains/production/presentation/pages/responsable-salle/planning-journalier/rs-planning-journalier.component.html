@@ -1,0 +1,219 @@
+<!-- EN-TÊTE -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="pj-ph-ico"><i class="fa-solid fa-calendar-day"></i></div>
+    <div>
+      <h1 class="ph-title">Planning Journalier</h1>
+      <p class="ph-sub">Postes, employés affectés, objectifs recalculés — {{ today }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+@if (message()) {
+  <div class="pj-toast pj-toast-ok">
+    <i class="fa-solid fa-circle-check"></i> {{ message() }}
+    <button class="pj-toast-close" (click)="message.set('')">×</button>
+  </div>
+}
+@if (erreur()) {
+  <div class="pj-toast pj-toast-err">
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
+    <button class="pj-toast-close" (click)="erreur.set('')">×</button>
+  </div>
+}
+
+<!-- Sélecteur PPH -->
+<div class="card">
+  <div class="pj-selector-row">
+    <div class="pj-selector-label"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
+    <select class="input pj-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
+      @for (p of pphs(); track p.id) {
+        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+      }
+    </select>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+  </div>
+</div>
+
+@if (loading()) {
+  @for (i of [1,2,3]; track i) {
+    <div class="skeleton skeleton-row" style="margin:6px 0"></div>
+  }
+} @else {
+
+  @if (affectation(); as a) {
+
+    <!-- MODE LECTURE -->
+    @if (!modeEdition()) {
+
+      <div class="card">
+        <div class="pj-card-header">
+          <div class="pj-card-title">
+            <div class="pj-card-ico"><i class="fa-solid fa-list-check"></i></div>
+            <span>Affectation du {{ a.date }}</span>
+            <span [class]="a.statut === 'VALIDEE' ? 'pj-badge pj-badge-lock' : 'pj-badge pj-badge-draft'">
+              @if (a.statut === 'VALIDEE') { <i class="fa-solid fa-lock"></i> Confirmé }
+              @else { <i class="fa-solid fa-pen-to-square"></i> Brouillon }
+            </span>
+          </div>
+          @if (a.statut !== 'VALIDEE') {
+            <div class="pj-header-actions">
+              <button class="btn btn-ghost btn-sm" (click)="entrerModeEdition()" [disabled]="actionning()">
+                <i class="fa-solid fa-pen"></i> Modifier
+              </button>
+              <button class="btn pj-btn-confirmer" (click)="confirmer()" [disabled]="actionning()">
+                @if (actionning()) { <span class="spinner spinner-sm"></span> En cours… }
+                @else { <i class="fa-solid fa-circle-check"></i> Confirmer le planning }
+              </button>
+            </div>
+          }
+          @if (a.statut === 'VALIDEE') {
+            <div class="pj-locked-info">
+              <i class="fa-solid fa-lock"></i> Planning verrouillé — vous pouvez maintenant saisir les réalisations
+            </div>
+          }
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Poste</th>
+                <th>Employés affectés</th>
+                <th class="text-right">Effectif</th>
+                <th>Durée</th>
+                <th class="text-right">Objectif ajusté</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of a.lignes; track l.codePoste) {
+                <tr>
+                  <td><strong>{{ l.libellePoste }}</strong></td>
+                  <td>
+                    <div class="pj-matricules-cell">
+                      @for (mat of l.matriculesEmployes; track mat) {
+                        <span class="pj-mat-tag">{{ mat }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="text-right mono">{{ l.effectifReel }} / {{ l.effectifReference }}</td>
+                  <td>{{ l.duree === 'JOURNEE_COMPLETE' ? 'Journée complète' : 'Demi-journée' }}</td>
+                  <td class="text-right">
+                    <strong class="pj-objectif">{{ l.objectifAjuste }} <span class="text-muted">{{ l.unite }}</span></strong>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i> Aucun poste planifié</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    }
+
+    <!-- MODE ÉDITION -->
+    @if (modeEdition()) {
+
+      <div class="card">
+        <div class="pj-card-header pj-header-edit">
+          <div class="pj-card-title">
+            <div class="pj-card-ico pj-ico-edit"><i class="fa-solid fa-pen"></i></div>
+            <span>Modifier le planning du {{ a.date }}</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" (click)="annulerEdition()">
+            <i class="fa-solid fa-xmark"></i> Annuler
+          </button>
+        </div>
+
+        <div class="pj-edit-body">
+
+          <div class="pj-edit-info">
+            <i class="fa-solid fa-circle-info"></i>
+            Saisissez les matricules séparés par des virgules. Les objectifs sont recalculés automatiquement par le serveur.
+          </div>
+
+          <div class="pj-lignes-wrap">
+            @for (l of lignesEdition; track $index; let i = $index) {
+              <div class="pj-ligne-card">
+                <div class="pj-ligne-hd">
+                  <span class="pj-ligne-num">Ligne {{ i + 1 }}</span>
+                  @if (lignesEdition.length > 1) {
+                    <button class="pj-remove-btn" (click)="retirerLigne(i)">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  }
+                </div>
+                <div class="pj-ligne-body">
+                  <!-- Poste -->
+                  <div class="pj-field pj-field-lg">
+                    <label class="pj-label">Poste</label>
+                    <select class="input" [(ngModel)]="l.poste" (ngModelChange)="onPosteChange(i, $event)">
+                      <option value="">— Choisir —</option>
+                      @for (p of codesPoste; track p.code) {
+                        <option [value]="p.code">{{ p.libelle }}</option>
+                      }
+                    </select>
+                  </div>
+                  <!-- Durée -->
+                  <div class="pj-field">
+                    <label class="pj-label">Durée</label>
+                    <select class="input" [(ngModel)]="l.duree">
+                      @for (d of durees; track d.code) {
+                        <option [value]="d.code">{{ d.libelle }}</option>
+                      }
+                    </select>
+                  </div>
+                  <!-- Objectif indicatif -->
+                  <div class="pj-field pj-field-sm">
+                    <label class="pj-label">Objectif indicatif</label>
+                    <div class="pj-objectif-cell">
+                      <span class="pj-obj-val">{{ objectifIndicatif(l.poste, effectifDeSaisie(l.matriculesTexte), l.duree) }}</span>
+                      <span class="pj-obj-unit">{{ unitePoste(l.poste) }}</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Matricules -->
+                <div class="pj-mats-row">
+                  <label class="pj-label"><i class="fa-solid fa-users"></i> Matricules (séparés par virgule)</label>
+                  <input class="input pj-mats-input" type="text"
+                         [(ngModel)]="l.matriculesTexte"
+                         placeholder="ex : AGP001, AGP002, AGP003">
+                  @if (l.matriculesTexte.trim()) {
+                    <span class="pj-effectif-hint">{{ effectifDeSaisie(l.matriculesTexte) }} employé(s)</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="pj-edit-footer">
+            <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()">
+              <i class="fa-solid fa-plus"></i> Ajouter un poste
+            </button>
+            <div class="pj-edit-footer-right">
+              <button class="btn btn-ghost" (click)="annulerEdition()" [disabled]="actionning()">Annuler</button>
+              <button class="btn btn-primary" (click)="enregistrerModification()" [disabled]="actionning()">
+                @if (actionning()) { <span class="spinner spinner-sm"></span> Enregistrement… }
+                @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les modifications }
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    }
+
+  } @else {
+    <div class="pj-empty">
+      <div class="pj-empty-ico"><i class="fa-solid fa-calendar-xmark"></i></div>
+      <div class="pj-empty-title">Aucune affectation aujourd'hui</div>
+      <p class="pj-empty-sub">Créez une affectation depuis la page <strong>Affectation des Employés</strong> pour ce PPH.</p>
+    </div>
+  }
+
+}

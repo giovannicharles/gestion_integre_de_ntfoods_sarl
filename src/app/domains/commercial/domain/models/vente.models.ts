@@ -27,6 +27,7 @@ export interface VenteBE {
   montantHT: number;
   montantTVA: number;
   montantTTC: number;
+  photoProduits?: string;
   lignes: LigneVenteBE[];
   dateCreation?: string;
   dateFinalisation?: string;
@@ -42,6 +43,7 @@ export interface CreerVenteRequest {
   coordonneesGPS?: string;
   idFeuillRoute?: string;
   signatureClient: boolean;
+  photoProduits: string;
   lignes: LigneVenteBE[];
 }
 

@@ -1,0 +1,46 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-simple ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Performances des Postes</h1>
+      <p class="ph-sub">Objectif recalculé, quantité produite, taux d'atteinte — classement journalier</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar-row">
+    <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+    </select>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+  @if (affectation(); as a) {
+
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Taux de réalisation par poste</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsClassement()" [series]="serieClassement()" [height]="220" /></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-trophy"></i> Classement journalier</h2></div>
+    @for (c of a.classement; track c.codePoste) {
+      <div class="rank-row">
+        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
+        <div class="rank-info">
+          <div class="rank-name">{{ c.libellePoste }}</div>
+          <div class="rank-meta">{{ c.quantiteRealisee }} / {{ c.objectifAjuste }} {{ c.unite }}</div>
+        </div>
+        <span class="badge bg-success">{{ c.pctRealisation | number:'1.1-1' }}%</span>
+      </div>
+    } @empty {
+      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune saisie enregistrée aujourd'hui</div>
+    }
+  </div>
+
+  }
+}

@@ -1,0 +1,111 @@
+<div class="page">
+
+  <header class="ph">
+    <div>
+      <h1 class="ph-title">Validation des fins de tournée</h1>
+      <p class="ph-sub">
+        Tournées déjà rapprochées par la secrétaire. Votre validation clôt
+        définitivement le cycle : une tournée terminée n'est plus modifiable.
+      </p>
+    </div>
+    <div class="ph-date">{{ today | date:'EEEE d MMMM y':'':'fr' }}</div>
+  </header>
+
+  @if (message(); as m) {
+    <div class="alerte" [class.alerte-ok]="m.type === 'succes'" [class.alerte-ko]="m.type === 'erreur'">
+      {{ m.texte }}
+    </div>
+  }
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-lbl">À valider</div>
+      <div class="kpi-val">{{ sessionsAValider().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Montant concerné</div>
+      <div class="kpi-val">{{ fCFA(totalAValider()) }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Écarts non justifiés</div>
+      <div class="kpi-val" [class.ecart-neg]="nbEcartsNonJustifies() > 0">{{ nbEcartsNonJustifies() }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Terminées</div>
+      <div class="kpi-val">{{ sessionsTerminees().length }}</div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="chargement">Chargement…</p>
+  }
+
+  <section class="card">
+    <div class="card-hd"><h2>En attente de validation</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Session</th><th>Commercial</th><th>Rapprochée par</th>
+            <th>Attendu</th><th>Remis</th><th>Écart</th><th>Justification</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of sessionsAValider(); track s.numeroSession) {
+            @let v = versementDe(s.matriculeCommercial);
+            <tr [class.ligne-alerte]="v?.alerteRouge && !v?.justificationEcart">
+              <td class="mono">{{ s.numeroSession }}</td>
+              <td>{{ s.matriculeCommercial }}</td>
+              <td>{{ s.matriculeValidateurSecretaire || '—' }}</td>
+              <td>{{ v ? fCFA(v.montantAttendu) : '—' }}</td>
+              <td>{{ v ? fCFA(v.cashVerse) : '—' }}</td>
+              <td [class]="v ? ecartClass(v.ecart) : ''">{{ v ? fCFA(v.ecart) : '—' }}</td>
+              <td>
+                @if (v?.alerteRouge) {
+                  {{ v?.justificationEcart || '⚠ manquante' }}
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <button
+                  class="btn btn-valider"
+                  [disabled]="traitementEnCours() === s.numeroSession"
+                  (click)="valider(s)">
+                  {{ traitementEnCours() === s.numeroSession ? 'Validation…' : 'Valider' }}
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="vide">Aucune tournée en attente de validation comptable.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Tournées clôturées</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Session</th><th>Commercial</th><th>Date</th><th>Secrétaire</th><th>Comptable</th></tr>
+        </thead>
+        <tbody>
+          @for (s of sessionsTerminees(); track s.numeroSession) {
+            <tr>
+              <td class="mono">{{ s.numeroSession }}</td>
+              <td>{{ s.matriculeCommercial }}</td>
+              <td>{{ s.dateEffet | date:'dd/MM/yyyy' }}</td>
+              <td>{{ s.matriculeValidateurSecretaire || '—' }}</td>
+              <td>{{ s.matriculeValidateurComptable || '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="vide">Aucune tournée clôturée.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

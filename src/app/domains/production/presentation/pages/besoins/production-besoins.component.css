@@ -1,0 +1,75 @@
+.card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); flex-wrap: wrap; gap: var(--sp-2); }
+.card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
+
+.alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--info-border, var(--b-l)); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--sp-4); }
+.modal-card { background: var(--w); border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.22); width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; animation: sb-fade-in .25s ease-out; }
+@keyframes sb-fade-in {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-hd {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--g, var(--g)) 0%, var(--g-m) 100%);
+  color: var(--w);
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: 18px 18px 0 0;
+}
+.modal-hd h3 { margin: 0; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.modal-hd i { color: var(--y, var(--y)); }
+.modal-hd-close {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.14); color: var(--w); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  transition: all .18s ease;
+}
+.modal-hd-close:hover { background: rgba(255,255,255,.28); transform: rotate(90deg); }
+.modal-body { padding: 22px 24px; }
+.modal-body p { margin: 0 0 10px; font-size: .9rem; color: var(--n700, var(--n700)); }
+.modal-body p:last-child { margin-bottom: 0; }
+.modal-ft { padding: 18px 24px; border-top: 1px solid var(--n200, var(--n200)); display: flex; justify-content: flex-end; gap: var(--sp-2); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid label, .form-group {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  color: var(--n500, var(--n500));
+}
+.form-grid .input, .modal-body .input, .form-group .input {
+  padding: 11px 13px; border-radius: 10px;
+  border: 1px solid var(--n300, var(--n300)); background: var(--w); color: var(--text, var(--n900));
+  font-size: .9rem; font-weight: 500; transition: border-color .18s, box-shadow .18s;
+}
+.form-grid .input:focus, .modal-body .input:focus, .form-group .input:focus {
+  outline: none; border-color: var(--g, var(--g)); box-shadow: 0 0 0 3px rgba(20,83,45,.12);
+}
+.form-grid textarea.input, .modal-body textarea.input { min-height: 76px; resize: vertical; }
+.form-grid label:has(input[disabled]) { color: var(--n400, var(--n400)); }
+.form-grid input[disabled] { background: var(--n100, var(--n100)); color: var(--n400, var(--n400)); border-style: dashed; }
+
+.row-actions { display: flex; gap: var(--sp-2); }
+
+.modal-detail-grid {
+  display: grid; gap: 10px;
+  padding: 4px;
+}
+.modal-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; background: var(--n100, var(--n100)); border-radius: 10px;
+}
+.modal-detail-label { font-weight: 700; color: var(--n500, var(--n500)); font-size: .82rem; }
+.modal-detail-value { color: var(--n800, var(--n800)); font-weight: 500; }
+
+@media (max-width:767px) {
+  .card { padding:14px; }
+  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
+  .form-grid { grid-template-columns:1fr; }
+  .modal-overlay { align-items:flex-end;padding:0; }
+  .modal-card { width:100%;max-width:100%;border-radius:18px 18px 0 0; }
+  .modal-hd { border-radius: 18px 18px 0 0; }
+  .modal-ft { flex-direction: column; }
+  .modal-ft .btn { width: 100%; justify-content: center; }
+}

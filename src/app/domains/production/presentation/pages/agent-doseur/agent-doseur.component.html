@@ -1,0 +1,114 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-flask ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Espace Agent Doseur</h1>
+      <p class="ph-sub">Dosage, mélange et conditionnement des fûts</p>
+    </div>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-weight-hanging"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fûts nets aujourd'hui</div>
+      <div class="kpi-val">{{ totalFutsJour() }}</div>
+      <div class="kpi-meta">50 kg / fût</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-list-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Sessions actives</div>
+      <div class="kpi-val">{{ sessionsActives().length }}</div>
+      <div class="kpi-meta">en cours</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-calendar-plus"></i> Ma session de dosage</h2>
+    <a routerLink="/production/agent-doseur/sessions" class="btn btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir / reprendre</a>
+  </div>
+  <div style="padding: var(--sp-4)">
+    <div class="gap-note" style="margin-bottom:0">
+      <i class="fa-solid fa-circle-info"></i>
+      <div>Ouvrez ou reprenez votre session du jour, saisissez le dosage, les fûts sortis et clôturez en fin de journée.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Statistiques hebdomadaires</h2>
+    <span class="text-muted">{{ statsHebdo()?.periodeLibelle }}</span>
+  </div>
+  @if (statsHebdo()) {
+    <div class="kpi-grid">
+      <div class="kpi-card kp-g">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Fûts nets</div>
+          <div class="kpi-val">{{ statsHebdo()!.nbFutsNets }}</div>
+        </div>
+      </div>
+      <div class="kpi-card kp-y">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Variation N-1</div>
+          <div class="kpi-val">{{ statsHebdo()!.comparaison.variationPourcentage | number:'1.2-2' }} %</div>
+        </div>
+      </div>
+      <div class="kpi-card kp-b">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Sessions</div>
+          <div class="kpi-val">{{ statsHebdo()!.nbSessions }}</div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des fûts nets (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-mini-chart type="line" [labels]="labelsHistorique()" [series]="serieEvolutionFuts()" [height]="200" />
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition des matières (semaine)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)">
+      <app-donut-chart title="" unit="kg" [data]="donutMatieres()" />
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Statistiques mensuelles</h2>
+    <span class="text-muted">{{ statsMois()?.periodeLibelle }}</span>
+  </div>
+  @if (statsMois()) {
+    <div class="kpi-grid">
+      <div class="kpi-card kp-g">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Fûts nets</div>
+          <div class="kpi-val">{{ statsMois()!.nbFutsNets }}</div>
+        </div>
+      </div>
+      <div class="kpi-card kp-y">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Variation N-1</div>
+          <div class="kpi-val">{{ statsMois()!.comparaison.variationPourcentage | number:'1.2-2' }} %</div>
+        </div>
+      </div>
+      <div class="kpi-card kp-b">
+        <div class="kpi-body">
+          <div class="kpi-lbl">Sessions</div>
+          <div class="kpi-val">{{ statsMois()!.nbSessions }}</div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

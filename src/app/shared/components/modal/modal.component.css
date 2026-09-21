@@ -1,0 +1,137 @@
+/* ══════════════════════════════════════════════════════════
+   MODAL — Composant modal réutilisable
+   ══════════════════════════════════════════════════════════ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-container {
+  background: var(--w);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-xl);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+/* ── SIZES ───────────────────────────────────────────────── */
+.modal-sm {
+  width: 100%;
+  max-width: 400px;
+}
+
+.modal-md {
+  width: 100%;
+  max-width: 560px;
+}
+
+.modal-lg {
+  width: 100%;
+  max-width: 720px;
+}
+
+.modal-xl {
+  width: 100%;
+  max-width: 960px;
+}
+
+.modal-full {
+  width: 100%;
+  max-width: 100%;
+  height: calc(100vh - 48px);
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--n800);
+  font-family: var(--font-d);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--n500);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--n50);
+  color: var(--n800);
+}
+
+/* ── BODY ───────────────────────────────────────────────── */
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── ANIMATIONS ───────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── DARK MODE ───────────────────────────────────────────── */
+:root.dark-mode .modal-container {
+  background: var(--n100);
+}
+
+:root.dark-mode .modal-header {
+  border-color: var(--n200);
+}
+
+:root.dark-mode .modal-title {
+  color: var(--n900);
+}
+
+:root.dark-mode .modal-close {
+  color: var(--n400);
+}
+
+:root.dark-mode .modal-close:hover {
+  background: var(--n200);
+  color: var(--n900);
+}

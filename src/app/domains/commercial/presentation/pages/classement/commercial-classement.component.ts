@@ -1,6 +1,8 @@
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { DgService, ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
+import { ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
+import { CommercialService } from '../../../infrastructure/commercial.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 
 @Component({
@@ -12,15 +14,26 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 })
 export class CommercialClassementComponent implements OnInit {
   today = new Date();
-  private readonly dgSvc = inject(DgService);
+  // `/api/dg/**` est réservé au Directeur Général ; le commercial y recevait un
+  // 403 sur son propre classement. La même donnée passe par le module
+  // commercial, sous la permission COMMERCIAL_VENTE_CONSULTER qu'il détient.
+  private readonly comSvc = inject(CommercialService);
+  private readonly auth = inject(AuthService);
 
   commerciaux = signal<ClassementCommercialBE[]>([]);
-  monId = 'COM004';
+  /**
+   * Matricule de l'utilisateur connecté, qui sert à mettre en évidence sa
+   * propre ligne. Il était figé à `COM004` — un matricule qui n'existe pas :
+   * la ligne surlignée n'était donc jamais la bonne, et pour tout le monde la
+   * même. Il vient maintenant de la session.
+   */
+  monId = signal<string>('');
   fCFA = fCFA;
   tauxAtteinte = tauxAtteinte;
 
   ngOnInit(): void {
-    this.dgSvc.getClassement().subscribe({
+    this.monId.set(this.auth.user()?.matricule ?? '');
+    this.comSvc.getClassementCommerciaux().subscribe({
       next: c => this.commerciaux.set(c),
       error: () => {},
     });

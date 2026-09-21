@@ -1,0 +1,180 @@
+<div class="page">
+
+  <header class="ph">
+    <div>
+      <h1 class="ph-title">Grille tarifaire</h1>
+      <p class="ph-sub">
+        Le prix homologué par couple produit × segment est opposable : une vente
+        saisie à un autre prix est refusée par le serveur, sauf déblocage exceptionnel.
+      </p>
+    </div>
+  </header>
+
+  @if (message(); as m) {
+    <div class="alerte" [class.alerte-ok]="m.type === 'succes'" [class.alerte-ko]="m.type === 'erreur'">
+      {{ m.texte }}
+    </div>
+  }
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-lbl">Tarifs homologués</div>
+      <div class="kpi-val">{{ grille().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Produits couverts</div>
+      <div class="kpi-val">{{ nbProduits() }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Dérogations (30 j)</div>
+      <div class="kpi-val" [class.alerte-val]="derogations().length > 0">{{ derogations().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Écart cumulé</div>
+      <div class="kpi-val">{{ fCFA(ecartDerogations()) }}</div>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="card-hd"><h2>Homologuer un prix</h2></div>
+    <div class="form">
+      <div class="champ">
+        <label for="produit">Code produit</label>
+        <input id="produit" type="text" [ngModel]="codeProduit()" (ngModelChange)="codeProduit.set($event)"
+               placeholder="TBSA" />
+      </div>
+      <div class="champ">
+        <label for="seg">Segment client</label>
+        <select id="seg" [ngModel]="segment()" (ngModelChange)="segment.set($event)">
+          @for (s of segments; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </div>
+      <div class="champ">
+        <label for="prix">Prix homologué (FCFA)</label>
+        <input id="prix" type="number" min="1" step="25"
+               [ngModel]="prix()" (ngModelChange)="prix.set($event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <p class="note">
+        @if (prixExistant(); as existant) {
+          Ce couple est déjà homologué à {{ fCFA(existant.prixHomologueFCFA) }} :
+          l'enregistrement le remplacera pour toutes les ventes à venir.
+        } @else {
+          Un couple produit × segment sans prix homologué bloque toute vente sur ce segment.
+        }
+      </p>
+      <button class="btn btn-primary" [disabled]="!formulaireValide() || traitementEnCours()"
+              (click)="homologuer()">
+        {{ traitementEnCours() ? 'Enregistrement…' : 'Homologuer' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Accorder un prix exceptionnel</h2></div>
+    <div class="form">
+      <div class="champ">
+        <label for="derogProduit">Code produit</label>
+        <input id="derogProduit" type="text" [ngModel]="derogCodeProduit()" (ngModelChange)="derogCodeProduit.set($event)"
+               placeholder="TBSA" />
+      </div>
+      <div class="champ">
+        <label for="derogClient">Code client</label>
+        <input id="derogClient" type="text" [ngModel]="derogCodeClient()" (ngModelChange)="derogCodeClient.set($event)"
+               placeholder="CLI-..." />
+      </div>
+      <div class="champ">
+        <label for="derogPrix">Prix appliqué (FCFA)</label>
+        <input id="derogPrix" type="number" min="1" step="25"
+               [ngModel]="derogPrix()" (ngModelChange)="derogPrix.set($event)" />
+      </div>
+      <div class="champ champ-large">
+        <label for="derogMotif">Motif</label>
+        <input id="derogMotif" type="text" [ngModel]="derogMotif()" (ngModelChange)="derogMotif.set($event)"
+               placeholder="Justification de la dérogation" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <p class="note">
+        Le prix homologué de référence est celui du segment du client concerné. L'écart sera tracé.
+      </p>
+      <button class="btn btn-primary" [disabled]="!derogationValide() || derogTraitementEnCours()"
+              (click)="accorderDerogation()">
+        {{ derogTraitementEnCours() ? 'Enregistrement…' : 'Accorder la dérogation' }}
+      </button>
+    </div>
+  </section>
+
+  @if (loading()) { <p class="chargement">Chargement…</p> }
+
+  <section class="card">
+    <div class="card-hd">
+      <h2>Prix homologués</h2>
+      <select class="filtre" [ngModel]="filtreSegment()" (ngModelChange)="filtreSegment.set($event)"
+              aria-label="Filtrer par segment">
+        <option value="">Tous les segments</option>
+        @for (s of segments; track s) { <option [value]="s">{{ s }}</option> }
+      </select>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Produit</th><th>Segment</th><th>Prix homologué</th><th>Auteur</th><th>Modifié le</th><th>État</th></tr>
+        </thead>
+        <tbody>
+          @for (g of grilleFiltree(); track g.id) {
+            <tr>
+              <td class="mono">{{ g.codeProduit }}</td>
+              <td>{{ g.segment }}</td>
+              <td class="fw-bold">{{ fCFA(g.prixHomologueFCFA) }}</td>
+              <td>{{ g.matriculeAuteur }}</td>
+              <td>{{ g.dateModification | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="g.actif" [class.bg-neutral]="!g.actif">
+                  {{ g.actif ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="vide">Aucun prix homologué.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><h2>Dérogations des 30 derniers jours</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Référence</th><th>Produit</th><th>Client</th>
+            <th>Homologué</th><th>Appliqué</th><th>Écart</th><th>Motif</th><th>Autorisé par</th><th>Le</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of derogations(); track d.id) {
+            <tr>
+              <td class="mono">{{ d.reference }}</td>
+              <td class="mono">{{ d.codeProduit }}</td>
+              <td class="mono">{{ d.codeClient }}</td>
+              <td>{{ fCFA(d.prixHomologueFCFA) }}</td>
+              <td>{{ fCFA(d.prixAppliqueFCFA) }}</td>
+              <td [class]="ecartClass(d.ecartFCFA)">
+                {{ d.ecartFCFA > 0 ? '+' : '' }}{{ fCFA(d.ecartFCFA) }}
+              </td>
+              <td>{{ d.motif }}</td>
+              <td>{{ d.matriculeAutorisateur }}</td>
+              <td>{{ d.dateAutorisation | date:'dd/MM/yy HH:mm' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="vide">Aucune dérogation accordée sur la période.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

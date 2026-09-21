@@ -1,0 +1,53 @@
+/* ── Version compacte de la page Sessions Agent Doseur ───────── */
+
+.ph { padding: 12px 0 16px; margin-bottom: 0; }
+.ph-ico { width: 36px; height: 36px; font-size: 16px; }
+.ph-title { font-size: 1.15rem; }
+.ph-sub { font-size: .78rem; }
+
+.card { padding: 14px 16px; margin-bottom: 14px; border-radius: 12px; }
+.card-hd { margin-bottom: 12px; }
+.card-title { font-size: .9rem; gap: 8px; }
+.card-title i { font-size: .95rem; }
+
+.ad-session-form { padding-top: 2px; }
+
+.alert { padding: 8px 12px; margin-bottom: 12px; font-size: .78rem; }
+
+.gap-note {
+  padding: 8px 10px; font-size: .75rem; margin-bottom: 12px; border-radius: 8px;
+}
+
+.form-grid {
+  gap: 10px; margin-bottom: 0;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.form-grid label { gap: 4px; font-size: .7rem; }
+.form-grid .input {
+  padding: 7px 10px; font-size: .82rem; min-height: 34px; border-radius: 8px;
+}
+.form-actions { margin-top: 12px; }
+.form-actions .btn { padding: 7px 14px; font-size: .82rem; min-height: 34px; border-radius: 8px; }
+
+.tbl-wrap { margin-top: 0; }
+.data-table { font-size: .8rem; }
+.data-table thead th { padding: 8px 10px; font-size: .68rem; }
+.data-table tbody td { padding: 7px 10px; }
+.data-table tbody tr { height: 42px; }
+
+.badge { padding: 3px 8px; font-size: .68rem; border-radius: 10px; }
+
+.row-actions { gap: 6px; }
+.row-actions .btn { padding: 5px 10px; font-size: .72rem; min-height: 28px; border-radius: 6px; }
+
+.empty-state-block { padding: 18px; font-size: .78rem; }
+.empty-state-block i { font-size: 1.4rem; }
+
+.skeleton-row { height: 36px; margin-bottom: 4px; }
+
+@media (max-width: 767px) {
+  .card { padding: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-actions { justify-content: stretch; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+}

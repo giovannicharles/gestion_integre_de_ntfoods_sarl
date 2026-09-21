@@ -1,0 +1,172 @@
+<div class="page">
+
+  <header class="ph">
+    <div>
+      <h1 class="ph-title">Promotions commerciales</h1>
+      <p class="ph-sub">
+        Une promotion active détermine la remise que le serveur accepte sur une vente
+        terrain, pour le couple produit × segment client qu'elle vise. Sans promotion
+        en vigueur, toute remise saisie par un commercial est refusée.
+      </p>
+    </div>
+    <button class="btn btn-primary" (click)="formulaireOuvert.set(!formulaireOuvert())">
+      {{ formulaireOuvert() ? 'Fermer' : 'Nouvelle promotion' }}
+    </button>
+  </header>
+
+  @if (message(); as m) {
+    <div class="alerte" [class.alerte-ok]="m.type === 'succes'" [class.alerte-ko]="m.type === 'erreur'">
+      {{ m.texte }}
+    </div>
+  }
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-lbl">Actives</div>
+      <div class="kpi-val">{{ actives().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">En brouillon</div>
+      <div class="kpi-val">{{ brouillons().length }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Clôturées</div>
+      <div class="kpi-val">{{ inactives().length }}</div>
+    </div>
+  </div>
+
+  @if (formulaireOuvert()) {
+  <section class="card">
+    <div class="card-hd"><h2>Nouvelle promotion</h2></div>
+    <div class="form">
+      <div class="champ">
+        <label for="code">Code</label>
+        <input id="code" type="text" [ngModel]="code()" (ngModelChange)="code.set($event)"
+               placeholder="PROMO-RENTREE-2026" />
+      </div>
+      <div class="champ champ-large">
+        <label for="libelle">Libellé</label>
+        <input id="libelle" type="text" [ngModel]="libelle()" (ngModelChange)="libelle.set($event)"
+               placeholder="Opération rentrée scolaire" />
+      </div>
+
+      <div class="champ">
+        <label for="type">Type</label>
+        <select id="type" [ngModel]="type()" (ngModelChange)="type.set($event)">
+          @for (t of types; track t.valeur) { <option [value]="t.valeur">{{ t.libelle }}</option> }
+        </select>
+      </div>
+      <div class="champ">
+        <label for="valeur">Valeur ({{ uniteDe(type()) }})</label>
+        <input id="valeur" type="number" min="0" step="1"
+               [disabled]="type() === 'GRATUITE'"
+               [ngModel]="valeurReduction()" (ngModelChange)="valeurReduction.set($event)" />
+      </div>
+
+      <div class="champ">
+        <label for="produit">Produit ciblé</label>
+        <input id="produit" type="text" [ngModel]="codeProduit()" (ngModelChange)="codeProduit.set($event)"
+               placeholder="Vide = tous les produits" />
+      </div>
+      <div class="champ">
+        <label for="segment">Segment client</label>
+        <select id="segment" [ngModel]="segmentCible()" (ngModelChange)="segmentCible.set($event)">
+          <option value="">Tous les segments</option>
+          @for (s of segments; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </div>
+
+      <div class="champ">
+        <label for="debut">Prise d'effet</label>
+        <input id="debut" type="date" [ngModel]="dateDebut()" (ngModelChange)="dateDebut.set($event)" />
+      </div>
+      <div class="champ">
+        <label for="fin">Fin (facultative)</label>
+        <input id="fin" type="date" [ngModel]="dateFin()" (ngModelChange)="dateFin.set($event)" />
+      </div>
+
+      <div class="champ">
+        <label for="limite">Limite d'utilisations</label>
+        <input id="limite" type="number" min="0" step="1"
+               [ngModel]="limiteUtilisations()" (ngModelChange)="limiteUtilisations.set($event)" />
+        <span class="aide">0 = illimité</span>
+      </div>
+      <div class="champ champ-large">
+        <label for="desc">Description</label>
+        <input id="desc" type="text" [ngModel]="description()" (ngModelChange)="description.set($event)" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <p class="note">
+        La promotion est créée en brouillon : elle ne s'appliquera aux ventes
+        qu'après activation explicite.
+      </p>
+      <button class="btn btn-primary"
+              [disabled]="!formulaireValide() || traitementEnCours() === 'creation'"
+              (click)="creer()">
+        {{ traitementEnCours() === 'creation' ? 'Création…' : 'Créer en brouillon' }}
+      </button>
+    </div>
+  </section>
+  }
+
+  @if (loading()) { <p class="chargement">Chargement…</p> }
+
+  <section class="card">
+    <div class="card-hd"><h2>Promotions</h2></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Code</th><th>Libellé</th><th>Effet</th><th>Portée</th>
+            <th>Période</th><th>Usage</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of promotions(); track p.code) {
+            <tr [class.ligne-active]="p.statut === 'ACTIVEE'">
+              <td class="mono">{{ p.code }}</td>
+              <td>{{ p.libelle }}</td>
+              <td>{{ effetDe(p) }}</td>
+              <td class="mono">{{ portee(p) }}</td>
+              <td>
+                {{ p.dateDebut | date:'dd/MM/yy' }}
+                @if (p.dateFin) { → {{ p.dateFin | date:'dd/MM/yy' }} } @else { → sans fin }
+              </td>
+              <td>
+                {{ p.nombreUtilisations }}
+                @if (p.limiteUtilisations > 0) { / {{ p.limiteUtilisations }} } @else { / ∞ }
+              </td>
+              <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
+              <td class="actions">
+                @if (p.statut === 'BROUILLON' || p.statut === 'SUSPENDUE') {
+                  <button class="btn btn-sm btn-valider"
+                          [disabled]="traitementEnCours() === p.code"
+                          (click)="activer(p)">Activer</button>
+                }
+                @if (p.statut === 'ACTIVEE') {
+                  <button class="btn btn-sm btn-ghost"
+                          [disabled]="traitementEnCours() === p.code"
+                          (click)="suspendre(p)">Suspendre</button>
+                }
+                @if (p.statut !== 'ANNULEE' && p.statut !== 'EXPIREE') {
+                  <button class="btn btn-sm btn-ghost"
+                          [disabled]="traitementEnCours() === p.code"
+                          (click)="annuler(p)">Annuler</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="vide">
+                Aucune promotion enregistrée. Tant qu'aucune promotion n'est active,
+                les commerciaux ne peuvent accorder aucune remise.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

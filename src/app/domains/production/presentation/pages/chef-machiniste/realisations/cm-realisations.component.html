@@ -1,0 +1,84 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-pen-to-square ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Réalisations Journalières</h1>
+      <p class="ph-sub">Saisie des quantités réalisées par machiniste et par poste</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Nouvelle saisie</h2></div>
+  <div style="padding: var(--sp-4)">
+    <div class="form-grid">
+      <label>Session (PPH / type poudre du jour)
+        <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="saisie.sessionId">
+          <option [ngValue]="0">— Choisir —</option>
+          @for (s of sessionsJour(); track s.id) {
+            <option [ngValue]="s.id">{{ s.referencePPH }} — {{ s.typePoudreLibelle }} ({{ s.date | date:'dd/MM' }})</option>
+          }
+        </select>
+      </label>
+      <label>Machiniste
+        <select class="input" [ngModel]="saisie.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
+          <option value="">— Choisir —</option>
+          @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
+        </select>
+      </label>
+      <label>Poste
+        <select class="input" [(ngModel)]="saisie.operation">
+          @for (o of operations; track o) { <option [value]="o">{{ o }}</option> }
+        </select>
+      </label>
+      <label>Type de poudre<input class="input" [(ngModel)]="saisie.typePoudre" disabled></label>
+      <label>Date<input class="input" [value]="today" disabled></label>
+      <label>Quantité réalisée (kg)<input type="number" class="input" [(ngModel)]="saisie.realiseKg"></label>
+    </div>
+
+    <div class="kpi-grid" style="margin-top:var(--sp-3)">
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Objectif</div><div class="kpi-val">{{ saisie.objectifKg }} kg</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Réalisé</div><div class="kpi-val">{{ saisie.realiseKg }} kg</div></div></div>
+      <div class="kpi-card" [class.kp-g]="difference() >= 0" [class.kp-r]="difference() < 0">
+        <div class="kpi-body"><div class="kpi-lbl">Différence</div><div class="kpi-val">{{ difference() > 0 ? '+' : '' }}{{ difference() }} kg</div></div>
+      </div>
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">% de réalisation</div><div class="kpi-val">{{ pctRealisation() }}%</div></div></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="enregistrer()"><i class="fa-solid fa-check"></i> Enregistrer la réalisation</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list"></i> Réalisations du jour</h2></div>
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>PPH</th><th>Type</th><th>Machiniste</th><th>Poste</th><th>Objectif</th><th>Réalisé</th><th>%</th></tr></thead>
+        <tbody>
+          @for (s of sessionsJour(); track s.id) {
+            @for (r of s.realisations; track r.machinisteMatricule + r.operation) {
+              <tr>
+                <td class="mono">{{ s.referencePPH }}</td>
+                <td>{{ s.typePoudreLibelle }}</td>
+                <td>{{ r.nomMachiniste }}</td>
+                <td>{{ r.operationLibelle }}</td>
+                <td>{{ r.objectifKg }} kg</td>
+                <td>{{ r.realiseKg }} kg</td>
+                <td><span [class]="r.pctRealisation >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ r.pctRealisation | number:'1.1-1' }}%</span></td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune réalisation saisie aujourd'hui</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

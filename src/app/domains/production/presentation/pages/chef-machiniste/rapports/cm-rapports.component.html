@@ -1,0 +1,49 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-lines ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Rapports</h1>
+      <p class="ph-sub">Consultation et téléchargement (CSV / impression PDF)</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>
+    <strong>Limite backend actuelle :</strong> les endpoints <code>/production/rapports/*</code> n'autorisent
+    que Chef de Production, Responsable de Salle et Directeur Général. Les rapports ci-dessous sont donc générés
+    directement depuis les données de broyage auxquelles ce rôle a réellement accès, au format CSV ou via
+    impression navigateur (« Enregistrer en PDF »), plutôt que via un export serveur qui échouerait.
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
+    <span class="text-muted">(utilisé pour les rapports hebdomadaire / pertes / performances / objectifs / réalisations)</span>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Rapport</th><th>Description</th><th>Téléchargement</th></tr></thead>
+      <tbody>
+        @for (r of rapports; track r.type) {
+          <tr>
+            <td><i class="fa-solid {{ r.icone }}"></i> <strong>{{ r.titre }}</strong></td>
+            <td class="text-muted">{{ r.description }}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'csv')"><i class="fa-solid fa-file-csv"></i> Excel/CSV</button>
+                <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'print')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

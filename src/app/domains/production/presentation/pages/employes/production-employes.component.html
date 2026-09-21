@@ -8,8 +8,15 @@
   </div>
   <div class="ph-actions">
     <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
+    <button class="btn btn-primary" (click)="ouvrirEnregistrerRegistre()">
+      <i class="fa-solid fa-plus"></i> Enregistrer registre
+    </button>
   </div>
 </div>
+
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
 
 <div class="kpi-grid">
   <div class="kpi-card kp-g">
@@ -90,8 +97,6 @@
             </td>
             <td>{{ e.present ? e.unite : '—' }}</td>
           </tr>
-        } @empty {
-          <tr><td colspan="6" class="empty-state">Aucun employé enregistré</td></tr>
         }
       </tbody>
     </table>
@@ -113,7 +118,159 @@
         <span class="perf-heure">Arrivée {{ e.heureArrivee }}</span>
       </div>
     </div>
-  } @empty {
-    <div class="empty-state" style="padding:24px;text-align:center">Aucun employé présent aujourd'hui</div>
+  }
+</div>
+
+@if (showEnregistrerRegistre()) {
+<div class="modal-overlay" (click)="showEnregistrerRegistre.set(false)">
+  <div class="modal-card modal-lg re-modal" (click)="$event.stopPropagation()">
+    <div class="re-modal-hd">
+      <div class="re-modal-title">
+        <div class="re-modal-ico"><i class="fa-solid fa-user-check"></i></div>
+        <div>
+          <div class="re-modal-ref">Enregistrer le registre du jour</div>
+          <div class="re-modal-sub">Présences et performances — {{ dateRegistre | date:'dd MMMM yyyy' }}</div>
+        </div>
+      </div>
+      <button class="re-modal-close" (click)="showEnregistrerRegistre.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="re-modal-body">
+      <div class="re-meta-row">
+        <div class="re-meta-field">
+          <label class="re-label"><i class="fa-solid fa-calendar-week"></i> PPH</label>
+          <select class="input re-select" [(ngModel)]="referencePPH" (ngModelChange)="onPphChange()">
+            <option value="">— Choisir un PPH —</option>
+            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option> }
+          </select>
+        </div>
+        <div class="re-meta-field">
+          <label class="re-label"><i class="fa-solid fa-calendar-day"></i> Date du registre</label>
+          <div class="re-date-readonly">
+            <i class="fa-solid fa-lock re-date-ico"></i>
+            <span class="mono">{{ dateRegistre | date:'dd/MM/yyyy' }}</span>
+            <span class="re-date-badge">Aujourd'hui</span>
+          </div>
+        </div>
+      </div>
+
+      @if (referencePPH && !affectationJour() && !loadingAgents()) {
+        <div class="re-hint re-hint-warn">
+          <i class="fa-solid fa-triangle-exclamation"></i> Aucune affectation trouvée pour ce PPH aujourd'hui. Les agents seront listés sans poste affecté.
+        </div>
+      }
+      @if (loadingAgents()) {
+        <div class="re-agents-loading"><span class="spinner spinner-sm"></span> Chargement des agents…</div>
+      }
+
+      <div class="re-section-title"><i class="fa-solid fa-list-check"></i> Employés affectés</div>
+
+      <div class="re-lines">
+        @for (l of lignesRegistre; track $index; let i = $index) {
+          <div class="re-ligne-card">
+            <div class="re-ligne-header">
+              <span class="re-ligne-num">Ligne {{ i + 1 }}</span>
+              @if (lignesRegistre.length > 1) {
+                <button class="re-remove-btn" (click)="retirerLigne(i)" title="Supprimer cette ligne"><i class="fa-solid fa-xmark"></i></button>
+              }
+            </div>
+            <div class="re-ligne-body">
+              <div class="re-field re-field-agent">
+                <label class="re-label">Agent de production</label>
+                <select class="input re-select" (change)="selectionnerAgent(i, $any($event.target).value); $any($event.target).value = ''">
+                  <option value="">
+                    @if (agentsDuJour().length) { + Sélectionner un agent ({{ agentsDuJour().length }} disponible{{ agentsDuJour().length > 1 ? 's' : '' }}) }
+                    @else { Aucun agent disponible }
+                  </option>
+                  @for (a of agentsDuJour(); track a.matricule) {
+                    <option [value]="a.matricule">{{ a.nomComplet }} — {{ a.libellePoste }} ({{ a.matricule }})</option>
+                  }
+                </select>
+              </div>
+
+              <div class="re-field re-field-sm">
+                <label class="re-label">Matricule</label>
+                <div class="re-readonly"><span class="mono">{{ l.matriculeEmploye || '—' }}</span></div>
+              </div>
+              <div class="re-field re-field-sm">
+                <label class="re-label">Nom</label>
+                <div class="re-readonly">{{ l.nomEmploye || '—' }}</div>
+              </div>
+              <div class="re-field re-field-sm">
+                <label class="re-label">Poste</label>
+                <div class="re-readonly">{{ (libellePoste(l.poste) | titlecase) || '—' }}</div>
+              </div>
+
+              <div class="re-field re-field-xs">
+                <label class="re-label">Présent</label>
+                <input type="checkbox" class="re-checkbox" [(ngModel)]="l.present">
+              </div>
+
+              <div class="re-field re-field-sm">
+                <label class="re-label">Arrivée</label>
+                <input class="input re-input-time" [(ngModel)]="l.heureArrivee" placeholder="08:00">
+              </div>
+
+              <div class="re-field re-field-xs">
+                <label class="re-label">Qté</label>
+                <input type="number" class="input re-input-qty" [(ngModel)]="l.qteRealisee">
+              </div>
+
+              <div class="re-field re-field-xs">
+                <label class="re-label">Unité</label>
+                <input class="input re-input-unit" [(ngModel)]="l.unite">
+              </div>
+
+              <div class="re-field re-field-md">
+                <label class="re-label">Motif absence</label>
+                <input class="input" [(ngModel)]="l.motifAbsence" [disabled]="l.present" placeholder="Si absent">
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="re-actions-row">
+        <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()"><i class="fa-solid fa-plus"></i> Ajouter un agent</button>
+        <button class="btn btn-primary" (click)="enregistrerRegistre()">Enregistrer le registre</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Consulter un registre précis</h2>
+  </div>
+  <div class="filter-row" style="padding: 0 var(--sp-4) var(--sp-3); display:flex; gap:var(--sp-2); align-items:center">
+    <select class="input" [(ngModel)]="referencePPH">
+      <option value="">— PPH —</option>
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+    </select>
+    <input type="date" class="input" [(ngModel)]="rechercheDate">
+    <button class="btn btn-primary" (click)="rechercherRegistre()">Rechercher</button>
+  </div>
+  @if (registreConsulte(); as r) {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Présent</th><th>Matricule</th><th>Nom</th><th>Poste</th><th>Arrivée</th><th>Qté réalisée</th></tr>
+        </thead>
+        <tbody>
+          @for (l of r.lignes; track l.matriculeEmploye) {
+            <tr>
+              <td><span [class]="l.present ? 'badge bg-success' : 'badge bg-red'">{{ l.present ? 'Présent' : 'Absent' }}</span></td>
+              <td>{{ l.matriculeEmploye }}</td>
+              <td>{{ l.nomEmploye }}</td>
+              <td>{{ l.poste }}</td>
+              <td>{{ l.heureArrivee ?? '—' }}</td>
+              <td>{{ l.qteRealisee }} {{ l.unite }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p style="padding: 0 var(--sp-4) var(--sp-3)">{{ r.nbPresents }} présent(s) — {{ r.nbAbsents }} absent(s)</p>
   }
 </div>

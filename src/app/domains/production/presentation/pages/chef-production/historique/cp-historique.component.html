@@ -1,0 +1,45 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-clock-rotate-left ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Historique et Audit</h1>
+      <p class="ph-sub">Timeline d'activité — PPH, Lots, Expressions de besoin</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>Pas de journal d'audit générique (ancienne/nouvelle valeur) côté backend. Cette timeline s'appuie uniquement sur les horodatages et auteurs déjà stockés sur chaque entité.</div>
+</div>
+
+<div class="card">
+  <div class="toolbar-row">
+    <button class="btn btn-sm" [class.btn-primary]="filtreType()===''" [class.btn-ghost]="filtreType()!==''" (click)="filtreType.set('')">Tout</button>
+    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='PPH'" [class.btn-ghost]="filtreType()!=='PPH'" (click)="filtreType.set('PPH')">PPH</button>
+    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='Lot'" [class.btn-ghost]="filtreType()!=='Lot'" (click)="filtreType.set('Lot')">Lots</button>
+    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='Besoin'" [class.btn-ghost]="filtreType()!=='Besoin'" (click)="filtreType.set('Besoin')">Besoins</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="timeline">
+      @for (e of evenementsFiltres(); track e.libelle + e.date) {
+        <div class="timeline-item">
+          <div class="timeline-dot" [class.dot-pph]="e.type==='PPH'" [class.dot-lot]="e.type==='Lot'" [class.dot-besoin]="e.type==='Besoin'"></div>
+          <div class="timeline-content">
+            <div class="timeline-hd">
+              <strong>{{ e.libelle }}</strong>
+              <span class="badge bg-neutral">{{ e.type }}</span>
+            </div>
+            <div class="text-muted">{{ e.detail }}</div>
+            <div class="timeline-meta">{{ e.auteur }} — {{ e.date | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun événement</div>
+      }
+    </div>
+  }
+</div>

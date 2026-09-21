@@ -1,0 +1,132 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Dosage des matières premières — style PROPRE à la page (scopé).
+   Aligné design system TANTY (--g vert · --y jaune · --r rouge · --n*).
+   Objectif : lisibilité + confort tactile pour l'Agent Doseur, la « recette »
+   (maïs / soja / arachide) mise en avant. Aucune classe globale cassée.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:host { display: block; }
+
+/* ── Sélecteur de session : plus grand, aligné, tactile ── */
+.toolbar-row { align-items: center; row-gap: 10px; }
+.toolbar-row .input {
+  min-height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--r-md, 12px);
+}
+.toolbar-row .badge { font-size: 12px; padding: 6px 12px; }
+
+/* ── Formulaire de la formule : champs confortables ── */
+.form-grid { gap: var(--sp-4, 16px); }
+.form-grid label { font-size: 13px; font-weight: 700; color: var(--n700); gap: 8px; }
+.form-grid .input,
+.form-grid input.input,
+.form-grid select.input {
+  min-height: 48px;
+  font-size: 15px;
+  border-radius: var(--r-md, 12px);
+}
+/* Le nombre de fûts : chiffre lisible et centré */
+.form-grid input[type="number"] {
+  font-family: var(--font-d, 'Poppins', sans-serif);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Titres de sous-section (h4) avec accent vert ── */
+:host h4 {
+  font-family: var(--font-d, 'Poppins', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--n800);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: var(--sp-5, 20px) 0 var(--sp-3, 12px);
+}
+:host h4::before {
+  content: "";
+  width: 4px;
+  height: 18px;
+  border-radius: 99px;
+  background: var(--g);
+  flex-shrink: 0;
+}
+
+/* ── Note « calcul automatique » : un peu plus présente ── */
+.gap-note {
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  border-left: 4px solid var(--o);
+}
+.gap-note i { font-size: 16px; }
+.gap-note strong { color: var(--o); font-weight: 800; }
+
+/* ── LA RECETTE : 3 tuiles matières mises en valeur ── */
+.kpi-grid { grid-template-columns: repeat(3, 1fr); gap: var(--sp-4, 16px); }
+.kpi-card {
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 20px;
+}
+.kpi-card .kpi-lbl {
+  font-size: 12px;
+  letter-spacing: .6px;
+}
+.kpi-card .kpi-val {
+  font-family: var(--font-d, 'Poppins', sans-serif);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--n900);
+}
+/* Repère couleur discret par matière (accents officiels TANTY) */
+.kp-y .kpi-lbl { color: var(--y-d); }
+.kp-g .kpi-lbl { color: var(--g); }
+.kp-b .kpi-lbl { color: var(--b); }
+
+@media (max-width: 767px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Ligne « autres matières » : formulaire aligné ── */
+.form-grid.mini {
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: stretch;
+  background: var(--n50);
+  border: 1px solid var(--n150);
+  border-radius: var(--r-md, 12px);
+  padding: 12px;
+  margin-bottom: var(--sp-3, 12px);
+}
+.form-grid.mini .input { min-height: 44px; margin: 0; }
+.form-grid.mini .btn { min-height: 44px; white-space: nowrap; }
+
+/* ── Bouton retirer (×) dans le tableau : rond et net ── */
+.data-table .btn-danger.btn-sm {
+  min-width: 34px;
+  padding: 4px 10px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: var(--r-sm, 8px);
+}
+
+/* ── Zone Observations ── */
+textarea.input {
+  min-height: 72px;
+  font-size: 14px;
+  border-radius: var(--r-md, 12px);
+}
+
+/* ── Action principale bien visible ── */
+.form-actions .btn-primary {
+  min-height: 46px;
+  font-size: 14px;
+  padding: 0 22px;
+}
+
+/* ── Tableau des matières enregistrées : montant en avant ── */
+.data-table tbody td:last-child { font-weight: 700; color: var(--n800); font-variant-numeric: tabular-nums; }

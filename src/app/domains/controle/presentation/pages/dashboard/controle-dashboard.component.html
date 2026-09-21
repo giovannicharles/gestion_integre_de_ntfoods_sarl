@@ -22,7 +22,7 @@
   </div>
   }
 
-  <!-- KPI ROW 1 -->
+  <!-- KPI -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
@@ -62,89 +62,11 @@
     </div>
   </div>
 
-  <!-- KPI ROW 2 — Budget & Contrôle -->
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b">
-      <div class="kpi-decor kd-b"></div>
-      <div class="kpi-ico ib"><i class="fa-solid fa-sack-dollar"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Budget total</span>
-        <span class="kpi-val">{{ fCFA(budgetTotal()) }}</span>
-        <span class="kpi-meta">Budget alloué période</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-decor kd-y"></div>
-      <div class="kpi-ico iy"><i class="fa-solid fa-file-signature"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Budget engagé</span>
-        <span class="kpi-val">{{ fCFA(budgetEngage()) }}</span>
-        <span class="kpi-meta">{{ budgetTotal() ? Math.round((budgetEngage()/budgetTotal())*100) : 0 }}% consommé</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-money-check-dollar"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Décaissements en attente</span>
-        <span class="kpi-val">{{ decaissementsAttente() }}</span>
-        <span class="kpi-meta">À valider par contrôle</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-user-secret"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Anomalies élevées</span>
-        <span class="kpi-val">{{ anomaliesElevees() }}</span>
-        <span class="kpi-meta">Niveau élevé à traiter</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- DÉCAISSEMENTS + BUDGET SUMMARY -->
-  <div class="charts-row-2">
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements à valider</span>
-        <a routerLink="/controle/decaissements" class="btn btn-ghost btn-sm">Voir tout</a>
-      </div>
-      @if (decaissementsAttente() > 0) {
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--n50);border-radius:var(--r-md);border-left:3px solid var(--r)">
-          <div class="kpi-ico ir" style="width:36px;height:36px;font-size:15px"><i class="fa-solid fa-clock"></i></div>
-          <div style="flex:1">
-            <div class="fw-bold" style="font-size:13px">{{ decaissementsAttente() }} demande(s) en attente</div>
-            <div style="font-size:11px;color:var(--n400)">Validation contrôle de gestion requise</div>
-          </div>
-          <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm">Traiter</a>
-        </div>
-      } @else {
-        <div class="empty-state"><i class="fa-solid fa-check-circle"></i>Aucun décaissement en attente</div>
-      }
-    </div>
-
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-scale-unbalanced"></i> Synthèse budgétaire</span>
-        <a routerLink="/controle/budget" class="btn btn-ghost btn-sm">Détail</a>
-      </div>
-      @if (budget().length > 0) {
-        <div style="display:flex;flex-direction:column;gap:12px">
-          @for (b of budget().slice(0, 4); track b.poste) {
-            <div>
-              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
-                <span class="fw-bold">{{ b.poste }}</span>
-                <span class="mono" [class.text-danger]="b.engage > b.budget">{{ budgetPct(b) }}%</span>
-              </div>
-              <div class="prog-bar-wrap">
-                <div class="prog-bar" [class.prog-r]="b.engage > b.budget" [class.prog-y]="budgetPct(b)>=90 && b.engage<=b.budget" [style.width.%]="Math.min(budgetPct(b),100)"></div>
-              </div>
-            </div>
-          }
-        </div>
-      } @else {
-        <div class="empty-state"><i class="fa-solid fa-inbox"></i>Aucune donnée budgétaire</div>
-      }
+  <!-- DÉCAISSEMENTS EN ATTENTE -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements à valider</span>
+      <span class="badge bg-red badge-sm">{{ decaissementsAttente() }}</span>
     </div>
   </div>
 
@@ -202,17 +124,5 @@
       <span class="card-title"><i class="fa-solid fa-user-secret"></i> Anomalies détectées</span>
       <span class="badge bg-red badge-sm">{{ anomaliesElevees() }} niveau élevé</span>
     </div>
-    @if (anomaliesElevees() > 0) {
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff1f1;border-radius:var(--r-md);border-left:3px solid var(--r)">
-        <div class="kpi-ico ir" style="width:36px;height:36px;font-size:15px"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div style="flex:1">
-          <div class="fw-bold" style="font-size:13px">{{ anomaliesElevees() }} anomalie(s) de niveau élevé</div>
-          <div style="font-size:11px;color:var(--n400)">Écarts entre CA déclaré et cash versé à justifier</div>
-        </div>
-        <a routerLink="/controle/audit" class="btn btn-danger btn-sm">Examiner</a>
-      </div>
-    } @else {
-      <div class="empty-state"><i class="fa-solid fa-shield-halved"></i>Aucune anomalie détectée — flux sécurisés</div>
-    }
   </div>
 </div>

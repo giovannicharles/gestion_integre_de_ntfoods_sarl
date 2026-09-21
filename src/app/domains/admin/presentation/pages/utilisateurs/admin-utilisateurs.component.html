@@ -1,23 +1,20 @@
-<div class="dash">
-  <div class="ph">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-users-gear"></i></div>
-      <div>
-        <div class="ph-title">Gestion Utilisateurs</div>
-        <div class="ph-sub">Comptes, rôles et accès système</div>
-      </div>
-    </div>
-    <div class="ph-actions">
-      <button class="btn btn-primary" (click)="showCreate.set(true)">
-        <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
-      </button>
+<!-- EN-TÊTE -->
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-users-gear ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion Utilisateurs</h1>
+      <p class="ph-sub">Comptes, rôles et accès système</p>
     </div>
   </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary" (click)="ouvrirModal()">
+      <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
+    </button>
+  </div>
+</div>
 
-  @if (toastMsg()) {
-    <div class="toast toast-success">{{ toastMsg() }}</div>
-  }
-
+<!-- KPIs -->
 <div class="kpi-grid">
   <div class="kpi-card kp-b">
     <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
@@ -45,6 +42,7 @@
   </div>
 </div>
 
+<!-- TABLE -->
 <div class="card">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-table"></i> Liste des Utilisateurs</h2>
@@ -63,23 +61,27 @@
         <tr>
           <th>Matricule</th>
           <th>Nom</th>
-          <th>Prénom</th>
           <th>Email</th>
           <th>Rôle</th>
           <th>Statut</th>
-          <th>Terminal IMEI</th>
-          <th>Dernière connexion</th>
+          <th>Créé le</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr><td colspan="7"><div class="skeleton" style="height:18px;border-radius:4px"></div></td></tr>
+          }
+        }
         @for (u of usersFiltres(); track u.id) {
           <tr [class]="!u.actif ? 'row-inactive' : ''">
-            <td><span class="badge bg-neutral">{{ u.matricule }}</span></td>
+            <td><span class="badge bg-neutral mono">{{ u.matricule }}</span></td>
             <td><strong>{{ u.nom }}</strong></td>
-            <td>{{ u.prenom }}</td>
-            <td>{{ u.email }}</td>
-            <td>{{ getRoleLabel(u.role) }}</td>
+            <td class="text-muted">{{ u.email }}</td>
+            <td>
+              <span class="u-role-badge">{{ getRoleLabel(u.role) }}</span>
+            </td>
             <td>
               @if (u.actif) {
                 <span class="badge bg-success">Actif</span>
@@ -87,20 +89,9 @@
                 <span class="badge bg-red">Inactif</span>
               }
             </td>
+            <td class="text-muted">{{ u.dateCreation | date:'dd/MM/yyyy' }}</td>
             <td>
-              @if (u.terminalImei) {
-                <span class="imei-code">{{ u.terminalImei }}</span>
-              } @else {
-                <span class="text-muted">—</span>
-              }
-            </td>
-            <td>{{ u.derniereConnexion | date:'dd/MM HH:mm' }}</td>
-            <td>
-              <button
-                class="btn btn-sm"
-                [class]="u.actif ? 'btn-ghost-red' : 'btn-success'"
-                (click)="toggleActif(u.id)"
-              >
+              <button class="btn btn-sm" [class]="u.actif ? 'btn-ghost-red' : 'btn-success'" (click)="toggleActif(u.id)">
                 @if (u.actif) {
                   <i class="fa-solid fa-ban"></i> Suspendre
                 } @else {
@@ -110,77 +101,138 @@
             </td>
           </tr>
         }
+        @if (!loading() && usersFiltres().length === 0) {
+          <tr><td colspan="7" class="empty-state-block">Aucun utilisateur trouvé</td></tr>
+        }
       </tbody>
     </table>
   </div>
-  <div class="table-footer">
-    {{ usersFiltres().length }} utilisateur(s) affichés
-  </div>
-</div>
+  <div class="table-footer">{{ usersFiltres().length }} utilisateur(s) affiché(s)</div>
 </div>
 
-@if (showCreate()) {
-  <div class="modal-overlay" (click)="showCreate.set(false)">
-    <div class="modal-box" style="max-width:560px" (click)="$event.stopPropagation()">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur</span>
-        <button class="btn btn-ghost btn-sm" (click)="showCreate.set(false)"><i class="fa-solid fa-times"></i></button>
+<!-- ═══ MODAL NOUVEL UTILISATEUR ═══ -->
+@if (showModal()) {
+  <div class="nu-overlay" (click)="fermerModal()">
+    <div class="nu-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="nu-modal-header">
+        <div class="nu-modal-ico"><i class="fa-solid fa-user-plus"></i></div>
+        <div>
+          <div class="nu-modal-title">Nouvel Utilisateur</div>
+          <div class="nu-modal-sub">Créer un nouveau compte dans le système</div>
+        </div>
+        <button class="nu-close-btn" (click)="fermerModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="form-group">
-          <label>Prénom <span class="req">*</span></label>
-          <input type="text" class="form-input" [(ngModel)]="newUser.prenom" placeholder="Prénom">
+
+      <!-- Body -->
+      <div class="nu-modal-body">
+
+        <!-- Toast erreur -->
+        @if (erreurForm()) {
+          <div class="nu-toast nu-toast-err">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurForm() }}
+          </div>
+        }
+
+        <!-- Section : Informations obligatoires -->
+        <div class="nu-section-title">
+          <i class="fa-solid fa-star"></i> Informations obligatoires
         </div>
-        <div class="form-group">
-          <label>Nom <span class="req">*</span></label>
-          <input type="text" class="form-input" [(ngModel)]="newUser.nom" placeholder="Nom">
+
+        <div class="nu-grid-2">
+          <div class="nu-field">
+            <label class="nu-label">Prénom <span class="nu-req">*</span></label>
+            <input class="input" type="text" [(ngModel)]="form.prenom" placeholder="ex : Jean">
+          </div>
+          <div class="nu-field">
+            <label class="nu-label">Nom <span class="nu-req">*</span></label>
+            <input class="input" type="text" [(ngModel)]="form.nom" placeholder="ex : DUPONT">
+          </div>
         </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Email <span class="req">*</span></label>
-          <input type="email" class="form-input" [(ngModel)]="newUser.email" placeholder="email@tanty.com">
+
+        <div class="nu-grid-2">
+          <div class="nu-field">
+            <label class="nu-label">Email <span class="nu-req">*</span></label>
+            <input class="input" type="email" [(ngModel)]="form.email" placeholder="jean.dupont@ntfoods.cm">
+          </div>
+          <div class="nu-field">
+            <label class="nu-label">Mot de passe <span class="nu-req">*</span></label>
+            <input class="input" type="password" [(ngModel)]="form.motDePasse" placeholder="Minimum 6 caractères">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Mot de passe <span class="req">*</span></label>
-          <input type="password" class="form-input" [(ngModel)]="newUser.motDePasse" placeholder="••••••">
-        </div>
-        <div class="form-group">
-          <label>Rôle <span class="req">*</span></label>
-          <select class="form-input" [(ngModel)]="newUser.role">
-            @for (r of rolesPourCreation; track r) {
+
+        <div class="nu-field">
+          <label class="nu-label">Rôle <span class="nu-req">*</span></label>
+          <select class="input" [(ngModel)]="form.role">
+            <option value="">— Sélectionner un rôle —</option>
+            @for (r of rolesCreation; track r) {
               <option [value]="r">{{ getRoleLabel(r) }}</option>
             }
           </select>
         </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input type="text" class="form-input" [(ngModel)]="newUser.telephone" placeholder="+237...">
+
+        <!-- Section : Informations complémentaires -->
+        <div class="nu-section-title nu-section-opt">
+          <i class="fa-solid fa-circle-info"></i> Informations complémentaires
+          <span class="nu-opt-badge">Optionnel</span>
         </div>
-        <div class="form-group">
-          <label>Sexe</label>
-          <select class="form-input" [(ngModel)]="newUser.sexe">
-            <option value="M">Masculin</option>
-            <option value="F">Féminin</option>
-          </select>
+
+        <div class="nu-grid-2">
+          <div class="nu-field">
+            <label class="nu-label">Téléphone</label>
+            <input class="input" type="tel" [(ngModel)]="form.telephone" placeholder="+237 6XX XXX XXX">
+          </div>
+          <div class="nu-field">
+            <label class="nu-label">Sexe</label>
+            <select class="input" [(ngModel)]="form.sexe">
+              <option value="">— Choisir —</option>
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>CNI</label>
-          <input type="text" class="form-input" [(ngModel)]="newUser.cni" placeholder="N° CNI">
+
+        <div class="nu-grid-2">
+          <div class="nu-field">
+            <label class="nu-label">Date de naissance</label>
+            <input class="input" type="date" [(ngModel)]="form.dateNaissance">
+          </div>
+          <div class="nu-field">
+            <label class="nu-label">Lieu de naissance</label>
+            <input class="input" type="text" [(ngModel)]="form.lieuNaissance" placeholder="ex : Yaoundé">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Date embauche</label>
-          <input type="date" class="form-input" [(ngModel)]="newUser.dateEmbauche">
+
+        <div class="nu-grid-2">
+          <div class="nu-field">
+            <label class="nu-label">Date d'embauche</label>
+            <input class="input" type="date" [(ngModel)]="form.dateEmbauche">
+          </div>
+          <div class="nu-field">
+            <label class="nu-label">CNI</label>
+            <input class="input" type="text" [(ngModel)]="form.cni" placeholder="Numéro CNI">
+          </div>
         </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Résidence</label>
-          <input type="text" class="form-input" [(ngModel)]="newUser.residence" placeholder="Ville de résidence">
+
+        <div class="nu-field">
+          <label class="nu-label">Résidence</label>
+          <input class="input" type="text" [(ngModel)]="form.residence" placeholder="ex : Yaoundé, Bastos">
         </div>
+
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-        <button class="btn btn-ghost" (click)="showCreate.set(false)">Annuler</button>
-        <button class="btn btn-primary" (click)="creerUser()" [disabled]="saving() || !newUser.prenom || !newUser.nom || !newUser.email || !newUser.motDePasse">
-          @if (saving()) { Création… } @else { <i class="fa-solid fa-check"></i> Créer }
+
+      <!-- Footer -->
+      <div class="nu-modal-footer">
+        <button class="btn btn-ghost" (click)="fermerModal()" [disabled]="saving()">Annuler</button>
+        <button class="btn btn-primary" (click)="creerUtilisateur()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner spinner-sm"></span> Création en cours… }
+          @else { <i class="fa-solid fa-user-plus"></i> Créer le compte }
         </button>
       </div>
+
     </div>
   </div>
 }

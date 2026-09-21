@@ -1,0 +1,19 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onBackdropClick()" (keydown)="onEscape($event)" tabindex="-1">
+    <div class="modal-container {{ sizeClass() }}" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        @if (title()) {
+          <h2 class="modal-title">{{ title() }}</h2>
+        }
+        @if (showCloseButton()) {
+          <button class="modal-close" (click)="onCloseClick()" aria-label="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+      <div class="modal-body">
+        <ng-content />
+      </div>
+    </div>
+  </div>
+}

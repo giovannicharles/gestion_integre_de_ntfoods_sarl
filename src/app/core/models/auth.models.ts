@@ -3,7 +3,8 @@ import { UserRole } from './user.models';
 /** Corps attendu par POST /api/auth/login (aligné sur LoginRequest backend). */
 export interface LoginRequest {
   matricule: string;
-  password: string;
+  password?: string;
+  motDePasse?: string;
 }
 
 /** Réponse de POST /api/auth/login (aligné sur LoginResponse backend). */
@@ -15,7 +16,14 @@ export interface LoginResponse {
   expirationMs: number;
 }
 
-/** Réponse brute de POST /api/auth/login (utilisée par AuthService). */
+/**
+ * Lecture tolérante de la réponse de connexion.
+ *
+ * Le backend émet un rôle unique (`role`), mais des écrans du module production
+ * ont été écrits contre une forme tableau (`roles`). Le type admet les deux pour
+ * que ces écrans compilent ; `AuthService` normalise vers la forme réellement
+ * émise et n'invente jamais de rôle absent de la réponse.
+ */
 export interface AuthResponse {
   token: string;
   matricule: string;
@@ -27,13 +35,21 @@ export interface AuthResponse {
   expirationMs?: number;
 }
 
-/** Utilisateur authentifié stocké en local. */
+/**
+ * Utilisateur connecté tel que conservé côté client.
+ *
+ * `role` est la valeur émise par le backend et fait foi. `roles` en est la forme
+ * tableau, dérivée et non saisie : elle existe pour les écrans qui l'attendent,
+ * jamais comme seconde source de vérité.
+ */
 export interface User {
   token: string;
   matricule: string;
   firstname: string;
   lastname: string;
-  roles: string[];
+  nomComplet: string;
+  role: UserRole;
+  roles: UserRole[];
 }
 
 /** Corps attendu par POST /api/auth/register (aligné sur RegisterRequest backend). */
@@ -53,7 +69,13 @@ export interface RegisterRequest {
   sexe?: string;
 }
 
-/** Corps pour POST /api/auth/otp/demander. */
+/**
+ * Corps pour POST /api/auth/otp/demander.
+ *
+ * Le double facteur n'est pas activé pour l'instant (voir `AuthService`), mais
+ * les routes existent côté serveur et le contrat reste décrit ici : le
+ * réactiver ne doit pas demander de le réécrire.
+ */
 export interface OtpRequest {
   matricule: string;
   raison: string;

@@ -14,12 +14,11 @@ export const COMPTABLE_ROUTES: Routes = [
       { path: 'recouvrement', loadComponent: () => import('./pages/recouvrement/comptable-recouvrement.component').then(m => m.ComptableRecouvrementComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/comptable-reporting.component').then(m => m.ComptableReportingComponent) },
       { path: 'objectifs', loadComponent: () => import('./pages/objectifs/comptable-objectifs.component').then(m => m.ComptableObjectifsComponent) },
-      {
-        path: 'validation-mp',
-        loadComponent: () => import('../../stock/presentation/pages/validation/validation.component').then(m => m.ValidationComponent),
-        data: { filterType: 'MATIERE_PREMIERE' }
-      },
-      { path: 'alertes', loadComponent: () => import('../../stock/presentation/pages/alertes/alertes.component').then(m => m.AlertesComponent) },
+      // Dernière étape du cycle de fin de tournée, après le rapprochement secrétaire.
+      { path: 'sessions', loadComponent: () => import('./pages/sessions/comptable-sessions.component').then(m => m.ComptableSessionsComponent) },
+      // Le découpage territorial conditionne les objectifs qu'il fixe : il
+      // l'administre au même titre que la Chargée RP.
+      { path: 'zones', loadComponent: () => import('../../commercial/presentation/pages/zones-admin/zones-admin.component').then(m => m.ZonesAdminComponent) },
     ]
   }
 ];

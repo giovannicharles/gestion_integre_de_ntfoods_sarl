@@ -138,6 +138,13 @@ export class DgService {
       .pipe(map(r => r.donnees ?? []));
   }
 
+  resoudreValidation(reference: string, type: string, approbation: boolean): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(`dg/validations/${reference}/resoudre`, null, {
+      type,
+      approbation: String(approbation)
+    });
+  }
+
   getAnomalies(): Observable<AnomalieBE[]> {
     return this.api.get<ApiResponse<AnomalieBE[]>>('dg/anomalies')
       .pipe(map(r => r.donnees ?? []));
@@ -158,20 +165,14 @@ export class DgService {
       .pipe(map(r => r.donnees!));
   }
 
+  /**
+   * Contexte remis à l'assistance IA — chiffres du jour, alertes, validations
+   * en attente. Le serveur l'expose sur `GET /api/dg/ai-context`
+   * (`DgController:234`) ; la forme est libre et volontairement non typée ici,
+   * car c'est le serveur qui décide de ce qu'il juge utile d'y mettre.
+   */
   getAiContext(): Observable<Record<string, unknown>> {
     return this.api.get<ApiResponse<Record<string, unknown>>>('dg/ai-context')
       .pipe(map(r => r.donnees ?? {}));
-  }
-
-  approverValidation(type: string, reference: string, matricule: string): Observable<ValidationEnAttenteBE> {
-    return this.api.post<ApiResponse<ValidationEnAttenteBE>>('dg/validations/approuver', {
-      type, reference, matricule
-    }).pipe(map(r => r.donnees!));
-  }
-
-  refuserValidation(type: string, reference: string, matricule: string, motif?: string): Observable<ValidationEnAttenteBE> {
-    return this.api.post<ApiResponse<ValidationEnAttenteBE>>('dg/validations/refuser', {
-      type, reference, matricule, motif: motif || 'Refusé par le DG'
-    }).pipe(map(r => r.donnees!));
   }
 }

@@ -1,0 +1,67 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Statistiques</h1>
+      <p class="ph-sub">Comparaisons et évolutions — 8 dernières semaines, données réelles</p>
+    </div>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+} @else {
+
+<div class="two-col">
+  @if (comparaisonSemaine(); as c) {
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Semaine N vs Semaine N-1</h2></div>
+      <div class="kpi-grid">
+        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production S</div><div class="kpi-val">{{ c.prodActuelle | number:'1.1-1' }} kg</div><div class="kpi-meta">S-1 : {{ c.prodPrecedente | number:'1.1-1' }} kg</div></div></div>
+        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
+        <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux réalisation</div><div class="kpi-val">{{ c.tauxActuel }}%</div><div class="kpi-meta">S-1 : {{ c.tauxPrecedent }}%</div></div></div>
+      </div>
+    </div>
+  }
+  @if (comparaisonMois(); as c) {
+    <div class="card">
+      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Mois N vs Mois N-1</h2></div>
+      <div class="kpi-grid">
+        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production M</div><div class="kpi-val">{{ c.prodActuelle | number:'1.1-1' }} kg</div><div class="kpi-meta">M-1 : {{ c.prodPrecedente | number:'1.1-1' }} kg</div></div></div>
+        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
+        <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux réalisation</div><div class="kpi-val">{{ c.tauxActuel }}%</div><div class="kpi-meta">M-1 : {{ c.tauxPrecedent }}%</div></div></div>
+      </div>
+    </div>
+  }
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution de la production</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProduction()" [height]="200" /></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="200" /></div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bullseye"></i> Évolution des objectifs</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieEvolutionObjectifs()" [height]="200" /></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gauge"></i> Évolution des performances</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPerformances()" [height]="200" /></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution des quantités broyées par type</h2></div>
+  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieEvolutionQuantitesBroyees()" [height]="220" /></div>
+</div>
+
+}

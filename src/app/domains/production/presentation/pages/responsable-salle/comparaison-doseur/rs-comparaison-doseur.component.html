@@ -1,0 +1,37 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-scale-balanced ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Comparaison Agent Doseur / Production</h1>
+      <p class="ph-sub">Quantité théorique attendue vs production réellement réalisée</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <select class="input" [(ngModel)]="referencePPH">
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
+    </select>
+    <input type="date" class="input" [(ngModel)]="date">
+    <button class="btn btn-primary btn-sm" (click)="comparer()">Comparer</button>
+  </div>
+</div>
+
+@if (comparaison(); as c) {
+  @if (alerteEcartImportant()) {
+    <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> Écart important détecté ({{ c.ecartPourcentage | number:'1.1-1' }}%) — vérification recommandée.</div>
+  }
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets (Doseur)</div><div class="kpi-val">{{ c.nbFutsNets }}</div></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Poudre totale</div><div class="kpi-val">{{ c.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
+    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Production réelle</div><div class="kpi-val">{{ c.productionReelleKg | number:'1.1-1' }} {{ c.uniteProduction }}</div></div></div>
+    <div class="kpi-card" [class.kp-g]="c.ecartPourcentage>=0" [class.kp-r]="c.ecartPourcentage<0">
+      <div class="kpi-body"><div class="kpi-lbl">Écart</div><div class="kpi-val">{{ c.ecartKg | number:'1.1-1' }} kg ({{ c.ecartPourcentage | number:'1.1-1' }}%)</div></div>
+    </div>
+  </div>
+} @else if (!loading()) {
+  <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Sélectionnez un PPH et une date puis cliquez sur Comparer</div>
+}

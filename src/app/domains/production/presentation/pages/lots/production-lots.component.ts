@@ -1,112 +1,166 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
-import { ProductionService, LotBE } from '../../../infrastructure/production.service';
-import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
-import { StockRulesDomainService } from '../../../../stock/domain/services/stock-rules.domain.service';
-import { Product } from '../../../../stock/domain/models';
+import { ProductionService, LotBE, PPHBE } from '../../../infrastructure/production.service';
 
-interface LotUI {
-  id: number; productSku: string; productName: string;
-  declaredQuantityKg: number; equivalentUnits: number;
-  batchDate: string; statut: string; productionDate: string;
-  createdAt: string; declaredBy: string; notes?: string;
-  conditioningType?: string; conditioningQty?: number;
+interface LotFormLigne {
+  codeProduit: string;
+  designationProduit: string;
+  referencePPH: string;
+  quantiteKg: number;
+  nbCartons: number;
+  dlc: string;
 }
 
 @Component({
   selector: 'app-production-lots',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './production-lots.component.html',
   styleUrls: ['./production-lots.component.css']
 })
 export class ProductionLotsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
-  private readonly repo = inject(StockApiRepository);
-  private readonly rules = inject(StockRulesDomainService);
-  private readonly router = inject(Router);
 
   today = new Date();
-  fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
   loading = signal(false);
 
-  lots = signal<LotUI[]>([]);
-  products = signal<Product[]>([]);
+  lots = signal<LotBE[]>([]);
+  lotsAValider = signal<LotBE[]>([]);
+  pphs = signal<PPHBE[]>([]);
+  showDeclarerLot = signal(false);
+  showRejeter = signal<LotBE | null>(null);
+  motifRejet = '';
+  message = signal('');
 
-  // Déclaration → page dédiée /stock/declaration-lot
-  toastMsg = signal(''); toastType = signal<'success'|'error'>('success');
+  dateProduction = this.formatDate(new Date());
+  lignesLot: LotFormLigne[] = [];
 
-  nbDeclares = computed(() => this.lots().filter(l => l.statut === 'DECLARED_BY_PRODUCTION').length);
+  nbDeclares = computed(() => this.lots().filter(l => l.statut === 'DECLARE').length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
-  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.declaredQuantityKg, 0));
-  totalUnites = computed(() => this.lots().reduce((s, l) => s + l.equivalentUnits, 0));
+  nbRejetes = computed(() => this.lots().filter(l => l.statut === 'REJETE').length);
+  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.quantiteKg, 0));
+  totalCartons = computed(() => this.lots().reduce((s, l) => s + l.nbCartons, 0));
 
   ngOnInit(): void {
+    this.chargerLots();
+    this.chargerLotsAValider();
+    this.svc.getPPHs().subscribe({ next: p => this.pphs.set(p) });
+  }
+
+  chargerLots(): void {
     this.loading.set(true);
-    forkJoin({
-      lots: this.svc.getLots(),
-      prods: this.repo.getFinishedProducts(),
-    }).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: ({ lots, prods }) => {
-        this.lots.set(lots.map(l => this.mapL(l)));
-        this.products.set(prods);
-      },
+    this.svc.getLots().subscribe({
+      next: list => { this.lots.set(list); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  /** Lots déclarés en attente de validation par le Gestionnaire de Stock. */
+  chargerLotsAValider(): void {
+    this.svc.getLotsAValider().subscribe({
+      next: list => this.lotsAValider.set(list),
       error: () => {},
     });
   }
 
-  // ── Déclaration lot → page dédiée ───────────────────────
-  openDeclareModal() {
-    this.router.navigate(['/production/declaration-lot']);
+  declarerLot(): void {
+    const valides = this.lignesLot.filter(l =>
+      l.codeProduit && l.designationProduit && l.referencePPH && l.quantiteKg > 0 && l.dlc
+    );
+    if (valides.length === 0) {
+      this.message.set('Veuillez renseigner au moins une ligne valide.');
+      return;
+    }
+    const req = valides.map(l => ({ ...l, dateProduction: this.dateProduction || undefined }));
+    forkJoin(req.map(r => this.svc.declarerLot(r))).subscribe({
+      next: crees => {
+        this.lots.update(list => [...crees, ...list]);
+        this.chargerLotsAValider();
+        this.showDeclarerLot.set(false);
+        this.lignesLot = [];
+        this.message.set(`${crees.length} lot(s) déclaré(s) — en attente de validation stock`);
+      },
+      error: () => this.message.set('Erreur lors de la déclaration des lots')
+    });
   }
 
-  getProduitDesignation(sku: string): string {
-    return this.lots().find(l => l.productSku === sku)?.productName ?? sku;
+  ouvrirDeclarerLot(): void {
+    this.dateProduction = this.formatDate(new Date());
+    this.lignesLot = [this.ligneVide()];
+    this.showDeclarerLot.set(true);
+  }
+
+  ajouterLigne(): void {
+    this.lignesLot = [...this.lignesLot, this.ligneVide()];
+  }
+
+  supprimerLigne(i: number): void {
+    this.lignesLot = this.lignesLot.filter((_, idx) => idx !== i);
+  }
+
+  private ligneVide(): LotFormLigne {
+    return { codeProduit: '', designationProduit: '', referencePPH: '', quantiteKg: 0, nbCartons: 0, dlc: '' };
+  }
+
+  private formatDate(d: Date): string {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** Validation physique par le Gestionnaire de Stock — déclenche le verrouillage de la fiche. */
+  validerLot(lot: LotBE): void {
+    if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
+    this.svc.validerLot(lot.numeroLot).subscribe({
+      next: l => {
+        this.remplacerLot(l);
+        this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
+        this.message.set('Lot validé — fiche de production verrouillée');
+      },
+      error: () => this.message.set('Erreur lors de la validation du lot')
+    });
+  }
+
+  ouvrirRejeter(lot: LotBE): void {
+    this.motifRejet = '';
+    this.showRejeter.set(lot);
+  }
+
+  confirmerRejet(): void {
+    const lot = this.showRejeter();
+    if (!lot || !this.motifRejet.trim()) return;
+    this.svc.rejeterLot(lot.numeroLot, this.motifRejet.trim()).subscribe({
+      next: l => {
+        this.remplacerLot(l);
+        this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
+        this.showRejeter.set(null);
+        this.message.set('Lot rejeté');
+      },
+      error: () => this.message.set('Erreur lors du rejet du lot')
+    });
+  }
+
+  private remplacerLot(l: LotBE): void {
+    this.lots.update(list => list.map(x => x.numeroLot === l.numeroLot ? l : x));
   }
 
   statutClass(s: string): string {
     if (s === 'VALIDATED_BY_STOCK') return 'badge bg-success';
-    if (s === 'REJECTED') return 'badge bg-danger';
+    if (s === 'REJETE') return 'badge bg-red';
+    if (s === 'RECEPTIONNE_STOCK') return 'badge bg-neutral';
     return 'badge bg-orange';
   }
 
   statutLabel(s: string): string {
-    if (s === 'VALIDATED_BY_STOCK') return 'Validé Stock';
-    if (s === 'REJECTED') return 'Rejeté';
-    return 'Déclaré Production';
-  }
-
-  getConditioningDisplay(l: LotUI): string {
-    if (l.conditioningType && l.conditioningQty) {
-      return `${l.conditioningQty} ${this.rules.getConditioningLabel(l.conditioningType)}`;
-    }
-    return `${l.declaredQuantityKg} kg`;
-  }
-
-  showToast(msg: string, type: 'success'|'error') {
-    this.toastMsg.set(msg); this.toastType.set(type);
-    setTimeout(() => this.toastMsg.set(''), 5000);
-  }
-
-  private mapL(l: LotBE): LotUI {
-    return {
-      id: l.id,
-      productSku: l.productSku ?? '',
-      productName: l.productName ?? '',
-      declaredQuantityKg: l.declaredQuantityKg,
-      equivalentUnits: l.equivalentUnits ?? 0,
-      batchDate: l.batchDate ?? l.productionDate,
-      statut: l.status,
-      productionDate: l.productionDate,
-      createdAt: l.createdAt,
-      declaredBy: l.declaredBy ?? '',
-      notes: l.notes,
-      conditioningType: l.conditioningType,
-      conditioningQty: l.conditioningQty,
+    const map: Record<string, string> = {
+      DECLARE: 'Déclaré Production',
+      RECEPTIONNE_STOCK: 'Réceptionné Stock',
+      VALIDATED_BY_STOCK: 'Validé Stock',
+      REJETE: 'Rejeté',
     };
+    return map[s] ?? s;
   }
 }

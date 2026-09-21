@@ -1,0 +1,33 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-download ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Téléchargements</h1>
+      <p class="ph-sub">Registre, rapports hebdomadaires, classements</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-circle-info"></i>
+  <div>Aucun export serveur dédié pour ces documents — génération CSV côté client à partir de données réelles. Le registre de dosage et la fiche produit se téléchargent depuis leurs propres pages (PDF).</div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Document</th><th>Format</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><i class="fa-solid fa-book"></i> Registre journalier des employés</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerRegistre()"><i class="fa-solid fa-download"></i></button></td></tr>
+        <tr><td><i class="fa-solid fa-calendar-week"></i> Rapport hebdomadaire de l'atelier</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerRapportHebdo()"><i class="fa-solid fa-download"></i></button></td></tr>
+        <tr><td><i class="fa-solid fa-trophy"></i> Classement des employés</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerClassementEmployes()"><i class="fa-solid fa-download"></i></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

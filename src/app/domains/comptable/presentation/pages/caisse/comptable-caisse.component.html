@@ -1,13 +1,15 @@
-<div class="dash">
-  <div class="ph">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-cash-register"></i></div>
+<div class="page animate-fadeInUp">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:13px">
+      <div style="width:46px;height:46px;background:var(--mc-gh);color:var(--mc);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px">
+        <i class="fa-solid fa-cash-register"></i>
+      </div>
       <div>
-        <div class="ph-title">Journal de Caisse</div>
-        <div class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</div>
+        <h1 style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)">Journal de Caisse</h1>
+        <p style="font-size:12px;color:var(--n400);margin-top:2px">{{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div style="display:flex;gap:8px">
       @if (!caisse() && !loading()) {
         <button class="btn btn-primary" (click)="showOuvrir.set(true)">
           <i class="fa-solid fa-lock-open"></i> Ouvrir la caisse
@@ -29,76 +31,75 @@
   }
 
   @if (loading()) {
-    <div class="empty-state">
+    <div style="padding:60px;text-align:center;color:var(--n400)">
       <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…
+    </div>
+  } @else if (erreur()) {
+    <!-- Une indisponibilité ne se confond pas avec une caisse non ouverte : la
+         première appelle une vérification, la seconde un clic sur « Ouvrir ». -->
+    <div class="card">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px;text-align:center">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:52px;color:var(--r500,#c0392b)"></i>
+        <h3 style="font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--n800)">Journal de caisse indisponible</h3>
+        <p style="font-size:13px;color:var(--n400)">{{ erreur() }}</p>
+        <button class="btn btn-sm" (click)="chargerCaisseJour()">Réessayer</button>
+      </div>
     </div>
   } @else if (!caisse()) {
     <div class="card">
-      <div class="empty-state">
-        <i class="fa-solid fa-cash-register" style="font-size:52px;color:var(--n300);margin-bottom:12px"></i>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px;text-align:center">
+        <i class="fa-solid fa-cash-register" style="font-size:52px;color:var(--n300)"></i>
         <h3 style="font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--n800)">Caisse non ouverte</h3>
-        <p style="font-size:13px;color:var(--n400);margin-top:8px">Aucun journal de caisse n'existe pour aujourd'hui. Cliquez sur "Ouvrir la caisse" pour démarrer.</p>
+        <p style="font-size:13px;color:var(--n400)">Aucun journal de caisse n'existe pour aujourd'hui. Cliquez sur "Ouvrir la caisse" pour démarrer.</p>
       </div>
     </div>
   } @else {
-    <div class="kpi-grid">
-      <div class="kpi-card kp-g">
-        <div class="kpi-decor"></div>
-        <div class="kpi-ico ig"><i class="fa-solid fa-wallet"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Solde actuel</span>
-          <span class="kpi-val">{{ fCFA(caisse()!.soldeCourant) }}</span>
-        </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px">
+      <div class="card stat-card">
+        <div class="stat-ico" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-wallet"></i></div>
+        <div class="stat-val">{{ fCFA(caisse()!.soldeCourant) }}</div>
+        <div class="stat-lbl">Solde actuel</div>
       </div>
-      <div class="kpi-card kp-g">
-        <div class="kpi-decor"></div>
-        <div class="kpi-ico ig"><i class="fa-solid fa-arrow-down"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Total entrées</span>
-          <span class="kpi-val">{{ fCFA(caisse()!.totalEntrees) }}</span>
-        </div>
+      <div class="card stat-card">
+        <div class="stat-ico" style="background:var(--mc-gh);color:var(--mc)"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="stat-val">{{ fCFA(caisse()!.totalEntrees) }}</div>
+        <div class="stat-lbl">Total entrées</div>
       </div>
-      <div class="kpi-card kp-r">
-        <div class="kpi-decor kd-r"></div>
-        <div class="kpi-ico ir"><i class="fa-solid fa-arrow-up"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Total sorties</span>
-          <span class="kpi-val">{{ fCFA(caisse()!.totalSorties) }}</span>
-        </div>
+      <div class="card stat-card">
+        <div class="stat-ico" style="background:var(--r-gh);color:var(--r)"><i class="fa-solid fa-arrow-up"></i></div>
+        <div class="stat-val">{{ fCFA(caisse()!.totalSorties) }}</div>
+        <div class="stat-lbl">Total sorties</div>
       </div>
-      <div class="kpi-card kp-y">
-        <div class="kpi-decor kd-y"></div>
-        <div class="kpi-ico iy"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Seuil de sécurisation</span>
-          <span class="kpi-val">{{ fCFA(caisse()!.seuilSecurisation) }}</span>
-        </div>
+      <div class="card stat-card">
+        <div class="stat-ico" style="background:var(--o-gh);color:var(--o)"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="stat-val">{{ fCFA(caisse()!.seuilSecurisation) }}</div>
+        <div class="stat-lbl">Seuil de sécurisation</div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-list"></i> Mouvements du jour</span>
-      </div>
-      @if (!caisse()!.lignes.length) {
-        <div class="empty-state"><i class="fa-solid fa-inbox"></i>Aucun mouvement enregistré.</div>
+    <div class="card" style="margin-bottom:22px">
+      <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+        <i class="fa-solid fa-list"></i> Mouvements du jour
+      </h3>
+      @if (!caisse()!.lignes?.length) {
+        <p style="text-align:center;color:var(--n400);padding:24px">Aucun mouvement enregistré.</p>
       } @else {
-        <div class="tbl-wrap">
-          <table class="data-table">
+        <div style="overflow-x:auto">
+          <table class="tbl">
             <thead>
               <tr><th>Référence</th><th>Type</th><th>Motif</th><th>Montant</th><th>Heure</th></tr>
             </thead>
             <tbody>
               @for (l of caisse()!.lignes; track l.referenceOperation) {
                 <tr>
-                  <td class="mono" style="font-size:12px">{{ l.referenceOperation }}</td>
+                  <td style="font-family:monospace;font-size:12px">{{ l.referenceOperation }}</td>
                   <td>
                     <span class="badge" [class.badge-success]="l.typeMouvement==='ENTREE'" [class.badge-danger]="l.typeMouvement==='SORTIE'">
                       {{ l.typeMouvement }}
                     </span>
                   </td>
                   <td>{{ l.motif }}</td>
-                  <td class="mono fw-bold" [class.text-success]="l.typeMouvement==='ENTREE'" [class.text-danger]="l.typeMouvement==='SORTIE'">
+                  <td style="font-weight:700" [style.color]="l.typeMouvement==='ENTREE'?'var(--g)':'var(--r)'">
                     {{ l.typeMouvement === 'ENTREE' ? '+' : '-' }} {{ fCFA(l.montant) }}
                   </td>
                   <td>{{ l.dateOperation | date:'HH:mm' }}</td>
@@ -113,11 +114,11 @@
 
   @if (historique().length > 0) {
     <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique du mois</span>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
+      <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historique du mois
+      </h3>
+      <div style="overflow-x:auto">
+        <table class="tbl">
           <thead>
             <tr><th>Date</th><th>Solde initial</th><th>Entrées</th><th>Sorties</th><th>Solde final</th></tr>
           </thead>
@@ -125,10 +126,10 @@
             @for (h of historique(); track h.id) {
               <tr>
                 <td>{{ h.date | date:'dd MMM yyyy':'':'fr' }}</td>
-                <td class="mono">{{ fCFA(h.soldeCourant - h.totalEntrees + h.totalSorties) }}</td>
-                <td class="mono text-success fw-bold">{{ fCFA(h.totalEntrees) }}</td>
-                <td class="mono text-danger fw-bold">{{ fCFA(h.totalSorties) }}</td>
-                <td class="mono fw-bold">{{ fCFA(h.soldeCourant) }}</td>
+                <td>{{ fCFA(h.soldeCourant - h.totalEntrees + h.totalSorties) }}</td>
+                <td style="color:var(--g);font-weight:600">{{ fCFA(h.totalEntrees) }}</td>
+                <td style="color:var(--r);font-weight:600">{{ fCFA(h.totalSorties) }}</td>
+                <td style="font-weight:700">{{ fCFA(h.soldeCourant) }}</td>
               </tr>
             }
           </tbody>
@@ -141,9 +142,7 @@
 @if (showOuvrir()) {
   <div class="modal-overlay" (click)="showOuvrir.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-lock-open"></i> Ouvrir la caisse</span>
-      </div>
+      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Ouvrir la caisse</h3>
       <div class="form-group">
         <label>Solde initial (FCFA)</label>
         <input type="number" class="form-input" [(ngModel)]="soldeInitial" placeholder="0">
@@ -161,12 +160,9 @@
 @if (showMouvement()) {
   <div class="modal-overlay" (click)="showMouvement.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="card-hd">
-        <span class="card-title">
-          <i class="fa-solid" [class.fa-arrow-down]="mouvementType==='ENTREE'" [class.fa-arrow-up]="mouvementType==='SORTIE'"></i>
-          {{ mouvementType === 'ENTREE' ? 'Entrée de caisse' : 'Sortie de caisse' }}
-        </span>
-      </div>
+      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">
+        {{ mouvementType === 'ENTREE' ? 'Entrée de caisse' : 'Sortie de caisse' }}
+      </h3>
       <div class="form-group">
         <label>Référence opération (optionnel)</label>
         <input type="text" class="form-input" [(ngModel)]="refOperation" placeholder="Généré automatiquement si vide">

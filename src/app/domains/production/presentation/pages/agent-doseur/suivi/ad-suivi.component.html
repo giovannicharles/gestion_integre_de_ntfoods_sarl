@@ -1,0 +1,63 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Suivi de Production</h1>
+      <p class="ph-sub">Progression du PPH, des fûts et alertes en temps réel</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <select class="input" (ngModelChange)="selectionnerPph($event)" [ngModel]="pphSelectionne()">
+      <option [ngValue]="null">— Choisir un PPH —</option>
+      @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }} ({{ p.statut }})</option> }
+    </select>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else if (pphSelectionne()) {
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Quantité produite</div><div class="kpi-val">{{ quantiteProduite() }}</div></div></div>
+  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Quantité restante</div><div class="kpi-val">{{ quantiteRestante() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Taux d'avancement</div><div class="kpi-val">{{ tauxAvancement() }}%</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Progression du PPH</h2></div>
+  <div style="padding: var(--sp-4)">
+    <div class="prog-bar-wrap"><div class="prog-bar" [class.prog-g]="tauxAvancement()>=100" [class.prog-y]="tauxAvancement()<100 && tauxAvancement()>=60" [class.prog-r]="tauxAvancement()<60" [style.width.%]="tauxAvancement()>100?100:tauxAvancement()"></div></div>
+  </div>
+</div>
+
+@for (a of alertes(); track a.texte) {
+  <div class="alert" [class.alert-error]="a.type==='danger'" [class.alert-info]="a.type!=='danger'">
+    <i class="fa-solid" [class.fa-triangle-exclamation]="a.type!=='success'" [class.fa-circle-check]="a.type==='success'"></i> {{ a.texte }}
+  </div>
+}
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Comparaison fûts dosés vs production réelle</h2></div>
+  <div class="toolbar-row">
+    <input type="date" class="input" [(ngModel)]="dateComparaison">
+    <button class="btn btn-primary btn-sm" (click)="comparerFuts()">Comparer</button>
+  </div>
+  @if (comparaison(); as c) {
+    <div class="kpi-grid" style="padding: 0 var(--sp-4) var(--sp-4)">
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ c.nbFutsNets }}</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poids poudre</div><div class="kpi-val">{{ c.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Production réelle</div><div class="kpi-val">{{ c.productionReelleKg | number:'1.1-1' }} {{ c.uniteProduction }}</div></div></div>
+      <div class="kpi-card" [class.kp-g]="c.ecartPourcentage>=0" [class.kp-r]="c.ecartPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Écart</div><div class="kpi-val">{{ c.ecartPourcentage | number:'1.1-1' }}%</div></div></div>
+    </div>
+  }
+</div>
+
+} @else {
+  <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Sélectionnez un PPH pour afficher son suivi</div>
+}

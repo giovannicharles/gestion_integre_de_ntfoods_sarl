@@ -1,0 +1,65 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-download ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Téléchargements</h1>
+      <p class="ph-sub">Tous les documents disponibles pour le Chef de Production</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>Seul le rapport des lots dispose d'un export serveur (PDF/Excel/CSV). Les autres rapports ci-dessous sont générés côté client (CSV) à partir de données réelles. Les Bons de Commande ne sont pas téléchargeables — aucune entité BC n'existe côté backend.</div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
+    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Document</th><th>Format</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><i class="fa-solid fa-boxes-stacked"></i> Rapport des lots</td>
+          <td>
+            <select class="input" [(ngModel)]="formatLots" style="width:100px">
+              <option value="xlsx">Excel</option><option value="pdf">PDF</option><option value="csv">CSV</option>
+            </select>
+          </td>
+          <td><button class="btn btn-sm btn-primary" (click)="telechargerRapportLots()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
+        </tr>
+        <tr>
+          <td><i class="fa-solid fa-calendar-week"></i> Rapport hebdomadaire de production</td>
+          <td>CSV</td>
+          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportHebdomadaire()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
+        </tr>
+        <tr>
+          <td><i class="fa-solid fa-triangle-exclamation"></i> Rapport des pertes</td>
+          <td>CSV</td>
+          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportPertes()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
+        </tr>
+        <tr>
+          <td><i class="fa-solid fa-chart-simple"></i> Rapport de performance (machinistes + postes)</td>
+          <td>CSV</td>
+          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportPerformances()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
+        </tr>
+        <tr>
+          <td><i class="fa-solid fa-calendar-days"></i> Plans de Production (PPH)</td>
+          <td>CSV</td>
+          <td><button class="btn btn-sm btn-ghost" (click)="telechargerPph()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
+        </tr>
+        <tr>
+          <td><i class="fa-solid fa-file-invoice"></i> Bons de Commande</td>
+          <td>—</td>
+          <td><span class="badge bg-neutral">Non disponible (pas de module BC)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

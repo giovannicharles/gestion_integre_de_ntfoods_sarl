@@ -1,0 +1,94 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-people-arrows ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Coordination des Acteurs</h1>
+      <p class="ph-sub">Activité du jour — Responsable Salle, Chef Machiniste, Agent Doseur</p>
+    </div>
+  </div>
+</div>
+
+<nav class="rp-tabs">
+  <button [class.active]="onglet()==='salle'" (click)="changerOnglet('salle')">Responsable Salle</button>
+  <button [class.active]="onglet()==='machiniste'" (click)="changerOnglet('machiniste')">Chef Machiniste</button>
+  <button [class.active]="onglet()==='doseur'" (click)="changerOnglet('doseur')">Agent Doseur</button>
+</nav>
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+} @else {
+
+@if (onglet() === 'salle') {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-user-gear"></i> Affectations du jour</h2></div>
+  @for (a of affectations(); track a.id) {
+    <div class="tbl-wrap" style="margin-bottom:var(--sp-3)">
+      <h4 style="padding: var(--sp-2) var(--sp-4) 0">{{ a.referencePPH }} — <span class="badge bg-orange">{{ a.statut }}</span></h4>
+      <table class="data-table">
+        <thead><tr><th>Poste</th><th>Effectif</th><th>Objectif ajusté</th><th>Réalisé</th></tr></thead>
+        <tbody>
+          @for (l of a.lignes; track l.codePoste) {
+            <tr>
+              <td>{{ l.libellePoste }}</td>
+              <td>{{ l.effectifReel }} / {{ l.effectifReference }}</td>
+              <td>{{ l.objectifAjuste }} {{ l.unite }}</td>
+              <td>{{ saisiePourPoste(a, l.codePoste) ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @empty {
+    <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune affectation aujourd'hui</div>
+  }
+</div>
+}
+
+@if (onglet() === 'machiniste') {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Sessions de broyage du jour</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>PPH</th><th>Type poudre</th><th>Objectif</th><th>Réalisé</th><th>Statut</th></tr></thead>
+      <tbody>
+        @for (s of sessionsBroyage(); track s.id) {
+          <tr>
+            <td class="mono">{{ s.referencePPH }}</td>
+            <td>{{ s.typePoudreLibelle }}</td>
+            <td>{{ s.objectifJournalierKg }} kg</td>
+            <td>{{ s.totalRealiseKg }} kg</td>
+            <td><span [class]="s.journeeValidee ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
+
+@if (onglet() === 'doseur') {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flask"></i> Sessions de dosage du jour</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>PPH</th><th>Agent</th><th>Fûts nets</th><th>Statut</th></tr></thead>
+      <tbody>
+        @for (s of sessionsDosage(); track s.id) {
+          <tr>
+            <td class="mono">{{ s.referencePPH }}</td>
+            <td>{{ s.matriculeAgentDoseur }}</td>
+            <td>{{ s.nbFutsNets }}</td>
+            <td><span [class]="s.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ s.cloturee ? 'Clôturée' : 'Ouverte' }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
+
+}

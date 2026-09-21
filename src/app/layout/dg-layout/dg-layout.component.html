@@ -6,7 +6,7 @@
       <!-- BRAND — fond jaune -->
       <div class="sidebar-brand">
         <div class="brand-content">
-          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo-image" />
+          <img src="/logo_tanty.jpg" alt="TANTY" class="brand-logo-image" />
           @if (alertCount() > 0) {
           <a class="logo-alert-badge" routerLink="/dg/alertes" title="{{ alertCount() }} alerte(s) active(s)">
             <i class="fa-solid fa-bell"></i>
@@ -181,6 +181,9 @@
         </button>
         <button class="tb-icon-btn" routerLink="/dg/ia-analyse" title="Analyse IA 360°" style="color:#B8860B">
           <i class="fa-solid fa-brain"></i>
+        </button>
+        <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
+          <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>
         <div class="tb-divider"></div>
         <div class="tb-user">

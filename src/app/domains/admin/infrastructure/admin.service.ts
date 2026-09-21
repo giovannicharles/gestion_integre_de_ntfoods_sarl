@@ -11,7 +11,17 @@ export interface UtilisateurBE {
 
 export interface ParametresBE {
   tvaTaux: number; primeMontant: number; alerteStockSeuil: number;
+  seuilClientStrategique: number;
   zones: string[]; gammeProduits: string[]; villes: string[];
+}
+
+export interface CodeObservationBE {
+  id: number;
+  code: string;
+  libelle: string;
+  requireQuantity: boolean;
+  actif: boolean;
+  ordre: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -65,11 +75,13 @@ export class AdminService {
       .pipe(map(r => r.donnees!));
   }
 
-  modifierParametres(tvaTaux: number, primeMontant: number, alerteStockSeuil: number): Observable<ParametresBE> {
+  modifierParametres(tvaTaux: number, primeMontant: number, alerteStockSeuil: number,
+                      seuilClientStrategique: number): Observable<ParametresBE> {
     const params: Record<string, string> = {
       tvaTaux: String(tvaTaux),
       primeMontant: String(primeMontant),
       alerteStockSeuil: String(alerteStockSeuil),
+      seuilClientStrategique: String(seuilClientStrategique),
     };
     return this.api.put<ApiResponse<ParametresBE>>('administration/parametres', {}, params)
       .pipe(map(r => r.donnees!));
@@ -85,5 +97,33 @@ export class AdminService {
     const params: Record<string, string> = { categorie, valeur };
     return this.api.delete<ApiResponse<ParametresBE>>('administration/parametres/referentiel', params)
       .pipe(map(r => r.donnees!));
+  }
+
+  // ── Codes observation tournée ─────────────────────────────────────────────
+
+  getCodesObservation(): Observable<CodeObservationBE[]> {
+    return this.api.get<ApiResponse<CodeObservationBE[]>>('administration/codes-observation')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  creerCodeObservation(code: string, libelle: string, requireQuantity: boolean, ordre: number): Observable<CodeObservationBE> {
+    const params: Record<string, string> = {
+      code, libelle, requireQuantity: String(requireQuantity), ordre: String(ordre),
+    };
+    return this.api.post<ApiResponse<CodeObservationBE>>('administration/codes-observation', {}, params)
+      .pipe(map(r => r.donnees!));
+  }
+
+  modifierCodeObservation(id: number, code: string, libelle: string, requireQuantity: boolean, actif: boolean, ordre: number): Observable<CodeObservationBE> {
+    const params: Record<string, string> = {
+      code, libelle, requireQuantity: String(requireQuantity), actif: String(actif), ordre: String(ordre),
+    };
+    return this.api.put<ApiResponse<CodeObservationBE>>(`administration/codes-observation/${id}`, {}, params)
+      .pipe(map(r => r.donnees!));
+  }
+
+  supprimerCodeObservation(id: number): Observable<unknown> {
+    return this.api.delete<ApiResponse<unknown>>(`administration/codes-observation/${id}`)
+      .pipe(map(r => r.donnees));
   }
 }

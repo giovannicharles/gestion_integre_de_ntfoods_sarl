@@ -1,0 +1,205 @@
+<!-- EN-TÊTE -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="af-ph-ico"><i class="fa-solid fa-user-gear"></i></div>
+    <div>
+      <h1 class="ph-title">Affectation des Employés</h1>
+      <p class="ph-sub">Postes de production — objectifs recalculés automatiquement par le serveur</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+@if (message()) {
+  <div class="aj-toast aj-toast-ok">
+    <i class="fa-solid fa-circle-check"></i> {{ message() }}
+    <button class="aj-toast-close" (click)="message.set('')">×</button>
+  </div>
+}
+@if (erreur()) {
+  <div class="aj-toast aj-toast-err">
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
+    <button class="aj-toast-close" (click)="erreur.set('')">×</button>
+  </div>
+}
+
+<!-- FORMULAIRE -->
+<div class="card">
+  <div class="af-card-header">
+    <div class="af-card-title">
+      <div class="af-card-ico"><i class="fa-solid fa-plus"></i></div>
+      <span>Nouvelle affectation</span>
+    </div>
+  </div>
+
+  <div class="af-form-body">
+    <!-- PPH + Date -->
+    <div class="af-meta-row">
+      <div class="af-meta-field">
+        <label class="af-label"><i class="fa-solid fa-calendar-week"></i> PPH en cours</label>
+        @if (loading()) {
+          <div class="skeleton" style="height:36px;border-radius:6px"></div>
+        } @else {
+          <select class="input af-select" [(ngModel)]="referencePPH">
+            <option value="">— Choisir un PPH —</option>
+            @for (p of pphs(); track p.id) {
+              <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+            }
+          </select>
+          @if (!pphs().length) {
+            <span class="af-hint af-hint-warn"><i class="fa-solid fa-triangle-exclamation"></i> Aucun PPH EN COURS</span>
+          }
+        }
+      </div>
+      <div class="af-meta-field">
+        <label class="af-label"><i class="fa-solid fa-calendar-day"></i> Date d'affectation</label>
+        <div class="af-date-readonly">
+          <i class="fa-solid fa-lock af-date-ico"></i>
+          <span class="mono">{{ date }}</span>
+          <span class="af-date-badge">Aujourd'hui</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau des lignes -->
+    <div class="af-section-title">
+      <i class="fa-solid fa-list-check"></i> Postes et employés
+    </div>
+
+    @if (loadingAgents()) {
+      <div class="af-agents-loading">
+        <span class="spinner spinner-sm"></span> Chargement des agents de production…
+      </div>
+    } @else {
+      <div class="af-lines-wrap">
+        @for (l of lignes; track $index; let i = $index) {
+          <div class="af-ligne-card">
+            <div class="af-ligne-header">
+              <span class="af-ligne-num">Ligne {{ i + 1 }}</span>
+              @if (lignes.length > 1) {
+                <button class="af-remove-btn" (click)="retirerLigne(i)" title="Supprimer cette ligne">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              }
+            </div>
+
+            <div class="af-ligne-body">
+              <!-- Poste -->
+              <div class="af-field">
+                <label class="af-label">Poste</label>
+                <select class="input af-select" [(ngModel)]="l.poste">
+                  <option value="">— Choisir un poste —</option>
+                  @for (p of codesPoste; track p.code) {
+                    <option [value]="p.code">{{ p.libelle }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Durée -->
+              <div class="af-field af-field-sm">
+                <label class="af-label">Durée</label>
+                <select class="input af-select" [(ngModel)]="l.duree">
+                  @for (d of durees; track d.code) {
+                    <option [value]="d.code">{{ d.libelle }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Objectif indicatif -->
+              <div class="af-field af-field-sm">
+                <label class="af-label">Objectif indicatif</label>
+                <div class="af-objectif">
+                  <span class="af-objectif-val">{{ objectifIndicatif(l.poste, l.matriculesList.length, l.duree) }}</span>
+                  <span class="af-objectif-unit">{{ unitePoste(l.poste) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sélecteur multi-agents -->
+            <div class="af-agents-section">
+              <label class="af-label"><i class="fa-solid fa-users"></i> Employés affectés</label>
+
+              <!-- Tags des agents sélectionnés -->
+              <div class="af-tags-row">
+                @if (l.matriculesList.length === 0) {
+                  <span class="af-tags-empty">Aucun employé sélectionné</span>
+                }
+                @for (mat of l.matriculesList; track mat) {
+                  <span class="af-tag">
+                    <i class="fa-solid fa-user-check"></i>
+                    {{ nomAgent(mat) }}
+                    <button class="af-tag-remove" (click)="retirerMatricule(i, mat)" title="Retirer">×</button>
+                  </span>
+                }
+              </div>
+
+              <!-- Dropdown d'ajout -->
+              <div class="af-add-agent-row">
+                <select class="input af-select af-agent-select"
+                        (change)="ajouterMatricule(i, $any($event.target).value); $any($event.target).value = ''">
+                  <option value="">
+                    @if (disponiblesPourLigne(i).length) {
+                      + Ajouter un agent ({{ disponiblesPourLigne(i).length }} disponible{{ disponiblesPourLigne(i).length > 1 ? 's' : '' }})
+                    } @else {
+                      Tous les agents ont été sélectionnés
+                    }
+                  </option>
+                  @for (a of disponiblesPourLigne(i); track a.matricule) {
+                    <option [value]="a.matricule">{{ a.nomComplet }} — {{ a.matricule }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="af-actions-row">
+      <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()">
+        <i class="fa-solid fa-plus"></i> Ajouter un poste
+      </button>
+      <button class="btn btn-primary" (click)="creerAffectation()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner spinner-sm"></span> Création… }
+        @else { <i class="fa-solid fa-check"></i> Créer l'affectation }
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RÉSULTAT -->
+@if (affectationCreee(); as a) {
+  <div class="card">
+    <div class="af-card-header af-header-success">
+      <div class="af-card-title">
+        <div class="af-card-ico af-ico-success"><i class="fa-solid fa-circle-check"></i></div>
+        <span>Affectation créée — #{{ a.id }}</span>
+        <span class="af-ref-chip mono">{{ a.referencePPH }} · {{ a.date }}</span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Poste</th>
+            <th class="text-right">Effectif réel</th>
+            <th>Durée</th>
+            <th class="text-right">Objectif ajusté (serveur)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of a.lignes; track l.codePoste) {
+            <tr>
+              <td><strong>{{ l.libellePoste }}</strong></td>
+              <td class="text-right mono">{{ l.effectifReel }}</td>
+              <td>{{ l.duree === 'JOURNEE_COMPLETE' ? 'Journée complète' : 'Demi-journée' }}</td>
+              <td class="text-right">
+                <strong class="af-objectif-result">{{ l.objectifAjuste }} <span class="text-muted">{{ l.unite }}</span></strong>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

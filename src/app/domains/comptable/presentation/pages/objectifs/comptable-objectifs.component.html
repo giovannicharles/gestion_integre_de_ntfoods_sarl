@@ -49,8 +49,7 @@
         <tr>
           <th>Rang</th>
           <th>Commercial</th>
-          <th>Zone</th>
-          <th>Ville</th>
+          <th>Gammes couvertes</th>
           <th>Objectif CA</th>
           <th>CA Réalisé</th>
           <th>Taux</th>
@@ -68,22 +67,27 @@
                 <span>{{ o.matriculeCommercial }}</span>
               </div>
             </td>
-            <td>{{ o.objectifFarines }}</td>
-            <td>{{ o.objectifEaux }}</td>
-            <td>{{ fCFA(o.objectifGlobal) }}</td>
-            <td><strong>{{ fCFA(o.objectifGlobal) }}</strong></td>
-            <td>{{ tauxGlobal() }}%</td>
+            <td>{{ gammesDe(o) }}</td>
+            <td>
+              {{ fCFA(o.objectifGlobalFCFA) }}
+              @if (o.revise) {
+                <span class="badge bg-orange badge-sm" [title]="titreRevision(o)">révisé</span>
+              }
+            </td>
+            <td><strong>{{ fCFA(realiseDe(o.matriculeCommercial)) }}</strong></td>
+            <td>{{ tauxAtteinte(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) }}%</td>
             <td>
               <div class="prog-track">
                 <div
-                  [class]="progressClass(o.objectifGlobal, o.objectifGlobal)"
-                  [style.width.%]="cappedTaux(o.objectifGlobal, o.objectifGlobal)">
+                  [class]="progressClass(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA)"
+                  [style.width.%]="cappedTaux(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA)">
                 </div>
               </div>
             </td>
             <td>
-              <span [class]="statutClass(o.objectifGlobal, o.objectifGlobal)">
-                {{ o.objectifGlobal > 0 ? 'Défini' : 'À définir' }}
+              <span [class]="statutClass(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA)">
+                {{ o.objectifGlobalFCFA <= 0 ? 'À définir'
+                   : (realiseDe(o.matriculeCommercial) >= o.objectifGlobalFCFA ? 'Atteint' : 'En cours') }}
               </span>
             </td>
           </tr>

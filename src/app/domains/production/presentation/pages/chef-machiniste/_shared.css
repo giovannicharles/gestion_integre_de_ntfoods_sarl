@@ -1,0 +1,78 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Recherche instantanée + filtres */
+.toolbar-row {
+  display: flex;
+  gap: var(--sp-2, 0.5rem);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 var(--sp-4, 1rem) var(--sp-3, 0.75rem);
+}
+.search-input {
+  flex: 1;
+  min-width: 180px;
+}
+
+/* Pagination */
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3, 0.75rem) var(--sp-4, 1rem);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: var(--sp-2, 0.5rem);
+}
+.pagination-btns { display: flex; gap: 4px; }
+.pagination-btns button {
+  min-width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer;
+}
+.pagination-btns button.active { background: var(--primary, #1976d2); color: #fff; border-color: var(--primary, #1976d2); }
+.pagination-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Classement — médailles */
+.medal { font-size: 1.1rem; margin-right: 4px; }
+.rank-row { display: flex; align-items: center; gap: var(--sp-3, 0.75rem); padding: var(--sp-3, 0.75rem); border-bottom: 1px solid var(--border); }
+.rank-row:last-child { border-bottom: none; }
+.rank-num { font-weight: 700; width: 34px; text-align: center; }
+.rank-info { flex: 1; }
+.rank-name { font-weight: 600; }
+.rank-meta { font-size: 0.78rem; color: var(--text-muted, #667); }
+.rank-progress-wrap { width: 120px; }
+
+.empty-state-block { text-align: center; padding: var(--sp-5, 2rem); color: var(--text-muted, #889); }
+.empty-state-block i { font-size: 2rem; margin-bottom: var(--sp-2, 0.5rem); display: block; opacity: 0.5; }
+
+.skeleton { background: linear-gradient(90deg, var(--surface-2, #eee) 25%, var(--border, #ddd) 50%, var(--surface-2, #eee) 75%); background-size: 200% 100%; animation: skeleton-anim 1.4s infinite; border-radius: 6px; }
+@keyframes skeleton-anim { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-row { height: 42px; margin-bottom: 6px; }
+
+.gap-note { background: var(--warning-bg, #fff3e0); color: var(--warning-text, #e65100); border: 1px solid var(--warning-border, #ffcc80); border-radius: 8px; padding: var(--sp-3, 0.75rem); font-size: 0.82rem; margin-bottom: var(--sp-4, 1rem); display: flex; gap: 8px; align-items: flex-start; }

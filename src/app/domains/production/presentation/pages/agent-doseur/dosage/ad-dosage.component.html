@@ -1,0 +1,98 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-flask ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Dosage des Matières Premières</h1>
+      <p class="ph-sub">Application automatique des formules Bouillie / Mélange Arachide — MAIS/SOJA/ARACHIDE enregistrés dès la saisie</p>
+    </div>
+  </div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-hashtag"></i> Session à doser</h2></div>
+  <div class="toolbar-row">
+    <label for="session-select" class="sr-only">Session ouverte</label>
+    <select id="session-select" class="input" style="min-width: 320px;"
+            [value]="contexte.sessionActive()?.id ?? ''"
+            (change)="selectionnerSessionDepuisSelect($any($event).target.value)">
+      <option value="" disabled>Sélectionner une session ouverte...</option>
+      @for (s of contexte.sessionsOuvertes(); track s.id) {
+        <option [value]="s.id">#{{ s.id }} — {{ s.referencePPH }} — {{ s.date }}</option>
+      }
+    </select>
+    @if (contexte.sessionActive(); as s) {
+      <span class="badge bg-success">Session ouverte : #{{ s.id }} ({{ s.referencePPH }})</span>
+    } @else if (contexte.aucuneSession()) {
+      <span class="badge bg-orange">Aucune session ouverte — ouvrez une session depuis Gestion des sessions</span>
+    }
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Formule de dosage</h2></div>
+  <div style="padding: var(--sp-4)">
+    <div class="form-grid">
+      <label>Type de mélange
+        <select class="input" [(ngModel)]="typeMelange" (change)="onDosageInputChange()">
+          <option value="BOUILLIE">Bouillie (40 maïs / 9 soja / 1 arachide)</option>
+          <option value="ARACHIDE">Mélange Arachide (40 maïs / 9 arachide / 1 soja)</option>
+        </select>
+      </label>
+      <label>Nombre de fûts produits (50 kg chacun)<input type="number" class="input" [(ngModel)]="nbFutsProduits" min="0" (input)="onDosageInputChange()"></label>
+    </div>
+
+    <div class="gap-note" style="margin-top:var(--sp-3)">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <div>Quantités calculées et enregistrées automatiquement pour <strong>{{ nbFutsProduits }}</strong> fût(s).</div>
+    </div>
+    <div class="kpi-grid" style="margin-top:var(--sp-3)">
+      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs</div><div class="kpi-val">{{ quantitesAttendues().mais }} kg</div></div></div>
+      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja</div><div class="kpi-val">{{ quantitesAttendues().soja }} kg</div></div></div>
+      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide</div><div class="kpi-val">{{ quantitesAttendues().arachide }} kg</div></div></div>
+    </div>
+
+    <h4 style="margin-top:var(--sp-3)">Autres matières premières (sucre, poisson, ...)</h4>
+    <div class="form-grid mini">
+      <input class="input" placeholder="Type de matière" [(ngModel)]="nouvelleAutreMatiere.typeMatiere">
+      <input type="number" class="input" placeholder="Quantité (kg)" [(ngModel)]="nouvelleAutreMatiere.quantiteKg">
+      <button class="btn btn-ghost btn-sm" (click)="ajouterAutreMatiere()">+ Ajouter</button>
+    </div>
+    @if (autresMatieres.length > 0) {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Matière</th><th>Quantité</th><th></th></tr></thead>
+          <tbody>
+            @for (m of autresMatieres; track $index; let i = $index) {
+              <tr><td>{{ m.typeMatiere }}</td><td>{{ m.quantiteKg }} kg</td><td><button class="btn btn-sm btn-danger" (click)="retirerAutreMatiere(i)">×</button></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <label style="margin-top:var(--sp-3);display:block">Observations
+      <textarea class="input" rows="2" [(ngModel)]="observations" placeholder="Remarques éventuelles..."></textarea>
+    </label>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="enregistrerDosage()" [disabled]="!contexte.sessionActive() || loading() || autresMatieres.length === 0"><i class="fa-solid fa-check"></i> Enregistrer les autres matières</button>
+      @if (loading()) { <span class="badge bg-neutral" style="margin-left:8px"><i class="fa-solid fa-spinner fa-spin"></i> Mise à jour...</span> }
+    </div>
+  </div>
+</div>
+
+@if (session(); as s) {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-vial"></i> Matières enregistrées — session #{{ s.id }}</h2></div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>Matière</th><th>Quantité</th></tr></thead>
+      <tbody>
+        @for (m of s.matieresUtilisees; track m.typeMatiere) { <tr><td>{{ m.typeMatiere }}</td><td>{{ m.quantiteKg }} kg</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>
+}

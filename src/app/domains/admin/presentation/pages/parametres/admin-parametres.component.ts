@@ -21,6 +21,7 @@ export class AdminParametresComponent implements OnInit {
     tvaTaux: 0,
     primeMontant: 0,
     alerteStockSeuil: 0,
+    seuilClientStrategique: 500000,
   };
 
   zones = signal<string[]>([]);
@@ -42,6 +43,7 @@ export class AdminParametresComponent implements OnInit {
         this.form.tvaTaux = p.tvaTaux;
         this.form.primeMontant = p.primeMontant;
         this.form.alerteStockSeuil = p.alerteStockSeuil;
+        this.form.seuilClientStrategique = p.seuilClientStrategique ?? 500000;
         this.zones.set([...p.zones]);
         this.gammeProduits.set([...p.gammeProduits]);
         this.villes.set([...p.villes]);
@@ -51,15 +53,23 @@ export class AdminParametresComponent implements OnInit {
     });
   }
 
+  /**
+   * Sauvegarde le taux de TVA.
+   *
+   * Le montant de prime et le seuil de stock sont retransmis inchangés : l'API
+   * historique attend les trois valeurs ensemble, mais elles ne gouvernent plus
+   * aucun calcul — les agrégats de configuration datés font désormais autorité.
+   */
   sauvegarder(): void {
-    this.svc.modifierParametres(this.form.tvaTaux, this.form.primeMontant, this.form.alerteStockSeuil)
-      .subscribe({
-        next: () => {
-          this.submitted.set(true);
-          this.isDirty.set(false);
-          setTimeout(() => this.submitted.set(false), 3000);
-        },
-      });
+    this.svc.modifierParametres(
+      this.form.tvaTaux, this.form.primeMontant, this.form.alerteStockSeuil, this.form.seuilClientStrategique
+    ).subscribe({
+      next: () => {
+        this.submitted.set(true);
+        this.isDirty.set(false);
+        setTimeout(() => this.submitted.set(false), 3000);
+      },
+    });
   }
 
   onFieldChange(): void {

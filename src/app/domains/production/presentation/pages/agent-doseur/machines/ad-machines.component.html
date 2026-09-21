@@ -1,0 +1,61 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-gears ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Gestion des Machines</h1>
+      <p class="ph-sub">Machines mobilisées pour le dosage et le mélange</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-triangle-exclamation"></i>
+  <div>Le backend ne trace pas de durée d'utilisation par machine — seule la liste des machines mobilisées par session est disponible.</div>
+</div>
+
+@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Enregistrer une machine mobilisée</h2></div>
+  <div class="toolbar-row" style="align-items:flex-end">
+    <label>Session ouverte
+      <select id="machines-session-select" class="input" style="min-width:260px"
+              [value]="contexte.sessionActive()?.id ?? ''"
+              (change)="selectionnerSessionDepuisSelect($any($event).target.value)">
+        <option value="" disabled>Sélectionner une session ouverte...</option>
+        @for (s of contexte.sessionsOuvertes(); track s.id) {
+          <option [value]="s.id">#{{ s.id }} — {{ s.referencePPH }} — {{ s.date }}</option>
+        }
+      </select>
+    </label>
+    <input class="input" placeholder="Identifiant machine..." [(ngModel)]="nouvelleMachineId">
+    <button class="btn btn-primary btn-sm" (click)="enregistrerMachine()" [disabled]="!contexte.sessionActive()">Enregistrer</button>
+    @if (contexte.sessionActive(); as s) { <span class="badge bg-success">Session ouverte : #{{ s.id }} ({{ s.referencePPH }})</span> }
+    @else if (contexte.aucuneSession()) { <span class="badge bg-orange">Aucune session ouverte</span> }
+  </div>
+</div>
+
+@if (erreurAcces()) {
+  <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Historique indisponible.</div></div>
+} @else if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+} @else {
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique d'utilisation par machine (14 jours)</h2></div>
+  @for (u of utilisationParMachine(); track u.machine) {
+    <div class="tbl-wrap" style="margin-bottom:var(--sp-3)">
+      <h4 style="padding: var(--sp-2) var(--sp-4) 0"><i class="fa-solid fa-gear"></i> {{ u.machine }} — {{ u.sessions.length }} session(s)</h4>
+      <table class="data-table">
+        <thead><tr><th>Session</th><th>PPH</th><th>Date</th><th>Observations</th></tr></thead>
+        <tbody>
+          @for (s of u.sessions; track s.session.id) {
+            <tr><td>#{{ s.session.id }}</td><td class="mono">{{ s.session.referencePPH }}</td><td>{{ s.session.date | date:'dd/MM/yyyy' }}</td><td class="text-muted">—</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @empty {
+    <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune machine enregistrée sur la période</div>
+  }
+</div>
+}

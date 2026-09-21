@@ -1,7 +1,7 @@
 import { Component, computed, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CommercialService, RecouvrementBE } from '../../../../commercial/infrastructure/commercial.service';
-import { DgService, ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
+import { ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 @Component({
@@ -13,7 +13,6 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
 export class ControleCreditsComponent implements OnInit {
   fCFA = fCFA;
   private readonly comSvc = inject(CommercialService);
-  private readonly dgSvc = inject(DgService);
 
   recouvrements = signal<RecouvrementBE[]>([]);
   commerciaux = signal<ClassementCommercialBE[]>([]);
@@ -25,8 +24,6 @@ export class ControleCreditsComponent implements OnInit {
   totalCredit = computed(() =>
     this.recouvrements().reduce((s, r) => s + r.montantRestant, 0)
   );
-  nbDebiteurs = computed(() => this.debiteurs().length);
-  nbRisqueEleve = computed(() => this.debiteurs().filter(d => d.montantRestant > 300000).length);
 
   parCommercial = computed(() => this.commerciaux().map(com => ({
     nom: com.nomComplet,
@@ -44,7 +41,10 @@ export class ControleCreditsComponent implements OnInit {
       next: r => this.recouvrements.set(r),
       error: () => {},
     });
-    this.dgSvc.getClassement().subscribe({
+    // Par le module commercial et non par `/api/dg/**`, réservé au DG : le
+    // Contrôleur Général y recevait un 403 sur un classement identique auquel
+    // COMMERCIAL_VENTE_CONSULTER lui donne droit.
+    this.comSvc.getClassementCommerciaux().subscribe({
       next: c => this.commerciaux.set(c),
       error: () => {},
     });

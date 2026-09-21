@@ -1,0 +1,9 @@
+<span class="badge {{ variantClass }} {{ sizeClass }}">
+  @if (dot()) {
+    <span class="badge-dot"></span>
+  }
+  @if (icon()) {
+    <i class="fa-solid {{ icon() }}"></i>
+  }
+  <span class="badge-text">{{ text() }}</span>
+</span>

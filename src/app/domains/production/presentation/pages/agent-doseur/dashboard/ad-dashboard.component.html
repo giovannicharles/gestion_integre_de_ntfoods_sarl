@@ -1,0 +1,54 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Tableau de Bord — Agent Doseur</h1>
+      <p class="ph-sub">Dosage, mélange et conditionnement des fûts</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <a routerLink="/production/agent-doseur/sessions" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ouvrir une session</a>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+} @else {
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">PPH en cours</div><div class="kpi-val">{{ pphEnCours() }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Sessions ouvertes</div><div class="kpi-val">{{ sessionsOuvertes() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Sessions clôturées</div><div class="kpi-val">{{ sessionsCloturees() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts produits (jour)</div><div class="kpi-val">{{ futsJour() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Fûts produits (semaine)</div><div class="kpi-val">{{ futsSemaine() }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Fûts produits (mois)</div><div class="kpi-val">{{ futsMois() }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs utilisé</div><div class="kpi-val">{{ maisUtilise() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja utilisé</div><div class="kpi-val">{{ sojaUtilise() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide utilisée</div><div class="kpi-val">{{ arachideUtilise() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Total matières consommées</div><div class="kpi-val">{{ totalMatieresConsommees() | number:'1.1-1' }} kg</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Machines utilisées</div><div class="kpi-val">{{ nbMachinesUtilisees() }}</div></div></div>
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Mélanges Bouillie</div><div class="kpi-val">{{ nbMelangesBouillie() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Mélanges Arachide</div><div class="kpi-val">{{ nbMelangesArachide() }}</div></div></div>
+  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Quantité restante à produire</div><div class="kpi-val">{{ quantiteRestante() }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Taux d'avancement PPH</div><div class="kpi-val">{{ tauxAvancementPph() }}%</div></div></div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des fûts produits (7 jours)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionFuts()" [height]="200" /></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Consommation des matières premières (30j)</h2></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-donut-chart title="" unit="kg" [data]="donutMatieres()" /></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Production Bouillie vs Mélange Arachide (7 jours)</h2></div>
+  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels7j()" [series]="serieMelangeTypes()" [height]="200" /></div>
+</div>
+
+}

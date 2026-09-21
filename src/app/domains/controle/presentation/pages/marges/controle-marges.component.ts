@@ -17,11 +17,6 @@ export class ControleMargesComponent implements OnInit {
 
   marges = signal<MargeProduit[]>([]);
   margeTotale = computed(() => this.marges().reduce((s, m) => s + m.margeTotale, 0));
-  nbSous30 = computed(() => this.marges().filter(m => m.margePct < 30).length);
-  margeMoyenne = computed(() => {
-    const list = this.marges();
-    return list.length ? Math.round(list.reduce((s, m) => s + m.margePct, 0) / list.length) : 0;
-  });
 
   ngOnInit(): void {
     this.svc.getMarges().subscribe({
