@@ -1,0 +1,234 @@
+<div class="pouvoirs-page">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-user-shield"></i> Pouvoirs &amp; délégations</h1>
+    <p class="subtitle">Qui peut valider quoi, et qui reprend les validations d'un absent</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="onglet() === 'delegations'" (click)="onglet.set('delegations')">
+      <i class="fa-solid fa-calendar-days"></i> Délégations (absences)
+    </button>
+    <button class="tab" [class.active]="onglet() === 'pouvoirs'" (click)="onglet.set('pouvoirs')">
+      <i class="fa-solid fa-scale-balanced"></i> Pouvoirs de validation
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
+  } @else if (error()) {
+    <div class="error">
+      <i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}
+      <button class="btn btn-sm btn-secondary" (click)="chargerTout()">Réessayer</button>
+    </div>
+  } @else if (onglet() === 'delegations') {
+    <div class="card">
+      <div class="card-header">
+        <h3>Je serai absent(e)…</h3>
+        <button class="btn btn-primary btn-sm" (click)="ouvrirNouvelleDelegation()">
+          <i class="fa-solid fa-plus"></i> Nouvelle délégation
+        </button>
+      </div>
+      <p class="hint">Pendant la période choisie, la personne désignée reçoit votre pouvoir de validation pour les actions sélectionnées (ou toutes, si aucune n'est cochée).</p>
+
+      <h4 class="section-title">Déléguées par moi</h4>
+      @if (delegationsDonnees().length === 0) {
+        <p class="empty-inline">Aucune délégation active donnée par vous.</p>
+      } @else {
+        <div class="delegations-list">
+          @for (d of delegationsDonnees(); track d.id) {
+            <div class="delegation-card" [class.inactive]="!estActive(d)">
+              <div class="delegation-main">
+                <strong>{{ nomUtilisateur(d.delegataireId) }}</strong>
+                <span class="periode">{{ formatDate(d.dateDebut) }} → {{ formatDate(d.dateFin) }}</span>
+              </div>
+              <div class="delegation-actions-types">
+                @if (!d.actionTypes) {
+                  <span class="badge-neutral">Toutes les actions</span>
+                } @else {
+                  @for (t of d.actionTypes.split(','); track t) {
+                    <span class="badge-neutral">{{ libelleActionType(t) }}</span>
+                  }
+                }
+              </div>
+              <p class="motif">{{ d.motif }}</p>
+              @if (d.actif) {
+                <button class="btn btn-sm btn-danger" (click)="revoquerDelegation(d)">
+                  <i class="fa-solid fa-ban"></i> Révoquer
+                </button>
+              } @else {
+                <span class="badge-revoquee">Révoquée</span>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <h4 class="section-title">Reçues par moi</h4>
+      @if (delegationsRecues().length === 0) {
+        <p class="empty-inline">Vous ne détenez aucune délégation active en ce moment.</p>
+      } @else {
+        <div class="delegations-list">
+          @for (d of delegationsRecues(); track d.id) {
+            <div class="delegation-card">
+              <div class="delegation-main">
+                <strong>De {{ nomUtilisateur(d.delegantId) }}</strong>
+                <span class="periode">{{ formatDate(d.dateDebut) }} → {{ formatDate(d.dateFin) }}</span>
+              </div>
+              <p class="motif">{{ d.motif }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="card">
+      <div class="card-header">
+        <h3>Qui a du poids de validation</h3>
+        <button class="btn btn-primary btn-sm" (click)="ouvrirNouveauPouvoir()">
+          <i class="fa-solid fa-plus"></i> Attribuer un pouvoir
+        </button>
+      </div>
+      @if (pouvoirs().length === 0) {
+        <p class="empty-inline">Aucun pouvoir actif.</p>
+      } @else {
+        <table class="pouvoirs-table">
+          <thead>
+            <tr><th>Cible</th><th>Action</th><th>Poids</th><th>Attribué le</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (p of pouvoirs(); track p.id) {
+              <tr>
+                <td>{{ p.role || nomUtilisateur(p.utilisateurId) }}</td>
+                <td>{{ p.actionType ? libelleActionType(p.actionType) : 'Toutes les actions' }}</td>
+                <td><span class="badge-poids">{{ p.poids }}</span></td>
+                <td>{{ formatDate(p.dateAttribution) }}</td>
+                <td>
+                  <button class="btn btn-sm btn-danger" (click)="revoquerPouvoir(p)" title="Révoquer">
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+
+  <!-- Modal nouvelle délégation -->
+  @if (showNouvelleDelegation) {
+    <div class="modal-overlay" (click)="showNouvelleDelegation = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-calendar-days"></i> Je serai absent(e)</h3>
+          <button class="modal-close" (click)="showNouvelleDelegation = false"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Qui reprend mes validations ? *</label>
+            <select [(ngModel)]="nouvelleDelegataireId">
+              <option [ngValue]="null">— Choisir une personne —</option>
+              @for (u of utilisateurs(); track u.id) {
+                <option [ngValue]="u.id">{{ u.nomComplet }} ({{ u.matricule }}) — {{ u.role }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Du *</label>
+              <input type="datetime-local" [(ngModel)]="nouvelleDateDebut">
+            </div>
+            <div class="form-group">
+              <label>Au *</label>
+              <input type="datetime-local" [(ngModel)]="nouvelleDateFin">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Pour quelles actions ? (rien cocher = toutes)</label>
+            <div class="checkbox-list">
+              @for (t of actionTypes; track t) {
+                <label class="checkbox-item">
+                  <input type="checkbox" [checked]="nouvelleActionTypes.includes(t)" (change)="toggleActionType(t)">
+                  {{ libelleActionType(t) }}
+                </label>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Motif *</label>
+            <textarea [(ngModel)]="nouvelleMotif" rows="2" placeholder="Ex. congés du 1er au 15 octobre"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="showNouvelleDelegation = false" [disabled]="actionEnCours">Annuler</button>
+          <button class="btn btn-primary" (click)="creerDelegation()" [disabled]="actionEnCours">
+            @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Créer la délégation
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal nouveau pouvoir -->
+  @if (showNouveauPouvoir) {
+    <div class="modal-overlay" (click)="showNouveauPouvoir = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-scale-balanced"></i> Attribuer un pouvoir de validation</h3>
+          <button class="modal-close" (click)="showNouveauPouvoir = false"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Cible</label>
+            <div class="radio-row">
+              <label><input type="radio" name="cible" value="role" [(ngModel)]="nouveauPouvoirCible"> Par rôle</label>
+              <label><input type="radio" name="cible" value="utilisateur" [(ngModel)]="nouveauPouvoirCible"> Par utilisateur (dérogation)</label>
+            </div>
+          </div>
+          @if (nouveauPouvoirCible === 'role') {
+            <div class="form-group">
+              <label>Rôle *</label>
+              <select [(ngModel)]="nouveauPouvoirRole">
+                <option value="">— Choisir —</option>
+                @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+              </select>
+            </div>
+          } @else {
+            <div class="form-group">
+              <label>Utilisateur *</label>
+              <select [(ngModel)]="nouveauPouvoirUtilisateurId">
+                <option [ngValue]="null">— Choisir —</option>
+                @for (u of utilisateurs(); track u.id) {
+                  <option [ngValue]="u.id">{{ u.nomComplet }} ({{ u.matricule }})</option>
+                }
+              </select>
+            </div>
+          }
+          <div class="form-group">
+            <label>Type d'action (vide = toutes)</label>
+            <select [(ngModel)]="nouveauPouvoirActionType">
+              <option value="">Toutes les actions</option>
+              @for (t of actionTypes; track t) { <option [value]="t">{{ libelleActionType(t) }}</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Poids *</label>
+            <input type="number" min="1" [(ngModel)]="nouveauPouvoirPoids">
+          </div>
+          <div class="form-group">
+            <label>Commentaire</label>
+            <textarea [(ngModel)]="nouveauPouvoirCommentaire" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="showNouveauPouvoir = false" [disabled]="actionEnCours">Annuler</button>
+          <button class="btn btn-primary" (click)="creerPouvoir()" [disabled]="actionEnCours">
+            @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Attribuer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

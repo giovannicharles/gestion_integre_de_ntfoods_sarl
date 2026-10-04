@@ -72,6 +72,16 @@ export interface AnomalieBE {
   matriculeConcerne?: string;
 }
 
+export interface VersementDuJourBE {
+  referenceVersement: string;
+  matriculeCommercial: string;
+  montantAttendu: number;
+  cashVerse: number;
+  ecart: number;
+  alerteRouge: boolean;
+  statut: string;
+}
+
 export interface DashboardStockDgBE {
   date: string;
   nbProduitsCentral: number;
@@ -86,20 +96,37 @@ export interface DashboardStockDgBE {
 }
 
 export interface DashboardFinancierDgBE {
+  date: string;
   soldeCaisse: number;
   totalFacturesEmises: number;
   totalFacturesPayees: number;
+  nbFacturesImpayees: number;
   totalDecaissementsExecutes: number;
-  totalVersements: number;
-  totalPrimes: number;
-  totalRecouvrements: number;
+  nbDecaissementsEnAttente: number;
+  nbVersementsEnAttente: number;
+  nbAlertesRouges: number;
+  totalVersementsValides: number;
+  nbPrimesValideesNonVersées: number;
+  totalPrimesAVerser: number;
+  nbRecouvrementsEnCours: number;
+  nbRecouvrementsContentieux: number;
+  totalCreances: number;
 }
 
 export interface DashboardProductionDgBE {
-  totalPPH: number;
-  totalOF: number;
-  totalLots: number;
-  totalQuantiteProduite: number;
+  date: string;
+  nbPPHEnCours: number;
+  nbPPHClotures: number;
+  nbOFPlanifies: number;
+  nbOFEnCours: number;
+  nbOFHonores: number;
+  nbOFAnnules: number;
+  nbLotsDeclares: number;
+  nbLotsReceptionnes: number;
+  nbLotsValides: number;
+  nbLotsRejetes: number;
+  quantiteProduiteKg: number;
+  nbCartons: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -109,6 +136,13 @@ export class DgService {
   getKpis(): Observable<KpisDgBE> {
     return this.api.get<ApiResponse<KpisDgBE>>('dg/kpis')
       .pipe(map(r => r.donnees!));
+  }
+
+  /** Versements du jour, tous commerciaux — lecture directe du module comptabilité (COMPTABILITE_VERSEMENT_CONSULTER, déjà accordée au DG). */
+  getVersementsDuJour(date?: string): Observable<VersementDuJourBE[]> {
+    const params: Record<string, string> = { date: date ?? new Date().toISOString().slice(0, 10) };
+    return this.api.get<ApiResponse<VersementDuJourBE[]>>('comptabilite/versements', params)
+      .pipe(map(r => r.donnees ?? []));
   }
 
   getClassement(): Observable<ClassementCommercialBE[]> {

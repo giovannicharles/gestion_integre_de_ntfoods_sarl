@@ -1,112 +1,131 @@
-<div class="login-container">
-    <div class="login-wrapper">
-        <!-- Colonne gauche - Branding -->
-        <div class="login-left">
-            <div class="brand-section">
-                <div class="logo-container">
-                    <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
-                </div>
-                <h1 class="brand-title">NTFOODS TANTY</h1>
-                <p class="brand-subtitle">Système de Gestion Intégré</p>
-            </div>
-            
-            <div class="features-section">
-                <div class="feature-item">
-                    <i class="fa-solid fa-boxes-stacked feature-icon"></i>
-                    <div class="feature-text">
-                        <h3>Gestion de Stock</h3>
-                        <p>Contrôle optimal des inventaires</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <i class="fa-solid fa-industry feature-icon"></i>
-                    <div class="feature-text">
-                        <h3>Production</h3>
-                        <p>Suivi en temps réel de la fabrication</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <i class="fa-solid fa-chart-line feature-icon"></i>
-                    <div class="feature-text">
-                        <h3>Commercial</h3>
-                        <p>Optimisation des ventes et relations clients</p>
-                    </div>
-                </div>
-                <div class="feature-item">
-                    <i class="fa-solid fa-shield-halved feature-icon"></i>
-                    <div class="feature-text">
-                        <h3>Sécurité</h3>
-                        <p>Contrôle d'accès et permissions avancées</p>
-                    </div>
-                </div>
-            </div>
+<div class="login-container" [class.shake]="hasError()">
+  <div class="login-wrapper">
+    <!-- Colonne gauche - Image + descriptions système -->
+    <div class="login-left">
+      <div class="content-overlay">
+        <div class="brand-header">
+          <img src="/logo_tanty.jpg" alt="TANTY Logo" class="brand-logo" />
+          <h1 class="brand-title">NTFOODS TANTY</h1>
+          <p class="brand-tagline">ERP de Gestion Intégré</p>
         </div>
 
-        <!-- Colonne droite - Formulaire -->
-        <div class="login-right">
-            <div class="login-card">
-                <div class="login-header">
-                    <h2>Connexion</h2>
-                    <p>Accédez à votre espace de travail</p>
-                </div>
-
-                @if (error()) {
-                    <div class="error-message">
-                        <i class="fa-solid fa-circle-exclamation"></i>
-                        <span>{{ error() }}</span>
-                    </div>
-                }
-
-                <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-                    <div class="form-group">
-                        <label class="form-label">Matricule</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-id-badge input-icon"></i>
-                            <input type="text" class="form-control" formControlName="matricule" placeholder="Ex: ADM-2025-0001"
-                                [class.is-error]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid" />
-                        </div>
-                        <div class="error-message" *ngIf="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid">
-                            Le matricule est obligatoire
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Mot de passe</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input [type]="showPassword ? 'text' : 'password'" class="form-control" formControlName="password"
-                                placeholder="••••••••"
-                                [class.is-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" />
-                            <button type="button" class="toggle-password" (click)="togglePassword()">
-                                <i [class]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                            </button>
-                        </div>
-                        <div class="error-message"
-                            *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
-                            Le mot de passe doit contenir au moins 6 caractères
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-full" [disabled]="loginForm.invalid || loading()">
-                            @if (!loading()) {
-                                <span>Se connecter</span>
-                            } @else {
-                                <span class="spinner spinner-sm"></span>
-                                <span>Connexion en cours...</span>
-                            }
-                        </button>
-                    </div>
-
-                    <div class="form-footer">
-                        <a (click)="goToForgotPassword()" class="forgot-link">
-                            Mot de passe oublié ?
-                        </a>
-                    </div>
-                </form>
-
-
-            </div>
+        <div class="system-description">
+          <h2>Système de gestion complet</h2>
+          <p class="description-text">
+            Pilotez vos stocks, de la matière première au franc encaissé. 
+            Notre ERP centralise tous vos processus : gestion des stocks, 
+            production, commercialisation, comptabilité et ressources humaines.
+          </p>
         </div>
+
+        <div class="features-list">
+          <div class="feature">
+            <i class="fa-solid fa-boxes-stacked feature-icon"></i>
+            <span>Gestion de stock en temps réel</span>
+          </div>
+          <div class="feature">
+            <i class="fa-solid fa-industry feature-icon"></i>
+            <span>Suivi de production</span>
+          </div>
+          <div class="feature">
+            <i class="fa-solid fa-chart-line feature-icon"></i>
+            <span>Tableaux de bord interactifs</span>
+          </div>
+          <div class="feature">
+            <i class="fa-solid fa-shield-halved feature-icon"></i>
+            <span>Sécurité et permissions avancées</span>
+          </div>
+        </div>
+
+        <div class="testimonial">
+          <p class="testimonial-text">"Grâce à vous nous sommes N°1, MERCI"</p>
+        </div>
+
+        <div class="brand-footer">
+          <p>NTFOODS SARL - Cameroun</p>
+          <p class="copyright">© 2026 Tous droits réservés</p>
+        </div>
+      </div>
     </div>
+
+    <!-- Colonne droite - Formulaire sans bordures -->
+    <div class="login-right">
+      <div class="form-container">
+        <div class="form-header">
+          <h2>Bienvenue</h2>
+          <p>Connectez-vous à votre espace de travail</p>
+        </div>
+
+        @if (error()) {
+          <div class="error-message" role="alert" aria-live="assertive">
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+          <div class="form-group">
+            <label for="matricule" class="form-label">Matricule</label>
+            <input
+              id="matricule"
+              type="text"
+              class="form-input"
+              formControlName="matricule"
+              placeholder="Ex: ADM-2025-0001"
+              [attr.aria-invalid]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid"
+            />
+            @if (loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid) {
+              <div class="field-error">Le matricule est obligatoire</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Mot de passe</label>
+            <div class="password-input">
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                class="form-input"
+                formControlName="password"
+                placeholder="••••••••"
+                [attr.aria-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword ? 'Masquer' : 'Afficher'"
+              >
+                @if (showPassword) {
+                  <i class="fa-solid fa-eye-slash"></i>
+                } @else {
+                  <i class="fa-solid fa-eye"></i>
+                }
+              </button>
+            </div>
+            @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+              <div class="field-error">Le mot de passe doit contenir au moins 6 caractères</div>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="submit-button"
+            [disabled]="loginForm.invalid || loading()"
+          >
+            @if (!loading()) {
+              <span>Se connecter</span>
+            } @else {
+              <span>Connexion en cours...</span>
+            }
+          </button>
+
+          <div class="form-footer">
+            <button type="button" class="forgot-password" (click)="goToForgotPassword()">
+              Mot de passe oublié ?
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

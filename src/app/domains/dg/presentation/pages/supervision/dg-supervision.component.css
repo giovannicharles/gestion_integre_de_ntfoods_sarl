@@ -1,0 +1,7 @@
+.loading-state, .error-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; color: var(--n400); gap: 12px; }
+.error-state { color: var(--r); }
+.error-state i { font-size: 2rem; }
+.section-titre { font-weight: 700; font-size: 0.95rem; color: var(--n700); display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
+.section-titre:first-of-type { margin-top: 8px; }
+.section-titre i { color: var(--g); }
+.row-alert { background: var(--r-gh); }

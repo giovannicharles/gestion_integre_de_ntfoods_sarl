@@ -22,6 +22,7 @@ export class LoginComponent {
   loading = signal(false);
   showPassword = false;
   error = signal('');
+  hasError = signal(false);
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -34,10 +35,11 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.loading.set(true);
       this.error.set('');
+      this.hasError.set(false);
 
       const loginRequest: LoginRequest = {
         matricule: this.loginForm.value.matricule,
-        password: this.loginForm.value.password
+        motDePasse: this.loginForm.value.password
       };
 
       this.authService.login(loginRequest).subscribe({
@@ -51,7 +53,9 @@ export class LoginComponent {
         error: (err) => {
           this.loading.set(false);
           this.error.set('Identifiants invalides. Veuillez réessayer.');
-          // this.error.set(err.message);
+          this.hasError.set(true);
+          // Remove shake class after animation
+          setTimeout(() => this.hasError.set(false), 500);
           console.error('Erreur de connexion:', err);
         }
       });

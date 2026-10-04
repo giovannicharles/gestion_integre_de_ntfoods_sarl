@@ -14,6 +14,8 @@ export const COMPTABLE_ROUTES: Routes = [
       { path: 'recouvrement', loadComponent: () => import('./pages/recouvrement/comptable-recouvrement.component').then(m => m.ComptableRecouvrementComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/comptable-reporting.component').then(m => m.ComptableReportingComponent) },
       { path: 'objectifs', loadComponent: () => import('./pages/objectifs/comptable-objectifs.component').then(m => m.ComptableObjectifsComponent) },
+      { path: 'primes', loadComponent: () => import('./pages/primes/comptable-primes.component').then(m => m.ComptablePrimesComponent) },
+      { path: 'rapports', loadComponent: () => import('./pages/rapports/comptable-rapports.component').then(m => m.ComptableRapportsComponent) },
       // Dernière étape du cycle de fin de tournée, après le rapprochement secrétaire.
       { path: 'sessions', loadComponent: () => import('./pages/sessions/comptable-sessions.component').then(m => m.ComptableSessionsComponent) },
       // Le découpage territorial conditionne les objectifs qu'il fixe : il

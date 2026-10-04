@@ -1,0 +1,50 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Corbeille</h1>
+    <p class="subtitle">Enregistrements supprimés logiquement, tous modules confondus. La restauration doit être approuvée par un DG, un Contrôleur général ou un Admin.</p>
+  </header>
+
+  @if (succes()) {
+    <div class="alert alert-success">{{ succes() }}</div>
+  }
+  @if (erreur()) {
+    <div class="alert alert-error">{{ erreur() }}</div>
+  }
+
+  @if (loading()) {
+    <p>Chargement...</p>
+  } @else {
+    <table class="table-corbeille">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Référence</th>
+          <th>Libellé</th>
+          <th>Supprimé le</th>
+          <th>Par</th>
+          <th>Motif de restauration</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of elements(); track cle(e)) {
+          <tr>
+            <td>{{ e.typeEntite }}</td>
+            <td>{{ e.reference }}</td>
+            <td>{{ e.libelle }}</td>
+            <td>{{ e.dateSuppression | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ e.supprimePar }}</td>
+            <td>
+              <input [(ngModel)]="motifParElement[cle(e)]" placeholder="Motif obligatoire" />
+            </td>
+            <td>
+              <button class="btn-small" (click)="demanderRestauration(e)">Demander la restauration</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7">La corbeille est vide.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

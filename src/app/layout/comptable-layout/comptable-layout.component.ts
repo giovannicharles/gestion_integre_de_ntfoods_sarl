@@ -29,6 +29,7 @@ export class ComptableLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/comptable/dashboard' },
+    { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
     { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes', badge: 4, badgeClass: 'bd-orange' },
     { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
     { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
@@ -36,6 +37,8 @@ export class ComptableLayoutComponent implements OnInit {
     { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement' },
     { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
     { label: 'Objectifs', icon: 'fa-bullseye', route: '/comptable/objectifs' },
+    { label: 'Primes', icon: 'fa-money-bill-trend-up', route: '/comptable/primes' },
+    { label: 'Rapports', icon: 'fa-file-export', route: '/comptable/rapports' },
     { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
   ];
 

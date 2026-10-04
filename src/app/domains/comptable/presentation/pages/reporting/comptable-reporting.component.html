@@ -35,72 +35,14 @@
     <div class="kpi-body">
       <div class="kpi-lbl">Créances en cours</div>
       <div class="kpi-val">{{ fCFA(totalCreances()) }}</div>
-      <div class="kpi-meta">soldes restants</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-arrow-trend-up"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Évolution CA N/N-1</div>
-      <div class="kpi-val">{{ evolutionPct() > 0 ? '+' : '' }}{{ evolutionPct() }}%</div>
-      <div class="kpi-meta">cumul période</div>
+      <div class="kpi-meta">factures non payées (période affichée)</div>
     </div>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table-columns"></i> CA Mensuel N vs N-1</h2>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Mois</th>
-          <th>CA Année N</th>
-          <th>CA Année N-1</th>
-          <th>Évolution</th>
-          <th>Tendance</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (m of caMensuel(); track $index) {
-          <tr>
-            <td><strong>{{ m.mois }}</strong></td>
-            <td>{{ fCFA(m.n) }}</td>
-            <td>{{ fCFA(m.nMoins1) }}</td>
-            <td [class]="m.n >= m.nMoins1 ? 'txt-success' : 'txt-danger'">
-              {{ m.n >= m.nMoins1 ? '+' : '' }}{{ fCFA(m.n - m.nMoins1) }}
-            </td>
-            <td>
-              @if (m.n >= m.nMoins1) {
-                <span class="badge bg-success"><i class="fa-solid fa-arrow-up"></i> Hausse</span>
-              } @else {
-                <span class="badge bg-red"><i class="fa-solid fa-arrow-down"></i> Baisse</span>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="5" class="empty-state">Données CA mensuel non disponibles</td></tr>
-        }
-      </tbody>
-      <tfoot>
-        <tr class="tfoot-total">
-          <td><strong>TOTAL</strong></td>
-          <td><strong>{{ fCFA(totalCaN()) }}</strong></td>
-          <td><strong>{{ fCFA(totalCaNMoins1()) }}</strong></td>
-          <td [class]="totalCaN() >= totalCaNMoins1() ? 'txt-success' : 'txt-danger'">
-            <strong>{{ fCFA(totalCaN() - totalCaNMoins1()) }}</strong>
-          </td>
-          <td>
-            <span [class]="evolutionPct() >= 0 ? 'badge bg-success' : 'badge bg-red'">
-              {{ evolutionPct() }}%
-            </span>
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+<div class="info-banner">
+  <i class="fa-solid fa-circle-info"></i>
+  L'évolution du chiffre d'affaires par mois (N vs N-1) n'est pas encore disponible côté API comptabilité.
 </div>
 
 <div class="two-col">

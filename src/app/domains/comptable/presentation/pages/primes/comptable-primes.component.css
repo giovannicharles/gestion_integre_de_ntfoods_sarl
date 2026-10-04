@@ -1,0 +1,6 @@
+.loading-state, .error-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; color: var(--n400); gap: 12px; }
+.error-state { color: var(--r); }
+.error-state i { font-size: 2rem; }
+.input-date { padding: 8px 12px; border: 1px solid var(--n200); border-radius: var(--r-md); font-size: 13px; }
+.info-text { font-size: 13px; color: var(--n600); margin: 0 0 14px; line-height: 1.5; }
+.form-sublabel { display:block; font-weight: 700; font-size: 0.8rem; margin: 12px 0 6px; color: var(--n600); }

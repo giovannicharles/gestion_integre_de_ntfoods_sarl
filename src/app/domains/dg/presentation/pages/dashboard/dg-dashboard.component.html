@@ -160,9 +160,25 @@
         <table class="data-table">
           <thead><tr><th>Commercial</th><th>Attendu</th><th>Versé</th><th>Écart</th><th>Statut</th></tr></thead>
           <tbody>
-            <tr>
-              <td colspan="5" class="empty-state">Données versements disponibles via le module comptable.</td>
-            </tr>
+            @for (v of versementsDuJour(); track v.referenceVersement) {
+              <tr>
+                <td>{{ getCommercialNom(v.matriculeCommercial) }}</td>
+                <td>{{ fCFA(v.montantAttendu) }}</td>
+                <td>{{ fCFA(v.cashVerse) }}</td>
+                <td [class.text-danger]="v.alerteRouge">{{ fCFA(v.ecart) }}</td>
+                <td>
+                  @if (v.alerteRouge) {
+                    <span class="badge bg-red badge-sm">{{ v.statut }}</span>
+                  } @else {
+                    <span class="badge bg-success badge-sm">{{ v.statut }}</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-state">Aucun versement enregistré aujourd'hui.</td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>

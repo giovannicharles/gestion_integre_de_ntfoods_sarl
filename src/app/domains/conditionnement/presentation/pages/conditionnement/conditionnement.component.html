@@ -1,0 +1,474 @@
+<div class="conditionnement">
+  <div class="page-header">
+    <h1>
+      <i class="fa-solid fa-boxes-stacked"></i>
+      Module Conditionnement
+    </h1>
+    <p class="subtitle">Gérez les marques, gammes, variétés et configurations de conditionnement</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'marques'" (click)="switchTab('marques')">
+      <i class="fa-solid fa-trademark"></i>
+      Marques
+    </button>
+    <button class="tab" [class.active]="activeTab() === 'gammes'" (click)="switchTab('gammes')">
+      <i class="fa-solid fa-layer-group"></i>
+      Gammes
+    </button>
+    <button class="tab" [class.active]="activeTab() === 'varietes'" (click)="switchTab('varietes')">
+      <i class="fa-solid fa-tag"></i>
+      Variétés
+    </button>
+    <button class="tab" [class.active]="activeTab() === 'emballages'" (click)="switchTab('emballages')">
+      <i class="fa-solid fa-box"></i>
+      Emballages
+    </button>
+    <button class="tab" [class.active]="activeTab() === 'configurations'" (click)="switchTab('configurations')">
+      <i class="fa-solid fa-cogs"></i>
+      Configurations
+    </button>
+  </div>
+
+  <div class="tab-content">
+    <!-- Marques -->
+    @if (activeTab() === 'marques') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Marques</h2>
+          <button class="btn btn-primary" (click)="ouvrirCreation('marques')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvelle Marque
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>État</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (marque of marques(); track marque.id) {
+                <tr>
+                  <td><code>{{ marque.code }}</code></td>
+                  <td>{{ marque.nom }}</td>
+                  <td>{{ marque.description }}</td>
+                  <td>
+                    <span class="badge [marque.actif ? 'active' : 'inactive']">
+                      {{ marque.actif ? 'Actif' : 'Inactif' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" (click)="ouvrirEdition(marque, 'marques')">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Gammes -->
+    @if (activeTab() === 'gammes') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Gammes</h2>
+          <button class="btn btn-primary" (click)="ouvrirCreation('gammes')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvelle Gamme
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>État</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (gamme of gammes(); track gamme.id) {
+                <tr>
+                  <td><code>{{ gamme.code }}</code></td>
+                  <td>{{ gamme.nom }}</td>
+                  <td>{{ gamme.description }}</td>
+                  <td>
+                    <span class="badge [gamme.actif ? 'active' : 'inactive']">
+                      {{ gamme.actif ? 'Actif' : 'Inactif' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" (click)="ouvrirEdition(gamme, 'gammes')">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Variétés -->
+    @if (activeTab() === 'varietes') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Variétés</h2>
+          <button class="btn btn-primary" (click)="ouvrirCreation('varietes')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvelle Variété
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Gamme</th>
+                <th>Marque</th>
+                <th>Poids</th>
+                <th>État</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (variete of varietes(); track variete.id) {
+                <tr>
+                  <td><code>{{ variete.code }}</code></td>
+                  <td>{{ variete.nom }}</td>
+                  <td>{{ variete.gammeNom }}</td>
+                  <td>{{ variete.marqueNom }}</td>
+                  <td>{{ variete.poidsUnitaireG }}{{ variete.unitePoids }}</td>
+                  <td>
+                    <span class="badge [variete.actif ? 'active' : 'inactive']">
+                      {{ variete.actif ? 'Actif' : 'Inactif' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" (click)="ouvrirEdition(variete, 'varietes')">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Emballages -->
+    @if (activeTab() === 'emballages') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Types d'Emballage</h2>
+          <button class="btn btn-primary" (click)="ouvrirCreation('emballages')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvel Emballage
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Niveau</th>
+                <th>Poids Vide</th>
+                <th>Matériau</th>
+                <th>État</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (emb of emballages(); track emb.id) {
+                <tr>
+                  <td><code>{{ emb.code }}</code></td>
+                  <td>{{ emb.nom }}</td>
+                  <td>{{ getNiveauLabel(emb.niveauHierarchie) }}</td>
+                  <td>{{ emb.poidsVideG }}g</td>
+                  <td>{{ emb.materiau }}</td>
+                  <td>
+                    <span class="badge [emb.actif ? 'active' : 'inactive']">
+                      {{ emb.actif ? 'Actif' : 'Inactif' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" (click)="ouvrirEdition(emb, 'emballages')">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Configurations -->
+    @if (activeTab() === 'configurations') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Configurations de Conditionnement</h2>
+          <button class="btn btn-primary" (click)="ouvrirCreation('configurations')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvelle Configuration
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Variété</th>
+                <th>Emballage</th>
+                <th>Niveau</th>
+                <th>Poids Net</th>
+                <th>Poids Total</th>
+                <th>Défaut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (config of configurations(); track config.id) {
+                <tr>
+                  <td><code>{{ config.codeConfiguration }}</code></td>
+                  <td>{{ config.varieteNom }}</td>
+                  <td>{{ config.typeEmballageNom }}</td>
+                  <td>{{ getNiveauLabel(config.niveau) }}</td>
+                  <td>{{ config.poidsNetG }}g</td>
+                  <td>{{ config.poidsTotalKg }}kg</td>
+                  <td>
+                    @if (config.estDefault) {
+                      <span class="badge default">
+                        <i class="fa-solid fa-star"></i>
+                        Défaut
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-secondary" (click)="ouvrirEdition(config, 'configurations')">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Modal Création -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="fermerModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-plus"></i>
+            Créer {{ selectedTab === 'marques' ? 'Marque' : selectedTab === 'gammes' ? 'Gamme' : selectedTab === 'varietes' ? 'Variété' : selectedTab === 'emballages' ? 'Emballage' : 'Configuration' }}
+          </h3>
+          <button class="modal-close" (click)="fermerModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Marque Form -->
+          @if (selectedTab === 'marques') {
+            <form class="entity-form">
+              <div class="form-group">
+                <label>Code *</label>
+                <input type="text" [(ngModel)]="nouvelleMarque.code" name="code" required>
+              </div>
+              <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" [(ngModel)]="nouvelleMarque.nom" name="nom" required>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="nouvelleMarque.description" name="description" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Logo URL</label>
+                <input type="text" [(ngModel)]="nouvelleMarque.logoUrl" name="logoUrl">
+              </div>
+            </form>
+          }
+
+          <!-- Gamme Form -->
+          @if (selectedTab === 'gammes') {
+            <form class="entity-form">
+              <div class="form-group">
+                <label>Code *</label>
+                <input type="text" [(ngModel)]="nouvelleGamme.code" name="code" required>
+              </div>
+              <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" [(ngModel)]="nouvelleGamme.nom" name="nom" required>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="nouvelleGamme.description" name="description" rows="3"></textarea>
+              </div>
+            </form>
+          }
+
+          <!-- Variété Form -->
+          @if (selectedTab === 'varietes') {
+            <form class="entity-form">
+              <div class="form-group">
+                <label>Code *</label>
+                <input type="text" [(ngModel)]="nouvelleVariete.code" name="code" required>
+              </div>
+              <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" [(ngModel)]="nouvelleVariete.nom" name="nom" required>
+              </div>
+              <div class="form-group">
+                <label>Gamme *</label>
+                <select [(ngModel)]="nouvelleVariete.gammeId" name="gammeId" required>
+                  <option value="">Sélectionner</option>
+                  @for (gamme of gammes(); track gamme.id) {
+                    <option [value]="gamme.id">{{ gamme.nom }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Marque</label>
+                <select [(ngModel)]="nouvelleVariete.marqueId" name="marqueId">
+                  <option value="">Sélectionner</option>
+                  @for (marque of marques(); track marque.id) {
+                    <option [value]="marque.id">{{ marque.nom }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Poids Unitaire (g)</label>
+                  <input type="number" [(ngModel)]="nouvelleVariete.poidsUnitaireG" name="poidsUnitaireG">
+                </div>
+                <div class="form-group">
+                  <label>Unité</label>
+                  <select [(ngModel)]="nouvelleVariete.unitePoids" name="unitePoids">
+                    <option value="G">Grammes</option>
+                    <option value="KG">Kilogrammes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="nouvelleVariete.description" name="description" rows="3"></textarea>
+              </div>
+            </form>
+          }
+
+          <!-- Emballage Form -->
+          @if (selectedTab === 'emballages') {
+            <form class="entity-form">
+              <div class="form-group">
+                <label>Code *</label>
+                <input type="text" [(ngModel)]="nouvelEmballage.code" name="code" required>
+              </div>
+              <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" [(ngModel)]="nouvelEmballage.nom" name="nom" required>
+              </div>
+              <div class="form-group">
+                <label>Niveau Hiérarchie *</label>
+                <select [(ngModel)]="nouvelEmballage.niveauHierarchie" name="niveauHierarchie" required>
+                  <option [value]="1">1 - Sachet</option>
+                  <option [value]="2">2 - Gaine</option>
+                  <option [value]="3">3 - Carton</option>
+                  <option [value]="4">4 - Palette</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Poids Vide (g)</label>
+                <input type="number" [(ngModel)]="nouvelEmballage.poidsVideG" name="poidsVideG">
+              </div>
+              <div class="form-group">
+                <label>Matériau</label>
+                <input type="text" [(ngModel)]="nouvelEmballage.materiau" name="materiau">
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="nouvelEmballage.description" name="description" rows="3"></textarea>
+              </div>
+            </form>
+          }
+
+          <!-- Configuration Form -->
+          @if (selectedTab === 'configurations') {
+            <form class="entity-form">
+              <div class="form-group">
+                <label>Variété *</label>
+                <select [(ngModel)]="nouvelleConfig.varieteId" name="varieteId" required>
+                  <option value="">Sélectionner</option>
+                  @for (variete of varietes(); track variete.id) {
+                    <option [value]="variete.id">{{ variete.nom }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Type d'Emballage *</label>
+                <select [(ngModel)]="nouvelleConfig.typeEmballageId" name="typeEmballageId" required>
+                  <option value="">Sélectionner</option>
+                  @for (emb of emballages(); track emb.id) {
+                    <option [value]="emb.id">{{ emb.nom }} ({{ getNiveauLabel(emb.niveauHierarchie) }})</option>
+                  }
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantité d'Unités *</label>
+                <input type="number" [(ngModel)]="nouvelleConfig.quantiteUnites" name="quantiteUnites" min="1" value="1">
+              </div>
+              <div class="form-group">
+                <label>Poids Net (g)</label>
+                <input type="number" [(ngModel)]="nouvelleConfig.poidsNetG" name="poidsNetG">
+              </div>
+              <div class="form-group">
+                <label>Référence Produit</label>
+                <input type="text" [(ngModel)]="nouvelleConfig.referenceProduit" name="referenceProduit">
+              </div>
+              <div class="form-group">
+                <label>Code Barres</label>
+                <input type="text" [(ngModel)]="nouvelleConfig.codeBarres" name="codeBarres">
+              </div>
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" [(ngModel)]="nouvelleConfig.estDefault" name="estDefault">
+                  Configuration par défaut pour cette variété
+                </label>
+              </div>
+            </form>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerModal()">
+            <i class="fa-solid fa-xmark"></i>
+            Annuler
+          </button>
+          <button class="btn btn-primary" (click)="sauvegarder()">
+            <i class="fa-solid fa-check"></i>
+            Créer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

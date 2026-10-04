@@ -1,0 +1,205 @@
+<div class="formulation-container">
+  <h2 class="page-title">Gestion des Formulations</h2>
+
+  <div class="card">
+    <h3>Créer une Formulation</h3>
+    <form [formGroup]="formulationForm" (ngSubmit)="creerFormulation()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Code Formulation *</label>
+          <input type="text" formControlName="codeFormulation" placeholder="FORM-PROD-001">
+        </div>
+        <div class="form-group">
+          <label>Code Produit *</label>
+          <input type="text" formControlName="codeProduit" placeholder="PROD-001">
+        </div>
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" formControlName="sku" placeholder="SKU-001">
+        </div>
+        <div class="form-group">
+          <label>Désignation</label>
+          <input type="text" formControlName="designation" placeholder="Boeuf Haché 500g">
+        </div>
+        <div class="form-group">
+          <label>Code Conditionnement</label>
+          <input type="text" formControlName="codeConditionnement" placeholder="BOEUF_HACHE_SEAU_500G">
+        </div>
+        <div class="form-group">
+          <label>Niveau Conditionnement *</label>
+          <select formControlName="niveauConditionnement">
+            <option value="">Sélectionner</option>
+            <option value="SACHET">Sachet</option>
+            <option value="GAINE">Gaine</option>
+            <option value="CARTON">Carton</option>
+            <option value="PALETTE">Palette</option>
+            <option value="SEAU">Seau</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantité Unitaire *</label>
+          <input type="number" formControlName="quantiteUnite" step="0.01" placeholder="500">
+        </div>
+        <div class="form-group">
+          <label>Unité *</label>
+          <select formControlName="unite">
+            <option value="KG">KG</option>
+            <option value="G">G</option>
+            <option value="L">L</option>
+            <option value="ML">ML</option>
+            <option value="UNITE">UNITE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Version *</label>
+          <input type="text" formControlName="version" placeholder="v1.0">
+        </div>
+        <div class="form-group">
+          <label>Créé par *</label>
+          <input type="text" formControlName="creePar" placeholder="USER-001">
+        </div>
+      </div>
+
+      <div class="lignes-section">
+        <h4>Lignes de Matières Premières</h4>
+        <form [formGroup]="ligneForm" (ngSubmit)="ajouterLigne()">
+          <div class="ligne-form-grid">
+            <div class="form-group">
+              <label>Code MP *</label>
+              <input type="text" formControlName="codeMP" placeholder="MP-001">
+            </div>
+            <div class="form-group">
+              <label>Nom MP *</label>
+              <input type="text" formControlName="nomMP" placeholder="Mais">
+            </div>
+            <div class="form-group">
+              <label>Quantité Unitaire *</label>
+              <input type="number" formControlName="quantiteUnite" step="0.01" placeholder="3">
+            </div>
+            <div class="form-group">
+              <label>Unité *</label>
+              <select formControlName="unite">
+                <option value="KG">KG</option>
+                <option value="G">G</option>
+                <option value="L">L</option>
+                <option value="ML">ML</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Perte %</label>
+              <input type="number" formControlName="pertePct" step="0.1" placeholder="6.67">
+            </div>
+            <div class="form-group">
+              <label>Raison Perte</label>
+              <input type="text" formControlName="raisonPerte" placeholder="Broyage">
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-secondary">Ajouter</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="lignes-list" *ngIf="lignes.length > 0">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code MP</th>
+                <th>Nom MP</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+                <th>Perte %</th>
+                <th>Raison</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ligne of lignes; let i = index">
+                <td>{{ ligne.codeMP }}</td>
+                <td>{{ ligne.nomMP }}</td>
+                <td>{{ ligne.quantiteUnite }}</td>
+                <td>{{ ligne.unite }}</td>
+                <td>{{ ligne.pertePct }}%</td>
+                <td>{{ ligne.raisonPerte }}</td>
+                <td>
+                  <button class="btn btn-danger" (click)="supprimerLigne(i)">Supprimer</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="!formulationForm.valid || lignes.length === 0">
+          Créer Formulation
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="resetForm()">Réinitialiser</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" *ngIf="besoinsMP.length > 0">
+    <h3>Besoins en Matières Premières</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Code MP</th>
+          <th>Nom MP</th>
+          <th>Unité</th>
+          <th>Quantité Totale</th>
+          <th>Perte %</th>
+          <th>Quantité Théorique</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let besoin of besoinsMP">
+          <td>{{ besoin.codeMP }}</td>
+          <td>{{ besoin.nomMP }}</td>
+          <td>{{ besoin.unite }}</td>
+          <td>{{ besoin.quantiteTotale.toFixed(2) }}</td>
+          <td>{{ besoin.pertePct }}%</td>
+          <td>{{ besoin.quantiteTheorique.toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" *ngIf="capaciteProduction">
+    <h3>Capacité de Production Prédite</h3>
+    <div class="capacite-info">
+      <p><strong>Produit:</strong> {{ capaciteProduction.designation || capaciteProduction.codeProduit }}</p>
+      <p><strong>Niveau:</strong> {{ capaciteProduction.niveauConditionnement }}</p>
+      <p><strong>Capacité:</strong> {{ capaciteProduction.capaciteUnites }} unités</p>
+      <p><strong>Facteur Limitant:</strong> {{ capaciteProduction.facteurLimitant.nomMP }} ({{ capaciteProduction.facteurLimitant.capaciteUnites.toFixed(2) }} unités)</p>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Code MP</th>
+          <th>Nom MP</th>
+          <th>Disponible</th>
+          <th>Requis/Unité</th>
+          <th>Capacité</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let capacite of capaciteProduction.capacitesMP">
+          <td>{{ capacite.codeMP }}</td>
+          <td>{{ capacite.nomMP }}</td>
+          <td>{{ capacite.quantiteDisponible.toFixed(2) }}</td>
+          <td>{{ capacite.quantiteRequiseParUnite.toFixed(2) }}</td>
+          <td>{{ capacite.capaciteUnites.toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Calculs Rapides</h3>
+    <div class="calcul-actions">
+      <button class="btn btn-primary" (click)="calculerBesoin()">Calculer Besoins (100 unités)</button>
+      <button class="btn btn-primary" (click)="predireProduction()">Prédire Production</button>
+    </div>
+  </div>
+</div>

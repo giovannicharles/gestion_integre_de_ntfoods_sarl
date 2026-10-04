@@ -1,0 +1,85 @@
+<div class="trace-page">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-route"></i> Parcours d'un lot</h1>
+    <p class="subtitle">De la matière première reçue au transfert vers le tampon</p>
+  </div>
+
+  <div class="card search-card">
+    <label>Numéro de lot</label>
+    <div class="search-row">
+      <input type="text" [(ngModel)]="numeroLot" placeholder="Ex. RCP-20260930-0001-PF-001" (keyup.enter)="tracer()">
+      <button class="btn btn-primary" (click)="tracer()" [disabled]="!numeroLot.trim() || loading()">
+        @if (loading()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-magnifying-glass"></i> }
+        Tracer
+      </button>
+    </div>
+    <p class="hint">Le numéro de lot vient du module Lots de traçabilité (réceptions, entrées de production) — pas de l'écran « Lots » historique.</p>
+  </div>
+
+  @if (error()) {
+    <div class="card error-card">
+      <i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}
+    </div>
+  } @else if (recherchee() && !loading() && trace()) {
+    <div class="card">
+      <h3>{{ trace()!.numeroLotDepart }}</h3>
+      @if (trace()!.tronque) {
+        <p class="warning-inline"><i class="fa-solid fa-triangle-exclamation"></i> Arbre tronqué (chaîne très longue ou cycle de données) — résultat partiel.</p>
+      }
+
+      <h4 class="section-title">Amont — d'où vient ce lot</h4>
+      @if (amonts().length === 0) {
+        <p class="empty-inline">Aucune origine tracée (lot d'entrée directe, ou stock ancien non tracé par lot).</p>
+      } @else {
+        <ul class="arc-list">
+          @for (a of amonts(); track a.lotParentId) {
+            <li>
+              <span class="lot-badge">{{ a.lotParentNumero }}</span>
+              <span class="relation-label">{{ libelleRelation(a.typeRelation) }}</span>
+              <span class="lot-badge current">{{ a.lotEnfantNumero }}</span>
+              <span class="qty">{{ a.quantiteEnBase }} unité(s)</span>
+              @if (noeud(a.lotParentId); as n) {
+                <span class="produit-info">({{ n.codeProduit }} — {{ n.codeEntrepot }})</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <h4 class="section-title">Aval — ce qu'est devenu ce lot</h4>
+      @if (avals().length === 0) {
+        <p class="empty-inline">Ce lot n'a pas encore été transféré ni consommé pour une production.</p>
+      } @else {
+        <ul class="arc-list">
+          @for (a of avals(); track a.lotEnfantId) {
+            <li>
+              <span class="lot-badge current">{{ a.lotParentNumero }}</span>
+              <span class="relation-label">{{ libelleRelation(a.typeRelation) }}</span>
+              <span class="lot-badge">{{ a.lotEnfantNumero }}</span>
+              <span class="qty">{{ a.quantiteEnBase }} unité(s)</span>
+              @if (noeud(a.lotEnfantId); as n) {
+                <span class="produit-info">({{ n.codeProduit }} — {{ n.codeEntrepot }}, reste {{ n.quantiteRestante }})</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <h4 class="section-title">Tous les lots de la chaîne</h4>
+      <table class="noeuds-table">
+        <thead><tr><th>Lot</th><th>Produit</th><th>Entrepôt</th><th>Statut</th><th>Restant</th></tr></thead>
+        <tbody>
+          @for (n of trace()!.noeuds; track n.id) {
+            <tr [class.current]="n.numeroLot === trace()!.numeroLotDepart">
+              <td>{{ n.numeroLot }}</td>
+              <td>{{ n.codeProduit }}</td>
+              <td>{{ n.codeEntrepot }}</td>
+              <td>{{ n.statut }}</td>
+              <td>{{ n.quantiteRestante }} / {{ n.quantiteInitiale }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

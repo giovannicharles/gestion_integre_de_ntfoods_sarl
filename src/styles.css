@@ -1,60 +1,208 @@
 /* ══════════════════════════════════════════════════════════
-   TANTY DIGITAL ERP — DESIGN SYSTEM GLOBAL v5
+   TANTY DIGITAL ERP — DESIGN SYSTEM GLOBAL v6
    Charte officielle: Vert #14532D · Jaune #F6B60B · Rouge #C22B2B
    Typographie: Poppins (titres) · Inter (corps)
-   v5: Dark mode + transitions fluides + cards enrichies
+   v6: Design tokens centralisés + login deux colonnes + toasts
    ══════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── TOKENS LIGHT (charte officielle TANTY) ── */
+/* ── DESIGN TOKENS CENTRALISÉS ── */
 :root {
-  --g:       #14532D;  --g-d:  #0D3A1E;  --g-m:  #1E7A42;  --g-l:  #2A9D5F;
-  --g-pale:  #B8E0C7;  --g-gh: #E6F2EC;  --g-sf: #F0F7F3;
-  --y:       #F6B60B;  --y-d:  #C49200;  --y-m:  #FFC845;  --y-l:  #FFD97A;  --y-gh: #FFF8E1;
-  --r:       #C22B2B;  --r-l:  #E04545;  --r-gh: #FCE8E8;
-  --o:       #D84315;  --o-gh: #FBE9E7;
-  --b:       #0277BD;  --b-gh: #E1F5FE;
-  --s:       #1E7A42;  --s-gh: #E6F2EC;
-  --n900: #111827; --n800: #1F2937; --n700: #374151; --n600: #4B5563;
-  --n500: #6B7280; --n400: #9CA3AF; --n300: #D1D5DB; --n200: #E5E7EB;
-  --n150: #F0F2F5; --n100: #F4F6F8; --n50:  #FAFBFC; --w: #FFFFFF;
-  --paper: #FFFDF7;
-  --cream: #FBF6E9;
-  --ink: #1A1A16;
-  --grey-100: #F3F1EA;
-  --grey-300: #D8D3C4;
-  --grey-500: #9C9686;
-  --grey-700: #5B5648;
-  /* Alias charte officielle */
-  --tanty-green: var(--g);
-  --tanty-yellow: var(--y);
-  --tanty-red: var(--r);
+  /* Couleurs primaires (charte TANTY) */
+  --color-primary: #14532D;
+  --color-primary-dark: #0D3A1E;
+  --color-primary-medium: #1E7A42;
+  --color-primary-light: #2A9D5F;
+  --color-primary-pale: #B8E0C7;
+  --color-primary-ghost: #E6F2EC;
+  --color-primary-surface: #F0F7F3;
+
+  /* Couleurs accent (jaune TANTY) */
+  --color-accent: #F6B60B;
+  --color-accent-dark: #C49200;
+  --color-accent-medium: #FFC845;
+  --color-accent-light: #FFD97A;
+  --color-accent-ghost: #FFF8E1;
+
+  /* Couleurs danger (rouge TANTY) */
+  --color-danger: #C22B2B;
+  --color-danger-light: #E04545;
+  --color-danger-ghost: #FCE8E8;
+
+  /* Couleurs warning (orange) */
+  --color-warning: #D84315;
+  --color-warning-ghost: #FBE9E7;
+
+  /* Couleurs info (bleu) */
+  --color-info: #0277BD;
+  --color-info-ghost: #E1F5FE;
+
+  /* Couleurs succès (vert medium) */
+  --color-success: #1E7A42;
+  --color-success-ghost: #E6F2EC;
+
+  /* Neutres (gris 50-900) */
+  --color-gray-900: #111827;
+  --color-gray-800: #1F2937;
+  --color-gray-700: #374151;
+  --color-gray-600: #4B5563;
+  --color-gray-500: #6B7280;
+  --color-gray-400: #9CA3AF;
+  --color-gray-300: #D1D5DB;
+  --color-gray-200: #E5E7EB;
+  --color-gray-150: #F0F2F5;
+  --color-gray-100: #F4F6F8;
+  --color-gray-50: #FAFBFC;
+  --color-white: #FFFFFF;
+
+  /* Surfaces spécifiques TANTY */
+  --color-paper: #FFFDF7;
+  --color-cream: #FBF6E9;
+  --color-ink: #1A1A16;
+  --color-grey-100: #F3F1EA;
+  --color-grey-300: #D8D3C4;
+  --color-grey-500: #9C9686;
+  --color-grey-700: #5B5648;
+
+  /* Typographie */
+  --font-display: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-d: 'Poppins', sans-serif;
-  --font-b: 'Inter', sans-serif;
-  --r-xs:4px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px; --r-full:9999px;
-  --sh-xs: 0 1px 2px rgba(0,0,0,.05);
-  --sh-sm: 0 1px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
-  --sh-md: 0 4px 12px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
-  --sh-lg: 0 8px 24px rgba(0,0,0,.10),0 4px 10px rgba(0,0,0,.06);
-  --sh-xl: 0 16px 48px rgba(0,0,0,.13),0 8px 20px rgba(0,0,0,.07);
-  --sh-g:  0 4px 16px rgba(20,83,45,.22);
-  --sh-y:  0 4px 16px rgba(246,182,11,.28);
-  /* Spacing scale */
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
-  /* Semantic aliases (used by comptable/admin/controle) */
-  --border: var(--n200);
-  --text-muted: var(--n400);
-  --surface: var(--w);
-  --surface-2: var(--n50);
-  --warning: var(--o);
-  --danger: var(--r);
-  --mc: var(--g); --mc-gh: var(--g-gh);
-  --r-gh: #FCE8E8; --o-gh: #FBE9E7;
-  --n150: #F0F2F5;
+
+  /* Rayons (border-radius) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Ombres (box-shadow) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10), 0 4px 10px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.13), 0 8px 20px rgba(0, 0, 0, 0.07);
+  --shadow-primary: 0 4px 16px rgba(20, 83, 45, 0.22);
+  --shadow-accent: 0 4px 16px rgba(246, 182, 11, 0.28);
+
+  /* Espacement (spacing scale) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Animations - Courbes d'easing */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Animations - Durées */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+
+  /* Z-index layers */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 9999;
+
+  /* Sémantique (compatibilité existante) */
+  --border: var(--color-gray-200);
+  --text-muted: var(--color-gray-400);
+  --surface: var(--color-white);
+  --surface-2: var(--color-gray-50);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --mc: var(--color-primary);
+  --mc-gh: var(--color-primary-ghost);
+  --r-gh: var(--color-danger-ghost);
+  --o-gh: var(--color-warning-ghost);
+
+  /* Login spécifique */
+  --login-bg-image: url('/tanty_vue.jpg');
+  --login-bg-position: center;
+  --login-overlay-top: rgba(20, 83, 45, 0.88);
+  --login-overlay-bottom: rgba(13, 58, 30, 0.70);
+  --login-left-bg: linear-gradient(135deg, #F6B60B 0%, #FFC845 100%);
+  --login-right-bg: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+
   /* Dark mode flag */
   --dm: 0;
+
+  /* ── COMPATIBILITÉ LEGACY (tokens v5) ── */
+  --g: var(--color-primary);
+  --g-d: var(--color-primary-dark);
+  --g-m: var(--color-primary-medium);
+  --g-l: var(--color-primary-light);
+  --g-pale: var(--color-primary-pale);
+  --g-gh: var(--color-primary-ghost);
+  --g-sf: var(--color-primary-surface);
+  --y: var(--color-accent);
+  --y-d: var(--color-accent-dark);
+  --y-m: var(--color-accent-medium);
+  --y-l: var(--color-accent-light);
+  --y-gh: var(--color-accent-ghost);
+  --r: var(--color-danger);
+  --r-l: var(--color-danger-light);
+  --r-gh: var(--color-danger-ghost);
+  --o: var(--color-warning);
+  --o-gh: var(--color-warning-ghost);
+  --b: var(--color-info);
+  --b-gh: var(--color-info-ghost);
+  --s: var(--color-success);
+  --s-gh: var(--color-success-ghost);
+  --n900: var(--color-gray-900);
+  --n800: var(--color-gray-800);
+  --n700: var(--color-gray-700);
+  --n600: var(--color-gray-600);
+  --n500: var(--color-gray-500);
+  --n400: var(--color-gray-400);
+  --n300: var(--color-gray-300);
+  --n200: var(--color-gray-200);
+  --n150: var(--color-gray-150);
+  --n100: var(--color-gray-100);
+  --n50: var(--color-gray-50);
+  --w: var(--color-white);
+  --tanty-green: var(--color-primary);
+  --tanty-yellow: var(--color-accent);
+  --tanty-red: var(--color-danger);
+  --font-d: var(--font-display);
+  --font-b: var(--font-body);
+  --r-xs: var(--radius-xs);
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: var(--radius-xl);
+  --r-full: var(--radius-full);
+  --sh-xs: var(--shadow-xs);
+  --sh-sm: var(--shadow-sm);
+  --sh-md: var(--shadow-md);
+  --sh-lg: var(--shadow-lg);
+  --sh-xl: var(--shadow-xl);
+  --sh-g: var(--shadow-primary);
+  --sh-y: var(--shadow-accent);
+  --sp-1: var(--space-1);
+  --sp-2: var(--space-2);
+  --sp-3: var(--space-3);
+  --sp-4: var(--space-4);
+  --sp-5: var(--space-5);
+  --sp-6: var(--space-6);
+  --sp-8: var(--space-8);
 }
 
 /* ── TOKENS DARK MODE (charte TANTY adaptée) ── */
@@ -111,6 +259,25 @@ button { font-family:var(--font-b); }
 @keyframes rowIn     { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
 @keyframes cardIn    { from{opacity:0;transform:translateY(10px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
 @keyframes progressFw { from{width:0} to{width:100%} }
+
+/* Animations Login/Toasts */
+@keyframes slideInRight { from{opacity:0;transform:translateX(100%)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideOutRight { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(100%)} }
+@keyframes slideInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 10%,30%,50%,70%,90%{transform:translateX(-4px)} 20%,40%,60%,80%{transform:translateX(4px)} }
+@keyframes zoomInSlow { from{opacity:0;transform:scale(1.08)} to{opacity:1;transform:scale(1)} }
+@keyframes floatUp { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+/* Préférences utilisateur - Mouvement réduit */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 .animate-fadeInUp { animation:fadeInUp .35s cubic-bezier(.4,0,.2,1) both; }
 .animate-fadeIn   { animation:fadeIn   .25s ease both; }

@@ -109,6 +109,9 @@
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
 
+        <!-- Centre de notifications temps réel (2026-09-30) — distinct de la cloche d'alertes stock ci-dessous -->
+        <app-notification-center></app-notification-center>
+
         <!-- NOTIFICATION BELL -->
         <div class="tb-notif-wrap">
           <button class="tb-icon-btn" (click)="toggleNotifPanel()" [class.tb-alert-pulse]="alertCount() > 0" title="Notifications">

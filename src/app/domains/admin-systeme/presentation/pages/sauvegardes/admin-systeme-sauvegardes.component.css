@@ -1,0 +1,126 @@
+.page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.subtitle {
+  color: #666;
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  background: #1e6f3e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #1e6f3e;
+  border: 1px solid #1e6f3e;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.alert {
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background: #e6f4ea;
+  color: #1e6f3e;
+}
+
+.alert-error {
+  background: #fdecea;
+  color: #c0392b;
+}
+
+.form-planification {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.form-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  gap: 0.25rem;
+}
+
+.form-row label.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-row label.motif {
+  flex: 1 1 100%;
+}
+
+.form-row input[type="text"],
+.form-row input[type="number"],
+.form-row label.motif input {
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.table-sauvegardes {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-sauvegardes th,
+.table-sauvegardes td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.row-echec {
+  background: #fdecea;
+}

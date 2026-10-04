@@ -1,0 +1,50 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-file-export"></i></div>
+      <div>
+        <div class="ph-title">Rapports Comptables</div>
+        <div class="ph-sub">Exports téléchargeables — factures, décaissements, versements, primes</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card filtres-card">
+    <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group">
+        <label>Période — du</label>
+        <input type="date" [ngModel]="debut()" (ngModelChange)="debut.set($event)" />
+      </div>
+      <div class="form-group">
+        <label>au</label>
+        <input type="date" [ngModel]="fin()" (ngModelChange)="fin.set($event)" />
+      </div>
+      <div class="form-group">
+        <label>Semaine (rapport primes) — lundi du</label>
+        <input type="date" [ngModel]="semaineDebut()" (ngModelChange)="semaineDebut.set($event)" />
+      </div>
+      <div class="form-group">
+        <label>Format</label>
+        <select [ngModel]="format()" (ngModelChange)="format.set($event)">
+          <option value="xlsx">Excel (.xlsx)</option>
+          <option value="pdf">PDF</option>
+          <option value="csv">CSV</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-grid-3" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+    @for (r of rapports; track r.type) {
+    <div class="card rapport-card">
+      <div class="rapport-ico"><i class="fa-solid {{ r.icone }}"></i></div>
+      <div class="rapport-titre">{{ r.titre }}</div>
+      <div class="rapport-desc">{{ r.description }}</div>
+      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" [disabled]="!!enCours()" (click)="telecharger(r.type)">
+        <i class="fa-solid" [class.fa-download]="enCours()!==r.type" [class.fa-spinner]="enCours()===r.type" [class.fa-spin]="enCours()===r.type"></i>
+        Télécharger
+      </button>
+    </div>
+    }
+  </div>
+</div>

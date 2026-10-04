@@ -1,0 +1,87 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Paramètres système</h1>
+    <p class="subtitle">Configuration technique de la plateforme — distinct des paramètres métier (module Administration).</p>
+    <button class="btn-primary" (click)="afficherFormCreation.set(!afficherFormCreation())">
+      {{ afficherFormCreation() ? 'Annuler' : 'Nouveau paramètre' }}
+    </button>
+  </header>
+
+  @if (succes()) {
+    <div class="alert alert-success">{{ succes() }}</div>
+  }
+  @if (erreur()) {
+    <div class="alert alert-error">{{ erreur() }}</div>
+  }
+
+  @if (afficherFormCreation()) {
+    <form class="form-creation" (ngSubmit)="creer()">
+      <div class="form-row">
+        <label>Code
+          <input name="code" [(ngModel)]="formCreation.code" required maxlength="100" placeholder="EX: MAX_LOGIN_ATTEMPTS" />
+        </label>
+        <label>Nom
+          <input name="nom" [(ngModel)]="formCreation.nom" required maxlength="200" />
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Valeur
+          <input name="valeur" [(ngModel)]="formCreation.valeur" required />
+        </label>
+        <label>Type
+          <select name="typeValeur" [(ngModel)]="formCreation.typeValeur">
+            <option value="STRING">STRING</option>
+            <option value="INTEGER">INTEGER</option>
+            <option value="BOOLEAN">BOOLEAN</option>
+            <option value="JSON">JSON</option>
+            <option value="DURATION">DURATION</option>
+          </select>
+        </label>
+        <label>Groupe
+          <input name="groupe" [(ngModel)]="formCreation.groupe" placeholder="AUTH, SECURITY, SYSTEME..." />
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Description
+          <input name="description" [(ngModel)]="formCreation.description" />
+        </label>
+      </div>
+      <button type="submit" class="btn-primary">Créer</button>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Chargement...</p>
+  } @else {
+    <table class="table-parametres">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Nom</th>
+          <th>Groupe</th>
+          <th>Valeur</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of parametres(); track p.code) {
+          <tr>
+            <td>{{ p.code }}</td>
+            <td>{{ p.nom }}</td>
+            <td>{{ p.groupe }}</td>
+            <td>
+              <input [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
+            </td>
+            <td class="actions">
+              <button class="btn-small" [disabled]="!p.modifiable" (click)="sauvegarderValeur(p)">Enregistrer</button>
+              <button class="btn-small" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)">Réinitialiser</button>
+              <button class="btn-small btn-danger" (click)="desactiver(p)">Désactiver</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5">Aucun paramètre système.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

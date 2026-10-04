@@ -14,7 +14,6 @@ Chart.register(...registerables);
   styleUrls: ['./dg-reporting.component.css']
 })
 export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('lineCanvas') lineCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('radarCanvas') radarCanvas!: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
@@ -24,21 +23,13 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = signal(true);
   selectedYear = signal(2026);
 
-  caMensuel = signal<{ mois: string; n: number; nMoins1: number }[]>([]);
   zones = signal<ZonePerformanceBE[]>([]);
   commerciaux = signal<ClassementCommercialBE[]>([]);
-  comparatif = signal<RapportComparatifBE | null>(null);
+  comparatifMois = signal<RapportComparatifBE | null>(null);
+  comparatifAnnee = signal<RapportComparatifBE | null>(null);
 
   fCFA = fCFA;
   Math = Math;
-
-  totalN = computed(() => this.caMensuel().reduce((s, m) => s + m.n, 0));
-  totalNm1 = computed(() => this.caMensuel().reduce((s, m) => s + m.nMoins1, 0));
-  croissance = computed(() => {
-    const prev = this.totalNm1();
-    if (prev === 0) return 0;
-    return Math.round(((this.totalN() - prev) / prev) * 100);
-  });
 
   ngOnInit() {
     this.dgSvc.getZones().subscribe({
@@ -50,7 +41,11 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
       error: () => {},
     });
     this.dgSvc.getComparatif('MOIS').subscribe({
-      next: r => this.comparatif.set(r),
+      next: r => this.comparatifMois.set(r),
+      error: () => {},
+    });
+    this.dgSvc.getComparatif('ANNEE').subscribe({
+      next: r => this.comparatifAnnee.set(r),
       error: () => {},
     });
     setTimeout(() => { this.loading.set(false); this.buildCharts(); }, 500);
@@ -62,20 +57,9 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.charts.forEach(c => c.destroy());
     this.charts = [];
 
-    const caMensuel = this.caMensuel();
-    if (this.lineCanvas?.nativeElement && caMensuel.length > 0) {
-      this.charts.push(new Chart(this.lineCanvas.nativeElement.getContext('2d')!, {
-        type: 'line',
-        data: {
-          labels: caMensuel.map(m => m.mois),
-          datasets: [
-            { label: 'N (2026)', data: caMensuel.map(m => m.n), borderColor: '#1A6B2A', backgroundColor: '#1A6B2A22', tension: 0.4, fill: true, pointBackgroundColor: '#1A6B2A', pointRadius: 5 },
-            { label: 'N-1 (2025)', data: caMensuel.map(m => m.nMoins1), borderColor: '#FFD700', backgroundColor: '#FFD70011', tension: 0.4, fill: false, borderDash: [8, 4], pointBackgroundColor: '#FFD700', pointRadius: 4 },
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }
-      }));
-    }
+    // Pas de série mensuelle N vs N-1 : /dg/comparatif ne renvoie qu'une
+    // tranche actuelle/précédente à la fois (mois précédent, pas année
+    // précédente) — aucune donnée réelle pour un historique 12 mois par an.
     const zones = this.zones();
     if (this.barCanvas?.nativeElement && zones.length > 0) {
       this.charts.push(new Chart(this.barCanvas.nativeElement.getContext('2d')!, {
@@ -83,8 +67,7 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
         data: {
           labels: zones.map(z => z.secteur),
           datasets: [
-            { label: 'CA N', data: zones.map(z => z.caMoisCourantFCFA), backgroundColor: '#1A6B2A', borderRadius: 6 },
-            { label: 'CA N-1', data: zones.map(z => Math.round(z.caMoisCourantFCFA * 0.85)), backgroundColor: '#FFD70088', borderRadius: 6 },
+            { label: 'CA du mois en cours', data: zones.map(z => z.caMoisCourantFCFA), backgroundColor: '#1A6B2A', borderRadius: 6 },
           ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }

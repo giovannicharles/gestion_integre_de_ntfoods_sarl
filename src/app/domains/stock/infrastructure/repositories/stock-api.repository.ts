@@ -226,22 +226,22 @@ export class StockApiRepository {
   }
 
   // ── PRODUCTION BATCHES ───────────────────────────────────
+  // Lecture seule depuis le 2026-09-22 (docs/PROGRESS.md) : la déclaration/
+  // validation/rejet d'un lot passe désormais uniquement par le module
+  // Production (/production/lots) — le backend a retiré les 3 endpoints
+  // d'écriture correspondants. Ne reste que la lecture, pour l'historique
+  // déjà en base.
+  // ProductionBatchController est monté sur /api/stock/production/batches (pas de préfixe /v1/,
+  // contrairement à ReceiptController) — "v1/" ici donnait un 404 sur les 4 appels.
   getBatches(): Observable<ProductionBatch[]> {
-    return this.api.get<ProductionBatch[]>('v1/stock/production/batches').pipe(catchError(() => of([])));
+    return this.api.get<ProductionBatch[]>('stock/production/batches').pipe(catchError(() => of([])));
   }
   getPendingBatches(): Observable<ProductionBatch[]> {
-    return this.api.get<ProductionBatch[]>('v1/stock/production/batches/pending').pipe(catchError(() => of([])));
+    return this.api.get<ProductionBatch[]>('stock/production/batches/pending').pipe(catchError(() => of([])));
   }
-  getBatchById(id: number): Observable<ProductionBatch> { return this.api.get(`v1/stock/production/batches/${id}`); }
-  declareBatch(data: any): Observable<ProductionBatch> { return this.api.post('v1/stock/production/batches/declare', data); }
-  validateBatch(id: number, notes = ''): Observable<ProductionBatch> {
-    return this.api.post(`v1/stock/production/batches/${id}/validate`, {}, { notes });
-  }
-  rejectBatch(id: number, reason: string): Observable<ProductionBatch> {
-    return this.api.post(`v1/stock/production/batches/${id}/reject`, {}, { reason });
-  }
+  getBatchById(id: number): Observable<ProductionBatch> { return this.api.get(`stock/production/batches/${id}`); }
   getBatchStats(): Observable<Record<string, unknown>> {
-    return this.api.get<Record<string, unknown>>('v1/stock/production/batches/stats').pipe(catchError(() => of({})));
+    return this.api.get<Record<string, unknown>>('stock/production/batches/stats').pipe(catchError(() => of({})));
   }
 
   // ── INTERNAL ORDERS (/api/stock/internal-orders) ────────

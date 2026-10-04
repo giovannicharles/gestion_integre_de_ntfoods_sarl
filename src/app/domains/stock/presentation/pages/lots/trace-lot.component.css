@@ -1,0 +1,125 @@
+.trace-page {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header { margin-bottom: 1.5rem; }
+.page-header h1 {
+  font-size: 2rem;
+  color: var(--primary-green, #14532D);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.subtitle { color: var(--text-secondary, #6B7280); }
+
+.card {
+  background: white;
+  border-radius: var(--r-md, 12px);
+  box-shadow: var(--sh-sm, 0 1px 6px rgba(0,0,0,0.07));
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.search-card label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem; }
+.search-row { display: flex; gap: 0.75rem; }
+.search-row input {
+  flex: 1;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--n-200, #E5E7EB);
+  border-radius: var(--r-sm, 6px);
+  font-size: 0.95rem;
+}
+.hint { color: var(--text-secondary, #6B7280); font-size: 0.8rem; margin: 0.75rem 0 0; }
+
+.error-card {
+  color: var(--danger-red, #C22B2B);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.warning-inline {
+  background: var(--accent-ghost, #FFF8E1);
+  color: var(--accent-yellow-dark, #C49200);
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--r-sm, 6px);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-green, #14532D);
+  margin: 1.25rem 0 0.6rem;
+}
+
+.empty-inline {
+  color: var(--text-secondary, #6B7280);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.arc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.arc-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--n-200, #E5E7EB);
+  border-radius: var(--r-md, 10px);
+  background: var(--n-50, #FAFBFC);
+  font-size: 0.85rem;
+}
+
+.lot-badge {
+  background: var(--n-100, #F0F2F5);
+  color: var(--text-primary, #1F2937);
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+.lot-badge.current {
+  background: var(--success-ghost, #E6F2EC);
+  color: var(--primary-green, #1E7A42);
+}
+
+.relation-label { color: var(--text-secondary, #6B7280); font-style: italic; }
+.qty { font-weight: 600; }
+.produit-info { color: var(--text-secondary, #6B7280); font-size: 0.78rem; }
+
+.noeuds-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+.noeuds-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6B7280);
+  padding: 0.5rem;
+  border-bottom: 2px solid var(--n-200, #E5E7EB);
+}
+.noeuds-table td {
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid var(--n-100, #F0F2F5);
+  font-size: 0.82rem;
+}
+.noeuds-table tr.current { background: var(--success-ghost, #E6F2EC); }
+
+.btn {
+  border: none;
+  border-radius: var(--r-sm, 6px);
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+.btn-primary { background: var(--primary-green, #1E7A42); color: white; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }

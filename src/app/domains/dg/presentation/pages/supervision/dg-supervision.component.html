@@ -1,0 +1,81 @@
+<div class="dash animate-fadeInUp">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-gauge-high"></i></div>
+      <div>
+        <h1 class="ph-title">Vue Consolidée</h1>
+        <p class="ph-sub">Financier · Production · Stock · Anomalies détectées</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement de la vue consolidée…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  @if (anomalies().length > 0) {
+  <div class="alert-banner-red">
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ anomalies().length }} anomalie(s) détectée(s) — voir le détail ci-dessous.
+  </div>
+  }
+
+  <div class="section-titre"><i class="fa-solid fa-sack-dollar"></i> Financier</div>
+  @if (financier(); as f) {
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-cash-register"></i></div><div class="kpi-body"><span class="kpi-lbl">Solde caisse</span><span class="kpi-val">{{ fCFA(f.soldeCaisse) }}</span></div></div>
+    <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-file-invoice"></i></div><div class="kpi-body"><span class="kpi-lbl">Factures émises / payées</span><span class="kpi-val">{{ fCFA(f.totalFacturesEmises) }}</span><span class="kpi-meta">payé : {{ fCFA(f.totalFacturesPayees) }} · {{ f.nbFacturesImpayees }} impayée(s)</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-money-bill-transfer"></i></div><div class="kpi-body"><span class="kpi-lbl">Décaissements exécutés</span><span class="kpi-val">{{ fCFA(f.totalDecaissementsExecutes) }}</span><span class="kpi-meta">{{ f.nbDecaissementsEnAttente }} en attente</span></div></div>
+    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div><div class="kpi-body"><span class="kpi-lbl">Créances en cours</span><span class="kpi-val">{{ fCFA(f.totalCreances) }}</span><span class="kpi-meta">{{ f.nbRecouvrementsEnCours }} en cours · {{ f.nbRecouvrementsContentieux }} contentieux</span></div></div>
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-hand-holding-dollar"></i></div><div class="kpi-body"><span class="kpi-lbl">Versements validés</span><span class="kpi-val">{{ fCFA(f.totalVersementsValides) }}</span><span class="kpi-meta">{{ f.nbVersementsEnAttente }} en attente · {{ f.nbAlertesRouges }} alerte(s) rouge(s)</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-money-bill-trend-up"></i></div><div class="kpi-body"><span class="kpi-lbl">Primes à verser</span><span class="kpi-val">{{ fCFA(f.totalPrimesAVerser) }}</span><span class="kpi-meta">{{ f['nbPrimesValideesNonVersées'] }} validée(s) non versée(s)</span></div></div>
+  </div>
+  }
+
+  <div class="section-titre"><i class="fa-solid fa-industry"></i> Production</div>
+  @if (production(); as p) {
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-calendar-week"></i></div><div class="kpi-body"><span class="kpi-lbl">Plans hebdomadaires (PPH)</span><span class="kpi-val">{{ p.nbPPHEnCours }}</span><span class="kpi-meta">en cours · {{ p.nbPPHClotures }} clôturé(s)</span></div></div>
+    <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-clipboard-list"></i></div><div class="kpi-body"><span class="kpi-lbl">Ordres de fabrication</span><span class="kpi-val">{{ p.nbOFEnCours }}</span><span class="kpi-meta">en cours · {{ p.nbOFPlanifies }} planifié(s) · {{ p.nbOFHonores }} honoré(s) · {{ p.nbOFAnnules }} annulé(s)</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-boxes-packing"></i></div><div class="kpi-body"><span class="kpi-lbl">Lots validés</span><span class="kpi-val">{{ p.nbLotsValides }}</span><span class="kpi-meta">{{ p.nbLotsDeclares }} déclaré(s) · {{ p.nbLotsReceptionnes }} réceptionné(s) · {{ p.nbLotsRejetes }} rejeté(s)</span></div></div>
+    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-weight-hanging"></i></div><div class="kpi-body"><span class="kpi-lbl">Quantité produite</span><span class="kpi-val">{{ p.quantiteProduiteKg }} kg</span><span class="kpi-meta">{{ p.nbCartons }} carton(s)</span></div></div>
+  </div>
+  }
+
+  <div class="section-titre"><i class="fa-solid fa-warehouse"></i> Stock</div>
+  @if (stock(); as s) {
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-building"></i></div><div class="kpi-body"><span class="kpi-lbl">Central</span><span class="kpi-val">{{ s.totalQuantiteCentral }}</span><span class="kpi-meta">{{ s.nbProduitsCentral }} produit(s)</span></div></div>
+    <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-dolly"></i></div><div class="kpi-body"><span class="kpi-lbl">Tampon</span><span class="kpi-val">{{ s.totalQuantiteTampon }}</span><span class="kpi-meta">{{ s.nbProduitsTampon }} produit(s)</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-truck"></i></div><div class="kpi-body"><span class="kpi-lbl">Mobile (commerciaux)</span><span class="kpi-val">{{ s.totalQuantiteMobile }}</span><span class="kpi-meta">{{ s.nbProduitsMobile }} produit(s)</span></div></div>
+    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-body"><span class="kpi-lbl">Alertes actives</span><span class="kpi-val">{{ s.nbAlertesActives }}</span><span class="kpi-meta">{{ s.nbProduitsSousSeuil }} produit(s) sous seuil</span></div></div>
+  </div>
+  }
+
+  <div class="section-titre"><i class="fa-solid fa-shield-halved"></i> Anomalies détectées</div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Catégorie</th><th>Référence</th><th>Description</th><th>Concerné</th></tr></thead>
+        <tbody>
+          @for (a of anomalies(); track a.reference + a.categorie) {
+          <tr class="row-alert">
+            <td><span class="badge bg-red">{{ libelleCategorie(a.categorie) }}</span></td>
+            <td class="mono">{{ a.reference }}</td>
+            <td>{{ a.description }}</td>
+            <td>{{ a.matriculeConcerne || '—' }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="4" class="empty-state"><i class="fa-solid fa-circle-check"></i> Aucune anomalie détectée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+</div>

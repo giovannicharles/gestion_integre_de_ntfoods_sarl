@@ -7,15 +7,28 @@
         <div class="ph-sub">Rentabilité nette réelle · {{ fCFA(margeTotale()) }} de marge générée ce mois</div>
       </div>
     </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary btn-sm" (click)="ouvrirCreation()"><i class="fa-solid fa-plus"></i> Nouvelle marge produit</button>
+    </div>
   </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des marges…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
 
   <div class="card">
     <div class="card-hd"><span class="card-title"><i class="fa-solid fa-tags"></i> Marge par produit</span></div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Produit</th><th>Prix vente</th><th>Coût revient</th><th>Marge unit.</th><th>Taux</th><th>Ventes/mois</th><th>Marge totale</th></tr></thead>
+        <thead><tr><th>Produit</th><th>Prix vente</th><th>Coût revient</th><th>Marge unit.</th><th>Taux</th><th>Ventes/mois</th><th>Marge totale</th><th></th></tr></thead>
         <tbody>
-          @for (m of marges(); track m.code) {
+          @for (m of marges(); track m.id) {
           <tr [class.row-alert]="m.margePct < 30">
             <td class="fw-bold">{{ m.designation }}</td>
             <td class="mono">{{ fCFA(m.prixVente) }}</td>
@@ -24,12 +37,59 @@
             <td><span class="taux-chip" [class.taux-ok]="m.margePct>=38" [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct }}%</span></td>
             <td class="mono">{{ m.ventesMois }}</td>
             <td class="mono fw-bold">{{ fCFA(m.margeTotale) }}</td>
+            <td><button class="btn btn-outline btn-sm" (click)="ouvrirEdition(m)"><i class="fa-solid fa-pen"></i></button></td>
           </tr>
+          } @empty {
+          <tr><td colspan="8" class="empty-state">Aucune marge produit enregistrée</td></tr>
           }
         </tbody>
-        <tfoot><tr class="tfoot-total"><td colspan="6" class="fw-bold">Marge totale générée</td><td class="mono fw-bold">{{ fCFA(margeTotale()) }}</td></tr></tfoot>
+        <tfoot><tr class="tfoot-total"><td colspan="6" class="fw-bold">Marge totale générée</td><td class="mono fw-bold">{{ fCFA(margeTotale()) }}</td><td></td></tr></tfoot>
       </table>
     </div>
   </div>
+  }
 
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="fermerForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-tags"></i> {{ editingId() ? 'Modifier la marge produit' : 'Nouvelle marge produit' }}</h3>
+        <button class="modal-close" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Code *</label>
+            <input type="text" [ngModel]="form().code" (ngModelChange)="actualiserChamp('code', $event)" [disabled]="!!editingId()" placeholder="Ex : PF-001" />
+          </div>
+          <div class="form-group" style="flex:2">
+            <label>Désignation *</label>
+            <input type="text" [ngModel]="form().designation" (ngModelChange)="actualiserChamp('designation', $event)" placeholder="Ex : Bouillie Soja 500g" />
+          </div>
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Prix de vente (FCFA)</label>
+            <input type="number" min="0" [ngModel]="form().prixVente" (ngModelChange)="actualiserChamp('prixVente', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Coût de revient (FCFA)</label>
+            <input type="number" min="0" [ngModel]="form().coutRevient" (ngModelChange)="actualiserChamp('coutRevient', $event)" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ventes du mois (unités)</label>
+          <input type="number" min="0" [ngModel]="form().ventesMois" (ngModelChange)="actualiserChamp('ventesMois', $event)" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" [disabled]="saving()" (click)="fermerForm()">Annuler</button>
+        <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
+          <i class="fa-solid" [class.fa-spinner]="saving()" [class.fa-spin]="saving()" [class.fa-check]="!saving()"></i>
+          {{ editingId() ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

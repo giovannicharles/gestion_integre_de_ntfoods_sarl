@@ -1,0 +1,253 @@
+<div class="incidents-page">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-triangle-exclamation"></i> Incidents</h1>
+    <p class="subtitle">Suivi des incidents techniques et fonctionnels signalés</p>
+    <button class="btn btn-primary" (click)="ouvrirCreation()">
+      <i class="fa-solid fa-plus"></i> Signaler un incident
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-group">
+      <label>Gravité :</label>
+      <select [ngModel]="filtrePriorite()" (ngModelChange)="filtrePriorite.set($event)">
+        <option value="TOUS">Toutes</option>
+        @for (p of priorites; track p) { <option [value]="p">{{ p }}</option> }
+      </select>
+    </div>
+    <label class="checkbox-item">
+      <input type="checkbox" [ngModel]="afficherRejetes()" (ngModelChange)="afficherRejetes.set($event)">
+      Afficher les rejetés
+    </label>
+  </div>
+
+  @if (loading()) {
+    <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des incidents...</div>
+  } @else if (error()) {
+    <div class="error">
+      <i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}
+      <button class="btn btn-sm btn-secondary" (click)="chargerIncidents()">Réessayer</button>
+    </div>
+  } @else {
+    <div class="kanban" [class.with-rejetes]="afficherRejetes()">
+      <div class="colonne">
+        <h3 class="colonne-titre"><span class="dot dot-nouveau"></span> Nouveau <span class="count">{{ colonneNouveau().length }}</span></h3>
+        <div class="colonne-cards">
+          @for (i of colonneNouveau(); track i.id) {
+            <div class="incident-card" [class]="classeGravite(i.priorite)" (click)="ouvrirDetails(i)">
+              <div class="card-top">
+                <span class="ref">{{ i.reference }}</span>
+                <span class="gravite-badge">{{ i.priorite }}</span>
+              </div>
+              <p class="titre">{{ i.titre }}</p>
+              <p class="meta">{{ i.moduleConcerne }} — {{ i.signaleurNom }}</p>
+              <div class="card-actions" (click)="$event.stopPropagation()">
+                <button class="btn btn-xs btn-primary" (click)="prendreEnCharge(i)" [disabled]="actionEnCours">Prendre en charge</button>
+                <button class="btn btn-xs btn-danger" (click)="ouvrirRejet(i)" [disabled]="actionEnCours">Rejeter</button>
+              </div>
+            </div>
+          } @empty { <p class="empty-inline">Aucun incident nouveau.</p> }
+        </div>
+      </div>
+
+      <div class="colonne">
+        <h3 class="colonne-titre"><span class="dot dot-en-cours"></span> En cours <span class="count">{{ colonneEnCours().length }}</span></h3>
+        <div class="colonne-cards">
+          @for (i of colonneEnCours(); track i.id) {
+            <div class="incident-card" [class]="classeGravite(i.priorite)" (click)="ouvrirDetails(i)">
+              <div class="card-top">
+                <span class="ref">{{ i.reference }}</span>
+                <span class="gravite-badge">{{ i.priorite }}</span>
+              </div>
+              <p class="titre">{{ i.titre }}</p>
+              <p class="meta">{{ i.moduleConcerne }} — assigné : {{ i.assigneANom || '—' }}</p>
+              <div class="card-actions" (click)="$event.stopPropagation()">
+                <button class="btn btn-xs btn-primary" (click)="ouvrirResolution(i)" [disabled]="actionEnCours">Résoudre</button>
+                <button class="btn btn-xs btn-danger" (click)="ouvrirRejet(i)" [disabled]="actionEnCours">Rejeter</button>
+              </div>
+            </div>
+          } @empty { <p class="empty-inline">Aucun incident en cours.</p> }
+        </div>
+      </div>
+
+      <div class="colonne">
+        <h3 class="colonne-titre"><span class="dot dot-resolu"></span> Résolu <span class="count">{{ colonneResolu().length }}</span></h3>
+        <div class="colonne-cards">
+          @for (i of colonneResolu(); track i.id) {
+            <div class="incident-card" [class]="classeGravite(i.priorite)" (click)="ouvrirDetails(i)">
+              <div class="card-top">
+                <span class="ref">{{ i.reference }}</span>
+                <span class="gravite-badge">{{ i.priorite }}</span>
+              </div>
+              <p class="titre">{{ i.titre }}</p>
+              <p class="meta">Résolu par {{ i.assigneANom || '—' }}</p>
+              <div class="card-actions" (click)="$event.stopPropagation()">
+                <button class="btn btn-xs btn-primary" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
+              </div>
+            </div>
+          } @empty { <p class="empty-inline">Aucun incident résolu.</p> }
+        </div>
+      </div>
+
+      <div class="colonne">
+        <h3 class="colonne-titre"><span class="dot dot-cloture"></span> Clôturé <span class="count">{{ colonneCloture().length }}</span></h3>
+        <div class="colonne-cards">
+          @for (i of colonneCloture(); track i.id) {
+            <div class="incident-card cloture" [class]="classeGravite(i.priorite)" (click)="ouvrirDetails(i)">
+              <div class="card-top">
+                <span class="ref">{{ i.reference }}</span>
+                <span class="gravite-badge">{{ i.priorite }}</span>
+              </div>
+              <p class="titre">{{ i.titre }}</p>
+              <p class="meta">{{ formatDate(i.dateResolution || i.dateCreation) }}</p>
+            </div>
+          } @empty { <p class="empty-inline">Aucun incident clôturé.</p> }
+        </div>
+      </div>
+
+      @if (afficherRejetes()) {
+        <div class="colonne">
+          <h3 class="colonne-titre"><span class="dot dot-rejete"></span> Rejeté <span class="count">{{ colonneRejete().length }}</span></h3>
+          <div class="colonne-cards">
+            @for (i of colonneRejete(); track i.id) {
+              <div class="incident-card rejete" [class]="classeGravite(i.priorite)" (click)="ouvrirDetails(i)">
+                <div class="card-top">
+                  <span class="ref">{{ i.reference }}</span>
+                  <span class="gravite-badge">{{ i.priorite }}</span>
+                </div>
+                <p class="titre">{{ i.titre }}</p>
+              </div>
+            } @empty { <p class="empty-inline">Aucun incident rejeté.</p> }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Modal création -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="fermerCreateModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-plus"></i> Signaler un incident</h3>
+          <button class="modal-close" (click)="fermerCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type *</label>
+              <select [(ngModel)]="newIncident.type">
+                @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Gravité *</label>
+              <select [(ngModel)]="newIncident.priorite">
+                @for (p of priorites; track p) { <option [value]="p">{{ p }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Titre * (200 caractères max)</label>
+            <input type="text" [(ngModel)]="newIncident.titre" maxlength="200" placeholder="Résumé court du problème">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="newIncident.description" rows="4" placeholder="Détails, contexte, ce qui était attendu..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Module concerné</label>
+            <input type="text" [(ngModel)]="newIncident.moduleConcerne" placeholder="Ex. STOCK, PRODUCTION, COMMERCIAL">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerCreateModal()" [disabled]="actionEnCours">Annuler</button>
+          <button class="btn btn-primary" (click)="creerIncident()" [disabled]="!newIncident.titre.trim() || actionEnCours">
+            @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Signaler
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal détails -->
+  @if (showDetailsModal && selectedIncident) {
+    <div class="modal-overlay" (click)="fermerDetailsModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ selectedIncident.reference }} — {{ selectedIncident.titre }}</h3>
+          <button class="modal-close" (click)="fermerDetailsModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Type :</strong> {{ selectedIncident.type }}</p>
+          <p><strong>Gravité :</strong> <span [class]="classeGravite(selectedIncident.priorite)" class="gravite-badge">{{ selectedIncident.priorite }}</span></p>
+          <p><strong>Module :</strong> {{ selectedIncident.moduleConcerne || '—' }}</p>
+          <p><strong>Signalé par :</strong> {{ selectedIncident.signaleurNom }} ({{ selectedIncident.signaleurMatricule }})</p>
+          <p><strong>Le :</strong> {{ formatDate(selectedIncident.dateCreation) }}</p>
+          @if (selectedIncident.description) {
+            <p><strong>Description :</strong></p>
+            <p class="description-block">{{ selectedIncident.description }}</p>
+          }
+          @if (selectedIncident.resolution) {
+            <p><strong>Résolution :</strong></p>
+            <p class="description-block">{{ selectedIncident.resolution }}</p>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerDetailsModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal résolution -->
+  @if (showResolveModal && selectedIncident) {
+    <div class="modal-overlay" (click)="fermerResolveModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-check"></i> Résoudre {{ selectedIncident.reference }}</h3>
+          <button class="modal-close" (click)="fermerResolveModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Résolution *</label>
+            <textarea [(ngModel)]="resolution" rows="4" placeholder="Qu'est-ce qui a été fait pour résoudre l'incident ?" [disabled]="actionEnCours"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerResolveModal()" [disabled]="actionEnCours">Annuler</button>
+          <button class="btn btn-primary" (click)="resoudreIncident()" [disabled]="!resolution.trim() || actionEnCours">
+            @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Marquer résolu
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal rejet -->
+  @if (showRejectModal && selectedIncident) {
+    <div class="modal-overlay" (click)="fermerRejectModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-ban"></i> Rejeter {{ selectedIncident.reference }}</h3>
+          <button class="modal-close" (click)="fermerRejectModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Motif du rejet *</label>
+            <textarea [(ngModel)]="motifRejet" rows="3" placeholder="Non reproductible, non pertinent..." [disabled]="actionEnCours"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerRejectModal()" [disabled]="actionEnCours">Annuler</button>
+          <button class="btn btn-danger" (click)="rejeterIncident()" [disabled]="!motifRejet.trim() || actionEnCours">
+            @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-ban"></i> }
+            Rejeter
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

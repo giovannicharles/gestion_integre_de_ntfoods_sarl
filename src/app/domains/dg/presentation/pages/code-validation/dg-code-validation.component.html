@@ -1,0 +1,222 @@
+<div class="dg-code-validation">
+  <div class="page-header">
+    <h1>
+      <i class="fa-solid fa-shield-halved"></i>
+      Gestion des Codes de Validation
+    </h1>
+    <p class="subtitle">En tant que Directeur Général, attribuez des codes de validation aux responsables pour valider les opérations sensibles</p>
+  </div>
+
+  <!-- Formulaire d'attribution -->
+  <div class="card attribution-card">
+    <h2>
+      <i class="fa-solid fa-plus-circle"></i>
+      Attribuer un Code de Validation
+    </h2>
+    <form (ngSubmit)="attribuerCode()" class="attribution-form">
+      <div class="form-group">
+        <label for="utilisateur">Responsable</label>
+        <select id="utilisateur" [(ngModel)]="utilisateurSelectionne" name="utilisateur" required>
+          <option value="">Sélectionner un responsable</option>
+          <option *ngFor="let user of utilisateurs" [value]="user.id">
+            {{ user.matricule }} - {{ user.nom }} {{ user.prenom }} ({{ user.role }})
+          </option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dateExpiration">Date d'expiration (optionnel)</label>
+          <input type="datetime-local" id="dateExpiration" [(ngModel)]="dateExpiration" name="dateExpiration">
+        </div>
+        <div class="form-group">
+          <label for="maxUtilisations">Max utilisations (optionnel)</label>
+          <input type="number" id="maxUtilisations" [(ngModel)]="maxUtilisations" name="maxUtilisations" min="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="commentaire">Commentaire (optionnel)</label>
+        <textarea id="commentaire" [(ngModel)]="commentaire" name="commentaire" rows="3"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="fa-solid fa-key"></i>
+        Attribuer le Code
+      </button>
+    </form>
+  </div>
+
+  <!-- Liste des codes -->
+  <div class="card codes-list-card">
+    <h2>
+      <i class="fa-solid fa-list"></i>
+      Codes de Validation Actifs
+    </h2>
+
+    @if (loading()) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Chargement...
+      </div>
+    } @else if (error()) {
+      <div class="error">
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        {{ error() }}
+      </div>
+    } @else if (codes().length === 0) {
+      <div class="empty">
+        <i class="fa-solid fa-inbox"></i>
+        Aucun code de validation actif
+      </div>
+    } @else {
+      <div class="codes-table-container">
+        <table class="codes-table">
+          <thead>
+            <tr>
+              <th>Responsable</th>
+              <th>Date d'attribution</th>
+              <th>Expiration</th>
+              <th>Utilisations</th>
+              <th>État</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (code of codes(); track code.id) {
+              <tr [class.bloque]="code.bloque">
+                <td>
+                  <div class="user-info">
+                    <i class="fa-solid fa-user-tie"></i>
+                    {{ code.utilisateurNom }}
+                  </div>
+                </td>
+                <td>{{ code.dateAttribution | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  @if (code.dateExpiration) {
+                    {{ code.dateExpiration | date:'dd/MM/yyyy HH:mm' }}
+                  } @else {
+                    <span class="no-expiration">Illimitée</span>
+                  }
+                </td>
+                <td>
+                  <div class="utilisations">
+                    <span class="nombre">{{ code.nombreUtilisations }}</span>
+                    @if (code.maxUtilisations) {
+                      <span class="max">/ {{ code.maxUtilisations }}</span>
+                    }
+                  </div>
+                  @if (code.tentativesEchouees > 0) {
+                    <div class="echecs">
+                      <i class="fa-solid fa-circle-xmark"></i>
+                      {{ code.tentativesEchouees }} tentative(s) échouée(s)
+                    </div>
+                  }
+                </td>
+                <td>
+                  @if (code.bloque) {
+                    <span class="status blocked">
+                      <i class="fa-solid fa-lock"></i>
+                      Bloqué
+                    </span>
+                  } @else if (!code.actif) {
+                    <span class="status revoked">
+                      <i class="fa-solid fa-ban"></i>
+                      Révoqué
+                    </span>
+                  } @else {
+                    <span class="status active">
+                      <i class="fa-solid fa-check-circle"></i>
+                      Actif
+                    </span>
+                  }
+                </td>
+                <td>
+                  <div class="actions">
+                    @if (code.bloque) {
+                      <button class="btn btn-sm btn-warning" (click)="debloquerCode(code)" title="Débloquer">
+                        <i class="fa-solid fa-unlock"></i>
+                      </button>
+                    }
+                    @if (code.actif) {
+                      <button class="btn btn-sm btn-danger" (click)="confirmerRevoquer(code)" title="Révoquer">
+                        <i class="fa-solid fa-ban"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Modal Nouveau Code -->
+  @if (showCodeModal) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-key"></i>
+            Code de Validation Attribué
+          </h3>
+          <button class="modal-close" (click)="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="code-display">
+            <label>Code de validation :</label>
+            <div class="code-value">{{ nouveauCode }}</div>
+          </div>
+          <p class="warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Transmettez ce code confidentiellement au responsable par un canal sécurisé.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" (click)="closeModal()">
+            <i class="fa-solid fa-check"></i>
+            J'ai bien noté le code
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Révocation -->
+  @if (showRevokeModal) {
+    <div class="modal-overlay" (click)="closeRevokeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-ban"></i>
+            Révoquer le Code de Validation
+          </h3>
+          <button class="modal-close" (click)="closeRevokeModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Êtes-vous sûr de vouloir révoquer le code de validation de <strong>{{ codeToRevoke?.utilisateurNom }}</strong> ?</p>
+          <div class="form-group">
+            <label for="motif">Motif de la révocation</label>
+            <textarea id="motif" [(ngModel)]="motifRevocation" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeRevokeModal()">
+            <i class="fa-solid fa-xmark"></i>
+            Annuler
+          </button>
+          <button class="btn btn-danger" (click)="revoquerCode()" [disabled]="!motifRevocation">
+            <i class="fa-solid fa-ban"></i>
+            Révoquer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

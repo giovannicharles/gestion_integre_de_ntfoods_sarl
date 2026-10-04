@@ -55,6 +55,17 @@ export interface GrandCompteResponse {
   statut: string;
 }
 
+export interface GrandCompteRequest {
+  nom: string;
+  type: string;
+  contact: string;
+  telephone: string;
+  caMensuel: number;
+  derniereCommande: string | null;
+  prochaineRelance: string | null;
+  statut: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RpService {
   private readonly api = inject(ApiService);
@@ -69,6 +80,18 @@ export class RpService {
 
   getGrandsComptes(): Observable<GrandCompteResponse[]> {
     return this.api.get<ApiResponse<GrandCompteResponse[]>>('rp/grands-comptes').pipe(map(r => r.donnees ?? []));
+  }
+
+  creerGrandCompte(payload: GrandCompteRequest): Observable<GrandCompteResponse> {
+    return this.api.post<ApiResponse<GrandCompteResponse>>('rp/grands-comptes', payload).pipe(map(r => r.donnees!));
+  }
+
+  modifierGrandCompte(id: number, payload: GrandCompteRequest): Observable<GrandCompteResponse> {
+    return this.api.put<ApiResponse<GrandCompteResponse>>(`rp/grands-comptes/${id}`, payload).pipe(map(r => r.donnees!));
+  }
+
+  archiverGrandCompte(id: number): Observable<void> {
+    return this.api.delete<ApiResponse<GrandCompteResponse>>(`rp/grands-comptes/${id}`).pipe(map(() => undefined));
   }
 
   getOccupation(): Observable<OccupationMarcheResponse[]> {

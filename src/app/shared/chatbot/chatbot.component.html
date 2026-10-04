@@ -1,0 +1,77 @@
+<div class="chatbot-container [position()]">
+  <!-- Bouton toggle -->
+  <button class="chatbot-toggle" (click)="toggleChat()" [class.open]="isOpen()">
+    @if (isOpen()) {
+      <i class="fa-solid fa-xmark"></i>
+    } @else {
+      <i class="fa-solid fa-robot"></i>
+    }
+  </button>
+
+  <!-- Chat window -->
+  @if (isOpen()) {
+    <div class="chatbot-window">
+      <div class="chatbot-header">
+        <div class="header-title">
+          <i class="fa-solid fa-robot"></i>
+          <span>{{ title() }}</span>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" (click)="clearChat()" title="Effacer la conversation">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+          <button class="action-btn" (click)="toggleChat()" title="Fermer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="chatbot-messages" #messagesContainer>
+        @for (message of messages(); track $index) {
+          <div class="message [message.role]">
+            <div class="message-content">
+              <p>{{ message.content }}</p>
+              <span class="message-time">{{ message.timestamp | date:'HH:mm' }}</span>
+            </div>
+          </div>
+        }
+
+        @if (loading()) {
+          <div class="message assistant">
+            <div class="message-content typing">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        }
+
+        @if (error()) {
+          <div class="message error">
+            <div class="message-content">
+              <i class="fa-solid fa-exclamation-triangle"></i>
+              {{ error() }}
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="chatbot-input">
+        <textarea
+          [(ngModel)]="userMessage"
+          (keypress)="handleKeyPress($event)"
+          placeholder="Tapez votre message..."
+          rows="1"
+          [disabled]="loading()"
+        ></textarea>
+        <button
+          class="send-btn"
+          (click)="sendMessage()"
+          [disabled]="loading() || !userMessage().trim()"
+        >
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

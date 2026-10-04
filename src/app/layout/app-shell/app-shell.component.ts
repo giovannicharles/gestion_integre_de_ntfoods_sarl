@@ -152,9 +152,23 @@ export class AppShellComponent {
     if (role !== 'ADMIN' && role !== 'DIRECTEUR_GENERAL') return [];
 
     return [
-      { route: '/admin/users', label: 'Utilisateurs', icon: 'fa-users-cog' },
-      { route: '/admin/settings', label: 'Paramètres', icon: 'fa-cog' },
+      { route: '/admin/utilisateurs', label: 'Utilisateurs', icon: 'fa-users-cog' },
+      { route: '/admin/parametres', label: 'Paramètres', icon: 'fa-cog' },
       { route: '/admin/audit', label: 'Journal d\'audit', icon: 'fa-history' }
+    ];
+  });
+
+  // Configuration technique de la plateforme (module `admin` backend) — distinct
+  // d'ADMINISTRATION ci-dessus, ne pas fusionner (docs/PROGRESS.md 2026-09-23).
+  readonly adminSystemeItems = computed<NavItem[]>(() => {
+    const role = this.user()?.role;
+    if (role !== 'ADMIN' && role !== 'DIRECTEUR_GENERAL') return [];
+
+    return [
+      { route: '/admin-systeme/parametres', label: 'Paramètres système', icon: 'fa-sliders' },
+      { route: '/admin-systeme/suivi', label: 'Suivi plateforme', icon: 'fa-heart-pulse' },
+      { route: '/admin-systeme/corbeille', label: 'Corbeille', icon: 'fa-trash-can-arrow-up' },
+      { route: '/admin-systeme/sauvegardes', label: 'Sauvegardes', icon: 'fa-database' }
     ];
   });
 

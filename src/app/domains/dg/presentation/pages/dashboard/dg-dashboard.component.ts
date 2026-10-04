@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, sig
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
-import { AuthService } from '../../../../../core/auth/auth.service';
-import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE } from '../../../infrastructure/dg.service';
+import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 Chart.register(...registerables);
@@ -20,7 +19,6 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('caMensuelCanvas') caMensuelCanvas!: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
-  private readonly auth = inject(AuthService);
 
   today = new Date();
   loading = signal(true);
@@ -31,6 +29,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   occupation = signal<TauxOccupationSecteurBE[]>([]);
   anomalies = signal<AnomalieBE[]>([]);
   zones = signal<ZonePerformanceBE[]>([]);
+  versementsDuJour = signal<VersementDuJourBE[]>([]);
 
   caMensuel = signal<{ mois: string; n: number; nMoins1: number }[]>([]);
   caZones = computed(() => this.zones().map(z => ({ zone: z.secteur, ca: z.caMoisCourantFCFA, objectif: 0 })));
@@ -75,8 +74,6 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    console.log("utilisateur connecter : ",this.auth.user())
-    console.log("utilisateur connecter : ",this.auth.getToken())
     this.dgSvc.getKpis().subscribe({
       next: k => this.kpis.set(k),
       error: () => {},
@@ -95,6 +92,10 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.dgSvc.getZones().subscribe({
       next: z => this.zones.set(z),
+      error: () => {},
+    });
+    this.dgSvc.getVersementsDuJour().subscribe({
+      next: v => this.versementsDuJour.set(v),
       error: () => {},
     });
     setTimeout(() => this.loading.set(false), 600);

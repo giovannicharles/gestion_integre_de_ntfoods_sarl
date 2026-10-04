@@ -4,51 +4,62 @@
     <div class="ph-left">
       <div class="ph-icon ph-icon-orange"><i class="fa-solid fa-scale-balanced"></i></div>
       <div>
-        <h1 class="ph-title">Arbitrage Prix Exceptionnels</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Demandes de dérogation tarifaire soumises par les commerciaux</p>
+        <h1 class="ph-title">Suivi des validations en attente</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Vue transversale — précommandes, dotations, bons de commande, réceptions, versements</p>
       </div>
     </div>
     <div class="ph-actions">
-      @if (nbEnAttente() > 0) {
-      <span class="alert-banner"><i class="fa-solid fa-circle-exclamation"></i> {{ nbEnAttente() }} demande(s) en attente de décision</span>
+      @if (!loading() && !loadError() && validations().length > 0) {
+      <span class="alert-banner"><i class="fa-solid fa-circle-exclamation"></i> {{ validations().length }} élément(s) à suivre</span>
       }
     </div>
   </div>
 
-  <!-- FILTRES -->
+  <div class="info-banner" style="margin-bottom:16px">
+    <i class="fa-solid fa-circle-info"></i>
+    Cet écran regroupe les demandes en attente de tous les modules pour vous donner une vue d'ensemble. La décision (approbation ou rejet) se prend dans l'écran du module concerné — « Marquer comme suivi » retire seulement l'élément de cette liste.
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des validations en attente…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- FILTRES PAR CATÉGORIE -->
   <div class="filter-bar">
-    <button class="filter-btn" [class.active]="filterStatut()==='all'" (click)="filterStatut.set('all')">Toutes ({{ validations().length }})</button>
-    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='EN_ATTENTE'" (click)="filterStatut.set('EN_ATTENTE')">En attente ({{ nbEnAttente() }})</button>
-    <button class="filter-btn filter-green" [class.active]="filterStatut()==='APPROUVE'" (click)="filterStatut.set('APPROUVE')">Approuvées</button>
-    <button class="filter-btn filter-red" [class.active]="filterStatut()==='REFUSE'" (click)="filterStatut.set('REFUSE')">Refusées</button>
+    <button class="filter-btn" [class.active]="filterType()==='all'" (click)="filterType.set('all')">Toutes ({{ validations().length }})</button>
+    @for (t of typesPresents(); track t) {
+    <button class="filter-btn" [class.active]="filterType()===t" (click)="filterType.set(t)">{{ libelleType(t) }}</button>
+    }
   </div>
 
   <!-- CARTES DEMANDES -->
   <div class="arb-grid">
     @for (arb of demandes(); track arb.reference) {
-    <div class="arb-card card" [class.arb-waiting]="arb.type==='EN_ATTENTE'" [class.arb-ok]="arb.type==='APPROUVE'" [class.arb-ko]="arb.type==='REFUSE'">
+    <div class="arb-card card arb-waiting">
 
       <div class="arb-header">
         <div class="arb-id-badge">{{ arb.reference }}</div>
-        @if (arb.type === 'EN_ATTENTE') { <span class="badge bg-orange">En attente DG</span> }
-        @else if (arb.type === 'APPROUVE') { <span class="badge bg-success">Approuvé ✓</span> }
-        @else { <span class="badge bg-red">Refusé ✗</span> }
+        <span class="badge bg-orange">{{ libelleType(arb.type) }}</span>
       </div>
 
       <div class="arb-body">
         <div class="arb-info-row">
+          @if (arb.matriculeConcerne) {
           <div class="arb-info-item">
-            <span class="arb-lbl"><i class="fa-solid fa-user"></i> Demandeur</span>
+            <span class="arb-lbl"><i class="fa-solid fa-user"></i> Concerné</span>
             <span class="arb-val">{{ arb.matriculeConcerne }}</span>
           </div>
+          }
+          @if (arb.depuis) {
           <div class="arb-info-item">
             <span class="arb-lbl"><i class="fa-solid fa-calendar"></i> Date</span>
             <span class="arb-val">{{ arb.depuis | date:'dd/MM/yyyy':'fr' }}</span>
-          </div>
-          @if (false) {
-          <div class="arb-info-item">
-            <span class="arb-lbl"><i class="fa-solid fa-money-bill"></i> Montant</span>
-            <span class="arb-val mono">{{ fCFA(0) }}</span>
           </div>
           }
         </div>
@@ -59,17 +70,23 @@
         </div>
       </div>
 
-      @if (arb.type === 'EN_ATTENTE') {
       <div class="arb-actions">
-        <button class="btn btn-danger btn-sm" (click)="refuser(arb.reference)"><i class="fa-solid fa-xmark"></i> Refuser</button>
-        <button class="btn btn-success btn-sm" (click)="approuver(arb.reference)"><i class="fa-solid fa-check"></i> Approuver</button>
+        @if (routeType(arb.type)) {
+        <button class="btn btn-outline btn-sm" (click)="ouvrirModule(arb)"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir le module</button>
+        }
+        <button class="btn btn-danger btn-sm" [disabled]="enCours(arb.reference)" (click)="marquerCommeSuivi(arb, true)">
+          <i class="fa-solid" [class.fa-flag]="!enCours(arb.reference)" [class.fa-spinner]="enCours(arb.reference)" [class.fa-spin]="enCours(arb.reference)"></i> Signaler un problème
+        </button>
+        <button class="btn btn-success btn-sm" [disabled]="enCours(arb.reference)" (click)="marquerCommeSuivi(arb, false)">
+          <i class="fa-solid" [class.fa-check]="!enCours(arb.reference)" [class.fa-spinner]="enCours(arb.reference)" [class.fa-spin]="enCours(arb.reference)"></i> Marquer comme suivi
+        </button>
       </div>
-      }
     </div>
     }
     @empty {
     <div class="empty-state"><i class="fa-solid fa-check-circle"></i><p>Aucune demande pour ce filtre</p></div>
     }
   </div>
+  }
 
 </div>

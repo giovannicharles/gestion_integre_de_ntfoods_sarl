@@ -9,11 +9,11 @@
       </div>
     </div>
     <div class="ph-right">
+      <!-- Création d'un magasin retirée (2026-10-01, demande du porteur) : ce n'est pas une tâche
+           du Gestionnaire de Stock. L'initialisation des emplacements par défaut (Stock Central,
+           Tampon) reste disponible — bootstrap borné, pas une création libre. -->
       <button class="btn btn-ghost" (click)="initializeDefaults()" [disabled]="saving()">
         <i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser par défaut
-      </button>
-      <button class="btn btn-primary" (click)="openCreateForm()">
-        <i class="fa-solid fa-plus"></i> Nouveau Magasin
       </button>
     </div>
   </div>

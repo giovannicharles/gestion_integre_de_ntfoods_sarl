@@ -1,0 +1,246 @@
+<div class="validation-pending">
+  <div class="page-header">
+    <h1>
+      <i class="fa-solid fa-clipboard-check"></i>
+      Mes validations
+    </h1>
+    <p class="subtitle">Demandes en attente de votre validation</p>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Chargement des demandes...
+      </div>
+    } @else if (error()) {
+      <div class="error">
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        {{ error() }}
+        <button class="btn btn-sm btn-secondary" (click)="chargerDemandesEnAttente()">Réessayer</button>
+      </div>
+    } @else if (demandesEnAttente().length === 0) {
+      <div class="empty">
+        <i class="fa-solid fa-check-circle"></i>
+        Aucune demande de validation en attente
+      </div>
+    } @else {
+      <div class="demandes-list">
+        @for (demande of demandesEnAttente(); track demande.id) {
+          <div class="demande-card" [class.expiree]="estExpiree(demande.dateLimite)">
+            <div class="demande-header">
+              <div class="demande-info">
+                <span class="workflow-badge">{{ libelleActionType(demande.actionType) }}</span>
+                <span class="module-badge">{{ demande.moduleSource }}</span>
+              </div>
+              <div class="demande-priority">
+                @if (estExpiree(demande.dateLimite)) {
+                  <span class="status urgent">
+                    <i class="fa-solid fa-clock"></i>
+                    Expirée
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="demande-body">
+              <p class="demande-description">
+                @if (demande.entityType && demande.entityReference) {
+                  {{ demande.entityType }} : {{ demande.entityReference }}
+                }
+              </p>
+              @if (demande.motif) {
+                <p class="motif">
+                  <i class="fa-solid fa-comment"></i>
+                  {{ demande.motif }}
+                </p>
+              }
+            </div>
+
+            <div class="progress-bar-track" [attr.aria-label]="'Poids accumulé ' + demande.poidsAccumule + ' sur ' + demande.seuilRequis">
+              <div class="progress-bar-fill" [style.width.%]="progression(demande)"></div>
+            </div>
+            <div class="progress-label">{{ demande.poidsAccumule }} / {{ demande.seuilRequis }} (poids requis)</div>
+
+            @if (demande.validations.length > 0) {
+              <div class="validateurs-avatars">
+                @for (v of demande.validations; track v.id) {
+                  <span class="avatar-chip" [title]="(v.validateurNomComplet || 'Validateur') + ' — poids ' + v.poidsApporte">
+                    {{ (v.validateurNomComplet || v.validateurMatricule || '?').charAt(0) }}
+                  </span>
+                }
+                <span class="validateurs-label">a déjà validé</span>
+              </div>
+            }
+
+            <div class="demande-footer">
+              <div class="validations-info">
+                <span class="validations-count">
+                  <i class="fa-solid fa-check-double"></i>
+                  {{ demande.nombreValidations }} validation(s)
+                </span>
+              </div>
+              <div class="date-info">
+                <i class="fa-solid fa-calendar"></i>
+                {{ formatDate(demande.dateCreation) }}
+              </div>
+            </div>
+
+            <div class="demande-actions">
+              <button class="btn btn-sm btn-secondary" (click)="voirDetails(demande)" title="Voir détails">
+                <i class="fa-solid fa-eye"></i>
+                Détails
+              </button>
+              <button class="btn btn-sm btn-primary" (click)="ouvrirValidation(demande)" title="Valider">
+                <i class="fa-solid fa-check"></i>
+                Valider
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="ouvrirRejet(demande)" title="Rejeter">
+                <i class="fa-solid fa-xmark"></i>
+                Rejeter
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Modal Détails + qui peut valider maintenant -->
+  @if (showDetailModal && selectedDemande()) {
+    <div class="modal-overlay" (click)="fermerDetailModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-circle-info"></i>
+            {{ libelleActionType(selectedDemande()!.actionType) }}
+          </h3>
+          <button class="modal-close" (click)="fermerDetailModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="demande-summary">
+            <p><strong>Référence :</strong> {{ selectedDemande()!.entityReference || '—' }}</p>
+            <p><strong>Module :</strong> {{ selectedDemande()!.moduleSource }}</p>
+            <p><strong>Motif :</strong> {{ selectedDemande()!.motif || '—' }}</p>
+            <p><strong>Poids accumulé :</strong> {{ selectedDemande()!.poidsAccumule }} / {{ selectedDemande()!.seuilRequis }}</p>
+          </div>
+
+          <h4 class="section-title">Qui peut valider maintenant</h4>
+          @if (chargementValideurs()) {
+            <div class="loading small"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
+          } @else if (valideursPotentiels().length === 0) {
+            <p class="empty-inline">Aucun valideur avec du pouvoir pour cette action pour le moment.</p>
+          } @else {
+            <ul class="valideurs-list">
+              @for (v of valideursPotentiels(); track v.utilisateurId) {
+                <li [class.deja-valide]="v.dejaValide">
+                  <span class="avatar-chip small">{{ v.nomComplet.charAt(0) }}</span>
+                  <span class="valideur-nom">{{ v.nomComplet }} ({{ v.matricule }})</span>
+                  <span class="valideur-poids">poids {{ v.poidsEffectif }}</span>
+                  @if (v.viaDelegationDe) {
+                    <span class="badge-delegation">par délégation</span>
+                  }
+                  @if (v.dejaValide) {
+                    <span class="badge-done"><i class="fa-solid fa-check"></i> a validé</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerDetailModal()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Validation -->
+  @if (showValidationModal && selectedDemande()) {
+    <div class="modal-overlay" (click)="fermerModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-shield-halved"></i>
+            Valider la demande
+          </h3>
+          <button class="modal-close" (click)="fermerModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="demande-summary">
+            <h4>{{ libelleActionType(selectedDemande()!.actionType) }}</h4>
+            <p><strong>Module :</strong> {{ selectedDemande()!.moduleSource }}</p>
+            <p><strong>Poids accumulé :</strong> {{ selectedDemande()!.poidsAccumule }} / {{ selectedDemande()!.seuilRequis }}</p>
+          </div>
+
+          <div class="form-group">
+            <label for="codeValidation">Code de validation *</label>
+            <input type="text" id="codeValidation" [(ngModel)]="codeValidation" placeholder="Votre code personnel" maxlength="10" [disabled]="actionEnCours">
+          </div>
+
+          <div class="form-group">
+            <label for="commentaireValidation">Commentaire (optionnel)</label>
+            <textarea id="commentaireValidation" [(ngModel)]="commentaireValidation" rows="3" placeholder="Ajoutez un commentaire..." [disabled]="actionEnCours"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerModal()" [disabled]="actionEnCours">
+            Annuler
+          </button>
+          <button class="btn btn-primary" (click)="validerDemande()" [disabled]="!codeValidation || actionEnCours">
+            @if (actionEnCours) {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            } @else {
+              <i class="fa-solid fa-check"></i>
+            }
+            Valider
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Rejet -->
+  @if (showRejectModal && selectedDemande()) {
+    <div class="modal-overlay" (click)="fermerRejetModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-ban"></i>
+            Rejeter la demande
+          </h3>
+          <button class="modal-close" (click)="fermerRejetModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="demande-summary">
+            <h4>{{ libelleActionType(selectedDemande()!.actionType) }}</h4>
+          </div>
+
+          <div class="form-group">
+            <label for="motifRejet">Motif du rejet *</label>
+            <textarea id="motifRejet" [(ngModel)]="motifRejet" rows="3" placeholder="Expliquez pourquoi vous rejetez cette demande..." required [disabled]="actionEnCours"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="fermerRejetModal()" [disabled]="actionEnCours">
+            Annuler
+          </button>
+          <button class="btn btn-danger" (click)="rejeterDemande()" [disabled]="!motifRejet || actionEnCours">
+            @if (actionEnCours) {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            } @else {
+              <i class="fa-solid fa-ban"></i>
+            }
+            Rejeter
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

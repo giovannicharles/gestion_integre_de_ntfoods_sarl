@@ -1,0 +1,203 @@
+<div class="admin-validation-workflows">
+  <div class="page-header">
+    <h1>
+      <i class="fa-solid fa-shield-halved"></i>
+      Workflows de Validation
+    </h1>
+    <p class="subtitle">Configurez les workflows de validation multi-codes pour les opérations sensibles</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>
+        <i class="fa-solid fa-list"></i>
+        Workflows Configurés
+      </h2>
+      <button class="btn btn-primary" (click)="showCreateModal = true">
+        <i class="fa-solid fa-plus"></i>
+        Nouveau Workflow
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Chargement...
+      </div>
+    } @else if (error) {
+      <div class="error">
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        {{ error }}
+      </div>
+    } @else if (workflows.length === 0) {
+      <div class="empty">
+        <i class="fa-solid fa-inbox"></i>
+        Aucun workflow configuré
+      </div>
+    } @else {
+      <div class="workflows-table-container">
+        <table class="workflows-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Nom</th>
+              <th>Module</th>
+              <th>Min Validations</th>
+              <th>Max Validations</th>
+              <th>Délai Max</th>
+              <th>État</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (workflow of workflows; track workflow.id) {
+              <tr [class.inactive]="!workflow.actif">
+                <td>
+                  <span class="code-badge">{{ workflow.code }}</span>
+                </td>
+                <td>
+                  <div class="workflow-name">{{ workflow.nom }}</div>
+                  <div class="workflow-description">{{ workflow.description }}</div>
+                </td>
+                <td>
+                  <span class="module-badge">{{ workflow.moduleSource }}</span>
+                </td>
+                <td>
+                  <span class="validations-count">{{ workflow.minValidations }}</span>
+                </td>
+                <td>
+                  @if (workflow.maxValidations) {
+                    <span class="validations-count">{{ workflow.maxValidations }}</span>
+                  } @else {
+                    <span class="no-limit">Illimité</span>
+                  }
+                </td>
+                <td>
+                  @if (workflow.delaiMaxHeures) {
+                    <span>{{ workflow.delaiMaxHeures }}h</span>
+                  } @else {
+                    <span class="no-limit">Illimité</span>
+                  }
+                </td>
+                <td>
+                  @if (workflow.actif) {
+                    <span class="status active">
+                      <i class="fa-solid fa-check-circle"></i>
+                      Actif
+                    </span>
+                  } @else {
+                    <span class="status inactive">
+                      <i class="fa-solid fa-ban"></i>
+                      Inactif
+                    </span>
+                  }
+                </td>
+                <td>
+                  <div class="actions">
+                    <button class="btn btn-sm btn-secondary" (click)="editerWorkflow(workflow)" title="Modifier">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm [workflow.actif ? 'btn-warning' : 'btn-success']" (click)="activerDesactiver(workflow)" [title]="workflow.actif ? 'Désactiver' : 'Activer'">
+                      <i class="fa-solid [workflow.actif ? 'fa-pause' : 'fa-play']"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Modal Création -->
+  @if (showCreateModal) {
+    <div class="modal-overlay" (click)="closeCreateModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            <i class="fa-solid fa-plus-circle"></i>
+            Nouveau Workflow
+          </h3>
+          <button class="modal-close" (click)="closeCreateModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form class="workflow-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="code">Code *</label>
+                <input type="text" id="code" [(ngModel)]="newWorkflow.code" name="code" required placeholder="ex: STOCK_AJUSTEMENT">
+              </div>
+              <div class="form-group">
+                <label for="moduleSource">Module *</label>
+                <select id="moduleSource" [(ngModel)]="newWorkflow.moduleSource" name="moduleSource" required>
+                  <option value="">Sélectionner</option>
+                  <option value="STOCK">Stock</option>
+                  <option value="PRODUCTION">Production</option>
+                  <option value="COMMERCIAL">Commercial</option>
+                  <option value="COMPTABILITE">Comptabilité</option>
+                  <option value="CONDITIONNEMENT">Conditionnement</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="nom">Nom *</label>
+              <input type="text" id="nom" [(ngModel)]="newWorkflow.nom" name="nom" required placeholder="ex: Ajustement de Stock">
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" [(ngModel)]="newWorkflow.description" name="description" rows="3"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="minValidations">Min Validations *</label>
+                <input type="number" id="minValidations" [(ngModel)]="newWorkflow.minValidations" name="minValidations" min="1" value="2">
+              </div>
+              <div class="form-group">
+                <label for="maxValidations">Max Validations (optionnel)</label>
+                <input type="number" id="maxValidations" [(ngModel)]="newWorkflow.maxValidations" name="maxValidations" min="1">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="delaiMaxHeures">Délai Max (heures, optionnel)</label>
+                <input type="number" id="delaiMaxHeures" [(ngModel)]="newWorkflow.delaiMaxHeures" name="delaiMaxHeures" min="1">
+              </div>
+              <div class="form-group">
+                <label for="rolesAutorises">Rôles Autorisés (JSON)</label>
+                <input type="text" id="rolesAutorises" [(ngModel)]="newWorkflow.rolesAutorises" name="rolesAutorises" placeholder='["GESTIONNAIRE_STOCK", "DIRECTEUR_COMMERCIAL"]'>
+              </div>
+            </div>
+
+            <div class="form-group checkboxes">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="newWorkflow.exigeCodeValidation" name="exigeCodeValidation">
+                Exiger code de validation
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="newWorkflow.notificationAuto" name="notificationAuto">
+                Notification automatique
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closeCreateModal()">
+            <i class="fa-solid fa-xmark"></i>
+            Annuler
+          </button>
+          <button class="btn btn-primary" (click)="creerWorkflow()" [disabled]="!newWorkflow.code || !newWorkflow.nom || !newWorkflow.moduleSource">
+            <i class="fa-solid fa-check"></i>
+            Créer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -13,6 +13,7 @@ export const DG_ROUTES: Routes = [
       { path: 'decaissements', loadComponent: () => import('./pages/decaissements/dg-decaissements.component').then(m => m.DgDecaissementsComponent) },
       { path: 'objectifs', loadComponent: () => import('./pages/objectifs/dg-objectifs.component').then(m => m.DgObjectifsComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/dg-reporting.component').then(m => m.DgReportingComponent) },
+      { path: 'supervision', loadComponent: () => import('./pages/supervision/dg-supervision.component').then(m => m.DgSupervisionComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
       // Assistance IA. Les miroirs des écrans stock que portait la version

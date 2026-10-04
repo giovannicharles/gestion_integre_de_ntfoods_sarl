@@ -1,0 +1,94 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-scale-unbalanced"></i></div>
+      <div>
+        <div class="ph-title">Variances Coûts Standard vs Réel</div>
+        <div class="ph-sub">Écarts de consommation matières et de coûts de production</div>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary btn-sm" (click)="ouvrirCreation()"><i class="fa-solid fa-plus"></i> Nouvelle variance</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des variances…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  @if (nbDefavorables() > 0) {
+  <div class="alert-banner-red"><i class="fa-solid fa-triangle-exclamation"></i> {{ nbDefavorables() }} poste(s) en écart défavorable (réel supérieur au standard).</div>
+  }
+
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-scale-unbalanced"></i> Écarts par poste</span></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Poste</th><th>Standard</th><th>Réel</th><th>Unité</th><th>Écart</th><th></th></tr></thead>
+        <tbody>
+          @for (v of variances(); track v.id) {
+          <tr [class.row-alert]="v.reel > v.standard">
+            <td class="fw-bold">{{ v.poste }}</td>
+            <td class="mono">{{ v.standard }}</td>
+            <td class="mono">{{ v.reel }}</td>
+            <td>{{ v.unite }}</td>
+            <td>
+              <span class="taux-chip" [class.taux-ok]="v.reel<=v.standard" [class.taux-warn]="v.reel>v.standard">
+                {{ ecartPct(v) >= 0 ? '+' : '' }}{{ ecartPct(v) }}%
+              </span>
+            </td>
+            <td><button class="btn btn-outline btn-sm" (click)="ouvrirEdition(v)"><i class="fa-solid fa-pen"></i></button></td>
+          </tr>
+          } @empty {
+          <tr><td colspan="6" class="empty-state">Aucune variance enregistrée</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="fermerForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-scale-unbalanced"></i> {{ editingId() ? 'Modifier la variance' : 'Nouvelle variance' }}</h3>
+        <button class="modal-close" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Poste *</label>
+          <input type="text" [ngModel]="form().poste" (ngModelChange)="actualiserChamp('poste', $event)" [disabled]="!!editingId()" placeholder="Ex : Maïs (kg/lot)" />
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Standard</label>
+            <input type="number" min="0" [ngModel]="form().standard" (ngModelChange)="actualiserChamp('standard', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Réel</label>
+            <input type="number" min="0" [ngModel]="form().reel" (ngModelChange)="actualiserChamp('reel', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Unité</label>
+            <input type="text" [ngModel]="form().unite" (ngModelChange)="actualiserChamp('unite', $event)" placeholder="kg, FCFA…" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" [disabled]="saving()" (click)="fermerForm()">Annuler</button>
+        <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
+          <i class="fa-solid" [class.fa-spinner]="saving()" [class.fa-spin]="saving()" [class.fa-check]="!saving()"></i>
+          {{ editingId() ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

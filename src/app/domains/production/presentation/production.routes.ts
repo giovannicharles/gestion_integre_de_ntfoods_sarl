@@ -46,7 +46,9 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'agent-doseur/registre', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/registre/ad-registre.component').then(m => m.AdRegistreComponent) },
       { path: 'agent-doseur/documents', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/documents/ad-documents.component').then(m => m.AdDocumentsComponent) },
       { path: 'lots', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/lots/production-lots.component').then(m => m.ProductionLotsComponent) },
-      { path: 'declaration-lot', canActivate: [productionRoleGuard], loadComponent: () => import('../../stock/presentation/pages/declaration-lot/declaration-lot.component').then(m => m.DeclarationLotComponent) },
+      // Unifié le 2026-09-22 (docs/PROGRESS.md) sur 'lots' (LotController), qui a sa propre
+      // déclaration — cf. stock.routes.ts pour le détail du doublon éliminé.
+      { path: 'declaration-lot', redirectTo: 'lots', pathMatch: 'full' },
       { path: 'responsable-salle/dashboard', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/responsable-salle/dashboard/rs-dashboard.component').then(m => m.RsDashboardComponent) },
       { path: 'responsable-salle/bons-commande', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/responsable-salle/bons-commande/rs-bons-commande.component').then(m => m.RsBonsCommandeComponent) },
       { path: 'responsable-salle/plans-pph', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/responsable-salle/plans-pph/rs-plans-pph.component').then(m => m.RsPlansPphComponent) },

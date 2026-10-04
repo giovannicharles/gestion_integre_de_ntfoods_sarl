@@ -25,5 +25,11 @@ export const ADMIN_ROUTES: Routes = [
   {
     path: 'postes-production',
     loadComponent: () => import('./pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent)
+  },
+  {
+    // 2026-09-30 : jamais routé jusqu'ici (aucune entrée de menu ne pointait vers ce composant) et appelait un
+    // chemin API inexistant (/api/v1/incidents) — corrigé, voir incidents.component.ts.
+    path: 'incidents',
+    loadComponent: () => import('./pages/incidents/incidents.component').then(m => m.IncidentsComponent)
   }
 ];

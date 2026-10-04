@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ApiService } from '../../core/http/api.service';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 import { ThemeService } from '../../core/services/theme.service';
 import { Subject, takeUntil, timer } from 'rxjs';
@@ -31,7 +32,7 @@ interface NotifItem {
 @Component({
   selector: 'app-stock-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent],
   templateUrl: './stock-layout.component.html',
   styleUrls: ['./stock-layout.component.css']
 })
@@ -96,6 +97,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/stock/dashboard' },
         { label: 'Statistiques', icon: 'fa-chart-line', route: '/stock/statistiques' },
         { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/stock/alertes' },
+        { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
       ]
     },
     {
@@ -111,7 +113,9 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Réceptions Fournisseurs', icon: 'fa-truck-ramp-box', route: '/stock/reception', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
         { label: 'Validation Entrées', icon: 'fa-clipboard-check', route: '/stock/validation', roles: ['GESTIONNAIRE_STOCK', 'CONTROLEUR_GENERAL', 'ADMIN'] },
-        { label: 'Lots de Production', icon: 'fa-industry', route: '/stock/production', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
+        // Écran Stock à part entière (2026-10-01, confidentialité des modules) : jamais
+        // /production/lots — le Gestionnaire de Stock ne doit pas voir la navigation Production.
+        { label: 'Lots de Production', icon: 'fa-industry', route: '/stock/lots-production', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
         { label: 'Commandes Production', icon: 'fa-cart-plus', route: '/stock/orders', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
         { label: 'Dotations', icon: 'fa-hand-holding', route: '/stock/dotations', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
         { label: 'Mouvements Stock', icon: 'fa-right-left', route: '/stock/mouvements' },
@@ -129,8 +133,10 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Articles de Stock', icon: 'fa-boxes-stacked', route: '/stock/articles' },
         { label: 'Magasins', icon: 'fa-warehouse', route: '/stock/magasins', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
         { label: 'Magasin Tampon', icon: 'fa-warehouse', route: '/stock/tampon', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
+        { label: 'Demander un transfert', icon: 'fa-truck-ramp-box', route: '/stock/transferts', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
         { label: 'Stock Mobile', icon: 'fa-truck-field', route: '/stock/mobile-stock', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
         { label: 'Localisations', icon: 'fa-map-location-dot', route: '/stock/localisations' },
+        { label: 'Parcours d\'un lot', icon: 'fa-route', route: '/stock/lots/trace' },
         { label: 'Seuils de Stock', icon: 'fa-ruler', route: '/stock/seuils', roles: ['GESTIONNAIRE_STOCK', 'DIRECTEUR_GENERAL', 'ADMIN'] },
       ]
     },
@@ -189,7 +195,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
 
   private getBadgeForRoute(route: string): number {
     switch (route) {
-      case '/stock/production': return this.pendingLotsCount();
+      case '/stock/lots-production': return this.pendingLotsCount();
       case '/stock/dotations': return this.pendingDotationsCount();
       case '/stock/orders': return this.pendingOrdersCount();
       case '/stock/validation': return this.pendingValidationCount();
@@ -201,7 +207,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
 
   private getBadgeClassForRoute(route: string): string {
     switch (route) {
-      case '/stock/production': return 'bd-orange';
+      case '/stock/lots-production': return 'bd-orange';
       case '/stock/dotations': return 'bd-blue';
       case '/stock/orders': return 'bd-orange';
       case '/stock/validation': return 'bd-orange';
@@ -225,8 +231,11 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   private loadSidebarBadges() {
-    // Pending production lots — receptions from production with statut EN_ATTENTE_VALIDATION_1
-    this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_1', source: 'PRODUCTION' })
+    // Corrigé le 2026-09-22 (docs/PROGRESS.md) : interrogeait stock/receptions avec un
+    // paramètre 'source' que ReceiptController n'a jamais eu — le compte affiché était
+    // sans rapport avec le vrai circuit de lots (production/LotController, seul chemin
+    // depuis l'unification du doublon de déclaration/validation de lot).
+    this.api.get<any>('production/lots/a-valider')
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (res) => this.pendingLotsCount.set(res?.donnees?.length || 0), error: () => {} });
 
@@ -248,15 +257,19 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (res) => this.pendingOrdersCount.set(res?.donnees?.length || 0), error: () => {} });
 
-    // Pending validation count — receptions awaiting 1st or 2nd validation
-    this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_1' })
+    // Pending validation count — receptions awaiting 1st or 2nd validation.
+    // Base réelle du contrôleur = /api/v1/stock/receptions (pas /api/stock/receptions), et les
+    // deux endpoints dédiés ci-dessous renvoient une liste JSON brute (pas d'enveloppe ApiResponse
+    // ici) — contrairement à la plupart des autres endpoints. Les deux erreurs donnaient un 404
+    // (mauvais chemin) suivi d'un comptage toujours à 0 (mauvaise lecture de la réponse).
+    this.api.get<any[]>('v1/stock/receptions/en-attente-premiere-validation')
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (res) => {
-        const c1 = res?.donnees?.length || 0;
-        this.api.get<any>('stock/receptions', { statut: 'EN_ATTENTE_VALIDATION_2' })
+        const c1 = Array.isArray(res) ? res.length : 0;
+        this.api.get<any[]>('v1/stock/receptions/en-attente-seconde-validation')
           .pipe(takeUntil(this.destroy$))
           .subscribe({ next: (res2) => {
-            const c2 = res2?.donnees?.length || 0;
+            const c2 = Array.isArray(res2) ? res2.length : 0;
             this.pendingValidationCount.set(c1 + c2);
           }, error: () => this.pendingValidationCount.set(c1) });
       }, error: () => {} });

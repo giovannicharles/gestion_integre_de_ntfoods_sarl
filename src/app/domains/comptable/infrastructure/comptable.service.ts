@@ -1,10 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { PageResponse, PageParams } from '../../../core/models/page-response.model';
+import { environment } from '../../../../environment/environment';
+
+export interface RapportTelecharge {
+  fichier: Blob;
+  nomFichier: string;
+}
 
 export interface VersementBE {
   id: number; referenceVersement: string; matriculeCommercial: string;
@@ -87,8 +93,18 @@ export interface PrimeSemaineBE {
   semaineDebut: string; semaineFin: string;
   objectifGlobalFCFA: number; totalVentesGlobalFCFA: number;
   tauxRealisationGlobalPourcent: number;
+  objectifsParGammeFCFA?: Record<string, number>;
+  realisationsParGammeFCFA?: Record<string, number>;
   eligible: boolean; montantPrimeFCFA: number;
-  statut: string;
+  montantCashFCFA?: number; montantNatureFCFA?: number;
+  statut: string; matriculeValidateur?: string;
+}
+
+export interface CalculerPrimeRequest {
+  matriculeCommercial: string;
+  semaineDebut: string;
+  totalVentesGlobalFCFA: number;
+  realisationsParGammeFCFA: Record<string, number>;
 }
 
 /**
@@ -125,6 +141,36 @@ export interface DashboardComptabiliteBE {
 @Injectable({ providedIn: 'root' })
 export class ComptableService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
+  private readonly base = environment.apiUrl;
+
+  // ── Rapports exportables ────────────────────────────────────
+
+  private telechargerRapport(chemin: string, params: Record<string, string>): Observable<RapportTelecharge> {
+    return this.http.get(`${this.base}/${chemin}`, { params, responseType: 'blob', observe: 'response' }).pipe(
+      map(resp => {
+        const entete = resp.headers.get('Content-Disposition') ?? '';
+        const correspondance = /filename="?([^"]+)"?/.exec(entete);
+        return { fichier: resp.body as Blob, nomFichier: correspondance?.[1] ?? 'rapport' };
+      })
+    );
+  }
+
+  rapportFactures(debut: string, fin: string, format: string): Observable<RapportTelecharge> {
+    return this.telechargerRapport('comptabilite/rapports/factures', { debut, fin, format });
+  }
+
+  rapportDecaissements(debut: string, fin: string, format: string): Observable<RapportTelecharge> {
+    return this.telechargerRapport('comptabilite/rapports/decaissements', { debut, fin, format });
+  }
+
+  rapportVersements(debut: string, fin: string, format: string): Observable<RapportTelecharge> {
+    return this.telechargerRapport('comptabilite/rapports/versements', { debut, fin, format });
+  }
+
+  rapportPrimes(semaineDebut: string, format: string): Observable<RapportTelecharge> {
+    return this.telechargerRapport('comptabilite/rapports/primes', { semaineDebut, format });
+  }
 
   // ── Dashboard ───────────────────────────────────────────────
 
@@ -357,6 +403,26 @@ export class ComptableService {
   getPrimesParSemaine(semaineDebut: string): Observable<PrimeSemaineBE[]> {
     return this.api.get<ApiResponse<PrimeSemaineBE[]>>('comptabilite/primes/semaine', { semaineDebut })
       .pipe(map(r => r.donnees ?? []));
+  }
+
+  /**
+   * Calcule la prime hebdomadaire d'un commercial. Le montant est dérivé par le
+   * serveur (règle 80/75, barème en vigueur la semaine concernée) — jamais fourni
+   * ici. Refusé si une prime existe déjà pour ce commercial cette semaine-là.
+   */
+  calculerPrime(req: CalculerPrimeRequest): Observable<PrimeSemaineBE> {
+    return this.api.post<ApiResponse<PrimeSemaineBE>>('comptabilite/primes/calculer', req)
+      .pipe(map(r => r.donnees!));
+  }
+
+  validerPrime(referencePrime: string): Observable<PrimeSemaineBE> {
+    return this.api.patch<ApiResponse<PrimeSemaineBE>>(`comptabilite/primes/${referencePrime}/valider`, null)
+      .pipe(map(r => r.donnees!));
+  }
+
+  verserPrime(referencePrime: string): Observable<PrimeSemaineBE> {
+    return this.api.patch<ApiResponse<PrimeSemaineBE>>(`comptabilite/primes/${referencePrime}/verser`, null)
+      .pipe(map(r => r.donnees!));
   }
 
   /**

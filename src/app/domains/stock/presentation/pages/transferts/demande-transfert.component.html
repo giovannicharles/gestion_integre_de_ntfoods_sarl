@@ -1,0 +1,93 @@
+<div class="transfert-page">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-truck-ramp-box"></i> Demander un transfert vers le tampon</h1>
+    <p class="subtitle">Le stock ne bouge qu'après validation par un second responsable — la demande n'exécute rien seule</p>
+  </div>
+
+  @if (loading()) {
+    <div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du stock central...</div>
+  } @else if (error()) {
+    <div class="error">
+      <i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}
+      <button class="btn btn-sm btn-secondary" (click)="chargerNiveaux()">Réessayer</button>
+    </div>
+  } @else {
+    <div class="layout">
+      <div class="card">
+        <h3>Stock central disponible</h3>
+        <input type="text" class="search-input" [(ngModel)]="recherche" placeholder="Rechercher un produit...">
+        <div class="niveaux-list">
+          @for (n of filtres(); track n.codeProduit) {
+            <div class="niveau-row">
+              <div class="niveau-info">
+                <strong>{{ n.designation }}</strong>
+                <span class="niveau-detail">{{ n.codeProduit }} — {{ n.quantite }} disponible(s)</span>
+              </div>
+              <button class="btn btn-sm btn-primary" (click)="ajouterLigne(n)">
+                <i class="fa-solid fa-plus"></i> Ajouter
+              </button>
+            </div>
+          } @empty {
+            <p class="empty-inline">Aucun produit trouvé.</p>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Ma demande</h3>
+        @if (lignesChoisies().length === 0) {
+          <p class="empty-inline">Ajoutez des produits depuis la liste de gauche.</p>
+        } @else {
+          <div class="lignes-list">
+            @for (l of lignesChoisies(); track l.codeProduit) {
+              <div class="ligne-row">
+                <div class="ligne-info">
+                  <strong>{{ l.designation }}</strong>
+                  <span class="niveau-detail">disponible : {{ l.disponible }}</span>
+                </div>
+                <input type="number" class="qty-input" [(ngModel)]="l.quantite" [max]="l.disponible" min="1" placeholder="Qté">
+                <button class="btn-icon" (click)="retirerLigne(l.codeProduit)" title="Retirer">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              @if (l.quantite !== null && (l.quantite <= 0 || l.quantite > l.disponible)) {
+                <p class="qty-error">Quantité invalide (max {{ l.disponible }})</p>
+              }
+            }
+          </div>
+          <button class="btn btn-primary btn-block" (click)="soumettre()" [disabled]="!peutSoumettre() || soumission">
+            @if (soumission) {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            } @else {
+              <i class="fa-solid fa-paper-plane"></i>
+            }
+            Envoyer la demande
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="card historique-card">
+      <h3>Transferts déjà exécutés</h3>
+      @if (chargementHistorique()) {
+        <div class="loading small"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
+      } @else if (historique().length === 0) {
+        <p class="empty-inline">Aucun transfert exécuté pour le moment.</p>
+      } @else {
+        <table class="historique-table">
+          <thead><tr><th>Numéro</th><th>Statut</th><th>Gestionnaire</th><th>Exécuté le</th></tr></thead>
+          <tbody>
+            @for (t of historique(); track t.id) {
+              <tr>
+                <td>{{ t.numero }}</td>
+                <td><span class="badge-statut">{{ t.statutLibelle }}</span></td>
+                <td>{{ t.matriculeGestionnaire }}</td>
+                <td>{{ formatDate(t.dateExecution) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

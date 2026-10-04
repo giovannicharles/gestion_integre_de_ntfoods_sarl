@@ -4,8 +4,8 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-chart-column"></i></div>
       <div>
-        <h1 class="ph-title">Reporting — N vs N-1</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Comparaison performances annuelles par zone et par commercial</p>
+        <h1 class="ph-title">Reporting — Comparatif</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Comparaison à la période précédente équivalente (jour/semaine/mois/année)</p>
       </div>
     </div>
     <div class="ph-actions">
@@ -20,53 +20,55 @@
 
   @if (!loading()) {
 
-  <!-- KPI COMPARAISON -->
+  <!-- KPI COMPARAISON (données réelles : /dg/comparatif, tranche actuelle vs précédente) -->
   <div class="kpi-grid kpi-grid-3">
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
       <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">CA Cumulé N (2026)</span>
-        <span class="kpi-val">{{ fCFA(totalN()) }}</span>
-        <div class="kpi-meta">6 mois · Janv–Juin 2026</div>
+        <span class="kpi-lbl">CA du mois en cours</span>
+        <span class="kpi-val">{{ comparatifMois() ? fCFA(comparatifMois()!.actuelle.caFCFA) : '—' }}</span>
+        <div class="kpi-meta">{{ comparatifMois() ? (comparatifMois()!.actuelle.debut | date:'dd/MM':'fr') + ' → ' + (comparatifMois()!.actuelle.fin | date:'dd/MM':'fr') : 'Chargement…' }}</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+{{ croissance() }}%</div>
+      @if (comparatifMois()) {
+      <div class="kpi-trend" [class.kpt-up]="comparatifMois()!.variationPourcent>=0" [class.kpt-down]="comparatifMois()!.variationPourcent<0">
+        <i class="fa-solid" [class.fa-arrow-trend-up]="comparatifMois()!.variationPourcent>=0" [class.fa-arrow-trend-down]="comparatifMois()!.variationPourcent<0"></i>
+        {{ comparatifMois()!.variationPourcent>=0 ? '+' : '' }}{{ Math.round(comparatifMois()!.variationPourcent) }}%
+      </div>
+      }
     </div>
     <div class="kpi-card kp-y">
       <div class="kpi-decor kd-y"></div>
       <div class="kpi-ico iy"><i class="fa-solid fa-clock-rotate-left"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">CA Cumulé N-1 (2025)</span>
-        <span class="kpi-val">{{ fCFA(totalNm1()) }}</span>
-        <div class="kpi-meta">6 mois · Janv–Juin 2025</div>
+        <span class="kpi-lbl">CA du mois précédent</span>
+        <span class="kpi-val">{{ comparatifMois() ? fCFA(comparatifMois()!.precedente.caFCFA) : '—' }}</span>
+        <div class="kpi-meta">{{ comparatifMois() ? (comparatifMois()!.precedente.debut | date:'dd/MM':'fr') + ' → ' + (comparatifMois()!.precedente.fin | date:'dd/MM':'fr') : 'Chargement…' }}</div>
       </div>
     </div>
     <div class="kpi-card kp-b">
       <div class="kpi-decor kd-b"></div>
       <div class="kpi-ico ib"><i class="fa-solid fa-percent"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Croissance Globale</span>
-        <span class="kpi-val text-success">+{{ croissance() }}%</span>
-        <div class="kpi-meta">{{ fCFA(totalN() - totalNm1()) }} de plus qu'en 2025</div>
+        <span class="kpi-lbl">CA de l'année en cours vs année précédente</span>
+        <span class="kpi-val" [class.text-success]="(comparatifAnnee()?.variationPourcent ?? 0)>=0" [class.text-danger]="(comparatifAnnee()?.variationPourcent ?? 0)<0">
+          {{ comparatifAnnee() ? ((comparatifAnnee()!.variationPourcent>=0 ? '+' : '') + Math.round(comparatifAnnee()!.variationPourcent) + '%') : '—' }}
+        </span>
+        <div class="kpi-meta">{{ comparatifAnnee() ? fCFA(comparatifAnnee()!.actuelle.caFCFA) + ' vs ' + fCFA(comparatifAnnee()!.precedente.caFCFA) : 'Chargement…' }}</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i></div>
     </div>
+  </div>
+
+  <div class="info-banner">
+    <i class="fa-solid fa-circle-info"></i>
+    L'historique mensuel détaillé (CA par mois sur 12 mois glissants, comparé à l'année précédente) n'est pas encore disponible côté API — seule la comparaison à la période précédente immédiate (jour/semaine/mois/année) est fournie ci-dessus.
   </div>
 
   <!-- CHARTS -->
-  <div class="charts-row">
-    <div class="card chart-card chart-main">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution Mensuelle CA N vs N-1</span>
-      </div>
-      <div class="chart-wrap-lg"><canvas #lineCanvas></canvas></div>
-    </div>
-  </div>
-
   <div class="charts-row-2">
     <div class="card chart-card">
       <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-chart-bar"></i> CA par Zone N vs N-1</span>
+        <span class="card-title"><i class="fa-solid fa-chart-bar"></i> CA par Zone — mois en cours</span>
       </div>
       <div class="chart-wrap"><canvas #barCanvas></canvas></div>
     </div>
@@ -75,46 +77,6 @@
         <span class="card-title"><i class="fa-solid fa-chart-radar"></i> Taux d'Atteinte par Commercial</span>
       </div>
       <div class="chart-wrap"><canvas #radarCanvas></canvas></div>
-    </div>
-  </div>
-
-  <!-- TABLEAU MENSUEL DETAIL -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-table"></i> Détail Mensuel N vs N-1</span>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Mois</th><th>CA N (2026)</th><th>CA N-1 (2025)</th><th>Variation</th><th>Évolution</th></tr>
-        </thead>
-        <tbody>
-          @for (m of caMensuel(); track m.mois) {
-          <tr>
-            <td><strong>{{ m.mois }}</strong></td>
-            <td class="mono fw-bold">{{ fCFA(m.n) }}</td>
-            <td class="mono">{{ fCFA(m.nMoins1) }}</td>
-            <td class="mono" [class.text-success]="m.n>=m.nMoins1" [class.text-danger]="m.n<m.nMoins1">
-              {{ m.n >= m.nMoins1 ? '+' : '' }}{{ fCFA(m.n - m.nMoins1) }}
-            </td>
-            <td>
-              <span class="taux-chip" [class.taux-ok]="m.n>=m.nMoins1" [class.taux-warn]="m.n<m.nMoins1">
-                {{ m.n >= m.nMoins1 ? '+' : '' }}{{ Math.round(((m.n-m.nMoins1)/m.nMoins1)*100) }}%
-              </span>
-            </td>
-          </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr class="tfoot-total">
-            <td><strong>TOTAL</strong></td>
-            <td class="mono fw-bold">{{ fCFA(totalN()) }}</td>
-            <td class="mono fw-bold">{{ fCFA(totalNm1()) }}</td>
-            <td class="mono text-success fw-bold">+{{ fCFA(totalN() - totalNm1()) }}</td>
-            <td><span class="taux-chip taux-ok">+{{ croissance() }}%</span></td>
-          </tr>
-        </tfoot>
-      </table>
     </div>
   </div>
 

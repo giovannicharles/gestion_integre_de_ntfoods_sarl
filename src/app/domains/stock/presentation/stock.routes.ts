@@ -18,9 +18,16 @@ export const STOCK_ROUTES: Routes = [
       { path: 'reception/new', loadComponent: () => import('./pages/reception/reception-form.component').then(m => m.ReceptionFormComponent) },
       { path: 'reception/:id', loadComponent: () => import('./pages/reception/reception-form.component').then(m => m.ReceptionFormComponent) },
       { path: 'validation', loadComponent: () => import('./pages/validation/validation.component').then(m => m.ValidationComponent) },
-      { path: 'production', loadComponent: () => import('./pages/production/production.component').then(m => m.ProductionComponent) },
+      // Revu le 2026-10-01 (demande explicite du porteur, confidentialité des modules) : le
+      // Gestionnaire de Stock ne doit jamais être envoyé dans le module Production (sa
+      // navigation, son tableau de bord) même pour une action qu'il a le droit de faire côté
+      // API. /stock/lots-production est un écran Stock à part entière (StockLayoutComponent),
+      // qui appelle les mêmes endpoints que ProductionLotsComponent mais ne charge jamais son
+      // layout. Ces deux anciens alias redirigent ici au lieu de /production/lots.
+      { path: 'production', redirectTo: '/stock/lots-production', pathMatch: 'full' },
+      { path: 'lots-production', loadComponent: () => import('./pages/lots-production/stock-lots-production.component').then(m => m.StockLotsProductionComponent) },
       { path: 'commande-production', loadComponent: () => import('./pages/commande-production/commande-production.component').then(m => m.CommandeProductionComponent) },
-      { path: 'declaration-lot', loadComponent: () => import('./pages/declaration-lot/declaration-lot.component').then(m => m.DeclarationLotComponent) },
+      { path: 'declaration-lot', redirectTo: '/stock/lots-production', pathMatch: 'full' },
       { path: 'orders', redirectTo: 'commande-production', pathMatch: 'full' },
       { path: 'inventaire', loadComponent: () => import('./pages/inventaire/inventaire.component').then(m => m.InventaireComponent) },
       { path: 'inventaire-physique', loadComponent: () => import('./pages/inventaire-physique/inventaire-physique.component').then(m => m.InventairePhysiqueComponent) },
@@ -30,6 +37,9 @@ export const STOCK_ROUTES: Routes = [
       { path: 'mobile-stock', loadComponent: () => import('./pages/mobile-stock/mobile-stock.component').then(m => m.MobileStockComponent) },
       { path: 'alertes', loadComponent: () => import('./pages/alertes/alertes.component').then(m => m.AlertesComponent) },
       { path: 'lots', loadComponent: () => import('./pages/lots/lots.component').then(m => m.LotsComponent) },
+      // Parcours d'un lot (2026-09-30) : distinct de 'lots' ci-dessus — celui-ci lit LotStock (le grand livre de
+      // traçabilité réellement alimenté par les réceptions/entrées de production), pas StockBatch (stock/batches).
+      { path: 'lots/trace', loadComponent: () => import('./pages/lots/trace-lot.component').then(m => m.TraceLotComponent) },
       { path: 'audit', loadComponent: () => import('./pages/audit/audit.component').then(m => m.AuditComponent) },
       { path: 'rapports', loadComponent: () => import('./pages/rapports/rapport-list.component').then(m => m.RapportListComponent) },
       { path: 'dotations', loadComponent: () => import('./pages/dotations/dotation-list.component').then(m => m.DotationListComponent) },
@@ -38,6 +48,9 @@ export const STOCK_ROUTES: Routes = [
       { path: 'magasins', loadComponent: () => import('./pages/magasins/magasin-list.component').then(m => m.MagasinListComponent) },
       { path: 'articles', loadComponent: () => import('./pages/articles/article-list.component').then(m => m.ArticleListComponent) },
       { path: 'tampon', loadComponent: () => import('./pages/buffer/buffer.component').then(m => m.BufferComponent) },
+      // Demande de transfert central → tampon (2026-09-30) : le seul chemin qui déplaçait réellement le stock
+      // (transfer-to-buffer) n'était appelé par aucun écran ; celui-ci passe par le moteur de demandes (invariant 1).
+      { path: 'transferts', loadComponent: () => import('./pages/transferts/demande-transfert.component').then(m => m.DemandeTransfertComponent) },
       { path: 'seuils', loadComponent: () => import('./pages/seuils/seuil-list.component').then(m => m.SeuilListComponent) },
       { path: 'exports', redirectTo: 'rapports', pathMatch: 'full' },
       { path: 'classification', loadComponent: () => import('./pages/classification/classification-list.component').then(m => m.ClassificationListComponent) },

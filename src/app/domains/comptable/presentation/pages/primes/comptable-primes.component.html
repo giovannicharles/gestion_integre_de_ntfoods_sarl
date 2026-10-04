@@ -1,0 +1,123 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+      <div>
+        <div class="ph-title">Primes Commerciales — Règle d'or 80/75</div>
+        <div class="ph-sub">Semaine du {{ semaineDebut() | date:'dd/MM/yyyy':'':"fr" }}</div>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <input type="date" class="input-date" [ngModel]="semaineDebut()" (ngModelChange)="changerSemaine($event)" />
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des primes…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <div class="kpi-grid-3">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-users"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Commerciaux éligibles</span><span class="kpi-val">{{ nbEligibles() }}</span></div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Total à verser (validées)</span><span class="kpi-val">{{ fCFA(totalAVerser()) }}</span></div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-list-check"></i></div>
+      <div class="kpi-body"><span class="kpi-lbl">Commerciaux suivis</span><span class="kpi-val">{{ lignes().length }}</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-table"></i> Primes par commercial</span></div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Commercial</th><th>Objectif</th><th>CA réalisé</th><th>Taux</th><th>Statut</th><th>Montant prime</th><th></th></tr></thead>
+        <tbody>
+          @for (l of lignes(); track l.matriculeCommercial) {
+          <tr>
+            <td class="fw-bold">{{ l.matriculeCommercial }}</td>
+            <td class="mono">{{ l.objectif ? fCFA(l.objectif.objectifGlobalFCFA) : '—' }}</td>
+            <td class="mono">{{ l.prime ? fCFA(l.prime.totalVentesGlobalFCFA) : '—' }}</td>
+            <td>{{ l.prime ? l.prime.tauxRealisationGlobalPourcent + '%' : '—' }}</td>
+            <td>
+              @if (l.prime) {
+              <span class="badge" [class.bg-orange]="l.prime.statut==='CALCULEE'" [class.bg-success]="l.prime.statut==='VALIDEE' || l.prime.statut==='VERSEE'">
+                {{ statutLabel(l.prime.statut) }}
+              </span>
+              @if (!l.prime.eligible) { <span class="badge bg-red badge-sm" title="Règle 80/75 non atteinte">Non éligible</span> }
+              } @else {
+              <span class="badge bg-neutral">Non calculée</span>
+              }
+            </td>
+            <td class="mono fw-bold">{{ l.prime ? fCFA(l.prime.montantPrimeFCFA) : '—' }}</td>
+            <td>
+              @if (!l.prime) {
+              <button class="btn btn-primary btn-sm" (click)="ouvrirCalcul(l)"><i class="fa-solid fa-calculator"></i> Calculer</button>
+              } @else if (l.prime.statut === 'CALCULEE') {
+              <button class="btn btn-success btn-sm" [disabled]="actionEnCours(l.prime.referencePrime)" (click)="valider(l)">
+                <i class="fa-solid" [class.fa-check]="!actionEnCours(l.prime.referencePrime)" [class.fa-spinner]="actionEnCours(l.prime.referencePrime)" [class.fa-spin]="actionEnCours(l.prime.referencePrime)"></i> Valider
+              </button>
+              } @else if (l.prime.statut === 'VALIDEE' && peutVerser()) {
+              <button class="btn btn-primary btn-sm" [disabled]="actionEnCours(l.prime.referencePrime) || l.prime.montantPrimeFCFA <= 0" [title]="l.prime.montantPrimeFCFA <= 0 ? 'Aucun versement possible : règle 80/75 non atteinte' : ''" (click)="verser(l)">
+                <i class="fa-solid" [class.fa-money-bill]="!actionEnCours(l.prime.referencePrime)" [class.fa-spinner]="actionEnCours(l.prime.referencePrime)" [class.fa-spin]="actionEnCours(l.prime.referencePrime)"></i> Verser
+              </button>
+              } @else if (l.prime.statut === 'VALIDEE') {
+              <span class="text-muted" title="Le versement est réservé au Comptable">En attente de versement</span>
+              } @else {
+              <span class="text-muted">—</span>
+              }
+            </td>
+          </tr>
+          } @empty {
+          <tr><td colspan="7" class="empty-state">Aucun objectif ni prime pour cette semaine</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  @if (showCalculForm()) {
+  <div class="modal-overlay" (click)="fermerCalcul()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-calculator"></i> Calculer la prime — {{ calculPour()?.matriculeCommercial }}</h3>
+        <button class="modal-close" (click)="fermerCalcul()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="info-text">Objectif de la semaine : <strong>{{ fCFA(calculPour()?.objectifGlobalFCFA ?? 0) }}</strong>. Saisissez le chiffre d'affaires réellement réalisé (issu du rapprochement des ventes de la semaine).</p>
+        <div class="form-group">
+          <label>CA global réalisé (FCFA) *</label>
+          <input type="number" min="0" [ngModel]="totalVentesGlobal()" (ngModelChange)="totalVentesGlobal.set($event)" />
+        </div>
+        @if (gammesDuCalcul().length > 0) {
+        <label class="form-sublabel">Réalisation par gamme</label>
+        @for (g of gammesDuCalcul(); track g) {
+        <div class="form-group">
+          <label>{{ g }} <span class="text-muted">(objectif : {{ fCFA(calculPour()!.objectifsParGammeFCFA[g]) }})</span></label>
+          <input type="number" min="0" [ngModel]="realisationsParGamme()[g]" (ngModelChange)="actualiserRealisationGamme(g, $event)" />
+        </div>
+        }
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" [disabled]="saving()" (click)="fermerCalcul()">Annuler</button>
+        <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="confirmerCalcul()">
+          <i class="fa-solid" [class.fa-spinner]="saving()" [class.fa-spin]="saving()" [class.fa-check]="!saving()"></i>
+          Calculer la prime
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

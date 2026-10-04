@@ -1,0 +1,64 @@
+.page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.subtitle {
+  color: #666;
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+.alert {
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background: #e6f4ea;
+  color: #1e6f3e;
+}
+
+.alert-error {
+  background: #fdecea;
+  color: #c0392b;
+}
+
+.table-corbeille {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-corbeille th,
+.table-corbeille td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.table-corbeille input {
+  width: 100%;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-small {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

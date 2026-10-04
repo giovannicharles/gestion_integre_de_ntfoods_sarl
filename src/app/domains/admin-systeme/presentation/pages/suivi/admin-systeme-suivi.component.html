@@ -1,0 +1,45 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Suivi de la plateforme</h1>
+    <p class="subtitle">Journal d'audit transversal (tous modules) — échecs récents et comportements à risque.</p>
+    <a class="btn-link" routerLink="/admin/incidents">Gestion des incidents →</a>
+  </header>
+
+  @if (erreur()) {
+    <div class="alert alert-error">{{ erreur() }}</div>
+  }
+
+  <section>
+    <h2>Comportements suspects (24 h, seuil 5)</h2>
+    <table class="table-suivi">
+      <thead><tr><th>Matricule</th><th>Ressource</th><th>Occurrences</th></tr></thead>
+      <tbody>
+        @for (a of activitesSuspectes(); track a.matricule + a.ressource) {
+          <tr><td>{{ a.matricule }}</td><td>{{ a.ressource }}</td><td>{{ a.occurrences }}</td></tr>
+        } @empty {
+          <tr><td colspan="3">Aucun comportement suspect détecté.</td></tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Échecs récents</h2>
+    <table class="table-suivi">
+      <thead><tr><th>Date</th><th>Matricule</th><th>Module</th><th>Action</th><th>Erreur</th></tr></thead>
+      <tbody>
+        @for (e of echecs(); track e.id) {
+          <tr>
+            <td>{{ e.horodatage | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ e.matricule }}</td>
+            <td>{{ e.module }}</td>
+            <td>{{ e.typeAction }}</td>
+            <td>{{ e.messageErreur }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5">Aucun échec récent.</td></tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</div>

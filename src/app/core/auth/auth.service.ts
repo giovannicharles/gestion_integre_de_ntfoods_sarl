@@ -51,9 +51,11 @@ export class AuthService {
 
   /** POST /api/auth/login → stocke token + utilisateur, renvoie la réponse. */
   login(credentials: LoginRequest): Observable<LoginResponse> {
+    // Le backend (LoginRequest.java) n'accepte que "motDePasse" — "password" était silencieusement
+    // ignoré par Jackson, laissant motDePasse null et échouant la validation @NotBlank (400).
     const payload = {
       matricule: credentials.matricule,
-      password: credentials.password || credentials.motDePasse
+      motDePasse: credentials.motDePasse || credentials.password
     };
     return this.api.post<ApiResponse<LoginResponse>>('auth/login', payload).pipe(
       map((res) => {

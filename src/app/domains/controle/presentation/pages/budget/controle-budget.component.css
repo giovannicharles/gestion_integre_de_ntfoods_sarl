@@ -1,0 +1,3 @@
+.loading-state, .error-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; color: var(--n400); gap: 12px; }
+.error-state { color: var(--r); }
+.error-state i { font-size: 2rem; }

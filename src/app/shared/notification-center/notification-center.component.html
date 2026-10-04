@@ -1,0 +1,46 @@
+<div class="notif-center" (click)="$event.stopPropagation()">
+  <button class="bell-btn" (click)="toggle($event)" [class.has-unread]="nonLues() > 0" title="Notifications">
+    <i class="fa-solid fa-bell"></i>
+    @if (nonLues() > 0) {
+      <span class="bell-badge">{{ nonLues() > 99 ? '99+' : nonLues() }}</span>
+    }
+  </button>
+
+  @if (ouvert()) {
+    <div class="notif-panel">
+      <div class="notif-panel-header">
+        <h4>Notifications</h4>
+        @if (nonLues() > 0) {
+          <button class="link-btn" (click)="toutMarquerLu()">Tout marquer lu</button>
+        }
+      </div>
+
+      @if (chargement()) {
+        <div class="notif-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
+      } @else if (erreur()) {
+        <div class="notif-error">
+          <i class="fa-solid fa-exclamation-triangle"></i> {{ erreur() }}
+        </div>
+      } @else if (notifications().length === 0) {
+        <div class="notif-empty">
+          <i class="fa-regular fa-bell-slash"></i>
+          <p>Aucune notification</p>
+        </div>
+      } @else {
+        <div class="notif-list">
+          @for (n of notifications(); track n.id) {
+            <div class="notif-item" [class.non-lu]="!n.lu" (click)="marquerLu(n, $event)">
+              <span class="prio-dot" [class]="classePriorite(n.priorite)"></span>
+              <div class="notif-content">
+                <p class="notif-titre">{{ n.titre }}</p>
+                <p class="notif-message">{{ n.message }}</p>
+                <p class="notif-date">{{ formatDate(n.dateCreation) }}</p>
+              </div>
+              @if (!n.lu) { <span class="unread-dot"></span> }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

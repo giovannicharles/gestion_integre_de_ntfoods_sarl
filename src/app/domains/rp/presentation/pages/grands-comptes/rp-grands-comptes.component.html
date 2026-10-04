@@ -7,7 +7,20 @@
         <div class="ph-sub">Hôtels · GMS · Boulangeries · {{ fCFA(caTotal()) }} CA mensuel cumulé</div>
       </div>
     </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary btn-sm" (click)="ouvrirCreation()"><i class="fa-solid fa-plus"></i> Nouveau grand compte</button>
+    </div>
   </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des grands comptes…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
 
   @if (relancesDues().length > 0) {
   <div class="alert-banner-red">
@@ -24,20 +37,87 @@
           <div class="fw-bold">{{ c.nom }}</div>
           <div style="font-size:11px;color:var(--n400)">{{ c.type }} · {{ c.telephone }}</div>
         </div>
-        @if (!c.actif) { <span class="badge bg-red badge-sm">Inactif</span> }
-        @else { <span class="badge bg-success badge-sm">Actif</span> }
+        @if (c.statut === 'ACTIF') { <span class="badge bg-success badge-sm">Actif</span> }
+        @else { <span class="badge bg-red badge-sm">{{ c.statut }}</span> }
       </div>
       <div class="fiche-kpis" style="grid-template-columns:1fr 1fr">
-        <div class="fiche-kpi"><span class="fk-lbl">Localité</span><span class="fk-val" style="font-size:13px">{{ c.localite }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">Commercial</span><span class="fk-val" style="font-size:13px">{{ c.matriculeCommercialReferent }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">CA mensuel</span><span class="fk-val" style="font-size:13px">{{ fCFA(c.caMensuel) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Prochaine relance</span><span class="fk-val" style="font-size:13px">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '—' }}</span></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn btn-outline btn-sm" style="flex:1"><i class="fa-solid fa-phone"></i> Appeler</button>
-        <button class="btn btn-primary btn-sm" style="flex:1"><i class="fa-solid fa-paper-plane"></i> Relancer</button>
+        <button class="btn btn-outline btn-sm" style="flex:1" (click)="ouvrirEdition(c)"><i class="fa-solid fa-pen"></i> Modifier</button>
+        <button class="btn btn-danger btn-sm" (click)="archiver(c)" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
       </div>
     </div>
     } @empty {
-    <div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-handshake"></i><p>Aucun grand compte disponible</p></div>
+    <div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-handshake"></i><p>Aucun grand compte enregistré</p></div>
     }
   </div>
+  }
+
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="fermerForm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-handshake"></i> {{ editingId() ? 'Modifier le grand compte' : 'Nouveau grand compte' }}</h3>
+        <button class="modal-close" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nom *</label>
+          <input type="text" [ngModel]="form().nom" (ngModelChange)="actualiserChamp('nom', $event)" placeholder="Ex : Hôtel Mont Fébé" />
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Type</label>
+            <select [ngModel]="form().type" (ngModelChange)="actualiserChamp('type', $event)">
+              <option value="HOTEL">Hôtel</option>
+              <option value="GMS">GMS</option>
+              <option value="BOULANGERIE">Boulangerie</option>
+              <option value="AUTRE">Autre</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select [ngModel]="form().statut" (ngModelChange)="actualiserChamp('statut', $event)">
+              <option value="ACTIF">Actif</option>
+              <option value="INACTIF">Inactif</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Contact</label>
+            <input type="text" [ngModel]="form().contact" (ngModelChange)="actualiserChamp('contact', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="text" [ngModel]="form().telephone" (ngModelChange)="actualiserChamp('telephone', $event)" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>CA mensuel (FCFA)</label>
+          <input type="number" min="0" [ngModel]="form().caMensuel" (ngModelChange)="actualiserChamp('caMensuel', $event)" />
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group">
+            <label>Dernière commande</label>
+            <input type="date" [ngModel]="form().derniereCommande" (ngModelChange)="actualiserChamp('derniereCommande', $event)" />
+          </div>
+          <div class="form-group">
+            <label>Prochaine relance</label>
+            <input type="date" [ngModel]="form().prochaineRelance" (ngModelChange)="actualiserChamp('prochaineRelance', $event)" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline btn-sm" [disabled]="saving()" (click)="fermerForm()">Annuler</button>
+        <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
+          <i class="fa-solid" [class.fa-spinner]="saving()" [class.fa-spin]="saving()" [class.fa-check]="!saving()"></i>
+          {{ editingId() ? 'Enregistrer' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

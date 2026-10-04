@@ -6,6 +6,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
@@ -13,7 +14,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-dg-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
   templateUrl: './dg-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -30,6 +31,8 @@ export class DgLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-line', route: '/dg/dashboard' },
+    { label: 'Vue Consolidée', icon: 'fa-gauge-high', route: '/dg/supervision' },
+    { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
   ];
 
   navGroups: NavGroup[] = [
@@ -74,6 +77,8 @@ export class DgLayoutComponent implements OnInit {
   ];
 
   adminItems: NavItem[] = [
+    { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
+    { label: 'Pouvoirs & délégations', icon: 'fa-user-shield', route: '/validations/pouvoirs' },
     { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/dg/utilisateurs' },
     { label: 'Journal d\'Audit', icon: 'fa-clipboard-list', route: '/dg/audit' },
     { label: 'Paramètres', icon: 'fa-sliders', route: '/dg/parametres' },

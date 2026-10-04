@@ -1,0 +1,73 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Sauvegardes</h1>
+    <p class="subtitle">Sauvegarde automatique et manuelle de la base de données.</p>
+    <div class="actions">
+      <button class="btn-primary" [disabled]="declenchementEnCours()" (click)="declencher()">
+        {{ declenchementEnCours() ? 'Sauvegarde en cours...' : 'Déclencher une sauvegarde maintenant' }}
+      </button>
+      <button class="btn-secondary" (click)="afficherFormPlanification.set(!afficherFormPlanification())">
+        {{ afficherFormPlanification() ? 'Annuler' : 'Modifier la planification' }}
+      </button>
+    </div>
+  </header>
+
+  @if (succes()) {
+    <div class="alert alert-success">{{ succes() }}</div>
+  }
+  @if (erreur()) {
+    <div class="alert alert-error">{{ erreur() }}</div>
+  }
+
+  @if (afficherFormPlanification()) {
+    <form class="form-planification" (ngSubmit)="demanderModificationPlanification()">
+      <p class="hint">Cette modification doit être approuvée par un DG ou un second Admin avant de prendre effet.</p>
+      <div class="form-row">
+        <label class="checkbox">
+          <input type="checkbox" name="actif" [(ngModel)]="formPlanification.actif" />
+          Sauvegarde automatique active
+        </label>
+        <label>Fréquence (heures)
+          <input type="number" name="frequenceHeures" min="1" [(ngModel)]="formPlanification.frequenceHeures" />
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="motif">Motif
+          <input name="motif" [(ngModel)]="formPlanification.motif" required placeholder="Pourquoi ce changement ?" />
+        </label>
+      </div>
+      <button type="submit" class="btn-primary">Soumettre la demande</button>
+    </form>
+  }
+
+  @if (loading()) {
+    <p>Chargement...</p>
+  } @else {
+    <table class="table-sauvegardes">
+      <thead>
+        <tr>
+          <th>Début</th>
+          <th>Statut</th>
+          <th>Type</th>
+          <th>Déclenché par</th>
+          <th>Taille</th>
+          <th>Erreur</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of sauvegardes(); track s.id) {
+          <tr [class.row-echec]="s.statut === 'ECHEC'">
+            <td>{{ s.dateDebut | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ s.statut }}</td>
+            <td>{{ s.typeDeclenchement }}</td>
+            <td>{{ s.matriculeDeclencheur ?? '—' }}</td>
+            <td>{{ s.tailleOctets ? (s.tailleOctets / 1024 / 1024).toFixed(1) + ' Mo' : '—' }}</td>
+            <td>{{ s.messageErreur ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6">Aucune sauvegarde enregistrée.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

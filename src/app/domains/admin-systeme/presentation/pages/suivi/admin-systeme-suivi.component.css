@@ -1,0 +1,59 @@
+.page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.subtitle {
+  flex: 1 1 100%;
+  color: #666;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.btn-link {
+  color: #1e6f3e;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.alert-error {
+  background: #fdecea;
+  color: #c0392b;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+section h2 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.table-suivi {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-suivi th,
+.table-suivi td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}

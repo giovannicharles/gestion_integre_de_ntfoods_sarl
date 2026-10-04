@@ -18,7 +18,6 @@ export class ComptableReportingComponent implements OnInit {
 
   versements = signal<VersementBE[]>([]);
   factures = signal<FactureBE[]>([]);
-  caMensuel = signal<{ mois: string; n: number; nMoins1: number }[]>([]);
 
   totalVersements = computed(() =>
     this.versements().reduce((s, v) => s + (v.cashVerse ?? 0), 0)
@@ -29,16 +28,15 @@ export class ComptableReportingComponent implements OnInit {
       .reduce((s, f) => s + f.lignes.reduce((ls, l) => ls + l.montantTTC, 0), 0)
   );
 
-  totalCreances = computed(() => 0);
-
-  totalCaN = computed(() => 0);
-  totalCaNMoins1 = computed(() => 0);
-
-  evolutionPct = computed(() => {
-    const prev = this.totalCaNMoins1();
-    if (prev === 0) return 0;
-    return Math.round(((this.totalCaN() - prev) / prev) * 100);
-  });
+  // Créances = factures (hors avoirs) dont le statut n'est pas PAYEE — dérivé
+  // des factures déjà chargées, pas une valeur inventée. Le module comptable
+  // ne calcule pas encore un "solde restant" par facture (paiement partiel) :
+  // ce total suppose donc une facture soit intégralement payée, soit pas du
+  // tout — à affiner si un paiement partiel est introduit un jour.
+  totalCreances = computed(() =>
+    this.factures().filter(f => f.typeFacture === 'FACTURE' && f.statut !== 'PAYEE')
+      .reduce((s, f) => s + f.lignes.reduce((ls, l) => ls + l.montantTTC, 0), 0)
+  );
 
   ngOnInit(): void {
     const today = new Date();

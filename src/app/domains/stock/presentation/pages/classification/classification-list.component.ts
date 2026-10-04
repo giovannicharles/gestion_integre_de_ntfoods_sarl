@@ -81,10 +81,16 @@ export class ClassificationListComponent implements OnInit {
 
   onRangeChange(): void {
     if (this.selectedRange) {
+      // Pas de route backend combinant marque+gamme (seul /range/{range} existe) :
+      // on filtre côté client sur la marque, comme filterByBrand() le fait déjà
+      // pour la gamme (route cassée avant correction, 2026-09-22).
       this.loading.set(true);
-      this.api.get<Classification[]>(`stock/product-classifications/brand/${this.selectedBrand}/range/${this.selectedRange}`).subscribe({
+      this.api.get<Classification[]>(`stock/product-classifications/range/${this.selectedRange}`).subscribe({
         next: (data) => {
-          this.classifications.set(data || []);
+          const filtered = this.selectedBrand
+            ? (data || []).filter(c => c.brand === this.selectedBrand)
+            : (data || []);
+          this.classifications.set(filtered);
           this.loading.set(false);
         },
         error: () => {

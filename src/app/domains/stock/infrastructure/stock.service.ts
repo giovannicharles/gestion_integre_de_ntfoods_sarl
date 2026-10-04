@@ -47,6 +47,28 @@ export interface NiveauStockBE {
   dateModification: string | null;
 }
 
+/** Miroir de DemandeTransfertResponse (backend) — la demande créée, pas le transfert exécuté. */
+export interface DemandeTransfertBE {
+  demandeId: number;
+  actionType: string;
+  statut: string;
+  seuilRequis: number;
+}
+
+/** Miroir de TransfertResponse (backend) — un transfert déjà exécuté. */
+export interface TransfertBE {
+  id: number;
+  numero: string;
+  codeEntrepotSource: string;
+  codeEntrepotCible: string;
+  statut: string;
+  statutLibelle: string;
+  declencheParSeuil: boolean;
+  matriculeGestionnaire: string;
+  dateExecution: string | null;
+  lignes: { id: string; codeProduit: string; sku: string | null; quantite: number }[];
+}
+
 export interface MouvementBE {
   id: number;
   date: string;
@@ -336,9 +358,35 @@ export class StockService {
       .pipe(map(r => r.donnees!));
   }
 
+  /**
+   * @deprecated Écrit directement le stock sans passer par le moteur de demandes (invariant 1) — plus appelé par
+   * aucun écran (2026-09-30). Utiliser {@link demanderTransfert}, qui crée une demande approuvée par un second
+   * acteur avant que le stock ne bouge (`TransfertController`/`StockNiveauTransfertHandler`).
+   */
   transferToBuffer(id: number, quantity: number): Observable<NiveauStockBE> {
     return this.api.post<ApiResponse<NiveauStockBE>>(`stock/levels/${id}/transfer-to-buffer?quantity=${quantity}`, {})
       .pipe(map(r => r.donnees!));
+  }
+
+  /**
+   * Demande un transfert central → tampon (2026-09-30) — le stock ne bouge pas à cet appel (202) : une demande est
+   * créée, exécutée automatiquement quand un second acteur l'approuve (`TransfertController`). Sans
+   * codeEntrepotSource/Cible, le CENTRAL et le TAMPON uniques sont résolus côté serveur.
+   */
+  demanderTransfert(lignes: { codeProduit: string; sku?: string | null; quantite: number }[]): Observable<DemandeTransfertBE> {
+    return this.api.post<ApiResponse<DemandeTransfertBE>>('stock/transferts', {
+      codeEntrepotSource: null,
+      codeEntrepotCible: null,
+      lignes: lignes.map((l) => ({ codeProduit: l.codeProduit, sku: l.sku ?? null, quantite: l.quantite })),
+    }).pipe(map((r) => r.donnees!));
+  }
+
+  /** Transferts déjà exécutés (historique) — les demandes en attente se suivent sur /validations. */
+  listerTransfertsExecutes(statut?: string): Observable<TransfertBE[]> {
+    const p: Record<string, string> = {};
+    if (statut) p['statut'] = statut;
+    return this.api.get<ApiResponse<TransfertBE[]>>('stock/transferts', p)
+      .pipe(map((r) => r.donnees ?? []));
   }
 
   marquerAlerteLue(reference: string): Observable<AlerteBE> {
@@ -411,18 +459,6 @@ export class StockService {
     return this.api.patch<ApiResponse<SessionCommercialBE>>(
       `stock/sessions/${encodeURIComponent(numero)}/valider-comptable?matricule=${encodeURIComponent(matricule)}`, {}
     ).pipe(map(r => r.donnees!));
-  }
-
-  // ── Rapports (téléchargement fichiers) ──────────────────────
-
-  getRapportEtatStock(params: {
-    entrepot?: string; produit?: string; type?: string; format?: string;
-  } = {}): Observable<Blob> {
-    const p: Record<string, string> = { format: params.format ?? 'xlsx' };
-    if (params.entrepot) p['entrepot'] = params.entrepot;
-    if (params.produit) p['produit'] = params.produit;
-    if (params.type) p['type'] = params.type;
-    return this.api.get('stock/rapports/etat-stock', p) as unknown as Observable<Blob>;
   }
 
   // ── Bons de commande (pour le module production) ────────────

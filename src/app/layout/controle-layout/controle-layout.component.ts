@@ -55,11 +55,13 @@ export class ControleLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },
+    { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
     { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements', badge: 2, badgeClass: 'bd-red' },
     { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
     { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
     { label: 'Valorisation Stock', icon: 'fa-boxes-stacked', route: '/controle/valorisation' },
     { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget', badge: 2, badgeClass: 'bd-orange' },
+    { label: 'Variances Coûts', icon: 'fa-scale-unbalanced', route: '/controle/variances' },
     { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
   ];
 
