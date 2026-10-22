@@ -2,11 +2,12 @@ import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductionService, SessionBroyageBE, SessionDosageBE, AffectationBE } from '../../../infrastructure/production.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-production-saisie',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink],
+  imports: [CommonModule, DatePipe, RouterLink, CanDirective],
   templateUrl: './production-saisie.component.html',
   styleUrls: ['./production-saisie.component.css']
 })
@@ -42,18 +43,18 @@ export class ProductionSaisieComponent implements OnInit {
   ngOnInit(): void {
     this.prodSvc.getSessionsBroyage().subscribe({
       next: b => this.broyage.set(b),
-      error: () => {},
+      error: () => this.message.set('Impossible de charger les sessions de broyage'),
     });
     this.prodSvc.getSessionsDosageParDate(new Date().toISOString().split('T')[0]).subscribe({
       next: d => this.dosage.set(d),
-      error: () => {},
+      error: () => this.message.set('Impossible de charger les sessions de dosage'),
     });
     this.prodSvc.getAffectations({
       debut: new Date().toISOString().split('T')[0],
       fin: new Date().toISOString().split('T')[0]
     }).subscribe({
       next: a => this.affectations.set(a),
-      error: () => {},
+      error: () => this.message.set('Impossible de charger les affectations du jour'),
     });
   }
 

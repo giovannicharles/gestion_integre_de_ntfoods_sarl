@@ -8,6 +8,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface LigneCommercial {
   matriculeCommercial: string;
@@ -29,7 +30,7 @@ interface LigneCommercial {
 @Component({
   selector: 'app-comptable-primes',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './comptable-primes.component.html',
   styleUrls: ['./comptable-primes.component.css'],
 })
@@ -66,9 +67,13 @@ export class ComptablePrimesComponent implements OnInit {
 
   private lundiCourant(): string {
     const today = new Date();
+    // (getDay()+6)%7 : lundi=0 ... dimanche=6 — gère correctement le dimanche
+    // (getDay()=0 → recule de 6 jours, pas d'avance d'un jour comme `getDay()-1`).
     const lundi = new Date(today);
-    lundi.setDate(today.getDate() - today.getDay() + 1);
-    return lundi.toISOString().split('T')[0];
+    lundi.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et
+    // décale la date avant 01:00 (WAT).
+    return `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
   }
 
   changerSemaine(valeur: string): void {

@@ -3,6 +3,9 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE } from '../../../../../domains/comptable/infrastructure/comptable.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface VersementUI {
   id: string; commercialId: string; date: Date;
@@ -15,13 +18,14 @@ interface VersementUI {
 @Component({
   selector: 'app-secretaire-versements',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './secretaire-versements.component.html',
   styleUrls: ['./secretaire-versements.component.css']
 })
 export class SecretaireVersementsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(ComptableService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
@@ -57,13 +61,11 @@ export class SecretaireVersementsComponent implements OnInit {
       typeVersement: type,
     }).subscribe({
       next: v => {
-        this.versements.update(list =>
-          list.map(ver => ver.id === id
-            ? { ...ver, cashVerse: verse, typeVersement: type, statut: 'EN_ATTENTE_VALIDATION' }
-            : ver
-          )
-        );
+        // Remplace par la vraie réponse serveur (statut réel), pas une valeur optimiste inventée —
+        // corrigé le 2026-10-15 (P5) : 'EN_ATTENTE_VALIDATION' n'existe pas dans StatutVersement.
+        this.versements.update(list => list.map(ver => ver.id === id ? this.mapV(v) : ver));
       },
+      error: (err) => this.toast.error(extractApiError(err), 'Versement non enregistré'),
     });
   }
 
@@ -71,12 +73,13 @@ export class SecretaireVersementsComponent implements OnInit {
 
   ecartCalc(attendu: number, verse: number): number { return verse - attendu; }
 
+  /** Valeurs réelles de StatutVersement (backend) : EN_ATTENTE, VALIDE, ALERTE_ROUGE, JUSTIFIE. */
   statutClass(s: string): string {
     const map: Record<string, string> = {
       VALIDE: 'badge bg-success',
       EN_ATTENTE: 'badge bg-neutral',
-      EN_ATTENTE_VALIDATION: 'badge bg-orange',
-      ECART_JUSTIFIE: 'badge bg-orange',
+      ALERTE_ROUGE: 'badge bg-red',
+      JUSTIFIE: 'badge bg-orange',
     };
     return map[s] ?? 'badge bg-neutral';
   }

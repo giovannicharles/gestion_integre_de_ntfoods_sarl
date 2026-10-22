@@ -1,0 +1,50 @@
+<div class="combobox">
+  <div class="cb-input-wrap">
+    <i class="fa-solid fa-barcode cb-icon"></i>
+    <input
+      type="text"
+      class="form-control cb-input"
+      [placeholder]="placeholder"
+      [ngModel]="searchText()"
+      (ngModelChange)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (keydown)="onKeydown($event)"
+      [class.is-invalid]="notFound()"
+    >
+  </div>
+
+  @if (showDropdown()) {
+  <div class="combobox-dropdown">
+    @if (getSearchResults().length > 0) {
+      @for (p of getSearchResults(); track p.id) {
+      <div class="combobox-item" (mousedown)="$event.preventDefault(); select(p)">
+        <div class="cb-item-left">
+          <span class="cb-sku">{{ p.sku }}</span>
+          <span class="cb-name">{{ p.designation || p.sku }}</span>
+        </div>
+        <div class="cb-item-right">
+          @if (p.packagingType) { <span class="cb-pack">{{ p.packagingType }}</span> }
+        </div>
+      </div>
+      }
+    } @else if (searchText() && searchText().length >= 2) {
+    <div class="combobox-empty">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      Aucun produit pour « {{ searchText() }} »
+    </div>
+    } @else {
+    <div class="combobox-empty">
+      <i class="fa-solid fa-keyboard"></i>
+      Tapez le code ou le nom du produit
+    </div>
+    }
+  </div>
+  }
+
+  @if (notFound()) {
+  <div class="cb-notfound">
+    <i class="fa-solid fa-circle-exclamation"></i> Produit introuvable. Vérifiez le code saisi.
+  </div>
+  }
+</div>

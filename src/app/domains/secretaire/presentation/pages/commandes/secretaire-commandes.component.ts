@@ -2,6 +2,9 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, PreCommandeBE } from '../../../../../domains/commercial/infrastructure/commercial.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface CommandeUI {
   id: string; commercialId: string; dateCommande: Date; statut: string;
@@ -12,13 +15,14 @@ interface CommandeUI {
 @Component({
   selector: 'app-secretaire-commandes',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, CanDirective],
   templateUrl: './secretaire-commandes.component.html',
   styleUrls: ['./secretaire-commandes.component.css']
 })
 export class SecretaireCommandesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(CommercialService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(false);
@@ -45,6 +49,7 @@ export class SecretaireCommandesComponent implements OnInit {
           list.map(c => c.id === id ? { ...c, statut: 'VALIDEE_SECRETAIRE', signatureSecretaire: true } : c)
         );
       },
+      error: (err) => this.toast.error(extractApiError(err), 'Validation impossible'),
     });
   }
 

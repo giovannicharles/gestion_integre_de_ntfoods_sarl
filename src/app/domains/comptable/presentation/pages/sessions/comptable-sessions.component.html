@@ -1,6 +1,6 @@
 <div class="page">
 
-  <header class="ph">
+  <header class="ph ph-wm-comptable">
     <div>
       <h1 class="ph-title">Validation des fins de tournée</h1>
       <p class="ph-sub">
@@ -40,7 +40,7 @@
     <p class="chargement">Chargement…</p>
   }
 
-  <section class="card">
+  <section class="card card-wm card-wm-comptable">
     <div class="card-hd"><h2>En attente de validation</h2></div>
     <div class="tbl-wrap">
       <table class="data-table">
@@ -70,6 +70,7 @@
               <td>
                 <button
                   class="btn btn-valider"
+                  *appCan="['COMPTABLE', 'ADMIN']"
                   [disabled]="traitementEnCours() === s.numeroSession"
                   (click)="valider(s)">
                   {{ traitementEnCours() === s.numeroSession ? 'Validation…' : 'Valider' }}

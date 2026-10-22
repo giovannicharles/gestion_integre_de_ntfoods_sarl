@@ -7,6 +7,7 @@ import {
   CommercialisationService, PromotionBE, TypePromotion, SegmentClient, StatutPromotion,
 } from '../../../infrastructure/commercialisation.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
  * Administration des promotions commerciales.
@@ -23,7 +24,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
 @Component({
   selector: 'app-promotions',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, CanDirective],
   templateUrl: './promotions.component.html',
   styleUrls: ['./promotions.component.css'],
 })

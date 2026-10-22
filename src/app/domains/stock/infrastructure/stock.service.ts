@@ -185,6 +185,8 @@ export interface BonCommandeBE {
   dateCreation: string;
   dateCommande?: string;
   dateLivraisonPrevue?: string;
+  dateDebutProduction?: string;
+  dateFinProduction?: string;
   dateValidation?: string;
   matriculeCreateur?: string;
   montantTotalHT?: number;
@@ -485,6 +487,8 @@ export class StockService {
     codeFournisseur: string | null;
     dateCommande: string;
     dateLivraisonPrevue?: string | null;
+    dateDebutProduction?: string | null;
+    dateFinProduction?: string | null;
     lignes: {
       codeProduit: string;
       designation?: string | null;

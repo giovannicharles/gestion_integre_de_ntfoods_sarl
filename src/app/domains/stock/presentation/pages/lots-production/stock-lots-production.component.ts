@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, LotBE } from '../../../../production/infrastructure/production.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
  * Écran Stock — « Lots de Production » (2026-10-01, demande explicite du porteur).
@@ -20,7 +21,7 @@ import { ProductionService, LotBE } from '../../../../production/infrastructure/
 @Component({
   selector: 'app-stock-lots-production',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './stock-lots-production.component.html',
   styleUrls: ['./stock-lots-production.component.css'],
 })
@@ -37,7 +38,7 @@ export class StockLotsProductionComponent implements OnInit {
   nbAValider = computed(() => this.lotsAValider().length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
   nbRejetes = computed(() => this.lots().filter(l => l.statut === 'REJETE').length);
-  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.quantiteKg, 0));
+  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.declaredQuantityKg, 0));
 
   ngOnInit(): void {
     this.chargerLots();

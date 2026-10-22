@@ -1,6 +1,6 @@
 <div class="dash">
   <!-- HEADER -->
-  <div class="ph">
+  <div class="ph ph-wm-controle">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
       <div>
@@ -13,6 +13,16 @@
       <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
     </div>
   </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du tableau de bord…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
 
   <!-- ALERTE ÉCARTS ROUGES -->
   @if (ecartsRouges() > 0) {
@@ -62,13 +72,32 @@
     </div>
   </div>
 
-  <!-- DÉCAISSEMENTS EN ATTENTE -->
+  <!-- DÉCAISSEMENTS EN COURS -->
   <div class="card">
     <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements à valider</span>
+      <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements en cours</span>
       <span class="badge bg-red badge-sm">{{ decaissementsAttente() }}</span>
       <a routerLink="/controle/decaissements" class="btn btn-ghost btn-sm">Voir tout</a>
     </div>
+    @if (decaissementsEnCours().length > 0) {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>N°</th><th>Bénéficiaire</th><th class="text-right">Montant</th><th>Statut</th></tr></thead>
+        <tbody>
+          @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
+          <tr>
+            <td class="fw-bold">{{ d.numeroDecaissement }}</td>
+            <td>{{ d.beneficiaire }}</td>
+            <td class="text-right mono">{{ fCFA(d.montantFCFA) }}</td>
+            <td>{{ d.statut === 'PROPOSE' ? 'Proposé — att. DG (1)' : 'DG (1) ✓ — att. DG (2)' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="empty-state">Aucun décaissement en cours.</div>
+    }
   </div>
 
   <!-- MARGES PAR PRODUIT -->
@@ -100,6 +129,28 @@
   <!-- BUDGET + VARIANCE -->
   <div class="charts-row-2" style="margin-top:0">
     <div class="card" style="padding:var(--sp-4)">
+      <div class="card-title" style="margin-bottom:14px"><i class="fa-solid fa-wallet"></i> Budget par poste</div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Poste</th><th class="text-right">Budget</th><th class="text-right">Engagé</th><th>Utilisation</th></tr></thead>
+          <tbody>
+            @for (b of budget(); track b.id) {
+            <tr [class.row-alert]="b.engage > b.budget">
+              <td>{{ b.poste }}</td>
+              <td class="text-right mono">{{ fCFA(b.budget) }}</td>
+              <td class="text-right mono">{{ fCFA(b.engage) }}</td>
+              <td>
+                <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100" [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{ budgetPct(b) }}%</span>
+              </td>
+            </tr>
+            } @empty {
+            <tr><td colspan="4" class="empty-state">Aucun poste budgétaire défini.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="padding:var(--sp-4)">
       <div class="card-title" style="margin-bottom:14px"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (standard vs réel)</div>
       <div class="tbl-wrap">
         <table class="data-table">
@@ -125,5 +176,25 @@
       <span class="card-title"><i class="fa-solid fa-user-secret"></i> Anomalies détectées</span>
       <span class="badge bg-red badge-sm">{{ anomaliesElevees() }} niveau élevé</span>
     </div>
+    @if (anomalies().length > 0) {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Catégorie</th><th>Référence</th><th>Description</th><th>Concerné</th></tr></thead>
+        <tbody>
+          @for (a of anomalies(); track a.reference) {
+          <tr class="row-alert">
+            <td class="fw-bold">{{ a.categorie }}</td>
+            <td class="mono">{{ a.reference }}</td>
+            <td>{{ a.description }}</td>
+            <td>{{ a.matriculeConcerne ?? '—' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <div class="empty-state">Aucune anomalie détectée.</div>
+    }
   </div>
+  }
 </div>

@@ -1,0 +1,145 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph ph-wm-controle">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-red"><i class="fa-solid fa-money-check-dollar"></i></div>
+      <div>
+        <h1 class="ph-title">Décaissements</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Vous proposez, le DG valide (2 étapes), la Secrétaire exécute</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="ouvrirForm()"><i class="fa-solid fa-plus"></i> Proposer un décaissement</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">En cours</span>
+        <span class="kpi-val">{{ nbEnCours() }}</span>
+        <div class="kpi-meta">pas encore exécutés</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Montant total (hors annulés)</span>
+        <span class="kpi-val" style="font-size:1rem">{{ fCFA(totalPropose()) }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-list-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total propositions</span>
+        <span class="kpi-val">{{ decaissements().length }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn" [class.active]="filterStatut()==='all'" (click)="filterStatut.set('all')">Toutes</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='PROPOSE'" (click)="filterStatut.set('PROPOSE')">Proposées</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='VALIDEE_CG'" (click)="filterStatut.set('VALIDEE_CG')">DG (1) ✓</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='VALIDEE_DG'" (click)="filterStatut.set('VALIDEE_DG')">DG (2) ✓</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='EXECUTE'" (click)="filterStatut.set('EXECUTE')">Exécutées</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='ANNULE'" (click)="filterStatut.set('ANNULE')">Annulées</button>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement…</div>
+  } @else {
+  <div class="card table-card card-wm card-wm-controle">
+    <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>N°</th><th>Type</th><th>Bénéficiaire</th><th class="text-right">Montant</th><th>Motif</th><th>Statut</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (d of liste(); track d.numeroDecaissement) {
+        <tr>
+          <td class="fw-bold">{{ d.numeroDecaissement }}</td>
+          <td>{{ d.typeDepense }}</td>
+          <td>{{ d.beneficiaire }}</td>
+          <td class="text-right mono">{{ fCFA(d.montantFCFA) }}</td>
+          <td>{{ d.motif }}</td>
+          <td><span [class]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span></td>
+          <td class="text-right">
+            @if (peutAnnuler(d)) {
+            <button class="btn btn-sm btn-outline" (click)="ouvrirAnnuler(d)"><i class="fa-solid fa-xmark"></i> Annuler</button>
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr><td colspan="7" class="empty-state">Aucun décaissement dans ce filtre.</td></tr>
+        }
+      </tbody>
+    </table>
+    </div>
+  </div>
+  }
+
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="showForm.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-plus"></i> Proposer un décaissement</h3>
+        <button class="modal-close" (click)="showForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Type de dépense</label>
+          <select class="form-control" [ngModel]="form().typeDepense" (ngModelChange)="majType($event)">
+            @for (t of typesDepense; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Montant (FCFA)</label>
+          <input type="number" min="0" class="form-control" [ngModel]="form().montantFCFA" (ngModelChange)="majMontant($event)">
+        </div>
+        <div class="form-group">
+          <label>Bénéficiaire</label>
+          <input type="text" class="form-control" [ngModel]="form().beneficiaire" (ngModelChange)="majBeneficiaire($event)">
+        </div>
+        <div class="form-group">
+          <label>Date de la dépense</label>
+          <input type="date" class="form-control" [ngModel]="form().dateDepense" (ngModelChange)="majDate($event)">
+        </div>
+        <div class="form-group">
+          <label>Motif</label>
+          <textarea class="form-control" rows="2" [ngModel]="form().motif" (ngModelChange)="majMotif($event)"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="showForm.set(false)">Annuler</button>
+        <button class="btn btn-primary" [disabled]="saving()" (click)="proposer()">
+          <i class="fa-solid" [class.fa-paper-plane]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> Soumettre au DG
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (showAnnuler()) {
+  <div class="modal-overlay" (click)="showAnnuler.set(null)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-xmark"></i> Annuler {{ showAnnuler()?.numeroDecaissement }}</h3>
+        <button class="modal-close" (click)="showAnnuler.set(null)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Motif de l'annulation</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="motifAnnulation"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="showAnnuler.set(null)">Fermer</button>
+        <button class="btn btn-danger" [disabled]="!motifAnnulation.trim()" (click)="confirmerAnnuler()">Confirmer l'annulation</button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

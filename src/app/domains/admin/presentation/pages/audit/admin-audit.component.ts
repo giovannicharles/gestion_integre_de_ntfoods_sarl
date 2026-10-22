@@ -34,10 +34,15 @@ export class AdminAuditComponent implements OnInit {
   nbAlertes = computed(() => this.auditLog().filter(l => !l.succes).length);
   nbImportants = computed(() => this.auditLog().filter(l => l.typeAction === 'IMPORTANT').length);
 
+  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  private dateLocaleIso(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   ngOnInit(): void {
     this.auditSvc.getAuditParPeriode(
-      new Date(Date.now() - 86400000 * 30).toISOString().split('T')[0],
-      new Date().toISOString().split('T')[0]
+      this.dateLocaleIso(new Date(Date.now() - 86400000 * 30)),
+      this.dateLocaleIso(new Date())
     ).subscribe({
       next: page => this.auditLog.set(page.contenu),
       error: () => {},

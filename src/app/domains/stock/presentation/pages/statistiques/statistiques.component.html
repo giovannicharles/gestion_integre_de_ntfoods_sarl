@@ -161,6 +161,7 @@
       <section class="card">
         <h2><i class="fa-solid fa-hand-holding-dollar"></i> Dotations par commercial</h2>
         <div class="table-wrapper">
+          <div class="tbl-wrap">
           <table>
             <thead>
               <tr><th>Commercial</th><th>Demandes</th><th>Qté totale</th><th>En attente</th></tr>
@@ -184,6 +185,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
         <div class="pagination">
           @for (p of pageRange(dotationByCommercial().length); track p) {
@@ -277,6 +279,7 @@
       <section class="card chart-section">
         <h2><i class="fa-solid fa-triangle-exclamation"></i> Risques de dépréciation</h2>
         <div class="table-wrapper">
+          <div class="tbl-wrap">
           <table>
             <thead>
               <tr><th>Produit</th><th>Qté</th><th>Âge (j)</th><th>Perte potentielle</th></tr>
@@ -294,6 +297,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       </section>
     </div>
@@ -302,6 +306,7 @@
     <section class="card aging-section">
       <h2><i class="fa-solid fa-hourglass-half"></i> Analyse de l'âge du stock</h2>
       <div class="table-wrapper">
+        <div class="tbl-wrap">
         <table>
           <thead>
             <tr><th>Produit</th><th>Âge moyen (j)</th><th>Âge max (j)</th><th>Quantité</th><th>Unité</th><th>Risque</th></tr>
@@ -319,6 +324,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
       <div class="pagination">
         @for (p of pageRange(stockAging().length); track p) {
@@ -332,6 +338,7 @@
       <section class="card reorder-section">
         <h2><i class="fa-solid fa-lightbulb"></i> Recommandations de réapprovisionnement</h2>
         <div class="table-wrapper">
+          <div class="tbl-wrap">
           <table>
             <thead>
               <tr><th>Produit</th><th>Stock</th><th>Suggéré</th><th>Conso/j</th><th>Urgence</th></tr>
@@ -350,6 +357,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
         <div class="pagination">
           @for (p of pageRange(reorderSuggestions().length); track p) {
@@ -361,6 +369,7 @@
       <section class="card velocity-section">
         <h2><i class="fa-solid fa-gauge"></i> Matrice de vélocité</h2>
         <div class="table-wrapper">
+          <div class="tbl-wrap">
           <table>
             <thead>
               <tr><th>Produit</th><th>Vélocité</th><th>Qté/mois</th><th>Tendance</th></tr>
@@ -376,6 +385,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
         <div class="pagination">
           @for (p of pageRange(velocityMatrix().length); track p) {
@@ -410,6 +420,7 @@
     <section class="card forecast-section">
       <h2><i class="fa-solid fa-chart-line"></i> Prévisions de demande (30 jours)</h2>
       <div class="table-wrapper">
+        <div class="tbl-wrap">
         <table>
           <thead>
             <tr><th>Produit</th><th>Stock actuel</th><th>Prévision 30j</th><th>Confiance</th><th>Tendance</th></tr>
@@ -431,6 +442,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
       <div class="pagination">
         @for (p of pageRange(demandForecast().length); track p) {
@@ -443,6 +455,7 @@
     <section class="card abc-section">
       <h2><i class="fa-solid fa-layer-group"></i> Classification ABC détaillée</h2>
       <div class="table-wrapper">
+        <div class="tbl-wrap">
         <table>
           <thead>
             <tr><th>SKU</th><th>Désignation</th><th>Valeur</th><th>% cumulé</th><th>Classe</th></tr>
@@ -459,6 +472,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
       <div class="pagination">
         @for (p of pageRange(abcAnalysis().length); track p) {

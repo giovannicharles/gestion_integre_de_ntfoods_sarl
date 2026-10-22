@@ -8,13 +8,14 @@ import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
 @Component({
   selector: 'app-controle-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
   templateUrl: './controle-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -55,7 +56,7 @@ export class ControleLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },
-    { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
+    { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/controle/validations' },
     { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements', badge: 2, badgeClass: 'bd-red' },
     { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
     { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
@@ -63,6 +64,7 @@ export class ControleLayoutComponent implements OnInit {
     { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget', badge: 2, badgeClass: 'bd-orange' },
     { label: 'Variances Coûts', icon: 'fa-scale-unbalanced', route: '/controle/variances' },
     { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
+    { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
   ];
 
   ngOnInit() {

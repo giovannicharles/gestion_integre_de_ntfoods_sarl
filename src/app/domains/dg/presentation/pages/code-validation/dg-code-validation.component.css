@@ -10,7 +10,7 @@
 
 .page-header h1 {
   font-size: 2rem;
-  color: var(--primary-green, #14532D);
+  color: var(--g);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -18,11 +18,11 @@
 }
 
 .page-header h1 i {
-  color: var(--accent-yellow, #F6B60B);
+  color: var(--y);
 }
 
 .subtitle {
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
   font-size: 1rem;
 }
 
@@ -36,7 +36,7 @@
 
 .card h2 {
   font-size: 1.25rem;
-  color: var(--primary-green, #14532D);
+  color: var(--g);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
@@ -44,7 +44,7 @@
 }
 
 .card h2 i {
-  color: var(--accent-yellow, #F6B60B);
+  color: var(--y);
 }
 
 .attribution-form {
@@ -66,7 +66,7 @@
 
 .form-group label {
   font-weight: 500;
-  color: var(--text-primary, #111827);
+  color: var(--n900);
   font-size: 0.875rem;
 }
 
@@ -74,7 +74,7 @@
 .form-group select,
 .form-group textarea {
   padding: 0.75rem;
-  border: 1px solid var(--border-color, #E5E7EB);
+  border: 1px solid var(--n200);
   border-radius: var(--r-sm, 8px);
   font-size: 0.875rem;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -84,7 +84,7 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--primary-green, #14532D);
+  border-color: var(--g);
   box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.1);
 }
 
@@ -102,25 +102,25 @@
 }
 
 .btn-primary {
-  background: var(--primary-green, #14532D);
+  background: var(--g);
   color: white;
 }
 
 .btn-primary:hover {
-  background: var(--dark-green, #0D3A1E);
+  background: var(--g-d);
 }
 
 .btn-secondary {
-  background: var(--gray-100, #F3F4F6);
-  color: var(--text-primary, #111827);
+  background: var(--n100);
+  color: var(--n900);
 }
 
 .btn-secondary:hover {
-  background: var(--gray-200, #E5E7EB);
+  background: var(--n200);
 }
 
 .btn-danger {
-  background: var(--danger-red, #C22B2B);
+  background: var(--r);
   color: white;
 }
 
@@ -129,12 +129,12 @@
 }
 
 .btn-warning {
-  background: var(--accent-yellow, #F6B60B);
-  color: var(--primary-green, #14532D);
+  background: var(--y);
+  color: var(--g);
 }
 
 .btn-warning:hover {
-  background: var(--dark-yellow, #C49200);
+  background: var(--y-d);
 }
 
 .btn-sm {
@@ -152,26 +152,26 @@
 }
 
 .codes-table thead {
-  background: var(--gray-50, #F9FAFB);
+  background: var(--n50);
 }
 
 .codes-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: var(--text-primary, #111827);
+  color: var(--n900);
   font-size: 0.875rem;
-  border-bottom: 2px solid var(--border-color, #E5E7EB);
+  border-bottom: 2px solid var(--n200);
 }
 
 .codes-table td {
   padding: 1rem;
-  border-bottom: 1px solid var(--border-color, #E5E7EB);
+  border-bottom: 1px solid var(--n200);
   font-size: 0.875rem;
 }
 
 .codes-table tr.bloque {
-  background: var(--red-surface, #FCE8E8);
+  background: var(--r-gh);
 }
 
 .user-info {
@@ -181,7 +181,7 @@
 }
 
 .user-info i {
-  color: var(--accent-yellow, #F6B60B);
+  color: var(--y);
 }
 
 .utilisations {
@@ -192,16 +192,16 @@
 
 .utilisations .nombre {
   font-weight: 600;
-  color: var(--primary-green, #14532D);
+  color: var(--g);
 }
 
 .utilisations .max {
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
 }
 
 .echecs {
   font-size: 0.75rem;
-  color: var(--danger-red, #C22B2B);
+  color: var(--r);
   margin-top: 0.25rem;
   display: flex;
   align-items: center;
@@ -209,7 +209,7 @@
 }
 
 .no-expiration {
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
   font-style: italic;
 }
 
@@ -224,18 +224,18 @@
 }
 
 .status.active {
-  background: var(--green-surface, #E6F2EC);
-  color: var(--primary-green, #14532D);
+  background: var(--g-gh);
+  color: var(--g);
 }
 
 .status.revoked {
-  background: var(--gray-100, #F3F4F6);
-  color: var(--text-secondary, #6B7280);
+  background: var(--n100);
+  color: var(--n500);
 }
 
 .status.blocked {
-  background: var(--red-surface, #FCE8E8);
-  color: var(--danger-red, #C22B2B);
+  background: var(--r-gh);
+  color: var(--r);
 }
 
 .actions {
@@ -248,22 +248,22 @@
 .empty {
   text-align: center;
   padding: 3rem;
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
 }
 
 .loading i {
   font-size: 2rem;
-  color: var(--accent-yellow, #F6B60B);
+  color: var(--y);
 }
 
 .error i,
 .empty i {
   font-size: 2rem;
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
 }
 
 .error {
-  color: var(--danger-red, #C22B2B);
+  color: var(--r);
 }
 
 .modal-overlay {
@@ -291,7 +291,7 @@
 
 .modal-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color, #E5E7EB);
+  border-bottom: 1px solid var(--n200);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -299,14 +299,14 @@
 
 .modal-header h3 {
   font-size: 1.25rem;
-  color: var(--primary-green, #14532D);
+  color: var(--g);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .modal-header h3 i {
-  color: var(--accent-yellow, #F6B60B);
+  color: var(--y);
 }
 
 .modal-close {
@@ -314,12 +314,12 @@
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: var(--text-secondary, #6B7280);
+  color: var(--n500);
   padding: 0.5rem;
 }
 
 .modal-close:hover {
-  color: var(--text-primary, #111827);
+  color: var(--n900);
 }
 
 .modal-body {
@@ -333,28 +333,28 @@
 .code-display label {
   display: block;
   font-weight: 500;
-  color: var(--text-primary, #111827);
+  color: var(--n900);
   margin-bottom: 0.5rem;
 }
 
 .code-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-green, #14532D);
+  color: var(--g);
   letter-spacing: 0.5rem;
   text-align: center;
   padding: 1rem;
-  background: var(--green-surface, #E6F2EC);
+  background: var(--g-gh);
   border-radius: var(--r-md, 12px);
-  border: 2px solid var(--primary-green, #14532D);
+  border: 2px solid var(--g);
 }
 
 .warning {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--accent-yellow, #F6B60B);
-  background: var(--yellow-surface, #FFF8E1);
+  color: var(--y);
+  background: var(--y-gh);
   padding: 1rem;
   border-radius: var(--r-sm, 8px);
   font-size: 0.875rem;
@@ -362,7 +362,7 @@
 
 .modal-footer {
   padding: 1.5rem;
-  border-top: 1px solid var(--border-color, #E5E7EB);
+  border-top: 1px solid var(--n200);
   display: flex;
   justify-content: flex-end;
   gap: 1rem;

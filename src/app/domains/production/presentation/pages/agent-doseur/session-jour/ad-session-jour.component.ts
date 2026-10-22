@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE, PPHBE, PredictionProduitFiniBE } from '../../../../infrastructure/production.service';
 import { AdSessionContextService } from '../ad-session-context.service';
 import { AuthService } from '../../../../../../core/auth/auth.service';
+import { extractApiError } from '../../../../../../core/http/api-error-parser';
 
-type TypeMelange = 'BOUILLIE' | 'ARACHIDE';
 type Etape = 1 | 2 | 3 | 4 | 5;
 
 /**
@@ -15,7 +15,7 @@ type Etape = 1 | 2 | 3 | 4 | 5;
  * qui était auparavant éclaté sur 6 écrans (Sessions, Dosage, Machines, Fûts,
  * Prédictions, Documents) :
  *   1. Ma session   → ouvrir / reprendre la session du jour
- *   2. Dosage       → formule (Bouillie / Arachide) + nb fûts, matières auto
+ *   2. Dosage       → nb fûts ; composition calculée côté serveur depuis la formulation du produit
  *   3. Fûts         → nombre de fûts sortis
  *   4. Machines     → machines mobilisées (optionnel)
  *   5. Terminer     → estimation produits finis, registre, clôture
@@ -73,20 +73,8 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   get matricule(): string { return this.auth.user()?.matricule ?? ''; }
 
   // ── Étape 2 : dosage ────────────────────────────────────────────────
-  typeMelange: TypeMelange = 'BOUILLIE';
   nbFuts = 1;
   private autoSave: ReturnType<typeof setTimeout> | null = null;
-
-  /** Quantités de matières premières pour le nombre de fûts choisi. */
-  quantites = computed(() => {
-    const n = this.nbFuts || 0;
-    return this.typeMelange === 'BOUILLIE'
-      ? { mais: 40 * n, soja: 9 * n, arachide: 1 * n }
-      : { mais: 40 * n, soja: 1 * n, arachide: 9 * n };
-  });
-
-  /** Total de poudre prévue par le dosage automatique. */
-  poidsTotalPoudre = computed(() => this.quantites().mais + this.quantites().soja + this.quantites().arachide);
 
   // ── Étape 3 : fûts ──────────────────────────────────────────────────
   /** Nombre de fûts sortis = fûts produits (règle métier). */
@@ -109,6 +97,7 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
         this.pphs.set(utiles.length ? utiles : list);
         if (this.pphs().length === 1) this.referencePPH = this.pphs()[0].referencePPH;
       },
+      error: () => this.erreur.set('Impossible de charger la liste des plans de production (PPH).'),
     });
     this.svc.getSessionsDosageParDate(this.today).subscribe({
       next: sessions => {
@@ -118,6 +107,7 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
           this.etape.set(2);            // on reprend directement au dosage
         }
       },
+      error: () => this.erreur.set('Impossible de vérifier une session de dosage déjà ouverte aujourd’hui.'),
     });
   }
 
@@ -135,9 +125,9 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
     this.contexte.definir(s.id, s.referencePPH, s.date);
     this.referencePPH = s.referencePPH;
     this.nbProduits = s.nbFutsProduits;
-    // On récupère le nombre de fûts prévu par le dosage existant (40 kg de maïs par fût).
-    const mais = s.matieresUtilisees.find(m => m.typeMatiere === 'MAIS')?.quantiteKg ?? 0;
-    this.nbFuts = Math.max(1, Math.round(mais / 40));
+    // Nombre de fûts dosés : repris directement du compteur de la session (la composition par matière
+    // dépend désormais de la formulation réelle du produit, plus d'un ratio fixe à inverser).
+    this.nbFuts = Math.max(1, s.nbFutsProduits || 1);
     // Si des matières existent, on considère que le dosage est enregistré.
     this.enregistre.set(s.matieresUtilisees.length > 0);
   }
@@ -176,7 +166,6 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   }
 
   // ── Étape 2 : dosage automatique ────────────────────────────────────
-  choisirMelange(t: TypeMelange): void { this.typeMelange = t; this.declencherDosage(); }
   incrementerFuts(delta: number): void { this.nbFuts = Math.max(0, this.nbFuts + delta); this.declencherDosage(); }
 
   declencherDosage(): void {
@@ -190,9 +179,10 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   private appliquerDosage(): void {
     const s = this.session();
     if (!s) return;
-    this.svc.mettreAJourDosageAutomatique(s.id, this.nbFuts, this.typeMelange).subscribe({
+    this.erreur.set('');
+    this.svc.mettreAJourDosageAutomatique(s.id, this.nbFuts).subscribe({
       next: maj => { this.session.set(maj); this.enregistre.set(true); },
-      error: () => this.erreur.set('Le dosage n’a pas pu être enregistré. Réessayez.'),
+      error: err => this.erreur.set(extractApiError(err)),
     });
   }
 
@@ -306,7 +296,7 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
 
   recommencer(): void {
     this.session.set(null); this.prediction.set(null); this.terminee.set(false);
-    this.referencePPH = ''; this.typeMelange = 'BOUILLIE'; this.nbFuts = 1;
+    this.referencePPH = ''; this.nbFuts = 1;
     this.nbProduits = 0; this.nouvelleMachine = '';
     this.message.set(''); this.erreur.set('');
     this.etape.set(1);

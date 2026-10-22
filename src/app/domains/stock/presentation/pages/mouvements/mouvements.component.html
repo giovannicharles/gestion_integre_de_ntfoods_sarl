@@ -74,6 +74,7 @@
       </div>
     </div>
     <div class="card table-card">
+      <div class="tbl-wrap">
       <div class="table-wrapper"><table class="table">
         <thead><tr><th>Type</th><th>Produit</th><th>Entrepôt</th><th class="text-right">Avant</th><th class="text-center">Mouvement</th><th class="text-right">Après</th><th>Statut</th><th>Référence</th><th>Date</th><th>Action</th></tr></thead>
         <tbody>
@@ -100,6 +101,7 @@
           @empty { <tr><td colspan="10" class="empty-row"><i class="fa-solid fa-inbox"></i><p>Aucun mouvement</p></td></tr> }
         </tbody>
       </table></div>
+      </div>
       @if (totalPages()>1) { <div class="pagination-bar"><span class="pg-info">{{ (cp()-1)*ps+1 }}–{{ Math.min(cp()*ps,filtered().length) }} sur {{ filtered().length }}</span><div class="pg-controls"><button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-angle-left"></i></button>@for (p of pages; track p) { <button class="pg-btn" [class.pg-active]="p===cp()" (click)="goTo(p)">{{ p }}</button> }<button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-angle-right"></i></button></div></div> }
     </div>
   }

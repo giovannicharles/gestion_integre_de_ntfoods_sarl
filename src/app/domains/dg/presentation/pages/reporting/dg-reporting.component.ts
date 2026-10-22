@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 Chart.register(...registerables);
 
@@ -18,6 +19,7 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('radarCanvas') radarCanvas!: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(true);
@@ -34,19 +36,19 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.dgSvc.getZones().subscribe({
       next: z => this.zones.set(z),
-      error: () => {},
+      error: () => this.toast.error('Impossible de charger les zones'),
     });
     this.dgSvc.getClassement().subscribe({
       next: c => this.commerciaux.set(c),
-      error: () => {},
+      error: () => this.toast.error('Impossible de charger le classement'),
     });
     this.dgSvc.getComparatif('MOIS').subscribe({
       next: r => this.comparatifMois.set(r),
-      error: () => {},
+      error: () => this.toast.error('Impossible de charger le comparatif du mois'),
     });
     this.dgSvc.getComparatif('ANNEE').subscribe({
       next: r => this.comparatifAnnee.set(r),
-      error: () => {},
+      error: () => this.toast.error("Impossible de charger le comparatif de l'année"),
     });
     setTimeout(() => { this.loading.set(false); this.buildCharts(); }, 500);
   }

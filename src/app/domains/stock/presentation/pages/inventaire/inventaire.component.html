@@ -163,10 +163,19 @@
       </div>
     </div>
 
+    <!-- ÉTAT VIDE -->
+    @if (filtered().length === 0) {
+      <div class="card" style="padding:40px 20px">
+        <app-empty-illustration title="Aucun article ne correspond à ces filtres"
+          sub="Ajustez les filtres ci-dessus, ou vérifiez qu'une réception a bien été validée pour ce magasin."></app-empty-illustration>
+      </div>
+    }
+
     <!-- TABLE VIEW -->
-    @if (viewMode()==='table') {
+    @if (viewMode()==='table' && filtered().length > 0) {
       <div class="card" style="overflow:hidden">
         <div class="table-wrapper">
+          <div class="tbl-wrap">
           <table class="table">
             <thead>
               <tr>
@@ -239,6 +248,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
         @if (totalPages()>1) {
           <div class="pagination-bar">
@@ -254,7 +264,7 @@
     }
 
     <!-- CARDS VIEW -->
-    @if (viewMode()==='cards') {
+    @if (viewMode()==='cards' && filtered().length > 0) {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px">
         @for (item of paginated(); track item.id) {
           <div class="inv-card" [class.inv-card-critical]="item.alertLevel==='CRITIQUE'" [class.inv-card-low]="item.alertLevel==='FAIBLE'"
@@ -311,7 +321,7 @@
           <button class="modal-close" (click)="selectedItem.set(null)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
             <div>
               <h4 style="font-size:11px;font-weight:800;color:var(--n400);text-transform:uppercase;margin-bottom:12px">Niveau de stock</h4>
               <div style="height:10px;background:var(--n150);border-radius:5px;overflow:hidden;margin-bottom:8px">
@@ -417,7 +427,7 @@
     <div class="modal-overlay animate-fadeIn" (click)="closeTransfer()">
       <div class="modal-box animate-fadeInUp" style="max-width:460px" (click)="$event.stopPropagation()">
         <div class="modal-header" style="background:var(--b-gh)">
-          <div class="modal-title" style="color:var(--b-d)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfert Central → Tampon</div>
+          <div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfert Central → Tampon</div>
           <button class="modal-close" (click)="closeTransfer()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">

@@ -148,7 +148,7 @@
 .btn-success { background:var(--g);color:#fff; }
 .btn-success:hover { background:var(--g-d); }
 .btn-danger { background:var(--r);color:#fff; }
-.btn-danger:hover { background:var(--r-d); }
+.btn-danger:hover { background:#B71C1C; }
 .btn-sm { padding:5px 10px;font-size:11px; }
 .btn:disabled { opacity:.5;cursor:not-allowed; }
 
@@ -227,7 +227,7 @@
 .inv-alert-info { display:flex;flex-direction:column; }
 .inv-alert-val { font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);line-height:1; }
 .inv-alert-lbl { font-size:11px;color:var(--n400);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px; }
-.inv-alert-critical .inv-alert-icon { background:rgba(220,38,38,.1);color:#dc2626; }
+.inv-alert-critical .inv-alert-icon { background:var(--r-gh, rgba(220,38,38,.1));color:var(--r, #dc2626); }
 .inv-alert-low .inv-alert-icon { background:rgba(234,88,12,.1);color:#ea580c; }
 .inv-alert-normal .inv-alert-icon { background:rgba(26,107,42,.1);color:#1A6B2A; }
-.inv-alert-total .inv-alert-icon { background:rgba(37,99,235,.1);color:#2563eb; }
+.inv-alert-total .inv-alert-icon { background:var(--b-gh, rgba(37,99,235,.1));color:var(--b, #2563eb); }

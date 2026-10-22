@@ -3,7 +3,7 @@
     <i class="fa-solid fa-flask ph-ico"></i>
     <div>
       <h1 class="ph-title">Dosage des Matières Premières</h1>
-      <p class="ph-sub">Application automatique des formules Bouillie / Mélange Arachide — MAIS/SOJA/ARACHIDE enregistrés dès la saisie</p>
+      <p class="ph-sub">Composition calculée depuis la formulation réelle du produit du plan — enregistrée dès la saisie</p>
     </div>
   </div>
 </div>
@@ -34,24 +34,16 @@
   <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Formule de dosage</h2></div>
   <div style="padding: var(--sp-4)">
     <div class="form-grid">
-      <label>Type de mélange
-        <select class="input" [(ngModel)]="typeMelange" (change)="onDosageInputChange()">
-          <option value="BOUILLIE">Bouillie (40 maïs / 9 soja / 1 arachide)</option>
-          <option value="ARACHIDE">Mélange Arachide (40 maïs / 9 arachide / 1 soja)</option>
-        </select>
-      </label>
       <label>Nombre de fûts produits (50 kg chacun)<input type="number" class="input" [(ngModel)]="nbFutsProduits" min="0" (input)="onDosageInputChange()"></label>
     </div>
 
     <div class="gap-note" style="margin-top:var(--sp-3)">
       <i class="fa-solid fa-wand-magic-sparkles"></i>
-      <div>Quantités calculées et enregistrées automatiquement pour <strong>{{ nbFutsProduits }}</strong> fût(s).</div>
+      <div>Composition calculée depuis la formulation du produit en cours et enregistrée automatiquement pour <strong>{{ nbFutsProduits }}</strong> fût(s) — voir le détail par matière ci-dessous une fois calculée.</div>
     </div>
-    <div class="kpi-grid" style="margin-top:var(--sp-3)">
-      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs</div><div class="kpi-val">{{ quantitesAttendues().mais }} kg</div></div></div>
-      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja</div><div class="kpi-val">{{ quantitesAttendues().soja }} kg</div></div></div>
-      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide</div><div class="kpi-val">{{ quantitesAttendues().arachide }} kg</div></div></div>
-    </div>
+    @if (message().includes('Impossible de déterminer')) {
+      <div class="alert alert-warning" style="margin-top:var(--sp-3)">{{ message() }} Utilisez « Autres matières premières » ci-dessous pour saisir manuellement.</div>
+    }
 
     <h4 style="margin-top:var(--sp-3)">Autres matières premières (sucre, poisson, ...)</h4>
     <div class="form-grid mini">

@@ -176,6 +176,11 @@
           </table>
         </div>
       </div>
+    } @else if (!loading()) {
+      <div class="card" style="padding:40px 20px">
+        <app-empty-illustration title="Aucune valorisation disponible pour ce magasin"
+          sub="Changez de magasin ci-dessus, ou vérifiez que des niveaux de stock existent ici."></app-empty-illustration>
+      </div>
     }
 
   }

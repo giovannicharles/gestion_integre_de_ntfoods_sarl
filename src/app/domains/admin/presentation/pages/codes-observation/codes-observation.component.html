@@ -50,6 +50,7 @@
   @if (loading()) {
     <p>Chargement...</p>
   } @else {
+    <div class="tbl-wrap">
     <table class="table">
       <thead>
         <tr>
@@ -69,7 +70,7 @@
             <td>{{ c.requireQuantity ? 'Oui' : 'Non' }}</td>
             <td>{{ c.actif ? 'Oui' : 'Non' }}</td>
             <td>{{ c.ordre }}</td>
-            <td>
+            <td *appCan="['ADMIN', 'DIRECTEUR_GENERAL']">
               <button class="btn btn-sm" (click)="basculerActif(c)">
                 {{ c.actif ? 'Désactiver' : 'Activer' }}
               </button>
@@ -78,8 +79,11 @@
               </button>
             </td>
           </tr>
+        } @empty {
+          <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun code d'observation défini</td></tr>
         }
       </tbody>
     </table>
+    </div>
   }
 </div>

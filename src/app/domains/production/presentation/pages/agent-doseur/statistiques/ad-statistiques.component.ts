@@ -69,7 +69,7 @@ export class AdStatistiquesComponent implements OnInit {
     const aujourdHui = new Date().toISOString().split('T')[0];
     this.svc.getStatistiquesFuts(aujourdHui, aujourdHui).subscribe({ next: s => this.statsJour.set(s) });
     this.svc.getStatistiquesFuts(this.debutSemaine(), aujourdHui).subscribe({ next: s => this.statsSemaine.set(s) });
-    this.svc.getStatistiquesFuts(this.debutMois(), aujourdHui).subscribe({ next: s => { this.statsMois.set(s); this.loading.set(false); } });
+    this.svc.getStatistiquesFuts(this.debutMois(), aujourdHui).subscribe({ next: s => { this.statsMois.set(s); this.loading.set(false); }, error: () => this.loading.set(false) });
 
     const debut7j = this.joursAvant(7);
     this.svc.getSessionsDosageParPeriode(debut7j, aujourdHui).subscribe({

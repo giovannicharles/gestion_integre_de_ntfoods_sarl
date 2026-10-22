@@ -7,13 +7,55 @@ import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../../../../core/http/api.service';
 import {
   StockLevel, Receipt, ProductionBatch, InternalOrder,
-  StockMovement, Commercial, InfoProduits, DashboardStatsResponse,
+  StockMovement, Commercial, InfoProduits, InfoProduitsLine, DashboardStatsResponse,
   StockAlert, Warehouse, Product, Brand, ProductLine, ProductVariant, Supplier,
   ReceptionType, ReceiptStatus,
   DotationRequest, CreateDotationRequest, DotationStatus,
   StockBatch, StockAuditLog, StockAlertEntity,
   MobileStockSummary, MobileStockRotation, SlowStockCommercial
 } from '../../domain/models/stock.models';
+
+/** Forme réelle de StockMobileController.StockMobileResponse (backend). */
+interface StockMobileResponseDto {
+  id: number;
+  matriculeCommercial: string;
+  dateSession: string;
+  totalVentes: number;
+  totalRestant: number;
+  totalAvaries: number;
+  dateModification?: string;
+  lignes: Array<{
+    codeProduit: string;
+    designation: string;
+    conditionnement: string;
+    quantiteDisponible: number;
+    quantiteInitiale: number;
+    quantiteVendue: number;
+    quantiteAvariee: number;
+    quantiteDonnee: number;
+  }>;
+}
+
+/** Voir le commentaire de getInfoProduits : approximation documentée, pas un double de la vérité backend. */
+function toInfoProduits(sm: StockMobileResponseDto): InfoProduits {
+  const lines: InfoProduitsLine[] = (sm.lignes || []).map((l, idx) => ({
+    id: idx,
+    productId: 0,
+    takenQty: l.quantiteInitiale,
+    soldQty: l.quantiteVendue,
+    returnedQty: l.quantiteDisponible,
+  }));
+  return {
+    id: sm.id,
+    commercialId: sm.matriculeCommercial,
+    commercialMatricule: sm.matriculeCommercial,
+    date: sm.dateSession,
+    status: 'DRAFT',
+    preparedBy: 0,
+    createdAt: sm.dateModification || sm.dateSession,
+    lines,
+  };
+}
 
 export interface ReportData {
   id: number;
@@ -99,22 +141,42 @@ export class StockApiRepository {
     return this.api.get<Product[]>('v1/stock/products', materialType ? { materialType } : undefined)
       .pipe(catchError(() => of([])));
   }
-  getBrands(): Observable<Brand[]> {
-    return this.api.get<Brand[]>('stock/product-classifications/brands').pipe(catchError(() => of([] as Brand[])));
+  /**
+   * Backend : ProductClassificationController./brands renvoie une liste de noms de marque
+   * (String), pas des objets {id,name,code,active} — corrigé le 2026-10-15 (P5). La ressource
+   * Brand{id,name,code,active} existe à une URL différente : /api/products/brands
+   * (ProductManagementController), pas sous ce contrôleur-ci.
+   */
+  getBrands(): Observable<string[]> {
+    return this.api.get<string[]>('stock/product-classifications/brands').pipe(catchError(() => of([] as string[])));
   }
+  /** Corrigé le 2026-10-15 (P5) : l'ancienne URL stock/product-classifications/lines n'existe pas (404). */
   getLines(brandId?: number): Observable<ProductLine[]> {
-    return this.api.get<ProductLine[]>('stock/product-classifications/lines', brandId ? { brandId: String(brandId) } : undefined)
+    return this.api.get<ProductLine[]>('products/product-lines', brandId ? { brandId: String(brandId) } : undefined)
       .pipe(catchError(() => of([] as ProductLine[])));
   }
+  /** Corrigé le 2026-10-15 (P5) : l'ancienne URL stock/product-classifications/variants n'existe pas (404). */
   getVariants(productLineId?: number): Observable<ProductVariant[]> {
-    return this.api.get<ProductVariant[]>('stock/product-classifications/variants', productLineId ? { productLineId: String(productLineId) } : undefined)
+    return this.api.get<ProductVariant[]>('products/product-variants', productLineId ? { productLineId: String(productLineId) } : undefined)
       .pipe(catchError(() => of([] as ProductVariant[])));
   }
+  /** @deprecated forme `Warehouse` fausse (id numérique, isBuffer inexistants côté serveur) — utiliser {@link getLocations} (StockLocationDto, déjà correct). Conservé pour compatibilité, aucun appelant réel aujourd'hui. */
   getWarehouses(): Observable<Warehouse[]> {
-    return this.api.get<any[]>('stock/locations').pipe(catchError(() => of([])));
+    return this.getLocations().pipe(
+      map(locs => locs.map(l => ({ id: 0, name: l.name, type: l.type as unknown as Warehouse['type'], isBuffer: l.type === 'STOCK_BUFFER' })))
+    );
   }
+  /**
+   * Corrigé le 2026-10-15 (P5) : l'ancienne URL v1/stock/suppliers n'existe pas (404) ; la vraie
+   * ressource est FournisseurController (/api/stock/fournisseurs), enveloppée ApiResponse, avec
+   * des noms de champ différents (raisonSociale, pas name ; pas de leadTimeDays/pays).
+   */
   getSuppliers(): Observable<Supplier[]> {
-    return this.api.get<Supplier[]>('v1/stock/suppliers').pipe(catchError(() => of([] as Supplier[])));
+    return this.api.get<{ donnees?: Array<{ id: number; code: string; raisonSociale: string; telephone?: string; email?: string; adresse?: string; actif: boolean }> }>('stock/fournisseurs')
+      .pipe(
+        map(r => (r.donnees ?? []).map(f => ({ id: f.id, name: f.raisonSociale, leadTimeDays: 0, pays: f.adresse, telephone: f.telephone, email: f.email }))),
+        catchError(() => of([] as Supplier[]))
+      );
   }
 
   // ── DASHBOARD (/api/v1/stock/dashboard/...) ───────────────
@@ -129,8 +191,24 @@ export class StockApiRepository {
     );
   }
 
+  /**
+   * Corrigé le 2026-10-15 (P5) : l'ancienne URL v1/stock/dashboard/stock-levels/warehouse/{id}
+   * n'existe pas (404) ; le vrai endpoint par entrepôt est NiveauStockController, enveloppé
+   * ApiResponse, avec une forme différente (NiveauStockDetailResponse) — reconverti ici vers
+   * `StockLevel` pour ne pas changer la signature publique de cette méthode.
+   */
   getStockLevelsByWarehouse(id: number): Observable<StockLevel[]> {
-    return this.api.get<StockLevel[]>(`v1/stock/dashboard/stock-levels/warehouse/${id}`).pipe(catchError(() => of([])));
+    return this.api.get<{ donnees?: Array<{
+      id: number; produitId: number; codeProduit: string; sku: string; designation: string;
+      entrepotId: number; quantite: number; seuilReapprovisionnement: number; valeurStock: number;
+    }> }>(`stock/levels/warehouse/${id}`).pipe(
+      map(r => (r.donnees ?? []).map(n => ({
+        id: n.id, productId: n.produitId, productSku: n.sku, productName: n.designation,
+        warehouseId: n.entrepotId, quantity: n.quantite, reservedQty: 0,
+        reorderPoint: n.seuilReapprovisionnement, safetyStock: 0, unitPriceAmount: n.valeurStock,
+      } as unknown as StockLevel))),
+      catchError(() => of([]))
+    );
   }
 
   getAlerts(): Observable<StockLevel[]> {
@@ -144,7 +222,12 @@ export class StockApiRepository {
     return this.getAlerts().pipe(map(levels => levels.filter(sl => sl.alertLevel === 'CRITIQUE')));
   }
 
-  adjustStock(stockLevelId: number, newQuantity: number, reason: string, requestedBy?: string): Observable<StockLevel> {
+  /**
+   * Corrigé le 2026-10-15 (P5) : le vrai endpoint (StockItemController./adjust) renvoie une
+   * ValidationRequest (ajustement = action approuvable), pas un StockLevel — aucun appelant
+   * actuel ne lit de champ sur le résultat, mais le type ne doit pas mentir sur la forme réelle.
+   */
+  adjustStock(stockLevelId: number, newQuantity: number, reason: string, requestedBy?: string): Observable<unknown> {
     return this.api.post('stock/items/adjust', { stockLevelId, newQuantity, reason, requestedBy });
   }
 
@@ -287,11 +370,26 @@ export class StockApiRepository {
     );
   }
 
+  /**
+   * Source réelle : /api/stock/stock-mobile/suivi/... (StockMobileController), pas
+   * /api/stock/info-produits (bouchon qui renvoyait un statut DRAFT figé et aucune
+   * décomposition pris/vendu/restant — cause du crash ".reduce is not a function",
+   * l'appelant recevait l'enveloppe ApiResponse entière au lieu du tableau).
+   *
+   * Le mapping ligne par ligne garde ce qui est réellement mesuré par StockMobile :
+   * quantiteInitiale → pris, quantiteVendue → vendu. `returnedQty` est approché par
+   * quantiteDisponible (ce qui reste chez le commercial) — une approximation, pas
+   * un retour physique au dépôt (règle métier : les invendus ne retournent pas).
+   * `status`/validations caissier-comptable n'existent pas dans cette source : fixé
+   * à 'DRAFT', pas de double validation tant que ce workflow n'est pas branché ici.
+   */
   getInfoProduits(date?: string): Observable<InfoProduits[]> {
     const fallback = catchError<InfoProduits[], Observable<InfoProduits[]>>(() => of([]));
-    return date
-      ? this.api.get<InfoProduits[]>(`stock/info-produits?date=${date}`).pipe(fallback)
-      : this.api.get<InfoProduits[]>('stock/info-produits').pipe(fallback);
+    const url = date ? `stock/stock-mobile/suivi/date/${date}` : 'stock/stock-mobile/suivi/tous';
+    return this.api.get<{ donnees?: StockMobileResponseDto[] }>(url).pipe(
+      map(res => (res.donnees || []).map(toInfoProduits)),
+      fallback
+    );
   }
 
   // ── MOBILE STOCK TRACKING ───────────────────────────────────

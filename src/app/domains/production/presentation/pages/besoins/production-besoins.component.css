@@ -3,7 +3,7 @@
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
 
 .alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
-.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--sp-4); }
 .modal-card { background: var(--w); border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.22); width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; animation: sb-fade-in .25s ease-out; }

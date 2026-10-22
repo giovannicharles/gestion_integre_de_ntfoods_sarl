@@ -116,7 +116,7 @@
 }
 .pi-info-chip-g { background: rgba(22,163,74,.08); border-color: rgba(22,163,74,.2); color: var(--g-m); }
 .pi-info-chip-b { background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.2); color: var(--b); }
-.pi-info-chip-y { background: rgba(246,182,11,.1); border-color: rgba(246,182,11,.3); color: var(--o-d); }
+.pi-info-chip-y { background: rgba(246,182,11,.1); border-color: rgba(246,182,11,.3); color: var(--o); }
 .pi-info-chip-err { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.25); color: var(--r); }
 
 /* ══════════════════════════════════════════════════════════════
@@ -214,7 +214,7 @@
   color: var(--pi-y); font-size: .78rem;
 }
 .pi-ico-dosage {
-  background: linear-gradient(135deg, var(--b-l), var(--b));
+  background: linear-gradient(135deg, var(--b-gh), var(--b));
 }
 
 .pi-mat-tag {
@@ -272,4 +272,4 @@
 /* Badges */
 .badge { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; border-radius: 20px; padding: 3px 9px; }
 .badge-success { background: rgba(22,163,74,.1); color: var(--g-m); border: 1px solid rgba(22,163,74,.2); }
-.badge-warning { background: rgba(246,182,11,.1); color: var(--o-d); border: 1px solid rgba(246,182,11,.3); }
+.badge-warning { background: rgba(246,182,11,.1); color: var(--o); border: 1px solid rgba(246,182,11,.3); }

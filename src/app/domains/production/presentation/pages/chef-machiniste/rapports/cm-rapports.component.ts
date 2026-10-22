@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE, ClassementMachinisteBE } from '../../../../infrastructure/production.service';
@@ -20,7 +20,8 @@ type TypeRapport = 'journalier' | 'hebdomadaire' | 'mensuel' | 'pertes' | 'perfo
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './cm-rapports.component.html',
-  styleUrls: ['./cm-rapports.component.css', '../_shared.css']
+  styleUrls: ['./cm-rapports.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CmRapportsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -85,7 +86,7 @@ export class CmRapportsComponent implements OnInit {
     let entetes: string[] = []; let rows: (string | number)[][] = [];
     if (type === 'performances' && classement) {
       entetes = ['Rang', 'Machiniste', 'Productivité (kg)', 'Objectif (kg)', 'Taux (%)', 'Efficacité (%)'];
-      rows = classement.classements.map(c => [c.rang, c.nomMachiniste, c.productiviteKg, c.objectifTotalKg, c.tauxRealisationMoyen, c.efficacite]);
+      rows = classement.classements.map(c => [c.rang, c.nomMachiniste, c.productiviteKg, c.objectifTotalKg, c.tauxRealisationMoyen, c.efficacite * 100]);
     } else if (type === 'objectifs' && classement) {
       entetes = ['Machiniste', 'Opérations', 'Jours', 'Objectif total (kg)'];
       rows = classement.classements.map(c => [c.nomMachiniste, c.operations.join(' / '), c.nbJours, c.objectifTotalKg]);

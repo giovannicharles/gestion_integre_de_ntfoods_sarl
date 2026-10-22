@@ -1,0 +1,224 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+      <div>
+        <h1 class="ph-title">Commandes clients</h1>
+        <p class="ph-sub">Téléphone · WhatsApp · SMS · Email — {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="ouvrirForm()"><i class="fa-solid fa-plus"></i> Nouvelle commande</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des commandes…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <div class="kpi-grid">
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-inbox"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Reçues</span>
+        <span class="kpi-val">{{ nbRecues() }}</span>
+        <span class="kpi-meta">en attente de validation secrétaire</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-user-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Validées secrétaire</span>
+        <span class="kpi-val">{{ nbValideesSecretaire() }}</span>
+        <span class="kpi-meta">en attente de validation comptable</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Validées comptable</span>
+        <span class="kpi-val">{{ nbValideesComptable() }}</span>
+        <span class="kpi-meta">prêtes à livrer</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-truck"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Livrées</span>
+        <span class="kpi-val">{{ nbLivrees() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn" [class.active]="filterStatut()==='TOUTES'" (click)="filterStatut.set('TOUTES')">Toutes</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='RECUE'" (click)="filterStatut.set('RECUE')">Reçues</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='VALIDEE_SECRETAIRE'" (click)="filterStatut.set('VALIDEE_SECRETAIRE')">Att. comptable</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='VALIDEE_COMPTABLE'" (click)="filterStatut.set('VALIDEE_COMPTABLE')">Prêtes à livrer</button>
+    <button class="filter-btn" [class.active]="filterStatut()==='LIVREE'" (click)="filterStatut.set('LIVREE')">Livrées</button>
+  </div>
+
+  <div class="card table-card">
+    <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>N°</th><th>Client</th><th>Canal</th><th class="text-right">Montant</th><th>Statut</th><th>Date</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (c of liste(); track c.numeroCommande) {
+        <tr>
+          <td class="fw-bold">{{ c.numeroCommande }}</td>
+          <td>{{ clientNom(c.codeClient) }}</td>
+          <td><i [class]="canalIcon(c.canal)"></i> {{ canalLabel(c.canal) }}</td>
+          <td class="text-right mono">{{ fCFA(totalCommande(c)) }}</td>
+          <td><span [class]="statutClass(c.statut)">{{ statutLabel(c.statut) }}</span></td>
+          <td>{{ c.dateCommande | date:'dd/MM/yyyy' }}</td>
+          <td class="text-right" style="white-space:nowrap">
+            @if (c.statut === 'RECUE' && peutValiderSecretaire()) {
+            <button class="btn btn-sm btn-primary" [disabled]="actionEnCours()===c.numeroCommande" (click)="validerSecretaire(c)">
+              <i class="fa-solid fa-check"></i> Valider
+            </button>
+            <button class="btn btn-sm btn-outline" (click)="ouvrirRejeter(c)"><i class="fa-solid fa-xmark"></i></button>
+            }
+            @if (c.statut === 'VALIDEE_SECRETAIRE' && peutValiderComptable()) {
+            <button class="btn btn-sm btn-primary" [disabled]="actionEnCours()===c.numeroCommande" (click)="validerComptable(c)">
+              <i class="fa-solid fa-check"></i> Valider
+            </button>
+            <button class="btn btn-sm btn-outline" (click)="ouvrirRejeter(c)"><i class="fa-solid fa-xmark"></i></button>
+            }
+            @if (c.statut === 'VALIDEE_COMPTABLE' && peutGerer()) {
+            <button class="btn btn-sm btn-primary" [disabled]="actionEnCours()===c.numeroCommande" (click)="livrer(c)">
+              <i class="fa-solid fa-truck"></i> Livrer
+            </button>
+            }
+            @if (peutAnnuler(c)) {
+            <button class="btn btn-sm btn-outline" (click)="ouvrirAnnuler(c)" title="Annuler"><i class="fa-solid fa-ban"></i></button>
+            }
+          </td>
+        </tr>
+        } @empty {
+        <tr><td colspan="7" class="empty-state">Aucune commande dans ce filtre.</td></tr>
+        }
+      </tbody>
+    </table>
+    </div>
+  </div>
+  }
+
+  <!-- NOUVELLE COMMANDE -->
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="showForm.set(false)">
+    <div class="modal-box" style="max-width:640px" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-plus"></i> Nouvelle commande client</h3>
+        <button class="modal-close" (click)="showForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Client *</label>
+          <select class="form-control" [ngModel]="form().codeClient" (ngModelChange)="majChamp('codeClient', $event)">
+            <option value="">— Choisir —</option>
+            @for (c of clients(); track c.codeClient) { <option [value]="c.codeClient">{{ c.nom }} ({{ c.localite }})</option> }
+          </select>
+        </div>
+        <div class="form-row" style="display:flex;gap:12px">
+          <div class="form-group" style="flex:1">
+            <label>Canal de réception</label>
+            <select class="form-control" [ngModel]="form().canal" (ngModelChange)="majChamp('canal', $event)">
+              @for (c of canaux; track c.value) { <option [value]="c.value">{{ c.label }}</option> }
+            </select>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Date de la commande</label>
+            <input type="date" class="form-control" [ngModel]="form().dateCommande" (ngModelChange)="majChamp('dateCommande', $event)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label style="margin:0">Produits</label>
+            <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
+          </div>
+          @for (l of lignesForm(); track $index; let i = $index) {
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <select class="form-control" style="flex:2" [ngModel]="l.codeProduit" (ngModelChange)="changerProduitLigne(i, $event)">
+              @for (p of produitsFinis(); track p.sku) { <option [value]="p.sku">{{ p.designation || p.sku }}</option> }
+            </select>
+            <input type="number" min="1" class="form-control" style="flex:1" [ngModel]="l.quantite" (ngModelChange)="majLigne(i, 'quantite', +$event)" placeholder="Qté">
+            <input type="number" min="0" class="form-control" style="flex:1" [ngModel]="l.prixUnitaire" (ngModelChange)="majLigne(i, 'prixUnitaire', +$event)" placeholder="Prix unit.">
+            <span class="mono" style="min-width:90px;text-align:right;font-size:12px">{{ fCFA(totalLigne(l)) }}</span>
+            <button class="btn btn-sm btn-outline" (click)="retirerLigne(i)"><i class="fa-solid fa-trash"></i></button>
+          </div>
+          }
+          @if (lignesForm().length === 0) {
+          <div class="empty-state" style="padding:12px 0">Aucune ligne — cliquez sur « Ajouter une ligne ».</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Observations</label>
+          <textarea class="form-control" rows="2" [ngModel]="form().observations" (ngModelChange)="majChamp('observations', $event)" placeholder="Précisions utiles (ex : livraison urgente, contact alternatif...)"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="showForm.set(false)">Annuler</button>
+        <button class="btn btn-primary" [disabled]="saving() || !formValide()" (click)="enregistrer()">
+          <i class="fa-solid" [class.fa-paper-plane]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- REJETER -->
+  @if (showRejeter()) {
+  <div class="modal-overlay" (click)="showRejeter.set(null)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-xmark"></i> Rejeter {{ showRejeter()?.numeroCommande }}</h3>
+        <button class="modal-close" (click)="showRejeter.set(null)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Motif du rejet *</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="motifRejet" placeholder="Ex : produit non autorisé pour ce profil client, quantité anormale..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="showRejeter.set(null)">Fermer</button>
+        <button class="btn btn-danger" [disabled]="!motifRejet.trim()" (click)="confirmerRejeter()">Confirmer le rejet</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ANNULER -->
+  @if (showAnnuler()) {
+  <div class="modal-overlay" (click)="showAnnuler.set(null)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-ban"></i> Annuler {{ showAnnuler()?.numeroCommande }}</h3>
+        <button class="modal-close" (click)="showAnnuler.set(null)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Motif de l'annulation *</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="motifAnnulation"></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="showAnnuler.set(null)">Fermer</button>
+        <button class="btn btn-danger" [disabled]="!motifAnnulation.trim()" (click)="confirmerAnnuler()">Confirmer l'annulation</button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

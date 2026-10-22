@@ -8,10 +8,8 @@
 .filter-orange.active { background: var(--o) !important; border-color: var(--o) !important; }
 .filter-green.active { background: var(--s) !important; border-color: var(--s) !important; }
 .dec-list { display: flex; flex-direction: column; gap: var(--sp-3); }
-.dec-card { padding: var(--sp-4); border-left: 4px solid var(--n300); }
-.dec-waiting { border-left-color: var(--r); }
-.dec-dg-ok { border-left-color: var(--o); }
-.dec-valide { border-left-color: var(--s); background: var(--s-gh); }
+.dec-card { padding: var(--sp-4); }
+.dec-valide { background: var(--s-gh); }
 .dec-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--sp-3); }
 .dec-id { font-size: .72rem; color: var(--n400); font-weight: 700; margin-bottom: .2rem; }
 .dec-libelle { font-weight: 700; font-size: 1rem; color: var(--n800); margin-bottom: .2rem; }

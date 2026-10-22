@@ -2,6 +2,7 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { CommercialService, FicheSyntheseBE } from '../../../infrastructure/commercial.service';
 import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface ProduitUI { code: string; designation: string; }
 
@@ -18,6 +19,7 @@ export class FicheSyntheseComponent implements OnInit {
 
   private readonly svc = inject(CommercialService);
   private readonly stockRepo = inject(StockApiRepository);
+  private readonly toast = inject(ToastService);
 
   fiche = signal<FicheSyntheseBE | null>(null);
   produits = signal<ProduitUI[]>([]);
@@ -25,7 +27,7 @@ export class FicheSyntheseComponent implements OnInit {
   ngOnInit(): void {
     this.svc.getFicheSynthese().subscribe({
       next: f => this.fiche.set(f),
-      error: () => {},
+      error: () => this.toast.error('Impossible de charger la fiche de synthèse'),
     });
     this.stockRepo.getProducts().subscribe(list => {
       this.produits.set(list.map(p => ({ code: p.sku, designation: p.designation ?? p.sku })));

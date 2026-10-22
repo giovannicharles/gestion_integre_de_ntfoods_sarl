@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ComptableService, FactureBE, LigneFactureBE } from '../../../infrastructure/comptable.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface FactureUI {
   id: string; numero: string; codeClient: string; clientNom: string; type: string;
@@ -13,9 +14,10 @@ interface FactureUI {
 @Component({
   selector: 'app-comptable-factures',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './comptable-factures.component.html',
-  styleUrls: ['./comptable-factures.component.css']
+  styleUrls: ['./comptable-factures.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComptableFacturesComponent implements OnInit {
   private readonly svc = inject(ComptableService);
@@ -102,6 +104,7 @@ export class ComptableFacturesComponent implements OnInit {
       next: f => this.factures.update(list =>
         list.map(fac => fac.numero === numero ? this.mapF(f) : fac)
       ),
+      error: (e) => this.showToast(extractApiError(e), 'error'),
     });
   }
 
@@ -110,6 +113,7 @@ export class ComptableFacturesComponent implements OnInit {
       next: f => this.factures.update(list =>
         list.map(fac => fac.numero === numero ? this.mapF(f) : fac)
       ),
+      error: (e) => this.showToast(extractApiError(e), 'error'),
     });
   }
 

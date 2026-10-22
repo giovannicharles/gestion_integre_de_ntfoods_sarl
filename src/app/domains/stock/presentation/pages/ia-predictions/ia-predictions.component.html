@@ -142,6 +142,8 @@
                   <td><span class="urg-badge {{ getUrgencyClass(p.urgency) }}"><i class="fa-solid {{ getUrgencyIcon(p.urgency) }}"></i> {{ p.urgency }}</span></td>
                   <td style="font-size:12px;color:var(--n600)">{{ p.recommendation }}</td>
                 </tr>
+              } @empty {
+                <tr><td colspan="10" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune prédiction pour ce filtre d'urgence</td></tr>
               }
             </tbody>
           </table>

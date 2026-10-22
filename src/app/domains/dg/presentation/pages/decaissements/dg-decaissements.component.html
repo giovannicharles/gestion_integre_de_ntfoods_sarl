@@ -49,28 +49,30 @@
   <!-- FILTRES -->
   <div class="filter-bar">
     <button class="filter-btn" [class.active]="filterStatut()==='all'" (click)="filterStatut.set('all')">Toutes</button>
-    <button class="filter-btn filter-red" [class.active]="filterStatut()==='EN_ATTENTE_DG'" (click)="filterStatut.set('EN_ATTENTE_DG')">En attente DG</button>
-    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='DG_APPROUVE'" (click)="filterStatut.set('DG_APPROUVE')">DG Approuvé — Att. CG</button>
-    <button class="filter-btn filter-green" [class.active]="filterStatut()==='VALIDE'" (click)="filterStatut.set('VALIDE')">Validés</button>
+    <button class="filter-btn filter-red" [class.active]="filterStatut()==='PROPOSE'" (click)="filterStatut.set('PROPOSE')">Proposé — Att. DG (1)</button>
+    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='VALIDEE_CG'" (click)="filterStatut.set('VALIDEE_CG')">DG (1) ✓ — Att. DG (2)</button>
+    <button class="filter-btn filter-green" [class.active]="filterStatut()==='VALIDEE_DG'" (click)="filterStatut.set('VALIDEE_DG')">DG (2) ✓ — Att. Secrétaire</button>
+    <button class="filter-btn filter-green" [class.active]="filterStatut()==='EXECUTE'" (click)="filterStatut.set('EXECUTE')">Exécutés</button>
   </div>
 
   <!-- LISTE -->
   <div class="dec-list">
-    @for (dec of liste(); track dec.numero) {
-    <div class="dec-card card" [class.dec-waiting]="dec.statut==='EN_ATTENTE_DG'" [class.dec-dg-ok]="dec.statut==='DG_APPROUVE'" [class.dec-valide]="dec.statut==='VALIDE'">
+    @for (dec of liste(); track dec.numeroDecaissement) {
+    <div class="dec-card card" [class.dec-valide]="dec.statut==='EXECUTE'">
 
       <div class="dec-header">
         <div class="dec-left">
-          <div class="dec-id">{{ dec.numero }}</div>
+          <div class="dec-id">{{ dec.numeroDecaissement }}</div>
           <div class="dec-libelle">{{ dec.typeDepense }}</div>
           <div class="dec-demande-par"><i class="fa-solid fa-user"></i> {{ dec.matriculeProposant }}</div>
         </div>
         <div class="dec-right">
           <div class="dec-montant">{{ fCFA(dec.montantFCFA) }}</div>
-          @if (dec.statut === 'EN_ATTENTE_DG') { <span class="badge bg-red">En attente DG</span> }
-          @else if (dec.statut === 'DG_APPROUVE') { <span class="badge bg-orange">DG ✓ · Att. CG</span> }
-          @else if (dec.statut === 'VALIDE') { <span class="badge bg-success">Validé ✓✓</span> }
-          @else { <span class="badge bg-neutral">Refusé</span> }
+          @if (dec.statut === 'PROPOSE') { <span class="badge bg-red">Att. DG (1)</span> }
+          @else if (dec.statut === 'VALIDEE_CG') { <span class="badge bg-orange">DG (1) ✓ · Att. DG (2)</span> }
+          @else if (dec.statut === 'VALIDEE_DG') { <span class="badge bg-neutral">DG (2) ✓ · Att. Secrétaire</span> }
+          @else if (dec.statut === 'EXECUTE') { <span class="badge bg-success">Exécuté ✓✓</span> }
+          @else { <span class="badge bg-neutral">Annulé</span> }
         </div>
       </div>
 
@@ -80,29 +82,31 @@
       </div>
 
       <div class="validation-track">
-        <div class="v-step" [class.v-done]="dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE'">
-          <div class="v-dot" [class.v-dot-done]="dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE'"><i class="fa-solid fa-check"></i></div>
+        <div class="v-step" [class.v-done]="dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE'">
+          <div class="v-dot" [class.v-dot-done]="dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE'"><i class="fa-solid fa-check"></i></div>
           <div class="v-info">
-            <span class="v-lbl">Signature DG</span>
-            @if (dec.statut !== 'EN_ATTENTE_DG' && dec.statut !== 'ANNULE') { <span class="v-date">Approuvé</span> }
+            <span class="v-lbl">Validation DG — étape 1</span>
+            @if (dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE') { <span class="v-date">Approuvé</span> }
             @else { <span class="v-pending">En attente</span> }
           </div>
         </div>
-        <div class="v-line" [class.v-line-done]="dec.statut === 'VALIDE'"></div>
-        <div class="v-step" [class.v-done]="dec.statut === 'VALIDE'">
-          <div class="v-dot" [class.v-dot-done]="dec.statut === 'VALIDE'"><i class="fa-solid fa-check"></i></div>
+        <div class="v-line" [class.v-line-done]="dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE'"></div>
+        <div class="v-step" [class.v-done]="dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE'">
+          <div class="v-dot" [class.v-dot-done]="dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE'"><i class="fa-solid fa-check"></i></div>
           <div class="v-info">
-            <span class="v-lbl">Signature Contrôleur Gestion</span>
-            @if (dec.statut === 'VALIDE') { <span class="v-date">Approuvé</span> }
+            <span class="v-lbl">Approbation DG — étape 2</span>
+            @if (dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE') { <span class="v-date">Approuvé</span> }
             @else { <span class="v-pending">En attente</span> }
           </div>
         </div>
       </div>
 
-      @if (dec.statut === 'EN_ATTENTE_DG') {
-      <div class="dec-actions">
-        <button class="btn btn-danger btn-sm" (click)="refuserDG(dec.numero)"><i class="fa-solid fa-xmark"></i> Refuser</button>
-        <button class="btn btn-success btn-sm" (click)="approuverDG(dec.numero)"><i class="fa-solid fa-signature"></i> Approuver & transmettre au CG</button>
+      @if (dec.statut === 'PROPOSE' || dec.statut === 'VALIDEE_CG') {
+      <div class="dec-actions" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
+        <button class="btn btn-danger btn-sm" (click)="refuserDG(dec.numeroDecaissement)"><i class="fa-solid fa-xmark"></i> Refuser</button>
+        <button class="btn btn-success btn-sm" (click)="approuverDG(dec)">
+          <i class="fa-solid fa-signature"></i> {{ dec.statut === 'PROPOSE' ? 'Valider (étape 1)' : 'Approuver (étape 2) — transmettre à la Secrétaire' }}
+        </button>
       </div>
       }
     </div>

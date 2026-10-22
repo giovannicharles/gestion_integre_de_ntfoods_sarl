@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
+import { CanDirective } from '../../../../../../shared/directives/can.directive';
 
 // ── Catalogue produits (extrait de LISTE DES PRODUITS.xlsx) ─────────────────
 export interface ProduitCatalogue {
@@ -103,7 +104,7 @@ interface LigneForm {
 @Component({
   selector: 'app-cp-bons-commande',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe, FormsModule],
+  imports: [CommonModule, DecimalPipe, DatePipe, FormsModule, CanDirective],
   templateUrl: './cp-bons-commande.component.html',
   styleUrls: ['./cp-bons-commande.component.css', '../_shared.css']
 })
@@ -142,6 +143,10 @@ export class CpBonsCommandeComponent implements OnInit {
   showForm        = signal(false);
   formDateCommande = new Date().toISOString().split('T')[0];
   formDateLivraison = '';
+  // Période réelle de production (optionnelle) — sans elle, le plan généré retombe sur la semaine ouvrée
+  // de la date de commande, comme avant (2026-10-18).
+  formDateDebutProduction = '';
+  formDateFinProduction = '';
   lignesForm: LigneForm[] = [this.nouvelleLigne()];
 
   // ── Cycle de vie ─────────────────────────────────────────────────────────
@@ -160,6 +165,8 @@ export class CpBonsCommandeComponent implements OnInit {
   ouvrirFormulaire(): void {
     this.formDateCommande  = new Date().toISOString().split('T')[0];
     this.formDateLivraison = '';
+    this.formDateDebutProduction = '';
+    this.formDateFinProduction = '';
     this.lignesForm        = [this.nouvelleLigne()];
     this.error.set('');
     this.successMsg.set('');
@@ -196,6 +203,9 @@ export class CpBonsCommandeComponent implements OnInit {
 
   formulaireValide(): boolean {
     if (!this.formDateCommande) return false;
+    if (!!this.formDateDebutProduction !== !!this.formDateFinProduction) return false;
+    if (this.formDateDebutProduction && this.formDateFinProduction
+        && this.formDateFinProduction < this.formDateDebutProduction) return false;
     return this.lignesForm.every(l => l.codeProduit.trim() && (l.quantiteCommandee ?? 0) > 0);
   }
 
@@ -207,6 +217,8 @@ export class CpBonsCommandeComponent implements OnInit {
       codeFournisseur: null,
       dateCommande: this.formDateCommande,
       dateLivraisonPrevue: this.formDateLivraison || null,
+      dateDebutProduction: this.formDateDebutProduction || null,
+      dateFinProduction: this.formDateFinProduction || null,
       lignes: this.lignesForm.map(l => ({
         codeProduit:       l.codeProduit.trim().toUpperCase(),
         designation:       l.designation || null,

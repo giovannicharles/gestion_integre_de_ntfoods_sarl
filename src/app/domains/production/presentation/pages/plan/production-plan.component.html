@@ -19,9 +19,9 @@
     <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '—' }}</span>
     <button class="btn btn-primary" (click)="showCreerPPH.set(true)"><i class="fa-solid fa-plus"></i> PPH</button>
     <button class="btn btn-ghost" (click)="ouvrirModifierLignes()" [disabled]="!pph()">Modifier lignes</button>
-    @if (pph()?.statut === 'BROUILLON') { <button class="btn btn-primary" (click)="validerPPH()">Valider</button> }
-    @if (pph()?.statut === 'VALIDE') { <button class="btn btn-primary" (click)="demarrerPPH()">Démarrer</button> }
-    @if (pph()?.statut === 'EN_COURS') { <button class="btn btn-danger" (click)="cloturerPPH()">Clôturer</button> }
+    @if (pph()?.statut === 'BROUILLON') { <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="validerPPH()">Valider</button> }
+    @if (pph()?.statut === 'VALIDE') { <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="demarrerPPH()">Démarrer</button> }
+    @if (pph()?.statut === 'EN_COURS') { <button class="btn btn-danger" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="cloturerPPH()">Clôturer</button> }
   </div>
 </div>
 
@@ -299,7 +299,7 @@
     </div>
     <div class="modal-body">
       <p class="text-muted" style="margin:0;">
-        <i class="fa-solid fa-circle-info" style="color:var(--info);"></i>
+        <i class="fa-solid fa-circle-info" style="color:var(--b);"></i>
         Ajustez les objectifs hebdomadaires par produit. La production réalisée reste inchangée.
       </p>
       <div class="tbl-wrap">

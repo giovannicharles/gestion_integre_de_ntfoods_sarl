@@ -4,11 +4,12 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE } from '../../../infrastructure/production.service';
 import { StockService, BonCommandeBE } from '../../../../stock/infrastructure/stock.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-production-plan',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule],
+  imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule, CanDirective],
   templateUrl: './production-plan.component.html',
   styleUrls: ['./production-plan.component.css']
 })
@@ -128,7 +129,8 @@ export class ProductionPlanComponent implements OnInit {
       error: () => this.loading.set(false),
     });
     this.prodSvc.getPPHs().subscribe({
-      next: p => this.pphs.set(p)
+      next: p => this.pphs.set(p),
+      error: () => this.message.set('Impossible de charger la liste des PPH')
     });
 
     // Si on arrive depuis la validation d'un BC, on cherche immédiatement les PPH liés

@@ -97,6 +97,8 @@
             </td>
             <td>{{ e.present ? e.unite : '—' }}</td>
           </tr>
+        } @empty {
+          <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun employé dans le registre du jour</td></tr>
         }
       </tbody>
     </table>
@@ -118,6 +120,8 @@
         <span class="perf-heure">Arrivée {{ e.heureArrivee }}</span>
       </div>
     </div>
+  } @empty {
+    <p class="txt-muted" style="padding:16px">Aucun employé présent aujourd'hui.</p>
   }
 </div>
 

@@ -18,6 +18,11 @@ export const STOCK_ROUTES: Routes = [
       { path: 'reception/new', loadComponent: () => import('./pages/reception/reception-form.component').then(m => m.ReceptionFormComponent) },
       { path: 'reception/:id', loadComponent: () => import('./pages/reception/reception-form.component').then(m => m.ReceptionFormComponent) },
       { path: 'validation', loadComponent: () => import('./pages/validation/validation.component').then(m => m.ValidationComponent) },
+      // Moteur de validation générique (demandes de transfert, réappro tampon, etc.), distinct
+      // de 'validation' ci-dessus (spécifique aux réceptions) — réutilisé sans quitter la
+      // coquille Stock (même correction que DG/Contrôle/Comptable, 2026-10-16) : le sidebar
+      // pointait vers /validations, route de premier niveau sans aucun layout.
+      { path: 'mes-validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
       // Revu le 2026-10-01 (demande explicite du porteur, confidentialité des modules) : le
       // Gestionnaire de Stock ne doit jamais être envoyé dans le module Production (sa
       // navigation, son tableau de bord) même pour une action qu'il a le droit de faire côté

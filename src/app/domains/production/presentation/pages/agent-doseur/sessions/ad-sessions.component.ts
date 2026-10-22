@@ -41,7 +41,10 @@ export class AdSessionsComponent implements OnInit {
   ngOnInit(): void {
     const user = this.auth.user();
     if (user) this.nouvelleSession.matriculeAgentDoseur = user.matricule;
-    this.svc.getPPHs().subscribe({ next: p => this.pphs.set(p) });
+    this.svc.getPPHs().subscribe({
+      next: p => this.pphs.set(p),
+      error: () => this.message.set('Impossible de charger la liste des PPH')
+    });
     this.chargerHistorique();
   }
 

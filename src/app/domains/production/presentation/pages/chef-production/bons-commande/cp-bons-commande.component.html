@@ -160,6 +160,23 @@
             <input type="date" class="form-control" [(ngModel)]="formDateLivraison" name="dateLiv">
           </div>
         </div>
+        <div class="bc-fields-row">
+          <div class="form-group">
+            <label class="form-label">Début de production (optionnel)</label>
+            <input type="date" class="form-control" [(ngModel)]="formDateDebutProduction" name="dateDebutProd">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fin de production (optionnel)</label>
+            <input type="date" class="form-control" [(ngModel)]="formDateFinProduction" name="dateFinProd">
+          </div>
+        </div>
+        @if (!!formDateDebutProduction !== !!formDateFinProduction) {
+          <p class="form-hint form-hint-warning">Les deux dates de production sont nécessaires ensemble, ou aucune.</p>
+        } @else if (formDateDebutProduction && formDateFinProduction && formDateFinProduction < formDateDebutProduction) {
+          <p class="form-hint form-hint-warning">La fin de production doit être après son début.</p>
+        } @else {
+          <p class="form-hint">Sans ces dates, le plan de production généré à la validation retombe sur la semaine en cours.</p>
+        }
       </div>
 
       <!-- Bloc lignes -->
@@ -291,7 +308,7 @@
       <button class="btn btn-ghost" (click)="fermerFormulaire()" [disabled]="saving()">
         Annuler
       </button>
-      <button class="btn btn-primary" (click)="soumettre()"
+      <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']" (click)="soumettre()"
               [disabled]="saving() || !formulaireValide()">
         @if (saving()) {
           <span class="spinner spinner-sm"></span> Enregistrement…
@@ -331,6 +348,16 @@
         <div class="fiche-kpi">
           <span class="fk-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
           <span class="fk-val">{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</span>
+        </div>
+        <div class="fiche-kpi">
+          <span class="fk-lbl"><i class="fa-solid fa-industry"></i> Période de production</span>
+          <span class="fk-val">
+            @if (bc.dateDebutProduction && bc.dateFinProduction) {
+              {{ bc.dateDebutProduction | date:'dd/MM/yyyy' }} → {{ bc.dateFinProduction | date:'dd/MM/yyyy' }}
+            } @else {
+              Semaine en cours
+            }
+          </span>
         </div>
         <div class="fiche-kpi">
           <span class="fk-lbl"><i class="fa-solid fa-user"></i> Créateur</span>

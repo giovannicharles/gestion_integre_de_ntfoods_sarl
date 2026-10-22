@@ -1,5 +1,5 @@
 <div class="dash animate-fadeInUp">
-  <div class="ph">
+  <div class="ph ph-wm-commercial">
     <div class="ph-left">
       <div class="ph-icon ph-icon-orange"><i class="fa-solid fa-gas-pump"></i></div>
       <div>
@@ -39,10 +39,23 @@
         <label class="form-label">Montant (FCFA)</label>
         <input type="number" class="form-input" [ngModel]="form().montant" (ngModelChange)="updateMontant($event)" placeholder="Ex: 30000" />
       </div>
+      <div class="form-group">
+        <label class="form-label">Feuille de route du jour (trajet réel, obligatoire)</label>
+        @if (feuillesRoute().length === 0) {
+        <p class="form-hint" style="color:var(--r)">Aucune feuille de route trouvée pour aujourd'hui — un ravitaillement ne peut être enregistré sans trajet réel.</p>
+        } @else if (feuillesRoute().length === 1) {
+        <input type="text" class="form-input" [value]="feuillesRoute()[0].numeroFeuillRoute" disabled />
+        } @else {
+        <select class="form-input" [ngModel]="numeroFeuillRouteChoisi()" (ngModelChange)="numeroFeuillRouteChoisi.set($event)">
+          <option value="">— Choisir —</option>
+          @for (f of feuillesRoute(); track f.id) { <option [value]="f.numeroFeuillRoute">{{ f.numeroFeuillRoute }} ({{ f.nombreVisites }} visite(s))</option> }
+        </select>
+        }
+      </div>
     </div>
     <div class="form-actions">
       <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Enregistrer consommation</button>
+      <button class="btn btn-primary" [disabled]="!peutSoumettre()" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Enregistrer consommation</button>
     </div>
   </div>
   }

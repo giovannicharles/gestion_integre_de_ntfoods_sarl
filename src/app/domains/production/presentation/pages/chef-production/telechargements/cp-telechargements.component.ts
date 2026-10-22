@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +17,8 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './cp-telechargements.component.html',
-  styleUrls: ['./cp-telechargements.component.css', '../_shared.css']
+  styleUrls: ['./cp-telechargements.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CpTelechargementsComponent {
   private readonly svc = inject(ProductionService);
@@ -59,7 +60,7 @@ export class CpTelechargementsComponent {
   telechargerRapportPerformances(): void {
     this.svc.getClassementMachinistes(this.debut(), this.fin()).subscribe({
       next: (c: ClassementMachinisteBE) => this.exporterTableauCsv('rapport-performances-machinistes',
-        c.classements.map(x => ({ Rang: x.rang, Machiniste: x.nomMachiniste, 'Productivité (kg)': x.productiviteKg, 'Taux (%)': x.tauxRealisationMoyen, 'Efficacité (%)': x.efficacite }))),
+        c.classements.map(x => ({ Rang: x.rang, Machiniste: x.nomMachiniste, 'Productivité (kg)': x.productiviteKg, 'Taux (%)': x.tauxRealisationMoyen, 'Efficacité (%)': x.efficacite * 100 }))),
       error: () => this.message.set('Erreur lors de la génération du rapport de performances')
     });
     this.svc.getClassementExecuteurs(this.debut(), this.fin()).subscribe({

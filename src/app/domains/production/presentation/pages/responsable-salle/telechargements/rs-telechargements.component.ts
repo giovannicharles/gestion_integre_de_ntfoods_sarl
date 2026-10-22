@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, ClassementExecuteurBE, RapportHebdoAffectationBE } from '../../../../infrastructure/production.service';
@@ -13,7 +13,8 @@ import { ProductionService, ClassementExecuteurBE, RapportHebdoAffectationBE } f
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './rs-telechargements.component.html',
-  styleUrls: ['./rs-telechargements.component.css', '../_shared.css']
+  styleUrls: ['./rs-telechargements.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RsTelechargementsComponent {
   private readonly svc = inject(ProductionService);

@@ -3,6 +3,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { ApiService } from '../../../../../core/http/api.service';
+import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
 
 Chart.register(...registerables);
 
@@ -33,7 +34,7 @@ interface BufferValuationResponse {
 @Component({
   selector: 'app-valorisation',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, EmptyIllustrationComponent],
   templateUrl: './valorisation.component.html',
   styleUrls: ['./valorisation.component.css']
 })
@@ -79,6 +80,7 @@ export class ValorisationComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => {
         this.loading.set(false);
+        this.showToast('Impossible de charger la valorisation', 'error');
       }
     });
     this.api.get<BufferValuationResponse>('stock/valuation/buffer/auto').subscribe({

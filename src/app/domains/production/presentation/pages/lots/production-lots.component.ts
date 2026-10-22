@@ -3,25 +3,33 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ProductionService, LotBE, PPHBE } from '../../../infrastructure/production.service';
+import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
+import { Product } from '../../../../stock/domain/models/stock.models';
+import { ProductSearchComponent } from '../../../../../shared/components/product-search/product-search.component';
+import { ConditioningQuantityComponent, LigneConditionnement } from '../../../../../shared/components/conditioning-quantity/conditioning-quantity.component';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface LotFormLigne {
-  codeProduit: string;
-  designationProduit: string;
   referencePPH: string;
-  quantiteKg: number;
-  nbCartons: number;
+  product: Product | null;
+  productLabel: string;
+  declaredQuantityKg: number;
+  /** Décomposition par conditionnement (P4) — [0] alimente conditioningType/conditioningQty/equivalentUnits. */
+  lignesConditionnement: LigneConditionnement[];
   dlc: string;
+  notes: string;
 }
 
 @Component({
   selector: 'app-production-lots',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, CanDirective],
   templateUrl: './production-lots.component.html',
   styleUrls: ['./production-lots.component.css']
 })
 export class ProductionLotsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
+  private readonly stockRepo = inject(StockApiRepository);
 
   today = new Date();
   loading = signal(false);
@@ -29,10 +37,19 @@ export class ProductionLotsComponent implements OnInit {
   lots = signal<LotBE[]>([]);
   lotsAValider = signal<LotBE[]>([]);
   pphs = signal<PPHBE[]>([]);
+  /**
+   * Produits finis réels (module conditionnement, projetés dans le catalogue opérationnel
+   * — voir CatalogueOperationnelSeeder/ProduitsFinisOperationnelSeeder, backend) : même
+   * source que le combobox de Stock (StockApiRepository.getFinishedProducts), réutilisée
+   * ici plutôt que ressaisie en texte libre (P3, 2026-10-15 — cause du 400 systématique
+   * corrigée dans la même tranche, voir production.service.ts : LotBE).
+   */
+  produits = signal<Product[]>([]);
   showDeclarerLot = signal(false);
   showRejeter = signal<LotBE | null>(null);
   motifRejet = '';
   message = signal('');
+  erreurDeclaration = signal<string | null>(null);
 
   dateProduction = this.formatDate(new Date());
   lignesLot: LotFormLigne[] = [];
@@ -40,13 +57,20 @@ export class ProductionLotsComponent implements OnInit {
   nbDeclares = computed(() => this.lots().filter(l => l.statut === 'DECLARE').length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
   nbRejetes = computed(() => this.lots().filter(l => l.statut === 'REJETE').length);
-  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.quantiteKg, 0));
-  totalCartons = computed(() => this.lots().reduce((s, l) => s + l.nbCartons, 0));
+  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.declaredQuantityKg, 0));
+  totalCartons = computed(() => this.lots().reduce((s, l) => s + l.equivalentUnits, 0));
 
   ngOnInit(): void {
     this.chargerLots();
     this.chargerLotsAValider();
-    this.svc.getPPHs().subscribe({ next: p => this.pphs.set(p) });
+    this.svc.getPPHs().subscribe({
+      next: p => this.pphs.set(p),
+      error: () => this.message.set('Impossible de charger la liste des PPH')
+    });
+    this.stockRepo.getFinishedProducts().subscribe({
+      next: p => this.produits.set(p),
+      error: () => this.message.set('Impossible de charger le catalogue des produits finis')
+    });
   }
 
   chargerLots(): void {
@@ -66,15 +90,31 @@ export class ProductionLotsComponent implements OnInit {
   }
 
   declarerLot(): void {
+    this.erreurDeclaration.set(null);
     const valides = this.lignesLot.filter(l =>
-      l.codeProduit && l.designationProduit && l.referencePPH && l.quantiteKg > 0 && l.dlc
+      l.product && l.referencePPH && l.declaredQuantityKg > 0 && l.dlc && l.lignesConditionnement.length > 0
     );
     if (valides.length === 0) {
-      this.message.set('Veuillez renseigner au moins une ligne valide.');
+      this.erreurDeclaration.set('Chaque ligne doit avoir un produit sélectionné (dans la liste, pas un code tapé au hasard), un PPH, une quantité (kg) positive, un conditionnement et une DLC.');
       return;
     }
-    const req = valides.map(l => ({ ...l, dateProduction: this.dateProduction || undefined }));
-    forkJoin(req.map(r => this.svc.declarerLot(r))).subscribe({
+    const requests = valides.map(l => {
+      const principal = l.lignesConditionnement[0];
+      return {
+        referencePPH: l.referencePPH,
+        productSku: l.product!.sku,
+        productName: l.product!.designation || l.product!.sku,
+        productUnit: l.product!.unit,
+        declaredQuantityKg: l.declaredQuantityKg,
+        equivalentUnits: principal.quantite,
+        conditioningType: principal.typeEmballageNom || undefined,
+        conditioningQty: principal.quantite,
+        dateProduction: this.dateProduction || undefined,
+        dlc: l.dlc,
+        notes: l.notes || undefined,
+      };
+    });
+    forkJoin(requests.map(r => this.svc.declarerLot(r))).subscribe({
       next: crees => {
         this.lots.update(list => [...crees, ...list]);
         this.chargerLotsAValider();
@@ -82,12 +122,16 @@ export class ProductionLotsComponent implements OnInit {
         this.lignesLot = [];
         this.message.set(`${crees.length} lot(s) déclaré(s) — en attente de validation stock`);
       },
-      error: () => this.message.set('Erreur lors de la déclaration des lots')
+      error: (err) => {
+        const detail = err?.error?.erreur || err?.error?.message;
+        this.erreurDeclaration.set(detail || 'Erreur lors de la déclaration des lots');
+      }
     });
   }
 
   ouvrirDeclarerLot(): void {
     this.dateProduction = this.formatDate(new Date());
+    this.erreurDeclaration.set(null);
     this.lignesLot = [this.ligneVide()];
     this.showDeclarerLot.set(true);
   }
@@ -100,8 +144,22 @@ export class ProductionLotsComponent implements OnInit {
     this.lignesLot = this.lignesLot.filter((_, idx) => idx !== i);
   }
 
+  surSelectionProduit(ligne: LotFormLigne, produit: Product): void {
+    ligne.product = produit;
+    ligne.lignesConditionnement = [];
+  }
+
+  surEffacementProduit(ligne: LotFormLigne): void {
+    ligne.product = null;
+    ligne.lignesConditionnement = [];
+  }
+
+  surLignesConditionnement(ligne: LotFormLigne, lignes: LigneConditionnement[]): void {
+    ligne.lignesConditionnement = lignes;
+  }
+
   private ligneVide(): LotFormLigne {
-    return { codeProduit: '', designationProduit: '', referencePPH: '', quantiteKg: 0, nbCartons: 0, dlc: '' };
+    return { referencePPH: '', product: null, productLabel: '', declaredQuantityKg: 0, lignesConditionnement: [], dlc: '', notes: '' };
   }
 
   private formatDate(d: Date): string {

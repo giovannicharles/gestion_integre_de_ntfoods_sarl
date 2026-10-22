@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ZoneDeVenteService, ZoneDeVenteBE } from '../../../infrastructure/zone-vente.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
  * Administration des zones de vente.
@@ -18,7 +19,7 @@ import { ZoneDeVenteService, ZoneDeVenteBE } from '../../../infrastructure/zone-
 @Component({
   selector: 'app-zones-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, CanDirective],
   templateUrl: './zones-admin.component.html',
   styleUrls: ['./zones-admin.component.css'],
 })

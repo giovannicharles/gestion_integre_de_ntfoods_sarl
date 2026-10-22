@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { CommercialService, RecouvrementBE } from '../../../../commercial/infrastructure/commercial.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface RecouvrementUI {
   id: string; clientId: string; clientNom: string;
@@ -17,6 +18,7 @@ interface RecouvrementUI {
 })
 export class ComptableRecouvrementComponent implements OnInit {
   private readonly svc = inject(CommercialService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
@@ -42,6 +44,7 @@ export class ComptableRecouvrementComponent implements OnInit {
       next: r => this.recouvrement.update(list =>
         list.map(rec => rec.id === id ? this.mapR(r) : rec)
       ),
+      error: () => this.toast.error('Impossible d\'enregistrer le remboursement'),
     });
   }
 

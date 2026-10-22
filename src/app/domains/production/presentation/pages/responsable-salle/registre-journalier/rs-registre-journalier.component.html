@@ -16,6 +16,55 @@
   <div>Pas d'endpoint d'export PDF/Excel dédié au registre journalier — export CSV généré côté client à partir des données réelles.</div>
 </div>
 
+@if (registreAujourdhui()) {
+  <div class="card">
+    <div class="toolbar-row">
+      <strong>Registre d'aujourd'hui — {{ registreAujourdhui()!.referencePPH }}</strong>
+      @if (!modeCorrection()) {
+        <button class="btn btn-secondary btn-sm" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="demarrerCorrection()"><i class="fa-solid fa-pen"></i> Corriger</button>
+      }
+    </div>
+
+    @if (message()) {
+      <div class="gap-note">{{ message() }}</div>
+    }
+
+    @if (modeCorrection()) {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Matricule</th><th>Nom</th><th>Poste</th><th>Présent</th><th>Heure arrivée</th><th>Quantité</th><th>Unité</th><th></th></tr></thead>
+          <tbody>
+            @for (l of lignesCorrection(); track $index) {
+              <tr>
+                <td><input class="input" [ngModel]="l.matriculeEmploye" (ngModelChange)="l.matriculeEmploye = $event"></td>
+                <td><input class="input" [ngModel]="l.nomEmploye" (ngModelChange)="l.nomEmploye = $event"></td>
+                <td>
+                  <select class="input" [ngModel]="l.poste" (ngModelChange)="l.poste = $event">
+                    <option value="">—</option>
+                    @for (c of codesPoste(); track c.code) {
+                      <option [value]="c.code">{{ c.libelle }}</option>
+                    }
+                  </select>
+                </td>
+                <td><input type="checkbox" [ngModel]="l.present" (ngModelChange)="l.present = $event"></td>
+                <td><input class="input" placeholder="HH:mm" [ngModel]="l.heureArrivee" (ngModelChange)="l.heureArrivee = $event"></td>
+                <td><input type="number" class="input" [ngModel]="l.qteRealisee" (ngModelChange)="l.qteRealisee = $event"></td>
+                <td><input class="input" [ngModel]="l.unite" (ngModelChange)="l.unite = $event"></td>
+                <td><button class="btn btn-ghost btn-sm" (click)="retirerLigneCorrection($index)"><i class="fa-solid fa-trash"></i></button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="toolbar-row">
+        <button class="btn btn-secondary btn-sm" (click)="ajouterLigneCorrection()"><i class="fa-solid fa-plus"></i> Ajouter un employé</button>
+        <button class="btn btn-primary btn-sm" [disabled]="enregistrementEnCours()" (click)="enregistrerCorrection()">Enregistrer la correction</button>
+        <button class="btn btn-ghost btn-sm" (click)="annulerCorrection()">Annuler</button>
+      </div>
+    }
+  </div>
+}
+
 <div class="card">
   <div class="toolbar-row">
     <input class="input search-input" placeholder="Rechercher un employé..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">

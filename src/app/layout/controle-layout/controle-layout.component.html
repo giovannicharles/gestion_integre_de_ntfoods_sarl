@@ -68,6 +68,7 @@
           <i class="fa-solid fa-money-check-dollar"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
         </button>
+        <app-notification-center></app-notification-center>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>

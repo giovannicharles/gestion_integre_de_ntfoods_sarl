@@ -1,4 +1,4 @@
-<div class="ph">
+<div class="ph ph-wm-comptable">
   <div class="ph-left">
     <i class="fa-solid fa-hand-holding-dollar ph-ico"></i>
     <div>
@@ -46,7 +46,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card card-wm card-wm-comptable">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-table"></i> Détail des Créances</h2>
   </div>
@@ -82,6 +82,8 @@
             </td>
             <td><span [class]="statutClass(r.statut)">{{ r.statut }}</span></td>
           </tr>
+        } @empty {
+          <tr><td colspan="7" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune créance en cours</td></tr>
         }
       </tbody>
     </table>

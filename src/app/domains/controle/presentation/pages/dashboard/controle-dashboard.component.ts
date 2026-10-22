@@ -1,7 +1,10 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ControleService, ControleDashboard, MargeProduit, BudgetItem, VarianceItem } from '../../../infrastructure/controle.service';
+import { forkJoin } from 'rxjs';
+import { ControleService, ControleDashboard, MargeProduit, BudgetItem, VarianceItem, AnomalieItem } from '../../../infrastructure/controle.service';
+import { ComptableService, DecaissementBE } from '../../../../comptable/infrastructure/comptable.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 @Component({
@@ -16,11 +19,17 @@ export class ControleDashboardComponent implements OnInit {
   Math = Math;
 
   private readonly svc = inject(ControleService);
+  private readonly cptSvc = inject(ComptableService);
+
+  loading = signal(true);
+  loadError = signal<string | null>(null);
 
   data = signal<ControleDashboard | null>(null);
   marges = signal<MargeProduit[]>([]);
   budget = signal<BudgetItem[]>([]);
   variances = signal<VarianceItem[]>([]);
+  anomalies = signal<AnomalieItem[]>([]);
+  decaissementsEnCours = signal<DecaissementBE[]>([]);
 
   tresorerie = computed(() => this.data()?.tresorerie ?? 0);
   ecartsRouges = computed(() => this.data()?.ecartsRouges ?? 0);
@@ -34,14 +43,31 @@ export class ControleDashboardComponent implements OnInit {
   anomaliesElevees = computed(() => this.data()?.anomaliesElevees ?? 0);
 
   ngOnInit(): void {
-    this.svc.getDashboard().subscribe({
-      next: d => {
-        this.data.set(d);
-        this.marges.set(d.marges);
-        this.budget.set(d.budget);
-        this.variances.set(d.variances);
+    this.charger();
+  }
+
+  charger(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+    forkJoin({
+      dashboard: this.svc.getDashboard(),
+      decaissements: this.cptSvc.getDecaissements(),
+    }).subscribe({
+      next: ({ dashboard, decaissements }) => {
+        this.data.set(dashboard);
+        this.marges.set(dashboard.marges);
+        this.budget.set(dashboard.budget);
+        this.variances.set(dashboard.variances);
+        this.anomalies.set(dashboard.anomalies);
+        this.decaissementsEnCours.set(
+          decaissements.filter(x => x.statut === 'PROPOSE' || x.statut === 'VALIDEE_CG').slice(0, 5)
+        );
+        this.loading.set(false);
       },
-      error: () => {},
+      error: e => {
+        this.loadError.set(extractApiError(e));
+        this.loading.set(false);
+      },
     });
   }
 

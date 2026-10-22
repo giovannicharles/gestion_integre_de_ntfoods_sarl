@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
 import { CommercialService } from '../../../infrastructure/commercial.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 
 @Component({
@@ -19,6 +20,7 @@ export class CommercialClassementComponent implements OnInit {
   // commercial, sous la permission COMMERCIAL_VENTE_CONSULTER qu'il détient.
   private readonly comSvc = inject(CommercialService);
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   commerciaux = signal<ClassementCommercialBE[]>([]);
   /**
@@ -35,8 +37,22 @@ export class CommercialClassementComponent implements OnInit {
     this.monId.set(this.auth.user()?.matricule ?? '');
     this.comSvc.getClassementCommerciaux().subscribe({
       next: c => this.commerciaux.set(c),
-      error: () => {},
+      error: () => this.toast.error('Impossible de charger le classement'),
     });
+  }
+
+  /**
+   * Numéro de semaine ISO-8601 réel, calculé côté client — remplace le libellé
+   * fixe « S26-2026 » qui restait affiché quelle que soit la semaine réelle
+   * (trouvé en vérifiant l'écran en direct, pas en lisant le code seul).
+   */
+  get numeroSemaine(): string {
+    const d = new Date(Date.UTC(this.today.getFullYear(), this.today.getMonth(), this.today.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const semaine = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return `S${semaine}-${d.getUTCFullYear()}`;
   }
 
   tauxRealisation(c: ClassementCommercialBE): number {

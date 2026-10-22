@@ -59,6 +59,7 @@
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
+        <app-notification-center></app-notification-center>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>

@@ -38,7 +38,7 @@ export class CpCoordinationComponent implements OnInit {
     this.loading.set(true);
     this.svc.getAffectations({ debut: this.today, fin: this.today }).subscribe({ next: a => this.affectations.set(a) });
     this.svc.getSessionsBroyage({ debut: this.today, fin: this.today }).subscribe({ next: s => this.sessionsBroyage.set(s) });
-    this.svc.getSessionsDosageParDate(this.today).subscribe({ next: s => { this.sessionsDosage.set(s); this.loading.set(false); } });
+    this.svc.getSessionsDosageParDate(this.today).subscribe({ next: s => { this.sessionsDosage.set(s); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 
   changerOnglet(o: Onglet): void { this.onglet.set(o); }

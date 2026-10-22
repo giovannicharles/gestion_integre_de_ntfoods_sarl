@@ -27,23 +27,17 @@
     <span class="text-muted">(utilisé pour les rapports hebdomadaire / pertes / performances / objectifs / réalisations)</span>
   </div>
 
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Rapport</th><th>Description</th><th>Téléchargement</th></tr></thead>
-      <tbody>
-        @for (r of rapports; track r.type) {
-          <tr>
-            <td><i class="fa-solid {{ r.icone }}"></i> <strong>{{ r.titre }}</strong></td>
-            <td class="text-muted">{{ r.description }}</td>
-            <td>
-              <div class="row-actions">
-                <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'csv')"><i class="fa-solid fa-file-csv"></i> Excel/CSV</button>
-                <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'print')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+  <div class="card-grid-auto" style="margin-top:var(--sp-3,12px)">
+    @for (r of rapports; track r.type) {
+      <div class="card doc-pick-card">
+        <div class="doc-pick-ico"><i class="fa-solid {{ r.icone }}"></i></div>
+        <div class="doc-pick-title">{{ r.titre }}</div>
+        <div class="doc-pick-desc">{{ r.description }}</div>
+        <div class="doc-pick-actions">
+          <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'csv')"><i class="fa-solid fa-file-csv"></i> Excel/CSV</button>
+          <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'print')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        </div>
+      </div>
+    }
   </div>
 </div>

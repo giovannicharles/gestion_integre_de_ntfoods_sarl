@@ -7,6 +7,7 @@ import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 registerLocaleData(localeFr);
 
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -14,7 +15,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 @Component({
   selector: 'app-commercial-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
   templateUrl: './commercial-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })

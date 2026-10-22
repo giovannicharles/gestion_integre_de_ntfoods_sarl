@@ -125,7 +125,7 @@
               @if (edition() === o.id) {
                 <button class="btn btn-ghost btn-sm" (click)="annulerEdition()">Annuler</button>
               } @else {
-                <button class="btn btn-ghost btn-sm" (click)="ouvrirEdition(o)">
+                <button class="btn btn-ghost btn-sm" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']" (click)="ouvrirEdition(o)">
                   <i class="fa-solid fa-pen"></i> Réviser
                 </button>
               }
@@ -148,6 +148,7 @@
                   La prime de cette semaine sera calculée sur la nouvelle valeur.
                 </span>
                 <button class="btn btn-primary"
+                        *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']"
                         [disabled]="!revisionValide(o) || enregistrement() === o.id"
                         (click)="enregistrer(o)">
                   {{ enregistrement() === o.id ? 'Enregistrement…' : 'Enregistrer la révision' }}

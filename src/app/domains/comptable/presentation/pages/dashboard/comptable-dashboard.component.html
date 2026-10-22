@@ -1,5 +1,5 @@
 <div class="dash animate-fadeInUp">
-  <div class="ph">
+  <div class="ph ph-wm-comptable">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
       <div>
@@ -14,6 +14,16 @@
       </a>
     </div>
   </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du tableau de bord…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
 
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
@@ -54,7 +64,7 @@
     </div>
   </div>
 
-  <!-- COMPTE D'EXPLOITATION (trésorerie · charges · résultat) -->
+  <!-- TRÉSORERIE -->
   <div class="kpi-grid">
     <div class="kpi-card kp-b">
       <div class="kpi-decor kd-b"></div>
@@ -69,18 +79,18 @@
       <div class="kpi-decor kd-r"></div>
       <div class="kpi-ico ir"><i class="fa-solid fa-file-invoice-dollar"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Charges (mois)</span>
-        <span class="kpi-val">{{ fCFA(totalCharges()) }}</span>
-        <div class="kpi-meta">Dépenses opérationnelles consolidées</div>
+        <span class="kpi-lbl">Décaissements exécutés</span>
+        <span class="kpi-val">{{ fCFA(fiche.totalDecaissements) }}</span>
+        <div class="kpi-meta">{{ fiche.nbDecaissementsEnAttente }} en attente de validation</div>
       </div>
     </div>
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
-      <div class="kpi-ico ig"><i class="fa-solid fa-scale-balanced"></i></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-file-invoice"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Résultat (mois)</span>
-        <span class="kpi-val" [class.text-success]="resultat()>0" [class.text-danger]="resultat()<0">{{ fCFA(resultat()) }}</span>
-        <div class="kpi-meta">Marge nette {{ margeNette() }}% · CA {{ fCFA(caMois) }}</div>
+        <span class="kpi-lbl">CA facturé (mois)</span>
+        <span class="kpi-val">{{ fCFA(caMois) }}</span>
+        <div class="kpi-meta">{{ fiche.nbFacturesImpayees }} facture(s) impayée(s)</div>
       </div>
     </div>
     <div class="kpi-card kp-y">
@@ -133,30 +143,34 @@
         @for (p of precommandes; track p.id) {
         <div class="pcm-row" [class.pcm-ready]="p.statut==='VALIDEE_COMPTABLE'">
           <div class="pcm-id">{{ p.id }}</div>
-          <div class="pcm-com">COM-{{ p.commercialId }}</div>
-          <div class="pcm-lignes">{{ p.lignes.length }} produit(s)</div>
+          <div class="pcm-com">{{ p.commercialId }}</div>
+          <div class="pcm-lignes">{{ p.nbLignes }} produit(s)</div>
           @if (p.statut==='VALIDEE_COMPTABLE') { <span class="badge bg-success">Validée ✓</span> }
           @else if (p.statut==='VALIDEE_SECRETAIRE') { <span class="badge bg-orange">Att. comptable</span> }
           @else { <span class="badge bg-neutral">Att. secrétaire</span> }
         </div>
+        } @empty {
+        <div class="empty-state">Aucune commande en attente.</div>
         }
       </div>
     </div>
   </div>
 
-  <!-- CHARGES + VARIANCE -->
+  <!-- BUDGET + VARIANCE (Contrôle de gestion) -->
   <div class="section-row">
     <div class="card table-card">
-      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-receipt"></i> Ventilation des charges</span></div>
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-receipt"></i> Engagement budgétaire par poste</span></div>
       <div style="padding:0 var(--sp-4) var(--sp-4)">
-        @for (c of charges; track c.categorie) {
+        @for (b of budget; track b.id) {
         <div style="margin-bottom:13px">
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span class="fw-bold">{{ c.categorie }}</span>
-            <span class="mono">{{ fCFA(c.montant) }} · {{ c.part }}%</span>
+            <span class="fw-bold">{{ b.poste }}</span>
+            <span class="mono">{{ fCFA(b.engage) }} · {{ budgetPart(b) }}%</span>
           </div>
-          <div class="prog-track-wide"><div class="prog-bar" [style.width.%]="c.part"></div></div>
+          <div class="prog-track-wide"><div class="prog-bar" [style.width.%]="budgetPart(b)"></div></div>
         </div>
+        } @empty {
+        <div class="empty-state">Aucun poste budgétaire enregistré.</div>
         }
       </div>
     </div>
@@ -174,6 +188,8 @@
               <td class="mono">{{ v.reel }}</td>
               <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
             </tr>
+            } @empty {
+            <tr><td colspan="4" class="empty-state">Aucune donnée de variance.</td></tr>
             }
           </tbody>
         </table>
@@ -206,38 +222,29 @@
     </div>
   </div>
 
-  <!-- ADMINISTRATION & FISCALITÉ -->
-  <div class="section-row">
-    <div class="card ranking-card">
-      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-landmark"></i> Éléments DSF & Social (CNPS)</span></div>
-      <div class="fiche-kpis" style="padding:0 var(--sp-4) var(--sp-4)">
-        <div class="fiche-kpi"><span class="fk-lbl">CA déclarable (mois)</span><span class="fk-val">{{ fCFA(caMois) }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">Charges déductibles</span><span class="fk-val">{{ fCFA(totalCharges()) }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">Résultat fiscal</span><span class="fk-val">{{ fCFA(resultat()) }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">TVA collectée (19,25%)</span><span class="fk-val">{{ fCFA(caFactureReel() * 0.1925) }}</span></div>
-      </div>
+  <!-- PRIMES -->
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-award"></i> Calcul des primes hebdomadaires</span>
+      <span class="badge badge-secondary badge-sm">{{ fCFA(primeMontant) }} à verser</span>
     </div>
-
-    <div class="card table-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-award"></i> Calcul des primes hebdomadaires</span>
-        <span class="badge badge-secondary badge-sm">{{ fCFA(totalPrimes()) }}</span>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Commercial</th><th>Taux global</th><th>Gammes ≥75%</th><th>Prime ({{ fCFA(primeMontant) }})</th></tr></thead>
-          <tbody>
-            @for (p of primes; track p.commercialId) {
-            <tr [class.row-winner]="p.eligible">
-              <td class="fw-bold">{{ p.nom }}</td>
-              <td class="mono">{{ p.tauxGlobal }}%</td>
-              <td class="mono">{{ p.gammesValidees }}/{{ p.gammesTotal }}</td>
-              <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">—</span> }</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Commercial</th><th>Taux global</th><th>Gammes ≥75%</th><th>Prime</th></tr></thead>
+        <tbody>
+          @for (p of primes; track p.commercialId) {
+          <tr [class.row-winner]="p.eligible">
+            <td class="fw-bold">{{ p.commercialId }}</td>
+            <td class="mono">{{ p.tauxGlobal }}%</td>
+            <td class="mono">{{ p.gammesValidees }}/{{ p.gammesTotal }}</td>
+            <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">—</span> }</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="4" class="empty-state">Aucune prime calculée pour cette semaine.</td></tr>
+          }
+        </tbody>
+      </table>
     </div>
   </div>
+  }
 </div>

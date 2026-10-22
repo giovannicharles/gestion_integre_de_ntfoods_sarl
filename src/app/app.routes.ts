@@ -80,8 +80,12 @@ export const routes: Routes = [
   },
   {
     // Configuration technique de la plateforme (module `admin` backend, /api/v1/admin/parametres) —
-    // espace distinct de /admin ci-dessus (qui sert en réalité `administration` : comptes, paramètres
-    // métier). Ne jamais fusionner : décision actée, docs/PROGRESS.md 2026-09-23.
+    // préfixes d'URL et modules backend restent distincts de /admin ci-dessus (qui sert en réalité
+    // `administration` : comptes, paramètres métier), mais les deux partagent désormais la même
+    // coquille visuelle (AdminLayoutComponent, une seule sidebar à deux sections) : ce n'est plus
+    // "deux espaces" pour l'utilisateur. Décision du 2026-10-15 (demande explicite du porteur), qui
+    // annule la séparation totale actée le 2026-09-23 — voir docs/PROGRESS.md et le commentaire de
+    // ADMIN_SYSTEME_ROUTES (admin-systeme.routes.ts) pour le détail.
     path: 'admin-systeme',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMIN', 'DIRECTEUR_GENERAL'] },

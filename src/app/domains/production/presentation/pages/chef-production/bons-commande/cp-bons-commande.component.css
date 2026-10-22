@@ -6,6 +6,10 @@
 /* ── Skeleton row ─────────────────────────────────────────── */
 .skeleton-row { height: 42px; margin: 4px 16px; border-radius: 6px; }
 
+/* ── Aide de formulaire (période de production) ──────────────── */
+.form-hint { font-size: 12px; color: var(--n500); margin: 4px 0 0; }
+.form-hint-warning { color: var(--r); font-weight: 600; }
+
 /* ── Modal principale ─────────────────────────────────────── */
 .bc-modal {
   max-width: 820px;

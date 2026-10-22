@@ -69,9 +69,13 @@ export class ComptableObjectifsComponent implements OnInit {
 
   ngOnInit(): void {
     const today = new Date();
+    // (getDay()+6)%7 : lundi=0 ... dimanche=6 — gère correctement le dimanche
+    // (getDay()=0 → recule de 6 jours, pas d'avance d'un jour comme `getDay()-1`).
     const lundi = new Date(today);
-    lundi.setDate(today.getDate() - today.getDay() + 1);
-    const semaineDebut = lundi.toISOString().split('T')[0];
+    lundi.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et
+    // décale la date avant 01:00 (WAT).
+    const semaineDebut = `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
 
     // Les objectifs portent la cible, les primes portent la réalisation calculée
     // par le serveur : les deux sont nécessaires pour un taux d'atteinte exact.

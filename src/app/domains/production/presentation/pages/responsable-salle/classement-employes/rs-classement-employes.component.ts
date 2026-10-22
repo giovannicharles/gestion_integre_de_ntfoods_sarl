@@ -27,7 +27,7 @@ export class RsClassementEmployesComponent implements OnInit {
     this.loading.set(true);
     const fin = new Date().toISOString().split('T')[0];
     this.svc.getClassementExecuteurs(this.debutSemaine(), fin).subscribe({ next: c => this.classementHebdo.set(c) });
-    this.svc.getClassementExecuteurs(this.debutMois(), fin).subscribe({ next: c => { this.classementMensuel.set(c); this.loading.set(false); } });
+    this.svc.getClassementExecuteurs(this.debutMois(), fin).subscribe({ next: c => { this.classementMensuel.set(c); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 
   private debutSemaine(): string { const d = new Date(); const j = d.getDay(); return new Date(d.setDate(d.getDate() - j + (j === 0 ? -6 : 1))).toISOString().split('T')[0]; }

@@ -8,6 +8,7 @@ import { StockLevelUseCase } from '../../../application/use-cases/inventaire/sto
 import { StockApiRepository, StockLocationDto } from '../../../infrastructure/repositories/stock-api.repository';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { StockLevel, Warehouse } from '../../../domain/models';
+import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
 Chart.register(...registerables);
 
 interface InventoryItem {
@@ -41,7 +42,7 @@ interface GammeStat {
 @Component({
   selector: 'app-inventaire',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, FormsModule, RouterLink],
+  imports: [CommonModule, DecimalPipe, FormsModule, RouterLink, EmptyIllustrationComponent],
   templateUrl: './inventaire.component.html',
   styleUrls: ['./inventaire.component.css']
 })

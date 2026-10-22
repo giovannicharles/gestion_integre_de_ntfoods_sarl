@@ -187,7 +187,7 @@
   box-shadow: var(--aj-shadow-sm), inset 0 1px 0 rgba(255,255,255,.35);
 }
 .aj-ico-g { background: linear-gradient(145deg, var(--aj-g), var(--aj-g-deep)); color: var(--aj-y); }
-.aj-ico-y { background: linear-gradient(145deg, var(--y-gh), var(--y-gh)); color: var(--o-d); }
+.aj-ico-y { background: linear-gradient(145deg, var(--y-gh), var(--y-gh)); color: var(--o); }
 .aj-ico-b { background: linear-gradient(145deg, var(--b-gh), var(--b-gh)); color: var(--b); }
 .aj-ico-n { background: linear-gradient(145deg, var(--n100, var(--n100)), var(--n200, var(--n200))); color: var(--n500, var(--n500)); }
 
@@ -319,7 +319,7 @@
   font-size: 11px;
 }
 .aj-mp-mais     .aj-mp-edit-header { color: var(--g-m); }
-.aj-mp-soja     .aj-mp-edit-header { color: var(--o-d); }
+.aj-mp-soja     .aj-mp-edit-header { color: var(--o); }
 .aj-mp-arachide .aj-mp-edit-header { color: var(--o); }
 
 .aj-mp-edit-total { display: flex; align-items: baseline; gap: 6px; }
@@ -436,7 +436,7 @@
   transition: background .18s, transform .15s, box-shadow .15s;
 }
 .aj-btn-pause:hover {
-  background: linear-gradient(150deg, var(--o-gh), var(--o-l));
+  background: linear-gradient(150deg, var(--o-gh), var(--o));
   transform: translateY(-1px);
   box-shadow: var(--aj-shadow-sm);
 }

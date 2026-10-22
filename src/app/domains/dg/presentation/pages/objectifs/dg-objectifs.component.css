@@ -3,19 +3,19 @@
 .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }
-.save-banner { background: #e8f5e9; color: #1b5e20; border: 1px solid var(--s); padding: .4rem 1rem; border-radius: var(--r-md); font-size: .85rem; font-weight: 600; display: flex; align-items: center; gap: .4rem; }
-.edit-badge { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 99px; font-size: .78rem; font-weight: 700; display: flex; align-items: center; gap: .3rem; }
+.save-banner { background: var(--s-gh); color: var(--s); border: 1px solid var(--s); padding: .4rem 1rem; border-radius: var(--r-md); font-size: .85rem; font-weight: 600; display: flex; align-items: center; gap: .4rem; }
+.edit-badge { background: var(--o-gh); color: var(--o); padding: 3px 10px; border-radius: 99px; font-size: .78rem; font-weight: 700; display: flex; align-items: center; gap: .3rem; }
 .objectif-input { border: 2px solid var(--g); border-radius: var(--r-sm); padding: 4px 8px; font-size: .88rem; font-weight: 600; width: 140px; font-variant-numeric: tabular-nums; }
-.objectif-input:focus { outline: none; box-shadow: 0 0 0 3px #1A6B2A22; }
+.objectif-input:focus { outline: none; box-shadow: 0 0 0 3px var(--g-pale); }
 .com-cell { display: flex; align-items: center; gap: .6rem; }
-.com-av { width: 34px; height: 34px; border-radius: 50%; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .72rem; flex-shrink: 0; }
+.com-av { width: 34px; height: 34px; border-radius: 50%; background: var(--g); color: var(--w); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .72rem; flex-shrink: 0; }
 .com-name { font-weight: 600; font-size: .85rem; color: var(--n800); }
 .com-tel { font-size: .72rem; color: var(--n500); }
 .zone-chip { background: var(--n100); color: var(--n600); padding: 2px 8px; border-radius: 99px; font-size: .75rem; font-weight: 600; }
 .taux-chip { padding: 3px 10px; border-radius: 99px; font-size: .8rem; font-weight: 700; }
-.taux-ok { background: #e8f5e9; color: #1b5e20; }
-.taux-mid { background: #fff8e1; color: #f57f17; }
-.taux-warn { background: #ffebee; color: var(--r); }
+.taux-ok { background: var(--s-gh); color: var(--s); }
+.taux-mid { background: var(--o-gh); color: var(--o); }
+.taux-warn { background: var(--r-gh); color: var(--r); }
 .progress-cell { min-width: 120px; }
 .prog-bar-wrap { height: 8px; background: var(--n200); border-radius: 99px; overflow: hidden; }
 .prog-bar { height: 100%; background: var(--r); border-radius: 99px; transition: width .5s ease; }
@@ -38,26 +38,26 @@
 }
 /* ── Révision d'objectif ─────────────────────────────────────────── */
 .alerte { padding: .75rem 1rem; border-radius: 6px; font-size: .875rem; margin-bottom: 1rem; border: 1px solid transparent; }
-.alerte-ok { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-.alerte-ko { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-.chargement { color: #6b7280; font-size: .875rem; }
-.vide { color: #9ca3af; text-align: center; padding: 1.5rem; }
+.alerte-ok { background: var(--s-gh); color: var(--s); border-color: var(--s); }
+.alerte-ko { background: var(--r-gh); color: var(--r); border-color: var(--r); }
+.chargement { color: var(--n500); font-size: .875rem; }
+.vide { color: var(--n400); text-align: center; padding: 1.5rem; }
 
 .lien-journal {
   display: block; margin-top: .2rem; padding: 0; border: none; background: none;
-  color: #b45309; font-size: .7rem; font-weight: 600; cursor: pointer;
+  color: var(--o); font-size: .7rem; font-weight: 600; cursor: pointer;
   font-family: inherit; text-decoration: underline; text-align: left;
 }
-.lien-journal:focus-visible { outline: 2px solid #b45309; outline-offset: 2px; }
+.lien-journal:focus-visible { outline: 2px solid var(--o); outline-offset: 2px; }
 
-.ligne-edition td, .ligne-journal td { background: #f9fafb; padding: .9rem 1.1rem; }
+.ligne-edition td, .ligne-journal td { background: var(--n50); padding: .9rem 1.1rem; }
 .motif-zone { width: 100%; min-height: 3.2rem; margin: .35rem 0 .6rem; resize: vertical; }
 .edition-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.note { color: #6b7280; font-size: .78rem; max-width: 60ch; line-height: 1.5; }
+.note { color: var(--n500); font-size: .78rem; max-width: 60ch; line-height: 1.5; }
 
-.journal-titre { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; font-weight: 700; margin-bottom: .5rem; }
+.journal-titre { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--n500); font-weight: 700; margin-bottom: .5rem; }
 .journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
 .journal li { display: flex; gap: .75rem; flex-wrap: wrap; align-items: baseline; font-size: .8rem; }
-.journal-date { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .72rem; color: #6b7280; }
-.journal-auteur { color: #6b7280; font-size: .75rem; }
-.journal-motif { color: #374151; font-style: italic; }
+.journal-date { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .72rem; color: var(--n500); }
+.journal-auteur { color: var(--n500); font-size: .75rem; }
+.journal-motif { color: var(--n700); font-style: italic; }

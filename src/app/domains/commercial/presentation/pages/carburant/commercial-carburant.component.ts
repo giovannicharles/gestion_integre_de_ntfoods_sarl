@@ -2,7 +2,8 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { CommercialService, CarburantBE } from '../../../infrastructure/commercial.service';
+import { CommercialService, CarburantBE, FeuillRouteBE } from '../../../infrastructure/commercial.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface CarburantUI {
   id: string; commercialId: string; dateCreation: Date;
@@ -21,6 +22,7 @@ interface CarburantUI {
 export class CommercialCarburantComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly svc = inject(CommercialService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fiches = signal<CarburantUI[]>([]);
@@ -30,6 +32,8 @@ export class CommercialCarburantComponent implements OnInit {
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
 
   form = signal({ kmCompteur: 0, litresDemandes: 0, station: '', immatriculation: '', montant: 0 });
+  feuillesRoute = signal<FeuillRouteBE[]>([]);
+  numeroFeuillRouteChoisi = signal<string>('');
 
   ngOnInit(): void {
     const matricule = this.auth.user()?.matricule;
@@ -39,11 +43,33 @@ export class CommercialCarburantComponent implements OnInit {
       next: list => { this.fiches.set(list.map(this.mapC)); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+    this.chargerFeuillesRoute(matricule);
+  }
+
+  private chargerFeuillesRoute(matricule: string): void {
+    const aujourdHui = this.today.toISOString().split('T')[0];
+    this.svc.getFeuillesRouteParDate(matricule, aujourdHui).subscribe({
+      next: feuilles => {
+        this.feuillesRoute.set(feuilles);
+        if (feuilles.length === 1) this.numeroFeuillRouteChoisi.set(feuilles[0].numeroFeuillRoute);
+      },
+      error: () => this.feuillesRoute.set([]),
+    });
+  }
+
+  /**
+   * Obligatoire côté API (CarburantController) : une demande doit référencer une feuille de
+   * route réelle du jour, sinon RegleMetierException systématique — cause du 400 constaté
+   * avant cette correction (P5, 2026-10-15).
+   */
+  peutSoumettre(): boolean {
+    const f = this.form();
+    return f.kmCompteur > 0 && f.litresDemandes > 0 && !!this.numeroFeuillRouteChoisi();
   }
 
   soumettre(): void {
+    if (!this.peutSoumettre()) return;
     const f = this.form();
-    if (f.kmCompteur <= 0 || f.litresDemandes <= 0) return;
     const matricule = this.auth.user()?.matricule ?? '';
     this.svc.creerCarburant({
       matriculeCommercial: matricule,
@@ -52,6 +78,7 @@ export class CommercialCarburantComponent implements OnInit {
       kilometrage: f.kmCompteur,
       litresDemandes: f.litresDemandes,
       montant: f.montant,
+      numeroFeuillRoute: this.numeroFeuillRouteChoisi(),
     }).subscribe({
       next: c => {
         this.fiches.update(list => [this.mapC(c), ...list]);
@@ -59,6 +86,7 @@ export class CommercialCarburantComponent implements OnInit {
         this.showForm.set(false);
         this.form.set({ kmCompteur: 0, litresDemandes: 0, station: '', immatriculation: '', montant: 0 });
       },
+      error: () => this.toast.error('Impossible de soumettre la demande de carburant'),
     });
   }
 

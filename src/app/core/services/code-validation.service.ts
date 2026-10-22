@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { ApiService } from './api.service';
+import { ApiService } from '../http/api.service';
 import { Observable } from 'rxjs';
 
 export interface CodeValidation {
@@ -29,7 +29,13 @@ export interface AttributionCodeResponse {
   providedIn: 'root'
 })
 export class CodeValidationService {
-  private baseUrl = '/api/v1/validation/codes';
+  /**
+   * Corrigé le 2026-10-16 : l'ancien préfixe '/api/v1/...' doublait le préfixe déjà ajouté par
+   * ApiService.buildUrl (http://host/api/<url>), produisant /api/api/v1/validation/codes/... —
+   * 404 systématique. Jamais détecté avant : ce service n'a jamais été câblé à aucune route
+   * (AdminCodeValidationComponent existait mais n'apparaissait dans aucun fichier de routes).
+   */
+  private baseUrl = 'v1/validation/codes';
 
   codesActifs = signal<CodeValidation[]>([]);
   loading = signal<boolean>(false);

@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE, CaisseBE } from '../../../../comptable/infrastructure/comptable.service';
 import { StockService, SessionCommercialBE } from '../../../../stock/infrastructure/stock.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface VersementUI {
   id: string; commercialId: string; date: Date;
@@ -24,7 +25,7 @@ interface VersementUI {
 @Component({
   selector: 'app-secretaire-session',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, CanDirective],
   templateUrl: './secretaire-session.component.html',
   styleUrls: ['./secretaire-session.component.css']
 })

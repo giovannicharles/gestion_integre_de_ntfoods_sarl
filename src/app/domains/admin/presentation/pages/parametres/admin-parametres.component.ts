@@ -3,6 +3,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../infrastructure/admin.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 @Component({
   selector: 'app-admin-parametres',
@@ -16,6 +18,7 @@ export class AdminParametresComponent implements OnInit {
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
 
   private readonly svc = inject(AdminService);
+  private readonly toast = inject(ToastService);
 
   form = {
     tvaTaux: 0,
@@ -69,6 +72,7 @@ export class AdminParametresComponent implements OnInit {
         this.isDirty.set(false);
         setTimeout(() => this.submitted.set(false), 3000);
       },
+      error: (err) => this.toast.error(extractApiError(err), 'Enregistrement impossible'),
     });
   }
 
@@ -81,12 +85,14 @@ export class AdminParametresComponent implements OnInit {
     if (!z) return;
     this.svc.ajouterReferentiel('ZONE', z).subscribe({
       next: (p) => { this.zones.set([...p.zones]); this.newZone.set(''); },
+      error: (err) => this.toast.error(extractApiError(err), 'Ajout impossible'),
     });
   }
 
   removeZone(z: string): void {
     this.svc.supprimerReferentiel('ZONE', z).subscribe({
       next: (p) => this.zones.set([...p.zones]),
+      error: (err) => this.toast.error(extractApiError(err), 'Suppression impossible'),
     });
   }
 
@@ -95,12 +101,14 @@ export class AdminParametresComponent implements OnInit {
     if (!g) return;
     this.svc.ajouterReferentiel('GAMME', g).subscribe({
       next: (p) => { this.gammeProduits.set([...p.gammeProduits]); this.newGamme.set(''); },
+      error: (err) => this.toast.error(extractApiError(err), 'Ajout impossible'),
     });
   }
 
   removeGamme(g: string): void {
     this.svc.supprimerReferentiel('GAMME', g).subscribe({
       next: (p) => this.gammeProduits.set([...p.gammeProduits]),
+      error: (err) => this.toast.error(extractApiError(err), 'Suppression impossible'),
     });
   }
 
@@ -109,12 +117,14 @@ export class AdminParametresComponent implements OnInit {
     if (!v) return;
     this.svc.ajouterReferentiel('VILLE', v).subscribe({
       next: (p) => { this.villes.set([...p.villes]); this.newVille.set(''); },
+      error: (err) => this.toast.error(extractApiError(err), 'Ajout impossible'),
     });
   }
 
   removeVille(v: string): void {
     this.svc.supprimerReferentiel('VILLE', v).subscribe({
       next: (p) => this.villes.set([...p.villes]),
+      error: (err) => this.toast.error(extractApiError(err), 'Suppression impossible'),
     });
   }
 }

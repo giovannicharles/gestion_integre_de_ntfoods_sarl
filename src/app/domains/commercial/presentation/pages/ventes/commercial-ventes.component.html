@@ -1,17 +1,17 @@
 <div class="page animate-fadeInUp">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px">
-    <div style="display:flex;align-items:center;gap:13px">
-      <div style="width:46px;height:46px;background:var(--mc-gh);color:var(--mc);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px">
-        <i class="fa-solid fa-cart-shopping"></i>
-      </div>
+  <div class="ph ph-wm-commercial">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-cart-shopping"></i></div>
       <div>
-        <h1 style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)">Ventes</h1>
-        <p style="font-size:12px;color:var(--n400);margin-top:2px">Finalisation, annulation, transactions non marchandes et avoirs</p>
+        <h1 class="ph-title">Ventes</h1>
+        <p class="ph-sub">Finalisation, annulation, transactions non marchandes et avoirs</p>
       </div>
     </div>
-    <button class="btn btn-primary" (click)="openNonMarchand()">
-      <i class="fa-solid fa-plus"></i> Transaction non marchande
-    </button>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="openNonMarchand()">
+        <i class="fa-solid fa-plus"></i> Transaction non marchande
+      </button>
+    </div>
   </div>
 
   @if (toastMsg()) {
@@ -31,6 +31,7 @@
         <p style="text-align:center;color:var(--n400);padding:24px">Aucune vente sur la période.</p>
       } @else {
         <div style="overflow-x:auto">
+          <div class="tbl-wrap">
           <table class="tbl">
             <thead>
               <tr><th>Numéro</th><th>Date</th><th>Client</th><th>Type</th><th>Montant</th><th>Statut</th><th>Actions</th></tr>
@@ -47,10 +48,10 @@
                   <td>
                     <div style="display:flex;gap:6px">
                       @if (v.statut === 'EN_COURS') {
-                        <button class="btn btn-success btn-sm" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
+                        <button class="btn btn-success btn-sm" *appCan="['COMMERCIAL', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
                           <i class="fa-solid fa-check"></i>
                         </button>
-                        <button class="btn btn-ghost btn-sm" (click)="openAnnuler(v.numeroVente)" title="Annuler">
+                        <button class="btn btn-ghost btn-sm" *appCan="['COMMERCIAL', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'ADMIN']" (click)="openAnnuler(v.numeroVente)" title="Annuler">
                           <i class="fa-solid fa-ban" style="color:var(--r)"></i>
                         </button>
                       }
@@ -65,6 +66,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       }
     </div>
@@ -75,6 +77,7 @@
           <i class="fa-solid fa-file-invoice"></i> Avoirs émis
         </h3>
         <div style="overflow-x:auto">
+          <div class="tbl-wrap">
           <table class="tbl">
             <thead>
               <tr><th>Numéro</th><th>Vente originale</th><th>Client</th><th>Montant TTC</th><th>Motif</th><th>Statut</th><th>Action</th></tr>
@@ -90,7 +93,7 @@
                   <td><span class="badge" [class.bg-orange]="a.statut==='EMIS'" [class.bg-success]="a.statut==='VALIDE'">{{ a.statut }}</span></td>
                   <td>
                     @if (a.statut === 'EMIS') {
-                      <button class="btn btn-success btn-sm" (click)="validerAvoir(a.numeroAvoir)" title="Valider">
+                      <button class="btn btn-success btn-sm" *appCan="['COMPTABLE', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="validerAvoir(a.numeroAvoir)" title="Valider">
                         <i class="fa-solid fa-check"></i>
                       </button>
                     }
@@ -99,6 +102,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     }
@@ -127,7 +131,7 @@
   <div class="modal-overlay" (click)="showNonMarchand.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:520px">
       <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Transaction non marchande</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div class="form-group">
           <label>Type</label>
           <select class="form-input" [(ngModel)]="nmTypeVente">
@@ -165,9 +169,21 @@
         <label>Motif</label>
         <input type="text" class="form-input" [(ngModel)]="nmMotif" placeholder="Motif de la transaction">
       </div>
+      @if (nmTypeVente === 'AVARIE') {
+      <div class="form-group">
+        <label>
+          Photo justificative
+          @if (photoRequise()) { <span style="color:var(--r)">— obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
+          @else if (seuilPhotoAvarie() !== null) { <span style="color:var(--n400)">(facultative en dessous de {{ seuilPhotoAvarie() }} unité(s))</span> }
+        </label>
+        <input type="file" class="form-input" accept=".jpg,.jpeg,.png,.pdf" (change)="onPhotoSelected($event)">
+        @if (uploadingPhoto()) { <span style="font-size:11px;color:var(--n400)"><i class="fa-solid fa-spinner fa-spin"></i> Import en cours…</span> }
+        @else if (nmPhotoDocId) { <span style="font-size:11px;color:var(--s)"><i class="fa-solid fa-check"></i> Photo archivée.</span> }
+      </div>
+      }
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
         <button class="btn btn-ghost" (click)="showNonMarchand.set(false)">Annuler</button>
-        <button class="btn btn-primary" (click)="confirmerNonMarchand()" [disabled]="saving() || !nmCodeClient || !nmCodeProduit">
+        <button class="btn btn-primary" (click)="confirmerNonMarchand()" [disabled]="saving() || !nmCodeClient || !nmCodeProduit || uploadingPhoto()">
           @if (saving()) { Enregistrement… } @else { Enregistrer }
         </button>
       </div>

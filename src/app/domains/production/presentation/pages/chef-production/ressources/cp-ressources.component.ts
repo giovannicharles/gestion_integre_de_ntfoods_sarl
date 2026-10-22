@@ -46,7 +46,7 @@ export class CpRessourcesComponent implements OnInit {
     const fin = new Date().toISOString().split('T')[0];
     const debut = this.joursAvant(7);
     this.svc.getRapportHebdomadaireProduction(debut, fin).subscribe({ next: r => this.rapport.set(r) });
-    this.svc.getSessionsDosageParPeriode(debut, fin).subscribe({ next: s => { this.sessionsDosage.set(s); this.loading.set(false); } });
+    this.svc.getSessionsDosageParPeriode(debut, fin).subscribe({ next: s => { this.sessionsDosage.set(s); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 
   private joursAvant(n: number): string { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split('T')[0]; }

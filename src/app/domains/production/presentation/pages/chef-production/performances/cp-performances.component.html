@@ -25,7 +25,7 @@
       <thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Taux réalisation</th><th>Efficacité</th></tr></thead>
       <tbody>
         @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
-          <tr><td>#{{ c.rang }}</td><td>{{ c.nomMachiniste }}</td><td>{{ c.productiviteKg | number:'1.1-1' }} kg</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.efficacite | number:'1.1-1' }}%</td></tr>
+          <tr><td>#{{ c.rang }}</td><td>{{ c.nomMachiniste }}</td><td>{{ c.productiviteKg | number:'1.1-1' }} kg</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td></tr>
         } @empty { <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
       </tbody>
     </table>

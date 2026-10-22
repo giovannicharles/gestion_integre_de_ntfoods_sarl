@@ -42,6 +42,12 @@ export interface CarburantBE {
   caZoneMoisCourantFCFA: number; ratioCarburantSurCaPourcent: number;
 }
 
+/** Forme réelle de FeuillRouteResponse (backend) — champs pertinents pour le sélecteur carburant. */
+export interface FeuillRouteBE {
+  id: number; numeroFeuillRoute: string; numeroSession: string; matriculeCommercial: string;
+  date: string; nombreVisites: number; nombreNonVisites: number; tousArretsTranches: boolean;
+}
+
 export interface VenteBE {
   id: number; numeroVente: string; matriculeCommercial: string;
   codeClient: string; date: string; modeReglement: string;
@@ -55,12 +61,39 @@ export interface LigneVenteBE {
   montantHT: number; montantTVA: number; montantTTC: number;
 }
 
+export interface ReglesAvarieBE {
+  id: number; reference: string; quantiteSeuilPhotoObligatoire: number;
+  dateDebut: string; dateFin: string | null; courant: boolean;
+  matriculeAuteur: string; motif: string; dateCreation: string;
+}
+
 export interface AvoirBE {
   id: number; numeroAvoir: string; numeroVenteOriginale: string;
   matriculeCommercial: string; codeClient: string; matriculeComptable: string;
   montantHT: number; montantTVA: number; montantTTC: number;
   motif: string; dateAvoir: string; statut: string;
   dateCreation: string; dateValidation?: string;
+}
+
+export type CanalCommande = 'APPEL_TELEPHONIQUE' | 'WHATSAPP' | 'SMS' | 'EMAIL';
+
+export interface LigneCommandeDistanceBE {
+  codeProduit: string; designation: string; conditionnement: string;
+  quantite: number; prixUnitaire: number;
+}
+
+export interface LigneCommandeDistanceRequest {
+  codeProduit: string; designation: string; conditionnement: string;
+  quantite: number; prixUnitaire: number;
+}
+
+export interface CommandeDistanceBE {
+  id: number; numeroCommande: string; codeClient: string; matriculeCommercial: string;
+  canal: CanalCommande; dateCommande: string; statut: string;
+  matriculeValidateurSecretaire?: string; matriculeValidateurComptable?: string;
+  motifAnnulation?: string; observations?: string;
+  dateCreation: string; dateModification?: string;
+  lignes: LigneCommandeDistanceBE[];
 }
 
 export interface FicheSyntheseBE {
@@ -194,10 +227,20 @@ export class CommercialService {
     matriculeCommercial: string; immatriculation: string;
     stationPartenaire: string; kilometrage: number;
     litresDemandes: number; montant: number;
-    photoCompteur?: string;
+    photoCompteur?: string; numeroFeuillRoute: string;
   }): Observable<CarburantBE> {
     return this.api.post<ApiResponse<CarburantBE>>('commercial/carburant', req)
       .pipe(map(r => r.donnees!));
+  }
+
+  /**
+   * Feuilles de route du commercial à une date donnée — nécessaire pour renseigner
+   * `numeroFeuillRoute` lors d'une demande de carburant (CarburantController : confronté à un
+   * trajet réel, sans quoi toute demande échoue avec RegleMetierException, voir P5 2026-10-15).
+   */
+  getFeuillesRouteParDate(matricule: string, date: string): Observable<FeuillRouteBE[]> {
+    return this.api.get<ApiResponse<FeuillRouteBE[]>>(`commercial/feuills-route/commercial/${encodeURIComponent(matricule)}/date/${date}`)
+      .pipe(map(r => r.donnees ?? []));
   }
 
   // ── Ventes ─────────────────────────────────────────────────
@@ -239,6 +282,15 @@ export class CommercialService {
     pourcentageLot?: number; photoJustificative?: string;
   }): Observable<VenteBE> {
     return this.api.post<ApiResponse<VenteBE>>('commercial/ventes/non-marchand', req)
+      .pipe(map(r => r.donnees!));
+  }
+
+  /**
+   * Seuil (en unités de base) à partir duquel une photo devient obligatoire pour une
+   * déclaration d'avarie — jamais codé en dur côté client, administrable par le DG.
+   */
+  getReglesAvarieCourantes(): Observable<ReglesAvarieBE> {
+    return this.api.get<ApiResponse<ReglesAvarieBE>>('commercial/regles-avarie/courantes')
       .pipe(map(r => r.donnees!));
   }
 
@@ -306,5 +358,64 @@ export class CommercialService {
   getClassementCommerciaux(): Observable<ClassementCommercialBE[]> {
     return this.api.get<ApiResponse<ClassementCommercialBE[]>>('commercial/dashboard/classement')
       .pipe(map(r => r.donnees ?? []));
+  }
+
+  // ── Commandes à distance (client hors tournée : téléphone, WhatsApp, SMS, email) ──
+  // Création ouverte à tout poste pouvant être contacté par un client (2026-10-16,
+  // COMMERCIAL_COMMANDE_DISTANCE_RECEVOIR), pas seulement au commercial — voir
+  // CommandeDistanceController, backend.
+
+  getCommandesDistance(): Observable<CommandeDistanceBE[]> {
+    return this.api.get<ApiResponse<CommandeDistanceBE[]>>('commercial/commandes-distance')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  consulterCommandeDistance(numero: string): Observable<CommandeDistanceBE> {
+    return this.api.get<ApiResponse<CommandeDistanceBE>>(`commercial/commandes-distance/${encodeURIComponent(numero)}`)
+      .pipe(map(r => r.donnees!));
+  }
+
+  creerCommandeDistance(req: {
+    codeClient: string; matriculeCommercial: string; canal: CanalCommande;
+    dateCommande: string; observations?: string; lignes: LigneCommandeDistanceRequest[];
+  }): Observable<CommandeDistanceBE> {
+    return this.api.post<ApiResponse<CommandeDistanceBE>>('commercial/commandes-distance', req)
+      .pipe(map(r => r.donnees!));
+  }
+
+  validerCommandeDistanceSecretaire(numero: string, matricule: string): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/valider-secretaire`, {}, { matricule }
+    ).pipe(map(r => r.donnees!));
+  }
+
+  validerCommandeDistanceComptable(numero: string, matricule: string): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/valider-comptable`, {}, { matricule }
+    ).pipe(map(r => r.donnees!));
+  }
+
+  rejeterCommandeDistance(numero: string, matricule: string, motif: string): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/rejeter`, {}, { matricule, motif }
+    ).pipe(map(r => r.donnees!));
+  }
+
+  annulerCommandeDistance(numero: string, motif: string): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/annuler`, {}, { motif }
+    ).pipe(map(r => r.donnees!));
+  }
+
+  livrerCommandeDistance(numero: string): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/livrer`, {}
+    ).pipe(map(r => r.donnees!));
+  }
+
+  ajusterLigneCommandeDistance(numero: string, codeProduit: string, nouvelleQuantite: number): Observable<CommandeDistanceBE> {
+    return this.api.patch<ApiResponse<CommandeDistanceBE>>(
+      `commercial/commandes-distance/${encodeURIComponent(numero)}/ajuster-ligne`, {}, { codeProduit, nouvelleQuantite: String(nouvelleQuantite) }
+    ).pipe(map(r => r.donnees!));
   }
 }

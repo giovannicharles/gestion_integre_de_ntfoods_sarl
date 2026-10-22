@@ -3,13 +3,13 @@
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
 
 .commercial-cell { display: flex; align-items: center; gap: var(--sp-2); }
-.initiales { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.initiales { width: 32px; height: 32px; border-radius: 50%; background: var(--mc); color: var(--w); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 
 .prog-track { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; width: 80px; }
 .prog-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
-.prog-g { background: #10b981; }
-.prog-y { background: #f59e0b; }
-.prog-r { background: #ef4444; }
+.prog-g { background: var(--s); }
+.prog-y { background: var(--o); }
+.prog-r { background: var(--r); }
 
 @media (max-width:767px) {
   .card { padding:14px; }

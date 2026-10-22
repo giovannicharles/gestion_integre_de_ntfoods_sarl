@@ -1,4 +1,4 @@
-<div class="ph">
+<div class="ph ph-wm-comptable">
   <div class="ph-left">
     <i class="fa-solid fa-bullseye ph-ico"></i>
     <div>
@@ -38,7 +38,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card card-wm card-wm-comptable">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement par Performance</h2>
     <span class="badge bg-neutral">Lecture seule</span>
@@ -91,6 +91,8 @@
               </span>
             </td>
           </tr>
+        } @empty {
+          <tr><td colspan="8" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun objectif défini</td></tr>
         }
       </tbody>
     </table>

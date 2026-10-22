@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE } from '../../../infrastructure/comptable.service';
 import { StockService, SessionCommercialBE } from '../../../../stock/infrastructure/stock.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
  * Validation comptable des fins de tournée.
@@ -17,7 +18,7 @@ import { StockService, SessionCommercialBE } from '../../../../stock/infrastruct
 @Component({
   selector: 'app-comptable-sessions',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, CanDirective],
   templateUrl: './comptable-sessions.component.html',
   styleUrls: ['./comptable-sessions.component.css'],
 })

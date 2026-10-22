@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ComptableService, RapportTelecharge } from '../../../infrastructure/comptable.service';
@@ -7,20 +7,28 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 type TypeRapport = 'factures' | 'decaissements' | 'versements' | 'primes';
 
+/** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+function dateLocaleIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function lundiCourant(): string {
   const today = new Date();
+  // (getDay()+6)%7 : lundi=0 ... dimanche=6 — contrairement à `getDay()-1`, gère
+  // correctement le dimanche (getDay()=0 → recule de 6 jours, pas d'avance d'un jour).
+  const decalage = (today.getDay() + 6) % 7;
   const lundi = new Date(today);
-  lundi.setDate(today.getDate() - today.getDay() + 1);
-  return lundi.toISOString().split('T')[0];
+  lundi.setDate(today.getDate() - decalage);
+  return dateLocaleIso(lundi);
 }
 
 function premierDuMois(): string {
   const today = new Date();
-  return new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  return dateLocaleIso(new Date(today.getFullYear(), today.getMonth(), 1));
 }
 
 function aujourdHui(): string {
-  return new Date().toISOString().split('T')[0];
+  return dateLocaleIso(new Date());
 }
 
 @Component({
@@ -29,6 +37,7 @@ function aujourdHui(): string {
   imports: [CommonModule, FormsModule],
   templateUrl: './comptable-rapports.component.html',
   styleUrls: ['./comptable-rapports.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComptableRapportsComponent {
   private readonly cptSvc = inject(ComptableService);

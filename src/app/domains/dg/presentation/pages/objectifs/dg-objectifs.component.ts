@@ -7,6 +7,7 @@ import {
   ComptableService, ObjectifCommercialBE, PrimeSemaineBE,
 } from '../../../../comptable/infrastructure/comptable.service';
 import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
  * Définition et révision des objectifs hebdomadaires.
@@ -22,7 +23,7 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 @Component({
   selector: 'app-dg-objectifs',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './dg-objectifs.component.html',
   styleUrls: ['./dg-objectifs.component.css'],
 })

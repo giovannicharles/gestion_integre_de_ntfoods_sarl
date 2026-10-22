@@ -96,6 +96,7 @@
   @if (activeTab()==='info') {
     <div class="card"><div class="card-header"><div class="sec-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-invoice"></i></span><div><h3>Fiches InfoProduits</h3><p class="sec-sub">Prises, ventes et retours par commercial</p></div></div></div>
       <div class="card-body">
+        <div class="tbl-wrap">
         <table class="rpt-table">
           <thead><tr><th>Commercial</th><th>Date</th><th>Pris</th><th>Vendus</th><th>Restants</th><th>Taux</th><th>Montant</th><th>Statut</th></tr></thead>
           <tbody>
@@ -113,6 +114,7 @@
             } @empty { <tr><td colspan="8" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune fiche InfoProduits</td></tr> }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   }
@@ -120,6 +122,7 @@
   @if (activeTab()==='dotations') {
     <div class="card"><div class="card-header"><div class="sec-head"><span class="sh-ico sh-b"><i class="fa-solid fa-box-open"></i></span><div><h3>Historique des dotations</h3><p class="sec-sub">Demandes de dotation commerciales</p></div></div></div>
       <div class="card-body">
+        <div class="tbl-wrap">
         <table class="rpt-table">
           <thead><tr><th>Référence</th><th>Commercial</th><th>Date</th><th>Articles</th><th>Statut</th></tr></thead>
           <tbody>
@@ -134,6 +137,7 @@
             } @empty { <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune dotation enregistrée</td></tr> }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   }
@@ -230,6 +234,7 @@
           @if (activeTab()==='dotations') {
             @if (detailLoading()) { <div style="padding:30px;text-align:center"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div></div> }
             @else {
+              <div class="tbl-wrap">
               <table class="rpt-table">
                 <thead><tr><th>Réf.</th><th>Date</th><th>Articles</th><th>Statut</th></tr></thead>
                 <tbody>
@@ -238,6 +243,7 @@
                   } @empty { <tr><td colspan="4" class="rpt-empty">Aucune dotation</td></tr> }
                 </tbody>
               </table>
+              </div>
             }
           }
         </div>

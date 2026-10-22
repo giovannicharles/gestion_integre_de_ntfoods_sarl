@@ -27,7 +27,25 @@
   </div>
 
   @if (loading()) {
-    <div style="padding:48px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div>
+    <div class="rpt-section">
+      <div class="rpt-section-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-export"></i></span><h2>Documents à générer</h2></div>
+      <div class="rpt-doc-grid">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="sk-doc-card">
+            <div class="sk-shimmer sk-ico"></div>
+            <div class="sk-lines"><div class="sk-shimmer sk-m"></div><div class="sk-shimmer sk-s"></div></div>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="card">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="sk-row">
+          <div class="sk-shimmer sk-ico"></div>
+          <div class="sk-lines"><div class="sk-shimmer sk-m"></div><div class="sk-shimmer sk-s"></div></div>
+        </div>
+      }
+    </div>
   } @else {
 
     <!-- ═══ CUSTOM REPORT BUILDER ═══ -->
@@ -215,6 +233,7 @@
           <!-- Material breakdown table -->
           @if (analysisView() === 'material') {
             <div class="rpt-breakdown-table">
+              <div class="tbl-wrap">
               <table class="rpt-table">
                 <thead>
                   <tr><th>Type de matériel</th><th>Nb produits</th><th>Quantité totale</th><th>Valeur stock</th></tr>
@@ -232,6 +251,7 @@
                   }
                 </tbody>
               </table>
+              </div>
             </div>
           }
 
@@ -250,6 +270,7 @@
           <!-- Warehouse breakdown -->
           @if (analysisView() === 'warehouse') {
             <div class="rpt-breakdown-table">
+              <div class="tbl-wrap">
               <table class="rpt-table">
                 <thead>
                   <tr><th>Entrepôt</th><th>Produits</th><th>Quantité</th><th>Valeur</th></tr>
@@ -267,12 +288,14 @@
                   }
                 </tbody>
               </table>
+              </div>
             </div>
           }
 
           <!-- Movement breakdown -->
           @if (analysisView() === 'movements') {
             <div class="rpt-breakdown-table">
+              <div class="tbl-wrap">
               <table class="rpt-table">
                 <thead>
                   <tr><th>Type de mouvement</th><th>Quantité totale</th></tr>
@@ -288,6 +311,7 @@
                   }
                 </tbody>
               </table>
+              </div>
             </div>
           }
         }
@@ -431,6 +455,7 @@
       </div>
       <div class="card-body">
         <div class="rpt-table-wrapper">
+          <div class="tbl-wrap">
           <table class="rpt-table">
             <thead>
               <tr>
@@ -463,10 +488,14 @@
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun rapport généré</td></tr>
+                <tr><td colspan="6">
+                  <app-empty-illustration title="Aucun rapport généré pour le moment"
+                    sub="Lancez-en un depuis « Nouveau rapport » ou téléchargez un document ci-dessus — il apparaîtra ici." />
+                </td></tr>
               }
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
@@ -506,7 +535,7 @@
       </div>
       <div class="modal-body">
         <p style="font-size:12px;color:var(--n500);margin:0 0 16px">Modèle vierge avec cases de quantités. Seul le motif change selon le type d'opération.</p>
-        <div class="rpt-form-grid" style="grid-template-columns:repeat(2,1fr)">
+        <div class="rpt-form-grid rgrid-2" style="grid-template-columns:repeat(2,1fr)">
           <div class="form-group"><label class="form-label">Motif</label>
             <select class="form-control" [ngModel]="ntFoodsMotif()" (ngModelChange)="ntFoodsMotif.set($any($event))">
               <option value="Vente">Vente</option>

@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE } from '../../../../comptable/infrastructure/comptable.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface VersementUI {
   id: string; commercialId: string; date: Date; montantAttendu: number;
@@ -21,6 +22,7 @@ interface VersementUI {
 export class CommercialVersementsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(ComptableService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   versements = signal<VersementUI[]>([]);
@@ -61,6 +63,7 @@ export class CommercialVersementsComponent implements OnInit {
         this.montantVerse.set(0);
         this.motif.set('');
       },
+      error: () => this.toast.error('Impossible d\'enregistrer le versement'),
     });
   }
 

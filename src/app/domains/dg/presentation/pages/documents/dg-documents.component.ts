@@ -1,44 +1,61 @@
-import { Component, signal, inject, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { DocumentService } from '../../../../shared/infrastructure/document.service';
+import { DocumentService, DocumentArchiveBE, TYPES_DOCUMENT } from '../../../../shared/infrastructure/document.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
 
-interface ArchivedDoc {
-  typeDocument: string;
-  reference: string;
-  storageKey: string;
-  dateImport: Date;
-}
-
+/**
+ * Archivage documentaire — réécrit le 2026-10-16. L'écran précédent perdait sa liste à
+ * chaque rechargement (aucun endpoint de liste n'existait côté serveur), son
+ * téléchargement n'a jamais fonctionné (il envoyait typeDocument+reference, le serveur
+ * n'attendait qu'une clé), et la moitié des types proposés (Avoir, Contrat, Autre)
+ * étaient refusés par le serveur (hors de la liste blanche réelle) — tout est corrigé.
+ */
 @Component({
   selector: 'app-dg-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, EmptyIllustrationComponent],
   templateUrl: './dg-documents.component.html',
-  styleUrls: ['./dg-documents.component.css']
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DgDocumentsComponent implements OnDestroy {
-  private d$ = new Subject<void>();
-  private svc = inject(DocumentService);
+export class DgDocumentsComponent implements OnInit {
+  private readonly svc = inject(DocumentService);
+  private readonly toast = inject(ToastService);
 
+  docTypes = TYPES_DOCUMENT;
   typeDocument = 'FACTURE';
   reference = '';
   selectedFile: File | null = null;
   uploading = signal(false);
-  documents = signal<ArchivedDoc[]>([]);
-  toastMsg = signal('');
-  toastType = signal<'success' | 'error'>('success');
 
-  docTypes = [
-    { value: 'FACTURE', label: 'Facture' },
-    { value: 'AVOIR', label: 'Avoir' },
-    { value: 'BON_LIVRAISON', label: 'Bon de livraison' },
-    { value: 'BON_RECEPTION', label: 'Bon de réception' },
-    { value: 'CONTRAT', label: 'Contrat' },
-    { value: 'AUTRE', label: 'Autre' },
-  ];
+  loading = signal(true);
+  loadError = signal<string | null>(null);
+  documents = signal<DocumentArchiveBE[]>([]);
+  filtreType = signal<string>('TOUS');
+
+  ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.svc.rechercher().subscribe({
+      next: docs => { this.documents.set(docs); this.loading.set(false); },
+      error: e => { this.loadError.set(extractApiError(e)); this.loading.set(false); },
+    });
+  }
+
+  listeFiltree(): DocumentArchiveBE[] {
+    const f = this.filtreType();
+    return f === 'TOUS' ? this.documents() : this.documents().filter(d => d.typeDocument === f);
+  }
+
+  libelleType(code: string): string {
+    return this.docTypes.find(t => t.value === code)?.label ?? code;
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -46,44 +63,37 @@ export class DgDocumentsComponent implements OnDestroy {
   }
 
   importer(): void {
-    if (this.uploading() || !this.selectedFile || !this.reference) return;
+    if (this.uploading() || !this.selectedFile || !this.reference.trim()) return;
     this.uploading.set(true);
-    this.svc.importer(this.typeDocument, this.reference, this.selectedFile).pipe(takeUntil(this.d$)).subscribe({
-      next: (key) => {
-        this.documents.update(list => [{
-          typeDocument: this.typeDocument,
-          reference: this.reference,
-          storageKey: key,
-          dateImport: new Date(),
-        }, ...list]);
+    this.svc.importer(this.typeDocument, this.reference.trim(), this.selectedFile).subscribe({
+      next: doc => {
         this.uploading.set(false);
+        this.documents.update(list => [doc, ...list]);
         this.selectedFile = null;
         this.reference = '';
-        this.showToast('Document archivé avec succès.', 'success');
+        this.toast.success(`Document "${doc.nomFichierOriginal}" archivé.`);
       },
-      error: (e) => { this.uploading.set(false); this.showToast(extractApiError(e), 'error'); },
+      error: e => { this.uploading.set(false); this.toast.error(extractApiError(e), "Échec de l'archivage"); },
     });
   }
 
-  telecharger(doc: ArchivedDoc): void {
-    this.svc.recuperer(doc.typeDocument, doc.reference).pipe(takeUntil(this.d$)).subscribe({
-      next: (blob) => {
+  telecharger(doc: DocumentArchiveBE): void {
+    this.svc.telecharger(doc.id).subscribe({
+      next: blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${doc.typeDocument}_${doc.reference}`;
+        a.download = doc.nomFichierOriginal || `document-${doc.id}`;
         a.click();
         URL.revokeObjectURL(url);
       },
-      error: (e) => this.showToast(extractApiError(e), 'error'),
+      error: e => this.toast.error(extractApiError(e), 'Échec du téléchargement'),
     });
   }
 
-  showToast(msg: string, type: 'success' | 'error'): void {
-    this.toastMsg.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => this.toastMsg.set(''), 4000);
+  tailleLisible(octets: number): string {
+    if (octets < 1024) return octets + ' o';
+    if (octets < 1024 * 1024) return (octets / 1024).toFixed(1) + ' Ko';
+    return (octets / (1024 * 1024)).toFixed(1) + ' Mo';
   }
-
-  ngOnDestroy(): void { this.d$.next(); this.d$.complete(); }
 }

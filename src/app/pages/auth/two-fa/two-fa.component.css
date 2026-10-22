@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════
-   OTP PAGE - TANTY DIGITAL ERP
+   VÉRIFICATION OTP — carte centrée, charte TANTY
    ══════════════════════════════════════════════════════════ */
 
 .otp-container {
@@ -7,185 +7,285 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(26, 107, 42, 0.85) 0%,
-      rgba(26, 107, 42, 0.9) 100%
-    ),
-    url("/tanty_vue.jpg");
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  padding: 20px;
-  animation: fadeIn 0.5s ease;
+  background: var(--color-gray-100);
+  padding: var(--space-4);
 }
 
 .otp-card {
-  background: white;
-  border-radius: var(--r-xl);
-  box-shadow: var(--sh-xl);
   width: 100%;
-  max-width: 420px;
-  padding: 40px;
-  animation: fadeInUp 0.5s ease 0.2s both;
+  max-width: 440px;
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-10) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* ── Illustration SVG ── */
+.otp-illustration {
+  margin-bottom: var(--space-6);
+}
+
+.otp-svg {
+  width: 112px;
+  height: 112px;
+}
+
+.otp-svg-ring {
+  fill: var(--color-primary-ghost);
+}
+
+.otp-svg-phone {
+  fill: var(--color-white);
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+}
+
+.otp-svg-screen {
+  fill: var(--color-primary-surface);
+}
+
+.otp-svg-dot {
+  fill: var(--color-primary);
+  animation: otp-dot-pulse 1.6s var(--ease-in-out) infinite;
+}
+
+.otp-svg-dot:nth-child(4) { animation-delay: 0ms; }
+.otp-svg-dot:nth-child(5) { animation-delay: 160ms; }
+.otp-svg-dot:nth-child(6) { animation-delay: 320ms; }
+
+.otp-svg-line {
+  fill: var(--color-primary-pale);
+}
+
+.otp-svg-home {
+  fill: var(--color-primary-pale);
+}
+
+.otp-svg-badge {
+  fill: var(--color-accent);
+}
+
+.otp-svg-check {
+  fill: none;
+  stroke: var(--color-primary-dark);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-svg-dot { animation: none; }
+}
+
+@keyframes otp-dot-pulse {
+  0%, 60%, 100% { opacity: 0.35; transform: scale(1); transform-origin: center; }
+  30% { opacity: 1; transform: scale(1.25); transform-origin: center; }
+}
+
+/* ── En-tête ── */
 .otp-header {
   text-align: center;
-  margin-bottom: 32px;
-}
-
-.logo-section {
-  margin-bottom: 24px;
-}
-
-.logo-image {
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-  margin: 0 auto;
-  display: block;
+  margin-bottom: var(--space-6);
 }
 
 .otp-header h1 {
-  font-family: var(--font-d);
-  font-size: 28px;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--n900);
-  margin-bottom: 8px;
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
 }
 
 .otp-header p {
-  font-family: var(--font-b);
-  font-size: 14px;
-  color: var(--n500);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-gray-500);
+  line-height: 1.5;
 }
 
-.otp-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.otp-input {
-  text-align: center;
-  font-size: 24px;
+.otp-header strong {
+  color: var(--color-gray-800);
   font-weight: 700;
-  letter-spacing: 8px;
-  font-family: var(--font-d);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
 }
 
-.error-message {
-  font-size: 12px;
-  color: var(--r);
-  margin-top: 4px;
+/* ── Bannière d'erreur ── */
+.error-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-danger-ghost);
+  color: var(--color-danger);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: var(--space-5);
 }
 
+.error-banner i {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── Formulaire ── */
+.otp-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* ── Boîtes de saisie du code ── */
+.otp-digits {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.otp-digit {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-gray-800);
+  border: 1.5px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+  transition: border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.otp-digit:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px var(--color-primary-ghost);
+}
+
+.otp-digit.is-error {
+  border-color: var(--color-danger);
+  background: var(--color-danger-ghost);
+}
+
+@media (max-width: 380px) {
+  .otp-digit { width: 40px; height: 48px; font-size: 1.25rem; }
+}
+
+/* ── Compte à rebours / renvoi ── */
 .countdown-section {
   text-align: center;
-  padding: 12px 0;
 }
 
-.countdown-section p {
-  font-family: var(--font-b);
-  font-size: 13px;
-  color: var(--n500);
+.countdown-text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
 }
 
 .resend-btn {
   background: none;
   border: none;
-  color: var(--g);
-  font-family: var(--font-b);
-  font-size: 13px;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: var(--r-md);
-  transition: all 0.15s;
 }
 
 .resend-btn:hover:not(:disabled) {
-  background: var(--g-gh);
+  text-decoration: underline;
 }
 
 .resend-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
+/* ── Actions ── */
 .form-actions {
-  margin-top: 8px;
+  width: 100%;
+}
+
+.submit-button {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .form-footer {
   text-align: center;
-  margin-top: 16px;
 }
 
 .back-link {
-  font-family: var(--font-b);
-  font-size: 13px;
-  color: var(--n600);
-  text-decoration: none;
+  background: none;
+  border: none;
+  color: var(--color-gray-500);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .back-link:hover {
-  color: var(--g);
+  color: var(--color-primary);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* ── Spinner ── */
+.spinner {
+  display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--color-white);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.spinner-sm {
+  width: 18px;
+  height: 18px;
 }
 
-/* Responsive */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
 @media (max-width: 480px) {
   .otp-card {
-    padding: 28px 20px;
-  }
-
-  .otp-header h1 {
-    font-size: 24px;
-  }
-
-  .logo-circle {
-    width: 64px;
-    height: 64px;
-  }
-
-  .logo-text {
-    font-size: 16px;
-  }
-
-  .otp-input {
-    font-size: 20px;
-    letter-spacing: 6px;
+    padding: var(--space-8) var(--space-5);
   }
 }

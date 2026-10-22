@@ -43,13 +43,18 @@ export interface CaisseBE {
   totalEntrees: number; totalSorties: number; lignes: CaisseLigneBE[];
 }
 
+/**
+ * Forme réelle de DecaissementResponse (backend, DecaissementController) — corrigée le
+ * 2026-10-15 (P5) : `numero`/`matriculeDG` n'existaient pas (vrais noms : numeroDecaissement/
+ * matriculeValidateurDG), et `dateValidationDG`/`dateApprobationDG`/`dateExecution` n'existent
+ * nulle part côté backend (seul `dateCreation` est exposé).
+ */
 export interface DecaissementBE {
-  id: number; numero: string; typeDepense: string;
-  matriculeProposant: string; montantFCFA: number;
+  id: number; numeroDecaissement: string; typeDepense: string; statut: string;
+  matriculeProposant: string; matriculeValidateurCG?: string; matriculeValidateurDG?: string;
+  matriculeExecuteur?: string; montantFCFA: number;
   beneficiaire: string; dateDepense: string; motif: string;
-  statut: string; matriculeDG?: string; matriculeExecuteur?: string;
-  dateValidationDG?: string; dateApprobationDG?: string;
-  dateExecution?: string; motifAnnulation?: string;
+  motifAnnulation?: string; dateCreation: string;
 }
 
 /**

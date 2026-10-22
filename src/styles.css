@@ -183,6 +183,7 @@
   --tanty-red: var(--color-danger);
   --font-d: var(--font-display);
   --font-b: var(--font-body);
+  --font-m: var(--font-mono);
   --r-xs: var(--radius-xs);
   --r-sm: var(--radius-sm);
   --r-md: var(--radius-md);
@@ -522,6 +523,16 @@ select.form-control    { cursor:pointer; }
 .kpi-trend { position:absolute; top:14px; right:16px; font-size:.7rem; font-weight:700; padding:3px 8px; border-radius:var(--r-full); }
 .kpt-up { background:var(--g-gh); color:var(--g); }
 
+/* Fil d'activité — items avec puce d'icône colorée (réutilise .ig/.iy/.ir/.ib des KPI). */
+.activity-feed { display:flex; flex-direction:column; gap:4px; }
+.activity-item { display:flex; align-items:center; gap:12px; padding:9px 8px; border-radius:var(--r-md); transition:background .15s; }
+.activity-item:hover { background:var(--n50); }
+.activity-ico { width:36px; height:36px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.activity-body { flex:1; min-width:0; }
+.activity-title { font-size:.82rem; font-weight:600; color:var(--n800); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.activity-desc { font-size:.72rem; color:var(--n500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.activity-time { font-size:.72rem; color:var(--n400); flex-shrink:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+
 /* Cards */
 .card { background:var(--w); border-radius:var(--r-lg); box-shadow:var(--sh-sm); border:1px solid var(--n200); padding:var(--sp-4); }
 .card-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-3); }
@@ -594,6 +605,19 @@ select.form-control    { cursor:pointer; }
 .section-row { display:grid; grid-template-columns:1.4fr 1fr; gap:var(--sp-4); margin-bottom:var(--sp-4); }
 .two-col { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4); }
 .charts-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4); margin-bottom:var(--sp-4); }
+
+/* Grille de cartes auto-responsive (motif déjà utilisé en inline par rp-grands-comptes) :
+   repasse en 1 colonne sur mobile sans aucune règle @media, par repli naturel de auto-fill. */
+.card-grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--sp-4); }
+
+/* Carte « choisir un document/rapport puis le télécharger » — motif réutilisé partout où une
+   liste plate de 3-10 types de documents existait auparavant comme simple tableau. */
+.doc-pick-card { display:flex; flex-direction:column; align-items:center; text-align:center; padding:22px 16px; transition:transform .2s, box-shadow .2s; }
+.doc-pick-card:hover { transform:translateY(-3px); box-shadow:var(--sh-md); }
+.doc-pick-ico { width:52px; height:52px; border-radius:50%; background:var(--g-gh); color:var(--g); display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:10px; }
+.doc-pick-title { font-weight:700; font-size:.92rem; margin-bottom:4px; }
+.doc-pick-desc { font-size:11.5px; color:var(--n500); line-height:1.4; margin-bottom:14px; flex:1; }
+.doc-pick-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; }
 
 /* Filter bar */
 .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:var(--sp-4); }
@@ -711,6 +735,23 @@ select.form-control    { cursor:pointer; }
 .sk-s { height:11px;width:44%; }
 .sk-m { height:11px;width:68%; }
 .sk-l { height:22px;width:85%; }
+/* Skeleton de ligne de tableau (listes de documents/rapports) et de carte-document. */
+.sk-row { display:flex; align-items:center; gap:14px; padding:12px 14px; border-bottom:1px solid var(--n150); }
+.sk-row .sk-ico { width:36px; height:36px; }
+.sk-row .sk-lines { gap:6px; }
+.sk-doc-card { display:flex; align-items:center; gap:12px; padding:16px; border-radius:var(--r-lg); border:1px solid var(--n200); }
+
+/* ── ÉTAT VIDE ILLUSTRÉ ── */
+.empty-illustrated { display:flex; flex-direction:column; align-items:center; gap:14px; padding:48px 24px; text-align:center; color:var(--n500); }
+.empty-illustrated svg { width:120px; height:120px; }
+.empty-illustrated-title { font-size:.95rem; font-weight:700; color:var(--n700); }
+.empty-illustrated-sub { font-size:.8rem; color:var(--n400); max-width:320px; }
+.ei-tray-body { fill:var(--n100); }
+.ei-tray-edge { fill:none; stroke:var(--n300); stroke-width:2.2; stroke-linejoin:round; }
+.ei-doc { fill:var(--w); stroke:var(--n300); stroke-width:2; }
+.ei-doc-line { stroke:var(--n200); stroke-width:2.2; stroke-linecap:round; }
+.ei-accent { fill:var(--y); }
+.ei-accent-ring { fill:none; stroke:var(--y); stroke-width:2.2; stroke-dasharray:3 4; stroke-linecap:round; }
 /* ── DATA TABLE ── */
 .data-table { width:100%;border-collapse:collapse;font-size:13px; }
 .data-table thead th { padding:10px 14px;background:var(--n50);color:var(--n500);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--n200);white-space:nowrap;text-align:left; }
@@ -914,6 +955,10 @@ select.form-control    { cursor:pointer; }
   /* KPI cards compact */
   .kpi-card { padding:14px; }
   .kpi-val { font-size:1.4rem; }
+  /* Grilles à colonnes fixes codées en style inline (gap/margin conservés tels quels,
+     seul le nombre de colonnes est forcé à 1 sur mobile) — ajouter la classe sans retirer
+     le style inline existant. */
+  .rgrid-2, .rgrid-3, .rgrid-2a { grid-template-columns:1fr !important; }
 }
 /* Small mobile (<480px) */
 @media (max-width:480px) {
@@ -1237,6 +1282,80 @@ select.input { cursor:pointer; }
 :root.dark-mode .dm-toggle:hover {
   background: var(--y-gh);
   color: var(--y);
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILIGRANES DE MODULE — pictogramme de fond, un par module
+   Discret (opacité faible), posé en haut à droite de l'en-tête
+   de page (.ph). Même couleur de marque partout (vert TANTY) :
+   seul le motif change, pas la teinte — cohérence avant tout.
+   ══════════════════════════════════════════════════════════ */
+.ph { position: relative; overflow: hidden; }
+.ph::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 230px;
+  height: 180px;
+  transform: translateY(-50%);
+  background-repeat: no-repeat;
+  background-position: center right;
+  background-size: contain;
+  opacity: .09;
+  pointer-events: none;
+  z-index: 0;
+}
+:root.dark-mode .ph::after { opacity: .15; }
+.ph > .ph-left, .ph > .ph-actions { position: relative; z-index: 1; }
+
+/* Même filigrane, en plus petit, discrètement posé dans l'angle d'une carte —
+   prolonge l'identité du module au-delà du seul en-tête de page, sans jamais
+   gêner la lecture du contenu (toujours sous le contenu, z-index 0). */
+.card-wm { position: relative; overflow: hidden; }
+.card-wm::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 120px;
+  height: 95px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: .05;
+  pointer-events: none;
+  z-index: 0;
+}
+:root.dark-mode .card-wm::after { opacity: .09; }
+.card-wm > * { position: relative; z-index: 1; }
+
+.ph-wm-rp::after, .card-wm-rp::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 40 H46 V60 H18 Z'/%3E%3Cpath d='M46 32 L82 14 V86 L46 68 Z'/%3E%3Cpath d='M94 32 A22 18 0 0 1 94 68'/%3E%3Cpath d='M102 22 A34 28 0 0 1 102 78'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-comptable::after, .card-wm-comptable::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='14' y='10' width='56' height='80' rx='4'/%3E%3Cline x1='26' y1='30' x2='58' y2='30'/%3E%3Cline x1='26' y1='44' x2='58' y2='44'/%3E%3Cline x1='26' y1='58' x2='46' y2='58'/%3E%3Ccircle cx='88' cy='70' r='20'/%3E%3Cline x1='88' y1='60' x2='88' y2='80'/%3E%3Cline x1='78' y1='70' x2='98' y2='70'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-controle::after, .card-wm-controle::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='16' y1='90' x2='16' y2='66'/%3E%3Cline x1='32' y1='90' x2='32' y2='52'/%3E%3Cline x1='48' y1='90' x2='48' y2='70'/%3E%3Ccircle cx='72' cy='50' r='24'/%3E%3Cline x1='90' y1='68' x2='106' y2='84'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-rh::after, .card-wm-rh::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='40' cy='28' r='14'/%3E%3Cpath d='M16 76 Q16 50 40 50 Q64 50 64 76'/%3E%3Ccircle cx='86' cy='40' r='11'/%3E%3Cpath d='M66 80 Q66 62 86 62 Q106 62 106 80'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-dg::after, .card-wm-dg::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='60' cy='50' r='34'/%3E%3Cpath d='M60 50 L60 26'/%3E%3Cpath d='M60 50 L78 62'/%3E%3Ccircle cx='60' cy='50' r='4' fill='%232A9D5F'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-admin::after, .card-wm-admin::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='58' cy='50' r='16'/%3E%3Cpath d='M58 26 V16 M58 84 V74 M34 50 H24 M92 50 H82 M41 33 L34 26 M75 33 L82 26 M41 67 L34 74 M75 67 L82 74'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-stock::after, .card-wm-stock::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='14' y='46' width='34' height='34'/%3E%3Crect x='52' y='46' width='34' height='34'/%3E%3Crect x='33' y='14' width='34' height='34'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-commercial::after, .card-wm-commercial::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 46 L34 34 L50 44 L38 54 Z'/%3E%3Cpath d='M106 46 L86 34 L70 44 L82 54 Z'/%3E%3Cline x1='50' y1='44' x2='70' y2='44'/%3E%3C/g%3E%3C/svg%3E");
+}
+.ph-wm-secretaire::after, .card-wm-secretaire::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100'%3E%3Cg fill='none' stroke='%232A9D5F' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 26 H78 V80 H14 Z'/%3E%3Cpath d='M14 26 L46 50 L78 26'/%3E%3Cpath d='M92 66 L106 52 L96 42 L82 56 L80 70 Z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* ── Smooth color transitions on theme switch ── */

@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RpService, RpDashboard, PrimeResponse, GrandCompteResponse, OccupationMarcheResponse, PerformanceGammeResponse } from '../../../infrastructure/rp.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 
 @Component({
@@ -18,6 +19,9 @@ export class RpDashboardComponent implements OnInit {
 
   private readonly svc = inject(RpService);
 
+  loading = signal(true);
+  loadError = signal<string | null>(null);
+
   data = signal<RpDashboard | null>(null);
   primes = signal<PrimeResponse[]>([]);
   gammes = signal<PerformanceGammeResponse[]>([]);
@@ -32,6 +36,12 @@ export class RpDashboardComponent implements OnInit {
   caGrandsComptes = computed(() => this.data()?.caGrandsComptes ?? 0);
 
   ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
     this.svc.getDashboard().subscribe({
       next: d => {
         this.data.set(d);
@@ -39,8 +49,12 @@ export class RpDashboardComponent implements OnInit {
         this.gammes.set(d.gammes);
         this.occupation.set(d.occupation);
         this.grandsComptes.set(d.grandsComptes);
+        this.loading.set(false);
       },
-      error: () => {},
+      error: e => {
+        this.loadError.set(extractApiError(e));
+        this.loading.set(false);
+      },
     });
   }
 

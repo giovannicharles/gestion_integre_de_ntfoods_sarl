@@ -1,9 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+registerLocaleData(localeFr);
 
 interface NavItem {
   route: string;

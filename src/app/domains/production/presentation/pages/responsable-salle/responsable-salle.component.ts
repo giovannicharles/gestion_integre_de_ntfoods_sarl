@@ -9,6 +9,7 @@ import {
 } from '../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 import { finalize } from 'rxjs';
 
 interface LigneAffectationForm {
@@ -26,7 +27,7 @@ interface ProductionIndividuelleForm {
 @Component({
   selector: 'app-responsable-salle',
   standalone: true,
-  imports: [CommonModule, FormsModule, MiniChartComponent, DonutChartComponent],
+  imports: [CommonModule, FormsModule, MiniChartComponent, DonutChartComponent, CanDirective],
   templateUrl: './responsable-salle.component.html',
   styleUrls: ['./responsable-salle.component.css']
 })

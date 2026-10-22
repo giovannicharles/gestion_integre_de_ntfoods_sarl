@@ -1,4 +1,4 @@
-<div class="ph">
+<div class="ph ph-wm-comptable">
   <div class="ph-left">
     <i class="fa-solid fa-file-invoice ph-ico"></i>
     <div>
@@ -7,7 +7,7 @@
     </div>
   </div>
   <div class="ph-actions">
-    <button class="btn btn-primary" (click)="showForm.set(!showForm())">
+    <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-primary" (click)="showForm.set(!showForm())">
       <i class="fa-solid fa-plus"></i> Émettre Facture
     </button>
   </div>
@@ -56,7 +56,7 @@
         <i class="fa-solid fa-times"></i>
       </button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+    <div class="form-row-2">
       <div class="form-group">
         <label>Code Client</label>
         <input type="text" class="form-input" [(ngModel)]="formCodeClient" placeholder="ex: CLT-001">
@@ -69,56 +69,56 @@
         </select>
       </div>
     </div>
-    <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">Lignes de facture</h3>
+    <h3 class="lignes-title">Lignes de facture</h3>
     @for (l of formLignes(); track $index) {
-      <div style="display:grid;grid-template-columns:1fr 2fr 70px 110px 70px 60px 30px;gap:8px;align-items:end;margin-bottom:8px">
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">Réf. Article</label>
+      <div class="ligne-facture-row">
+        <div class="form-group form-group-tight">
+          <label class="label-xs">Réf. Article</label>
           <input type="text" class="form-input" [(ngModel)]="l.referenceArticle" placeholder="SKU">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">Désignation</label>
+        <div class="form-group form-group-tight">
+          <label class="label-xs">Désignation</label>
           <input type="text" class="form-input" [(ngModel)]="l.designation" placeholder="Désignation">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">Qté</label>
+        <div class="form-group form-group-tight">
+          <label class="label-xs">Qté</label>
           <input type="number" class="form-input" [(ngModel)]="l.quantite">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">Prix HT</label>
+        <div class="form-group form-group-tight">
+          <label class="label-xs">Prix HT</label>
           <input type="number" class="form-input" [(ngModel)]="l.prixUnitaireHT">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">TVA %</label>
+        <div class="form-group form-group-tight">
+          <label class="label-xs">TVA %</label>
           <input type="number" class="form-input" [(ngModel)]="l.tauxTVA">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:10px">Remise %</label>
+        <div class="form-group form-group-tight">
+          <label class="label-xs">Remise %</label>
           <input type="number" class="form-input" [(ngModel)]="l.remise">
         </div>
-        <button class="btn btn-ghost btn-sm" (click)="supprimerLigne($index)" style="height:38px">
-          <i class="fa-solid fa-trash" style="color:var(--r)"></i>
+        <button class="btn btn-ghost btn-sm ligne-del-btn" (click)="supprimerLigne($index)">
+          <i class="fa-solid fa-trash text-danger"></i>
         </button>
       </div>
     }
-    <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()" style="margin-bottom:16px">
+    <button class="btn btn-ghost btn-sm btn-ajouter-ligne" (click)="ajouterLigne()">
       <i class="fa-solid fa-plus"></i> Ajouter une ligne
     </button>
-    <div style="display:flex;justify-content:flex-end;gap:20px;border-top:1px solid var(--n150);padding-top:14px">
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--n400)">Total HT</div>
-        <div style="font-weight:700">{{ fCFA(formTotalHT) }}</div>
+    <div class="form-totals">
+      <div class="form-total-item">
+        <div class="form-total-lbl">Total HT</div>
+        <div class="form-total-val">{{ fCFA(formTotalHT) }}</div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--n400)">Total TVA</div>
-        <div style="font-weight:700">{{ fCFA(formTotalTVA) }}</div>
+      <div class="form-total-item">
+        <div class="form-total-lbl">Total TVA</div>
+        <div class="form-total-val">{{ fCFA(formTotalTVA) }}</div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--n400)">Total TTC</div>
-        <div style="font-weight:800;font-size:16px;color:var(--mc)">{{ fCFA(formTotalTTC) }}</div>
+      <div class="form-total-item">
+        <div class="form-total-lbl">Total TTC</div>
+        <div class="form-total-val form-total-ttc">{{ fCFA(formTotalTTC) }}</div>
       </div>
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+    <div class="form-actions">
       <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
       <button class="btn btn-primary" (click)="emettreFacture()" [disabled]="formSaving() || !formCodeClient">
         @if (formSaving()) { Émission… } @else { Émettre la facture }
@@ -127,7 +127,7 @@
   </div>
 }
 
-<div class="card">
+<div class="card card-wm card-wm-comptable">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-list"></i> Liste des Factures</h2>
     <span class="badge bg-neutral">{{ factures().length }} documents</span>
@@ -161,7 +161,7 @@
             <td>
               <div style="display:flex;gap:6px">
                 @if (f.statut === 'EMISE') {
-                  <button class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Marquer payée">
+                  <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Marquer payée">
                     <i class="fa-solid fa-check"></i>
                   </button>
                 }
@@ -173,6 +173,8 @@
               </div>
             </td>
           </tr>
+        } @empty {
+          <tr><td colspan="8" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune facture ce mois-ci</td></tr>
         }
       </tbody>
     </table>

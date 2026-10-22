@@ -65,7 +65,8 @@ export class CmClassementsComponent implements OnInit {
   }
 
   valeurCritere(x: { productiviteKg: number; efficacite: number; tauxRealisationMoyen: number }): number {
-    return this.critere() === 'productivite' ? x.productiviteKg : this.critere() === 'efficacite' ? x.efficacite : x.tauxRealisationMoyen;
+    // efficacite vient du backend en ratio (0.9 pour 90 %), jamais en pourcentage.
+    return this.critere() === 'productivite' ? x.productiviteKg : this.critere() === 'efficacite' ? x.efficacite * 100 : x.tauxRealisationMoyen;
   }
 
   private debutSemaine(): string {

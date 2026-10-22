@@ -22,7 +22,7 @@
       <div class="kpi-card" style="border-left:4px solid var(--o)">
         <div class="kpi-info"><div class="kpi-value">{{ avgStockPerCommercial | number }}</div><div class="kpi-label">Moyenne / commercial</div></div>
       </div>
-      <div class="kpi-card" style="border-left:4px solid var(--p)">
+      <div class="kpi-card" style="border-left:4px solid var(--s)">
         <div class="kpi-info"><div class="kpi-value">{{ totalIn | number }}</div><div class="kpi-label">Entrées (dotations)</div></div>
       </div>
       <div class="kpi-card" style="border-left:4px solid var(--r)">
@@ -92,6 +92,7 @@
 
         @if (activeTab() === 'rotation') {
           <div class="ms-table-wrapper">
+            <div class="tbl-wrap">
             <table class="rpt-table">
               <thead><tr><th>Commercial</th><th>Entrées</th><th>Sorties</th><th>Mouvements</th><th>Net</th></tr></thead>
               <tbody>
@@ -107,11 +108,13 @@
                 } @empty { <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune donnée</td></tr> }
               </tbody>
             </table>
+            </div>
           </div>
         }
 
         @if (activeTab() === 'slow') {
           <div class="ms-table-wrapper">
+            <div class="tbl-wrap">
             <table class="rpt-table">
               <thead><tr><th>Commercial</th><th>Magasin</th><th>Ventes</th><th>Stock</th><th>Nb produits</th></tr></thead>
               <tbody>
@@ -126,6 +129,7 @@
                 } @empty { <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun stock dormant détecté</td></tr> }
               </tbody>
             </table>
+            </div>
           </div>
         }
       </div>
@@ -151,6 +155,7 @@
 
         <div class="ms-detail-body">
           @if (detailTab() === 'stock') {
+            <div class="tbl-wrap">
             <table class="rpt-table">
               <thead><tr><th>Code</th><th>Désignation</th><th>Qté</th><th>Prix Un.</th><th>Valeur</th></tr></thead>
               <tbody>
@@ -165,6 +170,7 @@
                 } @empty { <tr><td colspan="5" class="rpt-empty">Aucun article</td></tr> }
               </tbody>
             </table>
+            </div>
           }
 
           @if (detailTab() === 'rotation') {
@@ -182,6 +188,7 @@
           @if (detailTab() === 'history') {
             @if (detailLoading()) { <div style="padding:30px;text-align:center"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div></div> }
             @else {
+              <div class="tbl-wrap">
               <table class="rpt-table">
                 <thead><tr><th>Réf.</th><th>Date</th><th>Articles</th><th>Statut</th></tr></thead>
                 <tbody>
@@ -195,6 +202,7 @@
                   } @empty { <tr><td colspan="4" class="rpt-empty">Aucune dotation</td></tr> }
                 </tbody>
               </table>
+              </div>
             }
           }
         </div>

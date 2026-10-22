@@ -37,55 +37,106 @@
 .content-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(20, 83, 45, 0.88) 0%, rgba(13, 58, 30, 0.92) 100%);
-  padding: var(--space-12) var(--space-8);
+  background: linear-gradient(160deg, rgba(20, 83, 45, 0.92) 0%, rgba(13, 58, 30, 0.96) 100%);
+  padding: var(--space-8) var(--space-8);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: var(--space-5);
   color: var(--color-white);
+  overflow-y: auto;
 }
 
+/* Les surfaces non dessinées portent aussi la charte (scrollbar de cette colonne). */
+.content-overlay::-webkit-scrollbar { width: 8px; }
+.content-overlay::-webkit-scrollbar-track { background: transparent; }
+.content-overlay::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: var(--radius-full); }
+.content-overlay { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+
 .brand-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .brand-logo {
-  width: 100px;
+  width: 64px;
   height: auto;
-  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.brand-text {
+  min-width: 0;
 }
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: var(--space-2);
+  line-height: 1.2;
 }
 
 .brand-tagline {
   font-family: var(--font-body);
-  font-size: 1rem;
-  opacity: 0.9;
-}
-
-.system-description {
-  margin: var(--space-8) 0;
-}
-
-.system-description h2 {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: var(--space-4);
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin-top: var(--space-1);
 }
 
 .description-text {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.6;
-  opacity: 0.9;
+  opacity: 0.92;
 }
 
+.section-title {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  margin-bottom: var(--space-3);
+}
+
+/* ── Gamme de produits ── */
+.range-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.range-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.range-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.range-svg { width: 18px; height: 18px; }
+
+.r-fill { fill: var(--color-accent); }
+.r-fill-light { fill: var(--color-accent-light); opacity: 0.85; }
+.r-stroke { fill: none; stroke: var(--color-accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.r-stroke-light { fill: none; stroke: var(--color-primary-dark); stroke-width: 1.3; stroke-linecap: round; }
+
+/* ── Couverture du système ── */
 .features-list {
   display: flex;
   flex-direction: column;
@@ -97,46 +148,49 @@
   align-items: center;
   gap: var(--space-3);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  line-height: 1.3;
 }
 
 .feature-icon {
-  font-size: 1.25rem;
-  color: var(--color-accent);
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
+.feature-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.f-fill { fill: var(--color-accent); }
+.f-fill-light { fill: var(--color-accent-light); opacity: 0.8; }
+.f-stroke { fill: none; stroke: var(--color-accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.f-stroke-accent { fill: none; stroke: var(--color-accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.f-dot { fill: var(--color-white); opacity: 0.85; }
+.f-dot-accent { fill: var(--color-accent); }
+.f-check { fill: none; stroke: var(--color-primary-dark); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 .brand-footer {
-  text-align: center;
   font-family: var(--font-body);
-  font-size: 0.875rem;
-  opacity: 0.8;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: auto;
 }
 
 .brand-footer p {
-  margin: var(--space-1) 0;
+  margin: 2px 0;
 }
 
 .copyright {
-  font-weight: 600;
-}
-
-.testimonial {
-  margin: var(--space-6) 0;
-  text-align: center;
-}
-
-.testimonial-text {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
-  font-style: italic;
-  line-height: 1.5;
-  opacity: 0.95;
+  font-weight: 500;
 }
 
 /* ── Colonne droite - Formulaire sans bordures ── */
@@ -181,6 +235,24 @@
   font-weight: 500;
   margin-bottom: var(--space-6);
   text-align: center;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-success-ghost);
+  color: var(--color-success);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: var(--space-6);
+}
+
+.success-message i {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .login-form {
@@ -308,36 +380,28 @@
     padding: var(--space-6) var(--space-4);
   }
 
-  .system-description {
-    display: none;
-  }
-
-  .features-list {
-    display: none;
-  }
-
+  .description-text,
+  .range-section,
+  .coverage-section,
   .brand-footer {
     display: none;
   }
 
-  .brand-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    text-align: left;
+  .content-overlay {
+    gap: 0;
+    overflow: visible;
   }
 
   .brand-logo {
-    width: 60px;
-    margin-bottom: 0;
+    width: 52px;
   }
 
   .brand-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .brand-tagline {
-    display: none;
+    font-size: 0.75rem;
   }
 
   .login-right {

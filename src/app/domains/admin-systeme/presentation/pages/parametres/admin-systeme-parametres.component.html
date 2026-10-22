@@ -53,6 +53,7 @@
   @if (loading()) {
     <p>Chargement...</p>
   } @else {
+    <div class="tbl-wrap">
     <table class="table-parametres">
       <thead>
         <tr>
@@ -72,7 +73,7 @@
             <td>
               <input [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
             </td>
-            <td class="actions">
+            <td class="actions" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
               <button class="btn-small" [disabled]="!p.modifiable" (click)="sauvegarderValeur(p)">Enregistrer</button>
               <button class="btn-small" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)">Réinitialiser</button>
               <button class="btn-small btn-danger" (click)="desactiver(p)">Désactiver</button>
@@ -83,5 +84,6 @@
         }
       </tbody>
     </table>
+    </div>
   }
 </div>

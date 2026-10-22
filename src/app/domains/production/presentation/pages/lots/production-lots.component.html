@@ -77,14 +77,14 @@
         @for (l of lotsAValider(); track l.numeroLot) {
         <tr>
           <td><strong>{{ l.numeroLot }}</strong></td>
-          <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designationProduit }}</td>
+          <td><span class="badge bg-neutral">{{ l.productSku }}</span> {{ l.productName }}</td>
           <td class="mono">{{ l.referencePPH }}</td>
-          <td><strong>{{ l.quantiteKg }} kg</strong></td>
-          <td>{{ l.nbCartons }}</td>
+          <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
+          <td>{{ l.equivalentUnits }}</td>
           <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
           <td>{{ l.matriculeChefProduction }}</td>
           <td>
-            <div class="row-actions">
+            <div class="row-actions" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
               <button class="btn btn-sm btn-primary" (click)="validerLot(l)">Valider</button>
               <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(l)">Rejeter</button>
             </div>
@@ -121,13 +121,13 @@
         @for (l of lots(); track l.numeroLot) {
           <tr [class]="l.statut === 'DECLARE' ? 'row-pending' : ''">
             <td><strong>{{ l.numeroLot }}</strong></td>
-            <td><span class="badge bg-neutral">{{ l.codeProduit }}</span></td>
-            <td>{{ l.designationProduit }}</td>
+            <td><span class="badge bg-neutral">{{ l.productSku }}</span></td>
+            <td>{{ l.productName }}</td>
             <td class="mono">{{ l.referencePPH }}</td>
             <td>{{ l.dateProduction | date:'dd/MM/yyyy' }}</td>
             <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ l.quantiteKg }} kg</strong></td>
-            <td>{{ l.nbCartons }}</td>
+            <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
+            <td>{{ l.equivalentUnits }}</td>
             <td>{{ l.matriculeChefProduction }}</td>
             <td>
               <span [class]="statutClass(l.statut)">{{ statutLabel(l.statut) }}</span>
@@ -164,15 +164,19 @@
         </label>
         <span class="lot-date-chip">Date figée : {{ dateProduction | date:'dd/MM/yyyy' }}</span>
       </div>
+      @if (erreurDeclaration()) {
+      <div class="alert alert-danger" style="margin-top:12px">
+        <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurDeclaration() }}
+      </div>
+      }
       <div class="tbl-wrap" style="margin-top:12px;">
         <table class="data-table">
           <thead>
             <tr>
               <th>PPH</th>
-              <th>Code produit</th>
-              <th>Désignation</th>
+              <th style="min-width:260px">Produit (sélection obligatoire)</th>
               <th class="text-right">Quantité (kg)</th>
-              <th class="text-right">Cartons</th>
+              <th class="text-right">Conditionnement</th>
               <th>DLC</th>
               <th></th>
             </tr>
@@ -186,10 +190,19 @@
                     @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
                   </select>
                 </td>
-                <td><input class="input" [(ngModel)]="l.codeProduit" placeholder="Code"></td>
-                <td><input class="input" [(ngModel)]="l.designationProduit" placeholder="Désignation"></td>
-                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.quantiteKg" min="0" step="0.1" style="text-align:right;"></td>
-                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.nbCartons" min="0" step="1" style="text-align:right;"></td>
+                <td>
+                  <app-product-search
+                    [products]="produits()"
+                    [initialLabel]="l.productLabel"
+                    placeholder="Code ou nom du produit fini…"
+                    (productSelected)="surSelectionProduit(l, $event)"
+                    (cleared)="surEffacementProduit(l)">
+                  </app-product-search>
+                </td>
+                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1" style="text-align:right;"></td>
+                <td class="text-right">
+                  <app-conditioning-quantity [codeProduit]="l.product?.sku ?? null" (lignesChange)="surLignesConditionnement(l, $event)" />
+                </td>
                 <td><input type="date" class="input" [(ngModel)]="l.dlc"></td>
                 <td class="text-right">
                   <button class="btn btn-sm btn-danger" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">

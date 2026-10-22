@@ -1,6 +1,6 @@
 <div class="page">
 
-  <header class="ph">
+  <header class="ph ph-wm-commercial">
     <div>
       <h1 class="ph-title">Promotions commerciales</h1>
       <p class="ph-sub">
@@ -9,7 +9,7 @@
         en vigueur, toute remise saisie par un commercial est refusée.
       </p>
     </div>
-    <button class="btn btn-primary" (click)="formulaireOuvert.set(!formulaireOuvert())">
+    <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'CHARGEE_RP', 'ADMIN']" (click)="formulaireOuvert.set(!formulaireOuvert())">
       {{ formulaireOuvert() ? 'Fermer' : 'Nouvelle promotion' }}
     </button>
   </header>
@@ -112,7 +112,7 @@
 
   @if (loading()) { <p class="chargement">Chargement…</p> }
 
-  <section class="card">
+  <section class="card card-wm card-wm-commercial">
     <div class="card-hd"><h2>Promotions</h2></div>
     <div class="tbl-wrap">
       <table class="data-table">
@@ -138,7 +138,7 @@
                 @if (p.limiteUtilisations > 0) { / {{ p.limiteUtilisations }} } @else { / ∞ }
               </td>
               <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
-              <td class="actions">
+              <td class="actions" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'CHARGEE_RP', 'ADMIN']">
                 @if (p.statut === 'BROUILLON' || p.statut === 'SUSPENDUE') {
                   <button class="btn btn-sm btn-valider"
                           [disabled]="traitementEnCours() === p.code"

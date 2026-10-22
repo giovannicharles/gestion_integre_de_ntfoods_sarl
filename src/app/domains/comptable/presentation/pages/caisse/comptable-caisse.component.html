@@ -1,15 +1,13 @@
 <div class="page animate-fadeInUp">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px">
-    <div style="display:flex;align-items:center;gap:13px">
-      <div style="width:46px;height:46px;background:var(--mc-gh);color:var(--mc);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px">
-        <i class="fa-solid fa-cash-register"></i>
-      </div>
+  <div class="ph ph-wm-comptable">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-cash-register"></i></div>
       <div>
-        <h1 style="font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900)">Journal de Caisse</h1>
-        <p style="font-size:12px;color:var(--n400);margin-top:2px">{{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
+        <h1 class="ph-title">Journal de Caisse</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
       </div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="ph-actions">
       @if (!caisse() && !loading()) {
         <button class="btn btn-primary" (click)="showOuvrir.set(true)">
           <i class="fa-solid fa-lock-open"></i> Ouvrir la caisse
@@ -85,6 +83,7 @@
         <p style="text-align:center;color:var(--n400);padding:24px">Aucun mouvement enregistré.</p>
       } @else {
         <div style="overflow-x:auto">
+          <div class="tbl-wrap">
           <table class="tbl">
             <thead>
               <tr><th>Référence</th><th>Type</th><th>Motif</th><th>Montant</th><th>Heure</th></tr>
@@ -107,17 +106,19 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       }
     </div>
   }
 
   @if (historique().length > 0) {
-    <div class="card">
+    <div class="card card-wm card-wm-comptable">
       <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
         <i class="fa-solid fa-clock-rotate-left"></i> Historique du mois
       </h3>
       <div style="overflow-x:auto">
+        <div class="tbl-wrap">
         <table class="tbl">
           <thead>
             <tr><th>Date</th><th>Solde initial</th><th>Entrées</th><th>Sorties</th><th>Solde final</th></tr>
@@ -134,6 +135,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   }

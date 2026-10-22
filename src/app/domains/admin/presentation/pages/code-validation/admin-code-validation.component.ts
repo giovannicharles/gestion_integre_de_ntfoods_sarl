@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CodeValidationService, CodeValidation, AttributionCodeResponse } from '../../../../core/services/code-validation.service';
-import { ApiService } from '../../../../core/services/api.service';
+import { CodeValidationService, CodeValidation, AttributionCodeResponse } from '../../../../../core/services/code-validation.service';
+import { AdminService, UtilisateurBE } from '../../../infrastructure/admin.service';
 
 @Component({
   selector: 'app-admin-code-validation',
@@ -13,13 +13,13 @@ import { ApiService } from '../../../../core/services/api.service';
 })
 export class AdminCodeValidationComponent implements OnInit {
   private codeValidationService = inject(CodeValidationService);
-  private apiService = inject(ApiService);
+  private adminService = inject(AdminService);
 
   codes = this.codeValidationService.codesActifs;
   loading = this.codeValidationService.loading;
   error = this.codeValidationService.error;
 
-  utilisateurs: any[] = [];
+  utilisateurs: UtilisateurBE[] = [];
   utilisateurSelectionne: number | null = null;
   dateExpiration: string = '';
   maxUtilisations: number | null = null;
@@ -36,9 +36,15 @@ export class AdminCodeValidationComponent implements OnInit {
     this.chargerUtilisateurs();
   }
 
+  /**
+   * Corrigé le 2026-10-16 : appelait un chemin inexistant (/api/auth/utilisateurs, jamais
+   * aucun endpoint réel) via un ApiService fantôme (core/services/api.service, inexistant —
+   * le vrai vit dans core/http/). Réutilise AdminService.getUtilisateurs(), déjà correct et
+   * déjà utilisé par l'écran Utilisateurs.
+   */
   chargerUtilisateurs() {
-    this.apiService.get('/api/auth/utilisateurs').subscribe({
-      next: (data: any) => {
+    this.adminService.getUtilisateurs().subscribe({
+      next: (data) => {
         this.utilisateurs = data;
       },
       error: (err) => {

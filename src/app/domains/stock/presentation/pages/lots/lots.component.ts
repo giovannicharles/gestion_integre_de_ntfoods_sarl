@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockBatch, BatchStatus } from '../../../domain/models/stock.models';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-lots',
@@ -14,6 +15,7 @@ import { StockBatch, BatchStatus } from '../../../domain/models/stock.models';
 })
 export class LotsComponent implements OnInit {
   private repo = inject(StockApiRepository);
+  private toast = inject(ToastService);
   private d$ = new Subject<void>();
 
   batches = signal<StockBatch[]>([]);
@@ -65,13 +67,15 @@ export class LotsComponent implements OnInit {
       status: 'AVAILABLE' as BatchStatus
     };
     this.repo.createStockBatch(data).pipe(takeUntil(this.d$)).subscribe({
-      next: () => { this.newBatch = {}; this.showForm.set(false); this.loadAll(); }
+      next: () => { this.newBatch = {}; this.showForm.set(false); this.loadAll(); },
+      error: () => this.toast.error('Impossible de créer le lot')
     });
   }
 
   setStatus(id: number, status: BatchStatus) {
     this.repo.updateStockBatchStatus(id, status).pipe(takeUntil(this.d$)).subscribe({
-      next: () => this.loadAll()
+      next: () => this.loadAll(),
+      error: () => this.toast.error('Impossible de mettre à jour le statut du lot')
     });
   }
 

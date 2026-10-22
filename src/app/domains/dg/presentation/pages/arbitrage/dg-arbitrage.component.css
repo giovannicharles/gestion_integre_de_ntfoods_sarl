@@ -7,10 +7,7 @@
 .filter-green.active { background: var(--s) !important; border-color: var(--s) !important; }
 .filter-red.active { background: var(--r) !important; border-color: var(--r) !important; }
 .arb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--sp-4); }
-.arb-card { padding: var(--sp-4); border-left: 4px solid var(--n300); }
-.arb-waiting { border-left-color: var(--o); }
-.arb-ok { border-left-color: var(--s); background: var(--s-gh); }
-.arb-ko { border-left-color: var(--r); background: var(--r-gh); }
+.arb-card { padding: var(--sp-4); }
 .arb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .arb-id-badge { font-size: .75rem; font-weight: 700; color: var(--n500); }
 .arb-body { display: flex; flex-direction: column; gap: var(--sp-2); }

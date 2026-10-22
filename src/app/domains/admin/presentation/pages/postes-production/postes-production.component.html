@@ -58,6 +58,7 @@
   @if (loading()) {
     <p>Chargement...</p>
   } @else {
+    <div class="tbl-wrap">
     <table class="table">
       <thead>
         <tr>
@@ -81,7 +82,7 @@
             <td>{{ p.productionJournaliere }}</td>
             <td>{{ p.unite }}</td>
             <td>{{ p.actif ? 'Oui' : 'Non' }}</td>
-            <td>
+            <td *appCan="['ADMIN', 'DIRECTEUR_GENERAL']">
               <button class="btn btn-sm" (click)="basculerActif(p)">
                 {{ p.actif ? 'Désactiver' : 'Activer' }}
               </button>
@@ -90,8 +91,11 @@
               </button>
             </td>
           </tr>
+        } @empty {
+          <tr><td colspan="8" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun poste de production défini</td></tr>
         }
       </tbody>
     </table>
+    </div>
   }
 </div>

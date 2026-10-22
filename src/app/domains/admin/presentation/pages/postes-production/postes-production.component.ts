@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, CodePosteRef, CODES_POSTE } from '../../../../production/infrastructure/production.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-postes-production',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CanDirective],
   templateUrl: './postes-production.component.html',
   styleUrls: ['./postes-production.component.css'],
 })

@@ -57,14 +57,17 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
       },
       error: () => this.loading.set(false),
     });
-    this.stockRepo.getProducts().subscribe(list => {
-      this.produits.set(list.map(p => ({
-        code: p.sku,
-        designation: p.designation ?? p.sku,
-        gamme: p.variant?.name ?? '—',
-        prixHT: p.unitPriceAmount,
-        unite: p.unit ?? 'u',
-      })));
+    this.stockRepo.getProducts().subscribe({
+      next: list => {
+        this.produits.set(list.map(p => ({
+          code: p.sku,
+          designation: p.designation ?? p.sku,
+          gamme: p.variant?.name ?? '—',
+          prixHT: p.unitPriceAmount,
+          unite: p.unit ?? 'u',
+        })));
+      },
+      error: () => this.showToast('Impossible de charger le catalogue des produits', 'error'),
     });
   }
 
@@ -92,6 +95,7 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
         this.showForm.set(false);
         this.lignes.set([{ produitCode: '', designation: '', quantite: 0 }]);
       },
+      error: (e) => this.showToast(extractApiError(e), 'error'),
     });
   }
 

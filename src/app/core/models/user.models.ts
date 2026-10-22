@@ -166,7 +166,7 @@ export const ROLE_HOMES: Record<UserRole, string> = {
   COMMERCIAL: '/auth/login',
   COMPTABLE: '/comptable/dashboard',
   SECRETAIRE: '/secretaire/dashboard',
-  ADMIN: '/dg/dashboard',
+  ADMIN: '/admin/utilisateurs',
   CHARGEE_RP: '/rp/dashboard',
   CHEF_PRODUCTION: '/production/dashboard',
   RESPONSABLE_SALLE: '/production/dashboard',

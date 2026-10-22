@@ -1,4 +1,4 @@
-<div class="ph">
+<div class="ph ph-wm-comptable">
   <div class="ph-left">
     <i class="fa-solid fa-chart-line ph-ico"></i>
     <div>
@@ -46,7 +46,7 @@
 </div>
 
 <div class="two-col">
-  <div class="card">
+  <div class="card card-wm card-wm-comptable">
     <div class="card-hd">
       <h2 class="card-title"><i class="fa-solid fa-money-bill-wave"></i> Versements du Jour</h2>
     </div>
@@ -63,6 +63,8 @@
               <td>{{ fCFA(v.cashVerse) }}</td>
               <td><span [class]="v.statut === 'VALIDE' ? 'badge bg-success' : 'badge bg-orange'">{{ v.statut }}</span></td>
             </tr>
+          } @empty {
+            <tr><td colspan="4" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun versement aujourd'hui</td></tr>
           }
         </tbody>
       </table>
@@ -86,6 +88,8 @@
               <td>{{ fCFA(getFactureTTC(f)) }}</td>
               <td><span [class]="f.statut === 'PAYEE' ? 'badge bg-success' : 'badge bg-orange'">{{ f.statut }}</span></td>
             </tr>
+          } @empty {
+            <tr><td colspan="4" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune facture récente</td></tr>
           }
         </tbody>
       </table>

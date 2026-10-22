@@ -94,6 +94,7 @@
         </div>
       </div>
       <div class="table-wrapper">
+        <div class="tbl-wrap">
         <table class="table">
           <thead>
             <tr>
@@ -210,6 +211,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
       @if (totalPages() > 1) {
         <div style="padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--n150)">
@@ -240,6 +242,7 @@
         </div>
       </div>
       <div class="table-wrapper">
+        <div class="tbl-wrap">
         <table class="table">
           <thead><tr><th>Date</th><th>Produit</th><th>Quantité</th><th>Référence</th></tr></thead>
           <tbody>
@@ -260,6 +263,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   }
@@ -294,7 +298,7 @@
           </div>
 
           <!-- Stock comparison -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
             <div style="background:rgba(230,81,0,.06);border:1px solid rgba(230,81,0,.15);border-radius:var(--r-md);padding:12px;text-align:center">
               <div style="font-size:10px;color:var(--n400);text-transform:uppercase;font-weight:700;margin-bottom:4px">Stock Tampon</div>
               <div style="font-family:var(--font-d);font-size:22px;font-weight:800" [style.color]="getColor(item.alertLevel)">{{ item.quantity | number }}</div>

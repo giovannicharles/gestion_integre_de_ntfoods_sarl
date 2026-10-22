@@ -1,0 +1,30 @@
+<div class="cq-wrap">
+  @if (loading()) {
+  <span class="cq-loading"><i class="fa-solid fa-spinner fa-spin"></i></span>
+  } @else if (niveaux().length === 0) {
+  <div class="cq-fallback">
+    <input type="number" class="input" min="0" step="1" [(ngModel)]="quantitePrincipale" (ngModelChange)="surChangementQuantite()" placeholder="Quantité">
+    <span class="cq-hint"><i class="fa-solid fa-circle-info"></i> Aucun conditionnement défini pour ce produit — quantité brute.</span>
+  </div>
+  } @else if (niveaux().length === 1) {
+  <div class="cq-single">
+    <label class="cq-lbl">{{ niveaux()[0].typeEmballageNom }}</label>
+    <input type="number" class="input" min="0" step="1" [(ngModel)]="quantitePrincipale" (ngModelChange)="surChangementQuantite()">
+  </div>
+  } @else {
+  <div class="cq-multi">
+    <select class="input" [(ngModel)]="niveauChoisiId" (ngModelChange)="surChangementNiveau()">
+      @for (n of niveaux(); track n.id) {
+      <option [ngValue]="n.id">{{ n.typeEmballageNom }}@if (n.quantiteUnites) { ({{ n.quantiteUnites }} u.) }</option>
+      }
+    </select>
+    <input type="number" class="input" min="0" step="1" [(ngModel)]="quantitePrincipale" (ngModelChange)="surChangementQuantite()" [placeholder]="niveauChoisi()?.typeEmballageNom">
+    @if (niveauInferieur()) {
+    <div class="cq-reste">
+      <span class="cq-lbl">+ reste en {{ niveauInferieur()!.typeEmballageNom }} (optionnel)</span>
+      <input type="number" class="input" min="0" step="1" [(ngModel)]="quantiteReste" (ngModelChange)="surChangementQuantite()">
+    </div>
+    }
+  </div>
+  }
+</div>

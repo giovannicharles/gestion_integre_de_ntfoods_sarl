@@ -9,6 +9,8 @@ import {
 } from '../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface LotDashUI {
   id: string; codeProduit: string; designationProduit: string;
@@ -23,12 +25,13 @@ interface PlanUI {
 @Component({
   selector: 'app-production-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, FormsModule, MiniChartComponent, DonutChartComponent],
+  imports: [CommonModule, DatePipe, RouterLink, FormsModule, MiniChartComponent, DonutChartComponent, CanDirective],
   templateUrl: './production-dashboard.component.html',
   styleUrls: ['./production-dashboard.component.css']
 })
 export class ProductionDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(true);
@@ -162,9 +165,9 @@ export class ProductionDashboardComponent implements OnInit {
       next: ({ lots, ofs, dashboard, pphs }) => {
         this.lots.set(lots.map(l => ({
           id: l.numeroLot,
-          codeProduit: l.codeProduit,
-          designationProduit: l.designationProduit,
-          declaredQuantityKg: l.quantiteKg,
+          codeProduit: l.productSku,
+          designationProduit: l.productName,
+          declaredQuantityKg: l.declaredQuantityKg,
           statut: l.statut,
         })));
         this.ordres.set(ofs);
@@ -245,20 +248,23 @@ export class ProductionDashboardComponent implements OnInit {
         this.ordres.update(list => [o, ...list]);
         this.showCreerOF.set(false);
         this.nouveauOF = { idOF: '', referencePPH: '', codeProduit: '', designationProduit: '', qteDemandee: 0, dateButoir: '' };
-      }
+      },
+      error: () => this.toast.error("Impossible de créer l'ordre de fabrication")
     });
   }
 
   demarrerOF(idOF: string): void {
     this.svc.demarrerOF(idOF).subscribe({
-      next: o => this.mettreAJourOF(o)
+      next: o => this.mettreAJourOF(o),
+      error: () => this.toast.error("Impossible de démarrer l'ordre de fabrication")
     });
   }
 
   annulerOF(idOF: string): void {
     if (!confirm('Annuler cet ordre de fabrication ?')) return;
     this.svc.annulerOF(idOF).subscribe({
-      next: o => this.mettreAJourOF(o)
+      next: o => this.mettreAJourOF(o),
+      error: () => this.toast.error("Impossible d'annuler l'ordre de fabrication")
     });
   }
 
@@ -270,7 +276,8 @@ export class ProductionDashboardComponent implements OnInit {
   produireOF(idOF: string): void {
     if (this.quantiteProduire <= 0) return;
     this.svc.produireOF(idOF, this.quantiteProduire).subscribe({
-      next: o => { this.mettreAJourOF(o); this.showProduireOF.set(null); }
+      next: o => { this.mettreAJourOF(o); this.showProduireOF.set(null); },
+      error: () => this.toast.error("Impossible d'enregistrer la production")
     });
   }
 

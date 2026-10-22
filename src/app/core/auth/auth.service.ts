@@ -98,6 +98,21 @@ export class AuthService {
     );
   }
 
+  /**
+   * PUT /api/auth/mon-mot-de-passe → change le mot de passe de l'utilisateur courant.
+   * Le matricule vient du token côté serveur ; nécessite une session active
+   * (obtenue ici après `verifyOtp` dans le parcours mot de passe oublié).
+   */
+  changePassword(nouveauMotDePasse: string): Observable<void> {
+    return this.api.put<ApiResponse<void>>('auth/mon-mot-de-passe', { nouveauMotDePasse }).pipe(
+      map((res) => {
+        if (!res.succes) {
+          throw new Error(res.erreur || res.message || 'Échec du changement de mot de passe');
+        }
+      })
+    );
+  }
+
   logout(): void {
     this.api.post<ApiResponse<void>>('auth/logout', {}).subscribe({
       error: () => { /* session locale nettoyée même si le serveur est injoignable */ },

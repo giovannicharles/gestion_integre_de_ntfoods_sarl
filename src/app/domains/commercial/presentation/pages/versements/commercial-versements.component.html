@@ -1,5 +1,5 @@
 <div class="dash animate-fadeInUp">
-  <div class="ph">
+  <div class="ph ph-wm-commercial">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
       <div>
@@ -97,6 +97,8 @@
               @else { <span class="badge bg-red">Alerte</span> }
             </td>
           </tr>
+          } @empty {
+          <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun versement enregistré</td></tr>
           }
         </tbody>
       </table>

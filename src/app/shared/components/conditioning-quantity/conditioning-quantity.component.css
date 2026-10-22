@@ -1,0 +1,7 @@
+.cq-wrap { display: flex; flex-direction: column; gap: 6px; }
+.cq-single, .cq-multi { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cq-lbl { font-size: 12px; font-weight: 600; color: var(--n600); white-space: nowrap; }
+.cq-reste { display: flex; align-items: center; gap: 8px; }
+.cq-hint { font-size: 11px; color: var(--n500); display: flex; align-items: center; gap: 4px; }
+.cq-fallback { display: flex; flex-direction: column; gap: 4px; }
+.cq-loading { color: var(--n400); }

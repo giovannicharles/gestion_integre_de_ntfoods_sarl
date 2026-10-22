@@ -21,45 +21,57 @@
     <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
   </div>
 
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Document</th><th>Format</th><th>Action</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><i class="fa-solid fa-boxes-stacked"></i> Rapport des lots</td>
-          <td>
-            <select class="input" [(ngModel)]="formatLots" style="width:100px">
-              <option value="xlsx">Excel</option><option value="pdf">PDF</option><option value="csv">CSV</option>
-            </select>
-          </td>
-          <td><button class="btn btn-sm btn-primary" (click)="telechargerRapportLots()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
-        </tr>
-        <tr>
-          <td><i class="fa-solid fa-calendar-week"></i> Rapport hebdomadaire de production</td>
-          <td>CSV</td>
-          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportHebdomadaire()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
-        </tr>
-        <tr>
-          <td><i class="fa-solid fa-triangle-exclamation"></i> Rapport des pertes</td>
-          <td>CSV</td>
-          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportPertes()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
-        </tr>
-        <tr>
-          <td><i class="fa-solid fa-chart-simple"></i> Rapport de performance (machinistes + postes)</td>
-          <td>CSV</td>
-          <td><button class="btn btn-sm btn-ghost" (click)="telechargerRapportPerformances()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
-        </tr>
-        <tr>
-          <td><i class="fa-solid fa-calendar-days"></i> Plans de Production (PPH)</td>
-          <td>CSV</td>
-          <td><button class="btn btn-sm btn-ghost" (click)="telechargerPph()"><i class="fa-solid fa-download"></i> Télécharger</button></td>
-        </tr>
-        <tr>
-          <td><i class="fa-solid fa-file-invoice"></i> Bons de Commande</td>
-          <td>—</td>
-          <td><span class="badge bg-neutral">Non disponible (pas de module BC)</span></td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card-grid-auto" style="margin-top:var(--sp-3,12px)">
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="doc-pick-title">Rapport des lots</div>
+      <div class="doc-pick-desc">Export serveur réel — seul document de cette page avec un vrai export PDF/Excel/CSV.</div>
+      <div class="doc-pick-actions">
+        <select class="input" [(ngModel)]="formatLots" style="width:90px">
+          <option value="xlsx">Excel</option><option value="pdf">PDF</option><option value="csv">CSV</option>
+        </select>
+        <button class="btn btn-sm btn-primary" (click)="telechargerRapportLots()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-calendar-week"></i></div>
+      <div class="doc-pick-title">Rapport hebdomadaire de production</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-ghost" (click)="telechargerRapportHebdomadaire()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="doc-pick-title">Rapport des pertes</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-ghost" (click)="telechargerRapportPertes()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-chart-simple"></i></div>
+      <div class="doc-pick-title">Rapport de performance</div>
+      <div class="doc-pick-desc">Machinistes et postes, généré côté client (CSV).</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-ghost" (click)="telechargerRapportPerformances()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-calendar-days"></i></div>
+      <div class="doc-pick-title">Plans de Production (PPH)</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-ghost" (click)="telechargerPph()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-file-invoice"></i></div>
+      <div class="doc-pick-title">Bons de Commande</div>
+      <div class="doc-pick-desc">Aucune entité BC n'existe côté backend.</div>
+      <div class="doc-pick-actions">
+        <span class="badge bg-neutral">Non disponible</span>
+      </div>
+    </div>
   </div>
 </div>

@@ -103,7 +103,7 @@ export class ProductionEmployesComponent implements OnInit {
           this.employes.set(latest.lignes);
         }
       },
-      error: () => {},
+      error: () => this.message.set('Impossible de charger le registre des employés'),
     });
     this.svc.getPPHs().subscribe({
       next: p => this.pphs.set(p)

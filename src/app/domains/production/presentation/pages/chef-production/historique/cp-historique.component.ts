@@ -42,7 +42,7 @@ export class CpHistoriqueComponent implements OnInit {
       if (p.dateSoumission) liste.push({ type: 'PPH', libelle: `PPH ${p.referencePPH} soumis`, auteur: p.matriculeChefProduction, date: p.dateSoumission, detail: `Semaine ${p.semaine}` });
     }
     for (const l of this.lots()) {
-      liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} déclaré`, auteur: l.matriculeChefProduction, date: l.dateProduction, detail: `${l.quantiteKg} kg — ${l.codeProduit}` });
+      liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} déclaré`, auteur: l.matriculeChefProduction, date: l.dateProduction, detail: `${l.declaredQuantityKg} kg — ${l.productSku}` });
       if (l.matriculeGestionnaireValidation) liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} — décision stock`, auteur: l.matriculeGestionnaireValidation, date: l.dateProduction, detail: l.statut === 'REJETE' ? `Rejeté : ${l.motifRejet}` : 'Validé' });
     }
     for (const b of this.besoins()) {
@@ -63,6 +63,6 @@ export class CpHistoriqueComponent implements OnInit {
     this.loading.set(true);
     this.svc.getPPHs().subscribe({ next: p => this.pphs.set(p) });
     this.svc.getLots().subscribe({ next: l => this.lots.set(l) });
-    this.svc.getBesoins().subscribe({ next: b => { this.besoins.set(b); this.loading.set(false); } });
+    this.svc.getBesoins().subscribe({ next: b => { this.besoins.set(b); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 }

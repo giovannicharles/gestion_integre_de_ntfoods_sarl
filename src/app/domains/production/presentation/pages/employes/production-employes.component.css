@@ -3,7 +3,7 @@
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
 
 .alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
-.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--sp-4); }
 .modal-card { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow-lg); width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; }
 .modal-card.modal-lg { max-width: 900px; }
@@ -12,7 +12,7 @@
 .modal-ft { padding: var(--sp-4); border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: var(--sp-2); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .form-grid label { display: flex; flex-direction: column; gap: var(--sp-1); font-size: 0.85rem; font-weight: 500; }
-.form-grid .input, .modal-body .input { padding: var(--sp-2); border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+.form-grid .input, .modal-body .input { padding: var(--sp-2); border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--n800); }
 .row-absent { opacity: 0.55; background: var(--surface-2); }
 .txt-success { color: var(--g-d); font-weight: 600; }
 .txt-muted { color: var(--text-muted); }

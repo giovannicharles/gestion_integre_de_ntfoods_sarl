@@ -38,10 +38,10 @@
 .classement .row { display: flex; justify-content: space-between; padding: 0.25rem 0; }
 
 .warnings { margin-top: 0.25rem; }
-.warning { display: inline-block; background: var(--w)3cd; color: var(--y-d); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.75rem; }
+.warning { display: inline-block; background: var(--y-gh); color: var(--y-d); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.75rem; }
 
-.table { display: flex; flex-direction: column; border: 1px solid var(--n300); border-radius: 6px; overflow: hidden; margin-bottom: 1rem; }
-.thead, .tbody { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 0.6rem 0.75rem; }
+.table { display: flex; flex-direction: column; border: 1px solid var(--n300); border-radius: 6px; margin-bottom: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.thead, .tbody { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 0.6rem 0.75rem; min-width: 480px; }
 .thead { background: var(--n100); font-weight: 600; }
 .tbody { border-top: 1px solid var(--n200); }
 .tbody span { font-size: 0.9rem; }

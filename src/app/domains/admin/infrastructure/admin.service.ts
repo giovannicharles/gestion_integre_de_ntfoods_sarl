@@ -15,6 +15,22 @@ export interface ParametresBE {
   zones: string[]; gammeProduits: string[]; villes: string[];
 }
 
+export interface PermissionDto { code: string; libelle: string; }
+
+/** Valeurs réelles de UtilisateurPermissionJpaEntity.TypeOverride (backend) — pas GRANT/REVOKE. */
+export type TypeOverride = 'ACCORDER' | 'REFUSER';
+
+export interface OverridePermissionBE {
+  permission: string; libellePermission: string; typeOverride: TypeOverride;
+  motif: string; matriculeAuteur: string; dateCreation: string;
+}
+
+export interface PermissionsEffectivesBE {
+  matricule: string; role: string;
+  permissionsBaseRole: string[]; permissionsEffectives: string[];
+  overrides: OverridePermissionBE[];
+}
+
 export interface CodeObservationBE {
   id: number;
   code: string;
@@ -125,5 +141,37 @@ export class AdminService {
   supprimerCodeObservation(id: number): Observable<unknown> {
     return this.api.delete<ApiResponse<unknown>>(`administration/codes-observation/${id}`)
       .pipe(map(r => r.donnees));
+  }
+
+  // ── Permissions RBAC (PermissionController, backend) ──────────────────────
+  // Déjà entièrement configurable côté serveur (matrice rôle→permission +
+  // overrides par utilisateur en base, avec motif et auteur tracés) — il
+  // manquait seulement l'écran. Aucun changement backend ici.
+
+  listerPermissions(): Observable<PermissionDto[]> {
+    return this.api.get<ApiResponse<PermissionDto[]>>('auth/permissions')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  consulterMatricePermissions(): Observable<Record<string, string[]>> {
+    return this.api.get<ApiResponse<Record<string, string[]>>>('auth/permissions/matrice')
+      .pipe(map(r => r.donnees ?? {}));
+  }
+
+  permissionsEffectives(matricule: string): Observable<PermissionsEffectivesBE> {
+    return this.api.get<ApiResponse<PermissionsEffectivesBE>>(`auth/permissions/${encodeURIComponent(matricule)}`)
+      .pipe(map(r => r.donnees!));
+  }
+
+  ajouterOverridePermission(matricule: string, permission: string, typeOverride: TypeOverride, motif: string): Observable<OverridePermissionBE> {
+    return this.api.post<ApiResponse<OverridePermissionBE>>(
+      `auth/permissions/${encodeURIComponent(matricule)}/overrides`, { permission, typeOverride, motif }
+    ).pipe(map(r => r.donnees!));
+  }
+
+  supprimerOverridePermission(matricule: string, permission: string): Observable<unknown> {
+    return this.api.delete<ApiResponse<unknown>>(
+      `auth/permissions/${encodeURIComponent(matricule)}/overrides/${encodeURIComponent(permission)}`
+    ).pipe(map(r => r.donnees));
   }
 }

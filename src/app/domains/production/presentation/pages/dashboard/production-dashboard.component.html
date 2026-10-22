@@ -120,15 +120,17 @@
           <td>
             <div class="row-actions">
               <button class="btn btn-sm btn-ghost" (click)="voirDetailOF(o.idOF)">Détails</button>
-              @if (o.statut === 'PLANIFIE') {
-                <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
-              }
-              @if (o.statut === 'EN_COURS') {
-                <button class="btn btn-sm btn-primary" (click)="ouvrirProduire(o.idOF)">Produire</button>
-              }
-              @if (o.statut !== 'HONORE' && o.statut !== 'ANNULE') {
-                <button class="btn btn-sm btn-danger" (click)="annulerOF(o.idOF)">Annuler</button>
-              }
+              <ng-container *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'ADMIN']">
+                @if (o.statut === 'PLANIFIE') {
+                  <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
+                }
+                @if (o.statut === 'EN_COURS') {
+                  <button class="btn btn-sm btn-primary" (click)="ouvrirProduire(o.idOF)">Produire</button>
+                }
+                @if (o.statut !== 'HONORE' && o.statut !== 'ANNULE') {
+                  <button class="btn btn-sm btn-danger" (click)="annulerOF(o.idOF)">Annuler</button>
+                }
+              </ng-container>
             </div>
           </td>
         </tr>
@@ -329,7 +331,7 @@
               <td>#{{ c.rang }}</td>
               <td>{{ c.nomMachiniste }}</td>
               <td>{{ c.productiviteKg }} kg</td>
-              <td>{{ c.efficacite | number:'1.1-1' }}%</td>
+              <td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td>
             </tr>
           } @empty {
             <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>

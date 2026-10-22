@@ -20,14 +20,30 @@
     <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
     <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
   </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Document</th><th>Format</th><th>Action</th></tr></thead>
-      <tbody>
-        <tr><td><i class="fa-solid fa-book"></i> Registre journalier des employés</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerRegistre()"><i class="fa-solid fa-download"></i></button></td></tr>
-        <tr><td><i class="fa-solid fa-calendar-week"></i> Rapport hebdomadaire de l'atelier</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerRapportHebdo()"><i class="fa-solid fa-download"></i></button></td></tr>
-        <tr><td><i class="fa-solid fa-trophy"></i> Classement des employés</td><td>CSV</td><td><button class="btn btn-sm btn-primary" (click)="telechargerClassementEmployes()"><i class="fa-solid fa-download"></i></button></td></tr>
-      </tbody>
-    </table>
+  <div class="card-grid-auto" style="margin-top:var(--sp-3,12px)">
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-book"></i></div>
+      <div class="doc-pick-title">Registre journalier des employés</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-primary" (click)="telechargerRegistre()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-calendar-week"></i></div>
+      <div class="doc-pick-title">Rapport hebdomadaire de l'atelier</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-primary" (click)="telechargerRapportHebdo()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid fa-trophy"></i></div>
+      <div class="doc-pick-title">Classement des employés</div>
+      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
+      <div class="doc-pick-actions">
+        <button class="btn btn-sm btn-primary" (click)="telechargerClassementEmployes()"><i class="fa-solid fa-download"></i> Télécharger</button>
+      </div>
+    </div>
   </div>
 </div>

@@ -116,7 +116,7 @@
                 <div style="padding:14px 16px">
                   <div class="form-group" style="margin-bottom:14px">
                     <label class="form-label">Produit <span class="req">*</span></label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
+                    <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
                       <div>
                         <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Sélectionner</label>
                         <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
@@ -199,7 +199,7 @@
                       }
                     }
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+                  <div class="rgrid-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
                     <div class="form-group">
                       <label class="form-label">Qté demandée <span class="req">*</span> @if (l.productId) { @let p2 = findProduct(l.productId); <span style="font-weight:400;color:var(--n400)">({{ isRawMaterial(p2) ? 'kg' : (l.packagingType || p2?.packagingType || 'unités') }})</span> }</label>
                       <input type="number" class="form-control" min="0" step="{{ isRawMaterial(findProduct(l.productId)) ? '0.5' : '1' }}"

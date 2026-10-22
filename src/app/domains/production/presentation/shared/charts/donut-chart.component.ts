@@ -50,10 +50,10 @@ export interface DonutSlice {
     .dc-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted, #667); margin-bottom: 8px; }
     .dc-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
     .dc-svg { width: 110px; height: 110px; flex-shrink: 0; }
-    .dc-center-val { font-size: 18px; font-weight: 700; fill: var(--text); }
+    .dc-center-val { font-size: 18px; font-weight: 700; fill: var(--n800); }
     .dc-center-lbl { font-size: 8px; fill: var(--text-muted, #889); }
     .dc-legend { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
-    .dc-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text); }
+    .dc-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--n800); }
     .dc-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .dc-lbl { flex: 1; color: var(--text-muted, #667); }
     .dc-val { font-weight: 600; }

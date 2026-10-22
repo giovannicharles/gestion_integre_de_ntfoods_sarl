@@ -6,6 +6,7 @@ import {
 } from '../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-agent-doseur',
@@ -16,6 +17,7 @@ import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart
 })
 export class AgentDoseurComponent implements OnInit {
   private readonly prodSvc = inject(ProductionService);
+  private readonly toast = inject(ToastService);
 
   today = new Date().toISOString().split('T')[0];
   semaineDebut = signal(this.debutSemaine(new Date()));
@@ -75,13 +77,16 @@ export class AgentDoseurComponent implements OnInit {
 
   chargerDonnees(): void {
     this.prodSvc.getSessionsDosageParDate(this.today).subscribe({
-      next: s => this.sessions.set(s)
+      next: s => this.sessions.set(s),
+      error: () => this.toast.error('Impossible de charger les sessions de dosage du jour')
     });
     this.prodSvc.getStatistiquesFuts(this.semaineDebut(), this.semaineFin()).subscribe({
-      next: r => this.statsHebdo.set(r)
+      next: r => this.statsHebdo.set(r),
+      error: () => this.toast.error('Impossible de charger les statistiques de la semaine')
     });
     this.prodSvc.getStatistiquesFuts(this.moisDebut(), this.moisFin()).subscribe({
-      next: r => this.statsMois.set(r)
+      next: r => this.statsMois.set(r),
+      error: () => this.toast.error('Impossible de charger les statistiques du mois')
     });
     const debut7j = this.joursDesSeptDerniers()[0];
     this.prodSvc.getSessionsDosageParPeriode(debut7j, this.today).subscribe({

@@ -26,7 +26,7 @@
 .badge-sm { font-size: .68rem; padding: 2px 6px; }
 .fiche-card { padding: var(--sp-4); }
 .fiche-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--sp-3); }
-.fiche-kpi { background: var(--n50); border-radius: var(--r-md); padding: .75rem 1rem; border-left: 3px solid var(--g); }
+.fiche-kpi { background: var(--n50); border-radius: var(--r-md); padding: .75rem 1rem; }
 .fk-lbl { display: block; font-size: .75rem; color: var(--n500); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; margin-bottom: .3rem; }
 .fk-val { display: block; font-size: 1rem; font-weight: 700; color: var(--n800); font-variant-numeric: tabular-nums; }
 .text-success { color: var(--s) !important; }
@@ -35,6 +35,24 @@
 .text-primary { color: var(--g) !important; }
 .row-alert { background: var(--r-gh) !important; }
 .mono { font-variant-numeric: tabular-nums; }
+.maj-ts { font-variant-numeric: tabular-nums; font-size: .78rem; color: var(--n500); margin-left: .35rem; }
+
+.comparatif-variation { display: inline-flex; align-items: center; gap: .4rem; font-size: .82rem; font-weight: 700; padding: .25rem .6rem; border-radius: var(--r-full); margin-bottom: .5rem; }
+.comparatif-variation.var-up { background: var(--s-gh); color: var(--s); }
+.comparatif-variation.var-down { background: var(--r-gh); color: var(--r); }
+
+.validations-card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
+.validations-card.validations-urgent { background: var(--r-gh); }
+.validations-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: .85rem; }
+.validation-row { display: flex; align-items: center; gap: .6rem; padding: .5rem .7rem; border-radius: var(--r-md); background: var(--w); flex-wrap: wrap; }
+.validation-desc { flex: 1; min-width: 160px; font-size: .84rem; font-weight: 600; color: var(--n800); }
+.validation-meta { font-size: .72rem; color: var(--n500); white-space: nowrap; }
+
+/* Onglets du bas de page — affichage par CSS (display:none), jamais @if, pour ne pas
+   détruire/recréer les <canvas> Chart.js en changeant d'onglet. */
+.dash-tabs { margin-bottom: var(--sp-4); }
+.tab-hidden { display: none; }
+
 @media (max-width: 900px) { .charts-row, .section-row { grid-template-columns: 1fr; } }
 
 @media (max-width:767px) {
@@ -45,4 +63,8 @@
   .rank-ca { min-width:auto;width:100%; }
   .fiche-kpis { grid-template-columns:1fr; }
   .chart-wrap { height:200px; }
+  .validations-card { padding:14px; }
+  .validation-row { flex-direction:column; align-items:flex-start; }
+  .maj-ts { display:block; margin-left:0; }
+  .dash-tabs { flex-wrap:wrap; }
 }

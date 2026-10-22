@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, CodeObservationBE } from '../../../infrastructure/admin.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-codes-observation',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CanDirective],
   templateUrl: './codes-observation.component.html',
   styleUrls: ['./codes-observation.component.css'],
 })

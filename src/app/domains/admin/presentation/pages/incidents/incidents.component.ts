@@ -5,6 +5,8 @@ import { ApiService } from '../../../../../core/http/api.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { DocumentsPanelComponent } from '../../../../../shared/documents-panel/documents-panel.component';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 export interface Incident {
   id: number;
@@ -39,7 +41,7 @@ export interface Incident {
 @Component({
   selector: 'app-incidents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentsPanelComponent, CanDirective],
   templateUrl: './incidents.component.html',
   styleUrls: ['./incidents.component.css'],
 })

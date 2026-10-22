@@ -82,7 +82,7 @@
               <p class="titre">{{ i.titre }}</p>
               <p class="meta">Résolu par {{ i.assigneANom || '—' }}</p>
               <div class="card-actions" (click)="$event.stopPropagation()">
-                <button class="btn btn-xs btn-primary" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
+                <button class="btn btn-xs btn-primary" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
               </div>
             </div>
           } @empty { <p class="empty-inline">Aucun incident résolu.</p> }
@@ -193,6 +193,11 @@
             <p><strong>Résolution :</strong></p>
             <p class="description-block">{{ selectedIncident.resolution }}</p>
           }
+          <app-documents-panel
+            [entityType]="'INCIDENT'" [entityId]="selectedIncident.id"
+            [defaultType]="'PIECE_JOINTE_INCIDENT'"
+            [typesAutorises]="['PIECE_JOINTE_INCIDENT', 'PHOTO_AVARIE', 'RAPPORT']"
+            titre="Pièces jointes" [compact]="true" />
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="fermerDetailsModal()">Fermer</button>
@@ -217,7 +222,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="fermerResolveModal()" [disabled]="actionEnCours">Annuler</button>
-          <button class="btn btn-primary" (click)="resoudreIncident()" [disabled]="!resolution.trim() || actionEnCours">
+          <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']" (click)="resoudreIncident()" [disabled]="!resolution.trim() || actionEnCours">
             @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
             Marquer résolu
           </button>

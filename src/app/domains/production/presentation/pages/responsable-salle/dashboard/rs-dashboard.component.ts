@@ -7,6 +7,7 @@ import {
   RapportHebdoAffectationBE, DashboardAgentBE
 } from '../../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
+import { ToastService } from '../../../../../../core/services/toast.service';
 
 /**
  * DASHBOARD — Responsable de Salle
@@ -21,6 +22,7 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
 })
 export class RsDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);
+  private readonly toast = inject(ToastService);
 
   today = new Date().toISOString().split('T')[0];
   loading = signal(true);
@@ -64,8 +66,14 @@ export class RsDashboardComponent implements OnInit {
       },
       error: () => this.loading.set(false)
     });
-    this.svc.getDashboardAgent().subscribe({ next: d => this.dashboardAgent.set(d) });
-    this.svc.getRapportHebdomadaireAffectation(this.debutSemaine(), this.today).subscribe({ next: r => this.rapportHebdo.set(r) });
+    this.svc.getDashboardAgent().subscribe({
+      next: d => this.dashboardAgent.set(d),
+      error: () => this.toast.error('Impossible de charger le tableau de bord agent')
+    });
+    this.svc.getRapportHebdomadaireAffectation(this.debutSemaine(), this.today).subscribe({
+      next: r => this.rapportHebdo.set(r),
+      error: () => this.toast.error('Impossible de charger le rapport hebdomadaire')
+    });
   }
 
   private debutSemaine(): string {

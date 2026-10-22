@@ -69,9 +69,11 @@
       <div *ngIf="affectation" class="affectation-detail">
         <div class="rs-toolbar" style="margin-bottom:8px">
           <span class="badge">{{ affectation.statut }}</span>
-          <button class="primary" *ngIf="affectation.statut === 'BROUILLON'" (click)="validerAffectation()">
-            Valider (verrouiller la journée)
-          </button>
+          <ng-container *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'ADMIN']">
+            <button class="primary" *ngIf="affectation.statut === 'BROUILLON'" (click)="validerAffectation()">
+              Valider (verrouiller la journée)
+            </button>
+          </ng-container>
         </div>
         <div class="card" *ngFor="let ligne of affectation.lignes">
           <strong>{{ ligne.codePoste }} — {{ ligne.libellePoste }}</strong>

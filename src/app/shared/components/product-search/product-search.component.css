@@ -1,0 +1,17 @@
+/* Copié depuis commande-production.component.css (combobox local, pas de classes globales
+   équivalentes dans styles.css) — même rendu, un seul composant partagé désormais. */
+.combobox{position:relative;margin-bottom:0}
+.cb-input-wrap{position:relative}
+.cb-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n400);font-size:14px;z-index:1}
+.cb-input{padding-left:36px!important;padding-right:32px!important}
+.combobox-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--n200);border-radius:var(--r-md);box-shadow:var(--sh-lg);max-height:280px;overflow-y:auto;z-index:100;padding:4px}
+.combobox-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background .12s}
+.combobox-item:hover{background:var(--n50)}
+.cb-item-left{display:flex;align-items:center;gap:10px;overflow:hidden}
+.cb-item-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cb-sku{font-family:var(--font-d);font-size:12px;font-weight:800;color:var(--g);background:var(--g-gh);padding:2px 8px;border-radius:4px;white-space:nowrap}
+.cb-name{font-size:13px;font-weight:600;color:var(--n800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cb-pack{font-size:10px;font-weight:600;color:var(--n600);background:var(--n100);padding:2px 8px;border-radius:4px;white-space:nowrap}
+.combobox-empty{padding:20px 16px;text-align:center;font-size:12px;color:var(--n400);display:flex;flex-direction:column;align-items:center;gap:8px}
+.combobox-empty i{font-size:20px;opacity:.5}
+.cb-notfound{margin-top:6px;font-size:12px;color:var(--r);display:flex;align-items:center;gap:6px}

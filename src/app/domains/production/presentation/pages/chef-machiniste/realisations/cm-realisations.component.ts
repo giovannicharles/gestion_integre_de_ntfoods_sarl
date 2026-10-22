@@ -46,7 +46,10 @@ export class CmRealisationsComponent implements OnInit {
 
   charger(): void {
     this.loading.set(true);
-    this.svc.getMachinistes().subscribe({ next: m => this.machinistes.set(m) });
+    this.svc.getMachinistes().subscribe({
+      next: m => this.machinistes.set(m),
+      error: () => this.message.set('Impossible de charger la liste des machinistes')
+    });
     this.svc.getSessionsBroyage({ debut: this.today, fin: this.today }).subscribe({
       next: s => { this.sessionsJour.set(s); this.loading.set(false); },
       error: () => this.loading.set(false)

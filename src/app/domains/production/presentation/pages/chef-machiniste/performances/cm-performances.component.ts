@@ -67,7 +67,7 @@ export class CmPerformancesComponent implements OnInit {
   exporterCsv(): void {
     const lignes = this.lignesFiltrees();
     const entetes = ['Rang', 'Matricule', 'Nom', 'Quantité produite (kg)', 'Objectif (kg)', 'Taux réalisation (%)', 'Efficacité (%)', 'Jours'];
-    const rows = lignes.map(c => [c.rang, c.machinisteMatricule, c.nomMachiniste, c.productiviteKg, c.objectifTotalKg, c.tauxRealisationMoyen, c.efficacite, c.nbJours]);
+    const rows = lignes.map(c => [c.rang, c.machinisteMatricule, c.nomMachiniste, c.productiviteKg, c.objectifTotalKg, c.tauxRealisationMoyen, c.efficacite * 100, c.nbJours]);
     const csv = [entetes, ...rows].map(r => r.join(';')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);

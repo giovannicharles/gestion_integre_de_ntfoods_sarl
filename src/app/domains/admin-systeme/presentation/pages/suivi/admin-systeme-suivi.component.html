@@ -1,45 +1,119 @@
-<div class="page">
-  <header class="page-header">
-    <h1>Suivi de la plateforme</h1>
-    <p class="subtitle">Journal d'audit transversal (tous modules) — échecs récents et comportements à risque.</p>
-    <a class="btn-link" routerLink="/admin/incidents">Gestion des incidents →</a>
-  </header>
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+      <div>
+        <h1 class="ph-title">Suivi de la plateforme</h1>
+        <p class="ph-sub">Journal d'audit transversal (tous modules) — échecs récents et comportements à risque</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <a routerLink="/admin/incidents" class="btn btn-ghost btn-sm"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</a>
+    </div>
+  </div>
 
   @if (erreur()) {
-    <div class="alert alert-error">{{ erreur() }}</div>
+  <div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i><p>{{ erreur() }}</p></div>
   }
 
-  <section>
-    <h2>Comportements suspects (24 h, seuil 5)</h2>
-    <table class="table-suivi">
-      <thead><tr><th>Matricule</th><th>Ressource</th><th>Occurrences</th></tr></thead>
-      <tbody>
-        @for (a of activitesSuspectes(); track a.matricule + a.ressource) {
-          <tr><td>{{ a.matricule }}</td><td>{{ a.ressource }}</td><td>{{ a.occurrences }}</td></tr>
-        } @empty {
-          <tr><td colspan="3">Aucun comportement suspect détecté.</td></tr>
-        }
-      </tbody>
-    </table>
-  </section>
+  <!-- SANTÉ PLATEFORME -->
+  <div class="kpi-grid">
+    <div class="kpi-card" [class.kp-r]="totalEchecs() > 0" [class.kp-g]="totalEchecs() === 0">
+      <div class="kpi-ico" [class.ir]="totalEchecs() > 0" [class.ig]="totalEchecs() === 0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Échecs récents</span>
+        <span class="kpi-val">{{ totalEchecs() }}</span>
+        <div class="kpi-meta">Journal d'audit complet</div>
+      </div>
+    </div>
+    <div class="kpi-card" [class.kp-y]="activitesSuspectes().length > 0" [class.kp-g]="activitesSuspectes().length === 0">
+      <div class="kpi-ico" [class.iy]="activitesSuspectes().length > 0" [class.ig]="activitesSuspectes().length === 0"><i class="fa-solid fa-user-secret"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Comportements suspects</span>
+        <span class="kpi-val">{{ activitesSuspectes().length }}</span>
+        <div class="kpi-meta">Fenêtre 24h, seuil 5</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-sliders"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Paramètres système</span>
+        <span class="kpi-val">{{ nbParametres() }}</span>
+        <div class="kpi-meta">Configuration active</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-trash-can"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Corbeille</span>
+        <span class="kpi-val">{{ nbCorbeille() }}</span>
+        <div class="kpi-meta">Éléments restaurables</div>
+      </div>
+    </div>
+    <div class="kpi-card" [class.kp-g]="derniereSauvegarde()?.statut === 'REUSSIE'" [class.kp-r]="derniereSauvegarde()?.statut === 'ECHEC'" [class.kp-y]="!derniereSauvegarde()">
+      <div class="kpi-ico" [class.ig]="derniereSauvegarde()?.statut === 'REUSSIE'" [class.ir]="derniereSauvegarde()?.statut === 'ECHEC'" [class.iy]="!derniereSauvegarde()"><i class="fa-solid fa-database"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Dernière sauvegarde</span>
+        <span class="kpi-val" style="font-size:1rem">
+          @if (derniereSauvegarde()) { {{ derniereSauvegarde()!.date | date:'dd/MM HH:mm' }} }
+          @else { Aucune }
+        </span>
+        <div class="kpi-meta">
+          @if (derniereSauvegarde()) { {{ derniereSauvegarde()!.statut }} }
+          <a routerLink="/admin-systeme/sauvegardes">Voir</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <section>
-    <h2>Échecs récents</h2>
-    <table class="table-suivi">
-      <thead><tr><th>Date</th><th>Matricule</th><th>Module</th><th>Action</th><th>Erreur</th></tr></thead>
-      <tbody>
-        @for (e of echecs(); track e.id) {
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-user-secret"></i> Comportements suspects (24h, seuil 5)</span>
+      </div>
+      <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Matricule</th><th>Ressource</th><th class="text-right">Occurrences</th></tr></thead>
+        <tbody>
+          @for (a of activitesSuspectes(); track a.matricule + a.ressource) {
           <tr>
-            <td>{{ e.horodatage | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ e.matricule }}</td>
-            <td>{{ e.module }}</td>
-            <td>{{ e.typeAction }}</td>
-            <td>{{ e.messageErreur }}</td>
+            <td class="fw-bold">{{ a.matricule }}</td>
+            <td>{{ a.ressource }}</td>
+            <td class="text-right mono">{{ a.occurrences }}</td>
           </tr>
-        } @empty {
-          <tr><td colspan="5">Aucun échec récent.</td></tr>
-        }
-      </tbody>
-    </table>
-  </section>
+          } @empty {
+          <tr><td colspan="3" class="empty-state">Aucun comportement suspect détecté.</td></tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Échecs récents</span>
+        <span class="badge bg-neutral badge-sm">{{ totalEchecs() }} au total</span>
+      </div>
+      <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Matricule</th><th>Module</th><th>Action</th><th>Erreur</th></tr></thead>
+        <tbody>
+          @for (e of echecs(); track e.id) {
+          <tr>
+            <td>{{ e.horodatage | date:'dd/MM HH:mm' }}</td>
+            <td>{{ e.matricule }}</td>
+            <td><span class="badge bg-neutral badge-sm">{{ e.module }}</span></td>
+            <td>{{ e.typeAction }}</td>
+            <td class="text-danger">{{ e.messageErreur }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucun échec récent.</td></tr>
+          }
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
 </div>

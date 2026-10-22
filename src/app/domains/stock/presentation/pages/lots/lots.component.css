@@ -66,7 +66,7 @@ label { display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .btn-secondary { background:var(--n200);color:var(--n700); }
 .btn-secondary:hover { background:var(--n300); }
 .btn-danger { background:var(--r);color:#fff; }
-.btn-danger:hover { background:var(--r-d); }
+.btn-danger:hover { background:#B71C1C; }
 .btn-sm { padding:6px 12px;font-size:12px; }
 .btn:disabled { opacity:.5;cursor:not-allowed; }
 

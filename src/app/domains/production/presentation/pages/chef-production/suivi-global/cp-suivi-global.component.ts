@@ -46,7 +46,7 @@ export class CpSuiviGlobalComponent implements OnInit {
   charger(): void {
     this.loading.set(true);
     this.svc.getOFs().subscribe({ next: o => this.ofs.set(o) });
-    this.svc.getPPHs().subscribe({ next: p => { this.pphs.set(p); this.loading.set(false); } });
+    this.svc.getPPHs().subscribe({ next: p => { this.pphs.set(p); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 
   progression(o: OFBE): number {

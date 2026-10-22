@@ -3,7 +3,7 @@
 .card-title { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--n800, var(--n800)); }
 .card-title i { color: var(--g, var(--g)); }
 
-.alert { padding: 12px 16px; border-radius: 10px; margin-bottom: var(--sp-3); border: 1px solid var(--info-border, var(--b-l)); }
+.alert { padding: 12px 16px; border-radius: 10px; margin-bottom: var(--sp-3); border: 1px solid var(--b); }
 .alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); }
 
 /* ── Onglets ───────────────────────────────────────────────── */

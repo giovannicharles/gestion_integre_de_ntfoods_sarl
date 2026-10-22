@@ -9,7 +9,7 @@ export class StockLevelUseCase {
   getAll(): Observable<StockLevel[]>   { return this.repo.getStockLevels(); }
   getAlerts(): Observable<StockLevel[]>{ return this.repo.getAlerts(); }
   getWarehouses(): Observable<Warehouse[]> { return this.repo.getWarehouses(); }
-  adjust(id: number, qty: number, reason: string, requestedBy?: string): Observable<StockLevel> {
+  adjust(id: number, qty: number, reason: string, requestedBy?: string): Observable<unknown> {
     return this.repo.adjustStock(id, qty, reason, requestedBy);
   }
   getMovements(): Observable<StockMovement[]> { return this.repo.getMovements(); }

@@ -1,7 +1,7 @@
 <div class="dash animate-fadeInUp">
 
   <!-- HEADER -->
-  <div class="ph">
+  <div class="ph ph-wm-dg">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-chart-line"></i></div>
       <div>
@@ -15,10 +15,21 @@
         <button class="period-btn" [class.active]="selectedPeriod()==='week'" (click)="setPeriod('week')">Cette semaine</button>
         <button class="period-btn" [class.active]="selectedPeriod()==='month'" (click)="setPeriod('month')">Ce mois</button>
       </div>
+      <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()" title="Rafraîchir maintenant">
+        <i class="fa-solid fa-rotate"></i>
+        @if (derniereMiseAJour()) { <span class="maj-ts">{{ derniereMiseAJour() | date:'HH:mm:ss' }}</span> }
+      </button>
       <a routerLink="/dg/reporting" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-column"></i> Reporting</a>
       <a routerLink="/dg/classement" class="btn btn-primary"><i class="fa-solid fa-ranking-star"></i> Classement</a>
     </div>
   </div>
+
+  @if (liveError()) {
+  <div class="alert-banner" style="flex-wrap:wrap; justify-content:space-between">
+    <span><i class="fa-solid fa-triangle-exclamation"></i> Dernier rafraîchissement automatique échoué — affichage précédent conservé.</span>
+    <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  }
 
   @if (loading()) {
   <div class="sk-kpi-grid">
@@ -26,9 +37,13 @@
     <div class="card sk-kpi-card"><div class="sk-shimmer sk-ico"></div><div class="sk-lines"><div class="sk-shimmer sk-s"></div><div class="sk-shimmer sk-l"></div></div></div>
     }
   </div>
-  }
-
-  @if (!loading()) {
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerDonneesStatiques()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
   <!-- KPI GRID -->
   <div class="kpi-grid">
 
@@ -131,6 +146,48 @@
     </div>
   </div>
 
+  <!--
+    VALIDATIONS EN ATTENTE — vue unifiée (précommandes, dotations, BC, réceptions, versements,
+    carburant) déjà exposée par le backend (GET /api/dg/validations) mais jamais montrée depuis
+    ce tableau de bord : il fallait déjà savoir que /dg/arbitrage existait. Un DG qui ouvre son
+    tableau de bord doit voir en premier ce qui attend sa décision.
+  -->
+  <div class="card validations-card" [class.validations-urgent]="validationsEnAttente().length > 0">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-stamp"></i> Validations en attente de votre décision</span>
+      @if (validationsEnAttente().length > 0) {
+      <span class="badge bg-red badge-sm">{{ validationsEnAttente().length }} à traiter</span>
+      }
+    </div>
+    @if (validationsEnAttente().length === 0) {
+    <p class="empty-state">Rien n'attend votre décision pour le moment.</p>
+    } @else {
+    <div class="validations-list">
+      @for (v of validationsEnAttente().slice(0, 5); track v.reference) {
+      <div class="validation-row">
+        <span class="badge bg-neutral badge-sm">{{ v.type }}</span>
+        <span class="validation-desc">{{ v.description }}</span>
+        <span class="validation-meta">{{ v.matriculeConcerne }} · depuis {{ v.depuis }}</span>
+      </div>
+      }
+    </div>
+    <a routerLink="/dg/arbitrage" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-scale-balanced"></i> Traiter {{ validationsEnAttente().length > 5 ? 'les ' + validationsEnAttente().length + ' demandes' : '' }}
+    </a>
+    }
+  </div>
+
+  <!-- ONGLETS — casse les 12+ cartes empilées en 4 sections ; affichage par CSS, les <canvas>
+       Chart.js (onglet "Vue d'ensemble") ne sont jamais détruits en changeant d'onglet. -->
+  <div class="period-selector dash-tabs">
+    <button class="period-btn" [class.active]="activeTab()==='apercu'" (click)="setTab('apercu')"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</button>
+    <button class="period-btn" [class.active]="activeTab()==='commercial'" (click)="setTab('commercial')"><i class="fa-solid fa-ranking-star"></i> Commercial</button>
+    <button class="period-btn" [class.active]="activeTab()==='marches'" (click)="setTab('marches')"><i class="fa-solid fa-map-location-dot"></i> Marchés</button>
+    <button class="period-btn" [class.active]="activeTab()==='arbitrage'" (click)="setTab('arbitrage')"><i class="fa-solid fa-scale-balanced"></i> Arbitrage</button>
+  </div>
+
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
+
   <!-- CHARTS ROW -->
   <div class="charts-row">
     <div class="card chart-card chart-big">
@@ -141,13 +198,21 @@
     </div>
     <div class="card chart-card chart-sm">
       <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution CA · N vs N-1</span>
+        <span class="card-title"><i class="fa-solid fa-chart-line"></i> CA {{ periodeLabel() }} vs période précédente</span>
       </div>
+      @if (comparatif()) {
+      <div class="comparatif-variation" [class.var-up]="comparatif()!.variationPourcent >= 0" [class.var-down]="comparatif()!.variationPourcent < 0">
+        <i class="fa-solid" [class.fa-arrow-trend-up]="comparatif()!.variationPourcent >= 0" [class.fa-arrow-trend-down]="comparatif()!.variationPourcent < 0"></i>
+        {{ comparatif()!.variationPourcent >= 0 ? '+' : '' }}{{ comparatif()!.variationPourcent }}% ({{ fCFA(comparatif()!.variationAbsolueFCFA) }})
+      </div>
+      }
       <div class="chart-wrap"><canvas #caMensuelCanvas></canvas></div>
     </div>
   </div>
+  </div><!-- /tab-panel apercu (charts) -->
 
   <!-- VERSEMENTS + FICHE SYNTHÈSE -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='commercial'">
   <div class="section-row">
 
     <!-- VERSEMENTS DU JOUR -->
@@ -212,8 +277,10 @@
     </div>
 
   </div><!-- /section-row -->
+  </div><!-- /tab-panel commercial -->
 
   <!-- FICHE SYNTHÈSE CONDENSÉE -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
   <div class="card fiche-card">
     <div class="card-hd">
       <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse — {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
@@ -230,8 +297,10 @@
       <div class="fiche-kpi"><span class="fk-lbl">Tx Réalisation</span><span class="fk-val text-success">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span></div>
     </div>
   </div>
+  </div><!-- /tab-panel apercu (fiche) -->
 
   <!-- OCCUPATION MARCHÉS + ANOMALIES -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='marches'">
   <div class="section-row">
     <div class="card table-card">
       <div class="card-hd">
@@ -278,8 +347,10 @@
       </div>
     </div>
   </div>
+  </div><!-- /tab-panel marches -->
 
   <!-- ARBITRAGE PRIX (LOCK NUMÉRIQUE) -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='arbitrage'">
   <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:14px">
       <div class="kpi-ico iy"><i class="fa-solid fa-unlock-keyhole"></i></div>
@@ -290,6 +361,7 @@
     </div>
     <a routerLink="/dg/arbitrage" class="btn btn-primary"><i class="fa-solid fa-scale-balanced"></i> Gérer les arbitrages</a>
   </div>
+  </div><!-- /tab-panel arbitrage -->
 
-  }<!-- /!loading -->
+  }<!-- /loadError-else -->
 </div>

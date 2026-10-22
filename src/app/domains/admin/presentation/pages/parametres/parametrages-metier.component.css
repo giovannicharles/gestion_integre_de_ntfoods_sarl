@@ -11,8 +11,8 @@
   margin-bottom: 1rem;
   border: 1px solid transparent;
 }
-.alerte-ok { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-.alerte-ko { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.alerte-ok { background: var(--s-gh, #ecfdf5); color: var(--s, #065f46); border-color: #a7f3d0; }
+.alerte-ko { background: var(--r-gh, #fef2f2); color: var(--r, #991b1b); border-color: #fecaca; }
 
 .onglets { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.25rem; }
 .onglets button {

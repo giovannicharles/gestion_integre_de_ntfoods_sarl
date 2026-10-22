@@ -1,6 +1,6 @@
 <div class="page">
 
-  <header class="ph">
+  <header class="ph ph-wm-commercial">
     <div>
       <h1 class="ph-title">Zones de vente</h1>
       <p class="ph-sub">
@@ -8,7 +8,7 @@
         une zone mal calibrée paraîtra saturée ou sous-exploitée à tort.
       </p>
     </div>
-    <button class="btn btn-primary" (click)="formulaireOuvert.set(!formulaireOuvert())">
+    <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']" (click)="formulaireOuvert.set(!formulaireOuvert())">
       {{ formulaireOuvert() ? 'Fermer' : 'Nouvelle zone' }}
     </button>
   </header>
@@ -105,7 +105,7 @@
                   {{ z.actif ? 'Active' : 'Désactivée' }}
                 </span>
               </td>
-              <td class="actions">
+              <td class="actions" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']">
                 @if (calibrage() === z.nom) {
                   <button class="btn btn-sm btn-valider"
                           [disabled]="!calibrageValide(z) || traitementEnCours() === z.nom"

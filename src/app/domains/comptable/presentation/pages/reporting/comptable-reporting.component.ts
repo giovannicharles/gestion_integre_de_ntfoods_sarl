@@ -38,10 +38,15 @@ export class ComptableReportingComponent implements OnInit {
       .reduce((s, f) => s + f.lignes.reduce((ls, l) => ls + l.montantTTC, 0), 0)
   );
 
+  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  private dateLocaleIso(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   ngOnInit(): void {
     const today = new Date();
-    const debut = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-    const fin = today.toISOString().split('T')[0];
+    const debut = this.dateLocaleIso(new Date(today.getFullYear(), today.getMonth(), 1));
+    const fin = this.dateLocaleIso(today);
     this.cptSvc.getVersements().subscribe({
       next: v => this.versements.set(v),
       error: () => {},

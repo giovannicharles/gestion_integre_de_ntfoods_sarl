@@ -41,11 +41,11 @@
   <!-- CARTES DEMANDES -->
   <div class="arb-grid">
     @for (arb of demandes(); track arb.reference) {
-    <div class="arb-card card arb-waiting">
+    <div class="arb-card card">
 
       <div class="arb-header">
         <div class="arb-id-badge">{{ arb.reference }}</div>
-        <span class="badge bg-orange">{{ libelleType(arb.type) }}</span>
+        <span class="badge bg-orange"><i class="fa-solid fa-hourglass-half"></i> {{ libelleType(arb.type) }}</span>
       </div>
 
       <div class="arb-body">

@@ -106,7 +106,7 @@
   background: rgba(246,182,11,.07);
   border: 1px solid rgba(246,182,11,.25);
   border-radius: 10px;
-  font-size: .88rem; color: var(--o-d); margin-bottom: 16px;
+  font-size: .88rem; color: var(--o); margin-bottom: 16px;
 }
 .rp-not-affected i { color: var(--o); flex-shrink: 0; }
 .rp-not-affected-hint { color: var(--text-muted, var(--n500)); font-style: italic; }
@@ -131,7 +131,7 @@
 }
 .rp-kpi-ico-y { background: linear-gradient(135deg, var(--y), var(--o)); color: var(--w); }
 .rp-kpi-ico-g { background: linear-gradient(135deg, var(--g-pale), var(--g-l)); color: var(--w); }
-.rp-kpi-ico-b { background: linear-gradient(135deg, var(--b-l), var(--b)); color: var(--w); }
+.rp-kpi-ico-b { background: linear-gradient(135deg, var(--b-gh), var(--b)); color: var(--w); }
 .rp-kpi-lbl  { font-size: .73rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted, var(--n500)); }
 .rp-kpi-val  { font-size: 1.4rem; font-weight: 800; color: var(--text, var(--n900)); line-height: 1.2; }
 .rp-kpi-unit { font-size: .78rem; font-weight: 500; color: var(--text-muted, var(--n500)); }
@@ -167,7 +167,7 @@
   padding: 10px 20px;
   background: rgba(246,182,11,.06);
   border-bottom: 1px solid rgba(246,182,11,.15);
-  font-size: .8rem; color: var(--o-d);
+  font-size: .8rem; color: var(--o);
 }
 .rp-form-note i { color: var(--o); }
 

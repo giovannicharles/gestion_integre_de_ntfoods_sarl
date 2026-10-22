@@ -35,7 +35,7 @@
               <td>{{ c.productiviteKg | number:'1.1-1' }} kg</td>
               <td>{{ c.objectifTotalKg | number:'1.1-1' }} kg</td>
               <td><span [class]="c.tauxRealisationMoyen >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span></td>
-              <td>{{ c.efficacite | number:'1.1-1' }}%</td>
+              <td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td>
               <td>{{ c.nbJours }}</td>
             </tr>
           } @empty {

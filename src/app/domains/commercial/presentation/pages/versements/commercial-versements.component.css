@@ -2,9 +2,9 @@
 .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }
-.status-card { display: flex; align-items: center; gap: 1rem; margin-bottom: var(--sp-4); border-left: 4px solid var(--n300); }
-.status-ok { border-left-color: var(--s); background: #f1f8f3; }
-.status-alert { border-left-color: var(--r); background: #fff1f1; }
+.status-card { display: flex; align-items: center; gap: 1rem; margin-bottom: var(--sp-4); }
+.status-ok { background: var(--s-gh); }
+.status-alert { background: var(--r-gh); }
 .status-icon { font-size: 2rem; flex-shrink: 0; }
 .status-info { flex: 1; }
 .status-title { font-weight: 700; font-size: .95rem; margin-bottom: .2rem; }

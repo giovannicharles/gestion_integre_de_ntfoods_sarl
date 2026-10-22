@@ -1,0 +1,67 @@
+<div class="card" [class.table-card]="!compact()" style="margin-top:0">
+  <div class="card-hd">
+    <span class="card-title"><i class="fa-solid fa-paperclip"></i> {{ titre() }}</span>
+    <span class="badge badge-secondary badge-sm">{{ documents().length }}</span>
+    <button class="btn btn-ghost btn-sm" (click)="ouvrirForm()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state" style="padding:16px"><i class="fa-solid fa-spinner fa-spin"></i> Chargement…</div>
+  } @else if (loadError()) {
+  <div class="error-state" style="padding:16px">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else if (documents().length === 0) {
+  <div class="empty-state" style="padding:16px">Aucune pièce jointe pour l'instant.</div>
+  } @else {
+  <div style="padding:0 var(--sp-4) var(--sp-4)">
+    @for (d of documents(); track d.id) {
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--n150)">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <i class="fa-solid fa-file-lines" style="color:var(--n400)"></i>
+        <div style="min-width:0">
+          <div class="fw-bold" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">{{ d.nomFichierOriginal }}</div>
+          <div style="font-size:11px;color:var(--n500)">{{ libelleType(d.typeDocument) }} · {{ tailleLisible(d.tailleOctets) }} · {{ d.matriculeUploader }} · {{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-ghost" (click)="telecharger(d)" title="Télécharger"><i class="fa-solid fa-download"></i></button>
+    </div>
+    }
+  </div>
+  }
+</div>
+
+@if (showForm()) {
+<div class="modal-overlay" (click)="showForm.set(false)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-paperclip"></i> Ajouter une pièce jointe</h3>
+      <button class="modal-close" (click)="showForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Type de document</label>
+        <select class="form-control" [ngModel]="typeChoisi()" (ngModelChange)="typeChoisi.set($event)">
+          @for (t of docTypesDisponibles(); track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Référence</label>
+        <input type="text" class="form-control" [ngModel]="referenceChoisie()" (ngModelChange)="referenceChoisie.set($event)">
+      </div>
+      <div class="form-group">
+        <label>Fichier (pdf, xlsx, csv, jpg, png, xml)</label>
+        <input type="file" class="form-control" (change)="onFileSelected($event)" accept=".pdf,.xlsx,.csv,.jpg,.jpeg,.png,.xml">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" (click)="showForm.set(false)">Annuler</button>
+      <button class="btn btn-primary" [disabled]="uploading() || !selectedFile || !referenceChoisie().trim()" (click)="importer()">
+        <i class="fa-solid" [class.fa-upload]="!uploading()" [class.fa-spinner]="uploading()" [class.fa-spin]="uploading()"></i> Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+}

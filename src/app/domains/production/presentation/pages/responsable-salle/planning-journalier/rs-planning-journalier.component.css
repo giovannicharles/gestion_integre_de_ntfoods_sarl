@@ -90,7 +90,7 @@
 }
 .pj-badge-draft {
   background: rgba(246,182,11,.12);
-  color: var(--o-d);
+  color: var(--o);
   border: 1px solid rgba(246,182,11,.3);
 }
 .pj-badge-lock {
@@ -165,7 +165,7 @@
   border-radius: 8px;
   padding: 10px 14px;
   font-size: .83rem;
-  color: var(--o-d);
+  color: var(--o);
 }
 .pj-edit-info i { color: var(--o); margin-top: 1px; flex-shrink: 0; }
 
@@ -187,7 +187,7 @@
 .pj-ligne-num {
   font-size: .76rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: .05em;
-  color: var(--o-d);
+  color: var(--o);
 }
 .pj-remove-btn {
   width: 22px; height: 22px; border-radius: 50%;
@@ -224,7 +224,7 @@
   border: 1px solid rgba(246,182,11,.25);
   border-radius: 6px; min-height: 36px;
 }
-.pj-obj-val { font-size: .95rem; font-weight: 700; color: var(--o-d); }
+.pj-obj-val { font-size: .95rem; font-weight: 700; color: var(--o); }
 .pj-obj-unit { font-size: .7rem; color: var(--text-muted, var(--n500)); }
 
 /* Matricules saisie */

@@ -3,6 +3,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, PreCommandeBE } from '../../../../commercial/infrastructure/commercial.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface LigneUI {
   produitCode: string;
@@ -25,13 +27,14 @@ interface CommandeUI {
 @Component({
   selector: 'app-comptable-commandes',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './comptable-commandes.component.html',
   styleUrls: ['./comptable-commandes.component.css']
 })
 export class ComptableCommandesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(CommercialService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
@@ -80,6 +83,7 @@ export class ComptableCommandesComponent implements OnInit {
           )
         );
       },
+      error: () => this.toast.error('Impossible de valider la commande'),
     });
   }
 

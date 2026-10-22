@@ -97,7 +97,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/stock/dashboard' },
         { label: 'Statistiques', icon: 'fa-chart-line', route: '/stock/statistiques' },
         { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/stock/alertes' },
-        { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/validations' },
+        { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/stock/mes-validations' },
       ]
     },
     {

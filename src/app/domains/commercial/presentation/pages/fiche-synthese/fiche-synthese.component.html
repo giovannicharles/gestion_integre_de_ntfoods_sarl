@@ -1,6 +1,6 @@
 <div class="dash animate-fadeInUp">
 
-  <div class="ph">
+  <div class="ph ph-wm-commercial">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-file-lines"></i></div>
       <div>
@@ -68,6 +68,8 @@
             <td class="center mono text-danger">{{ ligne.qteAvoDotProm }}</td>
             <td class="center mono fw-bold text-success">{{ ligne.qteFacturee }}</td>
           </tr>
+          } @empty {
+          <tr><td colspan="9" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune ligne pour cette fiche</td></tr>
           }
         </tbody>
       </table>

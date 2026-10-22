@@ -1,0 +1,134 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-orange"><i class="fa-solid fa-gauge-high"></i></div>
+      <div>
+        <h1 class="ph-title">Seuils de réapprovisionnement</h1>
+        <p class="ph-sub">Gouvernance des seuils — définition, modification, historique complet des changements</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary btn-sm" (click)="ouvrirFormulaire()"><i class="fa-solid fa-plus"></i> Nouveau seuil</button>
+    </div>
+  </div>
+
+  <div class="info-banner" style="margin-bottom:16px">
+    <i class="fa-solid fa-circle-info"></i>
+    Seul le Directeur Général peut définir ou modifier un seuil. Chaque changement est tracé de façon permanente (qui, quand, ancienne valeur → nouvelle valeur).
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des seuils…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <div class="filter-bar">
+    <button class="filter-btn" [class.active]="activeTab()==='seuils'" (click)="activeTab.set('seuils')">Seuils actuels ({{ seuils().length }})</button>
+    <button class="filter-btn" [class.active]="activeTab()==='historique'" (click)="activeTab.set('historique')">Historique ({{ historique().length }})</button>
+  </div>
+
+  @if (activeTab()==='seuils') {
+  <div class="card table-card">
+    <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code produit</th>
+          <th>Entrepôt</th>
+          <th>Seuil de réapprovisionnement</th>
+          <th>Statut</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of seuilsTries(); track s.id) {
+        <tr>
+          <td class="fw-bold">{{ s.codeProduit }}</td>
+          <td>{{ s.typeEntrepot }}</td>
+          <td class="mono">{{ s.seuilReapprovisionnement }}</td>
+          <td><span class="badge" [class.bg-green]="s.actif" [class.bg-neutral]="!s.actif">{{ s.actif ? 'Actif' : 'Inactif' }}</span></td>
+          <td><button class="btn btn-outline btn-sm" (click)="ouvrirFormulaire(s)"><i class="fa-solid fa-pen"></i> Modifier</button></td>
+        </tr>
+        } @empty {
+        <tr><td colspan="5" class="empty-state">Aucun seuil défini.</td></tr>
+        }
+      </tbody>
+    </table>
+    </div>
+  </div>
+  } @else {
+  <div class="card table-card">
+    <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Code produit</th>
+          <th>Entrepôt</th>
+          <th>Ancienne valeur</th>
+          <th>Nouvelle valeur</th>
+          <th>Modifié par</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (h of historique(); track h.id) {
+        <tr>
+          <td class="fw-bold">{{ h.codeProduit }}</td>
+          <td>{{ h.typeEntrepot }}</td>
+          <td class="mono">{{ h.ancienneValeur }}</td>
+          <td class="mono">{{ h.nouvelleValeur }}</td>
+          <td>{{ h.matriculeAuteur }}</td>
+          <td>{{ h.dateModification | date:'dd/MM/yyyy HH:mm':'fr' }}</td>
+        </tr>
+        } @empty {
+        <tr><td colspan="6" class="empty-state">Aucun changement enregistré.</td></tr>
+        }
+      </tbody>
+    </table>
+    </div>
+  </div>
+  }
+  }
+
+  @if (showForm()) {
+  <div class="modal-overlay" (click)="fermerFormulaire()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-gauge-high"></i> Définir un seuil</h3>
+        <button class="modal-close" (click)="fermerFormulaire()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Code produit</label>
+          <input type="text" class="form-control" [ngModel]="formCodeProduit()" (ngModelChange)="formCodeProduit.set($event)" placeholder="Ex: TBSA">
+        </div>
+        <div class="form-group">
+          <label>Entrepôt</label>
+          <select class="form-control" [ngModel]="formTypeEntrepot()" (ngModelChange)="formTypeEntrepot.set($event)">
+            <option value="CENTRAL">Stock central</option>
+            <option value="TAMPON">Stock tampon</option>
+            <option value="MOBILE">Stock mobile commercial</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Seuil de réapprovisionnement</label>
+          <input type="number" min="0" class="form-control" [ngModel]="formValeur()" (ngModelChange)="formValeur.set($event)">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" (click)="fermerFormulaire()">Annuler</button>
+        <button class="btn btn-primary" [disabled]="saving()" (click)="enregistrer()">
+          <i class="fa-solid" [class.fa-floppy-disk]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

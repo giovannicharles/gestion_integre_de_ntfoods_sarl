@@ -41,7 +41,7 @@ export class CpPerformancesComponent implements OnInit {
     const fin = new Date().toISOString().split('T')[0];
     const debut = this.debutSemaine();
     this.svc.getClassementMachinistes(debut, fin).subscribe({ next: c => this.classementMachinistes.set(c) });
-    this.svc.getClassementExecuteurs(debut, fin).subscribe({ next: c => { this.classementExecuteurs.set(c); this.loading.set(false); } });
+    this.svc.getClassementExecuteurs(debut, fin).subscribe({ next: c => { this.classementExecuteurs.set(c); this.loading.set(false); }, error: () => this.loading.set(false) });
   }
 
   private debutSemaine(): string {
@@ -51,7 +51,8 @@ export class CpPerformancesComponent implements OnInit {
 
   efficaciteMoyenneMachinistes(): number {
     const c = this.classementMachinistes()?.classements ?? [];
-    return c.length ? Math.round((c.reduce((s, x) => s + x.efficacite, 0) / c.length) * 10) / 10 : 0;
+    // efficacite vient du backend en ratio (0.9 pour 90 %), jamais en pourcentage.
+    return c.length ? Math.round((c.reduce((s, x) => s + x.efficacite, 0) / c.length) * 1000) / 10 : 0;
   }
   tauxMoyenExecuteurs(): number {
     const c = this.classementExecuteurs();

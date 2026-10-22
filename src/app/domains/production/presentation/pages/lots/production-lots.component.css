@@ -4,7 +4,8 @@
 .row-pending { background: var(--w)beb; }
 
 .alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
-.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
+.alert-danger { background: var(--r-gh); color: var(--r); border: 1px solid var(--r); display: flex; align-items: center; gap: 8px; }
 
 .lot-lbl { display: block; font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; }
 .lot-date-chip { display: inline-flex; align-items: center; background: var(--g-bg, var(--s-gh)); color: var(--g, var(--g)); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }

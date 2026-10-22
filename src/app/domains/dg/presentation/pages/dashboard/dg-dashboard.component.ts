@@ -1,9 +1,16 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
-import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE } from '../../../infrastructure/dg.service';
+import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE, RapportComparatifBE, ValidationEnAttenteBE } from '../../../infrastructure/dg.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
+
+const PERIODE_API: Record<'today' | 'week' | 'month', string> = { today: 'JOUR', week: 'SEMAINE', month: 'MOIS' };
+const PERIODE_LABEL: Record<'today' | 'week' | 'month', string> = { today: "aujourd'hui", week: 'cette semaine', month: 'ce mois' };
+/** Rafraîchissement automatique des données vivantes (KPI, validations, anomalies) — tableau de bord réactif, pas une photo figée au chargement. */
+const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
 
 Chart.register(...registerables);
 
@@ -12,7 +19,8 @@ Chart.register(...registerables);
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink],
   templateUrl: './dg-dashboard.component.html',
-  styleUrls: ['./dg-dashboard.component.css']
+  styleUrls: ['./dg-dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('caZoneCanvas') caZoneCanvas!: ElementRef<HTMLCanvasElement>;
@@ -22,7 +30,14 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   today = new Date();
   loading = signal(true);
+  loadError = signal<string | null>(null);
+  /** Échec d'un rafraîchissement périodique (pas bloquant — l'affichage précédent reste). */
+  liveError = signal<string | null>(null);
   selectedPeriod = signal<'today' | 'week' | 'month'>('today');
+  /** Onglets du bas de page : réduit le défilement (12+ cartes empilées avant) sans rien supprimer.
+   *  Affichage par CSS (pas @if) pour ne jamais détruire les <canvas> Chart.js en changeant d'onglet. */
+  activeTab = signal<'apercu' | 'commercial' | 'marches' | 'arbitrage'>('apercu');
+  setTab(t: 'apercu' | 'commercial' | 'marches' | 'arbitrage') { this.activeTab.set(t); }
 
   kpis = signal<KpisDgBE | null>(null);
   commerciaux = signal<ClassementCommercialBE[]>([]);
@@ -30,9 +45,14 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   anomalies = signal<AnomalieBE[]>([]);
   zones = signal<ZonePerformanceBE[]>([]);
   versementsDuJour = signal<VersementDuJourBE[]>([]);
+  comparatif = signal<RapportComparatifBE | null>(null);
+  /** Vue unifiée (précommandes, dotations, BC, réceptions, versements, carburant) — jusqu'ici invisible depuis ce tableau de bord, il fallait déjà savoir aller sur /dg/arbitrage. */
+  validationsEnAttente = signal<ValidationEnAttenteBE[]>([]);
+  derniereMiseAJour = signal<Date | null>(null);
+  private refreshHandle: ReturnType<typeof setInterval> | null = null;
 
-  caMensuel = signal<{ mois: string; n: number; nMoins1: number }[]>([]);
   caZones = computed(() => this.zones().map(z => ({ zone: z.secteur, ca: z.caMoisCourantFCFA, objectif: 0 })));
+  periodeLabel = computed(() => PERIODE_LABEL[this.selectedPeriod()]);
   Math = Math;
 
   caTotal = computed(() => this.kpis()?.caTotal ?? 0);
@@ -74,40 +94,82 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.dgSvc.getKpis().subscribe({
-      next: k => this.kpis.set(k),
-      error: () => {},
+    this.chargerDonneesStatiques();
+    this.chargerComparatif();
+    this.chargerDonneesVivantes();
+    this.refreshHandle = setInterval(() => this.chargerDonneesVivantes(), INTERVALLE_RAFRAICHISSEMENT_MS);
+  }
+
+  /** Chargé une fois (référentiel du jour) : classement, occupation, zones, versements. */
+  chargerDonneesStatiques() {
+    this.loading.set(true);
+    this.loadError.set(null);
+    forkJoin({
+      classement: this.dgSvc.getClassement(),
+      occupation: this.dgSvc.getTauxOccupationMarches(),
+      zones: this.dgSvc.getZones(),
+      versements: this.dgSvc.getVersementsDuJour(),
+    }).subscribe({
+      next: ({ classement, occupation, zones, versements }) => {
+        this.commerciaux.set(classement);
+        this.occupation.set(occupation);
+        this.zones.set(zones);
+        this.versementsDuJour.set(versements);
+        this.loading.set(false);
+      },
+      error: e => {
+        this.loadError.set(extractApiError(e));
+        this.loading.set(false);
+      },
     });
-    this.dgSvc.getClassement().subscribe({
-      next: c => this.commerciaux.set(c),
-      error: () => {},
+  }
+
+  /** Rechargé périodiquement : les chiffres qui changent en continu pendant la journée. */
+  private chargerDonneesVivantes() {
+    forkJoin({
+      kpis: this.dgSvc.getKpis(),
+      anomalies: this.dgSvc.getAnomalies(),
+      validations: this.dgSvc.getValidationsEnAttente(),
+    }).subscribe({
+      next: ({ kpis, anomalies, validations }) => {
+        this.kpis.set(kpis);
+        this.anomalies.set(anomalies);
+        this.validationsEnAttente.set(validations);
+        this.liveError.set(null);
+        this.derniereMiseAJour.set(new Date());
+      },
+      error: e => this.liveError.set(extractApiError(e)),
     });
-    this.dgSvc.getTauxOccupationMarches().subscribe({
-      next: o => this.occupation.set(o),
-      error: () => {},
+  }
+
+  private chargerComparatif() {
+    this.dgSvc.getComparatif(PERIODE_API[this.selectedPeriod()]).subscribe({
+      next: c => { this.comparatif.set(c); this.rebuildComparatifChart(); },
+      error: () => this.comparatif.set(null),
     });
-    this.dgSvc.getAnomalies().subscribe({
-      next: a => this.anomalies.set(a),
-      error: () => {},
-    });
-    this.dgSvc.getZones().subscribe({
-      next: z => this.zones.set(z),
-      error: () => {},
-    });
-    this.dgSvc.getVersementsDuJour().subscribe({
-      next: v => this.versementsDuJour.set(v),
-      error: () => {},
-    });
-    setTimeout(() => this.loading.set(false), 600);
   }
 
   ngAfterViewInit() {
     setTimeout(() => this.buildCharts(), 700);
   }
 
-  setPeriod(p: 'today' | 'week' | 'month') { this.selectedPeriod.set(p); }
+  setPeriod(p: 'today' | 'week' | 'month') {
+    this.selectedPeriod.set(p);
+    this.chargerComparatif();
+  }
+
+  rafraichirMaintenant() {
+    this.chargerDonneesVivantes();
+  }
+
+  /** Couleurs lues depuis les tokens CSS (var(--g)/var(--color-accent)) — cohérent avec le thème clair/sombre, jamais de hex en dur dans les graphiques. */
+  private tokenColor(name: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#999';
+  }
 
   private buildCharts() {
+    const g = this.tokenColor('--color-primary');
+    const accent = this.tokenColor('--color-accent');
     const zones = this.caZones();
     if (this.caZoneCanvas?.nativeElement && zones.length > 0) {
       const ctx = this.caZoneCanvas.nativeElement.getContext('2d')!;
@@ -116,29 +178,52 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         data: {
           labels: zones.map(z => z.zone),
           datasets: [
-            { label: 'CA Réalisé', data: zones.map(z => z.ca), backgroundColor: '#1A6B2A', borderRadius: 6 },
-            { label: 'Objectif', data: zones.map(z => z.objectif), backgroundColor: '#FFD70066', borderColor: '#FFD700', borderWidth: 2, borderRadius: 6 },
+            { label: 'CA Réalisé', data: zones.map(z => z.ca), backgroundColor: g, borderRadius: 6 },
           ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }
       }));
     }
-    const caMensuel = this.caMensuel();
-    if (this.caMensuelCanvas?.nativeElement && caMensuel.length > 0) {
-      const ctx2 = this.caMensuelCanvas.nativeElement.getContext('2d')!;
-      this.charts.push(new Chart(ctx2, {
-        type: 'line',
-        data: {
-          labels: caMensuel.map(m => m.mois),
-          datasets: [
-            { label: 'CA N (2026)', data: caMensuel.map(m => m.n), borderColor: '#1A6B2A', backgroundColor: '#1A6B2A22', tension: 0.4, fill: true, pointBackgroundColor: '#1A6B2A' },
-            { label: 'CA N-1 (2025)', data: caMensuel.map(m => m.nMoins1), borderColor: '#FFD700', backgroundColor: '#FFD70011', tension: 0.4, fill: false, borderDash: [6, 3], pointBackgroundColor: '#FFD700' },
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }
-      }));
-    }
+    this.rebuildComparatifChart();
   }
 
-  ngOnDestroy() { this.charts.forEach(c => c.destroy()); }
+  /**
+   * Comparaison N vs N-1 sur la période choisie (JOUR/SEMAINE/MOIS) — remplace un graphique
+   * "Évolution CA mensuelle" qui affichait un tableau vide depuis le début : rien n'alimentait
+   * jamais `caMensuel`, et l'API DG n'expose de toute façon qu'une comparaison à deux tranches
+   * (actuelle vs précédente), pas une série de 12 mois (vérifié sur RapportComparatifResponse,
+   * backend). Se reconstruit à chaque changement de période (le sélecteur Aujourd'hui/Semaine/
+   * Mois ne faisait jusqu'ici rien d'autre que changer l'étiquette d'un bouton).
+   */
+  private rebuildComparatifChart() {
+    const comp = this.comparatif();
+    if (!this.caMensuelCanvas?.nativeElement || !comp) return;
+    const existing = this.charts.find(c => c.canvas === this.caMensuelCanvas.nativeElement);
+    if (existing) { existing.destroy(); this.charts = this.charts.filter(c => c !== existing); }
+    const g = this.tokenColor('--color-primary');
+    const accent = this.tokenColor('--color-accent');
+    const ctx2 = this.caMensuelCanvas.nativeElement.getContext('2d')!;
+    this.charts.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: ['Période précédente', 'Période actuelle'],
+        datasets: [{
+          label: 'CA (FCFA)',
+          data: [comp.precedente.caFCFA, comp.actuelle.caFCFA],
+          backgroundColor: [accent, g],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } }
+      }
+    }));
+  }
+
+  ngOnDestroy() {
+    this.charts.forEach(c => c.destroy());
+    if (this.refreshHandle) clearInterval(this.refreshHandle);
+  }
 }

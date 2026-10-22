@@ -1,43 +1,83 @@
 <div class="otp-container">
-    <div class="otp-card">
-        <div class="otp-header">
-            <div class="logo-section">
-                <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
-            </div>
-            <h1>Vérification OTP</h1>
-            <p>Entrez le code à 6 chiffres envoyé à votre numéro de téléphone</p>
-        </div>
-
-        <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form">
-            <div class="form-group">
-                <label class="form-label">Code OTP</label>
-                <input type="text" class="form-control otp-input" formControlName="otp" placeholder="000000"
-                    maxlength="6" [class.is-error]="otpForm.get('otp')?.touched && otpForm.get('otp')?.invalid" />
-                <div class="error-message" *ngIf="otpForm.get('otp')?.touched && otpForm.get('otp')?.invalid">
-                    Le code doit contenir 6 chiffres
-                </div>
-            </div>
-
-            <div class="countdown-section">
-                <p *ngIf="!canResend">Renvoyer dans {{ countdown }} secondes</p>
-                <button type="button" class="resend-btn" (click)="resendOtp()" [disabled]="!canResend"
-                    *ngIf="canResend">
-                    Renvoyer le code
-                </button>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary btn-full" [disabled]="otpForm.invalid || loading">
-                    <span *ngIf="!loading">Vérifier</span>
-                    <span *ngIf="loading" class="spinner spinner-sm"></span>
-                </button>
-            </div>
-
-            <div class="form-footer">
-                <a (click)="goToLogin()" class="back-link">
-                    ← Retour à la connexion
-                </a>
-            </div>
-        </form>
+  <div class="otp-card">
+    <div class="otp-illustration" aria-hidden="true">
+      <svg viewBox="0 0 120 120" class="otp-svg">
+        <circle cx="60" cy="60" r="56" class="otp-svg-ring" />
+        <rect x="40" y="26" width="40" height="68" rx="10" class="otp-svg-phone" />
+        <rect x="46" y="36" width="28" height="40" rx="3" class="otp-svg-screen" />
+        <circle cx="52" cy="48" r="3" class="otp-svg-dot" />
+        <circle cx="60" cy="48" r="3" class="otp-svg-dot" />
+        <circle cx="68" cy="48" r="3" class="otp-svg-dot" />
+        <rect x="46" y="58" width="28" height="3" rx="1.5" class="otp-svg-line" />
+        <rect x="46" y="65" width="18" height="3" rx="1.5" class="otp-svg-line" />
+        <circle cx="60" cy="86" r="3" class="otp-svg-home" />
+        <g class="otp-svg-badge-group">
+          <circle cx="86" cy="86" r="16" class="otp-svg-badge" />
+          <path d="M79 86.5 L84 91.5 L93.5 80.5" class="otp-svg-check" />
+        </g>
+      </svg>
     </div>
+
+    <div class="otp-header">
+      <h1>Vérification du code</h1>
+      <p>Entrez le code à 6 chiffres envoyé par SMS au matricule <strong>{{ matricule }}</strong></p>
+    </div>
+
+    @if (error()) {
+      <div class="error-banner" role="alert" aria-live="assertive">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form" novalidate>
+      <div class="otp-digits" (paste)="onPaste($event)">
+        @for (i of indices; track i) {
+          <input
+            #digitInput
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="1"
+            class="otp-digit"
+            [class.is-error]="!!error()"
+            [value]="digits()[i]"
+            (input)="onDigitInput(i, $event)"
+            (keydown)="onDigitKeydown(i, $event)"
+            [attr.aria-label]="'Chiffre ' + (i + 1) + ' sur ' + codeLength"
+          />
+        }
+      </div>
+
+      <div class="countdown-section">
+        @if (!canResend()) {
+          <p class="countdown-text"><i class="fa-regular fa-clock"></i> Renvoyer le code dans {{ countdown() }}s</p>
+        } @else {
+          <button type="button" class="resend-btn" (click)="resendOtp()" [disabled]="resending()">
+            @if (!resending()) {
+              <span>Renvoyer le code</span>
+            } @else {
+              <span class="spinner spinner-sm"></span>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="submit-button" [disabled]="otpForm.invalid || loading()">
+          @if (!loading()) {
+            <span>Vérifier le code</span>
+          } @else {
+            <span class="spinner spinner-sm"></span>
+          }
+        </button>
+      </div>
+
+      <div class="form-footer">
+        <button type="button" class="back-link" (click)="goToLogin()">
+          <i class="fa-solid fa-arrow-left"></i> Retour à la connexion
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

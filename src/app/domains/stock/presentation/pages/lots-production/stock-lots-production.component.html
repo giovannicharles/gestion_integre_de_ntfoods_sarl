@@ -62,13 +62,13 @@
           @for (lot of lotsAValider(); track lot.numeroLot) {
             <tr>
               <td class="fw-bold">{{ lot.numeroLot }}</td>
-              <td>{{ lot.designationProduit }} <span class="text-muted">({{ lot.codeProduit }})</span></td>
-              <td class="mono">{{ lot.quantiteKg }} kg</td>
-              <td class="mono">{{ lot.nbCartons }}</td>
+              <td>{{ lot.productName }} <span class="text-muted">({{ lot.productSku }})</span></td>
+              <td class="mono">{{ lot.declaredQuantityKg }} kg</td>
+              <td class="mono">{{ lot.equivalentUnits }}</td>
               <td>{{ lot.dateProduction | date:'dd/MM/yyyy' }}</td>
               <td>{{ lot.dlc | date:'dd/MM/yyyy' }}</td>
               <td>{{ lot.matriculeChefProduction }}</td>
-              <td>
+              <td *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
                 <button class="btn btn-primary btn-sm" (click)="validerLot(lot)">
                   <i class="fa-solid fa-check"></i> Valider
                 </button>
@@ -101,8 +101,8 @@
             @for (lot of lots(); track lot.numeroLot) {
               <tr>
                 <td class="fw-bold">{{ lot.numeroLot }}</td>
-                <td>{{ lot.designationProduit }}</td>
-                <td class="mono">{{ lot.quantiteKg }} kg</td>
+                <td>{{ lot.productName }}</td>
+                <td class="mono">{{ lot.declaredQuantityKg }} kg</td>
                 <td>{{ lot.dateProduction | date:'dd/MM/yyyy' }}</td>
                 <td><span class="{{ statutClass(lot.statut) }}">{{ statutLabel(lot.statut) }}</span></td>
               </tr>

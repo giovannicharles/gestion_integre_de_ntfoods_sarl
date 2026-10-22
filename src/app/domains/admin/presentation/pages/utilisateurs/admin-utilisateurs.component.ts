@@ -1,7 +1,9 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UtilisateurBE } from '../../../infrastructure/admin.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ROLE_LABELS } from '../../../../../core/models/user.models';
 
 interface UserUI {
@@ -27,10 +29,12 @@ const FORM_VIDE = (): NouvelUtilisateurForm => ({
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './admin-utilisateurs.component.html',
-  styleUrls: ['./admin-utilisateurs.component.css']
+  styleUrls: ['./admin-utilisateurs.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminUtilisateursComponent implements OnInit {
   private readonly svc = inject(AdminService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   ROLE_LABELS = ROLE_LABELS;
@@ -138,6 +142,7 @@ export class AdminUtilisateursComponent implements OnInit {
       next: u => this.users.update(list =>
         list.map(usr => usr.matricule === matricule ? this.mapU(u) : usr)
       ),
+      error: (err) => this.toast.error(extractApiError(err), user.actif ? 'Désactivation impossible' : 'Activation impossible'),
     });
   }
 

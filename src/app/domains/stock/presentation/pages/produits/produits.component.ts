@@ -219,7 +219,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   materialTypes = [
-    { value: 'PRODUIT_FINI', label: 'Produit Fini', icon: 'fa-box', color: 'var(--b-d)' },
+    { value: 'PRODUIT_FINI', label: 'Produit Fini', icon: 'fa-box', color: 'var(--b)' },
     { value: 'MATIERE_PREMIERE', label: 'Matière Première', icon: 'fa-wheat-awn', color: 'var(--o)' },
     { value: 'CONSOMMABLE', label: 'Consommable', icon: 'fa-box-open', color: 'var(--g)' }
   ];

@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { StockService, NiveauStockBE, TransfertBE } from '../../../infrastructure/stock.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { ConditioningQuantityComponent, LigneConditionnement } from '../../../../../shared/components/conditioning-quantity/conditioning-quantity.component';
 
 interface LigneSaisie {
   codeProduit: string;
-  sku: string | null;
   designation: string;
   disponible: number;
-  quantite: number | null;
+  /** Décomposition par niveau de conditionnement (P4, 2026-10-15) — remplace l'ancien `sku` toujours null. */
+  lignesConditionnement: LigneConditionnement[];
 }
 
 /**
@@ -22,7 +23,7 @@ interface LigneSaisie {
 @Component({
   selector: 'app-demande-transfert',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConditioningQuantityComponent],
   templateUrl: './demande-transfert.component.html',
   styleUrls: ['./demande-transfert.component.css'],
 })
@@ -88,7 +89,7 @@ export class DemandeTransfertComponent implements OnInit {
     }
     this.lignesChoisies.update((lignes) => [
       ...lignes,
-      { codeProduit: n.codeProduit, sku: null, designation: n.designation, disponible: n.quantite, quantite: null },
+      { codeProduit: n.codeProduit, designation: n.designation, disponible: n.quantite, lignesConditionnement: [] },
     ]);
   }
 
@@ -96,16 +97,26 @@ export class DemandeTransfertComponent implements OnInit {
     this.lignesChoisies.update((lignes) => lignes.filter((l) => l.codeProduit !== codeProduit));
   }
 
+  surLignesConditionnement(ligne: LigneSaisie, lignes: LigneConditionnement[]) {
+    ligne.lignesConditionnement = lignes;
+  }
+
+  totalLigne(l: LigneSaisie): number {
+    return l.lignesConditionnement.reduce((s, x) => s + x.quantite, 0);
+  }
+
   peutSoumettre(): boolean {
     const lignes = this.lignesChoisies();
     if (lignes.length === 0) return false;
-    return lignes.every((l) => l.quantite !== null && l.quantite > 0 && l.quantite <= l.disponible);
+    return lignes.every((l) => l.lignesConditionnement.length > 0 && this.totalLigne(l) > 0 && this.totalLigne(l) <= l.disponible);
   }
 
   soumettre() {
     if (!this.peutSoumettre() || this.soumission) return;
     this.soumission = true;
-    const lignes = this.lignesChoisies().map((l) => ({ codeProduit: l.codeProduit, sku: l.sku, quantite: l.quantite! }));
+    const lignes = this.lignesChoisies().flatMap((l) =>
+      l.lignesConditionnement.map((c) => ({ codeProduit: l.codeProduit, sku: c.codeConfiguration || null, quantite: c.quantite }))
+    );
 
     this.stockService.demanderTransfert(lignes).subscribe({
       next: (demande) => {

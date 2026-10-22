@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, AfterViewInit, ViewChild, ElementRef, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy, AfterViewInit, ViewChild, ElementRef, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
@@ -8,6 +8,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { StockApiRepository, ReportData, GenerateReportRequest, StockLocationDto, CustomReportCriteriaDto } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevel, StockMovement, DashboardStatsResponse, Product } from '../../../domain/models';
 import { IaService, MeetingReportResponse } from '../../../../../core/services/ia.service';
+import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
 
 Chart.register(...registerables);
 
@@ -24,9 +25,10 @@ export interface DocumentTemplate {
 @Component({
   selector: 'app-rapport-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe],
+  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, EmptyIllustrationComponent],
   templateUrl: './rapport-list.component.html',
-  styleUrls: ['./rapport-list.component.css']
+  styleUrls: ['./rapport-list.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   private d$ = new Subject<void>();
@@ -264,11 +266,11 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       {
         id: 'globale', label: 'Synthèse Globale', description: 'Entrées, sorties et stock par produit',
-        icon: 'fa-globe', color: 'var(--p)', action: () => this.downloadGlobale(), needsPeriod: true
+        icon: 'fa-globe', color: 'var(--s)', action: () => this.downloadGlobale(), needsPeriod: true
       },
       {
         id: 'movements-pdf', label: 'Rapport Mouvements PDF', description: 'Liste détaillée des mouvements',
-        icon: 'fa-right-left', color: 'var(--t)', action: () => this.downloadMovementsPdf(), needsPeriod: false
+        icon: 'fa-right-left', color: 'var(--n700)', action: () => this.downloadMovementsPdf(), needsPeriod: false
       },
       {
         id: 'movements-excel', label: 'Rapport Mouvements Excel', description: 'Export Excel des mouvements',
@@ -292,7 +294,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       {
         id: 'rotation-central', label: 'Rotation du Stock', description: 'Entrées, sorties et taux de rotation',
-        icon: 'fa-rotate', color: 'var(--p)', action: () => this.downloadRotation('central'), needsPeriod: true
+        icon: 'fa-rotate', color: 'var(--s)', action: () => this.downloadRotation('central'), needsPeriod: true
       },
       {
         id: 'receptions', label: 'Rapport Réceptions', description: 'Réceptions par produit avec écarts',
@@ -308,7 +310,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       {
         id: 'transferts-central', label: 'Rapport Transferts', description: 'Transferts internes par produit',
-        icon: 'fa-right-left', color: 'var(--t)', action: () => this.downloadTransferts('central'), needsPeriod: true
+        icon: 'fa-right-left', color: 'var(--n700)', action: () => this.downloadTransferts('central'), needsPeriod: true
       },
       {
         id: 'hebdo-central', label: 'Fiche Hebdomadaire', description: 'KPIs, graphique sorties, entrées/sorties/stock, alertes',

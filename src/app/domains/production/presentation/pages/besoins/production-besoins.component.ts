@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import {
   ProductionService, ExpressionBesoinBE, PPHBE, TYPES_BESOIN, STATUTS_BESOIN
 } from '../../../infrastructure/production.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-production-besoins',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './production-besoins.component.html',
   styleUrls: ['./production-besoins.component.css']
 })
@@ -42,7 +43,10 @@ export class ProductionBesoinsComponent implements OnInit {
 
   ngOnInit(): void {
     this.charger();
-    this.svc.getPPHs().subscribe({ next: p => this.pphs.set(p) });
+    this.svc.getPPHs().subscribe({
+      next: p => this.pphs.set(p),
+      error: () => this.message.set('Impossible de charger la liste des PPH')
+    });
   }
 
   charger(): void {

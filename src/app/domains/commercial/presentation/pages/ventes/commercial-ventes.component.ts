@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, VenteBE, AvoirBE } from '../../../infrastructure/commercial.service';
+import { DocumentService } from '../../../../shared/infrastructure/document.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-commercial-ventes',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, CanDirective],
   templateUrl: './commercial-ventes.component.html',
   styleUrls: ['./commercial-ventes.component.css']
 })
@@ -17,6 +19,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private svc = inject(CommercialService);
   private auth = inject(AuthService);
+  private docSvc = inject(DocumentService);
 
   loading = signal(true);
   ventes = signal<VenteBE[]>([]);
@@ -37,6 +40,12 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
   nmQuantite = 1;
   nmMotif = '';
 
+  /** Seuil réel (unités de base) au-delà duquel une photo est exigée pour une avarie — jamais codé en dur, lu au serveur. */
+  seuilPhotoAvarie = signal<number | null>(null);
+  nmPhotoFile: File | null = null;
+  nmPhotoDocId: number | null = null;
+  uploadingPhoto = signal(false);
+
   avoirMotif = '';
   avoirs = signal<AvoirBE[]>([]);
 
@@ -45,6 +54,38 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.chargerVentes();
+    this.svc.getReglesAvarieCourantes().pipe(takeUntil(this.d$)).subscribe({
+      next: r => this.seuilPhotoAvarie.set(r.quantiteSeuilPhotoObligatoire),
+      error: () => this.showToast("Seuil photo avarie non chargé — la photo sera exigée par précaution pour toute avarie.", 'error'),
+    });
+  }
+
+  /**
+   * Vrai si le type/la quantité saisie exige une photo, selon le seuil réel en vigueur.
+   *
+   * Si le seuil n'a pas pu être chargé (`null`), on exige la photo par défaut plutôt que de ne
+   * jamais la demander : avant ce correctif (2026-10-21, mode autonome), un échec silencieux du
+   * chargement du seuil désactivait entièrement l'obligation de photo pour toute la session —
+   * une déclaration d'avarie de n'importe quelle quantité passait alors sans preuve, contraire à
+   * la règle métier (§5.4 du contexte projet : « Avarie > 5% → photo obligatoire »).
+   */
+  photoRequise(): boolean {
+    const seuil = this.seuilPhotoAvarie();
+    if (this.nmTypeVente !== 'AVARIE') return false;
+    return seuil === null || this.nmQuantite >= seuil;
+  }
+
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.nmPhotoFile = input.files[0];
+    this.nmPhotoDocId = null;
+    this.uploadingPhoto.set(true);
+    const reference = `AVARIE-${this.nmCodeProduit || 'PROD'}-${Date.now()}`;
+    this.docSvc.importer('PHOTO_AVARIE', reference, this.nmPhotoFile).pipe(takeUntil(this.d$)).subscribe({
+      next: doc => { this.uploadingPhoto.set(false); this.nmPhotoDocId = doc.id; },
+      error: (e) => { this.uploadingPhoto.set(false); this.showToast(extractApiError(e), 'error'); },
+    });
   }
 
   chargerVentes(): void {
@@ -92,11 +133,17 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
     this.nmDesignation = '';
     this.nmQuantite = 1;
     this.nmMotif = '';
+    this.nmPhotoFile = null;
+    this.nmPhotoDocId = null;
     this.showNonMarchand.set(true);
   }
 
   confirmerNonMarchand(): void {
     if (this.saving() || !this.nmCodeClient || !this.nmCodeProduit) return;
+    if (this.photoRequise() && !this.nmPhotoDocId) {
+      this.showToast(`Une photo est obligatoire au-delà de ${this.seuilPhotoAvarie()} unité(s) pour une avarie.`, 'error');
+      return;
+    }
     this.saving.set(true);
     const matricule = this.auth.user()?.matricule ?? '';
     const now = new Date();
@@ -111,6 +158,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
       quantite: this.nmQuantite,
       date: fmt(now),
       motif: this.nmMotif,
+      photoJustificative: this.nmPhotoDocId !== null ? String(this.nmPhotoDocId) : undefined,
     }).pipe(takeUntil(this.d$)).subscribe({
       next: v => {
         this.ventes.update(list => [v, ...list]);

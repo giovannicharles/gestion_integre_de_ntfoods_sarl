@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { inject, signal } from '@angular/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { LoginRequest } from '../../../core/models/auth.models';
@@ -17,18 +17,21 @@ import { ROLE_HOMES, UserRole } from '../../../core/models/user.models';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loginForm: FormGroup;
   loading = signal(false);
   showPassword = false;
   error = signal('');
   hasError = signal(false);
+  passwordResetSuccess = signal(false);
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
       matricule: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+    this.passwordResetSuccess.set(this.route.snapshot.queryParamMap.get('motDePasseReinitialise') === '1');
   }
 
   onSubmit() {

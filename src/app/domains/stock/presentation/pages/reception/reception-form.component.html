@@ -53,6 +53,7 @@
           <div><span style="color:var(--n500);font-size:12px">Destination</span><div style="font-weight:600">{{ r.destinationLocationName || r.destinationLocationId }}</div></div>
           <div><span style="color:var(--n500);font-size:12px">Date</span><div style="font-weight:600">{{ r.receiptDate | date:'dd/MM/yyyy HH:mm' }}</div></div>
         </div>
+        <div class="tbl-wrap">
         <table class="table">
           <thead><tr><th>Produit</th><th>Conditionnement</th><th>Commandé</th><th>Reçu</th><th>Écart</th><th>Lot</th></tr></thead>
           <tbody>
@@ -72,6 +73,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   }
@@ -161,7 +163,7 @@
                       </select>
                     }
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+                  <div class="rgrid-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
                     <div class="form-group"><label class="form-label">Qté commandée <span style="font-weight:400;color:var(--n400)">(optionnel)</span></label><input type="number" class="form-control" min="0" [(ngModel)]="l.orderedQty"></div>
                     <div class="form-group"><label class="form-label">Qté reçue réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" style="border-color:var(--g-pale);background:var(--g-sf)" [(ngModel)]="l.receivedQty">
                       @if (l.receivedQty <= 0) {

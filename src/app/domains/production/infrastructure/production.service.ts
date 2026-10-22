@@ -66,11 +66,23 @@ export const STATUTS_PPH = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'] as con
 // Modèles — Lots
 // ═══════════════════════════════════════════════════════════════════════
 
+/**
+ * Forme réelle de LotResponse (backend, LotController) — vérifiée en direct le
+ * 2026-10-15 (P3) : les champs étaient auparavant supposés en français
+ * (codeProduit/designationProduit/quantiteKg/nbCartons) alors que l'API renvoie
+ * et attend productSku/productName/declaredQuantityKg/equivalentUnits. La
+ * déclaration de lot échouait systématiquement (400, productSku/productName
+ * obligatoires) et l'affichage des lots existants montrait des cellules vides.
+ */
 export interface LotBE {
-  id: number; numeroLot: string; referencePPH: string; codeProduit: string; designationProduit: string;
-  quantiteKg: number; nbCartons: number; dateProduction: string; dlc: string;
-  matriculeChefProduction: string; statut: string;
+  id: number; numeroLot: string; referencePPH: string;
+  productSku: string; productName: string; productUnit: string;
+  declaredQuantityKg: number; equivalentUnits: number;
+  dateProduction: string; dlc: string;
+  matriculeChefProduction: string; declaredBy?: string | null; statut: string;
   matriculeGestionnaireValidation?: string | null; motifRejet?: string | null;
+  conditioningType?: string | null; conditioningQty?: number | null;
+  notes?: string | null; createdAt?: string | null; validatedAt?: string | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -267,6 +279,16 @@ export interface ClassementExecuteurBE {
   rang: number; matriculeEmploye: string; nomEmploye: string;
   quantiteTotaleRealisee: number; unite: string;
   tauxRealisationMoyen: number; nbJoursAffectes: number;
+  /** Quantités par unité — jamais additionnées entre elles (sachets, kg, sceaux... distincts). */
+  quantitesParUnite?: { unite: string; quantite: number }[];
+}
+
+export interface PerformancePosteBE {
+  codePoste: string; libellePoste: string; unite: string | null;
+  joursAffectes: number; joursSaisis: number;
+  objectifCumule: number; realiseCumule: number;
+  taux: number | null; effectifMoyen: number | null; rendementParPersonne: number | null;
+  rang: number | null;
 }
 
 export interface ComparaisonFutsProductionBE {
@@ -380,8 +402,9 @@ export class ProductionService {
   }
 
   declarerLot(req: {
-    referencePPH: string; codeProduit: string; designationProduit: string;
-    quantiteKg: number; nbCartons: number; dateProduction?: string; dlc: string;
+    referencePPH: string; productSku: string; productName: string; productUnit?: string;
+    declaredQuantityKg: number; equivalentUnits: number; dateProduction?: string; dlc: string;
+    conditioningType?: string; conditioningQty?: number; notes?: string;
   }): Observable<LotBE> {
     return this.api.post<ApiResponse<LotBE>>('production/lots', req)
       .pipe(map(r => r.donnees!));
@@ -619,9 +642,9 @@ export class ProductionService {
     ).pipe(map(r => r.donnees!));
   }
 
-  mettreAJourDosageAutomatique(id: number, nbFuts: number, typeMelange: string): Observable<SessionDosageBE> {
+  mettreAJourDosageAutomatique(id: number, nbFuts: number): Observable<SessionDosageBE> {
     return this.api.post<ApiResponse<SessionDosageBE>>(
-      `production/dosage/${id}/dosage-auto?nbFuts=${nbFuts}&typeMelange=${encodeURIComponent(typeMelange)}`, {}
+      `production/dosage/${id}/dosage-auto?nbFuts=${nbFuts}`, {}
     ).pipe(map(r => r.donnees!));
   }
 
@@ -811,6 +834,13 @@ export class ProductionService {
     ).pipe(map(r => r.donnees ?? []));
   }
 
+  /** Performances des postes sur une période (jour, semaine, mois ou intervalle libre). */
+  getPerformancesPostes(debut: string, fin: string): Observable<PerformancePosteBE[]> {
+    return this.api.get<ApiResponse<PerformancePosteBE[]>>(
+      'production/affectations/performances-postes', { debut, fin }
+    ).pipe(map(r => r.donnees ?? []));
+  }
+
   /** Rapport hebdomadaire propre au module Affectation (fûts vs production aval). */
   getRapportHebdomadaireAffectation(debut: string, fin: string): Observable<RapportHebdoAffectationBE> {
     return this.api.get<ApiResponse<RapportHebdoAffectationBE>>(
@@ -841,6 +871,15 @@ export class ProductionService {
   }): Observable<RegistreProductionBE> {
     return this.api.post<ApiResponse<RegistreProductionBE>>('production/registres', req)
       .pipe(map(r => r.donnees!));
+  }
+
+  /** Correction du registre du jour même uniquement (refusée en 409 au-delà, preuve d'audit). */
+  modifierRegistre(referencePPH: string, date: string, req: {
+    lignes: LigneRegistreBE[];
+  }): Observable<RegistreProductionBE> {
+    return this.api.patch<ApiResponse<RegistreProductionBE>>(
+      `production/registres/pph/${encodeURIComponent(referencePPH)}/date/${date}`, req
+    ).pipe(map(r => r.donnees!));
   }
 
   // ── Dashboards ───────────────────────────────────────────────

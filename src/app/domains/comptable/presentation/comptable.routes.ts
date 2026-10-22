@@ -21,6 +21,13 @@ export const COMPTABLE_ROUTES: Routes = [
       // Le découpage territorial conditionne les objectifs qu'il fixe : il
       // l'administre au même titre que la Chargée RP.
       { path: 'zones', loadComponent: () => import('../../commercial/presentation/pages/zones-admin/zones-admin.component').then(m => m.ZonesAdminComponent) },
+      // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email) — écran
+      // partagé (voir shared/commande-client).
+      { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
+      // Moteur de validation générique, réutilisé sans quitter la coquille Comptable (même
+      // correction que DG/Contrôle, 2026-10-16) : le sidebar pointait vers /validations,
+      // route de premier niveau sans aucun layout.
+      { path: 'validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
     ]
   }
 ];

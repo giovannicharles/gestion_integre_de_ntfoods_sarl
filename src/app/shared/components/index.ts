@@ -2,6 +2,9 @@ export { StatCardComponent } from './stat-card/stat-card.component';
 export { BadgeComponent } from './badge/badge.component';
 export { ModalComponent } from './modal/modal.component';
 export { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+export { ProductSearchComponent } from './product-search/product-search.component';
+export { ConditioningQuantityComponent } from './conditioning-quantity/conditioning-quantity.component';
+export type { LigneConditionnement } from './conditioning-quantity/conditioning-quantity.component';
 
 export type { StatCardVariant, StatCardSize } from './stat-card/stat-card.component';
 export type { BadgeVariant, BadgeSize } from './badge/badge.component';

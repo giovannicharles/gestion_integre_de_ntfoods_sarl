@@ -45,12 +45,12 @@
                   <strong>{{ l.designation }}</strong>
                   <span class="niveau-detail">disponible : {{ l.disponible }}</span>
                 </div>
-                <input type="number" class="qty-input" [(ngModel)]="l.quantite" [max]="l.disponible" min="1" placeholder="Qté">
+                <app-conditioning-quantity [codeProduit]="l.codeProduit" (lignesChange)="surLignesConditionnement(l, $event)" />
                 <button class="btn-icon" (click)="retirerLigne(l.codeProduit)" title="Retirer">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
-              @if (l.quantite !== null && (l.quantite <= 0 || l.quantite > l.disponible)) {
+              @if (totalLigne(l) > l.disponible) {
                 <p class="qty-error">Quantité invalide (max {{ l.disponible }})</p>
               }
             }
@@ -74,6 +74,7 @@
       } @else if (historique().length === 0) {
         <p class="empty-inline">Aucun transfert exécuté pour le moment.</p>
       } @else {
+        <div class="tbl-wrap">
         <table class="historique-table">
           <thead><tr><th>Numéro</th><th>Statut</th><th>Gestionnaire</th><th>Exécuté le</th></tr></thead>
           <tbody>
@@ -87,6 +88,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     </div>
   }

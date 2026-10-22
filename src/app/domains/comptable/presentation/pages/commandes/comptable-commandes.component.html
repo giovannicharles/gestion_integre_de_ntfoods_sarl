@@ -1,4 +1,4 @@
-<div class="ph">
+<div class="ph ph-wm-comptable">
   <div class="ph-left">
     <i class="fa-solid fa-file-signature ph-ico"></i>
     <div>
@@ -56,7 +56,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card card-wm card-wm-comptable">
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Précommandes</h2>
     <div class="filter-row">
@@ -83,7 +83,7 @@
         <div class="cmd-actions">
           <span [class]="statutClass(cmd.statut)">{{ statutLabel(cmd.statut) }}</span>
           @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
-            <button class="btn btn-success btn-sm" (click)="validerCommande(cmd.id)">
+            <button class="btn btn-success btn-sm" *appCan="['COMPTABLE', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="validerCommande(cmd.id)">
               <i class="fa-solid fa-check"></i> Valider Comptable
             </button>
           }

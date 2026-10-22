@@ -60,7 +60,7 @@
             </span>
           </div>
           @if (a.statut !== 'VALIDEE') {
-            <div class="pj-header-actions">
+            <div class="pj-header-actions" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'ADMIN']">
               <button class="btn btn-ghost btn-sm" (click)="entrerModeEdition()" [disabled]="actionning()">
                 <i class="fa-solid fa-pen"></i> Modifier
               </button>

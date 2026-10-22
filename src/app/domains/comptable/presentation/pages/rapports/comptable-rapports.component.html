@@ -1,5 +1,5 @@
 <div class="dash">
-  <div class="ph">
+  <div class="ph ph-wm-comptable">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-file-export"></i></div>
       <div>
@@ -34,13 +34,13 @@
     </div>
   </div>
 
-  <div class="kpi-grid-3" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+  <div class="card-grid-auto">
     @for (r of rapports; track r.type) {
-    <div class="card rapport-card">
-      <div class="rapport-ico"><i class="fa-solid {{ r.icone }}"></i></div>
-      <div class="rapport-titre">{{ r.titre }}</div>
-      <div class="rapport-desc">{{ r.description }}</div>
-      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px" [disabled]="!!enCours()" (click)="telecharger(r.type)">
+    <div class="card doc-pick-card">
+      <div class="doc-pick-ico"><i class="fa-solid {{ r.icone }}"></i></div>
+      <div class="doc-pick-title">{{ r.titre }}</div>
+      <div class="doc-pick-desc">{{ r.description }}</div>
+      <button class="btn btn-primary btn-sm" style="width:100%" [disabled]="!!enCours()" (click)="telecharger(r.type)">
         <i class="fa-solid" [class.fa-download]="enCours()!==r.type" [class.fa-spinner]="enCours()===r.type" [class.fa-spin]="enCours()===r.type"></i>
         Télécharger
       </button>

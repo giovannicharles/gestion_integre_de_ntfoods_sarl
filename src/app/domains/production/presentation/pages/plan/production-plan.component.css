@@ -3,9 +3,9 @@
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
 
 .ph-actions { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
-.ph-actions .input { padding: var(--sp-2); border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+.ph-actions .input { padding: var(--sp-2); border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--n800); }
 .alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
-.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
 
 .prog-track-wide { height: 10px; background: var(--surface-2); border-radius: 4px; overflow: hidden; width: 120px; }
 .prog-bar { height: 100%; border-radius: 4px; }

@@ -229,6 +229,7 @@
 
     @if (displayMode() === 'table') {
     <div class="table-wrapper">
+      <div class="tbl-wrap">
       <table class="data-table">
         <thead>
           <tr>
@@ -278,6 +279,7 @@
           }
         </tbody>
       </table>
+      </div>
       @if (totalPages() > 1) {
         <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--n150)">
           <span style="font-size:12px;color:var(--n400)">{{ filteredProducts().length }} produit(s) · Page {{ cp() }}/{{ totalPages() }}</span>
@@ -421,6 +423,7 @@
       </select>
     </div>
     <div class="table-wrapper">
+      <div class="tbl-wrap">
       <table class="data-table">
         <thead>
           <tr><th>Nom</th><th>Code</th><th>Gamme</th><th>Produits</th><th>Actions</th></tr>
@@ -442,6 +445,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
   }
 
@@ -452,6 +456,7 @@
       <span>Sélectionnez un produit pour gérer ses prix (achat, gros, détail, promo, etc.). Les prix alimentent automatiquement la valorisation du stock.</span>
     </div>
     <div class="table-wrapper">
+      <div class="tbl-wrap">
       <table class="data-table">
         <thead>
           <tr><th>Code</th><th>Désignation</th><th>Catégorie</th><th>Type</th><th>Prix unitaire (défaut)</th><th>Prix configurés</th><th>Action</th></tr>
@@ -471,6 +476,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
   }
 }
@@ -625,6 +631,7 @@
 
         <!-- Existing prices -->
         <div class="table-wrapper" style="margin-bottom:16px">
+          <div class="tbl-wrap">
           <table class="data-table compact">
             <thead>
               <tr><th>Type</th><th>Prix</th><th>Devise</th><th>Qté min</th><th>Statut</th><th>Actions</th></tr>
@@ -650,6 +657,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
 
         <!-- Add/Edit price form -->

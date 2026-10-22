@@ -41,7 +41,7 @@
 
 /* ── Alertes ─────────────────────────────────────────────────────────── */
 .alert { padding: var(--sp-3, 0.75rem); border-radius: 8px; margin-bottom: var(--sp-3, 0.75rem); font-size: 0.9rem; }
-.alert-info    { background: var(--info-bg, var(--b-gh));    color: var(--info-text, var(--b));    border: 1px solid var(--info-border, var(--b-l)); }
+.alert-info    { background: var(--info-bg, var(--b-gh));    color: var(--info-text, var(--b));    border: 1px solid var(--b); }
 .alert-success { background: var(--success-bg, var(--s-gh)); color: var(--success-text, var(--g-m)); border: 1px solid var(--success-border, var(--g-pale)); }
 .alert-error   { background: var(--danger-bg, var(--r-gh));  color: var(--danger-text, var(--r));  border: 1px solid var(--danger-border, var(--r-l)); }
 

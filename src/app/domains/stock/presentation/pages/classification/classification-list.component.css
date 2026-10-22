@@ -59,7 +59,7 @@
 .btn-ghost { background:transparent;color:var(--n600);border:1px solid var(--n300); }
 .btn-ghost:hover { background:var(--n100); }
 .btn-danger { background:var(--r);color:#fff; }
-.btn-danger:hover { background:var(--r-d); }
+.btn-danger:hover { background:#B71C1C; }
 .btn-sm { padding:5px 10px;font-size:11px; }
 .btn:disabled { opacity:.5;cursor:not-allowed; }
 

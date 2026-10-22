@@ -16,6 +16,51 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Performances par période</h2></div>
+  <div class="toolbar-row">
+    <button class="btn btn-sm" [class.btn-primary]="periode()==='jour'" [class.btn-ghost]="periode()!=='jour'" (click)="changerPeriode('jour')">Jour</button>
+    <button class="btn btn-sm" [class.btn-primary]="periode()==='semaine'" [class.btn-ghost]="periode()!=='semaine'" (click)="changerPeriode('semaine')">Semaine</button>
+    <button class="btn btn-sm" [class.btn-primary]="periode()==='mois'" [class.btn-ghost]="periode()!=='mois'" (click)="changerPeriode('mois')">Mois</button>
+    <button class="btn btn-sm" [class.btn-primary]="periode()==='libre'" [class.btn-ghost]="periode()!=='libre'" (click)="changerPeriode('libre')">Intervalle libre</button>
+    @if (periode() === 'libre') {
+      <label>Du <input type="date" class="input" [(ngModel)]="debutLibre" (ngModelChange)="chargerPerformances()"></label>
+      <label>Au <input type="date" class="input" [(ngModel)]="finLibre" (ngModelChange)="chargerPerformances()"></label>
+    }
+  </div>
+
+  @if (performancesErreur()) {
+    <div class="gap-note">{{ performancesErreur() }}</div>
+  }
+
+  @if (performancesLoading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Rang</th><th>Poste</th><th>Jours affectés</th><th>Jours saisis</th><th>Objectif</th><th>Réalisé</th><th>Taux</th><th>Effectif moyen</th><th>Rendement / pers.</th></tr></thead>
+        <tbody>
+          @for (p of performances(); track p.codePoste) {
+            <tr>
+              <td>{{ p.rang ?? '—' }}</td>
+              <td>{{ p.libellePoste }}</td>
+              <td>{{ p.joursAffectes }}</td>
+              <td>{{ p.joursSaisis }}</td>
+              <td>{{ p.objectifCumule | number:'1.0-1' }}</td>
+              <td>{{ p.realiseCumule | number:'1.0-1' }} {{ p.unite }}</td>
+              <td>{{ p.taux != null ? (p.taux | number:'1.1-1') + '%' : '—' }}</td>
+              <td>{{ p.effectifMoyen != null ? (p.effectifMoyen | number:'1.1-1') : '—' }}</td>
+              <td>{{ p.rendementParPersonne != null ? (p.rendementParPersonne | number:'1.1-1') : '—' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune affectation sur la période</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
 @if (loading()) {
   <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
 } @else {

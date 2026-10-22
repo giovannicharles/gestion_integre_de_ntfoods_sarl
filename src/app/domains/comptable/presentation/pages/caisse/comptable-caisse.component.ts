@@ -33,8 +33,13 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
 
+  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  private dateLocaleIso(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   get todayStr() {
-    return this.today.toISOString().split('T')[0];
+    return this.dateLocaleIso(this.today);
   }
 
   ngOnInit(): void {
@@ -58,7 +63,7 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
   }
 
   chargerHistorique(): void {
-    const debut = new Date(this.today.getFullYear(), this.today.getMonth(), 1).toISOString().split('T')[0];
+    const debut = this.dateLocaleIso(new Date(this.today.getFullYear(), this.today.getMonth(), 1));
     this.svc.getCaisseParPeriode(debut, this.todayStr).pipe(takeUntil(this.d$)).subscribe({
       next: list => this.historique.set(list),
       error: () => {},

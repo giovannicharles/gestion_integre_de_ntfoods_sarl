@@ -2,11 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSystemeService, ParametreSystemeBE, CreerParametreSystemeRequest } from '../../../infrastructure/admin-systeme.service';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 @Component({
   selector: 'app-admin-systeme-parametres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CanDirective],
   templateUrl: './admin-systeme-parametres.component.html',
   styleUrls: ['./admin-systeme-parametres.component.css']
 })

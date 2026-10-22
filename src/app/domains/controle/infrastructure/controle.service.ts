@@ -18,6 +18,14 @@ export interface ControleDashboard {
   marges: MargeProduit[];
   budget: BudgetItem[];
   variances: VarianceItem[];
+  anomalies: AnomalieItem[];
+}
+
+export interface AnomalieItem {
+  categorie: string;
+  reference: string;
+  description: string;
+  matriculeConcerne: string | null;
 }
 
 export interface MargeProduit {

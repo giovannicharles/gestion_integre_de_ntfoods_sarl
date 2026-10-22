@@ -91,6 +91,7 @@
       @if (pouvoirs().length === 0) {
         <p class="empty-inline">Aucun pouvoir actif.</p>
       } @else {
+        <div class="tbl-wrap">
         <table class="pouvoirs-table">
           <thead>
             <tr><th>Cible</th><th>Action</th><th>Poids</th><th>Attribué le</th><th></th></tr>
@@ -111,6 +112,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     </div>
   }

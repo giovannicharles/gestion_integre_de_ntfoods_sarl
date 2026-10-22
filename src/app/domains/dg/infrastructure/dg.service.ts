@@ -129,9 +129,49 @@ export interface DashboardProductionDgBE {
   nbCartons: number;
 }
 
+export interface SeuilBE {
+  id: number;
+  codeProduit: string;
+  typeEntrepot: 'CENTRAL' | 'TAMPON' | 'MOBILE';
+  seuilReapprovisionnement: number;
+  actif: boolean;
+}
+
+export interface HistoriqueSeuilBE {
+  id: number;
+  codeProduit: string;
+  typeEntrepot: string;
+  ancienneValeur: number;
+  nouvelleValeur: number;
+  matriculeAuteur: string;
+  dateModification: string;
+}
+
+export interface DefinirSeuilRequestBE {
+  codeProduit: string;
+  typeEntrepot: 'CENTRAL' | 'TAMPON' | 'MOBILE';
+  seuilReapprovisionnement: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DgService {
   private readonly api = inject(ApiService);
+
+  /** Gouvernance des seuils (DG) — GET/POST /api/stock/seuils (SeuilController, backend). */
+  getSeuils(): Observable<SeuilBE[]> {
+    return this.api.get<ApiResponse<SeuilBE[]>>('stock/seuils')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  definirSeuil(request: DefinirSeuilRequestBE): Observable<SeuilBE> {
+    return this.api.post<ApiResponse<SeuilBE>>('stock/seuils', request)
+      .pipe(map(r => r.donnees!));
+  }
+
+  getHistoriqueSeuils(): Observable<HistoriqueSeuilBE[]> {
+    return this.api.get<ApiResponse<HistoriqueSeuilBE[]>>('stock/seuils/historique')
+      .pipe(map(r => r.donnees ?? []));
+  }
 
   getKpis(): Observable<KpisDgBE> {
     return this.api.get<ApiResponse<KpisDgBE>>('dg/kpis')
@@ -140,7 +180,10 @@ export class DgService {
 
   /** Versements du jour, tous commerciaux — lecture directe du module comptabilité (COMPTABILITE_VERSEMENT_CONSULTER, déjà accordée au DG). */
   getVersementsDuJour(date?: string): Observable<VersementDuJourBE[]> {
-    const params: Record<string, string> = { date: date ?? new Date().toISOString().slice(0, 10) };
+    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT).
+    const aujourdhui = new Date();
+    const dateLocale = `${aujourdhui.getFullYear()}-${String(aujourdhui.getMonth() + 1).padStart(2, '0')}-${String(aujourdhui.getDate()).padStart(2, '0')}`;
+    const params: Record<string, string> = { date: date ?? dateLocale };
     return this.api.get<ApiResponse<VersementDuJourBE[]>>('comptabilite/versements', params)
       .pipe(map(r => r.donnees ?? []));
   }

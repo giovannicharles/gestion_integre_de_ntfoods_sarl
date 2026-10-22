@@ -1,10 +1,11 @@
-import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RpService, GrandCompteResponse } from '../../../infrastructure/rp.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 type GrandCompteForm = {
   nom: string; type: string; contact: string; telephone: string;
@@ -19,9 +20,10 @@ const FORM_VIDE: GrandCompteForm = {
 @Component({
   selector: 'app-rp-grands-comptes',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './rp-grands-comptes.component.html',
   styleUrls: ['./rp-grands-comptes.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RpGrandsComptesComponent implements OnInit {
   fCFA = fCFA;
