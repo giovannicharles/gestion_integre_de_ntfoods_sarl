@@ -41,7 +41,7 @@
       <div class="kpi-body">
         <span class="kpi-lbl">CA Réalisé Global</span>
         <span class="kpi-val">{{ fCFA(totalCA()) }}</span>
-        <div class="kpi-meta">Taux global : {{ tauxAtteinte(totalCA(), totalObjectif()) }}%</div>
+        <div class="kpi-meta">Taux global : {{ tauxAffiche(totalCA(), totalObjectif()) }}</div>
       </div>
     </div>
     <div class="kpi-card kp-b">
@@ -111,7 +111,7 @@
               <span class="taux-chip"
                     [class.taux-ok]="tauxAtteinte(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) >= 100"
                     [class.taux-warn]="tauxAtteinte(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) < 100">
-                {{ tauxAtteinte(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) }}%
+                {{ tauxAffiche(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) }}
               </span>
             </td>
             <td class="progress-cell">
@@ -194,7 +194,7 @@
               <span class="taux-chip"
                     [class.taux-ok]="tauxAtteinte(totalCA(), totalObjectif()) >= 100"
                     [class.taux-warn]="tauxAtteinte(totalCA(), totalObjectif()) < 100">
-                {{ tauxAtteinte(totalCA(), totalObjectif()) }}%
+                {{ tauxAffiche(totalCA(), totalObjectif()) }}
               </span>
             </td>
             <td></td><td></td>

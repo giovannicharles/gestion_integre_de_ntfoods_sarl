@@ -1,3 +1,4 @@
+import { LOCALE_ID } from '@angular/core';
 import { Routes } from '@angular/router';
 import { ProductionLayoutComponent } from '../../../layout/production-layout/production-layout.component';
 import { productionHomeRedirectGuard, productionRoleGuard } from '../infrastructure/production-role.guard';
@@ -6,6 +7,8 @@ export const PRODUCTION_ROUTES: Routes = [
   {
     path: '',
     component: ProductionLayoutComponent,
+    // Dates en français sur toutes les pages du module (data fr enregistrée par le layout)
+    providers: [{ provide: LOCALE_ID, useValue: 'fr-FR' }],
     children: [
       // '' n'a plus de destination fixe : chaque rôle est redirigé vers SON tableau de bord.
       { path: '', pathMatch: 'full', canActivate: [productionHomeRedirectGuard], children: [] },
@@ -36,18 +39,26 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'agent-doseur/dashboard', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/dashboard/ad-dashboard.component').then(m => m.AdDashboardComponent) },
       { path: 'agent-doseur/plans', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/plans/ad-plans.component').then(m => m.AdPlansComponent) },
       { path: 'agent-doseur/sessions', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/session-jour/ad-session-jour.component').then(m => m.AdSessionJourComponent) },
-      { path: 'agent-doseur/dosage', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/dosage/ad-dosage.component').then(m => m.AdDosageComponent) },
-      { path: 'agent-doseur/melange', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/melange/ad-melange.component').then(m => m.AdMelangeComponent) },
+      // Dosage, mélange et fûts sont regroupés dans « Session de dosage » (onglets Ma session / Historique).
+      { path: 'agent-doseur/dosage', redirectTo: 'agent-doseur/sessions', pathMatch: 'full' },
+      { path: 'agent-doseur/melange', redirectTo: 'agent-doseur/sessions', pathMatch: 'full' },
       { path: 'agent-doseur/machines', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/machines/ad-machines.component').then(m => m.AdMachinesComponent) },
-      { path: 'agent-doseur/futs', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/futs/ad-futs.component').then(m => m.AdFutsComponent) },
+      { path: 'agent-doseur/futs', redirectTo: 'agent-doseur/sessions', pathMatch: 'full' },
       { path: 'agent-doseur/predictions', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/predictions/ad-predictions.component').then(m => m.AdPredictionsComponent) },
       { path: 'agent-doseur/suivi', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/suivi/ad-suivi.component').then(m => m.AdSuiviComponent) },
       { path: 'agent-doseur/statistiques', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/statistiques/ad-statistiques.component').then(m => m.AdStatistiquesComponent) },
       { path: 'agent-doseur/registre', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/registre/ad-registre.component').then(m => m.AdRegistreComponent) },
       { path: 'agent-doseur/documents', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-doseur/documents/ad-documents.component').then(m => m.AdDocumentsComponent) },
+      { path: 'agent-production/dashboard', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/dashboard/ap-dashboard.component').then(m => m.ApDashboardComponent) },
+      { path: 'agent-production/plans', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/plans/ap-plans.component').then(m => m.ApPlansComponent) },
+      { path: 'agent-production/bons-commande', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/bons-commande/ap-bons-commande.component').then(m => m.ApBonsCommandeComponent) },
+      { path: 'agent-production/ordres-fabrication', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/ordres-fabrication/ap-ordres-fabrication.component').then(m => m.ApOrdresFabricationComponent) },
+      { path: 'agent-production/registres', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/registres/ap-registres.component').then(m => m.ApRegistresComponent) },
+      { path: 'agent-production/fiches', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/fiches/ap-fiches.component').then(m => m.ApFichesComponent) },
+      { path: 'formules', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/formules/formules-production.component').then(m => m.FormulesProductionComponent) },
+      { path: 'composition-emballage', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/composition-emballage/composition-emballage.component').then(m => m.CompositionEmballageComponent) },
       { path: 'lots', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/lots/production-lots.component').then(m => m.ProductionLotsComponent) },
-      // Unifié le 2026-09-22 (docs/PROGRESS.md) sur 'lots' (LotController), qui a sa propre
-      // déclaration — cf. stock.routes.ts pour le détail du doublon éliminé.
+      // La déclaration de lot se fait sur l'écran Lots (aucun composant declaration-lot dans ce frontend).
       { path: 'declaration-lot', redirectTo: 'lots', pathMatch: 'full' },
       { path: 'responsable-salle/dashboard', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/responsable-salle/dashboard/rs-dashboard.component').then(m => m.RsDashboardComponent) },
       { path: 'responsable-salle/bons-commande', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/responsable-salle/bons-commande/rs-bons-commande.component').then(m => m.RsBonsCommandeComponent) },

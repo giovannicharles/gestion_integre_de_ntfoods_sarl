@@ -24,7 +24,7 @@
     <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Taux d'atteinte global</div>
-      <div class="kpi-val">{{ tauxGlobal() }}%</div>
+      <div class="kpi-val">{{ tauxAffiche(totalCA(), totalObjectif()) }}</div>
       <div class="kpi-meta">{{ nbAtteints() }}/{{ objectifs().length }} objectifs définis</div>
     </div>
   </div>
@@ -75,7 +75,7 @@
               }
             </td>
             <td><strong>{{ fCFA(realiseDe(o.matriculeCommercial)) }}</strong></td>
-            <td>{{ tauxAtteinte(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) }}%</td>
+            <td>{{ tauxAffiche(realiseDe(o.matriculeCommercial), o.objectifGlobalFCFA) }}</td>
             <td>
               <div class="prog-track">
                 <div

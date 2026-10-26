@@ -1,198 +1,176 @@
-<!-- EN-TÊTE -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="ph-icon ph-icon-g"><i class="fa-solid fa-file-invoice"></i></div>
+<div class="rbc">
+
+<header class="rbc-hero">
+  <div class="rbc-hero-gauche">
+    <i class="fa-solid fa-file-invoice rbc-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Bons de Commande</h1>
-      <p class="ph-sub">BC validés — consultation uniquement</p>
+      <div class="rbc-hero-kicker">Responsable de salle</div>
+      <h1 class="rbc-hero-titre">Bons de commande validés</h1>
+      <p class="rbc-hero-sous">
+        Tous les bons validés par le chef de production, avec leur avancement. Consultation uniquement.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <span class="badge-count"><span class="badge-count-num">{{ bcsFiltres().length }}</span> BC validé(s)</span>
-  </div>
-</div>
+  <button class="rbc-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.rbc-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-<!-- LISTE -->
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input"
-           placeholder="Rechercher par numéro ou fournisseur…"
-           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
+@if (sessionExpiree()) {
+  <div class="rbc-alerte rbc-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rbc-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="rbc-alerte rbc-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="rbc-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+<!-- Indicateurs -->
+<section class="rbc-kpis">
+  <div class="rbc-kpi rbc-kpi-principal">
+    <span class="rbc-lbl">Bons validés</span>
+    <strong class="rbc-grand">{{ compteurs().TOUS }}</strong>
+    <span class="rbc-muet">{{ compteurs().EN_COURS }} en cours · {{ compteurs().RECUS }} reçus ou clôturés</span>
+  </div>
+  <div class="rbc-kpi">
+    <span class="rbc-lbl">Montant total HT</span>
+    <strong class="rbc-grand">{{ montantTotal() | number:'1.0-0' }} <small>FCFA</small></strong>
+    <span class="rbc-muet">tous bons validés</span>
+  </div>
+  <div class="rbc-kpi">
+    <span class="rbc-lbl">Réalisation moyenne</span>
+    <strong class="rbc-grand">{{ tauxMoyen() !== null ? (tauxMoyen() | number:'1.0-1') + ' %' : '—' }}</strong>
+    <span class="rbc-muet">bons en cours de production</span>
+  </div>
+  <div class="rbc-kpi" [class.rbc-kpi-alerte]="nbEnRetard() > 0">
+    <span class="rbc-lbl">En retard de livraison</span>
+    <strong class="rbc-grand">{{ nbEnRetard() }}</strong>
+    <span class="rbc-muet">livraison prévue dépassée</span>
+  </div>
+</section>
+
+<!-- Filtres -->
+<section class="rbc-carte">
+  <div class="rbc-filtres">
+    <div class="rbc-segments">
+      @for (g of groupes; track g.code) {
+        <button class="rbc-segment" [class.rbc-segment-actif]="groupe() === g.code" (click)="groupe.set(g.code)">
+          {{ g.libelle }} <span class="rbc-compte">{{ compteurs()[g.code] }}</span>
+        </button>
+      }
+    </div>
+    <input class="rbc-input" placeholder="N° BC, fournisseur ou produit" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
   </div>
 
-  @if (loading()) {
-    @for (i of [1,2,3,4]; track i) {
-      <div class="skeleton skeleton-row" style="margin:4px 16px"></div>
-    }
+  @if (chargement()) {
+    <div class="rbc-squelette"></div>
+  } @else if (bcsFiltres().length === 0) {
+    <p class="rbc-vide">
+      <i class="fa-solid fa-inbox"></i>
+      @if (bcs().length === 0) { Aucun bon de commande n'a encore été validé. } @else { Aucun bon ne correspond aux filtres. }
+    </p>
   } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
+    <div class="rbc-table-wrap">
+      <table class="rbc-table">
         <thead>
           <tr>
             <th>N° BC</th>
-            <th>Date commande</th>
+            <th>Fournisseur</th>
+            <th>Commandé le</th>
             <th>Livraison prévue</th>
-            <th>Lignes</th>
-            <th>Montant HT</th>
-            <th>Réalisation prod.</th>
+            <th class="rbc-num">Lignes</th>
+            <th class="rbc-num">Montant HT</th>
+            <th>Réalisation</th>
             <th>Statut</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           @for (bc of bcsFiltres(); track bc.id) {
-            <tr>
-              <td><strong>{{ bc.numero }}</strong></td>
-              <td>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</td>
+            <tr class="rbc-ligne" (click)="ouvrir(bc)">
+              <td><span class="rbc-code">{{ bc.numero }}</span></td>
+              <td>{{ bc.nomFournisseur || bc.codeFournisseur || '—' }}</td>
+              <td>
+                {{ bc.dateCommande ? (bc.dateCommande | date:'dd/MM/yyyy') : '—' }}
+                <div class="rbc-meta">{{ bc.statutLibelle || bc.statut }}</div>
+              </td>
               <td>
                 @if (bc.dateLivraisonPrevue) {
-                  {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }}
-                } @else {
-                  <span class="text-muted">—</span>
-                }
+                  <span [class.rbc-retard]="joursRetard(bc) > 0">{{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }}</span>
+                  @if (joursRetard(bc) > 0) { <div class="rbc-meta rbc-retard">{{ joursRetard(bc) }} j de retard</div> }
+                } @else { <span class="rbc-meta">—</span> }
               </td>
-              <td>{{ bc.lignes.length }}</td>
-              <td class="mono">
-                @if (montantTotal(bc) > 0) {
-                  {{ montantTotal(bc) | number:'1.0-0' }} FCFA
-                } @else {
-                  <span class="text-muted">—</span>
-                }
-              </td>
+              <td class="rbc-num">{{ bc.lignes.length }}</td>
+              <td class="rbc-num">{{ montant(bc) | number:'1.0-0' }}</td>
               <td>
-                <div class="progress-cell">
-                  <div class="prog-bar-wrap">
-                    <div class="prog-bar" [style.width.%]="bc.tauxRealisation"
-                         [class.prog-ok]="bc.tauxRealisation >= 100"
-                         [class.prog-y]="bc.tauxRealisation >= 50 && bc.tauxRealisation < 100"
-                         [class.prog-r]="bc.tauxRealisation < 50"></div>
-                  </div>
-                  <span class="prog-pct">{{ bc.tauxRealisation }}%</span>
-                </div>
+                <div class="rbc-barre"><div class="rbc-barre-fill" [class.rbc-barre-ok]="(bc.tauxRealisation ?? 0) >= 100" [style.width.%]="(bc.tauxRealisation ?? 0) > 100 ? 100 : (bc.tauxRealisation ?? 0)"></div></div>
+                <span class="rbc-meta">{{ bc.tauxRealisation === null ? '—' : bc.tauxRealisation + ' %' }}</span>
               </td>
-              <td><span class="badge bg-success">VALIDÉ</span></td>
-              <td>
-                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(bc)">
-                  <i class="fa-solid fa-eye"></i> Détails
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="8">
-                <div class="empty-state-block">
-                  <i class="fa-solid fa-inbox"></i>
-                  <p>Aucun bon de commande validé</p>
-                </div>
-              </td>
+              <td><span class="rbc-badge rbc-badge-{{ teinte(bc) }}">{{ libelleStatut(bc) }}</span></td>
             </tr>
           }
         </tbody>
       </table>
     </div>
+    <p class="rbc-aide">Cliquez sur un bon pour voir ses produits. Un bon annulé garde sa trace de validation.</p>
   }
+</section>
+
 </div>
 
-<!-- MODAL DÉTAIL -->
+<!-- Détail -->
 @if (bcSelectionne(); as bc) {
-<div class="modal-overlay" (click)="fermerDetail()">
-  <div class="rs-modal" (click)="$event.stopPropagation()">
-
-    <div class="rs-modal-header">
-      <div class="rs-modal-title">
-        <div class="rs-modal-ico"><i class="fa-solid fa-file-invoice"></i></div>
+  <div class="rbc-fond" (click)="fermer()">
+    <aside class="rbc-tiroir" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="rbc-tiroir-tete">
         <div>
-          <div class="rs-modal-ref">{{ bc.numero }}</div>
-          <div class="rs-modal-sub">Bon de Commande — Validé</div>
+          <span class="rbc-code">{{ bc.numero }}</span>
+          <h2 class="rbc-titre">{{ bc.nomFournisseur || bc.codeFournisseur }}</h2>
+          <span class="rbc-badge rbc-badge-{{ teinte(bc) }}">{{ libelleStatut(bc) }}</span>
         </div>
-      </div>
-      <button class="rs-modal-close" (click)="fermerDetail()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-
-    <div class="rs-modal-body">
-      <!-- Méta-données -->
-      <div class="rs-recap-grid">
-        <div class="rs-recap-item">
-          <span class="rs-recap-lbl"><i class="fa-solid fa-calendar"></i> Date commande</span>
-          <span class="rs-recap-val">{{ bc.dateCommande | date:'dd/MM/yyyy' }}</span>
-        </div>
-        <div class="rs-recap-item">
-          <span class="rs-recap-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
-          <span class="rs-recap-val">
-            @if (bc.dateLivraisonPrevue) { {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }} } @else { — }
-          </span>
-        </div>
-        <div class="rs-recap-item">
-          <span class="rs-recap-lbl"><i class="fa-solid fa-coins"></i> Montant HT</span>
-          <span class="rs-recap-val">
-            @if (montantTotal(bc) > 0) { {{ montantTotal(bc) | number:'1.0-0' }} FCFA } @else { — }
-          </span>
-        </div>
-        <div class="rs-recap-item">
-          <span class="rs-recap-lbl"><i class="fa-solid fa-chart-pie"></i> Réalisation prod.</span>
-          <span class="rs-recap-val">{{ bc.tauxRealisation }}%</span>
-        </div>
-        <div class="rs-recap-item">
-          <span class="rs-recap-lbl"><i class="fa-solid fa-user"></i> Créateur</span>
-          <span class="rs-recap-val">{{ bc.matriculeCreateur }}</span>
-        </div>
+        <button class="rbc-icone" (click)="fermer()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Lignes produits -->
-      <div class="rs-section-title">
-        <i class="fa-solid fa-boxes-stacked"></i> Produits commandés
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
+      <dl class="rbc-fiche">
+        <div><dt>Commandé le</dt><dd>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</dd></div>
+        <div><dt>Statut</dt><dd>{{ bc.statutLibelle || bc.statut }}</dd></div>
+        <div><dt>Livraison prévue</dt><dd>{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</dd></div>
+        <div><dt>Créé par</dt><dd>{{ bc.matriculeCreateur || '—' }}</dd></div>
+        <div><dt>Montant HT</dt><dd>{{ montant(bc) | number:'1.0-0' }} FCFA</dd></div>
+      </dl>
+
+      <h3 class="rbc-sous-titre">Produits commandés</h3>
+      <div class="rbc-table-wrap">
+        <table class="rbc-table">
           <thead>
-            <tr>
-              <th>Code</th>
-              <th>Désignation</th>
-              <th class="text-right">Qté commandée</th>
-              <th class="text-right">Qté produite</th>
-              <th class="text-right">Réalisation</th>
-              <th class="text-right">Prix unit. HT</th>
-            </tr>
+            <tr><th>Produit</th><th class="rbc-num">Commandé</th><th class="rbc-num">Produit</th><th>Réalisation</th></tr>
           </thead>
           <tbody>
             @for (l of bc.lignes; track l.id) {
               <tr>
-                <td><strong class="mono" style="color:var(--g,#14532D)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '—' }}</td>
-                <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
-                <td class="text-right mono">{{ l.quantiteProduite }}</td>
-                <td class="text-right mono">
-                  <div class="progress-cell">
-                    <div class="prog-bar-wrap">
-                      <div class="prog-bar" [style.width.%]="l.tauxRealisation"
-                           [class.prog-ok]="l.tauxRealisation >= 100"
-                           [class.prog-y]="l.tauxRealisation >= 50 && l.tauxRealisation < 100"
-                           [class.prog-r]="l.tauxRealisation < 50"></div>
-                    </div>
-                    <span class="prog-pct">{{ l.tauxRealisation }}%</span>
-                  </div>
-                </td>
-                <td class="text-right mono">
-                  @if (l.prixUnitaireHT != null) { {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA } @else { — }
+                <td><span class="rbc-code">{{ l.codeProduit }}</span> <span class="rbc-meta">{{ l.designation ?? '' }}</span></td>
+                <td class="rbc-num"><strong>{{ l.quantiteCommandee }}</strong></td>
+                <td class="rbc-num">{{ l.quantiteProduite ?? '—' }}</td>
+                <td>
+                  <div class="rbc-barre"><div class="rbc-barre-fill" [class.rbc-barre-ok]="(l.tauxRealisation ?? 0) >= 100" [style.width.%]="(l.tauxRealisation ?? 0) > 100 ? 100 : (l.tauxRealisation ?? 0)"></div></div>
+                  <span class="rbc-meta">{{ l.tauxRealisation === null ? '—' : l.tauxRealisation + ' %' }}</span>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="empty-state-block">Aucune ligne</td></tr>
+              <tr><td colspan="4" class="rbc-vide-cellule">Aucun produit sur ce bon.</td></tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
 
-    <div class="rs-modal-footer">
-      <button class="btn btn-primary" (click)="fermerDetail()">Fermer</button>
-    </div>
-
+      <a routerLink="/production/plan" [queryParams]="{ bc: bc.numero }" class="rbc-lien-court">
+        <i class="fa-solid fa-calendar-week"></i> Voir le plan de production de ce bon
+      </a>
+    </aside>
   </div>
-</div>
 }

@@ -1,49 +1,119 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-download ph-ico"></i>
+<div class="tl">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="tl-hero">
+  <div class="tl-hero-gauche">
+    <i class="fa-solid fa-download tl-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Téléchargements</h1>
-      <p class="ph-sub">Registre, rapports hebdomadaires, classements</p>
+      <div class="tl-kicker">Responsable de salle · Téléchargements</div>
+      <h1 class="tl-hero-titre">Téléchargements</h1>
+      <p class="tl-hero-sous">Registre, rapport de période, classement des employés et performances des postes, en CSV.</p>
     </div>
   </div>
-</div>
+  <div class="tl-hero-choix">
+    <label class="tl-champ">
+      <span class="tl-lbl">Du</span>
+      <input class="tl-select" type="date" [ngModel]="debut()" (ngModelChange)="debut.set($event)" />
+    </label>
+    <label class="tl-champ">
+      <span class="tl-lbl">Au</span>
+      <input class="tl-select" type="date" [ngModel]="fin()" (ngModelChange)="fin.set($event)" />
+    </label>
+  </div>
+</header>
 
-<div class="gap-note">
+<div class="tl-alerte tl-alerte-info">
   <i class="fa-solid fa-circle-info"></i>
-  <div>Aucun export serveur dédié pour ces documents — génération CSV côté client à partir de données réelles. Le registre de dosage et la fiche produit se téléchargent depuis leurs propres pages (PDF).</div>
+  <span>Aucun export serveur dédié pour ces documents : le CSV est généré ici à partir des données réelles. Le registre de dosage et la fiche produit se téléchargent depuis leurs propres pages.</span>
 </div>
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+@if (sessionExpiree()) {
+  <div class="tl-alerte tl-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="tl-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="tl-alerte tl-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="tl-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
+}
+@if (message()) {
+  <div class="tl-alerte tl-alerte-ok">
+    <i class="fa-solid fa-circle-check"></i><span>{{ message() }}</span>
+    <button class="tl-lien" (click)="message.set('')">Fermer</button>
+  </div>
+}
 
-<div class="card">
-  <div class="toolbar-row">
-    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
-  </div>
-  <div class="card-grid-auto" style="margin-top:var(--sp-3,12px)">
-    <div class="card doc-pick-card">
-      <div class="doc-pick-ico"><i class="fa-solid fa-book"></i></div>
-      <div class="doc-pick-title">Registre journalier des employés</div>
-      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
-      <div class="doc-pick-actions">
-        <button class="btn btn-sm btn-primary" (click)="telechargerRegistre()"><i class="fa-solid fa-download"></i> Télécharger</button>
+<!-- ═══ DOCUMENTS ═══ -->
+<section class="tl-grille">
+  <article class="tl-carte">
+    <div class="tl-carte-corps">
+      <span class="tl-icone"><i class="fa-solid fa-book"></i></span>
+      <div>
+        <h3>Registre journalier des employés</h3>
+        <p class="tl-muet">Présence, poste, motif d'absence, heure d'arrivée et quantité réalisée, ligne par ligne.</p>
       </div>
     </div>
-    <div class="card doc-pick-card">
-      <div class="doc-pick-ico"><i class="fa-solid fa-calendar-week"></i></div>
-      <div class="doc-pick-title">Rapport hebdomadaire de l'atelier</div>
-      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
-      <div class="doc-pick-actions">
-        <button class="btn btn-sm btn-primary" (click)="telechargerRapportHebdo()"><i class="fa-solid fa-download"></i> Télécharger</button>
+    <footer class="tl-carte-pied">
+      <span class="tl-format">CSV</span>
+      <button class="tl-bouton tl-bouton-primaire" (click)="telechargerRegistre()" [disabled]="enCours() !== ''">
+        @if (enCours() === 'registre') { <i class="fa-solid fa-spinner tl-tourne"></i> } @else { <i class="fa-solid fa-download"></i> }
+        Télécharger
+      </button>
+    </footer>
+  </article>
+
+  <article class="tl-carte">
+    <div class="tl-carte-corps">
+      <span class="tl-icone"><i class="fa-solid fa-calendar-week"></i></span>
+      <div>
+        <h3>Rapport de période</h3>
+        <p class="tl-muet">Fûts produits, nets et cassés, poudre dosée, production réalisée, sessions de dosage et jours affectés.</p>
       </div>
     </div>
-    <div class="card doc-pick-card">
-      <div class="doc-pick-ico"><i class="fa-solid fa-trophy"></i></div>
-      <div class="doc-pick-title">Classement des employés</div>
-      <div class="doc-pick-desc">Généré côté client (CSV) à partir des données réelles de la période.</div>
-      <div class="doc-pick-actions">
-        <button class="btn btn-sm btn-primary" (click)="telechargerClassementEmployes()"><i class="fa-solid fa-download"></i> Télécharger</button>
+    <footer class="tl-carte-pied">
+      <span class="tl-format">CSV</span>
+      <button class="tl-bouton tl-bouton-primaire" (click)="telechargerRapportHebdo()" [disabled]="enCours() !== ''">
+        @if (enCours() === 'rapport') { <i class="fa-solid fa-spinner tl-tourne"></i> } @else { <i class="fa-solid fa-download"></i> }
+        Télécharger
+      </button>
+    </footer>
+  </article>
+
+  <article class="tl-carte">
+    <div class="tl-carte-corps">
+      <span class="tl-icone"><i class="fa-solid fa-trophy"></i></span>
+      <div>
+        <h3>Classement des employés</h3>
+        <p class="tl-muet">Taux individuel moyen et quantités par unité, sur la période choisie.</p>
       </div>
     </div>
-  </div>
+    <footer class="tl-carte-pied">
+      <span class="tl-format">CSV</span>
+      <button class="tl-bouton tl-bouton-primaire" (click)="telechargerClassementEmployes()" [disabled]="enCours() !== ''">
+        @if (enCours() === 'classement') { <i class="fa-solid fa-spinner tl-tourne"></i> } @else { <i class="fa-solid fa-download"></i> }
+        Télécharger
+      </button>
+    </footer>
+  </article>
+
+  <article class="tl-carte">
+    <div class="tl-carte-corps">
+      <span class="tl-icone"><i class="fa-solid fa-chart-simple"></i></span>
+      <div>
+        <h3>Performances des postes</h3>
+        <p class="tl-muet">Objectif, réalisé, taux, effectif moyen et rendement par personne, poste par poste.</p>
+      </div>
+    </div>
+    <footer class="tl-carte-pied">
+      <span class="tl-format">CSV</span>
+      <button class="tl-bouton tl-bouton-primaire" (click)="telechargerPerformancesPostes()" [disabled]="enCours() !== ''">
+        @if (enCours() === 'performances') { <i class="fa-solid fa-spinner tl-tourne"></i> } @else { <i class="fa-solid fa-download"></i> }
+        Télécharger
+      </button>
+    </footer>
+  </article>
+</section>
+
 </div>

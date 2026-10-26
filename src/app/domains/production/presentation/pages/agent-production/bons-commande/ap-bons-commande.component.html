@@ -1,0 +1,95 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-invoice ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Bons de Commande</h1>
+      <p class="ph-sub">Consultation des commandes fournisseurs à l'origine des plans de production</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-circle-info"></i>
+  <div>Écran de consultation uniquement — la validation, l'envoi et la clôture d'un bon de commande restent gérés par le Gestionnaire de Stock et le Chef de Production.</div>
+</div>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <input class="input search-input" placeholder="Rechercher un numéro ou un fournisseur..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <select class="input" [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event); charger()">
+      <option value="">Tous les statuts</option>
+      @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
+    </select>
+    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Numéro</th><th>Fournisseur</th><th>Date commande</th><th>Livraison prévue</th><th>Montant HT</th><th>Réalisation</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          @for (bc of bcsFiltres(); track bc.id) {
+            <tr>
+              <td class="mono">{{ bc.numero }}</td>
+              <td>{{ bc.nomFournisseur ?? bc.codeFournisseur }}</td>
+              <td>{{ bc.dateCommande ? (bc.dateCommande | date:'dd/MM/yyyy') : '—' }}</td>
+              <td>{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</td>
+              <td>{{ montantTotal(bc) | number:'1.0-0' }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="(bc.tauxRealisation ?? 0) >= 100" [class.prog-y]="(bc.tauxRealisation ?? 0) < 100" [style.width.%]="bc.tauxRealisation ?? 0"></div></div>
+                  <span>{{ bc.tauxRealisation === null ? '—' : bc.tauxRealisation + ' %' }}</span>
+                </div>
+              </td>
+              <td><span [class]="badgeStatut(bc.statut)">{{ bc.statutLibelle ?? bc.statut }}</span></td>
+              <td><button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(bc)">Détails</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun bon de commande</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (bcSelectionne(); as bc) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="modal-card" (click)="$event.stopPropagation()" style="max-width:700px">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-file-invoice"></i> {{ bc.numero }}</h3>
+      <button class="modal-close" (click)="fermerDetail()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Fournisseur</div><div class="value">{{ bc.nomFournisseur ?? bc.codeFournisseur }}</div></div>
+        <div class="info-item"><div class="label">Statut</div><div class="value"><span [class]="badgeStatut(bc.statut)">{{ bc.statutLibelle ?? bc.statut }}</span></div></div>
+        <div class="info-item"><div class="label">Montant HT</div><div class="value">{{ montantTotal(bc) | number:'1.0-0' }}</div></div>
+        <div class="info-item"><div class="label">Réalisation</div><div class="value">{{ bc.tauxRealisation === null ? 'non fourni par l\'API' : bc.tauxRealisation + ' %' }}</div></div>
+      </div>
+      <h4>Lignes commandées</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Produit</th><th>Quantité commandée</th><th>Produite</th><th>Reçue</th><th>Avancement</th></tr></thead>
+          <tbody>
+            @for (l of bc.lignes; track l.codeProduit) {
+              <tr>
+                <td>{{ l.designation }} <span class="text-muted">({{ l.codeProduit }})</span></td>
+                <td>{{ l.quantiteCommandee }} {{ l.unite }}</td>
+                <td>{{ l.quantiteProduite === null ? '—' : l.quantiteProduite + ' ' + (l.unite ?? '') }}</td>
+                <td>{{ l.quantiteRecue ?? '—' }}</td>
+                <td>{{ l.tauxRealisation === null ? '—' : l.tauxRealisation + ' %' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-primary" (click)="fermerDetail()">Fermer</button></div>
+  </div>
+</div>
+}

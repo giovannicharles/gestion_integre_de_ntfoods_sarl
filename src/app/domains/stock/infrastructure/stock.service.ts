@@ -168,10 +168,12 @@ export interface LigneBonCommandeBE {
   sku?: string;
   designation: string;
   quantiteCommandee: number;
-  quantiteProduite: number;
+  /** Calculé par le domaine mais non exposé par BonCommandeResponse : toujours null avec l'API actuelle. */
+  quantiteProduite: number | null;
   quantiteRecue?: number;
-  tauxRealisation: number;
-  unite: string;
+  /** Idem : non exposé par l'API. */
+  tauxRealisation: number | null;
+  unite: string | null;
   prixUnitaireHT?: number;
 }
 
@@ -190,9 +192,43 @@ export interface BonCommandeBE {
   dateValidation?: string;
   matriculeCreateur?: string;
   montantTotalHT?: number;
-  tauxRealisation: number;
+  /** Calculé par le domaine (BonCommande.tauxRealisation) mais non exposé par BonCommandeResponse : null. */
+  tauxRealisation: number | null;
   enRetard?: boolean;
   lignes: LigneBonCommandeBE[];
+}
+
+/**
+ * BonCommandeResponse ne contient ni tauxRealisation, ni quantiteProduite, ni unite : absents du JSON, ils
+ * arriveraient « undefined ». On les pose explicitement à null pour que les écrans affichent « — ».
+ */
+function normaliserBC(bc: BonCommandeBE): BonCommandeBE {
+  return {
+    ...bc,
+    tauxRealisation: bc.tauxRealisation ?? null,
+    lignes: (bc.lignes ?? []).map(l => ({ ...l, quantiteProduite: l.quantiteProduite ?? null, tauxRealisation: l.tauxRealisation ?? null, unite: l.unite ?? null })),
+  };
+}
+
+/** GET /api/stock/produits — miroir de ProduitResponse. */
+export interface ConditionnementProduitBE {
+  id: string; sku: string; niveau: string; niveauLibelle: string; libelle: string;
+  facteurConversionVersBase: number; poidsUnitaireGrammes: number; volumeUnitaireCm3: number;
+  prixUnitaireHT: number | null; codeBarres: string | null;
+}
+
+export interface ProduitBE {
+  id: number; code: string; marque: string; gamme: string; variete: string; designation: string;
+  categorie: string; categorieLibelle: string; categorieMetier: string; categorieMetierLibelle: string;
+  actif: boolean; prixDistributeur: number | null; prixGrossiste: number | null; prixDetaillant: number | null;
+  tva: boolean; conditionnementCommercial: string | null; uniteVenteCommerciale: string | null;
+  conditionnements: ConditionnementProduitBE[];
+}
+
+/** GET /api/stock/fournisseurs — miroir de FournisseurResponse. */
+export interface FournisseurBE {
+  id: number; code: string; raisonSociale: string; telephone: string | null;
+  email: string | null; adresse: string | null; actif: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -254,15 +290,17 @@ export class StockService {
       .pipe(map(r => r.donnees!));
   }
 
+  /** Corps = OuvrirInventaireRequest (type, codeEntrepot obligatoires). */
   ouvrirInventaire(req: {
-    type: string; entrepot: string; justification?: string;
+    type: string; codeEntrepot: string; perimetreGamme?: string; perimetreProduit?: string;
   }): Observable<InventaireBE> {
     return this.api.post<ApiResponse<InventaireBE>>('stock/inventaires', req)
       .pipe(map(r => r.donnees!));
   }
 
+  /** Corps = SaisirComptageRequest : la ligne d'inventaire est désignée par son id (idLigne). */
   saisirComptage(numero: string, req: {
-    codeProduit: string; quantiteComptee: number;
+    idLigne: string; quantiteComptee: number;
   }): Observable<InventaireBE> {
     return this.api.patch<ApiResponse<InventaireBE>>(
       `stock/inventaires/${encodeURIComponent(numero)}/comptage`, req
@@ -469,18 +507,18 @@ export class StockService {
     const p: Record<string, string> = {};
     if (params.statut) p['statut'] = params.statut;
     return this.api.get<ApiResponse<BonCommandeBE[]>>('stock/bons-commande', p)
-      .pipe(map(r => r.donnees ?? []));
+      .pipe(map(r => (r.donnees ?? []).map(normaliserBC)));
   }
 
   getBonCommande(numero: string): Observable<BonCommandeBE | null> {
     return this.api.get<ApiResponse<BonCommandeBE>>(`stock/bons-commande/${encodeURIComponent(numero)}`)
-      .pipe(map(r => r.donnees ?? null));
+      .pipe(map(r => r.donnees ? normaliserBC(r.donnees) : null));
   }
 
   validerBonCommande(numero: string): Observable<BonCommandeBE> {
     return this.api.post<ApiResponse<BonCommandeBE>>(
       `stock/bons-commande/${encodeURIComponent(numero)}/valider`, {}
-    ).pipe(map(r => r.donnees!));
+    ).pipe(map(r => normaliserBC(r.donnees!)));
   }
 
   creerBonCommande(req: {
@@ -498,7 +536,21 @@ export class StockService {
     }[];
   }): Observable<BonCommandeBE> {
     return this.api.post<ApiResponse<BonCommandeBE>>('stock/bons-commande', req)
-      .pipe(map(r => r.donnees!));
+      .pipe(map(r => normaliserBC(r.donnees!)));
+  }
+
+  // ── Catalogue et fournisseurs (lecture) ──────────────────────
+
+  /** Filtres acceptés par l'API : marque, gamme, variete, actif. */
+  getProduits(params: { marque?: string; gamme?: string; variete?: string; actif?: boolean } = {}): Observable<ProduitBE[]> {
+    const p: Record<string, string> = {};
+    for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') p[k] = String(v);
+    return this.api.get<ApiResponse<ProduitBE[]>>('stock/produits', p)
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  getFournisseurs(): Observable<FournisseurBE[]> {
+    return this.api.get<ApiResponse<FournisseurBE[]>>('stock/fournisseurs')
+      .pipe(map(r => r.donnees ?? []));
   }
 }
-

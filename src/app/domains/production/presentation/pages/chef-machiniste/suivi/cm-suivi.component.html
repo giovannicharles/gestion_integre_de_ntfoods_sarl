@@ -1,51 +1,172 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-eye ph-ico"></i>
+<div class="sr">
+
+<header class="sr-hero">
+  <div class="sr-hero-gauche">
+    <i class="fa-solid fa-eye sr-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Suivi des Réalisations</h1>
-      <p class="ph-sub">Objectif, réalisé, taux de réalisation et validation par journée</p>
+      <div class="sr-hero-kicker">Chef machiniste</div>
+      <h1 class="sr-hero-titre">Suivi des réalisations</h1>
+      <p class="sr-hero-sous">
+        Objectif, réalisé et validation de chaque journée de broyage.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="sr-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.sr-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+@if (sessionExpiree()) {
+  <div class="sr-alerte sr-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="sr-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="sr-alerte sr-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="sr-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
 
-<div class="card">
-  <div class="toolbar-row">
-    <button class="btn btn-sm" [class.btn-primary]="filtre()==='aujourdhui'" [class.btn-ghost]="filtre()!=='aujourdhui'" (click)="appliquerFiltre('aujourdhui')">Aujourd'hui</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtre()==='semaine'" [class.btn-ghost]="filtre()!=='semaine'" (click)="appliquerFiltre('semaine')">Semaine</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtre()==='mois'" [class.btn-ghost]="filtre()!=='mois'" (click)="appliquerFiltre('mois')">Mois</button>
-    <label>Du <input type="date" class="input" [ngModel]="debutPerso()" (ngModelChange)="debutPerso.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="finPerso()" (ngModelChange)="finPerso.set($event)"></label>
-    <button class="btn btn-sm" [class.btn-primary]="filtre()==='personnalise'" [class.btn-ghost]="filtre()!=='personnalise'" (click)="appliquerPeriodePersonnalisee()">Appliquer</button>
+<!-- Période et filtres -->
+<section class="sr-carte">
+  <div class="sr-filtres-haut">
+    <div class="sr-segments">
+      @for (p of periodes; track p.code) {
+        <button class="sr-segment" [class.sr-segment-actif]="periode() === p.code" (click)="choisirPeriode(p.code)">{{ p.libelle }}</button>
+      }
+      <span class="sr-segment sr-segment-statique" [class.sr-segment-actif]="periode() === 'personnalisee'">Période</span>
+    </div>
+    <div class="sr-dates">
+      <label class="sr-champ">
+        <span class="sr-lbl">Du</span>
+        <input type="date" class="sr-input" [ngModel]="debut()" (ngModelChange)="debut.set($event)">
+      </label>
+      <label class="sr-champ">
+        <span class="sr-lbl">Au</span>
+        <input type="date" class="sr-input" [ngModel]="fin()" (ngModelChange)="fin.set($event)">
+      </label>
+      <button class="sr-bouton sr-bouton-primaire" (click)="appliquerPersonnalisee()" [disabled]="dateInvalide() || chargement()">Appliquer</button>
+    </div>
+  </div>
+  @if (dateInvalide()) {
+    <p class="sr-aide sr-aide-erreur">La date de début doit être antérieure à la date de fin.</p>
+  } @else {
+    <p class="sr-aide">Du {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}</p>
+  }
+</section>
+
+<!-- Synthèse -->
+<section class="sr-kpis">
+  <div class="sr-kpi sr-kpi-principal">
+    <span class="sr-lbl">Taux de réalisation</span>
+    <strong class="sr-grand">{{ tauxGlobal() | number:'1.0-1' }} %</strong>
+    <span class="sr-muet">{{ realiseTotal() | number:'1.0-1' }} kg sur {{ objectifTotal() | number:'1.0-1' }} kg</span>
+  </div>
+  <div class="sr-kpi">
+    <span class="sr-lbl">Journées validées</span>
+    <strong class="sr-grand">{{ nbValidees() }} / {{ filtrees().length }}</strong>
+    <span class="sr-muet">validées à 85 % ou justifiées</span>
+  </div>
+  <div class="sr-kpi">
+    <span class="sr-lbl">Sessions clôturées</span>
+    <strong class="sr-grand">{{ nbClotures() }} / {{ filtrees().length }}</strong>
+    <span class="sr-muet">sur la sélection</span>
+  </div>
+</section>
+
+<!-- Liste -->
+<section class="sr-carte">
+  <div class="sr-entete">
+    <h2 class="sr-titre"><i class="fa-solid fa-list-check"></i> Sessions de la période</h2>
+    <div class="sr-filtres-liste">
+      <input class="sr-input" placeholder="PPH ou poudre" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+      <select class="sr-input" [ngModel]="validation()" (ngModelChange)="validation.set($event)">
+        <option value="TOUTES">Toutes les journées</option>
+        <option value="VALIDEES">Validées</option>
+        <option value="NON_VALIDEES">Non validées</option>
+      </select>
+    </div>
   </div>
 
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  @if (chargement()) {
+    <div class="sr-squelette"></div>
+    <div class="sr-squelette"></div>
+  } @else if (filtrees().length === 0) {
+    <p class="sr-vide"><i class="fa-solid fa-inbox"></i>
+      @if (sessions().length === 0) { Aucune réalisation sur la période sélectionnée. } @else { Aucune session ne correspond aux filtres. }
+    </p>
   } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Date</th><th>PPH</th><th>Type</th><th>Chef machiniste</th><th>Objectif</th><th>Réalisé</th><th>Taux</th><th>Validation</th></tr></thead>
+    <div class="sr-table-wrap">
+      <table class="sr-table">
+        <thead>
+          <tr>
+            <th>Date</th><th>PPH</th><th>Poudre</th>
+            <th class="sr-num">Objectif</th><th class="sr-num">Réalisé</th><th class="sr-num">Taux</th>
+            <th class="sr-num">Nette</th><th>Validation</th><th>Statut</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (s of sessions(); track s.id) {
-            <tr>
-              <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
-              <td class="mono">{{ s.referencePPH }}</td>
+          @for (s of filtrees(); track s.id) {
+            <tr class="sr-ligne" [class.sr-ligne-ouverte]="ouverte() === s.id" (click)="basculer(s.id)">
+              <td>{{ s.date | date:'EEE dd/MM' }}</td>
+              <td><span class="sr-code">{{ s.referencePPH }}</span></td>
               <td>{{ s.typePoudreLibelle }}</td>
-              <td>{{ s.matriculeChefMachiniste }}</td>
-              <td>{{ s.objectifJournalierKg | number:'1.1-1' }} kg</td>
-              <td>{{ (s.quantiteNetteBroyeeKg ?? 0) | number:'1.1-1' }} kg</td>
-              <td><span [class]="tauxRealisation(s) >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ tauxRealisation(s) }}%</span></td>
-              <td>
-                @if (s.journeeValidee) { <span class="badge bg-success"><i class="fa-solid fa-check"></i> Validée</span> }
-                @else { <span class="badge bg-neutral">Non validée</span> }
+              <td class="sr-num">{{ s.objectifJournalierKg | number:'1.0-1' }} kg</td>
+              <td class="sr-num"><strong>{{ s.totalRealiseKg | number:'1.1-1' }} kg</strong></td>
+              <td class="sr-num">
+                <span class="sr-badge" [class.sr-badge-ok]="taux(s) >= 85" [class.sr-badge-ko]="taux(s) < 85">{{ taux(s) | number:'1.0-1' }} %</span>
               </td>
+              <td class="sr-num">{{ s.quantiteNetteBroyeeKg != null ? (s.quantiteNetteBroyeeKg | number:'1.1-1') + ' kg' : '—' }}</td>
+              <td>
+                <span class="sr-badge" [class.sr-badge-ok]="s.journeeValidee" [class.sr-badge-attention]="!s.journeeValidee">
+                  {{ s.journeeValidee ? 'Validée' : 'Non validée' }}
+                </span>
+              </td>
+              <td><span class="sr-meta">{{ s.statut === 'CLOTUREE' ? 'Clôturée' : 'Ouverte' }}</span></td>
             </tr>
-          } @empty {
-            <tr><td colspan="8" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune réalisation sur la période sélectionnée</td></tr>
+            @if (ouverte() === s.id) {
+              <tr class="sr-detail">
+                <td colspan="9">
+                  <div class="sr-detail-grille">
+                    <div>
+                      <h3 class="sr-sous-titre"><i class="fa-solid fa-users"></i> Réalisations par machiniste</h3>
+                      @if (s.realisations.length === 0) {
+                        <p class="sr-muet">Aucune réalisation saisie pour cette session.</p>
+                      } @else {
+                        <ul class="sr-liste">
+                          @for (r of s.realisations; track r.machinisteMatricule + r.operation) {
+                            <li>
+                              <span class="sr-nom">{{ r.nomMachiniste }}</span>
+                              <span class="sr-muet">{{ r.operationLibelle }}</span>
+                              <span class="sr-muet">{{ r.realiseKg | number:'1.1-1' }} / {{ r.objectifKg | number:'1.1-1' }} kg</span>
+                              <span class="sr-badge" [class.sr-badge-ok]="r.pctRealisation >= 100" [class.sr-badge-attention]="r.pctRealisation >= 85 && r.pctRealisation < 100" [class.sr-badge-ko]="r.pctRealisation < 85">{{ r.pctRealisation | number:'1.0-1' }} %</span>
+                            </li>
+                          }
+                        </ul>
+                      }
+                    </div>
+                    <div>
+                      <h3 class="sr-sous-titre"><i class="fa-solid fa-scale-balanced"></i> Clôture et pertes</h3>
+                      <p class="sr-texte">Dépassement autorisé : {{ s.depassementAutoriseKg | number:'1.1-1' }} kg</p>
+                      <p class="sr-texte">Pertes : {{ s.pertesKg != null ? (s.pertesKg | number:'1.1-1') + ' kg' : 'non renseignées' }}</p>
+                      @if (s.justificatifNonValidation) {
+                        <p class="sr-texte"><strong>Justification :</strong> {{ s.justificatifNonValidation }}</p>
+                      }
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
+    <p class="sr-aide">Cliquez sur une session pour voir le détail par machiniste.</p>
   }
+</section>
+
 </div>

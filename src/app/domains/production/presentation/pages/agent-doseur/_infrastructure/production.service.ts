@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiService } from '../../../core/http/api.service';
-import { ApiResponse } from '../../../core/models/api-response.model';
+import { ApiService } from '../../../../../../core/http/api.service';
+import { ApiResponse } from '../../../../../../core/models/api-response.model';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Référentiels statiques (miroir des enums backend)

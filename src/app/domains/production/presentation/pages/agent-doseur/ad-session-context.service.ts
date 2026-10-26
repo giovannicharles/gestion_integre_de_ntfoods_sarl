@@ -20,7 +20,7 @@ export class AdSessionContextService {
   private readonly prod = inject(ProductionService);
 
   /** Date du jour (ISO court), calculée une fois. */
-  readonly today = new Date().toISOString().split('T')[0];
+  readonly today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
   // ── Sélection courante ────────────────────────────────────────────────
   readonly sessionActiveId = signal<number | null>(null);

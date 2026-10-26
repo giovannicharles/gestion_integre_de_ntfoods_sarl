@@ -3,7 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ComptableService, ObjectifCommercialBE, PrimeSemaineBE } from '../../../infrastructure/comptable.service';
-import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
+import { fCFA, tauxAtteinte, tauxAffiche } from '../../../../../shared/utils/format.utils';
 
 @Component({
   selector: 'app-comptable-objectifs',
@@ -16,6 +16,7 @@ export class ComptableObjectifsComponent implements OnInit {
   today = new Date();
   fCFA = fCFA;
   tauxAtteinte = tauxAtteinte;
+  tauxAffiche = tauxAffiche;
   private readonly cptSvc = inject(ComptableService);
 
   objectifs = signal<ObjectifCommercialBE[]>([]);

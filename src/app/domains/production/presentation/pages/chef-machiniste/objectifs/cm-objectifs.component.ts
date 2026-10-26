@@ -1,141 +1,206 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { RouterLink } from '@angular/router';
+import { forkJoin, of, Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
-  ProductionService, PPHBE, EmployeBE, SessionBroyageBE,
-  OPERATIONS_BROYAGE, TYPES_POUDRE
+  ProductionService, PPHBE, EmployeBE, SessionBroyageBE, OPERATIONS_BROYAGE, TYPES_POUDRE,
 } from '../../../../infrastructure/production.service';
+
+/** Date locale au format AAAA-MM-JJ (évite le décalage UTC de toISOString). */
+function dateLocaleIso(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Ajoute n jours à une date AAAA-MM-JJ, en calendrier local. */
+function ajouterJours(iso: string, n: number): string {
+  const [y, m, j] = iso.split('-').map(Number);
+  return dateLocaleIso(new Date(y, m - 1, j + n));
+}
 
 interface ObjectifDraft {
   machinisteMatricule: string; nomMachiniste: string; operation: string; objectifKg: number;
 }
 
 /**
- * DÉFINITION DES OBJECTIFS DES MACHINISTES — Chef Machiniste
+ * OBJECTIFS DES MACHINISTES — Chef Machiniste.
+ * Ouverture d'une session de broyage avec les objectifs de chaque machiniste, et consultation des
+ * objectifs des 7 derniers jours regroupés par session.
  *
- * ⚠️ Limite backend : le backend n'expose la création d'objectifs QUE groupée
- * dans l'ouverture d'une session de broyage (POST /broyage/sessions avec
- * objectifsMachinistes[]). Il n'existe pas de PATCH/DELETE pour modifier ou
- * supprimer un objectif isolé après coup.
- *
- * Chargement : forkJoin pour un état de chargement unique, MAIS chaque flux est
- * isolé par catchError — un échec sur les PPH ou les sessions ne doit jamais
- * faire disparaître la liste des machinistes (et inversement).
+ * Règles backend reprises ici : une seule session par PPH, date et type de poudre ; objectif
+ * journalier strictement positif ; au moins un objectif. Pas de modification ni de suppression
+ * d'un objectif isolé (non exposées par le backend) : seule l'ouverture de session crée des objectifs.
  */
 @Component({
   selector: 'app-cm-objectifs',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './cm-objectifs.component.html',
-  styleUrls: ['./cm-objectifs.component.css', '../_shared.css']
+  styleUrls: ['./cm-objectifs.component.css'],
 })
 export class CmObjectifsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
 
-  loading = signal(true);
-  message = signal('');
-  pphs = signal<PPHBE[]>([]);
-  machinistes = signal<EmployeBE[]>([]);
-  sessions = signal<SessionBroyageBE[]>([]);
-
-  // Référentiels réels (miroir des enums backend) — { code, libelle }[]
+  readonly aujourdhui = dateLocaleIso();
   readonly operations = OPERATIONS_BROYAGE;
   readonly typesPoudre = TYPES_POUDRE;
 
-  // Formulaire de création (nouvelle session = nouveaux objectifs groupés)
-  nouvelleSession = {
-    referencePPH: '', date: new Date().toISOString().split('T')[0], typePoudre: 'MAIS', objectifJournalierKg: 0,
-  };
-  brouillonObjectifs = signal<ObjectifDraft[]>([]);
-  nouvelObjectif: ObjectifDraft = { machinisteMatricule: '', nomMachiniste: '', operation: 'ECRASAGE', objectifKg: 0 };
+  readonly chargement = signal(true);
+  readonly erreur = signal('');
+  readonly sessionExpiree = signal(false);
+  readonly succes = signal('');
+  readonly derniereMaj = signal<Date | null>(null);
 
-  totalObjectifsBrouillon = computed(() => this.brouillonObjectifs().reduce((s, o) => s + o.objectifKg, 0));
+  readonly pphs = signal<PPHBE[]>([]);
+  readonly machinistes = signal<EmployeBE[]>([]);
+  readonly sessions = signal<SessionBroyageBE[]>([]);
+  /** Toutes les sessions du PPH choisi, pour détecter un doublon avant l'envoi. */
+  readonly sessionsDuPph = signal<SessionBroyageBE[]>([]);
+
+  // ── Formulaire de nouvelle session ──
+  readonly referencePPH = signal('');
+  readonly date = signal(this.aujourdhui);
+  readonly typePoudre = signal('MAIS');
+  readonly objectifGlobal = signal<number | null>(null);
+  readonly brouillon = signal<ObjectifDraft[]>([]);
+  readonly enCreation = signal(false);
+
+  nouvel: { machinisteMatricule: string; operation: string; objectifKg: number | null } = {
+    machinisteMatricule: '', operation: 'ECRASAGE', objectifKg: null,
+  };
+
+  readonly totalBrouillon = computed(() => this.brouillon().reduce((t, o) => t + o.objectifKg, 0));
+  readonly ecartGlobal = computed(() => (this.objectifGlobal() ?? 0) - this.totalBrouillon());
+
+  /** Session déjà ouverte pour ce PPH, cette date et ce type de poudre : le backend la refuse. */
+  readonly conflit = computed(() => this.sessionsDuPph()
+    .find(s => s.date === this.date() && s.typePoudre === this.typePoudre()) ?? null);
+
+  /** Raisons qui empêchent la création, affichées à l'utilisateur. */
+  readonly bloquants = computed(() => {
+    const raisons: string[] = [];
+    if (!this.referencePPH()) raisons.push('choisir un plan');
+    if (!this.date()) raisons.push('choisir une date');
+    if (!(this.objectifGlobal() && this.objectifGlobal()! > 0)) raisons.push('saisir un objectif journalier supérieur à 0');
+    if (this.brouillon().length === 0) raisons.push('ajouter au moins un machiniste');
+    if (this.conflit()) raisons.push('une session existe déjà pour ce plan, cette date et cette poudre');
+    return raisons;
+  });
+  readonly peutCreer = computed(() => this.bloquants().length === 0 && !this.enCreation());
+
+  /** Machinistes actifs, proposés dans le formulaire. */
+  readonly machinistesActifs = computed(() => this.machinistes().filter(m => m.actif));
+
+  /** Sessions de la période, regroupées avec leurs objectifs. */
+  readonly sessionsRecentes = computed(() =>
+    [...this.sessions()].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id));
 
   ngOnInit(): void {
     this.charger();
   }
 
   charger(): void {
-    this.loading.set(true);
-    this.message.set('');
-    const echecs: string[] = [];
-
+    this.chargement.set(true);
+    this.erreur.set('');
     forkJoin({
-      pphs: this.svc.getPPHs().pipe(
-        catchError(() => { echecs.push('PPH'); return of([] as PPHBE[]); })
-      ),
-      machinistes: this.svc.getMachinistes().pipe(
-        tap(data => console.log('Machinistes :', data)),
-          catchError(err => {
-            echecs.push('machinistes');
-            console.error('Erreur lors du chargement des machinistes :', err);
-            return of([] as EmployeBE[]);
-          })
-        ),
-      sessions: this.svc.getSessionsBroyage({
-        debut: this.septJoursAvant(),
-        fin: new Date().toISOString().split('T')[0],
-      }).pipe(
-        catchError(() => { echecs.push('sessions de broyage'); return of([] as SessionBroyageBE[]); })
-      ),
-    }).subscribe(({ pphs, machinistes, sessions }) => {
-      this.pphs.set(pphs);
-      this.machinistes.set(machinistes);
-      this.sessions.set(sessions);
-      this.loading.set(false);
-      if (echecs.length) {
-        this.message.set(`Chargement partiel — échec sur : ${echecs.join(', ')}.`);
-      }
+      pphs: this.tolerer(this.svc.getPPHs(), [] as PPHBE[]),
+      machinistes: this.tolerer(this.svc.getMachinistes(), [] as EmployeBE[]),
+      sessions: this.tolerer(this.svc.getSessionsBroyage({ debut: ajouterJours(this.aujourdhui, -7), fin: this.aujourdhui }), [] as SessionBroyageBE[]),
+    }).subscribe(r => {
+      this.pphs.set(r.pphs);
+      this.machinistes.set(r.machinistes);
+      this.sessions.set(r.sessions);
+      this.derniereMaj.set(new Date());
+      this.chargement.set(false);
     });
   }
 
-  private septJoursAvant(): string {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().split('T')[0];
+  choisirPph(reference: string): void {
+    this.referencePPH.set(reference);
+    this.sessionsDuPph.set([]);
+    this.succes.set('');
+    if (!reference) return;
+    this.svc.getSessionsBroyage({ referencePPH: reference }).subscribe({
+      next: s => this.sessionsDuPph.set(s),
+      error: (e: unknown) => this.noterErreur(e, 'Les sessions de ce plan n\'ont pas pu être vérifiées.'),
+    });
   }
 
-  /** Libellé lisible d'une opération de broyage à partir de son code. */
+  selectionnerMachiniste(matricule: string): void {
+    this.nouvel.machinisteMatricule = matricule;
+  }
+
+  ajouterAuBrouillon(): void {
+    const m = this.machinistes().find(x => x.matricule === this.nouvel.machinisteMatricule);
+    const kg = this.nouvel.objectifKg ?? 0;
+    if (!m) { this.erreur.set('Choisir un machiniste.'); return; }
+    if (kg <= 0) { this.erreur.set('L\'objectif du machiniste doit être supérieur à 0.'); return; }
+    if (this.brouillon().some(o => o.machinisteMatricule === m.matricule && o.operation === this.nouvel.operation)) {
+      this.erreur.set(`${m.nomComplet} a déjà un objectif pour ce poste.`);
+      return;
+    }
+    this.erreur.set('');
+    this.brouillon.update(l => [...l, {
+      machinisteMatricule: m.matricule, nomMachiniste: m.nomComplet, operation: this.nouvel.operation, objectifKg: kg,
+    }]);
+    this.nouvel = { machinisteMatricule: '', operation: this.nouvel.operation, objectifKg: null };
+  }
+
+  retirerDuBrouillon(index: number): void {
+    this.brouillon.update(l => l.filter((_, i) => i !== index));
+  }
+
+  creerObjectifs(): void {
+    if (!this.peutCreer()) return;
+    this.enCreation.set(true);
+    this.erreur.set('');
+    this.succes.set('');
+    this.svc.ouvrirSessionBroyage({
+      referencePPH: this.referencePPH(),
+      date: this.date(),
+      typePoudre: this.typePoudre(),
+      objectifJournalierKg: this.objectifGlobal()!,
+      objectifsMachinistes: this.brouillon(),
+    }).subscribe({
+      next: s => {
+        this.sessions.update(l => [s, ...l]);
+        this.sessionsDuPph.update(l => [s, ...l]);
+        this.brouillon.set([]);
+        this.objectifGlobal.set(null);
+        this.succes.set(`Objectifs enregistrés : session #${s.id} ouverte le ${s.date}.`);
+        this.enCreation.set(false);
+      },
+      error: (e: unknown) => {
+        this.enCreation.set(false);
+        this.noterErreur(e, 'Les objectifs n\'ont pas pu être enregistrés.');
+      },
+    });
+  }
+
   libelleOperation(code: string): string {
     return this.operations.find(o => o.code === code)?.libelle ?? code;
   }
 
-  selectionnerMachiniste(matricule: string): void {
-    const m = this.machinistes().find(x => x.matricule === matricule);
-    this.nouvelObjectif.machinisteMatricule = matricule;
-    this.nouvelObjectif.nomMachiniste = m?.nomComplet ?? matricule;
+  libelleTypePoudre(code: string): string {
+    return this.typesPoudre.find(t => t.code === code)?.libelle ?? code;
   }
 
-  ajouterAuBrouillon(): void {
-    if (!this.nouvelObjectif.machinisteMatricule || this.nouvelObjectif.objectifKg <= 0) {
-      this.message.set('Sélectionnez un machiniste et un objectif > 0');
+  private tolerer<T>(source: Observable<T>, repli: T): Observable<T> {
+    return source.pipe(catchError((e: unknown) => {
+      this.noterErreur(e, 'Certaines données n\'ont pas pu être chargées.');
+      return of(repli);
+    }));
+  }
+
+  private noterErreur(e: unknown, repli: string): void {
+    const err = e as { status?: number; error?: { erreur?: string; message?: string } };
+    if (err?.status === 401) {
+      this.sessionExpiree.set(true);
+      this.erreur.set('Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.');
       return;
     }
-    this.brouillonObjectifs.update(list => [...list, { ...this.nouvelObjectif }]);
-    this.nouvelObjectif = { machinisteMatricule: '', nomMachiniste: '', operation: 'ECRASAGE', objectifKg: 0 };
-  }
-
-  retirerDuBrouillon(index: number): void {
-    this.brouillonObjectifs.update(list => list.filter((_, i) => i !== index));
-  }
-
-  creerObjectifs(): void {
-    if (!this.nouvelleSession.referencePPH || this.brouillonObjectifs().length === 0) {
-      this.message.set('PPH et au moins un objectif sont requis');
-      return;
-    }
-    this.svc.ouvrirSessionBroyage({
-      ...this.nouvelleSession,
-      objectifsMachinistes: this.brouillonObjectifs(),
-    }).subscribe({
-      next: s => {
-        this.sessions.update(list => [s, ...list]);
-        this.brouillonObjectifs.set([]);
-        this.message.set(`Objectifs créés — session #${s.id} ouverte pour ${s.date}`);
-      },
-      error: () => this.message.set('Erreur lors de la création des objectifs')
-    });
+    // Le backend renvoie la raison métier (ex. session déjà existante) : on l'affiche telle quelle
+    this.erreur.set(err?.error?.erreur || err?.error?.message || repli);
   }
 }

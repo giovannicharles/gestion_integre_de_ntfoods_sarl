@@ -40,6 +40,14 @@
       <div class="kpi-meta">comptes suspendus</div>
     </div>
   </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-user-lock"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Bloqués</div>
+      <div class="kpi-val">{{ nbBloques() }}</div>
+      <div class="kpi-meta">trop d'échecs de connexion</div>
+    </div>
+  </div>
 </div>
 
 <!-- TABLE -->
@@ -47,6 +55,9 @@
   <div class="card-hd">
     <h2 class="card-title"><i class="fa-solid fa-table"></i> Liste des Utilisateurs</h2>
     <div class="filter-row">
+      <input class="form-select-sm u-search" type="search" placeholder="Matricule, nom ou email…"
+             aria-label="Rechercher un utilisateur"
+             [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
       <label>Filtrer par rôle :</label>
       <select [ngModel]="filtreRole()" (ngModelChange)="filtreRole.set($event)" class="form-select-sm">
         @for (r of rolesDisponibles; track r) {
@@ -83,21 +94,44 @@
               <span class="u-role-badge">{{ getRoleLabel(u.role) }}</span>
             </td>
             <td>
-              @if (u.actif) {
-                <span class="badge bg-success">Actif</span>
-              } @else {
-                <span class="badge bg-red">Inactif</span>
-              }
+              <div class="u-statuts">
+                @if (u.actif) {
+                  <span class="badge bg-success">Actif</span>
+                } @else {
+                  <span class="badge bg-red">Inactif</span>
+                }
+                @if (u.compteBloque) {
+                  <span class="badge bg-warning" [title]="u.tentativesEchouees + ' tentative(s) échouée(s)'"><i class="fa-solid fa-lock"></i> Bloqué</span>
+                }
+              </div>
             </td>
             <td class="text-muted">{{ u.dateCreation | date:'dd/MM/yyyy' }}</td>
             <td>
-              <button class="btn btn-sm" [class]="u.actif ? 'btn-ghost-red' : 'btn-success'" (click)="toggleActif(u.id)">
-                @if (u.actif) {
-                  <i class="fa-solid fa-ban"></i> Suspendre
-                } @else {
-                  <i class="fa-solid fa-check"></i> Activer
+              <div class="u-actions">
+                <button class="btn btn-sm btn-ghost u-icon-btn" title="Voir la fiche" aria-label="Voir la fiche" (click)="ouvrirFiche(u)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-ghost u-icon-btn" title="Réinitialiser le mot de passe" aria-label="Réinitialiser le mot de passe" (click)="ouvrirMotDePasse(u)">
+                  <i class="fa-solid fa-key"></i>
+                </button>
+                @if (roleModifiable(u)) {
+                  <button class="btn btn-sm btn-ghost u-icon-btn" title="Changer le rôle" aria-label="Changer le rôle" (click)="ouvrirRole(u)">
+                    <i class="fa-solid fa-user-tag"></i>
+                  </button>
                 }
-              </button>
+                @if (u.compteBloque) {
+                  <button class="btn btn-sm btn-ghost u-btn-deblocage" [disabled]="actionEnCours() === u.matricule" (click)="debloquer(u)">
+                    <i class="fa-solid fa-lock-open"></i> Débloquer
+                  </button>
+                }
+                <button class="btn btn-sm" [class]="u.actif ? 'btn-ghost-red' : 'btn-success'" [disabled]="actionEnCours() === u.matricule" (click)="toggleActif(u.id)">
+                  @if (u.actif) {
+                    <i class="fa-solid fa-ban"></i> Suspendre
+                  } @else {
+                    <i class="fa-solid fa-check"></i> Activer
+                  }
+                </button>
+              </div>
             </td>
           </tr>
         }
@@ -160,7 +194,7 @@
           </div>
           <div class="nu-field">
             <label class="nu-label">Mot de passe <span class="nu-req">*</span></label>
-            <input class="input" type="password" [(ngModel)]="form.motDePasse" placeholder="Minimum 6 caractères">
+            <input class="input" type="password" [(ngModel)]="form.motDePasse" placeholder="8 caractères, une lettre et un chiffre" autocomplete="new-password">
           </div>
         </div>
 
@@ -230,6 +264,204 @@
         <button class="btn btn-primary" (click)="creerUtilisateur()" [disabled]="saving()">
           @if (saving()) { <span class="spinner spinner-sm"></span> Création en cours… }
           @else { <i class="fa-solid fa-user-plus"></i> Créer le compte }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ═══ MODAL FICHE UTILISATEUR ═══ -->
+@if (ficheOuverte()) {
+  <div class="nu-overlay" (click)="fermerFiche()">
+    <div class="nu-modal" role="dialog" aria-modal="true" aria-labelledby="fiche-titre" (click)="$event.stopPropagation()">
+
+      <div class="nu-modal-header">
+        <div class="nu-modal-ico"><i class="fa-solid fa-id-card"></i></div>
+        <div>
+          <div class="nu-modal-title" id="fiche-titre">{{ fiche()?.nomComplet ?? 'Fiche utilisateur' }}</div>
+          <div class="nu-modal-sub">{{ fiche()?.matricule ?? 'Chargement…' }}@if (fiche(); as f) { · {{ getRoleLabel(f.role) }} }</div>
+        </div>
+        <button class="nu-close-btn" aria-label="Fermer" (click)="fermerFiche()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="nu-modal-body">
+        @if (ficheChargement()) {
+          <div class="skeleton" style="height:18px;border-radius:4px"></div>
+          <div class="skeleton" style="height:18px;border-radius:4px"></div>
+          <div class="skeleton" style="height:18px;border-radius:4px"></div>
+        }
+        @if (ficheErreur()) {
+          <div class="nu-toast nu-toast-err">
+            <i class="fa-solid fa-triangle-exclamation"></i> Impossible de charger la fiche : {{ ficheErreur() }}
+          </div>
+        }
+        @if (fiche(); as f) {
+          <div class="nu-section-title">
+            <i class="fa-solid fa-shield-halved"></i> État du compte
+          </div>
+          <div class="u-fiche-statuts">
+            @if (f.actif) { <span class="badge bg-success">Actif</span> } @else { <span class="badge bg-red">Inactif</span> }
+            @if (f.compteBloque) {
+              <span class="badge bg-warning"><i class="fa-solid fa-lock"></i> Bloqué</span>
+            } @else {
+              <span class="badge bg-neutral"><i class="fa-solid fa-lock-open"></i> Non bloqué</span>
+            }
+            @if (f.sessionActive) {
+              <span class="badge bg-info"><i class="fa-solid fa-circle-dot"></i> Session ouverte</span>
+            } @else {
+              <span class="badge bg-neutral">Aucune session ouverte</span>
+            }
+            <span class="badge bg-neutral">{{ f.tentativesEchouees ?? 0 }} tentative(s) échouée(s)</span>
+          </div>
+
+          <div class="nu-section-title">
+            <i class="fa-solid fa-user"></i> Identité
+          </div>
+          <dl class="u-fiche">
+            <div><dt>Prénom</dt><dd>{{ f.prenom || '—' }}</dd></div>
+            <div><dt>Nom</dt><dd>{{ f.nom || '—' }}</dd></div>
+            <div><dt>Email</dt><dd>{{ f.email }}</dd></div>
+            <div><dt>Rôle</dt><dd>{{ getRoleLabel(f.role) }}</dd></div>
+            <div><dt>Compte créé le</dt><dd>{{ f.dateCreation | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+            <div><dt>Date d'embauche</dt><dd>{{ f.dateEmbauche ? (f.dateEmbauche | date:'dd/MM/yyyy') : '—' }}</dd></div>
+          </dl>
+
+          <div class="nu-section-title nu-section-opt">
+            <i class="fa-solid fa-circle-info"></i> Informations personnelles
+          </div>
+          <dl class="u-fiche">
+            <div><dt>Téléphone</dt><dd>{{ f.telephone || '—' }}</dd></div>
+            <div><dt>Sexe</dt><dd>{{ libelleSexe(f.sexe) }}</dd></div>
+            <div><dt>Date de naissance</dt><dd>{{ f.dateNaissance ? (f.dateNaissance | date:'dd/MM/yyyy') : '—' }}</dd></div>
+            <div><dt>Lieu de naissance</dt><dd>{{ f.lieuNaissance || '—' }}</dd></div>
+            <div><dt>CNI</dt><dd>{{ f.cni || '—' }}</dd></div>
+            <div><dt>Résidence</dt><dd>{{ f.residence || '—' }}</dd></div>
+          </dl>
+        }
+      </div>
+
+      <div class="nu-modal-footer">
+        @if (fiche(); as f) {
+          @if (f.compteBloque) {
+            <button class="btn btn-ghost u-btn-deblocage" [disabled]="actionEnCours() === f.matricule"
+                    (click)="debloquer(versUI(f))">
+              <i class="fa-solid fa-lock-open"></i> Débloquer
+            </button>
+          }
+          @if (roleModifiable(versUI(f))) {
+            <button class="btn btn-ghost" (click)="ouvrirRole(versUI(f))">
+              <i class="fa-solid fa-user-tag"></i> Changer le rôle
+            </button>
+          }
+          <button class="btn btn-ghost"
+                  (click)="ouvrirMotDePasse(versUI(f))">
+            <i class="fa-solid fa-key"></i> Réinitialiser le mot de passe
+          </button>
+        }
+        <button class="btn btn-primary" (click)="fermerFiche()">Fermer</button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ═══ MODAL RÉINITIALISATION DU MOT DE PASSE ═══ -->
+@if (cibleMdp(); as c) {
+  <div class="nu-overlay" (click)="fermerMotDePasse()">
+    <div class="nu-modal u-modal-etroite" role="dialog" aria-modal="true" aria-labelledby="mdp-titre" (click)="$event.stopPropagation()">
+
+      <div class="nu-modal-header">
+        <div class="nu-modal-ico"><i class="fa-solid fa-key"></i></div>
+        <div>
+          <div class="nu-modal-title" id="mdp-titre">Réinitialiser le mot de passe</div>
+          <div class="nu-modal-sub">{{ c.nom }} · {{ c.matricule }}</div>
+        </div>
+        <button class="nu-close-btn" aria-label="Fermer" [disabled]="savingMdp()" (click)="fermerMotDePasse()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="nu-modal-body">
+        @if (erreurMdp()) {
+          <div class="nu-toast nu-toast-err">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurMdp() }}
+          </div>
+        }
+        <p class="u-aide">
+          Le nouveau mot de passe remplace immédiatement l'ancien. Il doit contenir au moins 8 caractères,
+          dont une lettre et un chiffre. Communiquez-le à l'utilisateur par un canal sûr.
+        </p>
+        <div class="nu-field">
+          <label class="nu-label" for="mdp-nouveau">Nouveau mot de passe <span class="nu-req">*</span></label>
+          <input id="mdp-nouveau" class="input" type="password" autocomplete="new-password" [(ngModel)]="nouveauMdp" [disabled]="savingMdp()">
+        </div>
+        <div class="nu-field">
+          <label class="nu-label" for="mdp-confirmation">Confirmation <span class="nu-req">*</span></label>
+          <input id="mdp-confirmation" class="input" type="password" autocomplete="new-password" [(ngModel)]="confirmationMdp" [disabled]="savingMdp()"
+                 (keyup.enter)="reinitialiserMotDePasse()">
+        </div>
+      </div>
+
+      <div class="nu-modal-footer">
+        <button class="btn btn-ghost" (click)="fermerMotDePasse()" [disabled]="savingMdp()">Annuler</button>
+        <button class="btn btn-primary" (click)="reinitialiserMotDePasse()" [disabled]="savingMdp()">
+          @if (savingMdp()) { <span class="spinner spinner-sm"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-key"></i> Réinitialiser }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ═══ MODAL CHANGEMENT DE RÔLE (Directeur Général) ═══ -->
+@if (cibleRole(); as c) {
+  <div class="nu-overlay" (click)="fermerRole()">
+    <div class="nu-modal u-modal-etroite" role="dialog" aria-modal="true" aria-labelledby="role-titre" (click)="$event.stopPropagation()">
+
+      <div class="nu-modal-header">
+        <div class="nu-modal-ico"><i class="fa-solid fa-user-tag"></i></div>
+        <div>
+          <div class="nu-modal-title" id="role-titre">Changer le rôle</div>
+          <div class="nu-modal-sub">{{ c.nom }} · {{ c.matricule }}</div>
+        </div>
+        <button class="nu-close-btn" aria-label="Fermer" [disabled]="savingRole()" (click)="fermerRole()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="nu-modal-body">
+        @if (erreurRole()) {
+          <div class="nu-toast nu-toast-err">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurRole() }}
+          </div>
+        }
+        <dl class="u-fiche">
+          <div><dt>Rôle actuel</dt><dd>{{ getRoleLabel(c.role) }}</dd></div>
+        </dl>
+        <div class="nu-field">
+          <label class="nu-label" for="role-nouveau">Nouveau rôle <span class="nu-req">*</span></label>
+          <select id="role-nouveau" class="input" [(ngModel)]="nouveauRole" [disabled]="savingRole()">
+            @for (r of rolesCreation; track r) {
+              <option [value]="r">{{ getRoleLabel(r) }}</option>
+            }
+          </select>
+        </div>
+        <p class="u-aide">
+          Les droits de l'utilisateur changent avec son rôle. Sa session en cours est fermée : il devra se reconnecter.
+          Le changement est tracé dans le journal d'audit. Le rôle Administrateur ne peut être retiré au dernier
+          administrateur actif.
+        </p>
+      </div>
+
+      <div class="nu-modal-footer">
+        <button class="btn btn-ghost" (click)="fermerRole()" [disabled]="savingRole()">Annuler</button>
+        <button class="btn btn-primary" (click)="changerRole()" [disabled]="savingRole() || nouveauRole === c.role">
+          @if (savingRole()) { <span class="spinner spinner-sm"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-check"></i> Changer le rôle }
         </button>
       </div>
 

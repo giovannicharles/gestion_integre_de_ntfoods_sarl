@@ -1,327 +1,299 @@
-<!-- EN-TÊTE -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="rp-ph-ico"><i class="fa-solid fa-pen-to-square"></i></div>
+<div class="rl">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="rl-hero">
+  <div class="rl-hero-gauche">
+    <i class="fa-solid fa-pen-to-square rl-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Saisie des Réalisations Journalières</h1>
-      <p class="ph-sub">Enregistrez la production de chaque poste pour la journée en cours</p>
+      <div class="rl-kicker">Responsable de salle · Réalisations</div>
+      <h1 class="rl-hero-titre">Saisie des réalisations</h1>
+      <p class="rl-hero-sous">Production de chaque poste pour la journée : {{ aujourdhui | date:'EEEE d MMMM y' }}</p>
     </div>
   </div>
-</div>
-
-<!-- Toasts -->
-@if (message()) {
-  <div class="rp-toast rp-toast-ok">
-    <i class="fa-solid fa-circle-check"></i> {{ message() }}
-    <button class="rp-toast-close" (click)="message.set('')">×</button>
-  </div>
-}
-@if (erreur()) {
-  <div class="rp-toast rp-toast-err">
-    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
-    <button class="rp-toast-close" (click)="erreur.set('')">×</button>
-  </div>
-}
-
-<!-- SÉLECTEUR PPH -->
-<div class="card">
-  <div class="rp-selector-row">
-    <div class="rp-selector-lbl"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
-    <select class="input rp-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
-      @for (p of pphs(); track p.id) {
-        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
-      }
-    </select>
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
-  </div>
-</div>
-
-@if (loading()) {
-  @for (i of [1,2,3]; track i) {
-    <div class="skeleton skeleton-row" style="margin:6px 0"></div>
-  }
-} @else {
-
-  @if (!affectation()) {
-    <div class="rp-empty">
-      <div class="rp-empty-ico"><i class="fa-solid fa-calendar-xmark"></i></div>
-      <div class="rp-empty-title">Aucune affectation pour aujourd'hui</div>
-      <p class="rp-empty-sub">Créez d'abord une affectation depuis la page <strong>Affectation des Employés</strong>.</p>
-    </div>
-  } @else {
-
-  <!-- ONGLETS POSTES -->
-  <div class="rp-postes-tabs">
-    @for (p of codesPoste; track p.code) {
-      <button class="rp-tab"
-              [class.rp-tab-active]="posteActif() === p.code"
-              [class.rp-tab-affecte]="posteEstAffecteCode(p.code)"
-              [class.rp-tab-saisi]="posteDejaEnregistre(p.code)"
-              (click)="selectionnerPoste(p.code)">
-        @if (posteDejaEnregistre(p.code)) {
-          <i class="fa-solid fa-circle-check rp-tab-ico-ok"></i>
-        } @else if (posteEstAffecteCode(p.code)) {
-          <i class="fa-solid fa-circle rp-tab-ico-pending"></i>
-        } @else {
-          <i class="fa-regular fa-circle rp-tab-ico-none"></i>
+  <div class="rl-hero-choix">
+    <label class="rl-champ">
+      <span class="rl-lbl">Plan en cours</span>
+      <select class="rl-select" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPph($event)"
+              [disabled]="pphs().length === 0">
+        @for (p of pphs(); track p.id) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.semaine }}</option>
         }
+      </select>
+    </label>
+  </div>
+</header>
+
+@if (sessionExpiree()) {
+  <div class="rl-alerte rl-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rl-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="rl-alerte rl-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="rl-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
+}
+@if (message()) {
+  <div class="rl-alerte rl-alerte-ok">
+    <i class="fa-solid fa-circle-check"></i><span>{{ message() }}</span>
+    <button class="rl-lien" (click)="message.set('')">Fermer</button>
+  </div>
+}
+
+@if (chargement() || chargementAffectation()) {
+  <div class="rl-squelette"></div>
+} @else if (pphs().length === 0) {
+  <section class="rl-carte rl-vide">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <h2>Aucun plan en cours</h2>
+    <p>Les réalisations se saisissent sur un plan démarré par le chef de production.</p>
+  </section>
+} @else if (sansAffectation()) {
+  <section class="rl-carte rl-vide">
+    <i class="fa-solid fa-user-clock"></i>
+    <h2>Aucune affectation aujourd'hui</h2>
+    <p>Les réalisations se rattachent à l'affectation du jour : créez-la d'abord sur la page Affectation des employés.</p>
+    <a routerLink="/production/responsable-salle/affectation-employes" class="rl-bouton rl-bouton-primaire">
+      <i class="fa-solid fa-user-gear"></i> Aller à l'affectation
+    </a>
+  </section>
+} @else if (affectation()) { @let a = affectation()!;
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="rl-kpis">
+    <div class="rl-kpi rl-kpi-principal">
+      <span class="rl-lbl">Postes saisis</span>
+      <strong class="rl-grand">{{ nbSaisis() }} / {{ nbAffectes() }}</strong>
+      <span class="rl-muet">postes affectés ayant une réalisation</span>
+    </div>
+    <div class="rl-kpi">
+      <span class="rl-lbl">Poste en cours</span>
+      <strong class="rl-grand rl-grand-court">{{ posteCourant()?.libelle ?? '—' }}</strong>
+      <span class="rl-muet">{{ posteAffecte() ? 'affecté aujourd\'hui' : 'non affecté aujourd\'hui' }}</span>
+    </div>
+    <div class="rl-kpi">
+      <span class="rl-lbl">Objectif du poste</span>
+      <strong class="rl-grand">{{ objectifCourant() | number:'1.1-1' }}</strong>
+      <span class="rl-muet">{{ uniteDuPoste(posteChoisi()) }}</span>
+    </div>
+    <div class="rl-kpi" [class.rl-kpi-ok]="saisieCourante() && saisieCourante()!.pctRealisation >= 100">
+      <span class="rl-lbl">Taux de réalisation</span>
+      @if (saisieCourante(); as s) {
+        <strong class="rl-grand">{{ s.pctRealisation | number:'1.0-0' }} %</strong>
+        <span class="rl-muet">{{ s.quantiteRealisee | number:'1.1-1' }} {{ s.unite }} enregistrés</span>
+      } @else {
+        <strong class="rl-grand rl-muet">—</strong>
+        <span class="rl-muet">aucune réalisation enregistrée</span>
+      }
+    </div>
+  </section>
+
+  <!-- ═══ ONGLETS DES POSTES (depuis le référentiel serveur) ═══ -->
+  <nav class="rl-onglets" aria-label="Postes de production">
+    @for (p of postes(); track p.code) {
+      <button class="rl-onglet"
+              [class.rl-onglet-actif]="posteChoisi() === p.code"
+              [class.rl-onglet-hors]="!affectes().has(p.code)"
+              [class.rl-onglet-saisi]="saisiesParPoste().has(p.code)"
+              (click)="choisirPoste(p.code)">
+        @if (saisiesParPoste().has(p.code)) { <i class="fa-solid fa-circle-check"></i> }
+        @else if (affectes().has(p.code)) { <i class="fa-solid fa-circle"></i> }
+        @else { <i class="fa-regular fa-circle"></i> }
         <span>{{ p.libelle }}</span>
       </button>
     }
-  </div>
+  </nav>
 
-  <!-- POSTE NON AFFECTÉ -->
-  @if (!posteEstAffecte()) {
-    <div class="rp-not-affected">
+  @if (!posteAffecte() && posteCourant()) {
+    <div class="rl-alerte rl-alerte-info">
       <i class="fa-solid fa-circle-info"></i>
-      <span><strong>{{ libellePoste(posteActif()) }}</strong> n'est pas affecté aujourd'hui.</span>
-      <span class="rp-not-affected-hint">Rendez-vous dans <em>Affectation des Employés</em> pour ajouter ce poste.</span>
-    </div>
-  } @else {
-
-  <!-- KPI OBJECTIF + SAISIE DÉJÀ FAITE -->
-  <div class="rp-kpi-row">
-    <div class="rp-kpi-card rp-kpi-obj">
-      <div class="rp-kpi-ico rp-kpi-ico-y"><i class="fa-solid fa-bullseye"></i></div>
-      <div>
-        <div class="rp-kpi-lbl">Objectif du poste</div>
-        <div class="rp-kpi-val">{{ objectifDuPoste() | number:'1.1-1' }} <span class="rp-kpi-unit">{{ uniteDuPoste(posteActif()) }}</span></div>
-      </div>
-    </div>
-    @if (saisieActuelle(); as s) {
-      <div class="rp-kpi-card rp-kpi-real">
-        <div class="rp-kpi-ico rp-kpi-ico-g"><i class="fa-solid fa-chart-bar"></i></div>
-        <div>
-          <div class="rp-kpi-lbl">Déjà enregistré</div>
-          <div class="rp-kpi-val">{{ s.quantiteRealisee | number:'1.1-1' }} <span class="rp-kpi-unit">{{ s.unite }}</span></div>
-        </div>
-      </div>
-      <div class="rp-kpi-card rp-kpi-pct">
-        <div class="rp-kpi-ico rp-kpi-ico-b"><i class="fa-solid fa-percent"></i></div>
-        <div>
-          <div class="rp-kpi-lbl">Taux de réalisation</div>
-          <div class="rp-kpi-val">{{ s.pctRealisation | number:'1.0-0' }}<span class="rp-kpi-unit">%</span></div>
-        </div>
-      </div>
-    }
-  </div>
-
-  <!-- FORMULAIRE CARAMEL / CROQUETTE / ARACHIDE ENROBÉE -->
-  @if (posteActif() === 'CARAMEL' || posteActif() === 'CROQUETTE' || posteActif() === 'ARACHIDE_ENROBEE') {
-    <div class="card rp-form-card">
-      <div class="rp-form-header">
-        <div class="rp-form-ico"><i class="fa-solid fa-scale-balanced"></i></div>
-        <div>
-          <div class="rp-form-title">{{ libellePoste(posteActif()) }}</div>
-          <div class="rp-form-sub">Production exprimée en kilogrammes</div>
-        </div>
-      </div>
-      <div class="rp-form-note">
-        <i class="fa-solid fa-circle-info"></i>
-        Aucune conversion Kg → unités emballées disponible pour ce poste.
-      </div>
-      <div class="rp-form-body">
-        <div class="rp-field">
-          <label class="rp-label">Quantité produite <span class="rp-unit-hint">(Kg)</span></label>
-          <input type="number" class="input rp-input" [(ngModel)]="quantiteSimple" min="0" step="0.1" placeholder="0.0">
-        </div>
-      </div>
-      <div class="rp-form-footer">
-        <button class="btn rp-btn-submit" (click)="soumettreSimple()" [disabled]="saving()">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
-        </button>
-      </div>
+      <span><strong>{{ posteCourant()!.libelle }}</strong> n'est pas affecté aujourd'hui : aucune réalisation ne peut être saisie.</span>
     </div>
   }
 
-  <!-- FORMULAIRE CHIPS PLANTAIN -->
-  @if (posteActif() === 'CHIPS_PLANTAIN') {
-    <div class="card rp-form-card">
-      <div class="rp-form-header">
-        <div class="rp-form-ico"><i class="fa-solid fa-seedling"></i></div>
-        <div>
-          <div class="rp-form-title">Chips Plantain</div>
-          <div class="rp-form-sub">Épluchage + Découpe/Friture — soumis en une seule saisie</div>
+  <!-- ═══ FORMULAIRE DU POSTE ═══ -->
+  @if (posteCourant(); as p) {
+    <section class="rl-carte">
+      <header class="rl-carte-tete">
+        <div class="rl-titre">
+          <span class="rl-numero"><i class="fa-solid fa-pen-to-square"></i></span>
+          <div>
+            <h3>{{ p.libelle }}</h3>
+            <span class="rl-muet">
+              @switch (famille()) {
+                @case ('chips') { Épluchage et découpe/friture, saisis ensemble }
+                @case ('conditionnement') { Production en {{ p.unite }} et cartons produits }
+                @case ('etiquetage') { Production en sceaux étiquetés }
+                @case ('datage') { Étiquettes et sachets datés }
+                @default { Production exprimée en {{ p.unite }} }
+              }
+            </span>
+          </div>
         </div>
-      </div>
+        @if (saisieCourante(); as s) {
+          <span class="rl-chip-info"><i class="fa-solid fa-clock"></i> Enregistré à {{ s.dateEnregistrement | date:'HH:mm' }}</span>
+        }
+      </header>
 
-      @if (avertissementChips(); as w) {
-        <div class="rp-warn-banner"><i class="fa-solid fa-triangle-exclamation"></i> {{ w }}</div>
+      @if (posteAffecte()) {
+        <div class="rl-formulaire">
+
+          @switch (famille()) {
+            @case ('chips') {
+              <div class="rl-groupe">
+                <span class="rl-lbl">Épluchage</span>
+                <label class="rl-champ">
+                  <span class="rl-lbl-sous">{{ libelles.epluches }}</span>
+                  <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().epluches"
+                         (ngModelChange)="majChamp('epluches', $event)" />
+                </label>
+              </div>
+              <div class="rl-groupe">
+                <span class="rl-lbl">Découpe et friture</span>
+                <div class="rl-grille">
+                  <label class="rl-champ">
+                    <span class="rl-lbl-sous">{{ libelles.kgChips }} (kg)</span>
+                    <input class="rl-input" type="number" min="0" step="0.1" [ngModel]="form().kgChips"
+                           (ngModelChange)="majChamp('kgChips', $event)" />
+                  </label>
+                  <label class="rl-champ">
+                    <span class="rl-lbl-sous">{{ libelles.decoupes }}</span>
+                    <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().decoupes"
+                           (ngModelChange)="majChamp('decoupes', $event)" />
+                  </label>
+                </div>
+              </div>
+              @if (avertissementChips()) {
+                <div class="rl-alerte rl-alerte-avert">
+                  <i class="fa-solid fa-triangle-exclamation"></i><span>{{ avertissementChips() }} (avertissement, non bloquant)</span>
+                </div>
+              }
+            }
+
+            @case ('conditionnement') {
+              <div class="rl-grille">
+                <label class="rl-champ">
+                  <span class="rl-lbl-sous">Quantité produite ({{ p.unite }})</span>
+                  <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().quantite"
+                         (ngModelChange)="majChamp('quantite', $event)" />
+                </label>
+                <label class="rl-champ">
+                  <span class="rl-lbl-sous">{{ libelles.cartons }}</span>
+                  <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().cartons"
+                         (ngModelChange)="majChamp('cartons', $event)" />
+                </label>
+              </div>
+            }
+
+            @case ('etiquetage') {
+              <label class="rl-champ">
+                <span class="rl-lbl-sous">{{ libelles.sceaux }}</span>
+                <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().sceaux"
+                       (ngModelChange)="majChamp('sceaux', $event)" />
+              </label>
+            }
+
+            @case ('datage') {
+              <div class="rl-grille">
+                <label class="rl-champ">
+                  <span class="rl-lbl-sous">{{ libelles.etiquettes }}</span>
+                  <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().etiquettes"
+                         (ngModelChange)="majChamp('etiquettes', $event)" />
+                </label>
+                <label class="rl-champ">
+                  <span class="rl-lbl-sous">{{ libelles.sachets }}</span>
+                  <input class="rl-input" type="number" min="0" step="1" [ngModel]="form().sachets"
+                         (ngModelChange)="majChamp('sachets', $event)" />
+                </label>
+              </div>
+            }
+
+            @default {
+              <label class="rl-champ">
+                <span class="rl-lbl-sous">Quantité produite ({{ p.unite }})</span>
+                <input class="rl-input" type="number" min="0" step="0.1" [ngModel]="form().quantite"
+                       (ngModelChange)="majChamp('quantite', $event)" />
+              </label>
+            }
+          }
+
+          @if (erreursFormulaire().length > 0) {
+            <ul class="rl-erreurs">
+              @for (e of erreursFormulaire(); track e) { <li>{{ e }}</li> }
+            </ul>
+          }
+        </div>
+
+        <footer class="rl-carte-pied">
+          <span class="rl-muet">
+            @if (saisieCourante()) { Une réalisation existe déjà pour ce poste : elle sera remplacée. }
+            @else { Première réalisation pour ce poste aujourd'hui. }
+          </span>
+          <button class="rl-bouton rl-bouton-primaire" (click)="enregistrer()" [disabled]="!peutEnregistrer()">
+            @if (enregistrement()) { <i class="fa-solid fa-spinner rl-tourne"></i> Enregistrement… }
+            @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
+          </button>
+        </footer>
       }
-
-      <div class="rp-form-body">
-        <div class="rp-section-title">Épluchage</div>
-        <div class="rp-field">
-          <label class="rp-label">Nombre de régimes épluchés</label>
-          <input type="number" class="input rp-input" [(ngModel)]="chipsEpluches" min="0" step="1" placeholder="0">
-        </div>
-        <div class="rp-section-title" style="margin-top:14px">Découpe & Friture</div>
-        <div class="rp-grid-2">
-          <div class="rp-field">
-            <label class="rp-label">Kg produits <span class="rp-unit-hint">(Kg)</span></label>
-            <input type="number" class="input rp-input" [(ngModel)]="chipsKg" min="0" step="0.1" placeholder="0.0">
-          </div>
-          <div class="rp-field">
-            <label class="rp-label">Nombre de régimes découpés</label>
-            <input type="number" class="input rp-input" [(ngModel)]="chipsDecoupes" min="0" step="1" placeholder="0">
-          </div>
-        </div>
-      </div>
-      <div class="rp-form-footer">
-        <button class="btn rp-btn-submit" (click)="soumettreChips()" [disabled]="saving()">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
-        </button>
-      </div>
-    </div>
+    </section>
   }
 
-  <!-- FORMULAIRE CONDITIONNEMENT (5 postes) -->
-  @if (posteEstConditionnement()) {
-    <div class="card rp-form-card">
-      <div class="rp-form-header">
-        <div class="rp-form-ico"><i class="fa-solid fa-box-open"></i></div>
-        <div>
-          <div class="rp-form-title">{{ libellePoste(posteActif()) }}</div>
-          <div class="rp-form-sub">Production en {{ uniteDuPoste(posteActif()) }}</div>
-        </div>
-      </div>
-      <div class="rp-form-body">
-        <div class="rp-grid-2">
-          <div class="rp-field">
-            <label class="rp-label">Quantité produite <span class="rp-unit-hint">({{ uniteDuPoste(posteActif()) }})</span></label>
-            <input type="number" class="input rp-input" [(ngModel)]="conditionnementQuantite" min="0" step="1" placeholder="0">
-          </div>
-          <div class="rp-field">
-            <label class="rp-label">Nombre de cartons produits</label>
-            <input type="number" class="input rp-input" [(ngModel)]="conditionnementCartons" min="0" step="1" placeholder="0">
+  <!-- ═══ RÉCAPITULATIF DU JOUR ═══ -->
+  @if (a.saisies.length) {
+    <section class="rl-carte">
+      <header class="rl-carte-tete">
+        <div class="rl-titre">
+          <span class="rl-numero"><i class="fa-solid fa-chart-pie"></i></span>
+          <div>
+            <h3>Réalisations du jour</h3>
+            <span class="rl-muet">Quantités dans l'unité de chaque poste ; elles ne sont pas additionnées.</span>
           </div>
         </div>
-      </div>
-      <div class="rp-form-footer">
-        <button class="btn rp-btn-submit" (click)="soumettreConditionnement()" [disabled]="saving()">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- FORMULAIRE ÉTIQUETAGE -->
-  @if (posteActif() === 'ETIQUETAGE') {
-    <div class="card rp-form-card">
-      <div class="rp-form-header">
-        <div class="rp-form-ico"><i class="fa-solid fa-tag"></i></div>
-        <div>
-          <div class="rp-form-title">Étiquetage</div>
-          <div class="rp-form-sub">Production exprimée en sceaux étiquetés</div>
-        </div>
-      </div>
-      <div class="rp-form-body">
-        <div class="rp-field">
-          <label class="rp-label">Nombre de sceaux étiquetés</label>
-          <input type="number" class="input rp-input" [(ngModel)]="etiquetageSceaux" min="0" step="1" placeholder="0">
-        </div>
-      </div>
-      <div class="rp-form-footer">
-        <button class="btn rp-btn-submit" (click)="soumettreEtiquetage()" [disabled]="saving()">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- FORMULAIRE DATAGE -->
-  @if (posteActif() === 'DATAGE') {
-    <div class="card rp-form-card">
-      <div class="rp-form-header">
-        <div class="rp-form-ico"><i class="fa-solid fa-calendar-check"></i></div>
-        <div>
-          <div class="rp-form-title">Datage</div>
-          <div class="rp-form-sub">Étiquettes et sachets datés</div>
-        </div>
-      </div>
-      <div class="rp-form-body">
-        <div class="rp-grid-2">
-          <div class="rp-field">
-            <label class="rp-label">Nombre d'étiquettes datées</label>
-            <input type="number" class="input rp-input" [(ngModel)]="datageEtiquettes" min="0" step="1" placeholder="0">
-          </div>
-          <div class="rp-field">
-            <label class="rp-label">Nombre de sachets datés</label>
-            <input type="number" class="input rp-input" [(ngModel)]="datageSachets" min="0" step="1" placeholder="0">
-          </div>
-        </div>
-      </div>
-      <div class="rp-form-footer">
-        <button class="btn rp-btn-submit" (click)="soumettreDatage()" [disabled]="saving()">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la réalisation }
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- RÉCAP SAISIES DU JOUR -->
-  @if (affectation()!.saisies.length) {
-    <div class="card">
-      <div class="rp-recap-header">
-        <div class="rp-recap-title">
-          <div class="rp-recap-ico"><i class="fa-solid fa-chart-pie"></i></div>
-          <span>Récapitulatif des saisies du jour</span>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
+      </header>
+      <div class="rl-table-wrap">
+        <table class="rl-table">
           <thead>
             <tr>
               <th>Poste</th>
-              <th class="text-right">Réalisé</th>
-              <th class="text-right">Objectif</th>
+              <th class="rl-num">Réalisé</th>
+              <th class="rl-num">Objectif</th>
               <th>Progression</th>
               <th>Avertissements</th>
             </tr>
           </thead>
           <tbody>
-            @for (s of affectation()!.saisies; track s.codePoste) {
+            @for (s of a.saisies; track s.codePoste) {
               <tr>
                 <td><strong>{{ s.libellePoste }}</strong></td>
-                <td class="text-right mono">{{ s.quantiteRealisee | number:'1.1-1' }} <span class="text-muted">{{ s.unite }}</span></td>
-                <td class="text-right mono text-muted">{{ s.objectifAjuste | number:'1.1-1' }}</td>
+                <td class="rl-num">{{ s.quantiteRealisee | number:'1.1-1' }} <span class="rl-unite">{{ s.unite }}</span></td>
+                <td class="rl-num rl-muet">{{ s.objectifAjuste | number:'1.1-1' }}</td>
                 <td>
-                  <div class="rp-prog-wrap">
-                    <div class="rp-prog-track">
-                      <div class="rp-prog-bar"
-                           [style.width.%]="s.pctRealisation"
-                           [class.rp-prog-g]="s.pctRealisation >= 100"
-                           [class.rp-prog-y]="s.pctRealisation >= 50 && s.pctRealisation < 100"
-                           [class.rp-prog-r]="s.pctRealisation < 50">
-                      </div>
+                  <div class="rl-progression">
+                    <div class="rl-piste">
+                      <div class="rl-barre"
+                           [class.rl-barre-ok]="s.pctRealisation >= 100"
+                           [class.rl-barre-moyen]="s.pctRealisation >= 50 && s.pctRealisation < 100"
+                           [class.rl-barre-bas]="s.pctRealisation < 50"
+                           [style.width.%]="borne(s.pctRealisation)"></div>
                     </div>
-                    <span class="rp-prog-pct">{{ s.pctRealisation | number:'1.0-0' }}%</span>
+                    <span class="rl-pct">{{ s.pctRealisation | number:'1.0-0' }} %</span>
                   </div>
                 </td>
                 <td>
                   @if (s.warnings.length) {
-                    <span class="rp-warn-chip"><i class="fa-solid fa-triangle-exclamation"></i> {{ s.warnings[0] }}</span>
+                    <span class="rl-chip-alerte"><i class="fa-solid fa-triangle-exclamation"></i> {{ s.warnings[0] }}</span>
                   } @else {
-                    <span class="text-muted">—</span>
+                    <span class="rl-muet">—</span>
                   }
                 </td>
               </tr>
-            } @empty {
-              <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune saisie enregistrée pour cette affectation</td></tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   }
+}
 
-  }<!-- fin posteEstAffecte -->
-  }<!-- fin affectation -->
-}<!-- fin loading -->
+</div>

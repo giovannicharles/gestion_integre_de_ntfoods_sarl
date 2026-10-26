@@ -1,43 +1,126 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-file-lines ph-ico"></i>
+<div class="rp">
+
+<header class="rp-hero">
+  <div class="rp-hero-gauche">
+    <i class="fa-solid fa-file-lines rp-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Rapports</h1>
-      <p class="ph-sub">Consultation et téléchargement (CSV / impression PDF)</p>
+      <div class="rp-hero-kicker">Chef machiniste</div>
+      <h1 class="rp-hero-titre">Rapports de broyage</h1>
+      <p class="rp-hero-sous">
+        Choisissez un rapport et une période, vérifiez l'aperçu, puis exportez-le en CSV ou en PDF.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="rp-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.rp-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-<div class="gap-note">
-  <i class="fa-solid fa-triangle-exclamation"></i>
-  <div>
-    <strong>Limite backend actuelle :</strong> les endpoints <code>/production/rapports/*</code> n'autorisent
-    que Chef de Production, Responsable de Salle et Directeur Général. Les rapports ci-dessous sont donc générés
-    directement depuis les données de broyage auxquelles ce rôle a réellement accès, au format CSV ou via
-    impression navigateur (« Enregistrer en PDF »), plutôt que via un export serveur qui échouerait.
+@if (sessionExpiree()) {
+  <div class="rp-alerte rp-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rp-lien">Se reconnecter</a>
   </div>
-</div>
+} @else if (erreur()) {
+  <div class="rp-alerte rp-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="rp-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
 
-@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+<!-- Période -->
+<section class="rp-carte">
+  <div class="rp-filtres">
+    <div class="rp-segments">
+      @for (p of periodes; track p.code) {
+        <button class="rp-segment" [class.rp-segment-actif]="periode() === p.code" (click)="choisirPeriode(p.code)">{{ p.libelle }}</button>
+      }
+    </div>
+    <div class="rp-dates">
+      <label class="rp-champ">
+        <span class="rp-lbl">Du</span>
+        <input type="date" class="rp-input" [ngModel]="debut()" (ngModelChange)="debut.set($event)">
+      </label>
+      <label class="rp-champ">
+        <span class="rp-lbl">Au</span>
+        <input type="date" class="rp-input" [ngModel]="fin()" (ngModelChange)="fin.set($event)">
+      </label>
+      <button class="rp-bouton rp-bouton-primaire" (click)="appliquerPersonnalisee()" [disabled]="dateInvalide() || chargement()">Appliquer</button>
+    </div>
+  </div>
+  @if (dateInvalide()) {
+    <p class="rp-aide rp-aide-erreur">La date de début doit être antérieure à la date de fin.</p>
+  } @else {
+    <p class="rp-aide">Du {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}. Les rapports jour et mois utilisent leur propre période.</p>
+  }
+</section>
 
-<div class="card">
-  <div class="toolbar-row">
-    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
-    <span class="text-muted">(utilisé pour les rapports hebdomadaire / pertes / performances / objectifs / réalisations)</span>
+<!-- Choix du rapport -->
+<section class="rp-grille">
+  @for (r of rapports; track r.code) {
+    <button class="rp-rapport" [class.rp-rapport-actif]="rapportChoisi() === r.code" (click)="choisirRapport(r)">
+      <i class="fa-solid {{ r.icone }} rp-rapport-ico"></i>
+      <strong class="rp-rapport-titre">{{ r.titre }}</strong>
+      <span class="rp-rapport-desc">{{ r.description }}</span>
+    </button>
+  }
+</section>
+
+<!-- Aperçu -->
+<section class="rp-carte">
+  <div class="rp-entete">
+    <div>
+      <h2 class="rp-titre">{{ contenu().titre }}</h2>
+      <span class="rp-meta">{{ nbLignes() }} ligne(s) · {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}</span>
+    </div>
+    <div class="rp-actions">
+      <button class="rp-bouton" (click)="exporterCsv()" [disabled]="nbLignes() === 0 || chargement()">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
+      <button class="rp-bouton rp-bouton-primaire" (click)="imprimer()" [disabled]="chargement()">
+        <i class="fa-solid fa-file-pdf"></i> PDF / Imprimer
+      </button>
+    </div>
   </div>
 
-  <div class="card-grid-auto" style="margin-top:var(--sp-3,12px)">
-    @for (r of rapports; track r.type) {
-      <div class="card doc-pick-card">
-        <div class="doc-pick-ico"><i class="fa-solid {{ r.icone }}"></i></div>
-        <div class="doc-pick-title">{{ r.titre }}</div>
-        <div class="doc-pick-desc">{{ r.description }}</div>
-        <div class="doc-pick-actions">
-          <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'csv')"><i class="fa-solid fa-file-csv"></i> Excel/CSV</button>
-          <button class="btn btn-sm btn-ghost" [disabled]="loading()" (click)="telecharger(r.type, 'print')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-        </div>
-      </div>
-    }
-  </div>
+  @if (chargement()) {
+    <div class="rp-squelette"></div>
+  } @else if (nbLignes() === 0) {
+    <p class="rp-vide"><i class="fa-solid fa-inbox"></i> {{ contenu().vide }}</p>
+  } @else {
+    <div class="rp-table-wrap">
+      <table class="rp-table">
+        <thead>
+          <tr>
+            @for (c of contenu().colonnes; track $index) { <th [class.rp-num]="$index > 0">{{ c }}</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of contenu().lignes; track $index) {
+            <tr>
+              @for (v of l; track $index) {
+                <td [class.rp-num]="$index > 0">
+                  @if (estNombre(v)) { {{ v | number:'1.0-1' }} } @else { {{ v }} }
+                </td>
+              }
+            </tr>
+          }
+          @if (contenu().total; as t) {
+            <tr class="rp-total">
+              @for (v of t; track $index) {
+                <td [class.rp-num]="$index > 0">
+                  @if (estNombre(v)) { {{ v | number:'1.0-1' }} } @else { {{ v }} }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
 </div>

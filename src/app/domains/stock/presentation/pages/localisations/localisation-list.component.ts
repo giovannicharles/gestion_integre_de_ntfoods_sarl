@@ -2,6 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../core/http/api.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface StockLocation {
   id: string;
@@ -96,12 +97,13 @@ export class LocalisationListComponent implements OnInit {
 
   assignCommercial(locationId: string, commercialId: string): void {
     if (!commercialId) return;
-    this.api.post(`stock/locations/${locationId}/assign`, { commercialId }).subscribe({
+    // Contrat de l'API : PUT /stock/locations/{id}/assign?commercialId=… (paramètre de requête, pas de corps).
+    this.api.put(`stock/locations/${locationId}/assign?commercialId=${encodeURIComponent(commercialId.trim())}`, {}).subscribe({
       next: () => {
         this.loadLocations();
         this.showToast('Commercial assigné avec succès', 'success');
       },
-      error: () => this.showToast('Erreur lors de l\'assignation', 'error')
+      error: e => this.showToast('Assignation impossible : ' + extractApiError(e), 'error')
     });
   }
 

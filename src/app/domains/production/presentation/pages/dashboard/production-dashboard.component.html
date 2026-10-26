@@ -1,407 +1,404 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-industry ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="db-hero">
+  <div class="db-hero-gauche">
+    <div class="db-hero-ico"><i class="fa-solid fa-industry"></i></div>
     <div>
-      <h1 class="ph-title">Tableau de Bord Production</h1>
-      <p class="ph-sub">{{ plan().semaine }} — {{ plan().dateDebut }} au {{ plan().dateFin }}</p>
+      <div class="db-hero-kicker">Production · {{ aujourdhui | date:'EEEE dd MMMM yyyy' }}</div>
+      <h1 class="db-hero-titre">Tableau de bord</h1>
+      <p class="db-hero-sous">
+        @if (periodeSemaine(); as p) { Semaine du {{ p.debut | date:'dd/MM' }} au {{ p.fin | date:'dd/MM/yyyy' }} }
+        @if (semaineAffichee()) { · plan {{ semaineAffichee() }} }
+        @if (derniereMaj(); as d) { · mis à jour à {{ d | date:'HH:mm' }} }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <a routerLink="/production/saisie" class="btn btn-primary">
-      <i class="fa-solid fa-pen-to-square"></i> Saisie Journalière
-    </a>
-    <button class="btn btn-primary" (click)="showCreerOF.set(true)">
-      <i class="fa-solid fa-plus"></i> Nouvel OF
-    </button>
-    <a routerLink="/production/lots" class="btn btn-ghost">
-      <i class="fa-solid fa-box"></i> Déclarer lot
-    </a>
-    <a routerLink="/production/rapports" class="btn btn-ghost">
-      <i class="fa-solid fa-file-lines"></i> Rapports
-    </a>
-    <a routerLink="/production/besoins" class="btn btn-ghost">
-      <i class="fa-solid fa-triangle-exclamation"></i> Besoins
-    </a>
+  <div class="db-actions">
+    <a routerLink="/production/saisie" class="db-bouton db-bouton-verre"><i class="fa-solid fa-pen-to-square"></i> Registres</a>
+    <a routerLink="/production/lots" class="db-bouton db-bouton-verre"><i class="fa-solid fa-box"></i> Lots</a>
+    <a routerLink="/production/besoins" class="db-bouton db-bouton-verre"><i class="fa-solid fa-triangle-exclamation"></i> Besoins</a>
+    <a routerLink="/production/rapports" class="db-bouton db-bouton-verre"><i class="fa-solid fa-file-lines"></i> Rapports</a>
+    <button class="db-bouton db-bouton-blanc" (click)="showCreerOF.set(true)"><i class="fa-solid fa-plus"></i> Nouvel OF</button>
   </div>
+</header>
+
+@if (erreur()) {
+  <div class="db-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="db-bouton db-bouton-petit db-bouton-rouge" (click)="chargerDonnees()">Réessayer</button>
+  </div>
+}
+
+@if (loading() && !dashboard()) {
+  <div class="db-squelette"></div>
+  <div class="db-squelette db-squelette-court"></div>
+} @else {
+
+<!-- ═══ INDICATEURS DE LA SEMAINE ═══ -->
+<section class="db-kpis">
+  <div class="db-kpi db-kpi-principal">
+    <span class="db-kpi-lbl">Production validée (semaine)</span>
+    <span class="db-kpi-val">{{ dashboard()?.quantiteKgSemaine ?? 0 | number:'1.0-1' }}<small> kg</small></span>
+    <span class="db-kpi-meta">{{ dashboard()?.cartonsSemaine ?? 0 }} carton(s) · lots validés par le stock cette semaine (date de validation)</span>
+  </div>
+  <div class="db-kpi" [class.db-kpi-alerte]="nbLotsDeclares() > 0">
+    <span class="db-kpi-lbl">Lots en attente</span>
+    <span class="db-kpi-val">{{ nbLotsDeclares() }}</span>
+    <span class="db-kpi-meta">{{ nbLotsValides() }} validé(s) · {{ nbLotsRejetes() }} rejeté(s)</span>
+  </div>
+  <div class="db-kpi">
+    <span class="db-kpi-lbl">Fiches enregistrées (semaine)</span>
+    <span class="db-kpi-val">{{ fichesSemaine() }}</span>
+    <span class="db-kpi-meta">fiches de production journalières</span>
+  </div>
+  <div class="db-kpi">
+    <span class="db-kpi-lbl">Ordres de fabrication</span>
+    <span class="db-kpi-val">{{ ofEnCours() }}<small> en cours</small></span>
+    <span class="db-kpi-meta">{{ ofPlanifies() }} planifié(s) · {{ ofHonores() }} honoré(s)</span>
+  </div>
+  <div class="db-kpi">
+    <span class="db-kpi-lbl">Avancement du plan</span>
+    <span class="db-kpi-val">{{ tauxAvancementPPH() }} %</span>
+    <div class="db-barre"><div class="db-barre-fill" [class.db-fill-ok]="tauxAvancementPPH() >= 100" [style.width.%]="tauxAvancementPPH()"></div></div>
+    <span class="db-kpi-meta">{{ pphEnCoursReference() ?? 'aucun plan en cours' }}</span>
+  </div>
+  <div class="db-kpi">
+    <span class="db-kpi-lbl">Taux de charge des OF</span>
+    <span class="db-kpi-val">{{ tauxCharge() }} %</span>
+    <div class="db-barre"><div class="db-barre-fill" [class.db-fill-ok]="tauxCharge() >= 100" [style.width.%]="tauxCharge()"></div></div>
+    <span class="db-kpi-meta">produit sur demandé, OF non annulés</span>
+  </div>
+</section>
+
+<!-- ═══ PLAN EN COURS ET LOTS RÉCENTS ═══ -->
+<div class="db-deux">
+  <section class="db-carte">
+    <header class="db-carte-tete">
+      <h2><i class="fa-solid fa-calendar-week"></i> Plan en cours</h2>
+      <a routerLink="/production/plan" class="db-lien">Voir le plan <i class="fa-solid fa-arrow-right"></i></a>
+    </header>
+    @if (pphEnCours(); as p) {
+      <p class="db-note"><span class="db-code mono">{{ p.referencePPH }}</span> · {{ p.semaine }} · {{ p.dateDebut | date:'dd/MM' }} au {{ p.dateFin | date:'dd/MM' }}</p>
+      <ul class="db-liste">
+        @for (ligne of p.lignes; track ligne.codeProduit) {
+          <li>
+            <div class="db-liste-tete">
+              <span class="db-nom">{{ ligne.nomProduit }} <span class="db-muet mono">{{ ligne.codeProduit }}</span></span>
+              <span class="mono db-pct" [ngClass]="'db-teinte-' + teinte(progression(ligne.productionRealisee, ligne.objectifSemaine))">
+                {{ ligne.productionRealisee }} / {{ ligne.objectifSemaine }}
+              </span>
+            </div>
+            <div class="db-barre"><div class="db-barre-fill" [class.db-fill-ok]="progression(ligne.productionRealisee, ligne.objectifSemaine) >= 100"
+                 [style.width.%]="progression(ligne.productionRealisee, ligne.objectifSemaine)"></div></div>
+          </li>
+        } @empty {
+          <li class="db-vide-court">Aucune ligne de production planifiée.</li>
+        }
+      </ul>
+    } @else {
+      <div class="db-vide">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <h3>Aucun plan en cours</h3>
+        <p>Un plan passe en cours lorsqu'il est démarré depuis la page des plans.</p>
+      </div>
+    }
+  </section>
+
+  <section class="db-carte">
+    <header class="db-carte-tete">
+      <h2><i class="fa-solid fa-boxes-packing"></i> Derniers lots</h2>
+      <a routerLink="/production/lots" class="db-lien">Tous les lots <i class="fa-solid fa-arrow-right"></i></a>
+    </header>
+    @if (lotsRecents().length) {
+      <ul class="db-lots">
+        @for (l of lotsRecents(); track l.id) {
+          <li>
+            <div class="db-lot-infos">
+              <span class="db-code mono">{{ l.id }}</span>
+              <span class="db-nom">{{ l.designationProduit }}</span>
+              <span class="db-muet">{{ l.dateProduction | date:'dd/MM/yyyy' }} · {{ l.declaredQuantityKg }} kg</span>
+            </div>
+            <span class="db-statut" [class]="'db-statut ' + classeStatutLot(l.statut)">{{ libelleStatutLot(l.statut) }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="db-vide">
+        <i class="fa-solid fa-box-open"></i>
+        <h3>Aucun lot déclaré</h3>
+        <p>Les lots déclarés par la production apparaîtront ici.</p>
+      </div>
+    }
+  </section>
 </div>
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-calendar-week"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Plan semaine</div>
-      <div class="kpi-val">{{ plan().semaine }}</div>
-      <div class="kpi-meta">{{ pphEnCoursReference() ?? 'Aucun PPH en cours' }}</div>
+<!-- ═══ ORDRES DE FABRICATION ═══ -->
+<section class="db-carte">
+  <header class="db-carte-tete">
+    <h2><i class="fa-solid fa-clipboard-list"></i> Ordres de fabrication</h2>
+    <div class="db-pastilles">
+      <span class="db-pastille db-pastille-attente">{{ ofEnCours() }} en cours</span>
+      <span class="db-pastille db-pastille-neutre">{{ ofPlanifies() }} planifié(s)</span>
+      <span class="db-pastille db-pastille-ok">{{ ofHonores() }} honoré(s)</span>
     </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-boxes-stacked"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots déclarés</div>
-      <div class="kpi-val">{{ nbLotsDeclares() }}</div>
-      <div class="kpi-meta">{{ nbLotsValides() }} validés stock</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Quantité produite (semaine)</div>
-      <div class="kpi-val">{{ dashboard()?.quantiteKgSemaine ?? 0 }} kg</div>
-      <div class="kpi-meta">{{ dashboard()?.cartonsSemaine ?? 0 }} cartons</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-clipboard-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Fiches enregistrées (semaine)</div>
-      <div class="kpi-val">{{ fichesSemaine() }}</div>
-      <div class="kpi-meta">fiches journalières</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clipboard-list"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">OF planifiés</div>
-      <div class="kpi-val">{{ ofPlanifies() }}</div>
-      <div class="kpi-meta">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Avancement PPH</div>
-      <div class="kpi-val">{{ tauxAvancementPPH() }}%</div>
-      <div class="kpi-meta">{{ pphEnCoursReference() ?? '—' }}</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-hourglass-half"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots en attente</div>
-      <div class="kpi-val">{{ lotsEnAttente() }}</div>
-      <div class="kpi-meta">validation stock</div>
-    </div>
-  </div>
-</div>
-
-<!-- ORDRES DE FABRICATION -->
-<div class="card">
-  <div class="card-hd">
-    <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Ordres de fabrication — taux de charge {{ tauxCharge() }}%</span>
-    <span class="badge badge-secondary badge-sm">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</span>
-  </div>
+  </header>
   <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>OF</th><th>PPH</th><th>Produit</th><th>Demandé</th><th>Réalisé</th><th>Avancement</th><th>Échéance</th><th>Statut</th><th>Actions</th></tr></thead>
+    <table class="db-table">
+      <thead>
+        <tr>
+          <th>OF</th><th>PPH</th><th>Produit</th><th class="num">Demandé</th><th class="num">Réalisé</th>
+          <th>Avancement</th><th>Échéance</th><th>Statut</th><th class="db-col-actions">Actions</th>
+        </tr>
+      </thead>
       <tbody>
         @for (o of ordres(); track o.idOF) {
-        <tr>
-          <td class="mono fw-bold">{{ o.idOF }}</td>
-          <td class="mono">{{ o.referencePPH }}</td>
-          <td>
-            <span class="badge bg-neutral">{{ o.codeProduit }}</span>
-            {{ o.designationProduit }}
-          </td>
-          <td class="mono">{{ o.qteDemandee }}</td>
-          <td class="mono">{{ o.qteRealisee }}</td>
-          <td>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="prog-bar-wrap" style="max-width:110px"><div [class]="progressClass(progression(o.qteRealisee,o.qteDemandee))" [style.width.%]="progression(o.qteRealisee,o.qteDemandee)"></div></div>
-              <span class="mono">{{ progression(o.qteRealisee,o.qteDemandee) }}%</span>
-            </div>
-          </td>
-          <td class="mono">{{ o.dateButoir ? (o.dateButoir | date:'dd MMM':'':'fr') : '—' }}</td>
-          <td>
-            @if (o.statut === 'HONORE') { <span class="badge bg-success badge-sm">Honoré</span> }
-            @else if (o.statut === 'EN_COURS') { <span class="badge bg-orange badge-sm">En cours</span> }
-            @else if (o.statut === 'ANNULE') { <span class="badge bg-red badge-sm">Annulé</span> }
-            @else { <span class="badge bg-neutral badge-sm">Planifié</span> }
-          </td>
-          <td>
-            <div class="row-actions">
-              <button class="btn btn-sm btn-ghost" (click)="voirDetailOF(o.idOF)">Détails</button>
-              <ng-container *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'ADMIN']">
+          <tr>
+            <td><span class="db-code mono">{{ o.idOF }}</span></td>
+            <td class="mono db-muet">{{ o.referencePPH }}</td>
+            <td>
+              <div class="db-produit"><span class="db-nom">{{ o.designationProduit }}</span><span class="db-muet mono">{{ o.codeProduit }}</span></div>
+            </td>
+            <td class="num mono">{{ o.qteDemandee }}</td>
+            <td class="num mono">{{ o.qteRealisee }}</td>
+            <td>
+              <div class="db-progres">
+                <div class="db-barre"><div class="db-barre-fill" [class.db-fill-ok]="progression(o.qteRealisee, o.qteDemandee) >= 100"
+                     [style.width.%]="progression(o.qteRealisee, o.qteDemandee)"></div></div>
+                <span class="mono db-pct-court">{{ progression(o.qteRealisee, o.qteDemandee) }} %</span>
+              </div>
+            </td>
+            <td class="mono">{{ o.dateButoir ? (o.dateButoir | date:'dd/MM/yyyy') : '—' }}</td>
+            <td><span class="db-statut" [class]="'db-statut ' + classeStatutOF(o.statut)">{{ libelleStatutOF(o.statut) }}</span></td>
+            <td class="db-col-actions">
+              <div class="db-actions-ligne">
+                <button class="db-bouton db-bouton-petit db-bouton-contour" (click)="voirDetailOF(o.idOF)">Détail</button>
                 @if (o.statut === 'PLANIFIE') {
-                  <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
+                  <button class="db-bouton db-bouton-petit db-bouton-primaire" (click)="demarrerOF(o.idOF)">Démarrer</button>
                 }
                 @if (o.statut === 'EN_COURS') {
-                  <button class="btn btn-sm btn-primary" (click)="ouvrirProduire(o.idOF)">Produire</button>
+                  <button class="db-bouton db-bouton-petit db-bouton-primaire" (click)="ouvrirProduire(o.idOF)">Produire</button>
                 }
                 @if (o.statut !== 'HONORE' && o.statut !== 'ANNULE') {
-                  <button class="btn btn-sm btn-danger" (click)="annulerOF(o.idOF)">Annuler</button>
+                  <button class="db-bouton db-bouton-petit db-bouton-contour-rouge" (click)="annulerOF(o.idOF)">Annuler</button>
                 }
-              </ng-container>
-            </div>
-          </td>
-        </tr>
-        }
-        @empty {
-        <tr><td colspan="9" class="text-center text-muted">Aucun ordre de fabrication</td></tr>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9">
+            <div class="db-vide"><i class="fa-solid fa-inbox"></i><h3>Aucun ordre de fabrication</h3><p>Créez un OF à partir d'un plan de production.</p></div>
+          </td></tr>
         }
       </tbody>
     </table>
   </div>
-</div>
+</section>
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Avancement Produits Finis — {{ pphEnCours()?.referencePPH ?? 'Aucun PPH en cours' }}</h2>
-    <a routerLink="/production/plan" class="btn btn-ghost btn-sm">Voir plan complet</a>
-  </div>
-  @for (ligne of (pphEnCours()?.lignes ?? []); track ligne.codeProduit) {
-    <div class="prod-ligne">
-      <div class="prod-info">
-        <span class="prod-code"><span class="badge bg-neutral">{{ ligne.codeProduit }}</span></span>
-        <span class="prod-nom">{{ ligne.nomProduit }}</span>
-        <span class="prod-qty">{{ ligne.productionRealisee }} / {{ ligne.objectifSemaine }}</span>
-      </div>
-      <div class="prog-wrap">
-        <div class="prog-track">
-          <div
-            [class]="progressClass(progression(ligne.productionRealisee, ligne.objectifSemaine))"
-            [style.width.%]="progression(ligne.productionRealisee, ligne.objectifSemaine)"
-          ></div>
-        </div>
-        <span class="prog-pct">{{ progression(ligne.productionRealisee, ligne.objectifSemaine) }}%</span>
-      </div>
-    </div>
-  } @empty {
-    <p class="text-muted" style="padding: var(--sp-3)">Aucune ligne de production planifiée.</p>
-  }
-</div>
+<!-- ═══ STATISTIQUES ═══ -->
+<section class="db-stats-entete">
+  <h2><i class="fa-solid fa-chart-line"></i> Tendances sur 4 semaines</h2>
+  <span class="db-note">calculées à partir des rapports hebdomadaires</span>
+</section>
 
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-users"></i> Registres & Présences</h2>
-      <a routerLink="/production/employes" class="btn btn-ghost btn-sm">Voir tout</a>
-    </div>
-    <p class="text-muted" style="padding: var(--sp-3)">
-      Consultez les registres de présence journaliers depuis la page Employés.
-    </p>
+@if (erreurStats()) {
+  <div class="db-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ erreurStats() }}</span>
+    <button class="db-bouton db-bouton-petit db-bouton-rouge" (click)="chargerDonnees()">Réessayer</button>
   </div>
-
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-boxes-packing"></i> Derniers Lots</h2>
-      <a routerLink="/production/lots" class="btn btn-ghost btn-sm">Voir tout</a>
-    </div>
-    @for (l of lots(); track l.id) {
-      <div class="lot-row">
-        <span class="badge bg-neutral">{{ l.codeProduit }}</span>
-        <span class="lot-qty">{{ l.declaredQuantityKg }} kg</span>
-        <span [class]="l.statut === 'VALIDATED_BY_STOCK' ? 'badge bg-success' : 'badge bg-orange'">
-          {{ l.statut === 'VALIDATED_BY_STOCK' ? 'Stock ✓' : 'Déclaré' }}
-        </span>
-      </div>
-    } @empty {
-      <p class="text-muted" style="padding: var(--sp-3)">Aucun lot déclaré récemment.</p>
-    }
-  </div>
-</div>
-
-<!-- ═══════════ STATISTIQUES & GRAPHIQUES (Section 2 du cahier des charges) ═══════════ -->
-<div class="ph" style="margin-top: var(--sp-5)">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
-    <div>
-      <h1 class="ph-title" style="font-size:1.1rem">Statistiques & Tendances</h1>
-      <p class="ph-sub">4 dernières semaines — données calculées automatiquement</p>
-    </div>
-  </div>
-</div>
+}
 
 @if (chargementStats()) {
-  <p class="text-muted" style="padding: var(--sp-3)">Chargement des statistiques...</p>
+  <div class="db-squelette db-squelette-court"></div>
 } @else {
 
-@if (comparaisonSemaineNvsN1(); as comp) {
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Production — Semaine actuelle</div>
-      <div class="kpi-val">{{ comp.actuelle }} kg</div>
-      <div class="kpi-meta">Semaine précédente : {{ comp.precedente }} kg</div>
-    </div>
+  @if (comparaisonSemaineNvsN1(); as comp) {
+    <section class="db-kpis db-kpis-3">
+      <div class="db-kpi">
+        <span class="db-kpi-lbl">Production — semaine en cours</span>
+        <span class="db-kpi-val">{{ comp.actuelle | number:'1.0-1' }}<small> kg</small></span>
+        <span class="db-kpi-meta">semaine précédente : {{ comp.precedente | number:'1.0-1' }} kg</span>
+      </div>
+      <div class="db-kpi" [class.db-kpi-hausse]="(comp.variation ?? 0) >= 0" [class.db-kpi-baisse]="(comp.variation ?? 0) < 0">
+        <span class="db-kpi-lbl">Variation semaine / semaine précédente</span>
+        <span class="db-kpi-val">
+          @if (comp.variation === null) { n.d. } @else { {{ comp.variation > 0 ? '+' : '' }}{{ comp.variation }} % }
+        </span>
+        <span class="db-kpi-meta">{{ comp.variation === null ? 'pas de production la semaine précédente' : 'comparaison automatique' }}</span>
+      </div>
+      <div class="db-kpi">
+        <span class="db-kpi-lbl">Fûts nets (semaine)</span>
+        <span class="db-kpi-val">{{ rapportSemaineCourante()?.totalFutsNets ?? 0 }}</span>
+        <span class="db-kpi-meta">{{ pphs().length }} plan(s) au total</span>
+      </div>
+    </section>
+  }
+
+  <div class="db-deux">
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-chart-line"></i> Production validée (kg)</h2></header>
+      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProductionKg()" [height]="220" />
+    </section>
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-triangle-exclamation"></i> Taux de pertes (%)</h2></header>
+      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="220" />
+    </section>
   </div>
-  <div class="kpi-card" [class.kp-g]="comp.variation >= 0" [class.kp-r]="comp.variation < 0">
-    <div class="kpi-ico" [class.ig]="comp.variation >= 0" [class.ir]="comp.variation < 0">
-      <i class="fa-solid" [class.fa-arrow-trend-up]="comp.variation >= 0" [class.fa-arrow-trend-down]="comp.variation < 0"></i>
-    </div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Variation S / S-1</div>
-      <div class="kpi-val">{{ comp.variation > 0 ? '+' : '' }}{{ comp.variation }}%</div>
-      <div class="kpi-meta">comparaison automatique</div>
-    </div>
+
+  <div class="db-deux">
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-bottle-droplet"></i> Fûts sortis et nets</h2></header>
+      <app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieFuts()" [height]="220" />
+    </section>
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-percent"></i> Avancement par bon de commande</h2><span class="db-note">semaine en cours</span></header>
+      @if (labelsAvancementBC().length) {
+        <app-mini-chart type="bar" [labels]="labelsAvancementBC()" [series]="serieAvancementBC()" [height]="220" />
+      } @else { <p class="db-vide-court">Aucun bon de commande actif cette semaine.</p> }
+    </section>
   </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-database"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Nombre de PPH</div>
-      <div class="kpi-val">{{ pphs().length }}</div>
-      <div class="kpi-meta">tous statuts confondus</div>
-    </div>
+
+  <div class="db-deux">
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-chart-pie"></i> Production par référence</h2><span class="db-note">unités, semaine en cours</span></header>
+      @if (donutProduits().length) {
+        <app-donut-chart title="" unit="unités" [data]="donutProduits()" />
+      } @else { <p class="db-vide-court">Aucune fiche de production cette semaine.</p> }
+    </section>
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-chart-pie"></i> Pertes par type de poudre</h2><span class="db-note">kg, semaine en cours</span></header>
+      @if (donutPertes().length) {
+        <app-donut-chart title="" unit="kg" [data]="donutPertes()" />
+      } @else { <p class="db-vide-court">Aucune perte enregistrée cette semaine.</p> }
+    </section>
   </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-bottle-droplet"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Fûts nets (semaine)</div>
-      <div class="kpi-val">{{ rapportSemaineCourante()?.totalFutsNets ?? 0 }}</div>
-      <div class="kpi-meta">fûts sortis</div>
-    </div>
+
+  <div class="db-deux">
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-ranking-star"></i> Postes (semaine)</h2></header>
+      <div class="tbl-wrap">
+        <table class="db-table">
+          <thead><tr><th>Rang</th><th>Employé</th><th class="num">Quantité</th><th class="num">Taux</th></tr></thead>
+          <tbody>
+            @for (c of classementExecuteurs(); track c.matriculeEmploye) {
+              <tr>
+                <td class="mono">#{{ c.rang }}</td>
+                <td class="db-nom">{{ c.nomEmploye }}</td>
+                <td class="num mono">{{ c.quantiteTotaleRealisee | number:'1.0-1' }} {{ c.unite }}</td>
+                <td class="num"><span class="db-pastille" [class.db-pastille-ok]="c.tauxRealisationMoyen >= 80" [class.db-pastille-erreur]="c.tauxRealisationMoyen < 80">{{ c.tauxRealisationMoyen | number:'1.1-1' }} %</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4"><p class="db-vide-court">Aucune affectation classée cette semaine.</p></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="db-carte">
+      <header class="db-carte-tete"><h2><i class="fa-solid fa-ranking-star"></i> Machinistes (semaine)</h2></header>
+      <div class="tbl-wrap">
+        <table class="db-table">
+          <thead><tr><th>Rang</th><th>Machiniste</th><th class="num">Productivité</th><th class="num">Efficacité</th></tr></thead>
+          <tbody>
+            @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
+              <tr>
+                <td class="mono">#{{ c.rang }}</td>
+                <td class="db-nom">{{ c.nomMachiniste }}</td>
+                <td class="num mono">{{ c.productiviteKg | number:'1.1-1' }} kg</td>
+                <td class="num"><span class="db-pastille" [class.db-pastille-ok]="c.efficacite >= 80" [class.db-pastille-erreur]="c.efficacite < 80">{{ c.efficacite | number:'1.1-1' }} %</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4"><p class="db-vide-court">Aucun broyage classé cette semaine.</p></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
-</div>
 }
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution de la production (kg)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProductionKg()" [height]="200" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes (%)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="200" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bottle-droplet"></i> Fûts produits vs nets (4 semaines)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieFuts()" [height]="200" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-percent"></i> Avancement par Bon de Commande (semaine)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="bar" [labels]="labelsAvancementBC()" [series]="serieAvancementBC()" [height]="200" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition des produits fabriqués</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-donut-chart title="" unit="kg" [data]="donutProduits()" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Pertes par type de poudre</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-donut-chart title="" unit="kg" [data]="donutPertes()" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement des exécutants (semaine)</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Employé</th><th>Quantité</th><th>Taux</th></tr></thead>
-        <tbody>
-          @for (c of classementExecuteurs(); track c.matriculeEmploye) {
-            <tr>
-              <td>#{{ c.rang }}</td>
-              <td>{{ c.nomEmploye }}</td>
-              <td>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</td>
-              <td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement des machinistes (semaine)</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Efficacité</th></tr></thead>
-        <tbody>
-          @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
-            <tr>
-              <td>#{{ c.rang }}</td>
-              <td>{{ c.nomMachiniste }}</td>
-              <td>{{ c.productiviteKg }} kg</td>
-              <td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
 }
 
-<!-- MODAL : CRÉER UN OF -->
+<!-- ═══ FENÊTRE : NOUVEL OF ═══ -->
 @if (showCreerOF()) {
-<div class="modal-overlay" (click)="showCreerOF.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-plus"></i> Nouvel ordre de fabrication</h3></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <label>ID OF<input class="input" [(ngModel)]="nouveauOF.idOF" placeholder="OF-..."></label>
-        <label>PPH
-          <select class="input" [(ngModel)]="nouveauOF.referencePPH">
+<div class="db-voile" (click)="showCreerOF.set(false)">
+  <div class="db-fenetre" role="dialog" aria-modal="true" aria-label="Nouvel ordre de fabrication" (click)="$event.stopPropagation()">
+    <header class="db-fenetre-tete">
+      <div>
+        <div class="db-hero-kicker">Production</div>
+        <h2 class="db-fenetre-titre">Nouvel ordre de fabrication</h2>
+      </div>
+      <button class="db-icone" aria-label="Fermer" (click)="showCreerOF.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+    <div class="db-fenetre-corps">
+      <div class="db-grille">
+        <label class="db-champ"><span class="db-etiquette">N° OF</span><input class="db-input" [(ngModel)]="nouveauOF.idOF" name="ofId" placeholder="OF-2026-001"></label>
+        <label class="db-champ">
+          <span class="db-etiquette">PPH</span>
+          <select class="db-input" [(ngModel)]="nouveauOF.referencePPH" name="ofPph">
             <option value="">— Choisir —</option>
-            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} ({{ p.referenceBC }})</option> }
+            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} ({{ p.referenceBC ?? '—' }})</option> }
           </select>
         </label>
-        <label>Code produit<input class="input" [(ngModel)]="nouveauOF.codeProduit"></label>
-        <label>Désignation<input class="input" [(ngModel)]="nouveauOF.designationProduit"></label>
-        <label>Qté demandée<input type="number" class="input" [(ngModel)]="nouveauOF.qteDemandee"></label>
-        <label>Date butoir<input type="date" class="input" [(ngModel)]="nouveauOF.dateButoir"></label>
+        <label class="db-champ"><span class="db-etiquette">Code produit</span><input class="db-input" [(ngModel)]="nouveauOF.codeProduit" name="ofCode"></label>
+        <label class="db-champ"><span class="db-etiquette">Désignation</span><input class="db-input" [(ngModel)]="nouveauOF.designationProduit" name="ofDesig"></label>
+        <label class="db-champ"><span class="db-etiquette">Quantité demandée</span><input type="number" class="db-input db-droite" min="1" [(ngModel)]="nouveauOF.qteDemandee" name="ofQte"></label>
+        <label class="db-champ"><span class="db-etiquette">Date butoir</span><input type="date" class="db-input" [(ngModel)]="nouveauOF.dateButoir" name="ofButoir"></label>
       </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showCreerOF.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="creerOF()">Créer</button>
-    </div>
+    <footer class="db-fenetre-pied">
+      <button class="db-bouton db-bouton-contour" (click)="showCreerOF.set(false)">Annuler</button>
+      <button class="db-bouton db-bouton-primaire" (click)="creerOF()">Créer l'OF</button>
+    </footer>
   </div>
 </div>
 }
 
-<!-- MODAL : DÉTAIL D'UN OF -->
-@if (ofDetail()) {
-<div class="modal-overlay" (click)="ofDetail.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-circle-info"></i> Détail OF {{ ofDetail()!.idOF }}</h3></div>
-    <div class="modal-body">
-      <p><strong>PPH :</strong> {{ ofDetail()!.referencePPH }}</p>
-      <p><strong>Produit :</strong> {{ ofDetail()!.codeProduit }} — {{ ofDetail()!.designationProduit }}</p>
-      <p><strong>Demandé :</strong> {{ ofDetail()!.qteDemandee }} — <strong>Réalisé :</strong> {{ ofDetail()!.qteRealisee }}</p>
-      <p><strong>Date butoir :</strong> {{ ofDetail()!.dateButoir ? (ofDetail()!.dateButoir | date:'dd/MM/yyyy') : '—' }}</p>
-      <p><strong>Statut :</strong> {{ ofDetail()!.statut }}</p>
+<!-- ═══ FENÊTRE : DÉTAIL D'UN OF ═══ -->
+@if (ofDetail(); as o) {
+<div class="db-voile" (click)="ofDetail.set(null)">
+  <div class="db-fenetre db-fenetre-etroite" role="dialog" aria-modal="true" aria-label="Détail de l'OF" (click)="$event.stopPropagation()">
+    <header class="db-fenetre-tete">
+      <div>
+        <div class="db-hero-kicker">Ordre de fabrication</div>
+        <h2 class="db-fenetre-titre mono">{{ o.idOF }}</h2>
+      </div>
+      <button class="db-icone" aria-label="Fermer" (click)="ofDetail.set(null)"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+    <div class="db-fenetre-corps">
+      <dl class="db-fiches">
+        <div><dt>PPH</dt><dd class="mono">{{ o.referencePPH }}</dd></div>
+        <div><dt>Produit</dt><dd>{{ o.designationProduit }} <span class="db-muet mono">({{ o.codeProduit }})</span></dd></div>
+        <div><dt>Demandé</dt><dd class="mono">{{ o.qteDemandee }}</dd></div>
+        <div><dt>Réalisé</dt><dd class="mono">{{ o.qteRealisee }}</dd></div>
+        <div><dt>Date butoir</dt><dd>{{ o.dateButoir ? (o.dateButoir | date:'dd/MM/yyyy') : '—' }}</dd></div>
+        <div><dt>Statut</dt><dd><span class="db-statut" [class]="'db-statut ' + classeStatutOF(o.statut)">{{ libelleStatutOF(o.statut) }}</span></dd></div>
+      </dl>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-primary" (click)="ofDetail.set(null)">Fermer</button>
-    </div>
+    <footer class="db-fenetre-pied">
+      <button class="db-bouton db-bouton-primaire" (click)="ofDetail.set(null)">Fermer</button>
+    </footer>
   </div>
 </div>
 }
-<!-- MODAL : PRODUIRE SUR UN OF -->
-@if (showProduireOF()) {
-<div class="modal-overlay" (click)="showProduireOF.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-industry"></i> Enregistrer la production</h3></div>
-    <div class="modal-body">
-      <label>Quantité produite<input type="number" class="input" [(ngModel)]="quantiteProduire"></label>
+
+<!-- ═══ FENÊTRE : PRODUIRE SUR UN OF ═══ -->
+@if (showProduireOF(); as idOF) {
+<div class="db-voile" (click)="showProduireOF.set(null)">
+  <div class="db-fenetre db-fenetre-etroite" role="dialog" aria-modal="true" aria-label="Enregistrer la production" (click)="$event.stopPropagation()">
+    <header class="db-fenetre-tete">
+      <div>
+        <div class="db-hero-kicker">Ordre de fabrication {{ idOF }}</div>
+        <h2 class="db-fenetre-titre">Enregistrer la production</h2>
+      </div>
+      <button class="db-icone" aria-label="Fermer" (click)="showProduireOF.set(null)"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+    <div class="db-fenetre-corps">
+      <label class="db-champ"><span class="db-etiquette">Quantité produite</span>
+        <input type="number" class="db-input db-droite" min="1" [(ngModel)]="quantiteProduire" name="produit">
+      </label>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showProduireOF.set(null)">Annuler</button>
-      <button class="btn btn-primary" (click)="produireOF(showProduireOF()!)">Enregistrer</button>
-    </div>
+    <footer class="db-fenetre-pied">
+      <button class="db-bouton db-bouton-contour" (click)="showProduireOF.set(null)">Annuler</button>
+      <button class="db-bouton db-bouton-primaire" (click)="produireOF(idOF)" [disabled]="quantiteProduire <= 0">Enregistrer</button>
+    </footer>
   </div>
 </div>
 }

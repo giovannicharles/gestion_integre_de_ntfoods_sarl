@@ -1,190 +1,206 @@
-<!-- ═══════════════════════════════════════════════════════
-     EN-TÊTE
-     ═══════════════════════════════════════════════════════ -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="ph-icon"><i class="fa-solid fa-stamp"></i></div>
+<!-- ═══ EN-TÊTE ═══ -->
+<div class="vb-hero">
+  <div class="vb-hero-left">
+    <div class="vb-hero-ico"><i class="fa-solid fa-stamp"></i></div>
     <div>
-      <h1 class="ph-title">Validation des Bons de Commande</h1>
-      <p class="ph-sub">Bons en attente de validation — génère automatiquement un plan de production (PPH)</p>
+      <h1 class="vb-hero-title">Validation des bons de commande</h1>
+      <p class="vb-hero-sub">Chaque validation génère le plan de production (PPH) correspondant.</p>
     </div>
   </div>
+  <button class="btn btn-ghost" (click)="charger()" aria-label="Actualiser la file">
+    <i class="fa-solid fa-arrows-rotate"></i> Actualiser
+  </button>
 </div>
 
-<!-- Toast succès -->
-@if (successMsg()) {
-  <div class="toast toast-success animate-fadeInUp">
-    <i class="fa-solid fa-circle-check"></i> {{ successMsg() }}
+<!-- ═══ RÉSULTAT DE LA DERNIÈRE VALIDATION ═══ -->
+@if (dernierValide(); as ok) {
+  <div class="vb-succes" role="status">
+    <div class="vb-succes-ico"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="vb-succes-txt">
+      <strong>Bon de commande {{ ok.numero }} validé</strong>
+      <span>Le plan de production a été généré. Vous pouvez le consulter ou continuer à valider la file.</span>
+    </div>
+    <a class="btn btn-primary btn-sm" routerLink="/production/plan">
+      <i class="fa-solid fa-calendar-week"></i> Voir le plan
+    </a>
+    <button class="vb-succes-close" aria-label="Fermer ce message" (click)="fermerSucces()"><i class="fa-solid fa-xmark"></i></button>
   </div>
 }
 
-<!-- ═══════════════════════════════════════════════════════
-     LISTE DES BC BROUILLONS
-     ═══════════════════════════════════════════════════════ -->
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input"
-           placeholder="Rechercher par numéro ou fournisseur…"
-           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
+@if (error()) {
+  <div class="banner banner-warning" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div>
+}
+
+<!-- ═══ INDICATEURS ═══ -->
+<div class="vb-stats">
+  <div class="vb-stat vb-stat-main">
+    <span class="vb-stat-lbl">En attente de validation</span>
+    <span class="vb-stat-val">{{ nbEnAttente() }}</span>
+    <span class="vb-stat-meta">{{ nbEnAttente() > 1 ? 'bons de commande' : 'bon de commande' }}</span>
   </div>
-
-  @if (error()) {
-    <div class="banner banner-warning" style="margin:1rem">
-      <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
-    </div>
-  }
-
-  @if (loading()) {
-    @for (i of [1,2,3]; track i) {
-      <div class="sk-shimmer skeleton-row"></div>
-    }
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>N° BC</th>
-            <th>Date commande</th>
-            <th>Livraison prévue</th>
-            <th>Nb lignes</th>
-            <th>Montant HT</th>
-            <th>Créateur</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (bc of bcsFiltres; track bc.id) {
-            <tr class="table-row-anim" [class.row-alert]="bc.enRetard">
-              <td><strong>{{ bc.numero }}</strong></td>
-              <td>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</td>
-              <td>
-                @if (bc.dateLivraisonPrevue) {
-                  {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }}
-                  @if (bc.enRetard) {
-                    <span class="taux-chip taux-warn" style="margin-left:6px">
-                      <i class="fa-solid fa-clock"></i> Retard
-                    </span>
-                  }
-                } @else {
-                  <span class="text-muted">—</span>
-                }
-              </td>
-              <td>{{ bc.lignes.length }} ligne(s)</td>
-              <td class="text-right mono">
-                @if (montantTotal(bc) > 0) {
-                  {{ montantTotal(bc) | number:'1.0-0' }} FCFA
-                } @else {
-                  <span class="text-muted">—</span>
-                }
-              </td>
-              <td><span class="zone-chip">{{ bc.matriculeCreateur }}</span></td>
-              <td>
-                <button class="btn btn-sm btn-primary" (click)="ouvrirConfirmation(bc)">
-                  <i class="fa-solid fa-check"></i> Valider
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7">
-                <div class="empty-state">
-                  <i class="fa-solid fa-inbox"></i>
-                  <p>Aucun bon de commande en attente de validation</p>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+  <div class="vb-stat">
+    <span class="vb-stat-lbl">Montant engagé</span>
+    <span class="vb-stat-val">{{ montantEnAttente() | number:'1.0-0' }}</span>
+    <span class="vb-stat-meta">FCFA HT</span>
+  </div>
+  <div class="vb-stat">
+    <span class="vb-stat-lbl">Lignes à planifier</span>
+    <span class="vb-stat-val">{{ nbLignesAPlanifier() }}</span>
+    <span class="vb-stat-meta">produits au total</span>
+  </div>
+  <div class="vb-stat" [class.vb-stat-alerte]="nbEnRetard() > 0">
+    <span class="vb-stat-lbl">Livraison dépassée</span>
+    <span class="vb-stat-val">{{ nbEnRetard() }}</span>
+    <span class="vb-stat-meta">{{ plusAncien() }} j. pour le plus ancien</span>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL DE CONFIRMATION
-     ═══════════════════════════════════════════════════════ -->
+<!-- ═══ FILTRES ═══ -->
+<div class="vb-toolbar">
+  <input class="input vb-search" type="search" aria-label="Rechercher un bon de commande"
+         placeholder="Numéro, fournisseur ou code produit…"
+         [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+  <select class="input vb-tri" aria-label="Trier la file"
+          [ngModel]="tri()" (ngModelChange)="tri.set($event)">
+    <option value="ancien">Plus ancien d'abord</option>
+    <option value="recent">Plus récent d'abord</option>
+    <option value="montant">Montant décroissant</option>
+  </select>
+</div>
+
+<!-- ═══ FILE DE VALIDATION ═══ -->
+@if (loading()) {
+  <div class="vb-grid">
+    @for (i of [1,2,3]; track i) { <div class="vb-skeleton sk-shimmer"></div> }
+  </div>
+} @else if (bcsFiltres().length === 0) {
+  <div class="vb-vide">
+    <div class="vb-vide-ico"><i class="fa-solid fa-circle-check"></i></div>
+    @if (nbEnAttente() === 0) {
+      <h2>Tout est validé</h2>
+      <p>Aucun bon de commande n'attend votre validation.</p>
+    } @else {
+      <h2>Aucun résultat</h2>
+      <p>Aucun bon de commande ne correspond à « {{ recherche() }} ».</p>
+    }
+  </div>
+} @else {
+  <div class="vb-grid">
+    @for (bc of bcsFiltres(); track bc.id) {
+      <article class="vb-carte" [class.vb-carte-retard]="estEnRetardAValider(bc)">
+        <header class="vb-carte-tete">
+          <div>
+            <div class="vb-numero">{{ bc.numero }}</div>
+            <div class="vb-age"><i class="fa-regular fa-clock"></i> {{ libelleAge(bc.dateCommande ?? aujourdhui) }}</div>
+          </div>
+          <span class="vb-pastille"><span class="vb-pulse"></span> En attente</span>
+        </header>
+
+        <dl class="vb-meta">
+          <div><dt>Fournisseur</dt><dd>{{ bc.nomFournisseur ?? bc.codeFournisseur ?? 'Non défini' }}</dd></div>
+          <div><dt>Créé par</dt><dd class="mono">{{ bc.matriculeCreateur ?? '—' }}</dd></div>
+          <div><dt>Commandé le</dt><dd>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</dd></div>
+          <div>
+            <dt>Livraison prévue</dt>
+            <dd>
+              {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}
+              @if (estEnRetardAValider(bc)) { <span class="vb-retard">Dépassée</span> }
+            </dd>
+          </div>
+          <div class="vb-meta-large"><dt>Période de production</dt><dd>{{ libellePeriode(bc) }}</dd></div>
+        </dl>
+
+        <div class="vb-produits">
+          @for (p of apercuProduits(bc); track p.codeProduit) {
+            <span class="vb-produit"><span class="mono">{{ p.codeProduit }}</span> × {{ p.quantiteCommandee }}</span>
+          }
+          @if (bc.lignes.length > 3) {
+            <span class="vb-produit vb-produit-plus">+ {{ bc.lignes.length - 3 }} autre(s)</span>
+          }
+        </div>
+
+        <footer class="vb-carte-pied">
+          <div class="vb-montant">
+            @if (montantTotal(bc) > 0) {
+              <span class="vb-montant-val">{{ montantTotal(bc) | number:'1.0-0' }}</span>
+              <span class="vb-montant-unite">FCFA HT</span>
+            } @else {
+              <span class="text-muted">Montant non renseigné</span>
+            }
+          </div>
+          <button class="btn btn-primary" (click)="ouvrirConfirmation(bc)">
+            <i class="fa-solid fa-check"></i> Examiner et valider
+          </button>
+        </footer>
+      </article>
+    }
+  </div>
+}
+
+<!-- ═══ CONFIRMATION ═══ -->
 @if (bcAValider(); as bc) {
 <div class="modal-overlay" (click)="annulerConfirmation()">
-  <div class="modal-box val-modal" (click)="$event.stopPropagation()">
+  <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vb-modal-titre" (click)="$event.stopPropagation()">
 
-    <div class="modal-header">
-      <div class="modal-title">
-        <div class="modal-title-ico"><i class="fa-solid fa-stamp"></i></div>
-        Confirmer la validation
+    <header class="vb-modal-tete">
+      <div>
+        <div class="vb-modal-kicker">Confirmation</div>
+        <h2 id="vb-modal-titre" class="vb-modal-titre">Valider {{ bc.numero }} ?</h2>
       </div>
-      <button class="modal-close" (click)="annulerConfirmation()" [disabled]="saving()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
+      <button class="modal-close" aria-label="Fermer" (click)="annulerConfirmation()" [disabled]="saving()"><i class="fa-solid fa-xmark"></i></button>
+    </header>
 
-    <div class="modal-body val-body">
-      <div class="confirm-block">
-        <i class="fa-solid fa-circle-info confirm-ico"></i>
+    <div class="vb-modal-corps">
+      <div class="vb-avertissement">
+        <i class="fa-solid fa-gears"></i>
         <div>
-          <p class="confirm-title">Valider le bon de commande <strong>{{ bc.numero }}</strong> ?</p>
-          <p class="confirm-sub">
-            Cette action va <strong>valider définitivement</strong> ce bon de commande
-            et <strong>générer automatiquement un Plan de Production Hebdomadaire (PPH)</strong>
-            lié à ce BC. Vous serez redirigé vers la page Plan de Production.
-          </p>
+          La validation est définitive et génère le plan de production de ce bon de commande.
+          Pour modifier ensuite le plan, il faudra le recalculer depuis sa page.
         </div>
       </div>
 
-      <!-- Récap BC -->
-      <div class="recap-grid">
-        <div class="recap-item">
-          <span class="recap-lbl"><i class="fa-solid fa-calendar"></i> Date commande</span>
-          <span class="recap-val">{{ bc.dateCommande | date:'dd/MM/yyyy' }}</span>
+      <div class="vb-recap">
+        <div class="vb-recap-item">
+          <span class="vb-recap-lbl">Commandé le</span>
+          <span class="vb-recap-val">{{ bc.dateCommande | date:'dd/MM/yyyy' }}</span>
         </div>
-        <div class="recap-item">
-          <span class="recap-lbl"><i class="fa-solid fa-list"></i> Lignes</span>
-          <span class="recap-val">{{ bc.lignes.length }} produit(s)</span>
+        <div class="vb-recap-item">
+          <span class="vb-recap-lbl">Période de production</span>
+          <span class="vb-recap-val">{{ libellePeriode(bc) }}</span>
         </div>
-        <div class="recap-item">
-          <span class="recap-lbl"><i class="fa-solid fa-coins"></i> Montant HT</span>
-          <span class="recap-val">
-            @if (montantTotal(bc) > 0) {
-              {{ montantTotal(bc) | number:'1.0-0' }} FCFA
-            } @else {
-              —
-            }
+        <div class="vb-recap-item">
+          <span class="vb-recap-lbl">Produits</span>
+          <span class="vb-recap-val">{{ bc.lignes.length }}</span>
+        </div>
+        <div class="vb-recap-item">
+          <span class="vb-recap-lbl">Montant HT</span>
+          <span class="vb-recap-val">
+            @if (montantTotal(bc) > 0) { {{ montantTotal(bc) | number:'1.0-0' }} FCFA } @else { — }
           </span>
         </div>
-        <div class="recap-item">
-          <span class="recap-lbl"><i class="fa-solid fa-user"></i> Créateur</span>
-          <span class="recap-val">{{ bc.matriculeCreateur }}</span>
-        </div>
       </div>
 
-      <!-- Table des lignes -->
-      <div class="val-section-title">
-        <i class="fa-solid fa-boxes-stacked"></i> Produits commandés
-      </div>
-      <div class="tbl-wrap">
+      <h3 class="vb-section-titre"><i class="fa-solid fa-boxes-stacked"></i> Produits commandés</h3>
+      <div class="tbl-wrap vb-tbl">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Code produit</th>
+              <th>Produit</th>
               <th>Désignation</th>
-              <th class="text-right">Qté</th>
+              <th>Conditionnement</th>
+              <th class="text-right">Quantité</th>
               <th class="text-right">Prix unit. HT</th>
             </tr>
           </thead>
           <tbody>
             @for (l of bc.lignes; track l.id) {
               <tr>
-                <td><strong class="mono" style="color:var(--g)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation }}</td>
+                <td><span class="mono vb-code">{{ l.codeProduit }}</span></td>
+                <td>{{ l.designation ?? '—' }}</td>
+                <td><span class="zone-chip">{{ l.sku ?? '—' }}</span></td>
                 <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
                 <td class="text-right mono">
-                  @if (l.prixUnitaireHT != null) {
-                    {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA
-                  } @else {
-                    —
-                  }
+                  {{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '—' }}
                 </td>
               </tr>
             }
@@ -192,26 +208,18 @@
         </table>
       </div>
 
-      @if (error()) {
-        <div class="banner banner-warning" style="margin-top:12px">
-          <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
-        </div>
+      @if (erreurValidation()) {
+        <div class="banner banner-warning" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurValidation() }}</div>
       }
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="annulerConfirmation()" [disabled]="saving()">
-        Annuler
+    <footer class="vb-modal-pied">
+      <button class="btn btn-ghost" (click)="annulerConfirmation()" [disabled]="saving()">Annuler</button>
+      <button class="btn btn-primary" (click)="valider()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner spinner-sm"></span> Validation en cours… }
+        @else { <i class="fa-solid fa-stamp"></i> Valider et générer le plan }
       </button>
-      <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']" (click)="valider()" [disabled]="saving()">
-        @if (saving()) {
-          <span class="spinner spinner-sm"></span> Validation en cours…
-        } @else {
-          <i class="fa-solid fa-check"></i> Valider et générer le PPH
-        }
-      </button>
-    </div>
-
+    </footer>
   </div>
 </div>
 }

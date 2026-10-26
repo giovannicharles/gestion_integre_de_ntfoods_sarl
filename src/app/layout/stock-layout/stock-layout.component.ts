@@ -120,9 +120,8 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Dotations', icon: 'fa-hand-holding', route: '/stock/dotations', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
         { label: 'Mouvements Stock', icon: 'fa-right-left', route: '/stock/mouvements' },
         { label: 'Session du Jour', icon: 'fa-calendar-check', route: '/stock/session', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
-        // Le comptage est l'acte du dépôt, pas du commercial : celui-ci déclare
-        // ses invendus depuis le terminal, le gestionnaire les confronte ici.
-        { label: 'Comptage Invendus', icon: 'fa-clipboard-list', route: '/stock/invendus', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
+        // « Comptage Invendus » retiré du menu : ni route /stock/invendus ni écran ni endpoint dans cette version
+        // (le lien renvoyait au tableau de bord).
       ]
     },
     {
@@ -145,6 +144,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Gestion Produits', icon: 'fa-boxes-stacked', route: '/stock/produits', roles: ['DIRECTEUR_GENERAL', 'ADMIN'] },
         { label: 'Classification ABC', icon: 'fa-tags', route: '/stock/classification' },
+        { label: "Types d'emballage", icon: 'fa-box-open', route: '/stock/types-emballage', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
         { label: 'Valorisation', icon: 'fa-coins', route: '/stock/valorisation', roles: ['GESTIONNAIRE_STOCK', 'COMPTABLE', 'DIRECTEUR_GENERAL', 'ADMIN'] },
         { label: 'Matériel', icon: 'fa-screwdriver-wrench', route: '/stock/materiels' },
       ]

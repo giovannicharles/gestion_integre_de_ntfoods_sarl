@@ -1,63 +1,118 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { ProductionService, StatistiquesFutsBE, SessionDosageBE } from '../../../../infrastructure/production.service';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { Observable, catchError, forkJoin, of } from 'rxjs';
+import {
+  ProductionService, StatistiquesFutsBE, SessionDosageBE,
+} from '../../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
+type Periode = 'JOUR' | 'SEMAINE' | 'MOIS';
+
+/** Date locale au format AAAA-MM-JJ (évite le décalage UTC de toISOString). */
+function dateLocaleIso(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Ajoute n jours à une date AAAA-MM-JJ, en calendrier local. */
+function ajouterJours(iso: string, n: number): string {
+  const [y, m, j] = iso.split('-').map(Number);
+  return dateLocaleIso(new Date(y, m - 1, j + n));
+}
+
+/** Code canonique d'une matière (« Maïs » → « MAIS ») pour regrouper les consommations. */
+function codeMatiere(nom: string): string {
+  return nom.normalize('NFD').replace(/\p{M}/gu, '').trim().toUpperCase();
+}
+
 /**
- * STATISTIQUES — Agent Doseur
- * GET /dosage/statistiques/futs autorise explicitement AGENT_DOSEUR (contrairement
- * aux autres endpoints de consultation) — comparaisons N/N-1 pleinement fonctionnelles.
- * Les graphiques d'évolution jour par jour dépendent en revanche de /dosage/periode
- * (réserve identique aux autres vues).
+ * STATISTIQUES — Agent Doseur.
+ * Fûts nets, fûts produits, sessions et matières consommées sur le jour, la semaine et le mois,
+ * avec la variation par rapport à la période précédente (N-1), et l'évolution des 7 derniers jours.
  */
 @Component({
   selector: 'app-ad-statistiques',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, MiniChartComponent],
+  imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, MiniChartComponent],
   templateUrl: './ad-statistiques.component.html',
-  styleUrls: ['./ad-statistiques.component.css', '../_shared.css']
+  styleUrls: ['./ad-statistiques.component.css'],
 })
 export class AdStatistiquesComponent implements OnInit {
   private readonly svc = inject(ProductionService);
 
-  loading = signal(true);
-  statsJour = signal<StatistiquesFutsBE | null>(null);
-  statsSemaine = signal<StatistiquesFutsBE | null>(null);
-  statsMois = signal<StatistiquesFutsBE | null>(null);
+  readonly aujourdhui = dateLocaleIso();
+  readonly jours7 = Array.from({ length: 7 }, (_, i) => ajouterJours(this.aujourdhui, i - 6));
 
-  erreurEvolution = signal(false);
-  historique7j = signal<SessionDosageBE[]>([]);
+  readonly periodes: { code: Periode; libelle: string }[] = [
+    { code: 'JOUR', libelle: 'Aujourd\'hui' },
+    { code: 'SEMAINE', libelle: 'Cette semaine' },
+    { code: 'MOIS', libelle: 'Ce mois' },
+  ];
 
-  labels7j = computed(() => {
-    const jours: string[] = [];
-    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); jours.push(d.toISOString().split('T')[0]); }
-    return jours.map(j => j.slice(5).split('-').reverse().join('/'));
+  readonly chargement = signal(true);
+  readonly erreur = signal('');
+  readonly sessionExpiree = signal(false);
+  readonly erreurHistorique = signal('');
+  readonly periodeChoisie = signal<Periode>('SEMAINE');
+
+  readonly statsJour = signal<StatistiquesFutsBE | null>(null);
+  readonly statsSemaine = signal<StatistiquesFutsBE | null>(null);
+  readonly statsMois = signal<StatistiquesFutsBE | null>(null);
+  readonly historique = signal<SessionDosageBE[]>([]);
+
+  readonly statsChoisies = computed(() => {
+    switch (this.periodeChoisie()) {
+      case 'JOUR': return this.statsJour();
+      case 'MOIS': return this.statsMois();
+      default: return this.statsSemaine();
+    }
   });
 
-  serieEvolutionFuts = computed<ChartSeries[]>(() => {
-    const jours: string[] = [];
-    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); jours.push(d.toISOString().split('T')[0]); }
-    const h = this.historique7j();
-    return [{ name: 'Fûts nets', color: 'var(--success, #2e7d32)', values: jours.map(j => h.filter(s => s.date === j).reduce((s, x) => s + x.nbFutsNets, 0)) }];
+  /** Consommation de matières de la période choisie, regroupée par code (MAIS, SOJA…), la plus forte en tête. */
+  readonly matieresChoisies = computed(() => {
+    const s = this.statsChoisies();
+    if (!s) return [];
+    const cumul = new Map<string, number>();
+    for (const m of s.matieresPremieres) {
+      const code = codeMatiere(m.matierePremiere);
+      cumul.set(code, (cumul.get(code) ?? 0) + m.quantiteKg);
+    }
+    const total = [...cumul.values()].reduce((t, v) => t + v, 0);
+    return [...cumul.entries()]
+      .map(([code, kg]) => ({ code, kg, part: total > 0 ? (kg / total) * 100 : 0 }))
+      .sort((a, b) => b.kg - a.kg);
   });
 
-  serieEvolutionMatieres = computed<ChartSeries[]>(() => {
-    const jours: string[] = [];
-    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); jours.push(d.toISOString().split('T')[0]); }
-    const h = this.historique7j();
-    const parType = (type: string) => jours.map(j => h.filter(s => s.date === j).flatMap(s => s.matieresUtilisees).filter(m => m.typeMatiere === type).reduce((s, m) => s + m.quantiteKg, 0));
+  readonly labels7j = computed(() => this.jours7.map(j => j.slice(8, 10) + '/' + j.slice(5, 7)));
+
+  readonly seriesFuts = computed<ChartSeries[]>(() => {
+    const h = this.historique();
+    return [{
+      name: 'Fûts nets', color: '#2e7d32',
+      values: this.jours7.map(j => h.filter(s => s.date === j).reduce((t, s) => t + s.nbFutsNets, 0)),
+    }];
+  });
+
+  readonly seriesMatieres = computed<ChartSeries[]>(() => {
+    const h = this.historique();
+    const parCode = (code: string) => this.jours7.map(j =>
+      h.filter(s => s.date === j)
+        .flatMap(s => s.matieresUtilisees)
+        .filter(m => codeMatiere(m.typeMatiere) === code)
+        .reduce((t, m) => t + m.quantiteKg, 0));
     return [
-      { name: 'Maïs', color: '#f9a825', values: parType('MAIS') },
-      { name: 'Soja', color: '#558b2f', values: parType('SOJA') },
-      { name: 'Arachide', color: '#6d4c41', values: parType('ARACHIDE') },
+      { name: 'Maïs', color: '#f9a825', values: parCode('MAIS') },
+      { name: 'Soja', color: '#558b2f', values: parCode('SOJA') },
+      { name: 'Arachide', color: '#6d4c41', values: parCode('ARACHIDE') },
     ];
   });
 
-  serieEvolutionSessions = computed<ChartSeries[]>(() => {
-    const jours: string[] = [];
-    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); jours.push(d.toISOString().split('T')[0]); }
-    const h = this.historique7j();
-    return [{ name: 'Sessions ouvertes', color: 'var(--primary, #1976d2)', values: jours.map(j => h.filter(s => s.date === j).length) }];
+  readonly seriesSessions = computed<ChartSeries[]>(() => {
+    const h = this.historique();
+    return [{
+      name: 'Sessions', color: '#1976d2',
+      values: this.jours7.map(j => h.filter(s => s.date === j).length),
+    }];
   });
 
   ngOnInit(): void {
@@ -65,20 +120,57 @@ export class AdStatistiquesComponent implements OnInit {
   }
 
   charger(): void {
-    this.loading.set(true);
-    const aujourdHui = new Date().toISOString().split('T')[0];
-    this.svc.getStatistiquesFuts(aujourdHui, aujourdHui).subscribe({ next: s => this.statsJour.set(s) });
-    this.svc.getStatistiquesFuts(this.debutSemaine(), aujourdHui).subscribe({ next: s => this.statsSemaine.set(s) });
-    this.svc.getStatistiquesFuts(this.debutMois(), aujourdHui).subscribe({ next: s => { this.statsMois.set(s); this.loading.set(false); }, error: () => this.loading.set(false) });
+    this.chargement.set(true);
+    this.erreur.set('');
+    const fin = this.aujourdhui;
+    forkJoin({
+      jour: this.statistiques(fin, fin),
+      semaine: this.statistiques(this.debutSemaine(), fin),
+      mois: this.statistiques(this.debutMois(), fin),
+    }).subscribe(r => {
+      this.statsJour.set(r.jour);
+      this.statsSemaine.set(r.semaine);
+      this.statsMois.set(r.mois);
+      this.chargement.set(false);
+    });
 
-    const debut7j = this.joursAvant(7);
-    this.svc.getSessionsDosageParPeriode(debut7j, aujourdHui).subscribe({
-      next: h => this.historique7j.set(h),
-      error: () => this.erreurEvolution.set(true)
+    this.erreurHistorique.set('');
+    this.svc.getSessionsDosageParPeriode(this.jours7[0], fin).subscribe({
+      next: h => this.historique.set(h),
+      error: (e: unknown) => {
+        this.noterErreur(e);
+        this.erreurHistorique.set('L\'évolution sur 7 jours n\'a pas pu être chargée.');
+      },
     });
   }
 
-  private joursAvant(n: number): string { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split('T')[0]; }
-  private debutSemaine(): string { const d = new Date(); const j = d.getDay(); return new Date(d.setDate(d.getDate() - j + (j === 0 ? -6 : 1))).toISOString().split('T')[0]; }
-  private debutMois(): string { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0]; }
+  /** Une période qui échoue ne bloque pas les autres : elle reste vide et l'erreur est signalée. */
+  private statistiques(debut: string, fin: string): Observable<StatistiquesFutsBE | null> {
+    return this.svc.getStatistiquesFuts(debut, fin).pipe(
+      catchError((e: unknown) => {
+        this.noterErreur(e);
+        return of(null);
+      }));
+  }
+
+  private noterErreur(e: unknown): void {
+    const statut = (e as { status?: number })?.status;
+    if (statut === 401) {
+      this.sessionExpiree.set(true);
+      this.erreur.set('Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.');
+    } else {
+      this.erreur.set('Certaines statistiques n\'ont pas pu être chargées.');
+    }
+  }
+
+  private debutSemaine(): string {
+    const d = new Date();
+    const decalage = (d.getDay() + 6) % 7; // lundi = 0
+    return ajouterJours(this.aujourdhui, -decalage);
+  }
+
+  private debutMois(): string {
+    const d = new Date();
+    return dateLocaleIso(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
 }

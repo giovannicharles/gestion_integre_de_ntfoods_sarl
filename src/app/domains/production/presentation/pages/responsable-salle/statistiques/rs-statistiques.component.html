@@ -1,52 +1,129 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
+<div class="st">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="st-hero">
+  <div class="st-hero-gauche">
+    <i class="fa-solid fa-chart-line st-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Statistiques</h1>
-      <p class="ph-sub">Comparaisons et évolutions — 8 dernières semaines, données réelles</p>
+      <div class="st-kicker">Responsable de salle · Statistiques</div>
+      <h1 class="st-hero-titre">Statistiques</h1>
+      <p class="st-hero-sous">Production, dosage, présence, postes et employés, semaine par semaine · au {{ aujourdhui | date:'d MMMM y' }}</p>
     </div>
   </div>
-</div>
+  <div class="st-segment" role="group" aria-label="Durée de la période">
+    <button class="st-segment-bouton" [class.st-segment-actif]="duree() === 8" (click)="choisirDuree(8)">8 semaines</button>
+    <button class="st-segment-bouton" [class.st-segment-actif]="duree() === 12" (click)="choisirDuree(12)">12 semaines</button>
+    <button class="st-segment-bouton" [class.st-segment-actif]="duree() === 26" (click)="choisirDuree(26)">26 semaines</button>
+  </div>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+@if (sessionExpiree()) {
+  <div class="st-alerte st-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.</span>
+    <a routerLink="/auth/login" class="st-lien">Se reconnecter</a>
+  </div>
+} @else if (erreurs().length > 0) {
+  <div class="st-alerte st-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>Certaines données n'ont pas pu être chargées : {{ erreurs().join(', ') }}. Les graphiques concernés sont partiels ou vides.</span>
+    <button class="st-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement()) {
+  <div class="st-squelette"></div>
+} @else if (points().length === 0) {
+  <section class="st-carte st-vide">
+    <i class="fa-solid fa-chart-line"></i>
+    <h2>Aucune donnée sur la période</h2>
+    <p>Aucun rapport hebdomadaire n'a pu être calculé sur les {{ duree() }} dernières semaines.</p>
+  </section>
 } @else {
 
-<div class="two-col">
-  @if (comparaisonSemaine(); as c) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Semaine N vs N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production S</div><div class="kpi-val">{{ c.actuel | number:'1.1-1' }} kg</div><div class="kpi-meta">S-1 : {{ c.precedent | number:'1.1-1' }} kg</div></div></div>
-        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
+  <!-- ═══ COMPARAISONS ═══ -->
+  <section class="st-kpis">
+    @if (comparaisonSemaine(); as c) {
+      <div class="st-kpi" [class.st-kpi-ok]="c.variation >= 0" [class.st-kpi-bas]="c.variation < 0">
+        <span class="st-lbl">Semaine actuelle vs précédente</span>
+        <strong class="st-grand">{{ c.variation > 0 ? '+' : '' }}{{ c.variation }} %</strong>
+        <span class="st-muet">{{ c.actuel | number:'1.1-1' }} kg contre {{ c.precedent | number:'1.1-1' }} kg</span>
       </div>
-    </div>
-  }
-  @if (comparaisonMois(); as c) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Mois N vs N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production M</div><div class="kpi-val">{{ c.actuel | number:'1.1-1' }} kg</div><div class="kpi-meta">M-1 : {{ c.precedent | number:'1.1-1' }} kg</div></div></div>
-        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
+    }
+    @if (comparaisonMois(); as c) {
+      <div class="st-kpi" [class.st-kpi-ok]="c.variation >= 0" [class.st-kpi-bas]="c.variation < 0">
+        <span class="st-lbl">4 dernières semaines vs 4 précédentes</span>
+        <strong class="st-grand">{{ c.variation > 0 ? '+' : '' }}{{ c.variation }} %</strong>
+        <span class="st-muet">{{ c.actuel | number:'1.1-1' }} kg contre {{ c.precedent | number:'1.1-1' }} kg</span>
       </div>
+    }
+    <div class="st-kpi st-kpi-principal">
+      <span class="st-lbl">Période affichée</span>
+      <strong class="st-grand">{{ points().length }} / {{ duree() }}</strong>
+      <span class="st-muet">semaine(s) avec un rapport disponible</span>
     </div>
+  </section>
+
+  <!-- ═══ PRODUCTION ET DOSAGE ═══ -->
+  <section class="st-grille">
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-chart-line"></i> Production réalisée</h3></header>
+      <div class="st-graphique"><app-mini-chart type="line" [labels]="labels()" [series]="serieProduction()" [height]="200" /></div>
+      <footer class="st-carte-pied"><span class="st-muet">Kilogrammes réels, postes dont l'unité est le kg seulement (#96).</span></footer>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-scale-balanced"></i> Poudre dosée contre production réalisée</h3></header>
+      <div class="st-graphique"><app-mini-chart type="line" [labels]="labels()" [series]="seriePoudreVsProduction()" [height]="200" /></div>
+      <footer class="st-carte-pied"><span class="st-muet">Deux grandeurs en kg, donc comparables ; l'écart révèle la poudre non transformée en kg de production.</span></footer>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-bottle-droplet"></i> Fûts nets</h3></header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labels()" [series]="serieFuts()" [height]="200" /></div>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-triangle-exclamation"></i> Taux de casse des fûts</h3></header>
+      <p class="st-muet">Le rapport hebdomadaire de l'API ne fournit ni les fûts produits ni les fûts cassés : le taux de casse ne peut pas être calculé.</p>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-flask"></i> Sessions de dosage</h3></header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labels()" [series]="serieSessionsDosage()" [height]="200" /></div>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-user-gear"></i> Jours affectés</h3></header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labels()" [series]="serieJoursAffectes()" [height]="200" /></div>
+    </article>
+
+    <article class="st-carte">
+      <header class="st-carte-tete"><h3><i class="fa-solid fa-user-check"></i> Taux de présence</h3></header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labels()" [series]="seriePresence()" [height]="200" /></div>
+      <footer class="st-carte-pied"><span class="st-muet">D'après les registres de la période ; vide pour une semaine sans registre.</span></footer>
+    </article>
+  </section>
+
+  <!-- ═══ POSTES ET EMPLOYÉS SUR LA PÉRIODE ═══ -->
+  @if (labelsTopPostes().length > 0) {
+    <section class="st-carte">
+      <header class="st-carte-tete">
+        <h3><i class="fa-solid fa-trophy"></i> Postes les plus performants sur la période</h3>
+        <span class="st-muet">Taux sur les journées saisies, tous postes confondus (#99).</span>
+      </header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labelsTopPostes()" [series]="serieTopPostes()" [height]="220" /></div>
+    </section>
   }
-</div>
 
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution de la production</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labels()" [series]="serieProduction()" [height]="200" /></div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bottle-droplet"></i> Évolution des fûts reçus</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labels()" [series]="serieFuts()" [height]="200" /></div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-users"></i> Évolution des jours affectés (activité employés)</h2></div>
-  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels()" [series]="serieObjectifs()" [height]="200" /></div>
-</div>
-
+  @if (labelsTopEmployes().length > 0) {
+    <section class="st-carte">
+      <header class="st-carte-tete">
+        <h3><i class="fa-solid fa-ranking-star"></i> Employés les plus performants sur la période</h3>
+        <span class="st-muet">Taux individuel moyen, comparable entre postes (#98).</span>
+      </header>
+      <div class="st-graphique"><app-mini-chart type="bar" [labels]="labelsTopEmployes()" [series]="serieTopEmployes()" [height]="220" /></div>
+    </section>
+  }
 }
+
+</div>

@@ -1,63 +1,133 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
+<header class="st-hero">
+  <div class="st-hero-gauche">
+    <i class="fa-solid fa-chart-line st-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Statistiques</h1>
-      <p class="ph-sub">Production et comparaisons — journalier, hebdomadaire, mensuel</p>
+      <div class="st-hero-kicker">Agent doseur</div>
+      <h1 class="st-hero-titre">Statistiques de dosage</h1>
+      <p class="st-hero-sous">Fûts nets, sessions et matières consommées, avec la variation par rapport à la période précédente.</p>
     </div>
   </div>
-</div>
+  <button class="st-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.st-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-} @else {
-
-<div class="two-col">
-  @if (statsSemaine(); as s) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Semaine N vs N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ s.nbFutsNets }}</div><div class="kpi-meta">N-1 : {{ s.comparaison.nbFutsNetsPeriodePrecedente }}</div></div></div>
-        <div class="kpi-card" [class.kp-g]="s.comparaison.variationPourcentage>=0" [class.kp-r]="s.comparaison.variationPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ s.comparaison.variationPourcentage>0?'+':'' }}{{ s.comparaison.variationPourcentage | number:'1.1-1' }}%</div></div></div>
-      </div>
-    </div>
-  }
-  @if (statsMois(); as s) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Mois N vs N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ s.nbFutsNets }}</div><div class="kpi-meta">N-1 : {{ s.comparaison.nbFutsNetsPeriodePrecedente }}</div></div></div>
-        <div class="kpi-card" [class.kp-g]="s.comparaison.variationPourcentage>=0" [class.kp-r]="s.comparaison.variationPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ s.comparaison.variationPourcentage>0?'+':'' }}{{ s.comparaison.variationPourcentage | number:'1.1-1' }}%</div></div></div>
-      </div>
-    </div>
-  }
-</div>
-
-@if (statsJour(); as s) {
-<div class="kpi-grid">
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Production journalière (fûts nets)</div><div class="kpi-val">{{ s.nbFutsNets }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Sessions du jour</div><div class="kpi-val">{{ s.nbSessions }}</div></div></div>
-</div>
+@if (sessionExpiree()) {
+  <div class="st-alerte st-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="st-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="st-alerte st-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
 }
 
-@if (erreurEvolution()) {
-  <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Les graphiques d'évolution jour par jour dépendent de <code>/dosage/periode</code>, non autorisé pour Agent Doseur actuellement.</div></div>
+@if (chargement()) {
+  <div class="st-squelette"></div>
+  <div class="st-squelette st-squelette-haut"></div>
 } @else {
-  <div class="two-col">
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des fûts produits (7 jours)</h2></div>
-      <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionFuts()" [height]="200" /></div>
-    </div>
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution des matières consommées</h2></div>
-      <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels7j()" [series]="serieEvolutionMatieres()" [height]="200" /></div>
-    </div>
+
+  <!-- Comparaison N / N-1 des trois périodes -->
+  <div class="st-comparaison">
+    @for (p of periodes; track p.code) {
+      @let s = (p.code === 'JOUR' ? statsJour() : p.code === 'MOIS' ? statsMois() : statsSemaine());
+      <button class="st-comp" [class.st-comp-actif]="periodeChoisie() === p.code" (click)="periodeChoisie.set(p.code)">
+        <span class="st-comp-lbl">{{ p.libelle }}</span>
+        @if (s; as x) {
+          <span class="st-comp-val">{{ x.nbFutsNets }} <small>fûts nets</small></span>
+          <span class="st-var" [class.st-var-hausse]="x.comparaison.variationPourcentage >= 0" [class.st-var-baisse]="x.comparaison.variationPourcentage < 0">
+            <i class="fa-solid" [class.fa-arrow-trend-up]="x.comparaison.variationPourcentage >= 0" [class.fa-arrow-trend-down]="x.comparaison.variationPourcentage < 0"></i>
+            {{ x.comparaison.variationPourcentage >= 0 ? '+' : '' }}{{ x.comparaison.variationPourcentage | number:'1.0-1' }} % vs N-1
+          </span>
+        } @else {
+          <span class="st-comp-val st-manquant">—</span>
+          <span class="st-var">Non disponible</span>
+        }
+      </button>
+    }
   </div>
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution des sessions</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labels7j()" [series]="serieEvolutionSessions()" [height]="200" /></div>
-  </div>
-}
+  @if (statsChoisies(); as s) {
+    <section class="st-carte">
+      <div class="st-carte-entete">
+        <h2 class="st-carte-titre"><i class="fa-solid fa-calendar-days"></i> {{ s.periodeLibelle }}</h2>
+        <span class="st-meta">Du {{ s.debut | date:'dd/MM/yyyy' }} au {{ s.fin | date:'dd/MM/yyyy' }} · N-1 : {{ s.comparaison.nbFutsNetsPeriodePrecedente }} fûts nets</span>
+      </div>
 
+      <div class="st-kpis">
+        <div class="st-kpi st-kpi-principal">
+          <div class="st-kpi-lbl">Fûts nets</div>
+          <div class="st-kpi-val">{{ s.nbFutsNets }}</div>
+          <div class="st-kpi-meta">{{ s.nbSessions }} session(s)</div>
+        </div>
+        <div class="st-kpi">
+          <div class="st-kpi-lbl">Fûts produits</div>
+          <div class="st-kpi-val">{{ s.nbFutsProduits }}</div>
+          <div class="st-kpi-meta">avant casse et écart</div>
+        </div>
+        <div class="st-kpi">
+          <div class="st-kpi-lbl">Sessions</div>
+          <div class="st-kpi-val">{{ s.nbSessions }}</div>
+          <div class="st-kpi-meta">ouvertes sur la période</div>
+        </div>
+        <div class="st-kpi" [class.st-kpi-alerte]="s.nbSessionsNonEstimees > 0">
+          <div class="st-kpi-lbl">Non estimées</div>
+          <div class="st-kpi-val">{{ s.nbSessionsNonEstimees }}</div>
+          <div class="st-kpi-meta">exclues des matières (formule ambiguë)</div>
+        </div>
+      </div>
+
+      <div class="st-matieres">
+        <h3 class="st-sous-titre"><i class="fa-solid fa-seedling"></i> Matières consommées</h3>
+        @if (matieresChoisies().length === 0) {
+          <p class="st-vide"><i class="fa-solid fa-inbox"></i> Aucune matière consommée sur cette période.</p>
+        } @else {
+          <div class="st-table-wrap">
+            <table class="st-table">
+              <thead><tr><th>Matière</th><th class="st-num">Quantité</th><th>Part</th></tr></thead>
+              <tbody>
+                @for (m of matieresChoisies(); track m.code) {
+                  <tr>
+                    <td><span class="st-code">{{ m.code }}</span></td>
+                    <td class="st-num"><strong>{{ m.kg | number:'1.1-1' }} kg</strong></td>
+                    <td>
+                      <div class="st-barre"><div class="st-barre-fill" [style.width.%]="m.part"></div></div>
+                      <div class="st-pct">{{ m.part | number:'1.0-0' }} %</div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="st-carte">
+      <p class="st-vide"><i class="fa-solid fa-circle-exclamation"></i> Les statistiques de cette période ne sont pas disponibles.</p>
+    </section>
+  }
+
+  <!-- Évolution des 7 derniers jours -->
+  <section class="st-carte">
+    <h2 class="st-carte-titre"><i class="fa-solid fa-chart-line"></i> Les 7 derniers jours</h2>
+    @if (erreurHistorique()) {
+      <p class="st-vide"><i class="fa-solid fa-circle-exclamation"></i> {{ erreurHistorique() }}</p>
+    } @else {
+      <div class="st-graphiques">
+        <div class="st-graphique">
+          <div class="st-graphique-titre">Fûts nets par jour</div>
+          <app-mini-chart type="line" [labels]="labels7j()" [series]="seriesFuts()" [height]="200" />
+        </div>
+        <div class="st-graphique">
+          <div class="st-graphique-titre">Matières consommées (kg)</div>
+          <app-mini-chart type="bar" [labels]="labels7j()" [series]="seriesMatieres()" [height]="200" />
+        </div>
+        <div class="st-graphique">
+          <div class="st-graphique-titre">Sessions ouvertes par jour</div>
+          <app-mini-chart type="bar" [labels]="labels7j()" [series]="seriesSessions()" [height]="200" />
+        </div>
+      </div>
+    }
+  </section>
 }

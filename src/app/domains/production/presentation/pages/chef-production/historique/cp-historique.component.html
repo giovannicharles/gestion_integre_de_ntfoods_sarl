@@ -1,45 +1,145 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-clock-rotate-left ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="hi-hero">
+  <div class="hi-hero-gauche">
+    <div class="hi-hero-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
     <div>
-      <h1 class="ph-title">Historique et Audit</h1>
-      <p class="ph-sub">Timeline d'activité — PPH, Lots, Expressions de besoin</p>
+      <div class="hi-hero-kicker">Chef de Production</div>
+      <h1 class="hi-hero-titre">Historique de l'activité</h1>
+      <p class="hi-hero-sous">
+        Du {{ debut() | date:'dd/MM/yyyy' }} au {{ aujourdhui | date:'dd/MM/yyyy' }}
+        @if (derniereMaj(); as d) { · mis à jour à {{ d | date:'HH:mm' }} }
+      </p>
     </div>
   </div>
-</div>
-
-<div class="gap-note">
-  <i class="fa-solid fa-triangle-exclamation"></i>
-  <div>Pas de journal d'audit générique (ancienne/nouvelle valeur) côté backend. Cette timeline s'appuie uniquement sur les horodatages et auteurs déjà stockés sur chaque entité.</div>
-</div>
-
-<div class="card">
-  <div class="toolbar-row">
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()===''" [class.btn-ghost]="filtreType()!==''" (click)="filtreType.set('')">Tout</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='PPH'" [class.btn-ghost]="filtreType()!=='PPH'" (click)="filtreType.set('PPH')">PPH</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='Lot'" [class.btn-ghost]="filtreType()!=='Lot'" (click)="filtreType.set('Lot')">Lots</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='Besoin'" [class.btn-ghost]="filtreType()!=='Besoin'" (click)="filtreType.set('Besoin')">Besoins</button>
+  <div class="hi-actions">
+    <div class="hi-segment" role="group" aria-label="Période">
+      @for (p of periodes; track p) {
+        <button class="hi-segment-bouton" [class.hi-segment-actif]="periode() === p" [disabled]="chargement()" (click)="choisirPeriode(p)">{{ p }} jours</button>
+      }
+    </div>
+    <button class="hi-bouton" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.hi-tourne]="chargement()"></i>
+    </button>
   </div>
+</header>
 
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+@if (erreurs().length) {
+  <div class="hi-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Certaines sources n'ont pas pu être lues ({{ erreurs().join(', ') }}). La timeline peut être incomplète.</span>
+    <button class="hi-bouton hi-bouton-petit hi-bouton-rouge" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement() && !derniereMaj()) {
+  <div class="hi-squelette"></div>
+  <div class="hi-squelette hi-squelette-court"></div>
+} @else {
+<div class="hi-contenu" [class.hi-attente]="chargement()" [attr.aria-busy]="chargement()">
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="hi-kpis">
+    <div class="hi-kpi">
+      <span class="hi-kpi-lbl">Événements</span>
+      <span class="hi-kpi-val">{{ tous().length }}</span>
+      <span class="hi-kpi-meta">sur la période</span>
+    </div>
+    <div class="hi-kpi">
+      <span class="hi-kpi-lbl">Personnes actives</span>
+      <span class="hi-kpi-val">{{ auteurs().length }}</span>
+      <span class="hi-kpi-meta">ont laissé une trace</span>
+    </div>
+    <div class="hi-kpi" [class.hi-kpi-alerte]="nbLotsRejetes() > 0">
+      <span class="hi-kpi-lbl">Lots rejetés</span>
+      <span class="hi-kpi-val">{{ nbLotsRejetes() }}</span>
+      <span class="hi-kpi-meta">par le stock</span>
+    </div>
+    <div class="hi-kpi">
+      <span class="hi-kpi-lbl">Besoins traités</span>
+      <span class="hi-kpi-val">{{ nbBesoinsTraites() }}</span>
+      <span class="hi-kpi-meta">validés ou rejetés</span>
+    </div>
+  </section>
+
+  <!-- ═══ FILTRES ═══ -->
+  <section class="hi-carte">
+    <div class="hi-pilles" role="tablist" aria-label="Type d'activité">
+      <button class="hi-pille" [class.hi-pille-active]="filtreGroupe() === ''" (click)="filtreGroupe.set('')">Tout <span class="hi-pille-n">{{ tous().length }}</span></button>
+      @for (g of groupes; track g.code) {
+        @if (compteGroupe(g.code) > 0) {
+          <button class="hi-pille" [class.hi-pille-active]="filtreGroupe() === g.code" (click)="filtreGroupe.set(g.code)">
+            <i class="fa-solid" [class]="'fa-solid ' + g.icone"></i> {{ g.libelle }} <span class="hi-pille-n">{{ compteGroupe(g.code) }}</span>
+          </button>
+        }
+      }
+    </div>
+    <div class="hi-outils">
+      <select class="hi-select" aria-label="Filtrer par personne" (change)="filtreAuteur.set($any($event.target).value)">
+        <option value="">Toutes les personnes</option>
+        @for (a of auteurs(); track a) { <option [value]="a" [selected]="a === filtreAuteur()">{{ a }}</option> }
+      </select>
+      <input type="search" class="hi-recherche" placeholder="Rechercher un plan, un lot, une personne…" aria-label="Rechercher"
+             [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+      @if (filtreGroupe() || filtreAuteur() || recherche()) {
+        <button class="hi-lien" (click)="reinitialiser()">Réinitialiser</button>
+      }
+    </div>
+  </section>
+
+  <!-- ═══ TIMELINE ═══ -->
+  @if (parJour().length) {
+    @for (jour of parJour(); track jour.jour) {
+      <section class="hi-jour">
+        <header class="hi-jour-tete">
+          <span class="hi-jour-date">{{ jour.jour === aujourdhui ? "Aujourd'hui" : (jour.jour | date:'EEEE dd MMMM yyyy') }}</span>
+          <span class="hi-jour-n">{{ jour.evenements.length }} événement(s)</span>
+        </header>
+        <ol class="hi-frise">
+          @for (e of jour.evenements; track e.id) {
+            <li class="hi-evt" [class.hi-evt-pph]="e.groupe === 'pph'" [class.hi-evt-prod]="e.groupe === 'production'"
+                [class.hi-evt-saisie]="e.groupe === 'saisie'" [class.hi-evt-lot]="e.groupe === 'lot'" [class.hi-evt-besoin]="e.groupe === 'besoin'">
+              <span class="hi-evt-pastille"><i class="fa-solid" [class]="'fa-solid ' + iconeGroupe(e.groupe)"></i></span>
+              <div class="hi-evt-corps">
+                <div class="hi-evt-tete">
+                  <span class="hi-evt-titre">{{ e.titre }}</span>
+                  <span class="hi-evt-groupe">{{ libelleGroupe(e.groupe) }}</span>
+                </div>
+                <p class="hi-evt-detail">{{ e.detail }}</p>
+                <div class="hi-evt-pied">
+                  @if (e.auteur) {
+                    <span class="hi-evt-auteur"><i class="fa-solid fa-user"></i> {{ e.auteur }}</span>
+                  } @else {
+                    <span class="hi-evt-auteur hi-muet"><i class="fa-solid fa-user-slash"></i> auteur non tracé</span>
+                  }
+                  <span class="hi-evt-heure">{{ e.date.length > 10 ? (e.date | date:'HH:mm') : '' }}</span>
+                  <a class="hi-evt-lien" [routerLink]="e.lien">Ouvrir <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+    }
   } @else {
-    <div class="timeline">
-      @for (e of evenementsFiltres(); track e.libelle + e.date) {
-        <div class="timeline-item">
-          <div class="timeline-dot" [class.dot-pph]="e.type==='PPH'" [class.dot-lot]="e.type==='Lot'" [class.dot-besoin]="e.type==='Besoin'"></div>
-          <div class="timeline-content">
-            <div class="timeline-hd">
-              <strong>{{ e.libelle }}</strong>
-              <span class="badge bg-neutral">{{ e.type }}</span>
-            </div>
-            <div class="text-muted">{{ e.detail }}</div>
-            <div class="timeline-meta">{{ e.auteur }} — {{ e.date | date:'dd/MM/yyyy HH:mm' }}</div>
-          </div>
-        </div>
-      } @empty {
-        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun événement</div>
+    <div class="hi-vide">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      @if (tous().length === 0) {
+        <h3>Aucune activité sur la période</h3>
+        <p>Aucun plan, broyage, dosage, registre, lot ou besoin n'a été enregistré depuis le {{ debut() | date:'dd/MM/yyyy' }}.</p>
+      } @else {
+        <h3>Aucun événement ne correspond</h3>
+        <p>Modifiez les filtres ou la recherche.</p>
+        <button class="hi-bouton hi-bouton-primaire hi-bouton-petit" (click)="reinitialiser()">Réinitialiser les filtres</button>
       }
     </div>
   }
+
+  <p class="hi-pied">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>
+      Cette timeline reprend les dates et auteurs enregistrés sur chaque élément. Le backend ne conserve pas d'historique détaillé des modifications :
+      un élément « auteur non tracé » a bien été modifié, mais le système ne dit pas par qui.
+    </span>
+  </p>
 </div>
+}

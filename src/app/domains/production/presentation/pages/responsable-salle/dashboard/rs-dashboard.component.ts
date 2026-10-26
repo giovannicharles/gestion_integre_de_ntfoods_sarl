@@ -1,98 +1,131 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Observable, catchError, forkJoin, of } from 'rxjs';
 import {
-  ProductionService, PPHBE, AffectationBE, FicheProductionBE,
-  RapportHebdoAffectationBE, DashboardAgentBE
+  ProductionService, AffectationBE, DashboardResponsableSalleBE, RapportHebdoAffectationBE,
 } from '../../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
-import { ToastService } from '../../../../../../core/services/toast.service';
+
+/** Date locale au format AAAA-MM-JJ (évite le décalage UTC de toISOString). */
+function dateLocaleIso(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Ajoute n jours à une date AAAA-MM-JJ, en calendrier local. */
+function ajouterJours(iso: string, n: number): string {
+  const [y, m, j] = iso.split('-').map(Number);
+  return dateLocaleIso(new Date(y, m - 1, j + n));
+}
+
+type Gravite = 'danger' | 'warning' | 'info';
 
 /**
- * DASHBOARD — Responsable de Salle
- * Centre de pilotage quotidien de l'atelier.
+ * TABLEAU DE BORD — Responsable de Salle.
+ * Vue d'ensemble de l'atelier pour la journée : plan en cours et son avancement, affectation et registre
+ * du jour, écarts sur les postes, besoins et lots en attente. Les alertes se déduisent des données réelles.
  */
 @Component({
   selector: 'app-rs-dashboard',
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, MiniChartComponent],
   templateUrl: './rs-dashboard.component.html',
-  styleUrls: ['./rs-dashboard.component.css', '../_shared.css']
+  styleUrls: ['./rs-dashboard.component.css'],
 })
 export class RsDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);
-  private readonly toast = inject(ToastService);
 
-  today = new Date().toISOString().split('T')[0];
-  loading = signal(true);
+  readonly aujourdhui = dateLocaleIso();
+  readonly chargement = signal(true);
+  readonly erreurs = signal<string[]>([]);
+  readonly sessionExpiree = signal(false);
+  readonly derniereMaj = signal<Date | null>(null);
 
-  pphs = signal<PPHBE[]>([]);
-  pphEnCours = signal<PPHBE | null>(null);
-  affectationJour = signal<AffectationBE | null>(null);
-  ficheJour = signal<FicheProductionBE | null>(null);
-  rapportHebdo = signal<RapportHebdoAffectationBE | null>(null);
-  dashboardAgent = signal<DashboardAgentBE | null>(null);
+  readonly dashboard = signal<DashboardResponsableSalleBE | null>(null);
+  readonly affectation = signal<AffectationBE | null>(null);
+  readonly semaine = signal<RapportHebdoAffectationBE | null>(null);
 
-  // ── KPI ──
-  bcEnCours = computed(() => new Set(this.pphs().filter(p => p.statut === 'EN_COURS').map(p => p.referenceBC).filter(Boolean)).size);
-  pphActifs = computed(() => this.pphs().filter(p => p.statut === 'EN_COURS').length);
-  employesAffectesJour = computed(() => new Set((this.affectationJour()?.lignes ?? []).flatMap(l => l.matriculesEmployes)).size);
-  postesActifs = computed(() => this.affectationJour()?.lignes.length ?? 0);
-  postesObjectifAtteint = computed(() => (this.affectationJour()?.saisies ?? []).filter(s => s.pctRealisation >= 100).length);
-  quantiteProduiteJour = computed(() => (this.affectationJour()?.saisies ?? []).reduce((s, x) => s + x.quantiteRealisee, 0));
-  tauxGlobalObjectifs = computed(() => {
-    const saisies = this.affectationJour()?.saisies ?? [];
-    if (!saisies.length) return 0;
-    return Math.round((saisies.reduce((s, x) => s + x.pctRealisation, 0) / saisies.length) * 10) / 10;
+  readonly plan = computed(() => this.dashboard()?.planEnCours ?? null);
+  readonly aff = computed(() => this.dashboard()?.affectation ?? null);
+  readonly tauxAtteinte = computed(() => {
+    const a = this.aff();
+    return a && a.saisies > 0 ? Math.round((a.objectifsAtteints / a.saisies) * 1000) / 10 : null;
   });
-  ecartsDetectes = computed(() => (this.affectationJour()?.saisies ?? []).reduce((s, x) => s + x.warnings.length, 0));
-  fichesGenerees = computed(() => this.ficheJour() ? 1 : 0);
 
-  ngOnInit(): void { this.charger(); }
+  /** Alertes déduites des données du jour, de la plus grave à la moins grave. */
+  readonly alertes = computed(() => {
+    const d = this.dashboard();
+    if (!d) return [] as { gravite: Gravite; texte: string }[];
+    const out: { gravite: Gravite; texte: string }[] = [];
+    if (d.affectation.ecarts > 0) out.push({ gravite: 'danger', texte: `${d.affectation.ecarts} écart(s) détecté(s) sur les postes aujourd'hui.` });
+    if (d.planEnCours && !d.affectation.existe) out.push({ gravite: 'warning', texte: 'Aucune affectation des employés pour aujourd\'hui sur le plan en cours.' });
+    if (d.planEnCours && !d.registreSaisi) out.push({ gravite: 'warning', texte: 'Le registre des employés du jour n\'est pas encore saisi.' });
+    if (!d.planEnCours && d.plansValides > 0) out.push({ gravite: 'info', texte: `Aucun plan en cours : ${d.plansValides} plan(s) validé(s) attendent d'être démarrés.` });
+    if (d.besoins.enAttente > 0) out.push({ gravite: 'info', texte: `${d.besoins.enAttente} expression(s) de besoin en attente de traitement.` });
+    if (d.lots.enAttenteStock > 0) out.push({ gravite: 'info', texte: `${d.lots.enAttenteStock} lot(s) en attente de validation par le stock.` });
+    return out;
+  });
 
-  charger(): void {
-    this.loading.set(true);
-    this.svc.getPPHs().subscribe({
-      next: pphs => {
-        this.pphs.set(pphs);
-        const enCours = pphs.find(p => p.statut === 'EN_COURS') ?? null;
-        this.pphEnCours.set(enCours);
-        if (enCours) {
-          this.svc.getAffectationDuJour(enCours.referencePPH).subscribe({ next: a => this.affectationJour.set(a), error: () => this.affectationJour.set(null) });
-          this.svc.getFiche(enCours.referencePPH, this.today).subscribe({ next: f => this.ficheJour.set(f), error: () => this.ficheJour.set(null) });
-        }
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false)
-    });
-    this.svc.getDashboardAgent().subscribe({
-      next: d => this.dashboardAgent.set(d),
-      error: () => this.toast.error('Impossible de charger le tableau de bord agent')
-    });
-    this.svc.getRapportHebdomadaireAffectation(this.debutSemaine(), this.today).subscribe({
-      next: r => this.rapportHebdo.set(r),
-      error: () => this.toast.error('Impossible de charger le rapport hebdomadaire')
-    });
-  }
-
-  private debutSemaine(): string {
-    const d = new Date(); const j = d.getDay();
-    return new Date(d.setDate(d.getDate() - j + (j === 0 ? -6 : 1))).toISOString().split('T')[0];
-  }
-
-  labelsJours = computed(() => (this.rapportHebdo()?.comparaisonsJournalieres ?? []).map(c => c.date.slice(5).split('-').reverse().join('/')));
-  serieFutsVsProduction = computed<ChartSeries[]>(() => {
-    const jours = this.rapportHebdo()?.comparaisonsJournalieres ?? [];
+  readonly labelsSemaine = computed(() => (this.semaine()?.comparaisonsJournalieres ?? [])
+    .map(c => c.date.slice(8, 10) + '/' + c.date.slice(5, 7)));
+  readonly serieSemaine = computed<ChartSeries[]>(() => {
+    const jours = this.semaine()?.comparaisonsJournalieres ?? [];
     return [
-      { name: 'Fûts nets', color: 'var(--info, #0284c7)', values: jours.map(j => j.nbFutsNets) },
-      { name: 'Production (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => j.productionReelleKg) },
+      { name: 'Fûts nets', color: '#0284c7', values: jours.map(j => j.nbFutsNets) },
+      { name: 'Production (kg)', color: '#2e7d32', values: jours.map(j => j.productionReelleKg) },
     ];
   });
 
-  serieClassementPostes = computed<ChartSeries[]>(() => [{
-    name: 'Taux réalisation (%)', color: 'var(--primary, #1976d2)',
-    values: (this.affectationJour()?.classement ?? []).map(c => c.pctRealisation),
+  readonly labelsPostes = computed(() => (this.affectation()?.classement ?? []).map(c => c.libellePoste));
+  readonly seriePostes = computed<ChartSeries[]>(() => [{
+    name: 'Taux de réalisation (%)', color: '#1E7A42',
+    values: (this.affectation()?.classement ?? []).map(c => c.pctRealisation),
   }]);
-  labelsClassementPostes = computed(() => (this.affectationJour()?.classement ?? []).map(c => c.libellePoste));
+
+  ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
+    this.chargement.set(true);
+    this.erreurs.set([]);
+    this.sessionExpiree.set(false);
+    forkJoin({
+      dashboard: this.tolerer(this.svc.getDashboardResponsableSalle(this.aujourdhui), null, 'tableau de bord'),
+      semaine: this.tolerer(this.svc.getRapportHebdomadaireAffectation(this.debutSemaine(), this.aujourdhui), null, 'rapport de la semaine'),
+    }).subscribe(r => {
+      this.dashboard.set(r.dashboard);
+      this.semaine.set(r.semaine);
+      this.derniereMaj.set(new Date());
+      this.chargement.set(false);
+      const ref = r.dashboard?.planEnCours?.reference;
+      if (ref) {
+        this.tolerer(this.svc.getAffectationDuJour(ref), null, 'affectations du jour')
+          .subscribe(a => this.affectation.set(a));
+      } else {
+        this.affectation.set(null);
+      }
+    });
+  }
+
+  libelleAvancement(p: number | null | undefined): string {
+    return p === null || p === undefined ? '—' : `${p.toFixed(1)} %`;
+  }
+
+  /** Une source qui échoue ne bloque pas les autres : elle reste vide et son nom est signalé. */
+  private tolerer<T>(source: Observable<T>, repli: T, nom: string): Observable<T> {
+    return source.pipe(catchError((e: unknown) => {
+      if ((e as { status?: number })?.status === 401) {
+        this.sessionExpiree.set(true);
+      } else {
+        this.erreurs.update(l => l.includes(nom) ? l : [...l, nom]);
+      }
+      return of(repli);
+    }));
+  }
+
+  private debutSemaine(): string {
+    const decalage = (new Date().getDay() + 6) % 7; // lundi = 0
+    return ajouterJours(this.aujourdhui, -decalage);
+  }
 }

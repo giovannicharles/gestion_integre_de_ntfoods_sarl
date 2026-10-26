@@ -1,75 +1,160 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-simple ph-ico"></i>
+<header class="pr-hero">
+  <div class="pr-hero-gauche">
+    <i class="fa-solid fa-wand-magic-sparkles pr-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Prédictions des Produits Finis</h1>
-      <p class="ph-sub">Estimation automatique à partir des fûts nets de la session sélectionnée (vue informative)</p>
+      <div class="pr-hero-kicker">Agent doseur</div>
+      <h1 class="pr-hero-titre">Prédictions de production</h1>
+      <p class="pr-hero-sous">
+        Nombre de fûts et produits du bon de commande : le système calcule les produits qui doivent sortir.
+        Cette prédiction est la référence utilisée par les autres rôles.
+      </p>
     </div>
   </div>
-</div>
+</header>
 
-@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Calculer une prédiction</h2></div>
-  <div class="toolbar-row">
-    <select class="input" (change)="selectionnerSessionDepuisSelect($any($event.target).value)">
-      <option value="">— Choisir une session ouverte —</option>
-      @for (s of contexte.sessionsOuvertes(); track s.id) {
-        <option [value]="s.id" [selected]="contexte.sessionActive()?.id === s.id">#{{ s.id }} — {{ s.referencePPH }} ({{ s.date }})</option>
-      }
-    </select>
+@if (sessionExpiree()) {
+  <div class="pr-alerte pr-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="pr-lien">Se reconnecter</a>
   </div>
-  @if (contexte.sessionActive(); as s) {
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <span class="badge bg-success">Session #{{ s.id }} — PPH {{ s.referencePPH }}</span>
-      <span class="badge bg-neutral" style="margin-left:8px">Fûts nets enregistrés : {{ s.nbFutsNets }}</span>
-    </div>
-  } @else if (contexte.sessionsOuvertes().length === 0) {
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><span class="badge bg-orange">Aucune session ouverte</span></div>
-  }
-</div>
+} @else if (erreur()) {
+  <div class="pr-alerte pr-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
+}
+@if (succes()) {
+  <div class="pr-alerte pr-alerte-succes"><i class="fa-solid fa-circle-check"></i><span>{{ succes() }}</span></div>
+}
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else {
-  @if (prediction(); as p) {
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ p.nbFutsNets }}</div></div></div>
-    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poids total poudre</div><div class="kpi-val">{{ p.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
-  </div>
+<section class="pr-carte">
+  <h2 class="pr-carte-titre"><i class="fa-solid fa-calculator"></i> Calculer la prédiction d'un plan</h2>
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Quantités théoriques par conditionnement</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Produit</th><th>Recette</th><th>Poids unitaire</th><th>Unités de base</th><th>Cartons estimés</th><th>Unités / carton</th></tr></thead>
-        <tbody>
-          @for (l of p.predictions; track l.codeProduit) {
-            <tr>
-              <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designation }}</td>
-              <td>{{ l.recette }}</td>
-              <td>{{ l.poidsUnitaireGrammes }} g</td>
-              <td><strong>{{ l.quantiteUnitesBase }}</strong></td>
-              <td>{{ l.quantiteCartons }}</td>
-              <td>{{ l.nombreUnitesParCarton }}</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="6" class="empty-state-block">
-              <i class="fa-solid fa-inbox"></i>
-              Aucun produit prédit : vérifiez que le BC du PPH contient des produits de catégorie TANTY BOUILLIE DE SOJA avec un conditionnement valide.
-            </td></tr>
+  @if (chargementPlans()) {
+    <div class="pr-squelette"></div>
+  } @else if (plansValides().length === 0) {
+    <p class="pr-vide"><i class="fa-solid fa-inbox"></i> Aucun plan validé ou en cours : une prédiction ne peut être calculée que sur un plan validé.</p>
+  } @else {
+    <div class="pr-form">
+      <label class="pr-champ">
+        <span class="pr-champ-lbl">Plan de production</span>
+        <select class="pr-input" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPlan($event)">
+          <option value="">— Choisir un plan —</option>
+          @for (p of plansValides(); track p.referencePPH) {
+            <option [value]="p.referencePPH">{{ p.referencePPH }} · BC {{ p.referenceBC ?? '—' }} · {{ p.statut }}</option>
           }
-        </tbody>
-      </table>
+        </select>
+      </label>
+
+      <label class="pr-champ">
+        <span class="pr-champ-lbl">Nombre de fûts</span>
+        <input class="pr-input" type="number" min="1" step="1" placeholder="ex. 4"
+               [ngModel]="nbFuts() || null" (ngModelChange)="nbFuts.set(+$event || 0)"
+               [disabled]="!planChoisi()">
+      </label>
+
+      <div class="pr-action">
+        <button class="pr-bouton" [disabled]="!peutCalculer()" (click)="calculer()">
+          @if (calcul()) {
+            <i class="fa-solid fa-spinner pr-tourne"></i> Calcul…
+          } @else {
+            <i class="fa-solid fa-play"></i> Calculer et enregistrer
+          }
+        </button>
+      </div>
     </div>
-    <p class="text-muted" style="padding: 0 var(--sp-4) var(--sp-4)">
-      La prédiction est calculée automatiquement dès la sélection d'une session :
-      elle utilise ses fûts nets, résout le PPH associé puis le Bon de Commande,
-      et ne concerne que les produits de la catégorie métier <strong>TANTY BOUILLIE DE SOJA</strong>.
-      Les colonnes "sachets / étuis / gaines" correspondent aux différents types de conditionnement listés
-      ci-dessus selon le produit (chaque référence a son unité propre — sachet, étui, gaine ou carton).
+
+    <p class="pr-note">
+      <i class="fa-solid fa-circle-info"></i>
+      1 fût = 50 kg de poudre. Poudre à répartir : <strong>{{ poudreAttendueKg() | number:'1.0-1' }} kg</strong>,
+      partagée entre les produits du bon de commande au prorata du poids demandé.
     </p>
-  </div>
+  }
+</section>
+
+@if (planChoisi(); as plan) {
+  @if (chargementPrediction()) {
+    <div class="pr-squelette pr-squelette-haut"></div>
+  } @else if (prediction()) { @let p = prediction()!;
+    <div class="pr-kpis">
+      <div class="pr-kpi pr-kpi-principal">
+        <div class="pr-kpi-lbl">Fûts</div>
+        <div class="pr-kpi-val">{{ p.nbFuts }}</div>
+        <div class="pr-kpi-meta">Plan {{ p.referencePPH }}</div>
+      </div>
+      <div class="pr-kpi">
+        <div class="pr-kpi-lbl">Poudre totale</div>
+        <div class="pr-kpi-val">{{ p.poudreKg | number:'1.0-1' }} <small>kg</small></div>
+        <div class="pr-kpi-meta">{{ p.nbFuts }} × 50 kg</div>
+      </div>
+      <div class="pr-kpi">
+        <div class="pr-kpi-lbl">Produits qui doivent sortir</div>
+        <div class="pr-kpi-val">{{ p.predictions.length }}</div>
+        <div class="pr-kpi-meta">{{ p.predictions.length > 1 ? 'produits du BC' : 'produit du BC' }}</div>
+      </div>
+      <div class="pr-kpi" [class.pr-kpi-alerte]="p.exclusions.length > 0">
+        <div class="pr-kpi-lbl">Exclus</div>
+        <div class="pr-kpi-val">{{ p.exclusions.length }}</div>
+        <div class="pr-kpi-meta">produits sans prédiction</div>
+      </div>
+    </div>
+
+    <section class="pr-carte">
+      <h2 class="pr-carte-titre"><i class="fa-solid fa-boxes-stacked"></i> Produits prédits</h2>
+      @if (p.predictions.length === 0) {
+        <p class="pr-vide"><i class="fa-solid fa-inbox"></i> Aucun produit prédit pour ce plan.</p>
+      } @else {
+        <div class="pr-table-wrap">
+          <table class="pr-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Composition (formule)</th>
+                <th class="pr-num">Poudre allouée</th>
+                <th class="pr-num">Unités à produire</th>
+                <th class="pr-num">Cartons</th>
+                <th class="pr-num">Unités / carton</th>
+                <th class="pr-num">Poids unitaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of p.predictions; track l.codeProduit) {
+                <tr>
+                  <td>
+                    <span class="pr-code">{{ l.codeProduit }}</span>
+                    <div class="pr-designation">{{ l.designation }}</div>
+                  </td>
+                  <td class="pr-composition">{{ l.composition }}</td>
+                  <td class="pr-num"><strong>{{ l.poudreAlloueeKg | number:'1.1-1' }} kg</strong></td>
+                  <td class="pr-num"><strong>{{ l.quantiteUnitesBase }}</strong></td>
+                  <td class="pr-num">{{ l.quantiteCartons }}</td>
+                  <td class="pr-num">{{ l.unitesParCarton }}</td>
+                  <td class="pr-num">{{ l.poidsUnitaireGrammes }} g</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (p.exclusions.length > 0) {
+      <section class="pr-carte pr-carte-alerte">
+        <h2 class="pr-carte-titre"><i class="fa-solid fa-triangle-exclamation"></i> Produits exclus de la prédiction</h2>
+        <ul class="pr-exclusions">
+          @for (x of p.exclusions; track x.codeProduit + x.motif) {
+            <li><span class="pr-code">{{ x.codeProduit }}</span> {{ x.motif }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    <p class="pr-pied">
+      <i class="fa-solid fa-clock"></i>
+      Calculée le {{ p.dateCalcul | date:'dd/MM/yyyy HH:mm' }} par {{ p.matricule }}.
+      Recalculez après toute modification du nombre de fûts ou des poids unitaires.
+    </p>
+  } @else {
+    <section class="pr-carte">
+      <p class="pr-vide"><i class="fa-solid fa-flask"></i> Aucune prédiction pour le plan {{ plan.referencePPH }}. Saisissez le nombre de fûts puis calculez.</p>
+    </section>
   }
 }

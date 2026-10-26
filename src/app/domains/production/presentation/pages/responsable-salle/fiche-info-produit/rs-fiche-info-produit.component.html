@@ -1,89 +1,200 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-file-lines ph-ico"></i>
+<div class="fp">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="fp-hero">
+  <div class="fp-hero-gauche">
+    <i class="fa-solid fa-file-lines fp-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Fiche Info Produit Journalière</h1>
-      <p class="ph-sub">Produits fabriqués, quantités, comparaison avec les prédictions</p>
+      <div class="fp-kicker">Responsable de salle · Fiche produit</div>
+      <h1 class="fp-hero-titre">Fiche info produit journalière</h1>
+      <p class="fp-hero-sous">Produits fabriqués, comparés aux prédictions de dosage et de postes.</p>
     </div>
   </div>
-  @if (fiche()) {
-    <div class="ph-actions"><button class="btn btn-ghost" (click)="imprimer()"><i class="fa-solid fa-print"></i> Imprimer / PDF</button></div>
-  }
-</div>
-
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
-      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-    </select>
-    <input type="date" class="input" [(ngModel)]="date" (ngModelChange)="charger()">
+  <div class="fp-hero-choix">
+    <label class="fp-champ">
+      <span class="fp-lbl">Plan</span>
+      <select class="fp-select" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPph($event)"
+              [disabled]="pphs().length === 0">
+        @for (p of pphs(); track p.id) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.semaine }}</option>
+        }
+      </select>
+    </label>
+    <label class="fp-champ">
+      <span class="fp-lbl">Journée</span>
+      <input class="fp-select" type="date" [ngModel]="dateChoisie()" (ngModelChange)="choisirDate($event)" />
+    </label>
+    @if (fiche()) {
+      <button class="fp-bouton fp-bouton-blanc" (click)="imprimer()">
+        <i class="fa-solid fa-print"></i> Imprimer
+      </button>
+    }
   </div>
-</div>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else {
-  @if (fiche(); as f) {
-
-  <div class="card">
-    <div class="toolbar-row">
-      <label>Nombre de fûts produits (50 kg)</label>
-      <span class="badge bg-blue">{{ f.nbFutsProduits }}</span>
-      <small>Saisi par l'agent doseur</small>
-    </div>
+@if (sessionExpiree()) {
+  <div class="fp-alerte fp-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="fp-lien">Se reconnecter</a>
   </div>
+} @else if (erreur()) {
+  <div class="fp-alerte fp-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="fp-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
+}
+@if (message()) {
+  <div class="fp-alerte fp-alerte-ok">
+    <i class="fa-solid fa-circle-check"></i><span>{{ message() }}</span>
+    <button class="fp-lien" (click)="message.set('')">Fermer</button>
+  </div>
+}
 
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-list"></i> Produits fabriqués — {{ f.date }}</h2>
-      @if (f.verrouillee) { <span class="badge bg-orange">🔒 Verrouillée</span> }
+@if (chargement() || chargementFiche()) {
+  <div class="fp-squelette"></div>
+} @else if (pphs().length === 0) {
+  <section class="fp-carte fp-vide">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <h2>Aucun plan disponible</h2>
+    <p>La fiche se rattache à un plan de production (PPH).</p>
+  </section>
+} @else if (sansFiche()) {
+  <section class="fp-carte fp-vide">
+    <i class="fa-solid fa-file-circle-plus"></i>
+    <h2>Aucune fiche pour cette journée</h2>
+    <p>Générez-la : les prédictions disponibles à cet instant seront calculées automatiquement.</p>
+    <button class="fp-bouton fp-bouton-primaire" (click)="genererFiche()" [disabled]="action() !== ''">
+      @if (action() === 'generation') { <i class="fa-solid fa-spinner fp-tourne"></i> Génération… }
+      @else { <i class="fa-solid fa-plus"></i> Générer la fiche du jour }
+    </button>
+  </section>
+} @else if (fiche()) { @let f = fiche()!;
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="fp-kpis">
+    <div class="fp-kpi fp-kpi-principal">
+      <span class="fp-lbl">Fûts dosés</span>
+      <strong class="fp-grand">{{ f.nbFutsProduits }}</strong>
+      <span class="fp-muet">saisis par l'agent doseur, {{ f.date | date:'dd/MM/yyyy' }}</span>
     </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Produit</th><th>Quantité réelle</th><th>Prédiction Dosage</th><th>Prédiction Postes</th><th>Écart</th><th>Progression</th></tr></thead>
+    <div class="fp-kpi">
+      <span class="fp-lbl">Produits suivis</span>
+      <strong class="fp-grand">{{ nbProduits() }}</strong>
+      <span class="fp-muet">{{ nbAvecPrediction() }} avec une prédiction</span>
+    </div>
+    <div class="fp-kpi">
+      <span class="fp-lbl">Bouillie (dosage)</span>
+      <strong class="fp-grand">{{ nbBouillie() }}</strong>
+      <span class="fp-muet">produits prédits depuis les fûts</span>
+    </div>
+    <div class="fp-kpi">
+      <span class="fp-lbl">Grignoter (postes)</span>
+      <strong class="fp-grand">{{ nbGrignoter() }}</strong>
+      <span class="fp-muet">produits prédits depuis les réalisations</span>
+    </div>
+  </section>
+
+  <!-- ═══ PRODUITS DU JOUR ═══ -->
+  <section class="fp-carte">
+    <header class="fp-carte-tete">
+      <div class="fp-titre">
+        <span class="fp-numero"><i class="fa-solid fa-list"></i></span>
+        <div>
+          <h3>Produits fabriqués — {{ f.date | date:'EEEE d MMMM y' }}</h3>
+          <span class="fp-muet">
+            @if (f.verrouillee) { Fiche verrouillée : le lot a été validé par le stock, plus aucune correction possible. }
+            @else { Prédiction dosage pour la bouillie, prédiction postes pour le grignoter ; datage et étiquetage ne fabriquent rien. }
+          </span>
+        </div>
+      </div>
+      @if (f.verrouillee) { <span class="fp-chip-verrou"><i class="fa-solid fa-lock"></i> Verrouillée</span> }
+    </header>
+
+    @if (f.justificationEcart) {
+      <div class="fp-alerte fp-alerte-info">
+        <i class="fa-solid fa-comment"></i><span>Justification d'écart : {{ f.justificationEcart }}</span>
+      </div>
+    }
+
+    <div class="fp-table-wrap">
+      <table class="fp-table">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th class="fp-num">Quantité réelle</th>
+            <th>Source</th>
+            <th class="fp-num">Prédiction</th>
+            <th class="fp-num">Écart</th>
+            <th>Progression</th>
+            <th>Niveau</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (l of f.lignes; track l.codeProduit; let i = $index) {
+          @for (l of lignes(); track l.codeProduit) {
             <tr>
-              <td>{{ l.nomProduit }}</td>
-              <td><input type="number" class="input" [ngModel]="l.quantiteProduite" (ngModelChange)="modifierQuantite(i, $event)" [disabled]="f.verrouillee" style="width:100px"></td>
-              <td>{{ l.quantitePrediteDosage ?? '—' }}</td>
-              <td>{{ l.quantitePreditePostes ?? '—' }}</td>
-              <td>{{ l.ecart ?? '—' }}</td>
-              <td>
-                @if (l.tauxAvancement != null) {
-                  <div class="rp-prog-wrap">
-                    <div class="rp-prog-track">
-                      <div class="rp-prog-bar" [style.width.%]="l.tauxAvancement"
-                           [class.rp-prog-g]="l.tauxAvancement >= 100"
-                           [class.rp-prog-y]="l.tauxAvancement >= 50 && l.tauxAvancement < 100"
-                           [class.rp-prog-r]="l.tauxAvancement < 50"></div>
-                    </div>
-                    <span class="rp-prog-pct">{{ l.tauxAvancement }}%</span>
-                  </div>
-                } @else { — }
+              <td><strong>{{ l.nomProduit }}</strong></td>
+              <td class="fp-num">
+                <input class="fp-input" type="number" min="0" step="0.1" [ngModel]="l.quantiteSaisie"
+                       (ngModelChange)="majQuantite(l.codeProduit, $event)" [disabled]="f.verrouillee" />
               </td>
+              <td>
+                <span class="fp-source fp-source-{{ l.source ?? 'aucune' }}">{{ libelleSource(l.source) }}</span>
+              </td>
+              <td class="fp-num">{{ l.prediction ?? '—' }}</td>
+              <td class="fp-num">
+                @if (l.ecart !== null) {
+                  <span [class.fp-texte-alerte]="l.ecart < 0">{{ l.ecart > 0 ? '+' : '' }}{{ l.ecart }}</span>
+                } @else { <span class="fp-muet">—</span> }
+              </td>
+              <td>
+                @if (l.prediction !== null) {
+                  <div class="fp-progression">
+                    <div class="fp-piste">
+                      <div class="fp-barre fp-barre-{{ l.niveau }}" [style.width.%]="borne(pourcentageAtteint(l))"></div>
+                    </div>
+                    @if (l.prediction > 0) {
+                      <span class="fp-pct">{{ pourcentageAtteint(l) | number:'1.0-0' }} %</span>
+                    } @else {
+                      <span class="fp-pct">—</span>
+                    }
+                  </div>
+                } @else { <span class="fp-muet">—</span> }
+              </td>
+              <td><span class="fp-niveau fp-niveau-{{ l.niveau }}">{{ libelleNiveau(l.niveau) }}</span></td>
             </tr>
           }
         </tbody>
       </table>
     </div>
-    @if (!f.verrouillee) {
-      <div class="form-actions" style="padding: 0 var(--sp-4) var(--sp-4)">
-        <button class="btn btn-primary" (click)="enregistrerCorrections()">Enregistrer les corrections</button>
-      </div>
-    }
-  </div>
 
-  } @else {
-    <div class="card">
-      <div class="empty-state-block" style="padding: var(--sp-5)">
-        <i class="fa-solid fa-inbox"></i>Aucune fiche pour ce jour
-        <div class="form-actions" style="justify-content:center;margin-top:var(--sp-3)">
-          <button class="btn btn-primary" (click)="genererFiche()">Générer la fiche du jour</button>
+    @if (erreursEdition().length > 0) {
+      <ul class="fp-erreurs">
+        @for (msg of erreursEdition(); track msg) { <li>{{ msg }}</li> }
+      </ul>
+    }
+
+    @if (!f.verrouillee) {
+      <footer class="fp-carte-pied">
+        <span class="fp-muet">
+          <i class="fa-solid fa-circle-info"></i>
+          Les prédictions sont calculées au moment du calcul : recalculez-les une fois les réalisations du jour saisies.
+        </span>
+        <div class="fp-actions">
+          <button class="fp-bouton fp-bouton-secondaire" (click)="recalculerPredictions()" [disabled]="!peutRecalculer()">
+            @if (action() === 'recalcul') { <i class="fa-solid fa-spinner fp-tourne"></i> Recalcul… }
+            @else { <i class="fa-solid fa-rotate"></i> Recalculer les prédictions }
+          </button>
+          @if (modifie()) {
+            <button class="fp-bouton fp-bouton-secondaire" (click)="annulerModifications()" [disabled]="action() !== ''">Annuler</button>
+          }
+          <button class="fp-bouton fp-bouton-primaire" (click)="enregistrerCorrections()" [disabled]="!peutEnregistrerCorrections()">
+            @if (action() === 'corrections') { <i class="fa-solid fa-spinner fp-tourne"></i> Enregistrement… }
+            @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les corrections }
+          </button>
         </div>
-      </div>
-    </div>
-  }
+      </footer>
+    }
+  </section>
 }
+
+</div>

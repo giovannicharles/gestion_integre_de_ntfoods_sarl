@@ -1,184 +1,317 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-triangle-exclamation ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="bs-hero">
+  <div class="bs-hero-gauche">
+    <div class="bs-hero-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
     <div>
-      <h1 class="ph-title">Expressions de Besoin</h1>
-      <p class="ph-sub">Signalement des ruptures de matières premières ou d'emballages</p>
+      <div class="bs-hero-kicker">Approvisionnement</div>
+      <h1 class="bs-hero-titre">Expressions de besoin</h1>
+      <p class="bs-hero-sous">
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }} }
+        @else { Ruptures de matières premières, emballages et consommables }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary" (click)="ouvrirSignaler()">
+  <div class="bs-actions">
+    <button class="bs-bouton bs-bouton-verre" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.bs-tourne]="chargement()"></i>
+    </button>
+    <button class="bs-bouton bs-bouton-blanc" (click)="ouvrirSignaler()">
       <i class="fa-solid fa-plus"></i> Signaler un besoin
     </button>
   </div>
-</div>
+</header>
 
-@if (message()) {
-  <div class="alert alert-info">{{ message() }}</div>
+@if (notification(); as n) {
+  <div class="bs-notif" [class.bs-notif-erreur]="n.type === 'erreur'" role="status" aria-live="polite">
+    <i class="fa-solid" [class.fa-circle-check]="n.type === 'ok'" [class.fa-triangle-exclamation]="n.type === 'erreur'"></i>
+    <span>{{ n.texte }}</span>
+    <button class="bs-icone" aria-label="Fermer" (click)="notification.set(null)"><i class="fa-solid fa-xmark"></i></button>
+  </div>
 }
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">En attente</div>
-      <div class="kpi-val">{{ nbEnAttente() }}</div>
-      <div class="kpi-meta">à traiter</div>
-    </div>
+@if (erreur()) {
+  <div class="bs-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="bs-bouton bs-bouton-petit bs-bouton-rouge" (click)="charger()">Réessayer</button>
   </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Validés</div>
-      <div class="kpi-val">{{ nbValides() }}</div>
-      <div class="kpi-meta">approvisionnement lancé</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-xmark"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Rejetés</div>
-      <div class="kpi-val">{{ nbRejetes() }}</div>
-      <div class="kpi-meta">non retenus</div>
-    </div>
-  </div>
-</div>
+}
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des besoins</h2>
-    <div class="filter-row" style="display:flex;gap:var(--sp-2)">
-      <select class="input" [ngModel]="filtreStatut()" (ngModelChange)="changerFiltre($event)">
-        <option value="">Tous les statuts</option>
-        @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
-      </select>
-    </div>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>N°</th><th>Type</th><th>Produit</th><th>PPH</th><th>Qté demandée</th>
-          <th>Date besoin</th><th>Demandeur</th><th>Statut</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (b of besoins(); track b.numero) {
-          <tr>
-            <td><a href="javascript:void(0)" (click)="voirDetail(b.numero)"><strong>{{ b.numero }}</strong></a></td>
-            <td><span class="badge bg-neutral">{{ typeLabel(b.type) }}</span></td>
-            <td><span class="badge bg-neutral">{{ b.codeProduit }}</span> {{ b.designationProduit }}</td>
-            <td class="mono">{{ b.referencePPH ?? '—' }}</td>
-            <td><strong>{{ b.quantiteDemandee }} {{ b.unite }}</strong></td>
-            <td>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '—' }}</td>
-            <td>{{ b.matriculeDemandeur }}</td>
-            <td>
-              <span [class]="statutClass(b.statut)">{{ b.statut }}</span>
-              @if (b.statut === 'REJETE' && b.motifRejet) {
-                <div class="text-muted" style="font-size:11px;margin-top:2px">{{ b.motifRejet }}</div>
-              }
-            </td>
-            <td>
-              @if (b.statut === 'EN_ATTENTE') {
-                <div class="row-actions" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
-                  <button class="btn btn-sm btn-primary" (click)="valider(b)">Valider</button>
-                  <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(b)">Rejeter</button>
-                </div>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="9" class="text-center text-muted">Aucun besoin signalé</td></tr>
+@if (chargement() && !derniereMaj()) {
+  <div class="bs-squelette"></div>
+  <div class="bs-squelette bs-squelette-court"></div>
+} @else {
+<div class="bs-contenu" [class.bs-attente]="chargement()" [attr.aria-busy]="chargement()">
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="bs-kpis">
+    @for (k of kpis(); track k.libelle) {
+      <div class="bs-kpi" [class.bs-kpi-alerte]="k.alerte">
+        <span class="bs-kpi-lbl">{{ k.libelle }}</span>
+        <span class="bs-kpi-val">{{ k.valeur }}</span>
+        <span class="bs-kpi-meta">{{ k.detail }}</span>
+      </div>
+    }
+  </section>
+
+  <!-- ═══ REGISTRE ═══ -->
+  <section class="bs-carte">
+    <header class="bs-carte-tete">
+      <div class="bs-pilles" role="tablist" aria-label="Filtrer par statut">
+        @for (f of filtres; track f.code) {
+          <button class="bs-pille" role="tab" [attr.aria-selected]="statut() === f.code"
+                  [class.bs-pille-active]="statut() === f.code" (click)="statut.set(f.code)">
+            {{ f.libelle }} <span class="bs-pille-n">{{ compteStatut(f.code) }}</span>
+          </button>
         }
-      </tbody>
-    </table>
-  </div>
-</div>
+      </div>
+      <div class="bs-outils">
+        <select class="bs-select" aria-label="Filtrer par type" (change)="type.set($any($event.target).value)">
+          <option value="">Tous les types</option>
+          @for (t of typesBesoin; track t.code) { <option [value]="t.code" [selected]="t.code === type()">{{ t.libelle }}</option> }
+        </select>
+        <input type="search" class="bs-recherche" placeholder="N°, produit, PPH, demandeur…" aria-label="Rechercher"
+               [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+      </div>
+    </header>
 
-@if (showSignaler()) {
-<div class="modal-overlay" (click)="showSignaler.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd">
-      <h3><i class="fa-solid fa-plus"></i> Signaler un besoin</h3>
-      <button class="modal-hd-close" (click)="showSignaler.set(false)"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <label>Numéro<input class="input" [(ngModel)]="nouveauBesoin.numero"></label>
-        <label>Type
-          <select class="input" [(ngModel)]="nouveauBesoin.type">
-            @for (t of typesBesoin; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
-          </select>
-        </label>
-        <label>PPH (optionnel)
-          <select class="input" [(ngModel)]="nouveauBesoin.referencePPH">
-            <option value="">— Aucun —</option>
-            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-          </select>
-        </label>
-        <label>Code produit<input class="input" [(ngModel)]="nouveauBesoin.codeProduit"></label>
-        <label>Désignation<input class="input" [(ngModel)]="nouveauBesoin.designationProduit"></label>
-        <label>Quantité demandée<input type="number" class="input" [(ngModel)]="nouveauBesoin.quantiteDemandee"></label>
-        <label>Unité<input class="input" [(ngModel)]="nouveauBesoin.unite"></label>
-        <label>Date du besoin<input type="date" class="input" [(ngModel)]="nouveauBesoin.dateBesoin"></label>
-        <label style="grid-column: 1 / -1">Motif<textarea class="input" rows="2" [(ngModel)]="nouveauBesoin.motif"></textarea></label>
+    @if (besoinsFiltres().length) {
+      <div class="tbl-wrap">
+        <table class="bs-table">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Type</th>
+              <th>Produit</th>
+              <th>PPH</th>
+              <th class="num">Quantité</th>
+              <th>Besoin pour le</th>
+              <th>Demandeur</th>
+              <th>Statut</th>
+              <th class="bs-col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of besoinsFiltres(); track b.numero) {
+              <tr [class.bs-ligne-attente]="b.statut === 'EN_ATTENTE'">
+                <td><button class="bs-lien mono" (click)="detail.set(b)">{{ b.numero }}</button></td>
+                <td><span class="bs-tag">{{ typeLabel(b.type) }}</span></td>
+                <td>
+                  <div class="bs-produit">
+                    <span class="bs-nom">{{ b.designationProduit }}</span>
+                    <span class="bs-muet mono">{{ b.codeProduit }}</span>
+                  </div>
+                </td>
+                <td class="mono bs-muet">{{ b.referencePPH ?? '—' }}</td>
+                <td class="num mono bs-nom">{{ formaterQuantite(b.quantiteDemandee) }} {{ b.unite }}</td>
+                <td>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="mono bs-muet">{{ b.matriculeDemandeur }}</td>
+                <td>
+                  <span class="bs-statut" [class]="'bs-statut ' + classeStatut(b.statut)">{{ libelleStatut(b.statut) }}</span>
+                  @if (b.statut === 'REJETE' && b.motifRejet) { <div class="bs-muet bs-motif">{{ b.motifRejet }}</div> }
+                </td>
+                <td>
+                  @if (peutDecider(b)) {
+                    <div class="bs-actions-ligne">
+                      <button class="bs-bouton bs-bouton-petit bs-bouton-primaire" (click)="demanderValidation(b)" [disabled]="actionEnCours() === b.numero">
+                        <i class="fa-solid fa-check"></i> Valider
+                      </button>
+                      <button class="bs-bouton bs-bouton-petit bs-bouton-contour-rouge" (click)="ouvrirRejet(b)" [disabled]="actionEnCours() === b.numero">
+                        <i class="fa-solid fa-xmark"></i> Rejeter
+                      </button>
+                    </div>
+                  } @else {
+                    <span class="bs-muet">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="bs-vide">
+        <i class="fa-solid fa-box-open"></i>
+        @if (besoins().length === 0) {
+          <h3>Aucun besoin signalé</h3>
+          <p>Les ruptures signalées apparaîtront ici.</p>
+          <button class="bs-bouton bs-bouton-primaire" (click)="ouvrirSignaler()"><i class="fa-solid fa-plus"></i> Signaler un besoin</button>
+        } @else {
+          <h3>Aucun résultat</h3>
+          <p>Aucun besoin ne correspond à ces critères.</p>
+          <button class="bs-bouton bs-bouton-primaire bs-bouton-petit" (click)="recherche.set(''); statut.set('TOUS'); type.set('')">Réinitialiser</button>
+        }
+      </div>
+    }
+  </section>
+</div>
+}
+
+<!-- ═══ TIROIR DE SIGNALEMENT ═══ -->
+@if (tiroirSignalerOuvert()) {
+  <div class="bs-voile" (click)="fermerSignaler()">
+    <aside class="bs-tiroir" role="dialog" aria-modal="true" aria-label="Signaler un besoin" (click)="$event.stopPropagation()">
+      <header class="bs-tiroir-tete">
+        <div>
+          <div class="bs-hero-kicker">Nouveau besoin</div>
+          <h2 class="bs-tiroir-titre">Signaler un besoin</h2>
+          <span class="bs-muet-clair mono">{{ form().numero }}</span>
+        </div>
+        <button class="bs-icone" aria-label="Fermer" (click)="fermerSignaler()" [disabled]="envoi()"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+
+      <div class="bs-tiroir-corps">
+        @if (erreurFormulaire()) {
+          <div class="bs-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ erreurFormulaire() }}</span></div>
+        }
+
+        <div class="bs-grille">
+          <label class="bs-champ">
+            <span class="bs-etiquette">Type</span>
+            <select class="bs-input" [value]="form().type" (change)="majForm('type', $any($event.target).value)" [disabled]="envoi()">
+              @for (t of typesBesoin; track t.code) { <option [value]="t.code" [selected]="t.code === form().type">{{ t.libelle }}</option> }
+            </select>
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">PPH concerné (optionnel)</span>
+            <select class="bs-input" (change)="majForm('referencePPH', $any($event.target).value)" [disabled]="envoi()">
+              <option value="">— Aucun —</option>
+              @for (p of pphs(); track p.id) { <option [value]="p.referencePPH" [selected]="p.referencePPH === form().referencePPH">{{ p.referencePPH }}</option> }
+            </select>
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">Code produit</span>
+            <input class="bs-input" [value]="form().codeProduit" [disabled]="envoi()" placeholder="Ex. TBS-SAC-001"
+                   (input)="majForm('codeProduit', $any($event.target).value)">
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">Désignation</span>
+            <input class="bs-input" [value]="form().designationProduit" [disabled]="envoi()" placeholder="Ex. Sachet 100 g"
+                   (input)="majForm('designationProduit', $any($event.target).value)">
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">Quantité demandée</span>
+            <input type="number" class="bs-input bs-droite" min="0" step="any" [value]="form().quantiteDemandee ?? ''" [disabled]="envoi()"
+                   (input)="majForm('quantiteDemandee', $any($event.target).valueAsNumber)">
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">Unité</span>
+            <input class="bs-input" [value]="form().unite" [disabled]="envoi()" (input)="majForm('unite', $any($event.target).value)">
+          </label>
+
+          <label class="bs-champ">
+            <span class="bs-etiquette">Besoin pour le (optionnel)</span>
+            <input type="date" class="bs-input" [value]="form().dateBesoin" [min]="aujourdhui" [disabled]="envoi()"
+                   (change)="majForm('dateBesoin', $any($event.target).value)">
+          </label>
+
+          <label class="bs-champ bs-champ-large">
+            <span class="bs-etiquette">Motif</span>
+            <textarea class="bs-input" rows="3" [value]="form().motif" [disabled]="envoi()" placeholder="Pourquoi ce besoin ? Ex. : rupture avant la production de mardi…"
+                      (input)="majForm('motif', $any($event.target).value)"></textarea>
+          </label>
+        </div>
+
+        @if (erreurForm()) {
+          <p class="bs-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> {{ erreurForm() }}</p>
+        }
+      </div>
+
+      <footer class="bs-tiroir-pied">
+        <span class="bs-muet">Le besoin passe en attente de validation.</span>
+        <div class="bs-actions-ligne">
+          <button class="bs-bouton bs-bouton-contour" (click)="fermerSignaler()" [disabled]="envoi()">Annuler</button>
+          <button class="bs-bouton bs-bouton-primaire" (click)="signaler()" [disabled]="!!erreurForm() || envoi()">
+            @if (envoi()) { <i class="fa-solid fa-spinner bs-tourne"></i> Envoi… }
+            @else { <i class="fa-solid fa-paper-plane"></i> Signaler }
+          </button>
+        </div>
+      </footer>
+    </aside>
+  </div>
+}
+
+<!-- ═══ DÉTAIL ═══ -->
+@if (detail(); as b) {
+  <div class="bs-voile" (click)="detail.set(null)">
+    <aside class="bs-tiroir bs-tiroir-etroit" role="dialog" aria-modal="true" aria-label="Détail du besoin" (click)="$event.stopPropagation()">
+      <header class="bs-tiroir-tete">
+        <div>
+          <div class="bs-hero-kicker">Besoin</div>
+          <h2 class="bs-tiroir-titre mono">{{ b.numero }}</h2>
+          <span class="bs-statut" [class]="'bs-statut ' + classeStatut(b.statut)">{{ libelleStatut(b.statut) }}</span>
+        </div>
+        <button class="bs-icone" aria-label="Fermer" (click)="detail.set(null)"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+      <div class="bs-tiroir-corps">
+        <dl class="bs-fiche">
+          <div><dt>Type</dt><dd>{{ typeLabel(b.type) }}</dd></div>
+          <div><dt>Produit</dt><dd>{{ b.designationProduit }} <span class="bs-muet mono">({{ b.codeProduit }})</span></dd></div>
+          <div><dt>Quantité demandée</dt><dd class="mono">{{ formaterQuantite(b.quantiteDemandee) }} {{ b.unite }}</dd></div>
+          <div><dt>PPH</dt><dd class="mono">{{ b.referencePPH ?? '—' }}</dd></div>
+          <div><dt>Besoin pour le</dt><dd>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '—' }}</dd></div>
+          <div><dt>Demandeur</dt><dd class="mono">{{ b.matriculeDemandeur }}</dd></div>
+          <div><dt>Motif</dt><dd>{{ b.motif || '—' }}</dd></div>
+          @if (b.matriculeValidateur) { <div><dt>Traité par</dt><dd class="mono">{{ b.matriculeValidateur }}</dd></div> }
+          @if (b.motifRejet) { <div><dt>Motif du rejet</dt><dd>{{ b.motifRejet }}</dd></div> }
+        </dl>
+      </div>
+      <footer class="bs-tiroir-pied">
+        @if (peutDecider(b)) {
+          <div class="bs-actions-ligne">
+            <button class="bs-bouton bs-bouton-contour-rouge" (click)="ouvrirRejet(b)"><i class="fa-solid fa-xmark"></i> Rejeter</button>
+            <button class="bs-bouton bs-bouton-primaire" (click)="demanderValidation(b)"><i class="fa-solid fa-check"></i> Valider</button>
+          </div>
+        } @else { <span></span> }
+        <button class="bs-bouton bs-bouton-contour" (click)="detail.set(null)">Fermer</button>
+      </footer>
+    </aside>
+  </div>
+}
+
+<!-- ═══ CONFIRMATION DE VALIDATION ═══ -->
+@if (aValider(); as b) {
+  <div class="bs-voile bs-voile-centre" (click)="aValider.set(null)">
+    <div class="bs-dialogue" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="bs-dialogue-ico bs-dialogue-ico-ok"><i class="fa-solid fa-check"></i></div>
+      <h2>Valider le besoin {{ b.numero }} ?</h2>
+      <p>{{ b.designationProduit }} — {{ formaterQuantite(b.quantiteDemandee) }} {{ b.unite }}. La validation lance l'approvisionnement.</p>
+      <div class="bs-dialogue-pied">
+        <button class="bs-bouton bs-bouton-contour" (click)="aValider.set(null)">Annuler</button>
+        <button class="bs-bouton bs-bouton-primaire" (click)="confirmerValidation()" [disabled]="actionEnCours() === b.numero">
+          <i class="fa-solid fa-check"></i> Valider
+        </button>
       </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showSignaler.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="signaler()">Signaler</button>
-    </div>
   </div>
-</div>
 }
 
-@if (showRejeter()) {
-<div class="modal-overlay" (click)="showRejeter.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd">
-      <h3><i class="fa-solid fa-xmark"></i> Rejeter le besoin {{ showRejeter()?.numero }}</h3>
-      <button class="modal-hd-close" (click)="showRejeter.set(null)"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <label class="form-group">Motif du rejet
-        <textarea class="input" rows="3" [(ngModel)]="motifRejet"></textarea>
+<!-- ═══ REJET ═══ -->
+@if (aRejeter(); as b) {
+  <div class="bs-voile bs-voile-centre" (click)="aRejeter.set(null)">
+    <div class="bs-dialogue" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="bs-dialogue-ico bs-dialogue-ico-erreur"><i class="fa-solid fa-xmark"></i></div>
+      <h2>Rejeter le besoin {{ b.numero }}</h2>
+      <p>Indiquez pourquoi ce besoin n'est pas retenu.</p>
+      <label class="bs-champ">
+        <span class="bs-etiquette">Motif du rejet</span>
+        <textarea class="bs-input" rows="3" [value]="motifRejet()" (input)="motifRejet.set($any($event.target).value)"
+                  placeholder="Ex. : stock suffisant, déjà commandé…"></textarea>
       </label>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showRejeter.set(null)">Annuler</button>
-      <button class="btn btn-danger" (click)="confirmerRejet()">Confirmer le rejet</button>
-    </div>
-  </div>
-</div>
-}
-
-@if (showDetail()) {
-<div class="modal-overlay" (click)="showDetail.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd">
-      <h3><i class="fa-solid fa-circle-info"></i> Détail besoin {{ showDetail()!.numero }}</h3>
-      <button class="modal-hd-close" (click)="showDetail.set(null)"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-detail-grid">
-        <div class="modal-detail-row"><span class="modal-detail-label">Type</span><span class="modal-detail-value">{{ typeLabel(showDetail()!.type) }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Produit</span><span class="modal-detail-value">{{ showDetail()!.codeProduit }} — {{ showDetail()!.designationProduit }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Quantité demandée</span><span class="modal-detail-value">{{ showDetail()!.quantiteDemandee }} {{ showDetail()!.unite }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">PPH</span><span class="modal-detail-value">{{ showDetail()!.referencePPH ?? '—' }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Demandeur</span><span class="modal-detail-value">{{ showDetail()!.matriculeDemandeur }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Motif</span><span class="modal-detail-value">{{ showDetail()!.motif ?? '—' }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Statut</span><span class="modal-detail-value"><span [class]="statutClass(showDetail()!.statut)">{{ showDetail()!.statut }}</span></span></div>
-        @if (showDetail()!.matriculeValidateur) {
-          <div class="modal-detail-row"><span class="modal-detail-label">Traité par</span><span class="modal-detail-value">{{ showDetail()!.matriculeValidateur }}</span></div>
-        }
-        @if (showDetail()!.motifRejet) {
-          <div class="modal-detail-row"><span class="modal-detail-label">Motif de rejet</span><span class="modal-detail-value">{{ showDetail()!.motifRejet }}</span></div>
-        }
+      @if (motifRejet().trim().length > 0 && motifRejet().trim().length < 3) {
+        <p class="bs-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> Motif trop court (3 caractères minimum).</p>
+      }
+      <div class="bs-dialogue-pied">
+        <button class="bs-bouton bs-bouton-contour" (click)="aRejeter.set(null)">Annuler</button>
+        <button class="bs-bouton bs-bouton-rouge" (click)="confirmerRejet()" [disabled]="motifRejet().trim().length < 3 || actionEnCours() === b.numero">
+          <i class="fa-solid fa-xmark"></i> Confirmer le rejet
+        </button>
       </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-primary" (click)="showDetail.set(null)">Fermer</button>
-    </div>
   </div>
-</div>
 }

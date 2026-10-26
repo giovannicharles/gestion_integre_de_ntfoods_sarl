@@ -1,50 +1,229 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-simple ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="pf-hero">
+  <div class="pf-hero-gauche">
+    <div class="pf-hero-ico"><i class="fa-solid fa-chart-line"></i></div>
     <div>
-      <h1 class="ph-title">Analyse des Performances</h1>
-      <p class="ph-sub">Équipes, machinistes et postes — semaine en cours</p>
+      <div class="pf-hero-kicker">Chef de Production</div>
+      <h1 class="pf-hero-titre">Performances de la production</h1>
+      <p class="pf-hero-sous">
+        Du {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}
+        @if (derniereMaj(); as d) { · mis à jour à {{ d | date:'HH:mm' }} }
+      </p>
     </div>
   </div>
-</div>
+  <div class="pf-actions">
+    <div class="pf-segment" role="group" aria-label="Période">
+      @for (p of periodes; track p.code) {
+        <button class="pf-segment-bouton" [class.pf-segment-actif]="periode() === p.code" [disabled]="chargement()" (click)="choisirPeriode(p.code)">{{ p.libelle }}</button>
+      }
+    </div>
+    <button class="pf-bouton pf-bouton-blanc" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.pf-tourne]="chargement()"></i>
+    </button>
+  </div>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+@if (chargement() && !derniereMaj()) {
+  <div class="pf-squelette"></div>
+  <div class="pf-squelette pf-squelette-court"></div>
 } @else {
+<div class="pf-contenu" [class.pf-attente]="chargement()" [attr.aria-busy]="chargement()">
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Efficacité moyenne machinistes</div><div class="kpi-val">{{ efficaciteMoyenneMachinistes() }}%</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Taux moyen de réalisation (postes)</div><div class="kpi-val">{{ tauxMoyenExecuteurs() }}%</div></div></div>
-</div>
+  <!-- ═══ ERREURS PAR SOURCE ═══ -->
+  @if (nbErreurs() > 0) {
+    <div class="pf-alerte" role="alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Certaines données n'ont pas pu être chargées : {{ nbErreurs() }} source(s) en erreur. Les autres indicateurs restent valables.</span>
+      <button class="pf-bouton pf-bouton-petit pf-bouton-rouge" (click)="charger()">Réessayer</button>
+    </div>
+  }
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Performance des machinistes</h2></div>
-  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsMachinistes()" [series]="serieMachinistes()" [height]="220" /></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Taux réalisation</th><th>Efficacité</th></tr></thead>
-      <tbody>
-        @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
-          <tr><td>#{{ c.rang }}</td><td>{{ c.nomMachiniste }}</td><td>{{ c.productiviteKg | number:'1.1-1' }} kg</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td></tr>
-        } @empty { <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
-      </tbody>
-    </table>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="pf-kpis">
+    <div class="pf-kpi pf-kpi-principal">
+      <span class="pf-kpi-lbl">Production réelle</span>
+      <span class="pf-kpi-val">{{ formaterKg(rapportAffectation()?.productionTotaleKg ?? 0) }}<small> kg</small></span>
+      <span class="pf-kpi-meta">{{ rapportAffectation()?.nbJoursAffectes ?? 0 }} jour(s) d'activité · {{ rapportAffectation()?.nbFutsNets ?? 0 }} fût(s) nets</span>
+    </div>
+    <div class="pf-kpi" [class.pf-kpi-alerte]="tauxAtteinteGlobal() !== null && tauxAtteinteGlobal()! < seuilEfficacite">
+      <span class="pf-kpi-lbl">Objectifs atteints</span>
+      <span class="pf-kpi-val">{{ tauxAtteinteGlobal() === null ? '—' : pct(tauxAtteinteGlobal()!) }}</span>
+      <span class="pf-kpi-meta">{{ produits().length }} produit(s) planifié(s)</span>
+    </div>
+    <div class="pf-kpi" [class.pf-kpi-alerte]="efficaciteMoyenne() < seuilEfficacite && machinistes()">
+      <span class="pf-kpi-lbl">Efficacité des machinistes</span>
+      <span class="pf-kpi-val">{{ pct(efficaciteMoyenne()) }}</span>
+      <span class="pf-kpi-meta">moyenne de {{ machinistes()?.classements?.length ?? 0 }} machiniste(s)</span>
+    </div>
+    <div class="pf-kpi" [class.pf-kpi-alerte]="tauxPostesMoyen() < seuilEfficacite && executeurs().length">
+      <span class="pf-kpi-lbl">Réalisation des postes</span>
+      <span class="pf-kpi-val">{{ pct(tauxPostesMoyen()) }}</span>
+      <span class="pf-kpi-meta">moyenne de {{ executeurs().length }} employé(s)</span>
+    </div>
+    <div class="pf-kpi" [class.pf-kpi-alerte]="(rapportProduction()?.tauxPertesGlobal ?? 0) > seuilPertes">
+      <span class="pf-kpi-lbl">Taux de pertes</span>
+      <span class="pf-kpi-val">{{ pct(rapportProduction()?.tauxPertesGlobal ?? 0) }}</span>
+      <span class="pf-kpi-meta">seuil {{ seuilPertes }} %</span>
+    </div>
+    <div class="pf-kpi">
+      <span class="pf-kpi-lbl">Lots validés par le stock</span>
+      <span class="pf-kpi-val">{{ tauxValidation() === null ? '—' : pct(tauxValidation()!) }}</span>
+      <span class="pf-kpi-meta">{{ lotsDansPeriode().length }} lot(s) déclaré(s) sur la période</span>
+    </div>
+  </section>
+
+  <!-- ═══ POINTS D'ATTENTION ═══ -->
+  <section class="pf-carte">
+    <header class="pf-carte-tete">
+      <h2><i class="fa-solid fa-bell"></i> Points d'attention</h2>
+      <span class="pf-note">{{ alertes().length ? alertes().length + ' point(s)' : 'aucun' }}</span>
+    </header>
+    @if (alertes().length) {
+      <ul class="pf-alertes">
+        @for (a of alertes(); track $index) {
+          <li [class.pf-alerte-haut]="a.niveau === 'haut'">
+            <i class="fa-solid" [class.fa-circle-exclamation]="a.niveau === 'haut'" [class.fa-circle-info]="a.niveau !== 'haut'"></i>
+            <span>{{ a.texte }}</span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="pf-ok"><i class="fa-solid fa-circle-check"></i><span>Rien à signaler sur la période : équipes, pertes, lots et échéances sont dans les seuils.</span></div>
+    }
+  </section>
+
+  <!-- ═══ TENDANCES ═══ -->
+  <div class="pf-deux">
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-chart-column"></i> Production réelle par jour</h2><span class="pf-note">kg</span></header>
+      @if (tendance().labels.length) {
+        <app-mini-chart type="line" [labels]="tendance().labels" [series]="serieTendance()" [height]="220" />
+      } @else { <p class="pf-vide-court">Aucune production enregistrée sur la période.</p> }
+    </section>
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-fill-drip"></i> Fûts nets par jour</h2><span class="pf-note">fûts</span></header>
+      @if (tendance().labels.length) {
+        <app-mini-chart type="bar" [labels]="tendance().labels" [series]="serieFuts()" [height]="220" />
+      } @else { <p class="pf-vide-court">Aucun dosage enregistré sur la période.</p> }
+    </section>
+  </div>
+
+  <!-- ═══ ATTEINTE PAR PRODUIT ═══ -->
+  <section class="pf-carte">
+    <header class="pf-carte-tete">
+      <h2><i class="fa-solid fa-bullseye"></i> Atteinte des objectifs par produit</h2>
+      <span class="pf-note">unités réalisées sur unités prévues dans les PPH de la période</span>
+    </header>
+    @if (produits().length) {
+      <div class="tbl-wrap">
+        <table class="pf-table">
+          <thead><tr><th>Produit</th><th class="num">Prévu</th><th class="num">Réalisé</th><th>Atteinte</th></tr></thead>
+          <tbody>
+            @for (p of produits(); track p.code) {
+              <tr>
+                <td><div class="pf-produit"><span class="pf-nom">{{ p.nom }}</span><span class="pf-muet mono">{{ p.code }}</span></div></td>
+                <td class="num mono">{{ p.prevu }}</td>
+                <td class="num mono">{{ p.realise }}</td>
+                <td>
+                  <div class="pf-progres">
+                    <div class="pf-barre"><div class="pf-barre-fill" [class.pf-fill-ok]="couleurTaux(p.taux) === 'ok'" [class.pf-fill-bas]="couleurTaux(p.taux) === 'bas'" [style.width.%]="p.taux"></div></div>
+                    <span class="mono pf-pct">{{ pct(p.taux) }}</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else { <p class="pf-vide-court">Aucun PPH planifié sur la période.</p> }
+  </section>
+
+  <!-- ═══ ÉQUIPES ═══ -->
+  <div class="pf-deux">
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-gears"></i> Machinistes</h2><span class="pf-note">classement par productivité</span></header>
+      @if (machinistes()?.classements?.length) {
+        <app-mini-chart type="bar" [labels]="labelsMachinistes()" [series]="serieMachinistes()" [height]="200" />
+        <div class="tbl-wrap">
+          <table class="pf-table">
+            <thead><tr><th>Rang</th><th>Machiniste</th><th class="num">Productivité</th><th class="num">Objectif</th><th>Efficacité</th></tr></thead>
+            <tbody>
+              @for (c of machinistes()!.classements; track c.machinisteMatricule) {
+                <tr>
+                  <td class="mono">#{{ c.rang }}</td>
+                  <td><div class="pf-produit"><span class="pf-nom">{{ c.nomMachiniste }}</span><span class="pf-muet">{{ c.operations.join(', ') || '—' }}</span></div></td>
+                  <td class="num mono">{{ formaterKg(c.productiviteKg) }} kg</td>
+                  <td class="num mono">{{ formaterKg(c.objectifTotalKg) }} kg</td>
+                  <td>
+                    <span class="pf-statut" [class.pf-statut-ok]="c.efficacite >= seuilEfficacite" [class.pf-statut-bas]="c.efficacite < seuilEfficacite">{{ pct(c.efficacite) }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else { <p class="pf-vide-court">Aucun broyage classé sur la période.</p> }
+    </section>
+
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-user-gear"></i> Postes de production</h2><span class="pf-note">classement par taux de réalisation</span></header>
+      @if (executeurs().length) {
+        <app-mini-chart type="bar" [labels]="labelsExecuteurs()" [series]="serieExecuteurs()" [height]="200" />
+        <div class="tbl-wrap">
+          <table class="pf-table">
+            <thead><tr><th>Rang</th><th>Employé</th><th class="num">Quantité</th><th>Réalisation</th><th class="num">Jours</th></tr></thead>
+            <tbody>
+              @for (c of executeurs(); track c.matriculeEmploye) {
+                <tr>
+                  <td class="mono">#{{ c.rang }}</td>
+                  <td><div class="pf-produit"><span class="pf-nom">{{ c.nomEmploye }}</span><span class="pf-muet mono">{{ c.matriculeEmploye }}</span></div></td>
+                  <td class="num mono">{{ formaterKg(c.quantiteTotaleRealisee) }} {{ c.unite }}</td>
+                  <td>
+                    <span class="pf-statut" [class.pf-statut-ok]="c.tauxRealisationMoyen >= seuilEfficacite" [class.pf-statut-bas]="c.tauxRealisationMoyen < seuilEfficacite">{{ pct(c.tauxRealisationMoyen) }}</span>
+                  </td>
+                  <td class="num mono">{{ c.nbJoursAffectes }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else { <p class="pf-vide-court">Aucune affectation classée sur la période.</p> }
+    </section>
+  </div>
+
+  <!-- ═══ QUALITÉ ET ÉCHÉANCES ═══ -->
+  <div class="pf-deux">
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-vial-circle-check"></i> Qualité des lots</h2></header>
+      <div class="pf-mini-kpis">
+        <div><span class="pf-kpi-lbl">Déclarés</span><span class="pf-kpi-val">{{ lotsDansPeriode().length }}</span></div>
+        <div><span class="pf-kpi-lbl">Validés</span><span class="pf-kpi-val">{{ nbLotsStatut('VALIDATED_BY_STOCK') }}</span></div>
+        <div [class.pf-kpi-alerte]="nbLotsStatut('REJETE') > 0"><span class="pf-kpi-lbl">Rejetés</span><span class="pf-kpi-val">{{ nbLotsStatut('REJETE') }}</span></div>
+        <div><span class="pf-kpi-lbl">En attente</span><span class="pf-kpi-val">{{ nbLotsStatut('DECLARE') }}</span></div>
+      </div>
+      @if (nbLotsStatut('REJETE') > 0) {
+        <ul class="pf-rejets">
+          @for (l of lotsStatut('REJETE'); track l.numeroLot) {
+            <li><span class="mono pf-code">{{ l.numeroLot }}</span><span class="pf-nom">{{ l.productName }}</span><span class="pf-muet">{{ l.motifRejet || 'motif non renseigné' }}</span></li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="pf-carte">
+      <header class="pf-carte-tete"><h2><i class="fa-solid fa-calendar-check"></i> Échéances des ordres de fabrication</h2></header>
+      <div class="pf-mini-kpis">
+        <div><span class="pf-kpi-lbl">Respect des échéances</span><span class="pf-kpi-val">{{ tauxRespectEcheances() === null ? '—' : pct(tauxRespectEcheances()!) }}</span></div>
+        <div [class.pf-kpi-alerte]="ofsEnRetard().length > 0"><span class="pf-kpi-lbl">En retard</span><span class="pf-kpi-val">{{ ofsEnRetard().length }}</span></div>
+      </div>
+      @if (ofsEnRetard().length) {
+        <ul class="pf-rejets">
+          @for (o of ofsEnRetard().slice(0, 6); track o.idOF) {
+            <li><span class="mono pf-code">{{ o.idOF }}</span><span class="pf-nom">{{ o.designationProduit }}</span><span class="pf-muet">échéance {{ o.dateButoir | date:'dd/MM/yyyy' }}</span></li>
+          }
+        </ul>
+      }
+    </section>
   </div>
 </div>
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-user-gear"></i> Performance des postes (exécutants)</h2></div>
-  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsExecuteurs()" [series]="serieExecuteurs()" [height]="220" /></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Rang</th><th>Employé</th><th>Quantité</th><th>Taux réalisation</th><th>Jours</th></tr></thead>
-      <tbody>
-        @for (c of classementExecuteurs(); track c.matriculeEmploye) {
-          <tr><td>#{{ c.rang }}</td><td>{{ c.nomEmploye }}</td><td>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</td><td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td><td>{{ c.nbJoursAffectes }}</td></tr>
-        } @empty { <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
-      </tbody>
-    </table>
-  </div>
-</div>
-
 }

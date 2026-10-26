@@ -1,49 +1,143 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-trophy ph-ico"></i>
+<div class="ce">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="ce-hero">
+  <div class="ce-hero-gauche">
+    <i class="fa-solid fa-trophy ce-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Classement des Employés</h1>
-      <p class="ph-sub">Top employés — hebdomadaire et mensuel</p>
+      <div class="ce-kicker">Responsable de salle · Performance</div>
+      <h1 class="ce-hero-titre">Classement des employés</h1>
+      <p class="ce-hero-sous">Taux de réalisation individuel moyen : {{ periodeLibelle() | lowercase }} · {{ aujourdhui | date:'EEEE d MMMM y' }}</p>
     </div>
   </div>
-</div>
+  <div class="ce-segment" role="group" aria-label="Période">
+    <button class="ce-segment-bouton" [class.ce-segment-actif]="periode() === 'semaine'" (click)="choisirPeriode('semaine')">Semaine</button>
+    <button class="ce-segment-bouton" [class.ce-segment-actif]="periode() === 'mois'" (click)="choisirPeriode('mois')">Mois</button>
+  </div>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+@if (sessionExpiree()) {
+  <div class="ce-alerte ce-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="ce-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="ce-alerte ce-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="ce-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement()) {
+  <div class="ce-squelette"></div>
+} @else if (classement().length === 0) {
+  <section class="ce-carte ce-vide">
+    <i class="fa-solid fa-inbox"></i>
+    <h2>Aucune donnée {{ periode() === 'semaine' ? 'cette semaine' : 'ce mois' }}</h2>
+    <p>Le classement se construit à partir des productions individuelles saisies sur les affectations.</p>
+  </section>
 } @else {
 
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Classement hebdomadaire</h2></div>
-    @for (c of classementHebdo(); track c.matriculeEmploye) {
-      <div class="rank-row">
-        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
-        <div class="rank-info">
-          <div class="rank-name">{{ c.nomEmploye }}</div>
-          <div class="rank-meta">{{ c.nbJoursAffectes }} jour(s) affectés</div>
-        </div>
-        <span class="badge bg-success">{{ c.quantiteTotaleRealisee }} {{ c.unite }} — {{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
-      </div>
-    } @empty {
-      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée cette semaine</div>
-    }
-  </div>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="ce-kpis">
+    <div class="ce-kpi">
+      <span class="ce-lbl">Exécutants classés</span>
+      <strong class="ce-grand">{{ classement().length }}</strong>
+      <span class="ce-muet">ayant au moins une production</span>
+    </div>
+    <div class="ce-kpi ce-kpi-principal">
+      <span class="ce-lbl">Taux moyen de l'équipe</span>
+      <strong class="ce-grand">{{ tauxEquipe() | number:'1.0-0' }} %</strong>
+      <span class="ce-muet">moyenne des exécutants classés</span>
+    </div>
+    <div class="ce-kpi">
+      <span class="ce-lbl">Meilleur taux</span>
+      <strong class="ce-grand">{{ meilleurTaux() | number:'1.0-0' }} %</strong>
+      <span class="ce-muet">{{ classement()[0]?.nomEmploye }}</span>
+    </div>
+  </section>
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Classement mensuel</h2></div>
-    @for (c of classementMensuel(); track c.matriculeEmploye) {
-      <div class="rank-row">
-        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
-        <div class="rank-info">
-          <div class="rank-name">{{ c.nomEmploye }}</div>
-          <div class="rank-meta">{{ c.nbJoursAffectes }} jour(s) affectés</div>
-        </div>
-        <span class="badge bg-success">{{ c.quantiteTotaleRealisee }} {{ c.unite }} — {{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span>
-      </div>
-    } @empty {
-      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée ce mois</div>
+  <!-- ═══ PODIUM ═══ -->
+  <section class="ce-podium">
+    @for (c of podium(); track c.matriculeEmploye) {
+      <article class="ce-marche ce-marche-{{ c.rang }}">
+        <span class="ce-medaille">{{ medaille(c.rang) }}</span>
+        <strong class="ce-marche-nom">{{ c.nomEmploye }}</strong>
+        <span class="ce-marche-taux">{{ c.tauxRealisationMoyen | number:'1.0-0' }} %</span>
+        <span class="ce-muet">{{ c.nbJoursAffectes }} jour(s) travaillé(s)</span>
+      </article>
     }
-  </div>
-</div>
+  </section>
 
+  <!-- ═══ CLASSEMENT COMPLET ═══ -->
+  <section class="ce-carte">
+    <header class="ce-carte-tete">
+      <div class="ce-titre">
+        <span class="ce-numero"><i class="fa-solid fa-list-ol"></i></span>
+        <div>
+          <h3>Classement complet</h3>
+          <span class="ce-muet">Seuils : moins de {{ seuilVigilance }} % sous le seuil ; {{ seuilAtteint }} % objectif atteint ; {{ seuilDepassement }} % et plus à vérifier.</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="ce-table-wrap">
+      <table class="ce-table">
+        <thead>
+          <tr>
+            <th class="ce-rang">Rang</th>
+            <th>Exécutant</th>
+            <th class="ce-num">Jours</th>
+            <th>Taux moyen</th>
+            <th>Niveau</th>
+            <th>Quantités produites (par unité)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of classement(); track c.matriculeEmploye) {
+            <tr>
+              <td class="ce-rang">
+                @if (medaille(c.rang)) { <span class="ce-medaille-ligne">{{ medaille(c.rang) }}</span> }
+                @else { <span class="ce-rang-num">#{{ c.rang }}</span> }
+              </td>
+              <td>
+                <strong>{{ c.nomEmploye }}</strong>
+                <div><code class="ce-code">{{ c.matriculeEmploye }}</code></div>
+              </td>
+              <td class="ce-num">{{ c.nbJoursAffectes }}</td>
+              <td>
+                <div class="ce-progression">
+                  <div class="ce-piste">
+                    <div class="ce-barre ce-barre-{{ niveau(c.tauxRealisationMoyen) }}" [style.width.%]="borne(c.tauxRealisationMoyen)"></div>
+                  </div>
+                  <span class="ce-pct">{{ c.tauxRealisationMoyen | number:'1.1-1' }} %</span>
+                </div>
+              </td>
+              <td>
+                <span class="ce-niveau ce-niveau-{{ niveau(c.tauxRealisationMoyen) }}">{{ libelleNiveau(niveau(c.tauxRealisationMoyen)) }}</span>
+              </td>
+              <td>
+                <div class="ce-chips">
+                  @for (q of c.quantitesParUnite ?? []; track q.unite) {
+                    <span class="ce-chip">{{ q.quantite | number:'1.0-1' }} <span class="ce-unite">{{ q.unite }}</span></span>
+                  } @empty {
+                    <span class="ce-muet">—</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="ce-carte-pied">
+      <span class="ce-muet">
+        <i class="fa-solid fa-circle-info"></i>
+        Taux individuel = quantité produite ÷ objectif individuel du poste. Les quantités ne sont pas additionnées entre unités.
+      </span>
+    </footer>
+  </section>
 }
+
+</div>

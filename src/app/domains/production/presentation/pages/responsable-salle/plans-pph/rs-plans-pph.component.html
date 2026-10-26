@@ -1,248 +1,267 @@
-<!-- EN-TÊTE -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="ph-icon ph-icon-g"><i class="fa-solid fa-calendar-week"></i></div>
+<div class="pp">
+
+<header class="pp-hero">
+  <div class="pp-hero-gauche">
+    <i class="fa-solid fa-calendar-week pp-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Plans de Production (PPH)</h1>
-      <p class="ph-sub">Objectifs, quantités prévues, ressources et matières premières</p>
+      <div class="pp-hero-kicker">Responsable de salle</div>
+      <h1 class="pp-hero-titre">Plans de production</h1>
+      <p class="pp-hero-sous">
+        Objectifs, réalisé, fûts et matières premières de chaque plan. Consultation uniquement.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
-
-<!-- LISTE -->
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input"
-           placeholder="Filtrer par semaine (ex: 2026-W27)…"
-           [ngModel]="filtreSemaine()" (ngModelChange)="filtreSemaine.set($event)">
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
+  <div class="pp-actions">
+    <button class="pp-bouton" (click)="charger()" [disabled]="chargement()">
+      <i class="fa-solid fa-rotate" [class.pp-tourne]="chargement()"></i> Actualiser
     </button>
+    <a routerLink="/production/responsable-salle/ajustement-plan" class="pp-bouton pp-bouton-blanc">
+      <i class="fa-solid fa-sliders"></i> Ajuster un plan
+    </a>
+  </div>
+</header>
+
+@if (sessionExpiree()) {
+  <div class="pp-alerte pp-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="pp-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="pp-alerte pp-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="pp-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+<!-- Indicateurs -->
+<section class="pp-kpis">
+  <div class="pp-kpi pp-kpi-principal">
+    <span class="pp-lbl">Plans</span>
+    <strong class="pp-grand">{{ plansFiltres().length }}</strong>
+    <span class="pp-muet">{{ compteurs().EN_COURS }} en cours · {{ compteurs().VALIDE }} validé(s)</span>
+  </div>
+  <div class="pp-kpi">
+    <span class="pp-lbl">Avancement global</span>
+    <strong class="pp-grand">{{ totaux().avancement !== null ? (totaux().avancement | number:'1.1-1') + ' %' : '—' }}</strong>
+    <span class="pp-muet">{{ totaux().realise | number:'1.0-0' }} / {{ totaux().objectif | number:'1.0-0' }} unités</span>
+  </div>
+  <div class="pp-kpi">
+    <span class="pp-lbl">Fûts prévus</span>
+    <strong class="pp-grand">{{ totaux().futs | number:'1.0-0' }}</strong>
+    <span class="pp-muet">sur la durée des plans affichés</span>
+  </div>
+  <div class="pp-kpi">
+    <span class="pp-lbl">Matières premières</span>
+    <strong class="pp-grand">{{ totaux().matieresKg | number:'1.0-0' }} <small>kg</small></strong>
+    <span class="pp-muet">besoins prévus</span>
+  </div>
+  <div class="pp-kpi" [class.pp-kpi-alerte]="totaux().aCompleter > 0">
+    <span class="pp-lbl">À compléter</span>
+    <strong class="pp-grand">{{ totaux().aCompleter }}</strong>
+    <span class="pp-muet">plan(s) avec un produit sans formule ou sans emballage</span>
+  </div>
+</section>
+
+<!-- Filtres -->
+<section class="pp-carte">
+  <div class="pp-filtres">
+    <div class="pp-segments">
+      @for (s of statuts; track s.code) {
+        <button class="pp-segment" [class.pp-segment-actif]="statut() === s.code" (click)="statut.set(s.code)">
+          {{ s.libelle }} <span class="pp-compte">{{ compteurs()[s.code] }}</span>
+        </button>
+      }
+    </div>
+    <input class="pp-input" placeholder="Référence, BC ou semaine" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
   </div>
 
-  @if (loading()) {
-    @for (i of [1,2,3,4]; track i) {
-      <div class="skeleton skeleton-row" style="margin:4px 16px"></div>
-    }
+  @if (chargement()) {
+    <div class="pp-squelette"></div>
+  } @else if (plansFiltres().length === 0) {
+    <p class="pp-vide"><i class="fa-solid fa-inbox"></i>
+      @if (plans().length === 0) { Aucun plan de production pour le moment. } @else { Aucun plan ne correspond aux filtres. }
+    </p>
   } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
+    <div class="pp-table-wrap">
+      <table class="pp-table">
         <thead>
           <tr>
-            <th>Référence PPH</th>
-            <th>BC lié</th>
-            <th>Semaine</th>
+            <th>Plan</th>
+            <th>Semaine et période</th>
+            <th class="pp-num">Produits</th>
+            <th>Avancement</th>
+            <th class="pp-num">Fûts</th>
+            <th class="pp-num">Matières (kg)</th>
             <th>Statut</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (p of pphsFiltres(); track p.id) {
-            <tr>
-              <td><strong>{{ p.referencePPH }}</strong></td>
-              <td class="mono">{{ p.referenceBC ?? '—' }}</td>
-              <td>{{ p.semaine }}</td>
-              <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
+          @for (p of plansFiltres(); track p.id) {
+            <tr class="pp-ligne" (click)="ouvrir(p)">
               <td>
-                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(p)">
-                  <i class="fa-solid fa-eye"></i> Détails
-                </button>
+                <span class="pp-code">{{ p.referencePPH }}</span>
+                <div class="pp-meta">BC {{ p.referenceBC ?? '—' }}</div>
               </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="5">
-                <div class="empty-state-block">
-                  <i class="fa-solid fa-inbox"></i>
-                  <p>Aucun PPH pour cette semaine</p>
-                </div>
+              <td>
+                <strong>{{ p.semaine }}</strong>
+                <div class="pp-meta">{{ p.dateDebut | date:'dd/MM' }} → {{ p.dateFin | date:'dd/MM/yyyy' }}</div>
               </td>
+              <td class="pp-num">{{ resume(p).nbProduits }}</td>
+              <td>
+                @if (resume(p).avancement !== null) {
+                  <div class="pp-barre"><div class="pp-barre-fill" [class.pp-barre-ok]="(resume(p).avancement ?? 0) >= 100" [style.width.%]="resume(p).avancement ?? 0"></div></div>
+                  <span class="pp-meta">{{ resume(p).realise | number:'1.0-0' }} / {{ resume(p).objectif | number:'1.0-0' }} · {{ resume(p).avancement | number:'1.0-1' }} %</span>
+                } @else { <span class="pp-meta">Pas d'objectif</span> }
+              </td>
+              <td class="pp-num">{{ resume(p).futs | number:'1.0-0' }}</td>
+              <td class="pp-num">{{ resume(p).matieresKg | number:'1.1-1' }}</td>
+              <td><span class="pp-badge pp-badge-{{ teinte(p.statut) }}">{{ libelleStatut(p.statut) }}</span></td>
+              <td class="pp-num"><button class="pp-icone" aria-label="Détails"><i class="fa-solid fa-eye"></i></button></td>
             </tr>
           }
         </tbody>
       </table>
     </div>
+    <p class="pp-aide">Cliquez sur un plan pour voir toutes ses valeurs.</p>
   }
+</section>
+
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL DÉTAIL PPH
-     ═══════════════════════════════════════════════════════ -->
-@if (pphSelectionne(); as p) {
-<div class="modal-overlay" (click)="fermerDetail()">
-  <div class="pph-modal" (click)="$event.stopPropagation()">
-
-    <!-- Header -->
-    <div class="pph-modal-header">
-      <div class="pph-modal-title">
-        <div class="pph-modal-ico"><i class="fa-solid fa-calendar-week"></i></div>
+<!-- Détail d'un plan -->
+@if (planSelectionne(); as p) {
+  <div class="pp-fond" (click)="fermer()">
+    <aside class="pp-tiroir" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="pp-tiroir-tete">
         <div>
-          <div class="pph-modal-ref">{{ p.referencePPH }}</div>
-          <div class="pph-modal-sub">Semaine {{ p.semaine }} · {{ p.dateDebut }} → {{ p.dateFin }}</div>
+          <span class="pp-code">{{ p.referencePPH }}</span>
+          <h2 class="pp-titre">Semaine {{ p.semaine }}</h2>
+          <span class="pp-badge pp-badge-{{ teinte(p.statut) }}">{{ libelleStatut(p.statut) }}</span>
         </div>
-      </div>
-      <div class="pph-modal-actions">
-        <span [class]="statutClass(p.statut)">{{ p.statut }}</span>
-        <button class="pph-modal-close" (click)="fermerDetail()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Body scrollable -->
-    <div class="pph-modal-body">
-
-      <!-- Méta-données -->
-      <div class="pph-recap-grid">
-        <div class="pph-recap-item">
-          <span class="pph-recap-lbl"><i class="fa-solid fa-link"></i> BC lié</span>
-          <span class="pph-recap-val mono">{{ p.referenceBC ?? '—' }}</span>
-        </div>
-        <div class="pph-recap-item">
-          <span class="pph-recap-lbl"><i class="fa-solid fa-user-tie"></i> Chef production</span>
-          <span class="pph-recap-val">{{ p.matriculeChefProduction }}</span>
-        </div>
-        <div class="pph-recap-item">
-          <span class="pph-recap-lbl"><i class="fa-solid fa-boxes-stacked"></i> Produits planifiés</span>
-          <span class="pph-recap-val">{{ p.lignes.length }} produit(s)</span>
-        </div>
-        <div class="pph-recap-item">
-          <span class="pph-recap-lbl"><i class="fa-solid fa-calendar-check"></i> Soumis le</span>
-          <span class="pph-recap-val">{{ p.dateSoumission ?? '—' }}</span>
-        </div>
+        <button class="pp-icone" (click)="fermer()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Section 1 : Objectifs et réalisé -->
-      <div class="pph-section">
-        <div class="pph-section-title">
-          <i class="fa-solid fa-chart-bar"></i> Objectifs et quantités prévues
+      <dl class="pp-fiche">
+        <div><dt>Période</dt><dd>{{ p.dateDebut | date:'dd/MM/yyyy' }} → {{ p.dateFin | date:'dd/MM/yyyy' }}</dd></div>
+        <div><dt>BC lié</dt><dd>{{ p.referenceBC ?? '—' }}</dd></div>
+        <div><dt>Chef de production</dt><dd>{{ p.matriculeChefProduction }}</dd></div>
+        <div><dt>Soumis le</dt><dd>{{ p.dateSoumission ? (p.dateSoumission | date:'dd/MM/yyyy') : '—' }}</dd></div>
+        <div><dt>Jours planifiés</dt><dd>{{ resumePlanSelectionne()?.nbJours }}</dd></div>
+        <div><dt>Produits</dt><dd>{{ resumePlanSelectionne()?.nbProduits }}</dd></div>
+      </dl>
+
+      <div class="pp-chiffres">
+        <div><span class="pp-lbl">Avancement</span><strong>{{ resumePlanSelectionne()?.avancement !== null && resumePlanSelectionne()?.avancement !== undefined ? (resumePlanSelectionne()?.avancement | number:'1.1-1') + ' %' : '—' }}</strong></div>
+        <div><span class="pp-lbl">Réalisé / objectif</span><strong>{{ resumePlanSelectionne()?.realise | number:'1.0-0' }} / {{ resumePlanSelectionne()?.objectif | number:'1.0-0' }}</strong></div>
+        <div><span class="pp-lbl">Fûts prévus</span><strong>{{ resumePlanSelectionne()?.futs | number:'1.0-0' }}</strong></div>
+        <div><span class="pp-lbl">Matières</span><strong>{{ resumePlanSelectionne()?.matieresKg | number:'1.1-1' }} kg</strong></div>
+      </div>
+
+      @if ((resumePlanSelectionne()?.produitsSansFormule?.length ?? 0) > 0 || (resumePlanSelectionne()?.produitsSansEmballage?.length ?? 0) > 0) {
+        <div class="pp-alerte pp-alerte-attention">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            @if ((resumePlanSelectionne()?.produitsSansFormule?.length ?? 0) > 0) {
+              <div>Sans formule (aucune matière calculée) : {{ resumePlanSelectionne()?.produitsSansFormule?.join(', ') }}</div>
+            }
+            @if ((resumePlanSelectionne()?.produitsSansEmballage?.length ?? 0) > 0) {
+              <div>Sans composition d'emballage : {{ resumePlanSelectionne()?.produitsSansEmballage?.join(', ') }}</div>
+            }
+          </div>
         </div>
-        <div class="tbl-wrap">
-          <table class="data-table">
-            <thead>
+      }
+
+      <h3 class="pp-sous-titre">Objectifs et réalisé par produit</h3>
+      <div class="pp-table-wrap">
+        <table class="pp-table">
+          <thead>
+            <tr><th>Produit</th><th>Catégorie</th><th class="pp-num">Objectif</th><th class="pp-num">Kg</th><th class="pp-num">Unités</th><th class="pp-num">Réalisé</th><th>Progression</th></tr>
+          </thead>
+          <tbody>
+            @for (l of p.lignes; track l.codeProduit) {
               <tr>
-                <th>Produit</th>
-                <th>Catégorie</th>
-                <th class="text-right">Objectif semaine</th>
-                <th class="text-right">Qté attendue (kg)</th>
-                <th class="text-right">Unités attendues</th>
-                <th class="text-right">Réalisé</th>
-                <th>Progression</th>
+                <td><strong>{{ l.nomProduit }}</strong><div class="pp-meta">{{ l.codeProduit }}</div></td>
+                <td><span class="pp-tag">{{ l.categorieMetier }}</span></td>
+                <td class="pp-num">{{ l.objectifSemaine | number:'1.0-0' }}</td>
+                <td class="pp-num">{{ l.quantiteAttendueKg | number:'1.1-1' }}</td>
+                <td class="pp-num">{{ l.quantiteAttendueUnites | number:'1.0-0' }}</td>
+                <td class="pp-num"><strong>{{ l.productionRealisee | number:'1.0-0' }}</strong></td>
+                <td><div class="pp-barre"><div class="pp-barre-fill" [class.pp-barre-ok]="pctLigne(l.objectifSemaine, l.productionRealisee) >= 100" [style.width.%]="pctLigne(l.objectifSemaine, l.productionRealisee)"></div></div></td>
               </tr>
-            </thead>
+            } @empty {
+              <tr><td colspan="7" class="pp-vide-cellule">Aucune ligne de production.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="pp-sous-titre">Matières premières et emballage (total du plan)</h3>
+      <div class="pp-deux-col">
+        <div class="pp-table-wrap">
+          <table class="pp-table">
+            <thead><tr><th>Matière</th><th class="pp-num">Kg prévus</th></tr></thead>
             <tbody>
-              @for (l of p.lignes; track l.codeProduit) {
-                <tr>
-                  <td><strong>{{ l.nomProduit }}</strong></td>
-                  <td><span class="badge">{{ l.categorieMetier }}</span></td>
-                  <td class="text-right mono">{{ l.objectifSemaine }}</td>
-                  <td class="text-right mono">{{ l.quantiteAttendueKg | number:'1.1-1' }}</td>
-                  <td class="text-right mono">{{ l.quantiteAttendueUnites | number:'1.0-0' }}</td>
-                  <td class="text-right mono">{{ l.productionRealisee }}</td>
-                  <td>
-                    <div class="pph-prog-track">
-                      <div class="pph-prog-bar"
-                           [style.width.%]="l.objectifSemaine > 0 ? (l.productionRealisee / l.objectifSemaine * 100) : 0"
-                           [class.pph-prog-g]="l.objectifSemaine > 0 && (l.productionRealisee / l.objectifSemaine) >= 1"
-                           [class.pph-prog-y]="l.objectifSemaine > 0 && (l.productionRealisee / l.objectifSemaine) >= .5 && (l.productionRealisee / l.objectifSemaine) < 1"
-                           [class.pph-prog-r]="l.objectifSemaine === 0 || (l.productionRealisee / l.objectifSemaine) < .5">
-                      </div>
-                    </div>
-                  </td>
-                </tr>
+              @for (m of resumePlanSelectionne()?.matieres ?? []; track m.nom) {
+                <tr><td>{{ m.nom }}</td><td class="pp-num"><strong>{{ m.kg | number:'1.1-1' }}</strong></td></tr>
               } @empty {
-                <tr><td colspan="7" class="empty-state-block">Aucune ligne de production</td></tr>
+                <tr><td colspan="2" class="pp-vide-cellule">Aucun besoin en matière (produits sans formule).</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="pp-table-wrap">
+          <table class="pp-table">
+            <thead><tr><th>Emballage</th><th class="pp-num">Quantité</th></tr></thead>
+            <tbody>
+              @for (e of resumePlanSelectionne()?.emballage ?? []; track e.type) {
+                <tr><td>{{ e.type }}</td><td class="pp-num"><strong>{{ e.quantite | number:'1.0-0' }}</strong></td></tr>
+              } @empty {
+                <tr><td colspan="2" class="pp-vide-cellule">Aucun besoin d'emballage calculé.</td></tr>
               }
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Section 2 : Répartition journalière -->
-      @if (p.repartitionJours && p.repartitionJours.length > 0) {
-        <div class="pph-section">
-          <div class="pph-section-title">
-            <i class="fa-solid fa-seedling"></i> Ressources et matières premières par jour
-          </div>
-          <div class="tbl-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Jour</th>
-                  <th class="text-right">Maïs (kg)</th>
-                  <th class="text-right">Soja (kg)</th>
-                  <th class="text-right">Arachide (kg)</th>
-                  <th class="text-right">Fûts</th>
-                  <th class="text-right">Sachets</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (j of p.repartitionJours; track j.dateJour) {
-                  <tr>
-                    <td><strong>{{ j.dateJour }}</strong></td>
-                    <td class="text-right mono">{{ j.poudreMaisKg | number:'1.1-1' }}</td>
-                    <td class="text-right mono">{{ j.poudreSojaKg | number:'1.1-1' }}</td>
-                    <td class="text-right mono">{{ j.poudreArachideKg | number:'1.1-1' }}</td>
-                    <td class="text-right mono">{{ j.futsPrevus }}</td>
-                    <td class="text-right mono">{{ j.sachetsPrevus }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <h3 class="pp-sous-titre">Répartition par jour</h3>
+      @if ((p.repartitionJours ?? []).length > 0) {
+        <app-besoins-par-jour [repartition]="p.repartitionJours" />
+      } @else {
+        <p class="pp-vide">Aucune répartition journalière pour ce plan.</p>
       }
 
-      <!-- Section 3 : Détail par produit/jour -->
-      @if (p.lignesDetaillees && p.lignesDetaillees.length > 0) {
-        <div class="pph-section">
-          <div class="pph-section-title">
-            <i class="fa-solid fa-list"></i> Détail par produit et par jour
-          </div>
-          <div class="tbl-wrap">
-            <table class="data-table">
-              <thead>
+      <h3 class="pp-sous-titre">Détail par produit et par jour</h3>
+      <div class="pp-table-wrap">
+        <table class="pp-table">
+          <thead>
+            <tr><th>Jour</th><th>Produit</th><th class="pp-num">Qté jour</th><th class="pp-num">Kg</th><th class="pp-num">Unités</th><th class="pp-num">Fûts</th></tr>
+          </thead>
+          <tbody>
+            @for (g of detailParJour(p); track g.jour) {
+              @for (d of g.lignes; track d.codeProduit + d.dateJour; let premier = $first) {
                 <tr>
-                  <th>Jour</th>
-                  <th>Produit</th>
-                  <th>Catégorie</th>
-                  <th class="text-right">Qté jour</th>
-                  <th class="text-right">Qté attendue (kg)</th>
-                  <th class="text-right">Unités attendues</th>
-                  <th class="text-right">Poids total (g)</th>
+                  <td>@if (premier) { <strong>{{ g.jour | date:'EEE dd/MM' }}</strong> }</td>
+                  <td>
+                    {{ d.nomProduit }}
+                    @if (d.formuleManquante) { <span class="pp-badge pp-badge-attention">sans formule</span> }
+                    @if (d.compositionEmballageManquante) { <span class="pp-badge pp-badge-attention">sans emballage</span> }
+                  </td>
+                  <td class="pp-num">{{ d.quantiteJour | number:'1.0-0' }}</td>
+                  <td class="pp-num">{{ d.quantiteAttendueKg | number:'1.1-1' }}</td>
+                  <td class="pp-num">{{ d.quantiteAttendueUnites | number:'1.0-0' }}</td>
+                  <td class="pp-num">{{ d.futsPrevus | number:'1.0-1' }}</td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (g of detailsParJour(p); track g.dateJour) {
-                  @for (d of g.lignes; track d.codeProduit + d.dateJour) {
-                    <tr [class.pph-detail-day-start]="$first">
-                      <td>
-                        @if ($first) { <strong>{{ g.dateJour }}</strong> }
-                      </td>
-                      <td>{{ d.nomProduit }}</td>
-                      <td><span class="badge">{{ d.categorieMetier }}</span></td>
-                      <td class="text-right mono">{{ d.quantiteJour }}</td>
-                      <td class="text-right mono">{{ d.quantiteAttendueKg | number:'1.1-1' }}</td>
-                      <td class="text-right mono">{{ d.quantiteAttendueUnites | number:'1.0-0' }}</td>
-                      <td class="text-right mono">{{ d.poidsTotalGrammes | number:'1.0-0' }}</td>
-                    </tr>
-                  }
-                } @empty {
-                  <tr><td colspan="7" class="empty-state-block">Aucun détail</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
-
-    </div>
-
-    <!-- Footer -->
-    <div class="pph-modal-footer">
-      <button class="btn btn-primary" (click)="fermerDetail()">Fermer</button>
-    </div>
-
+              }
+            } @empty {
+              <tr><td colspan="6" class="pp-vide-cellule">Aucun détail par jour.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </aside>
   </div>
-</div>
 }

@@ -1,30 +1,170 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-table-list ph-ico"></i>
+<div class="rp">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="rp-hero">
+  <div class="rp-hero-gauche">
+    <i class="fa-solid fa-table-list rp-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Référentiel des Postes</h1>
-      <p class="ph-sub">Base des calculs — configurable dans Administration &gt; Postes production</p>
+      <div class="rp-kicker">Responsable de salle · Référence</div>
+      <h1 class="rp-hero-titre">Référentiel des postes</h1>
+      <p class="rp-hero-sous">Cadences et effectifs de référence qui servent à calculer les objectifs des affectations.</p>
     </div>
   </div>
-</div>
+  <button class="rp-bouton rp-bouton-blanc" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.rp-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-<div class="card">
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr><th>Poste</th><th>Unité</th><th>Effectif de référence</th><th>Production / heure</th><th>Production / jour</th></tr>
-      </thead>
-      <tbody>
-        @for (p of postes(); track p.code) {
-          <tr>
-            <td><strong>{{ p.libelle }}</strong></td>
-            <td><span class="badge bg-neutral">{{ p.unite }}</span></td>
-            <td>{{ p.effectifReference }}</td>
-            <td>{{ p.productionParHeure }}</td>
-            <td>{{ p.productionJournaliere }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+@if (sessionExpiree()) {
+  <div class="rp-alerte rp-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rp-lien">Se reconnecter</a>
   </div>
+} @else if (erreur()) {
+  <div class="rp-alerte rp-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="rp-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement()) {
+  <div class="rp-squelette"></div>
+} @else if (!erreur() && postes().length === 0) {
+  <section class="rp-carte rp-vide">
+    <i class="fa-solid fa-industry"></i>
+    <h2>Aucun poste de production actif</h2>
+    <p>Les postes se créent et s'activent dans Administration &gt; Postes production.</p>
+  </section>
+} @else if (postes().length > 0) {
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="rp-kpis">
+    <div class="rp-kpi rp-kpi-principal">
+      <span class="rp-lbl">Postes actifs</span>
+      <strong class="rp-grand">{{ postes().length }}</strong>
+      <span class="rp-muet">dans la chaîne de production</span>
+    </div>
+    <div class="rp-kpi">
+      <span class="rp-lbl">Effectif de référence</span>
+      <strong class="rp-grand">{{ effectifTotal() }}</strong>
+      <span class="rp-muet">personnes, tous postes confondus</span>
+    </div>
+    <div class="rp-kpi">
+      <span class="rp-lbl">Unités de mesure</span>
+      <strong class="rp-grand">{{ nbUnites() }}</strong>
+      <span class="rp-muet">les productions ne sont pas additionnées</span>
+    </div>
+    <div class="rp-kpi" [class.rp-kpi-alerte]="nbAnomalies() > 0">
+      <span class="rp-lbl">À vérifier</span>
+      <strong class="rp-grand">{{ nbAnomalies() }}</strong>
+      <span class="rp-muet">poste(s) avec une valeur suspecte</span>
+    </div>
+  </section>
+
+  <!-- ═══ TABLEAU ═══ -->
+  <section class="rp-carte">
+    <header class="rp-carte-tete">
+      <div class="rp-titre">
+        <span class="rp-numero"><i class="fa-solid fa-list-ol"></i></span>
+        <div>
+          <h3>Postes et cadences</h3>
+          <span class="rp-muet">{{ lignesFiltrees().length }} sur {{ lignes().length }} affiché(s)</span>
+        </div>
+      </div>
+      <div class="rp-outils">
+        <label class="rp-recherche">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" placeholder="Rechercher un poste, un code, une unité…"
+                 [ngModel]="recherche()" (ngModelChange)="recherche.set($event)" />
+        </label>
+      </div>
+    </header>
+
+    @if (categories().length > 0) {
+      <div class="rp-filtres" role="group" aria-label="Filtrer par catégorie">
+        <button class="rp-filtre" [class.rp-filtre-actif]="!categorieChoisie()" (click)="categorieChoisie.set('')">Toutes</button>
+        @for (c of categories(); track c.code) {
+          <button class="rp-filtre" [class.rp-filtre-actif]="categorieChoisie() === c.code" (click)="choisirCategorie(c.code)">
+            {{ c.libelle }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (lignesFiltrees().length === 0) {
+      <div class="rp-vide-filtre">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        <span>Aucun poste ne correspond à ces critères.</span>
+        <button class="rp-lien" (click)="reinitialiserFiltres()">Effacer les filtres</button>
+      </div>
+    } @else {
+      <div class="rp-table-wrap">
+        <table class="rp-table">
+          <thead>
+            <tr>
+              <th class="rp-ordre">#</th>
+              <th>Poste</th>
+              <th>Catégories</th>
+              <th class="rp-num">Effectif réf.</th>
+              <th class="rp-num">Prod. / heure</th>
+              <th class="rp-num">Prod. / jour</th>
+              <th class="rp-num">Rendement / pers. / h</th>
+              <th class="rp-num">Base journalière</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lignesFiltrees(); track l.poste.code) {
+              <tr [class.rp-ligne-alerte]="l.anomalie">
+                <td class="rp-ordre"><span class="rp-rang">{{ l.poste.ordre ?? '—' }}</span></td>
+                <td>
+                  <div class="rp-nom">
+                    <strong>{{ l.poste.libelle }}</strong>
+                    @if (l.anomalie) {
+                      <i class="fa-solid fa-triangle-exclamation rp-icone-alerte" [attr.title]="l.anomalie" aria-hidden="true"></i>
+                    }
+                  </div>
+                  <code class="rp-code">{{ l.poste.code }}</code>
+                </td>
+                <td>
+                  <div class="rp-chips">
+                    @for (c of l.categories; track c) {
+                      <span class="rp-chip">{{ libelle(c) }}</span>
+                    } @empty {
+                      <span class="rp-muet">—</span>
+                    }
+                  </div>
+                </td>
+                <td class="rp-num">{{ l.poste.effectifReference }}</td>
+                <td class="rp-num">
+                  {{ l.poste.productionParHeure | number:'1.0-1' }} <span class="rp-unite">{{ l.poste.unite }}</span>
+                </td>
+                <td class="rp-num">
+                  {{ l.poste.productionJournaliere | number:'1.0-1' }} <span class="rp-unite">{{ l.poste.unite }}</span>
+                </td>
+                <td class="rp-num">
+                  {{ l.rendement | number:'1.0-2' }} <span class="rp-unite">{{ l.poste.unite }}</span>
+                </td>
+                <td class="rp-num">
+                  @if (l.heuresJour > 0) {
+                    <span [class.rp-texte-alerte]="l.anomalie && l.heuresJour > 12">{{ l.heuresJour | number:'1.0-1' }} h</span>
+                  } @else {
+                    <span class="rp-muet">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <footer class="rp-carte-pied">
+      <span class="rp-muet">
+        <i class="fa-solid fa-circle-info"></i>
+        Rendement = production par heure ÷ effectif de référence. Base journalière = production par jour ÷ production par heure.
+      </span>
+    </footer>
+  </section>
+}
+
 </div>

@@ -59,6 +59,8 @@ export const STOCK_ROUTES: Routes = [
       { path: 'seuils', loadComponent: () => import('./pages/seuils/seuil-list.component').then(m => m.SeuilListComponent) },
       { path: 'exports', redirectTo: 'rapports', pathMatch: 'full' },
       { path: 'classification', loadComponent: () => import('./pages/classification/classification-list.component').then(m => m.ClassificationListComponent) },
+      // Référentiel du module conditionnement (/api/conditionnement/types-emballage + calcul de poids).
+      { path: 'types-emballage', loadComponent: () => import('../../conditionnement/presentation/pages/types-emballage/types-emballage.component').then(m => m.TypesEmballageComponent) },
       { path: 'materiels', loadComponent: () => import('./pages/materiels/materiel-list.component').then(m => m.MaterielListComponent) },
       { path: 'produits', loadComponent: () => import('./pages/produits/produits.component').then(m => m.ProduitsComponent) },
       { path: 'valorisation', loadComponent: () => import('./pages/valorisation/valorisation.component').then(m => m.ValorisationComponent) },

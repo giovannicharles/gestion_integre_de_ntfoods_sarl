@@ -4,9 +4,15 @@ import { map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 
+/** Miroir de UtilisateurResponse (GET /administration/utilisateurs[/{matricule}]). */
 export interface UtilisateurBE {
   id: number; matricule: string; nomComplet: string; email: string;
   role: string; roleLibelle: string; actif: boolean; dateCreation: string;
+  prenom?: string; nom?: string;
+  /** Bloqué automatiquement après trop d'échecs de connexion. */
+  compteBloque?: boolean; tentativesEchouees?: number; sessionActive?: boolean;
+  telephone?: string | null; residence?: string | null; cni?: string | null; photo?: string | null;
+  dateNaissance?: string | null; lieuNaissance?: string | null; dateEmbauche?: string | null; sexe?: string | null;
 }
 
 export interface ParametresBE {
@@ -67,6 +73,36 @@ export class AdminService {
     return this.api.patch<ApiResponse<UtilisateurBE>>(
       `administration/utilisateurs/${encodeURIComponent(matricule)}/role?role=${encodeURIComponent(role)}`, {}
     ).pipe(map(r => r.donnees!));
+  }
+
+  /** Fiche complète d'un utilisateur (identité, état du compte, informations personnelles). */
+  consulterUtilisateur(matricule: string): Observable<UtilisateurBE> {
+    return this.api.get<ApiResponse<UtilisateurBE>>(`administration/utilisateurs/${encodeURIComponent(matricule)}`)
+      .pipe(map(r => r.donnees!));
+  }
+
+  /**
+   * Réinitialise le mot de passe d'un utilisateur. Endpoint AuthController (permission
+   * AUTH_USER_RESET_PASSWORD) : le mot de passe voyage dans le corps — l'équivalent sous
+   * /administration le passe en paramètre d'URL, donc dans les journaux du serveur.
+   * Politique serveur : 8 caractères minimum, au moins une lettre et un chiffre.
+   */
+  reinitialiserMotDePasse(matricule: string, nouveauMotDePasse: string): Observable<unknown> {
+    return this.api.put<ApiResponse<unknown>>(
+      `auth/utilisateurs/${encodeURIComponent(matricule)}/mot-de-passe`, { nouveauMotDePasse }
+    ).pipe(map(r => r.donnees));
+  }
+
+  /**
+   * Change le rôle d'un utilisateur — PUT /auth/utilisateurs/{matricule}/role (permission
+   * AUTH_USER_CHANGER_ROLE). Le serveur refuse : son propre rôle, l'attribution / le retrait du rôle
+   * ADMIN par un non-ADMIN non-DG, la rétrogradation du dernier ADMIN actif ; il trace l'opération
+   * (ancien → nouveau rôle). Réponse sans corps : relire le compte pour l'afficher à jour.
+   */
+  changerRoleUtilisateur(matricule: string, role: string): Observable<unknown> {
+    return this.api.put<ApiResponse<unknown>>(
+      `auth/utilisateurs/${encodeURIComponent(matricule)}/role`, { role }
+    ).pipe(map(r => r.donnees));
   }
 
   debloquer(matricule: string): Observable<UtilisateurBE> {

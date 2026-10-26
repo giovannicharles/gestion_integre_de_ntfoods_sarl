@@ -15,6 +15,8 @@ export const DG_ROUTES: Routes = [
       { path: 'reporting', loadComponent: () => import('./pages/reporting/dg-reporting.component').then(m => m.DgReportingComponent) },
       { path: 'supervision', loadComponent: () => import('./pages/supervision/dg-supervision.component').then(m => m.DgSupervisionComponent) },
       { path: 'seuils', loadComponent: () => import('./pages/seuils/dg-seuils.component').then(m => m.DgSeuilsComponent) },
+      // Même écran que /stock/types-emballage : le DG détient STOCK_CONDITIONNEMENT_GERER et reste dans sa propre coquille.
+      { path: 'types-emballage', loadComponent: () => import('../../conditionnement/presentation/pages/types-emballage/types-emballage.component').then(m => m.TypesEmballageComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
       // Assistance IA. Les miroirs des écrans stock que portait la version

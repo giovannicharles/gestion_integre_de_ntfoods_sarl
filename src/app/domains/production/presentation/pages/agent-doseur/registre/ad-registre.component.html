@@ -1,53 +1,180 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-book ph-ico"></i>
+<header class="rg-hero">
+  <div class="rg-hero-gauche">
+    <i class="fa-solid fa-book rg-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Registre de Dosage</h1>
-      <p class="ph-sub">Historique des opérations de dosage — recherche, filtres, téléchargement</p>
+      <div class="rg-hero-kicker">Agent doseur</div>
+      <h1 class="rg-hero-titre">Registre de dosage</h1>
+      <p class="rg-hero-sous">Sessions de dosage d'une période, avec leurs fûts, leurs matières et leur registre à télécharger.</p>
     </div>
+  </div>
+  <button class="rg-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.rg-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
+
+@if (sessionExpiree()) {
+  <div class="rg-alerte rg-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rg-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="rg-alerte rg-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
+}
+@if (erreurTelechargement()) {
+  <div class="rg-alerte rg-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreurTelechargement() }}</span></div>
+}
+
+<section class="rg-carte">
+  <div class="rg-filtres">
+    <label class="rg-champ">
+      <span class="rg-champ-lbl">Recherche</span>
+      <input class="rg-input" placeholder="PPH ou matricule de l'agent" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    </label>
+    <label class="rg-champ">
+      <span class="rg-champ-lbl">Statut</span>
+      <select class="rg-input" [ngModel]="statutFiltre()" (ngModelChange)="statutFiltre.set($event)">
+        <option value="TOUS">Tous</option>
+        <option value="EN_COURS">En cours</option>
+        <option value="VALIDEE">Validée</option>
+        <option value="EN_PAUSE">En pause</option>
+        <option value="CLOTUREE">Clôturée</option>
+      </select>
+    </label>
+    <label class="rg-champ">
+      <span class="rg-champ-lbl">Du</span>
+      <input type="date" class="rg-input" [ngModel]="debut()" (ngModelChange)="debut.set($event); presenceChoisie.set('')">
+    </label>
+    <label class="rg-champ">
+      <span class="rg-champ-lbl">Au</span>
+      <input type="date" class="rg-input" [ngModel]="fin()" (ngModelChange)="fin.set($event); presenceChoisie.set('')">
+    </label>
+    <div class="rg-champ">
+      <span class="rg-champ-lbl">Période</span>
+      <div class="rg-presets">
+        @for (p of presets; track p.code) {
+          <button class="rg-preset" [class.rg-preset-actif]="presenceChoisie() === p.code" (click)="choisirPresence(p.code)">{{ p.libelle }}</button>
+        }
+      </div>
+    </div>
+    <div class="rg-champ rg-champ-action">
+      <button class="rg-bouton rg-bouton-primaire" (click)="charger()" [disabled]="chargement()">
+        <i class="fa-solid fa-magnifying-glass"></i> Appliquer
+      </button>
+    </div>
+  </div>
+</section>
+
+<div class="rg-kpis">
+  <div class="rg-kpi rg-kpi-principal">
+    <div class="rg-kpi-lbl">Sessions</div>
+    <div class="rg-kpi-val">{{ nbFiltrees() }}</div>
+    <div class="rg-kpi-meta">du {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}</div>
+  </div>
+  <div class="rg-kpi">
+    <div class="rg-kpi-lbl">Fûts produits</div>
+    <div class="rg-kpi-val">{{ futsProduits() }}</div>
+    <div class="rg-kpi-meta">{{ futsCasses() }} cassé(s)</div>
+  </div>
+  <div class="rg-kpi">
+    <div class="rg-kpi-lbl">Matières dosées</div>
+    <div class="rg-kpi-val">{{ matieresKg() | number:'1.0-1' }} <small>kg</small></div>
+    <div class="rg-kpi-meta">toutes matières</div>
+  </div>
+  <div class="rg-kpi" [class.rg-kpi-alerte]="nbAvecEcart() > 0">
+    <div class="rg-kpi-lbl">Avec écart justifié</div>
+    <div class="rg-kpi-val">{{ nbAvecEcart() }}</div>
+    <div class="rg-kpi-meta">justification saisie</div>
   </div>
 </div>
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input" placeholder="Rechercher un PPH ou un agent..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
-    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
-  </div>
-
-  @if (erreurAcces()) {
-    <div class="gap-note"><i class="fa-solid fa-lock"></i><div>Liste indisponible. Le téléchargement individuel d'un registre reste disponible depuis la ligne d'une session.</div></div>
-  } @else if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+<section class="rg-carte">
+  @if (chargement()) {
+    <div class="rg-squelette"></div>
+    <div class="rg-squelette"></div>
+  } @else if (sessionsFiltrees().length === 0) {
+    <p class="rg-vide"><i class="fa-solid fa-inbox"></i>
+      @if (sessions().length === 0) { Aucune session de dosage sur cette période. } @else { Aucune session ne correspond aux filtres. }
+    </p>
   } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Date</th><th>PPH</th><th>Matières</th><th>Machines</th><th>Mélange</th><th>Fûts</th><th>Agent</th><th>Téléchargement</th></tr></thead>
+    <div class="rg-table-wrap">
+      <table class="rg-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>PPH</th>
+            <th>Agent</th>
+            <th class="rg-num">Fûts produits</th>
+            <th class="rg-num">Cassés</th>
+            <th class="rg-num">Matières (kg)</th>
+            <th>Statut</th>
+            <th class="rg-actions-col">Registre</th>
+          </tr>
+        </thead>
         <tbody>
           @for (s of sessionsFiltrees(); track s.id) {
-            <tr>
+            <tr class="rg-ligne" [class.rg-ligne-ouverte]="ouverte() === s.id" (click)="basculer(s.id)">
               <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
-              <td class="mono">{{ s.referencePPH }}</td>
-              <td>{{ s.matieresUtilisees.length }} matière(s)</td>
-              <td>{{ s.machinesMobilisees.join(', ') || '—' }}</td>
-              <td>{{ s.matieresUtilisees.length ? 'Enregistré' : '—' }}</td>
-              <td>{{ s.nbFutsNets }}</td>
+              <td><span class="rg-code">{{ s.referencePPH }}</span></td>
               <td>{{ s.matriculeAgentDoseur }}</td>
+              <td class="rg-num"><strong>{{ s.nbFutsProduits }}</strong></td>
+              <td class="rg-num" [class.rg-casse]="s.nbFutsCasses > 0">{{ s.nbFutsCasses }}</td>
+              <td class="rg-num">{{ s.matieresUtilisees.length ? (sommeMatieres(s) | number:'1.1-1') : '—' }}</td>
               <td>
-                <div class="row-actions">
-                  <button class="btn btn-sm btn-ghost" (click)="telecharger(s, 'pdf')"><i class="fa-solid fa-file-pdf"></i></button>
-                  <button class="btn btn-sm btn-ghost" (click)="telecharger(s, 'excel')"><i class="fa-solid fa-file-excel"></i></button>
-                </div>
+                @switch (statutDe(s)) {
+                  @case ('CLOTUREE') { <span class="rg-statut rg-statut-cloture"><i class="fa-solid fa-lock"></i> Clôturée</span> }
+                  @case ('VALIDEE') { <span class="rg-statut rg-statut-valide"><i class="fa-solid fa-circle-check"></i> Validée</span> }
+                  @case ('EN_PAUSE') { <span class="rg-statut rg-statut-pause"><i class="fa-solid fa-pause"></i> En pause</span> }
+                  @default { <span class="rg-statut rg-statut-cours"><i class="fa-solid fa-arrows-rotate"></i> En cours</span> }
+                }
+              </td>
+              <td class="rg-actions-col" (click)="$event.stopPropagation()">
+                <button class="rg-icone" title="Télécharger en PDF" [disabled]="telechargement() !== ''" (click)="telecharger(s, 'pdf')">
+                  @if (telechargement() === s.id + '-pdf') { <i class="fa-solid fa-spinner rg-tourne"></i> } @else { <i class="fa-solid fa-file-pdf"></i> }
+                </button>
+                <button class="rg-icone" title="Télécharger en Excel" [disabled]="telechargement() !== ''" (click)="telecharger(s, 'excel')">
+                  @if (telechargement() === s.id + '-excel') { <i class="fa-solid fa-spinner rg-tourne"></i> } @else { <i class="fa-solid fa-file-excel"></i> }
+                </button>
               </td>
             </tr>
-          } @empty {
-            <tr><td colspan="8" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune opération sur la période</td></tr>
+            @if (ouverte() === s.id) {
+              <tr class="rg-detail">
+                <td colspan="8">
+                  <div class="rg-detail-grille">
+                    <div>
+                      <h3 class="rg-sous-titre"><i class="fa-solid fa-seedling"></i> Matières dosées</h3>
+                      @if (s.matieresUtilisees.length === 0) {
+                        <p class="rg-texte-vide">Aucune matière saisie.</p>
+                      } @else {
+                        <ul class="rg-liste">
+                          @for (m of s.matieresUtilisees; track m.typeMatiere) {
+                            <li><span>{{ m.typeMatiere }}</span><strong>{{ m.quantiteKg | number:'1.1-1' }} kg</strong></li>
+                          }
+                        </ul>
+                      }
+                    </div>
+                    <div>
+                      <h3 class="rg-sous-titre"><i class="fa-solid fa-gears"></i> Machines</h3>
+                      @if (s.machinesMobilisees.length === 0) {
+                        <p class="rg-texte-vide">Aucune machine enregistrée.</p>
+                      } @else {
+                        <div class="rg-machines">
+                          @for (m of s.machinesMobilisees; track m) { <span class="rg-code">{{ m }}</span> }
+                        </div>
+                      }
+                    </div>
+                    <div>
+                      <h3 class="rg-sous-titre"><i class="fa-solid fa-triangle-exclamation"></i> Écart</h3>
+                      <p class="rg-texte">{{ s.justificationEcart || 'Aucune justification d\'écart.' }}</p>
+                    </div>
+                  </div>
+                  <p class="rg-pied">Session #{{ s.id }} · créée le {{ s.dateCreation | date:'dd/MM/yyyy HH:mm' }} · modifiée le {{ s.dateModification | date:'dd/MM/yyyy HH:mm' }}</p>
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
   }
-</div>
+</section>

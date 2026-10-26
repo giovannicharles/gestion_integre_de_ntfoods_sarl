@@ -1,0 +1,70 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Tableau de Bord — Agent de Production</h1>
+      <p class="ph-sub">Ordres de fabrication et fiches du jour</p>
+    </div>
+  </div>
+</div>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+@if (loading()) {
+  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+} @else if (dashboard()) { @let d = dashboard()!;
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">OF en cours</div><div class="kpi-val">{{ d.ofsEnCours }}</div></div></div>
+  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">OF planifiés</div><div class="kpi-val">{{ d.ofsPlanifies }}</div></div></div>
+  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Fiches cette semaine</div><div class="kpi-val">{{ d.fichesSemaine }}</div></div></div>
+  <div class="kpi-card" [class.kp-g]="d.ficheJourExistante" [class.kp-r]="!d.ficheJourExistante">
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fiche du jour</div>
+      <div class="kpi-val">{{ d.ficheJourExistante ? 'Déclarée' : 'Non déclarée' }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-list-check"></i> Ordres de fabrication en cours</h2>
+    <a routerLink="/production/agent-production/ordres-fabrication" class="btn btn-ghost btn-sm">Voir tous les OF <i class="fa-solid fa-arrow-right"></i></a>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead><tr><th>OF</th><th>Produit</th><th>Demandé</th><th>Réalisé</th><th>Progression</th></tr></thead>
+      <tbody>
+        @for (o of d.ofs; track o.idOF) {
+          <tr>
+            <td class="mono">{{ o.idOF }}</td>
+            <td>{{ o.designationProduit }} <span class="text-muted">({{ o.codeProduit }})</span></td>
+            <td>{{ o.qteDemandee }}</td>
+            <td>{{ o.qteRealisee }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="progression(o.qteDemandee, o.qteRealisee)>=100" [class.prog-y]="progression(o.qteDemandee, o.qteRealisee)<100" [style.width.%]="progression(o.qteDemandee, o.qteRealisee)"></div></div>
+                <span>{{ o.tauxAvancement }}%</span>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun OF en cours</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="two-col">
+  <a routerLink="/production/agent-production/registres" class="card" style="padding: var(--sp-4); text-decoration:none; display:flex; align-items:center; gap:12px;">
+    <i class="fa-solid fa-book" style="font-size:1.5rem; color: var(--g);"></i>
+    <div><strong>Registres de production</strong><div class="text-muted" style="font-size:12px">Présences et rendements par PPH</div></div>
+  </a>
+  <a routerLink="/production/agent-production/fiches" class="card" style="padding: var(--sp-4); text-decoration:none; display:flex; align-items:center; gap:12px;">
+    <i class="fa-solid fa-file-lines" style="font-size:1.5rem; color: var(--b);"></i>
+    <div><strong>Fiches produit journalières</strong><div class="text-muted" style="font-size:12px">Quantités réelles vs prédictions</div></div>
+  </a>
+</div>
+
+}

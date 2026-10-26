@@ -1,131 +1,163 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-gauge-high ph-ico"></i>
+<div class="cmd">
+
+<header class="cmd-hero">
+  <div class="cmd-hero-gauche">
+    <i class="fa-solid fa-gauge-high cmd-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Tableau de Bord — Chef Machiniste</h1>
-      <p class="ph-sub">Pilotage du broyage — maïs, soja, arachide</p>
+      <div class="cmd-hero-kicker">Chef machiniste · {{ aujourdhui | date:'EEEE dd MMMM' }}</div>
+      <h1 class="cmd-hero-titre">Atelier de broyage</h1>
+      <p class="cmd-hero-sous">
+        Vue d'ensemble de la journée et des 30 derniers jours.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <a routerLink="/production/chef-machiniste/realisations" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Saisir une réalisation</a>
+  <div class="cmd-actions">
+    <button class="cmd-bouton" (click)="charger()" [disabled]="chargement()">
+      <i class="fa-solid fa-rotate" [class.cmd-tourne]="chargement()"></i> Actualiser
+    </button>
+    <a routerLink="/production/chef-machiniste/realisations" class="cmd-bouton cmd-bouton-blanc">
+      <i class="fa-solid fa-pen-to-square"></i> Saisir une réalisation
+    </a>
   </div>
-</div>
+</header>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+@if (sessionExpiree()) {
+  <div class="cmd-alerte">
+    <i class="fa-solid fa-lock"></i>
+    <span>Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.</span>
+    <a routerLink="/auth/login" class="cmd-lien">Se reconnecter</a>
+  </div>
+} @else if (erreurs().length > 0) {
+  <div class="cmd-alerte">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>Données non chargées : {{ erreurs().join(', ') }}.</span>
+    <button class="cmd-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
 
-@if (loading()) {
-  @for (i of [1,2,3,4]; track i) {
-    <div class="skeleton skeleton-row"></div>
-  }
+@for (a of alertes(); track a.texte) {
+  <div class="cmd-alerte cmd-alerte-{{ a.type }}">
+    <i class="fa-solid" [class.fa-triangle-exclamation]="a.type !== 'info'" [class.fa-circle-info]="a.type === 'info'"></i>
+    <span>{{ a.texte }}</span>
+  </div>
+}
+
+@if (chargement()) {
+  <div class="cmd-squelette"></div>
+  <div class="cmd-squelette cmd-squelette-haut"></div>
 } @else {
 
-<!-- Vue d'ensemble production -->
-<h2 class="dash-section-title"><i class="fa-solid fa-industry"></i> Production du jour</h2>
-<div class="kpi-grid">
-  <div class="kpi-card kp-g featured"><div class="kpi-ico ig"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Poudre broyée (jour)</div><div class="kpi-val">{{ poudreTotaleJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-b featured"><div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Nette confirmée (clôturé)</div><div class="kpi-val">{{ netteBroyeeJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-r featured"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Pertes</div><div class="kpi-val">{{ pertesJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-y featured"><div class="kpi-ico iy"><i class="fa-solid fa-percent"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Taux global de réalisation</div><div class="kpi-val">{{ tauxRealisationGlobal() }}%</div></div></div>
-</div>
-
-<!-- Répartition par type de poudre -->
-<h2 class="dash-section-title"><i class="fa-solid fa-layer-group"></i> Répartition par type de poudre</h2>
-<div class="kpi-grid kpi-grid-3">
-  <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-seedling"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Maïs broyé</div><div class="kpi-val">{{ maisJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-leaf"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Soja broyé</div><div class="kpi-val">{{ sojaJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-jar"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Arachide broyée</div><div class="kpi-val">{{ arachideJour() | number:'1.1-1' }} kg</div></div></div>
-</div>
-
-<!-- Objectifs & ressources -->
-<h2 class="dash-section-title"><i class="fa-solid fa-bullseye"></i> Objectifs & Ressources</h2>
-<div class="kpi-grid kpi-grid-4">
-  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-bullseye"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Objectif du jour</div><div class="kpi-val">{{ objectifsJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Objectifs atteints</div><div class="kpi-val">{{ objectifsAtteints() }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-users"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Machinistes actifs</div><div class="kpi-val">{{ machinistesActifs() }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-gauge"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Productivité moyenne</div><div class="kpi-val">{{ productiviteMoyenne() | number:'1.1-1' }} kg</div></div></div>
-</div>
-
-<!-- Qualité & planning -->
-<h2 class="dash-section-title"><i class="fa-solid fa-clipboard-check"></i> Qualité & Planning</h2>
-<div class="kpi-grid kpi-grid-4">
-  <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-arrow-trend-down"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">% global des pertes</div><div class="kpi-val">{{ pctPertesJour() }}%</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-file-lines"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">PPH reçus</div><div class="kpi-val">{{ nbPphRecus() }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-flag-checkered"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Productions terminées</div><div class="kpi-val">{{ productionsTerminees() }}</div></div></div>
-</div>
-
-<!-- Graphiques en avant -->
-<div class="two-col charts-row-tall">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution journalière (7 jours)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      @if (historique30j().length) {
-        <app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionJournaliere()" [height]="280" />
-      } @else {
-        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune session de broyage sur la période.</p>
-      }
+  <!-- Aujourd'hui -->
+  <h2 class="cmd-section"><i class="fa-solid fa-calendar-day"></i> Aujourd'hui</h2>
+  <section class="cmd-kpis">
+    <div class="cmd-kpi cmd-kpi-principal">
+      <span class="cmd-lbl">Poudre broyée</span>
+      <strong class="cmd-grand">{{ jour()?.realise | number:'1.1-1' }} kg</strong>
+      <span class="cmd-muet">sur {{ jour()?.objectif | number:'1.0-0' }} kg d'objectif</span>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Objectifs vs Réalisations (7 jours)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      @if (historique30j().length) {
-        <app-mini-chart type="bar" [labels]="labels7j()" [series]="serieObjectifsVsRealise()" [height]="280" />
-      } @else {
-        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucun objectif enregistré sur la période.</p>
-      }
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Taux de réalisation</span>
+      <strong class="cmd-grand">{{ libelleTaux(jour()?.taux ?? null) }}</strong>
+      <span class="cmd-muet">seuil de validation : 85 %</span>
     </div>
-  </div>
-</div>
-
-<div class="two-col charts-row-tall">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      @if (historique30j().length) {
-        <app-mini-chart type="line" [labels]="labels7j()" [series]="serieEvolutionPertes()" [height]="260" />
-      } @else {
-        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune donnée de pertes à afficher.</p>
-      }
+    <div class="cmd-kpi" [class.cmd-kpi-alerte]="(jour()?.pctPertes ?? 0) > 5">
+      <span class="cmd-lbl">Pertes</span>
+      <strong class="cmd-grand">{{ jour()?.pertes | number:'1.1-1' }} kg</strong>
+      <span class="cmd-muet">{{ libelleTaux(jour()?.pctPertes ?? null) }} du broyé</span>
     </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition Maïs / Soja / Arachide</h2></div>
-    <div class="donut-wrap" style="padding: 0 var(--sp-4) var(--sp-4)">
-      @if (donutRepartitionTypes().length) {
-        <app-donut-chart title="" unit="kg" [data]="donutRepartitionTypes()" />
-      } @else {
-        <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucune poudre broyée à répartir.</p>
-      }
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Sessions</span>
+      <strong class="cmd-grand">{{ jour()?.nbValidees ?? 0 }} / {{ jour()?.nbSessions ?? 0 }}</strong>
+      <span class="cmd-muet">journées validées · {{ jour()?.nbClotures ?? 0 }} clôturée(s)</span>
     </div>
-  </div>
-</div>
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Machinistes actifs</span>
+      <strong class="cmd-grand">{{ jour()?.machinistes ?? 0 }}</strong>
+      <span class="cmd-muet">ayant saisi une réalisation</span>
+    </div>
+  </section>
 
-<div class="card chart-card-wide">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Performance des machinistes (semaine)</h2>
-    <a routerLink="/production/chef-machiniste/classements" class="btn btn-ghost btn-sm">Voir classement complet</a>
-  </div>
-  <div style="padding: 0 var(--sp-4) var(--sp-4)">
-    @if (labelsMachinistesHebdo().length) {
-      <app-mini-chart type="bar" [labels]="labelsMachinistesHebdo()" [series]="serieProductiviteHebdo()" [height]="280" />
-    } @else {
-      <p class="empty-hint"><i class="fa-solid fa-circle-info"></i> Aucun classement machiniste pour cette semaine.</p>
-    }
-  </div>
-</div>
+  <!-- 30 derniers jours -->
+  <h2 class="cmd-section"><i class="fa-solid fa-chart-column"></i> 30 derniers jours</h2>
+  <section class="cmd-kpis">
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Production</span>
+      <strong class="cmd-moyen">{{ periode()?.realise | number:'1.0-0' }} kg</strong>
+      <span class="cmd-muet">{{ periode()?.nbSessions ?? 0 }} session(s)</span>
+    </div>
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Taux global</span>
+      <strong class="cmd-moyen">{{ libelleTaux(periode()?.taux ?? null) }}</strong>
+      <span class="cmd-muet">réalisé ÷ objectif</span>
+    </div>
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Pertes</span>
+      <strong class="cmd-moyen">{{ libelleTaux(periode()?.pctPertes ?? null) }}</strong>
+      <span class="cmd-muet">{{ periode()?.pertes | number:'1.1-1' }} kg perdus</span>
+    </div>
+    <div class="cmd-kpi">
+      <span class="cmd-lbl">Journées validées</span>
+      <strong class="cmd-moyen">{{ periode()?.nbValidees ?? 0 }} / {{ periode()?.nbSessions ?? 0 }}</strong>
+      <span class="cmd-muet">à 85 % ou justifiées</span>
+    </div>
+  </section>
 
+  <div class="cmd-deux">
+    <section class="cmd-carte">
+      <h3 class="cmd-titre">Activité des 7 derniers jours</h3>
+      @if (sept().length === 0) {
+        <p class="cmd-vide">Aucune donnée de broyage.</p>
+      } @else {
+        <app-mini-chart type="bar" [labels]="labels7()" [series]="serieActivite()" [height]="240" />
+      }
+    </section>
+    <section class="cmd-carte">
+      <h3 class="cmd-titre">Poudre broyée par type (30 jours)</h3>
+      @if (donutPoudres().length === 0) {
+        <p class="cmd-vide">Aucune poudre broyée sur 30 jours.</p>
+      } @else {
+        <app-donut-chart title="" unit="kg" [data]="donutPoudres()" />
+      }
+    </section>
+  </div>
+
+  <div class="cmd-deux">
+    <section class="cmd-carte">
+      <div class="cmd-carte-entete">
+        <h3 class="cmd-titre">Machinistes de la semaine</h3>
+        <a routerLink="/production/chef-machiniste/classements" class="cmd-lien-court">Classement complet</a>
+      </div>
+      @if (top5().length === 0) {
+        <p class="cmd-vide">Aucun classement pour cette semaine.</p>
+      } @else {
+        <ol class="cmd-classement">
+          @for (c of top5(); track c.machinisteMatricule) {
+            <li>
+              <span class="cmd-rang" [class.cmd-rang-or]="c.rang === 1">{{ c.rang }}</span>
+              <span class="cmd-nom">{{ c.nomMachiniste }}</span>
+              <span class="cmd-muet">{{ (c.efficacite * 100) | number:'1.0-1' }} % d'efficacité</span>
+              <strong>{{ c.productiviteKg | number:'1.1-1' }} kg</strong>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <section class="cmd-carte">
+      <h3 class="cmd-titre">Plan en cours</h3>
+      @if (apercu()?.planEnCours; as ref) {
+        <div class="cmd-plan">
+          <span class="cmd-code">{{ ref }}</span>
+          <span class="cmd-muet">plan démarré par le chef de production</span>
+        </div>
+      } @else {
+        <p class="cmd-vide">Aucun plan en cours.</p>
+      }
+      <p class="cmd-muet">{{ apercu()?.plansValides ?? 0 }} plan(s) validé(s) en attente de démarrage.</p>
+      <a routerLink="/production/chef-machiniste/plans" class="cmd-lien-court">Voir les plans</a>
+    </section>
+  </div>
 }
+
+</div>

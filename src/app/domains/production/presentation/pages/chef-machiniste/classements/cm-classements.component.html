@@ -1,70 +1,86 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-trophy ph-ico"></i>
+<div class="cl">
+
+<header class="cl-hero">
+  <div class="cl-hero-gauche">
+    <i class="fa-solid fa-trophy cl-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Classements</h1>
-      <p class="ph-sub">Top machinistes — hebdomadaire et mensuel</p>
+      <div class="cl-hero-kicker">Chef machiniste · {{ aujourdhui | date:'EEEE dd MMMM' }}</div>
+      <h1 class="cl-hero-titre">Classements des machinistes</h1>
+      <p class="cl-hero-sous">
+        Semaine et mois en cours.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-sm" [class.btn-primary]="critere()==='productivite'" [class.btn-ghost]="critere()!=='productivite'" (click)="changerCritere('productivite')">Productivité</button>
-    <button class="btn btn-sm" [class.btn-primary]="critere()==='efficacite'" [class.btn-ghost]="critere()!=='efficacite'" (click)="changerCritere('efficacite')">Efficacité</button>
-    <button class="btn btn-sm" [class.btn-primary]="critere()==='taux'" [class.btn-ghost]="critere()!=='taux'" (click)="changerCritere('taux')">Taux de réalisation</button>
+  <div class="cl-segments" role="tablist" aria-label="Critère de classement">
+    @for (c of criteres; track c.code) {
+      <button class="cl-segment" [class.cl-segment-actif]="critere() === c.code" (click)="changerCritere(c.code)">{{ c.libelle }}</button>
+    }
   </div>
+</header>
+
+@if (sessionExpiree()) {
+  <div class="cl-alerte">
+    <i class="fa-solid fa-lock"></i>
+    <span>Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.</span>
+    <a routerLink="/auth/login" class="cl-lien">Se reconnecter</a>
+  </div>
+}
+
+<!-- Podium -->
+@if (podium().length > 0) {
+  <section class="cl-podium">
+    @for (l of podium(); track l.machinisteMatricule) {
+      <article class="cl-marche" [class.cl-marche-1]="l.rang === 1">
+        <span class="cl-medaille">{{ medaille(l.rang) }}</span>
+        <strong class="cl-nom">{{ l.nomMachiniste }}</strong>
+        <span class="cl-val">{{ valeur(l) | number:'1.1-1' }} <small>{{ unite() }}</small></span>
+        <span class="cl-meta">{{ l.nbJours }} jour(s) · {{ l.operations.join(', ') }}</span>
+      </article>
+    }
+  </section>
+}
+
+<div class="cl-deux">
+  @for (p of [semaine(), mois()]; track p.titre) {
+    <section class="cl-carte">
+      <div class="cl-entete">
+        <div>
+          <h2 class="cl-titre">{{ p.titre }}</h2>
+          <span class="cl-meta">{{ p.libelle }}</span>
+        </div>
+        <span class="cl-meta">Classé par {{ libelleCritere() }}</span>
+      </div>
+
+      @if (p.chargement) {
+        <div class="cl-squelette"></div>
+        <div class="cl-squelette"></div>
+      } @else if (p.erreur) {
+        <p class="cl-alerte cl-alerte-fine"><i class="fa-solid fa-circle-exclamation"></i><span>{{ p.erreur }}</span></p>
+      } @else if (p.lignes.length === 0) {
+        <p class="cl-vide"><i class="fa-solid fa-inbox"></i> Aucune réalisation sur cette période.</p>
+      } @else {
+        <ol class="cl-liste">
+          @for (l of p.lignes; track l.machinisteMatricule) {
+            <li>
+              <span class="cl-rang" [class.cl-rang-or]="l.rang === 1">{{ l.rang }}</span>
+              <div class="cl-identite">
+                <strong class="cl-nom">{{ l.nomMachiniste }}</strong>
+                <span class="cl-meta">{{ l.nbJours }} jour(s) · {{ l.operations.join(', ') }}</span>
+              </div>
+              <div class="cl-barre"><div class="cl-barre-fill" [style.width.%]="largeur(l, p.lignes)"></div></div>
+              <span class="cl-val">{{ valeur(l) | number:'1.1-1' }} <small>{{ unite() }}</small></span>
+            </li>
+          }
+        </ol>
+        @if (critere() === 'productivite') {
+          <p class="cl-aide">La barre est proportionnelle au meilleur de la liste.</p>
+        } @else {
+          <p class="cl-aide">Efficacité = réalisé ÷ objectif. Taux moyen = moyenne simple des pourcentages par poste.</p>
+        }
+      }
+    </section>
+  }
 </div>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Classement hebdomadaire</h2>
-      <span class="text-muted">{{ classementHebdo()?.periode }}</span>
-    </div>
-    @if (loading()) {
-      <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-    } @else {
-      @for (c of (classementHebdo()?.classements ?? []); track c.machinisteMatricule) {
-        <div class="rank-row">
-          <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
-          <div class="rank-info">
-            <div class="rank-name">{{ c.nomMachiniste }}</div>
-            <div class="rank-meta">{{ c.nbJours }} jour(s) — {{ c.operations.join(', ') }}</div>
-          </div>
-          <div class="rank-progress-wrap">
-            <div class="prog-bar-wrap"><div class="prog-bar prog-g" [style.width.%]="valeurCritere(c) > 100 ? 100 : valeurCritere(c)"></div></div>
-          </div>
-          <span class="badge bg-success">{{ valeurCritere(c) | number:'1.1-1' }}{{ critere()==='productivite' ? ' kg' : '%' }}</span>
-        </div>
-      } @empty {
-        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée cette semaine</div>
-      }
-    }
-  </div>
-
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Classement mensuel</h2>
-      <span class="text-muted">{{ classementMensuel()?.periode }}</span>
-    </div>
-    @if (loading()) {
-      <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-    } @else {
-      @for (c of (classementMensuel()?.classements ?? []); track c.machinisteMatricule) {
-        <div class="rank-row">
-          <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
-          <div class="rank-info">
-            <div class="rank-name">{{ c.nomMachiniste }}</div>
-            <div class="rank-meta">{{ c.nbJours }} jour(s) — {{ c.operations.join(', ') }}</div>
-          </div>
-          <div class="rank-progress-wrap">
-            <div class="prog-bar-wrap"><div class="prog-bar prog-g" [style.width.%]="valeurCritere(c) > 100 ? 100 : valeurCritere(c)"></div></div>
-          </div>
-          <span class="badge bg-success">{{ valeurCritere(c) | number:'1.1-1' }}{{ critere()==='productivite' ? ' kg' : '%' }}</span>
-        </div>
-      } @empty {
-        <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée ce mois</div>
-      }
-    }
-  </div>
 </div>

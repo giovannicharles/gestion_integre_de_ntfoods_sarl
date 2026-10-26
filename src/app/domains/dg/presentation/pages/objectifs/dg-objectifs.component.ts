@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import {
   ComptableService, ObjectifCommercialBE, PrimeSemaineBE,
 } from '../../../../comptable/infrastructure/comptable.service';
-import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
+import { fCFA, tauxAtteinte, tauxAffiche } from '../../../../../shared/utils/format.utils';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 /**
@@ -33,6 +33,7 @@ export class DgObjectifsComponent implements OnInit {
   today = new Date();
   fCFA = fCFA;
   tauxAtteinte = tauxAtteinte;
+  tauxAffiche = tauxAffiche;
   Math = Math;
 
   objectifs = signal<ObjectifCommercialBE[]>([]);

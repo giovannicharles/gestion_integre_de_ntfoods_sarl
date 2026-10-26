@@ -87,19 +87,31 @@ export class MiniChartComponent {
   readonly padTop = 14;
   readonly padBottom = 26;
 
-  private maxValue = computed(() => {
+  /**
+   * Échelle de l'axe : sommet et nombre de paliers.
+   * - compteurs entiers jusqu'à 4 (ex. 0 ou 1 session) : un palier par unité, libellés entiers ;
+   * - autres valeurs : pas « rond » (1, 2, 5 ou 10 × une puissance de 10), 4 paliers.
+   */
+  private echelle = computed(() => {
     const all = this.series().flatMap(s => s.values);
     const max = all.length ? Math.max(...all) : 0;
-    return max <= 0 ? 1 : max;
+    if (max <= 0) return { top: 1, steps: 1 };
+    if (all.every(v => Number.isInteger(v)) && max <= 4) return { top: max, steps: max };
+    const brut = max / 4;
+    const mag = Math.pow(10, Math.floor(Math.log10(brut)));
+    const norm = brut / mag;
+    const pas = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+    return { top: pas * 4, steps: 4 };
   });
 
+  private maxValue = computed(() => this.echelle().top);
+
   gridLines = computed(() => {
-    const max = this.maxValue();
-    const steps = 4;
+    const { top, steps } = this.echelle();
     const usableH = this.height() - this.padTop - this.padBottom;
     const lines = [];
     for (let i = 0; i <= steps; i++) {
-      const v = (max / steps) * (steps - i);
+      const v = (top / steps) * (steps - i);
       const y = this.padTop + (usableH / steps) * i;
       lines.push({ y, label: this.formatNum(v) });
     }
@@ -108,7 +120,8 @@ export class MiniChartComponent {
 
   private formatNum(v: number): string {
     if (v >= 1000) return (v / 1000).toFixed(1) + 'k';
-    return Math.round(v).toString();
+    if (Math.abs(v - Math.round(v)) < 1e-9) return Math.round(v).toString();
+    return v.toFixed(1);
   }
 
   private yForValue(v: number): number {

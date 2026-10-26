@@ -1,0 +1,253 @@
+<!-- ═══ BANDEAU ═══ -->
+<header class="ce-hero">
+  <div class="ce-hero-gauche">
+    <div class="ce-hero-ico"><i class="fa-solid fa-box-open"></i></div>
+    <div>
+      <div class="ce-hero-kicker">Référentiel de production</div>
+      <h1 class="ce-hero-titre">Composition d'emballage</h1>
+      <p class="ce-hero-sous">Le type et les composants de chaque conditionnement. Ils déterminent les besoins d'emballage des plans.</p>
+    </div>
+  </div>
+  <div class="ce-hero-stats" aria-label="Indicateurs">
+    <div class="ce-stat"><span class="ce-stat-val">{{ stats().total }}</span><span class="ce-stat-lbl">conditionnements</span></div>
+    <div class="ce-stat ce-stat-ok"><span class="ce-stat-val">{{ stats().avec }}</span><span class="ce-stat-lbl">composés</span></div>
+    <div class="ce-stat ce-stat-alerte" [class.ce-stat-vide]="stats().sans === 0"><span class="ce-stat-val">{{ stats().sans }}</span><span class="ce-stat-lbl">à compléter</span></div>
+  </div>
+</header>
+
+<!-- ═══ RECHERCHE ET FILTRES ═══ -->
+<section class="ce-barre" aria-label="Recherche et filtres">
+  <div class="ce-recherche">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input #champRecherche type="search" class="ce-recherche-champ"
+           placeholder="Rechercher un produit, un SKU, un type ou un composant (ex. couvercle)…"
+           aria-label="Rechercher un conditionnement"
+           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <kbd class="ce-raccourci" title="Raccourci : appuyez sur /">/</kbd>
+  </div>
+
+  <div class="ce-segment-type" role="group" aria-label="Filtrer par type d'emballage">
+    <button class="ce-puce" [class.ce-puce-actif]="typeFiltre() === ''" (click)="typeFiltre.set('')">Tous types</button>
+    @for (t of types; track t.code) {
+      <button class="ce-puce" [class.ce-puce-actif]="typeFiltre() === t.code" [disabled]="!parType().get(t.code)"
+              (click)="typeFiltre.set(t.code)">
+        <i class="fa-solid" [class]="'fa-solid ' + icone(t.code)"></i> {{ t.libelle }}
+        <span class="ce-puce-n">{{ parType().get(t.code) ?? 0 }}</span>
+      </button>
+    }
+  </div>
+
+  <div class="ce-filtres">
+    <div class="ce-segment" role="tablist" aria-label="Filtrer par composition">
+      @for (f of filtres; track f.code) {
+        <button class="ce-segment-bouton" role="tab" [attr.aria-selected]="filtre() === f.code"
+                [class.ce-segment-actif]="filtre() === f.code" (click)="filtre.set(f.code)">{{ f.libelle }}</button>
+      }
+    </div>
+
+    <select class="ce-select" aria-label="Filtrer par catégorie" [ngModel]="categorieFiltre()" (ngModelChange)="categorieFiltre.set($event)">
+      <option value="">Toutes les catégories</option>
+      @for (c of categories(); track c.code) {
+        <option [value]="c.code">{{ c.code.replace('TANTY_', '').replace('_', ' ') }} ({{ c.n }})</option>
+      }
+    </select>
+
+    <select class="ce-select" aria-label="Trier" [ngModel]="tri()" (ngModelChange)="tri.set($event)">
+      <option value="produit">Trier par produit</option>
+      <option value="sku">Trier par SKU</option>
+      <option value="type">Trier par type d'emballage</option>
+      <option value="sans-composition-d-abord">Sans composition d'abord</option>
+    </select>
+
+    <label class="ce-case">
+      <input type="checkbox" [ngModel]="seulementActifs()" (ngModelChange)="seulementActifs.set($event)">
+      Produits actifs seulement
+    </label>
+
+    <button class="ce-lien" (click)="reinitialiserFiltres()">Réinitialiser</button>
+  </div>
+</section>
+
+<!-- ═══ NOTIFICATION ═══ -->
+@if (notification(); as n) {
+  <div class="ce-notif" [class.ce-notif-erreur]="n.type === 'erreur'" role="status" aria-live="polite">
+    <i class="fa-solid" [class.fa-circle-check]="n.type === 'ok'" [class.fa-triangle-exclamation]="n.type === 'erreur'"></i>
+    <span>{{ n.texte }}</span>
+    <button class="ce-icone" aria-label="Fermer" (click)="notification.set(null)"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+}
+
+<!-- ═══ LISTE ═══ -->
+<section class="ce-liste-carte">
+  <div class="ce-liste-entete">
+    <span class="ce-compte">{{ resultats().length }} conditionnement(s)</span>
+    @if ((recherche() || typeFiltre() || categorieFiltre() || filtre() !== 'TOUS') && resultats().length === 0) {
+      <span class="ce-aucun">Aucun conditionnement ne correspond aux critères.</span>
+    }
+  </div>
+
+  @if (chargement()) {
+    @for (i of [1,2,3,4,5]; track i) { <div class="ce-squelette"></div> }
+  } @else if (resultats().length === 0) {
+    <div class="ce-vide">
+      <div class="ce-vide-ico"><i class="fa-solid fa-box-open"></i></div>
+      <h2>Rien à afficher</h2>
+      <p>Essayez une autre recherche ou réinitialisez les filtres.</p>
+      <button class="ce-bouton ce-bouton-primaire" (click)="reinitialiserFiltres()">Réinitialiser les filtres</button>
+    </div>
+  } @else {
+    <ul class="ce-liste" role="list">
+      @for (l of resultats(); track trackLigne($index, l)) {
+        <li class="ce-ligne" [class.ce-ligne-sans]="!l.cond.type" [class.ce-ligne-inactif]="!l.produit.actif">
+          <button class="ce-ligne-zone" (click)="ouvrir(l)" [attr.aria-label]="'Modifier la composition de ' + l.cond.sku">
+            <div class="ce-ligne-identite">
+              <span class="ce-code mono">{{ l.produit.codeProduit }}</span>
+              <span class="ce-designation">{{ l.produit.designation }}</span>
+              @if (!l.produit.actif) { <span class="ce-tag-inactif">inactif</span> }
+            </div>
+            <div class="ce-sku">
+              <span class="mono">{{ l.cond.sku }}</span>
+              <span class="ce-libelle">{{ l.cond.libelle }}</span>
+              <span class="ce-poids">{{ l.cond.poidsUnitaireGrammes }} g</span>
+            </div>
+
+            @if (l.cond.type; as type) {
+              <div class="ce-type-ligne">
+                <span class="ce-type"><i class="fa-solid" [class]="'fa-solid ' + icone(type)"></i> {{ libelleType(type) }}</span>
+                <ul class="ce-phrases">
+                  @for (c of l.cond.composants; track $index) {
+                    <li><i class="fa-solid" [class]="'fa-solid ' + icone(c.type)"></i> {{ phrase(c, l.cond.type) }}</li>
+                  }
+                </ul>
+              </div>
+            } @else {
+              <div class="ce-sans"><i class="fa-solid fa-circle-exclamation"></i> Aucun type : aucun besoin d'emballage calculé pour ce conditionnement</div>
+            }
+          </button>
+
+          <div class="ce-ligne-actions">
+            <button class="ce-bouton ce-bouton-primaire ce-bouton-petit" (click)="ouvrir(l)">
+              <i class="fa-solid fa-pen"></i> {{ l.cond.type ? 'Modifier' : 'Définir' }}
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<!-- ═══ ÉDITEUR ═══ -->
+@if (edition(); as l) {
+<div class="ce-overlay" (click)="fermer()">
+  <div class="ce-modale" role="dialog" aria-modal="true" aria-labelledby="ce-titre" (click)="$event.stopPropagation()">
+
+    <header class="ce-modale-tete">
+      <div>
+        <div class="ce-modale-kicker">Composition d'emballage</div>
+        <h2 id="ce-titre" class="ce-modale-titre"><span class="mono">{{ l.cond.sku }}</span></h2>
+        <div class="ce-modale-sous">{{ l.produit.designation }} · {{ l.cond.libelle }}</div>
+      </div>
+      <button class="ce-icone ce-icone-clair" aria-label="Fermer" (click)="fermer()" [disabled]="enregistrement()"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+
+    <div class="ce-modale-corps">
+
+      <!-- Type du conditionnement -->
+      <div class="ce-bloc">
+        <div class="ce-etiquette">1. Ce qu'on vend (le conditionnement)</div>
+        <p class="ce-aide">Quel est le contenant de ce produit ? Exemple : un seau, un sachet, une gaine.</p>
+        <div class="ce-types">
+          @for (t of types; track t.code) {
+            <button class="ce-type-carte" [class.ce-type-carte-actif]="type() === t.code" (click)="choisirType(t.code)"
+                    [attr.aria-pressed]="type() === t.code">
+              <i class="fa-solid" [class]="'fa-solid ' + icone(t.code)"></i>
+              <span>{{ t.libelle }}</span>
+            </button>
+          }
+        </div>
+        @if (type()) {
+          <button class="ce-lien ce-lien-discret" (click)="effacerType()"><i class="fa-solid fa-eraser"></i> Effacer la composition</button>
+        }
+      </div>
+
+      @if (type()) {
+        <!-- Ce qu'on utilise pour chaque lot -->
+        <div class="ce-bloc">
+          <div class="ce-etiquette">2. Ce qu'on utilise pour produire</div>
+          <p class="ce-aide">
+            Exemple : <strong>1 carton pour chaque 12 {{ uniteDuType(type()) }}</strong>, c'est-à-dire qu'il faut 1 carton
+            pour emballer 12 {{ uniteDuType(type()) }}. Si la quantité ne tombe pas juste, on arrondit au nombre supérieur.
+          </p>
+
+          <div class="ce-composants">
+            @for (c of composants(); track $index; let i = $index) {
+              <div class="ce-composant" [class.ce-composant-doublon]="doublons().has(c.type)">
+                <select class="ce-champ" aria-label="Ce qu'on utilise" [ngModel]="c.type" (ngModelChange)="majComposant(i, 'type', $event)">
+                  @for (t of types; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
+                </select>
+                <input type="number" min="1" step="1" class="ce-champ ce-champ-court" aria-label="Nombre utilisé"
+                       [ngModel]="c.quantiteComposant" (ngModelChange)="majComposant(i, 'quantiteComposant', $event)">
+                <span class="ce-pour">pour chaque</span>
+                <input type="number" min="1" step="1" class="ce-champ ce-champ-court" aria-label="Nombre de unités du produit"
+                       [ngModel]="c.quantiteUnitesProduites" (ngModelChange)="majComposant(i, 'quantiteUnitesProduites', $event)">
+                <span class="ce-pour">{{ uniteDuType(type()) }}</span>
+                <button class="ce-icone" aria-label="Retirer cette ligne" (click)="retirerComposant(i)" [disabled]="composants().length <= 1">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            }
+          </div>
+          <button class="ce-lien ce-ajout" (click)="ajouterComposant()"><i class="fa-solid fa-plus"></i> Ajouter un autre élément utilisé</button>
+
+          @if (doublons().size > 0) {
+            <div class="ce-controle ce-controle-ko"><i class="fa-solid fa-triangle-exclamation"></i> Le même élément apparaît deux fois : fusionnez les lignes.</div>
+          }
+          @if (!composantsValides()) {
+            <div class="ce-controle ce-controle-ko"><i class="fa-solid fa-triangle-exclamation"></i> Les nombres doivent être supérieurs à zéro.</div>
+          }
+        </div>
+
+        <!-- Vérification -->
+        <div class="ce-bloc ce-apercu">
+          <div class="ce-etiquette">3. Vérification</div>
+          <label class="ce-apercu-saisie">
+            Si on produit
+            <input type="number" min="0" step="1" class="ce-champ ce-champ-court" aria-label="Nombre à produire"
+                   [ngModel]="unitesApercu()" (ngModelChange)="unitesApercu.set($event)">
+            {{ uniteDuType(type()) }}, il faut :
+          </label>
+          <div class="ce-apercu-resultats">
+            @for (b of apercu(); track b.type) {
+              <div class="ce-apercu-item">
+                <i class="fa-solid" [class]="'fa-solid ' + icone(b.type)"></i>
+                <strong class="mono">{{ b.besoin }}</strong>
+                <span>{{ b.besoin > 1 ? uniteDuType(b.type) : b.libelle.toLowerCase() }}</span>
+              </div>
+            } @empty {
+              <span class="ce-aucun">Renseignez une ligne complète pour voir le calcul.</span>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="ce-bloc ce-sans-type">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>Sans type, ce produit ne demande aucun emballage dans les plans. Choisissez le contenant pour le composer.</span>
+        </div>
+      }
+
+      <p class="ce-note">Modifier la composition n'altère pas les plans déjà générés : recalculez-les ensuite.</p>
+    </div>
+
+    <footer class="ce-modale-pied">
+      <span class="ce-indice"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> pour enregistrer</span>
+      <div class="ce-pied-boutons">
+        <button class="ce-bouton ce-bouton-fantome" (click)="fermer()" [disabled]="enregistrement()">Annuler</button>
+        <button class="ce-bouton ce-bouton-primaire" (click)="enregistrer()" [disabled]="enregistrement() || !formValide()">
+          @if (enregistrement()) { <span class="ce-spinner"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-check"></i> {{ type() ? 'Enregistrer' : 'Effacer la composition' }} }
+        </button>
+      </div>
+    </footer>
+  </div>
+</div>
+}

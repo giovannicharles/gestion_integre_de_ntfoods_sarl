@@ -228,7 +228,7 @@
             <td>{{ c.nomMachiniste }}</td>
             <td>{{ c.productiviteKg | number:'1.2-2' }}</td>
             <td>{{ c.tauxRealisationMoyen | number:'1.2-2' }} %</td>
-            <td>{{ c.efficacite * 100 | number:'1.2-2' }} %</td>
+            <td>{{ c.efficacite | number:'1.2-2' }}</td>
             <td>{{ c.nbJours }}</td>
           </tr>
         } @empty {
@@ -256,7 +256,7 @@
             <td>{{ c.nomMachiniste }}</td>
             <td>{{ c.productiviteKg | number:'1.2-2' }}</td>
             <td>{{ c.tauxRealisationMoyen | number:'1.2-2' }} %</td>
-            <td>{{ c.efficacite * 100 | number:'1.2-2' }} %</td>
+            <td>{{ c.efficacite | number:'1.2-2' }}</td>
             <td>{{ c.nbJours }}</td>
           </tr>
         } @empty {

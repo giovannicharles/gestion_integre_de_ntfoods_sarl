@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE, PPHBE, PredictionProduitFiniBE } from '../../../../infrastructure/production.service';
 import { AdSessionContextService } from '../ad-session-context.service';
 import { AuthService } from '../../../../../../core/auth/auth.service';
-import { extractApiError } from '../../../../../../core/http/api-error-parser';
 
 type Etape = 1 | 2 | 3 | 4 | 5;
 
@@ -15,7 +14,7 @@ type Etape = 1 | 2 | 3 | 4 | 5;
  * qui était auparavant éclaté sur 6 écrans (Sessions, Dosage, Machines, Fûts,
  * Prédictions, Documents) :
  *   1. Ma session   → ouvrir / reprendre la session du jour
- *   2. Dosage       → nb fûts ; composition calculée côté serveur depuis la formulation du produit
+ *   2. Dosage       → formule (Bouillie / Arachide) + nb fûts, matières auto
  *   3. Fûts         → nombre de fûts sortis
  *   4. Machines     → machines mobilisées (optionnel)
  *   5. Terminer     → estimation produits finis, registre, clôture
@@ -25,7 +24,7 @@ type Etape = 1 | 2 | 3 | 4 | 5;
 @Component({
   selector: 'app-ad-session-jour',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './ad-session-jour.component.html',
   styleUrls: ['./ad-session-jour.component.css', '../_shared.css'],
 })
@@ -54,7 +53,7 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
       referencePPH: s.referencePPH,
       date: s.date,
       nbFuts: s.nbFutsProduits,
-      nbMatières: s.matieresUtilisees.length,
+      nbMatieres: s.matieresUtilisees.length,
       nbMachines: s.machinesMobilisees.length,
       validee: s.validee,
       cloturee: s.cloturee,
@@ -76,6 +75,16 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   nbFuts = 1;
   private autoSave: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Matières premières calculées par le serveur d'après la formule du produit du BC
+   * de la session (plus de recette choisie à la main) — vides tant que le dosage
+   * n'a pas été enregistré.
+   */
+  matieresCalculees = computed(() => this.session()?.matieresUtilisees ?? []);
+
+  /** Total de poudre prévue : nombre de fûts × 50 kg (capacité physique d'un fût). */
+  poidsTotalPoudre = computed(() => (this.nbFuts || 0) * 50);
+
   // ── Étape 3 : fûts ──────────────────────────────────────────────────
   /** Nombre de fûts sortis = fûts produits (règle métier). */
   nbProduits = 0;
@@ -88,6 +97,84 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   prediction = signal<PredictionProduitFiniBE | null>(null);
   terminee = signal(false);
 
+  // ── Onglets : parcours du jour / historique ─────────────────────────
+  onglet = signal<'parcours' | 'historique'>('parcours');
+  historique = signal<SessionDosageBE[]>([]);
+  historiqueChargement = signal(false);
+  filtreHistorique = signal<'TOUS' | 'BOUILLIE' | 'ARACHIDE'>('TOUS');
+  detailHistorique = signal<SessionDosageBE | null>(null);
+
+  /** Classement estimé d'une session : soja majoritaire = bouillie, arachide majoritaire = arachide. */
+  typeEstime(s: SessionDosageBE): 'BOUILLIE' | 'ARACHIDE' | null {
+    const soja = this.quantiteMatiere(s, 'SOJA');
+    const arachide = this.quantiteMatiere(s, 'ARACHIDE');
+    if (soja === 0 && arachide === 0) return null;
+    return soja > arachide ? 'BOUILLIE' : 'ARACHIDE';
+  }
+
+  quantiteMatiere(s: SessionDosageBE, code: string): number {
+    return s.matieresUtilisees
+      .filter(m => this.codeMatiere(m.typeMatiere) === code)
+      .reduce((t, m) => t + m.quantiteKg, 0);
+  }
+
+  /** Code canonique d'une matière (« Maïs » → « MAIS »), pour les données déjà enregistrées. */
+  codeMatiere(nom: string): string {
+    return nom.normalize('NFD').replace(/\p{M}/gu, '').trim().toUpperCase();
+  }
+
+  historiqueFiltre = computed(() => {
+    const f = this.filtreHistorique();
+    return this.historique()
+      .filter(s => f === 'TOUS' || this.typeEstime(s) === f)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  });
+
+  nbHistorique = (f: 'TOUS' | 'BOUILLIE' | 'ARACHIDE'): number =>
+    f === 'TOUS' ? this.historique().length : this.historique().filter(s => this.typeEstime(s) === f).length;
+
+  choisirOnglet(o: 'parcours' | 'historique'): void {
+    this.onglet.set(o);
+    if (o === 'historique') this.chargerHistorique();
+  }
+
+  chargerHistorique(): void {
+    this.historiqueChargement.set(true);
+    const debut = new Date();
+    debut.setDate(debut.getDate() - 13);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    this.svc.getSessionsDosageParPeriode(fmt(debut), this.today).subscribe({
+      next: list => { this.historique.set(list); this.historiqueChargement.set(false); },
+      error: () => { this.historiqueChargement.set(false); this.erreur.set('L’historique n’a pas pu être chargé.'); },
+    });
+  }
+
+  // ── Correction manuelle d'une matière (cas exceptionnel) ─────────────
+  matiereCorrection = '';
+  quantiteCorrection: number | null = null;
+
+  ajouterMatiereCorrection(): void {
+    const s = this.session();
+    const type = this.matiereCorrection.trim();
+    const kg = Number(this.quantiteCorrection);
+    if (!s || !type || !(kg >= 0) || this.quantiteCorrection === null) {
+      this.erreur.set('Indiquez la matière et une quantité positive.');
+      return;
+    }
+    this.chargement.set(true);
+    this.svc.enregistrerMatiereDosage(s.id, type, kg).subscribe({
+      next: maj => {
+        this.session.set(maj);
+        this.matiereCorrection = '';
+        this.quantiteCorrection = null;
+        this.chargement.set(false);
+        this.message.set(`${type} : ${kg} kg enregistré.`);
+      },
+      error: e => { this.chargement.set(false); this.erreur.set(e?.error?.message ?? 'La matière n’a pas pu être enregistrée.'); },
+    });
+  }
+
   // ── Cycle de vie ────────────────────────────────────────────────────
   ngOnInit(): void {
     this.svc.getPPHs().subscribe({
@@ -97,7 +184,6 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
         this.pphs.set(utiles.length ? utiles : list);
         if (this.pphs().length === 1) this.referencePPH = this.pphs()[0].referencePPH;
       },
-      error: () => this.erreur.set('Impossible de charger la liste des plans de production (PPH).'),
     });
     this.svc.getSessionsDosageParDate(this.today).subscribe({
       next: sessions => {
@@ -107,7 +193,6 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
           this.etape.set(2);            // on reprend directement au dosage
         }
       },
-      error: () => this.erreur.set('Impossible de vérifier une session de dosage déjà ouverte aujourd’hui.'),
     });
   }
 
@@ -125,9 +210,9 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
     this.contexte.definir(s.id, s.referencePPH, s.date);
     this.referencePPH = s.referencePPH;
     this.nbProduits = s.nbFutsProduits;
-    // Nombre de fûts dosés : repris directement du compteur de la session (la composition par matière
-    // dépend désormais de la formulation réelle du produit, plus d'un ratio fixe à inverser).
-    this.nbFuts = Math.max(1, s.nbFutsProduits || 1);
+    // On récupère le nombre de fûts prévu par le dosage existant (50 kg de poudre par fût).
+    const totalKg = s.matieresUtilisees.reduce((somme, m) => somme + m.quantiteKg, 0);
+    this.nbFuts = Math.max(1, Math.round(totalKg / 50));
     // Si des matières existent, on considère que le dosage est enregistré.
     this.enregistre.set(s.matieresUtilisees.length > 0);
   }
@@ -179,10 +264,9 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
   private appliquerDosage(): void {
     const s = this.session();
     if (!s) return;
-    this.erreur.set('');
     this.svc.mettreAJourDosageAutomatique(s.id, this.nbFuts).subscribe({
       next: maj => { this.session.set(maj); this.enregistre.set(true); },
-      error: err => this.erreur.set(extractApiError(err)),
+      error: e => this.erreur.set(e?.error?.message ?? 'Le dosage n’a pas pu être enregistré. Réessayez.'),
     });
   }
 

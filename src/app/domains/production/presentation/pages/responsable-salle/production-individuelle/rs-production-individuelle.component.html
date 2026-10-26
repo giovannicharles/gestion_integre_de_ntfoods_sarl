@@ -1,304 +1,342 @@
-<!-- EN-TÊTE -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="pi-ph-ico"><i class="fa-solid fa-users"></i></div>
+<div class="pi">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="pi-hero">
+  <div class="pi-hero-gauche">
+    <i class="fa-solid fa-users pi-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Production Individuelle</h1>
-      <p class="ph-sub">Saisie de la production par employé et par poste</p>
+      <div class="pi-kicker">Responsable de salle · Production</div>
+      <h1 class="pi-hero-titre">Production individuelle</h1>
+      <p class="pi-hero-sous">Production de chaque employé affecté, pour la journée : {{ aujourdhui | date:'EEEE d MMMM y' }}</p>
     </div>
   </div>
-</div>
+  <div class="pi-hero-choix">
+    <label class="pi-champ">
+      <span class="pi-lbl">Plan en cours</span>
+      <select class="pi-select" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPph($event)"
+              [disabled]="pphs().length === 0">
+        @for (p of pphs(); track p.id) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.semaine }}</option>
+        }
+      </select>
+    </label>
+  </div>
+</header>
 
-<!-- Toasts -->
+@if (sessionExpiree()) {
+  <div class="pi-alerte pi-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="pi-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="pi-alerte pi-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="pi-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
+}
 @if (message()) {
-  <div class="pi-toast pi-toast-ok">
-    <i class="fa-solid fa-circle-check"></i> {{ message() }}
-    <button class="pi-toast-close" (click)="message.set('')">×</button>
-  </div>
-}
-@if (erreur()) {
-  <div class="pi-toast pi-toast-err">
-    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
-    <button class="pi-toast-close" (click)="erreur.set('')">×</button>
+  <div class="pi-alerte pi-alerte-ok">
+    <i class="fa-solid fa-circle-check"></i><span>{{ message() }}</span>
+    <button class="pi-lien" (click)="message.set('')">Fermer</button>
   </div>
 }
 
-<!-- Sélecteur PPH -->
-<div class="card">
-  <div class="pi-selector-row">
-    <div class="pi-selector-lbl"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
-    <select class="input pi-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
-      @for (p of pphs(); track p.id) {
-        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
-      }
-    </select>
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
-  </div>
-</div>
+@if (chargement()) {
+  <div class="pi-squelette"></div>
+} @else if (pphs().length === 0) {
+  <section class="pi-carte pi-vide">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <h2>Aucun plan en cours</h2>
+    <p>La production individuelle se rattache à un plan démarré par le chef de production.</p>
+  </section>
+} @else if (sansAffectation()) {
+  <section class="pi-carte pi-vide">
+    <i class="fa-solid fa-user-clock"></i>
+    <h2>Aucune affectation aujourd'hui</h2>
+    <p>Les employés à saisir viennent de l'affectation du jour : créez-la d'abord.</p>
+    <a routerLink="/production/responsable-salle/affectation-employes" class="pi-bouton pi-bouton-primaire">
+      <i class="fa-solid fa-user-gear"></i> Aller à l'affectation
+    </a>
+  </section>
+} @else if (affectation()) { @let a = affectation()!;
 
-@if (loading()) {
-  @for (i of [1,2,3]; track i) {
-    <div class="skeleton skeleton-row" style="margin:6px 0"></div>
-  }
-} @else {
-
-  @if (!affectation()) {
-    <div class="pi-empty">
-      <div class="pi-empty-ico"><i class="fa-solid fa-calendar-xmark"></i></div>
-      <div class="pi-empty-title">Aucune affectation pour aujourd'hui</div>
-      <p class="pi-empty-sub">Créez d'abord une affectation depuis la page <strong>Affectation des Employés</strong>.</p>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="pi-kpis">
+    <div class="pi-kpi">
+      <span class="pi-lbl">Employés affectés</span>
+      <strong class="pi-grand">{{ nbEmployesAffectes() }}</strong>
+      <span class="pi-muet">sur l'ensemble des postes</span>
     </div>
-  } @else {
-
-  <!-- ═══ FORMULAIRE SAISIE ═══ -->
-  <div class="card pi-form-card">
-    <div class="pi-form-header">
-      <div class="pi-form-ico"><i class="fa-solid fa-pen-to-square"></i></div>
-      <div>
-        <div class="pi-form-title">Saisir les productions individuelles</div>
-        <div class="pi-form-sub">Choisissez un poste — les employés affectés sont pré-remplis automatiquement</div>
-      </div>
+    <div class="pi-kpi">
+      <span class="pi-lbl">Postes saisis</span>
+      <strong class="pi-grand">{{ nbPostesSaisis() }} / {{ nbPostes() }}</strong>
+      <span class="pi-muet">avec une production individuelle</span>
     </div>
+    <div class="pi-kpi pi-kpi-niveau-{{ niveauPoste() }}">
+      <span class="pi-lbl">Taux du poste</span>
+      <strong class="pi-grand">{{ tauxPoste() | number:'1.0-0' }} %</strong>
+      <span class="pi-muet">{{ libelleNiveau(niveauPoste()) }}</span>
+    </div>
+    <div class="pi-kpi pi-kpi-principal">
+      <span class="pi-lbl">Total individuel du poste</span>
+      <strong class="pi-grand">{{ totalSaisi() | number:'1.1-1' }}</strong>
+      <span class="pi-muet">{{ unite() }}{{ ligneCourante() ? ' · objectif ' + (ligneCourante()!.objectifAjuste | number:'1.1-1') : '' }}</span>
+    </div>
+  </section>
 
-    <div class="pi-form-body">
-
-      <!-- Sélecteur de poste -->
-      <div class="pi-field">
-        <label class="pi-label"><i class="fa-solid fa-briefcase"></i> Poste</label>
-        @if (postesDisponibles().length === 0) {
-          <div class="pi-all-done">
-            <i class="fa-solid fa-circle-check"></i>
-            Toutes les productions individuelles ont été enregistrées pour aujourd'hui.
-          </div>
+  <!-- ═══ ONGLETS POSTES ═══ -->
+  <nav class="pi-onglets" aria-label="Postes affectés">
+    @for (l of a.lignes; track l.codePoste) {
+      <button class="pi-onglet"
+              [class.pi-onglet-actif]="posteChoisi() === l.codePoste"
+              [class.pi-onglet-saisi]="posteSaisi(l.codePoste)"
+              (click)="choisirPoste(l.codePoste)">
+        @if (posteSaisi(l.codePoste)) {
+          <i class="fa-solid fa-circle-check"></i>
         } @else {
-          <select class="input pi-select-poste"
-                  [ngModel]="posteChoisi"
-                  (ngModelChange)="onPosteChange($event)">
-            <option value="">— Choisir un poste —</option>
-            @for (l of postesDisponibles(); track l.codePoste) {
-              <option [value]="l.codePoste">{{ l.libellePoste }}</option>
-            }
-          </select>
+          <i class="fa-regular fa-circle"></i>
         }
-      </div>
+        <span>{{ l.libellePoste }}</span>
+        <span class="pi-onglet-nb">{{ l.matriculesEmployes.length }}</span>
+      </button>
+    } @empty {
+      <span class="pi-muet">Aucun poste affecté aujourd'hui.</span>
+    }
+  </nav>
 
-      <!-- Info poste choisi -->
-      @if (posteChoisi) {
-        <div class="pi-poste-info-row">
-          @if (saisiePosteChoisi(); as s) {
-            <div class="pi-info-chip pi-info-chip-g">
-              <i class="fa-solid fa-chart-bar"></i>
-              Production enregistrée : <strong>{{ s.quantiteRealisee | number:'1.1-1' }} {{ s.unite }}</strong>
-            </div>
-            <div class="pi-info-chip pi-info-chip-b">
-              <i class="fa-solid fa-percent"></i>
-              Taux : <strong>{{ s.pctRealisation | number:'1.0-0' }}%</strong>
-            </div>
-          } @else {
-            @if (lignePoste(posteChoisi); as lgn) {
-              <div class="pi-info-chip pi-info-chip-y">
-                <i class="fa-solid fa-bullseye"></i>
-                Objectif : <strong>{{ lgn.objectifAjuste | number:'1.1-1' }} {{ lgn.unite }}</strong>
-              </div>
-            }
-          }
-          <div class="pi-info-chip"
-               [class.pi-info-chip-err]="depassement()"
-               [class.pi-info-chip-g]="!depassement() && totalSaisi() > 0">
-            <i class="fa-solid fa-sigma"></i>
-            Total saisi : <strong>{{ totalSaisi() | number:'1.1-1' }} {{ unitePosteChoisi() }}</strong>
-            @if (maxPoste() > 0) {
-              / {{ maxPoste() | number:'1.1-1' }}
-            }
+  <!-- ═══ SAISIE PAR EMPLOYÉ ═══ -->
+  @if (ligneCourante(); as l) {
+    <section class="pi-carte">
+      <header class="pi-carte-tete">
+        <div class="pi-titre">
+          <span class="pi-numero"><i class="fa-solid fa-pen-to-square"></i></span>
+          <div>
+            <h3>{{ l.libellePoste }}</h3>
+            <span class="pi-muet">
+              Objectif du poste {{ l.objectifAjuste | number:'1.1-1' }} {{ l.unite }}, réparti entre {{ l.matriculesEmployes.length }} employé(s) ;
+              les employés viennent de l'affectation.
+            </span>
           </div>
         </div>
-
-        @if (depassement()) {
-          <div class="pi-warn-banner">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            Le total individuel dépasse la production réalisée pour ce poste ({{ maxPoste() | number:'1.1-1' }} {{ unitePosteChoisi() }}).
-          </div>
+        @if (saisieCourante(); as s) {
+          <span class="pi-chip-info"><i class="fa-solid fa-clock"></i> Enregistré à {{ s.dateEnregistrement | date:'HH:mm' }}</span>
         }
+      </header>
 
-        <!-- Tableau des employés -->
-        <div class="pi-table-wrap">
-          <table class="pi-table">
-            <thead>
-              <tr>
-                <th>Matricule</th>
-                <th>Nom / Prénom</th>
-                <th>Quantité <span class="pi-unit-hint">({{ unitePosteChoisi() }})</span></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (l of lignes; track $index; let i = $index) {
-                <tr>
-                  <td>
-                    <input class="input pi-input"
-                           [(ngModel)]="l.matricule"
-                           placeholder="ex : AGP001">
-                  </td>
-                  <td>
-                    <input class="input pi-input"
-                           [(ngModel)]="l.nom"
-                           placeholder="Nom de l'employé">
-                  </td>
-                  <td>
-                    <input type="number" class="input pi-input pi-input-qty"
-                           [(ngModel)]="l.quantite"
-                           [max]="maxPoste()"
-                           min="0" step="0.1"
-                           placeholder="0.0">
-                  </td>
-                  <td>
-                    @if (lignes.length > 1) {
-                      <button class="pi-remove-btn" (click)="retirerLigne(i)" title="Retirer">
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      @if (niveauPoste() === 'bas' && toutRenseigne()) {
+        <div class="pi-alerte pi-alerte-avert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Taux du poste sous le seuil de {{ seuilVigilance }} %.</span>
         </div>
-
-        <button class="btn btn-ghost btn-sm pi-add-btn" (click)="ajouterLigne()">
-          <i class="fa-solid fa-plus"></i> Ajouter un employé
-        </button>
+      }
+      @if (niveauPoste() === 'depasse' && toutRenseigne()) {
+        <div class="pi-alerte pi-alerte-avert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Dépassement de plus de {{ seuilDepassement - 100 }} % de l'objectif : à vérifier.</span>
+        </div>
       }
 
-    </div>
-
-    @if (posteChoisi && postesDisponibles().length > 0) {
-      <div class="pi-form-footer">
-        <button class="btn pi-btn-submit"
-                (click)="enregistrer()"
-                [disabled]="saving() || depassement() || totalSaisi() === 0">
-          @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les productions }
-        </button>
-      </div>
-    }
-  </div>
-
-  <!-- ═══ RÉCAP PRODUCTIONS DU JOUR ═══ -->
-  @if (affectation()!.saisies.length) {
-    <div class="card">
-      <div class="pi-recap-header">
-        <div class="pi-recap-title">
-          <div class="pi-recap-ico"><i class="fa-solid fa-chart-pie"></i></div>
-          <span>Productions individuelles du jour</span>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
+      <div class="pi-table-wrap">
+        <table class="pi-table">
           <thead>
             <tr>
-              <th>Poste</th>
               <th>Employé</th>
-              <th class="text-right">Quantité réalisée</th>
-              <th class="text-right">Objectif poste</th>
+              <th class="pi-num">Objectif individuel</th>
+              <th class="pi-num">Quantité ({{ l.unite }})</th>
               <th>Taux</th>
+              <th>Niveau</th>
             </tr>
           </thead>
           <tbody>
-            @for (s of affectation()!.saisies; track s.codePoste) {
-              @if (s.productionsIndividuelles && s.productionsIndividuelles.length > 0) {
-                @for (pi of s.productionsIndividuelles; track pi.matriculeEmploye; let first = $first) {
-                  <tr>
-                    @if (first) {
-                      <td [attr.rowspan]="s.productionsIndividuelles.length" class="pi-poste-cell">
-                        <strong>{{ s.libellePoste }}</strong>
-                      </td>
-                    }
-                    <td>
-                      <span class="pi-mat-tag">{{ pi.matriculeEmploye }}</span>
-                      {{ pi.nomEmploye }}
-                    </td>
-                    <td class="text-right mono">
-                      {{ pi.quantiteRealisee | number:'1.1-1' }}
-                      <span class="text-muted">{{ pi.unite }}</span>
-                    </td>
-                    @if (first) {
-                      <td class="text-right mono text-muted" [attr.rowspan]="s.productionsIndividuelles.length">
-                        {{ s.objectifAjuste | number:'1.1-1' }}
-                      </td>
-                      <td [attr.rowspan]="s.productionsIndividuelles.length">
-                        <div class="pi-prog-wrap">
-                          <div class="pi-prog-track">
-                            <div class="pi-prog-bar"
-                                 [style.width.%]="s.pctRealisation > 100 ? 100 : s.pctRealisation"
-                                 [class.pi-prog-g]="s.pctRealisation >= 100"
-                                 [class.pi-prog-y]="s.pctRealisation >= 50 && s.pctRealisation < 100"
-                                 [class.pi-prog-r]="s.pctRealisation < 50">
-                            </div>
-                          </div>
-                          <span class="pi-prog-pct">{{ s.pctRealisation | number:'1.0-0' }}%</span>
-                        </div>
-                      </td>
-                    }
-                  </tr>
-                }
-              }
-            }
-            @if (!aSaisiesIndividuelles()) {
+            @for (e of employes(); track e.matricule; let i = $index) {
               <tr>
-                <td colspan="5" class="empty-state-block">
-                  <i class="fa-solid fa-inbox"></i> Aucune production individuelle saisie
+                <td>
+                  <strong>{{ e.nom || nomEmploye(e.matricule) }}</strong>
+                  <div><code class="pi-code">{{ e.matricule }}</code></div>
+                </td>
+                <td class="pi-num">{{ e.objectif | number:'1.1-1' }}</td>
+                <td class="pi-num">
+                  <input class="pi-input" type="number" min="0" step="0.1" placeholder="0.0"
+                         [ngModel]="e.quantite" (ngModelChange)="majQuantite(i, $event)" />
+                </td>
+                <td>
+                  @let t = tauxEmploye(e);
+                  @if (t !== null) {
+                    <div class="pi-progression">
+                      <div class="pi-piste">
+                        <div class="pi-barre pi-barre-{{ niveauEmploye(e) }}" [style.width.%]="t > 100 ? 100 : t"></div>
+                      </div>
+                      <span class="pi-pct">{{ t | number:'1.0-0' }} %</span>
+                    </div>
+                  } @else {
+                    <span class="pi-muet">—</span>
+                  }
+                </td>
+                <td>
+                  <span class="pi-niveau pi-niveau-{{ niveauEmploye(e) }}">{{ libelleNiveau(niveauEmploye(e)) }}</span>
                 </td>
               </tr>
             }
           </tbody>
         </table>
       </div>
+
+      @if (erreursSaisie().length > 0) {
+        <ul class="pi-erreurs">
+          @for (msg of erreursSaisie(); track msg) { <li>{{ msg }}</li> }
+        </ul>
+      }
+
+      <footer class="pi-carte-pied">
+        <span class="pi-muet">
+          {{ nbEmployesRenseignes() }} / {{ employes().length }} employé(s) renseigné(s) ·
+          seuils : {{ seuilVigilance }} % à surveiller, {{ seuilAtteint }} % objectif atteint, {{ seuilDepassement }} % à vérifier
+        </span>
+        <button class="pi-bouton pi-bouton-primaire" (click)="enregistrer()" [disabled]="!peutEnregistrer()">
+          @if (enregistrement()) { <i class="fa-solid fa-spinner pi-tourne"></i> Enregistrement… }
+          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les productions }
+        </button>
+      </footer>
+    </section>
+  }
+
+  <!-- ═══ RÉCAPITULATIF DU JOUR ═══ -->
+  @if (a.saisies.length) {
+    <section class="pi-carte">
+      <header class="pi-carte-tete">
+        <div class="pi-titre">
+          <span class="pi-numero"><i class="fa-solid fa-chart-pie"></i></span>
+          <div>
+            <h3>Productions du jour par poste</h3>
+            <span class="pi-muet">Quantités dans l'unité de chaque poste ; elles ne sont pas additionnées.</span>
+          </div>
+        </div>
+      </header>
+      <div class="pi-table-wrap">
+        <table class="pi-table">
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th class="pi-num">Employés saisis</th>
+              <th class="pi-num">Réalisé</th>
+              <th class="pi-num">Objectif</th>
+              <th>Taux</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of a.saisies; track s.codePoste) {
+              <tr>
+                <td><strong>{{ s.libellePoste }}</strong></td>
+                <td class="pi-num">{{ s.productionsIndividuelles.length }}</td>
+                <td class="pi-num">{{ s.quantiteRealisee | number:'1.1-1' }} <span class="pi-unite">{{ s.unite }}</span></td>
+                <td class="pi-num">{{ s.objectifAjuste | number:'1.1-1' }}</td>
+                <td>
+                  <div class="pi-progression">
+                    <div class="pi-piste">
+                      <div class="pi-barre pi-barre-{{ niveau(s.pctRealisation, true) }}" [style.width.%]="s.pctRealisation > 100 ? 100 : s.pctRealisation"></div>
+                    </div>
+                    <span class="pi-pct">{{ s.pctRealisation | number:'1.0-0' }} %</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+}
+
+<!-- ═══ SESSIONS DE DOSAGE DU JOUR (agent doseur, lecture seule) ═══ -->
+<section class="pi-carte">
+  <header class="pi-carte-tete">
+    <div class="pi-titre">
+      <span class="pi-numero pi-numero-doseur"><i class="fa-solid fa-flask"></i></span>
+      <div>
+        <h3>Sessions de dosage du jour</h3>
+        <span class="pi-muet">Saisies par l'agent doseur ; consultation seule.</span>
+      </div>
+    </div>
+  </header>
+
+  @if (erreurSessions()) {
+    <div class="pi-alerte pi-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreurSessions() }}</span></div>
+  }
+
+  @if (sessions().length > 0) {
+    <div class="pi-kpis pi-kpis-mini">
+      <div class="pi-kpi">
+        <span class="pi-lbl">Fûts nets</span>
+        <strong class="pi-grand">{{ sessionsTotaux().futsNets }}</strong>
+        <span class="pi-muet">{{ sessionsTotaux().futsCasses }} fût(s) cassé(s)</span>
+      </div>
+      <div class="pi-kpi">
+        <span class="pi-lbl">Sessions</span>
+        <strong class="pi-grand">{{ sessions().length }}</strong>
+        <span class="pi-muet">{{ sessionsTotaux().ouvertes }} ouverte(s)</span>
+      </div>
+      <div class="pi-kpi">
+        <span class="pi-lbl">Matières dosées</span>
+        <div class="pi-chips">
+          @for (m of sessionsTotaux().matieres; track m.type) {
+            <span class="pi-chip">{{ m.type }} · {{ m.kg | number:'1.0-1' }} kg</span>
+          } @empty {
+            <span class="pi-muet">—</span>
+          }
+        </div>
+      </div>
     </div>
   }
 
-  <!-- ═══ AGENT DOSEUR (lecture seule) ═══ -->
-  <div class="card">
-    <div class="pi-recap-header">
-      <div class="pi-recap-title">
-        <div class="pi-recap-ico pi-ico-dosage"><i class="fa-solid fa-flask"></i></div>
-        <span>Agent Doseur — référence lecture seule</span>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
+  <div class="pi-table-wrap">
+    <table class="pi-table">
+      <thead>
+        <tr>
+          <th>Agent doseur</th>
+          <th>PPH</th>
+          <th class="pi-num">Fûts produits</th>
+          <th class="pi-num">Fûts nets</th>
+          <th class="pi-num">Cassés</th>
+          <th>Matières (kg)</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of sessions(); track s.id) {
           <tr>
-            <th>Matricule agent</th>
-            <th>PPH</th>
-            <th class="text-right">Fûts nets</th>
-            <th>Statut</th>
+            <td>
+              <strong>{{ nomEmploye(s.matriculeAgentDoseur) }}</strong>
+              <div><code class="pi-code">{{ s.matriculeAgentDoseur }}</code></div>
+            </td>
+            <td><code class="pi-code">{{ s.referencePPH }}</code></td>
+            <td class="pi-num">{{ s.nbFutsProduits }}</td>
+            <td class="pi-num"><strong>{{ s.nbFutsNets }}</strong></td>
+            <td class="pi-num" [class.pi-texte-alerte]="s.nbFutsCasses > 0">{{ s.nbFutsCasses }}</td>
+            <td>
+              <div class="pi-chips">
+                @for (m of s.matieresUtilisees; track m.typeMatiere) {
+                  <span class="pi-chip">{{ m.typeMatiere }} · {{ m.quantiteKg | number:'1.0-1' }}</span>
+                } @empty {
+                  <span class="pi-muet">—</span>
+                }
+              </div>
+            </td>
+            <td>
+              <span class="pi-niveau" [class.pi-niveau-ok]="s.cloturee" [class.pi-niveau-moyen]="!s.cloturee && !s.enPause"
+                    [class.pi-niveau-bas]="s.enPause">
+                {{ s.cloturee ? 'Clôturée' : s.enPause ? 'En pause' : s.validee ? 'Validée' : 'Ouverte' }}
+              </span>
+              @if (s.justificationEcart) {
+                <div class="pi-muet"><i class="fa-solid fa-comment"></i> {{ s.justificationEcart }}</div>
+              }
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          @for (s of sessionsDoseur(); track s.id) {
-            <tr>
-              <td><span class="pi-mat-tag">{{ s.matriculeAgentDoseur }}</span></td>
-              <td class="mono">{{ s.referencePPH }}</td>
-              <td class="text-right mono">{{ s.nbFutsNets }}</td>
-              <td>
-                <span class="badge" [class.badge-success]="s.cloturee" [class.badge-warning]="!s.cloturee">
-                  {{ s.cloturee ? 'Clôturée' : 'Ouverte' }}
-                </span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="4" class="empty-state-block">
-                <i class="fa-solid fa-inbox"></i> Aucune session de dosage aujourd'hui
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+        } @empty {
+          <tr><td colspan="7" class="pi-centre pi-muet">Aucune session de dosage aujourd'hui.</td></tr>
+        }
+      </tbody>
+    </table>
   </div>
+</section>
 
-  }<!-- fin affectation -->
-}<!-- fin loading -->
+</div>

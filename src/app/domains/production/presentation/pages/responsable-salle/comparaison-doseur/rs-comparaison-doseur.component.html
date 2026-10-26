@@ -1,37 +1,339 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-scale-balanced ph-ico"></i>
+<div class="cd">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="cd-hero">
+  <div class="cd-hero-gauche">
+    <i class="fa-solid fa-scale-balanced cd-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Comparaison Agent Doseur / Production</h1>
-      <p class="ph-sub">Quantité théorique attendue vs production réellement réalisée</p>
+      <div class="cd-kicker">Responsable de salle · Contrôle</div>
+      <h1 class="cd-hero-titre">Comparaison doseur / production</h1>
+      <p class="cd-hero-sous">Plan du bon de commande contre dosage et production réalisés, pour la journée choisie.</p>
     </div>
   </div>
-</div>
-
-@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <select class="input" [(ngModel)]="referencePPH">
-      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-    </select>
-    <input type="date" class="input" [(ngModel)]="date">
-    <button class="btn btn-primary btn-sm" (click)="comparer()">Comparer</button>
+  <div class="cd-hero-choix">
+    <label class="cd-champ">
+      <span class="cd-lbl">Plan en cours</span>
+      <select class="cd-select" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPph($event)"
+              [disabled]="pphs().length === 0">
+        @for (p of pphs(); track p.id) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.semaine }}</option>
+        }
+      </select>
+    </label>
+    <label class="cd-champ">
+      <span class="cd-lbl">Journée</span>
+      <input class="cd-select" type="date" [ngModel]="dateChoisie()" (ngModelChange)="choisirDate($event)" />
+    </label>
   </div>
-</div>
+</header>
 
-@if (comparaison(); as c) {
-  @if (alerteEcartImportant()) {
-    <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> Écart important détecté ({{ c.ecartPourcentage | number:'1.1-1' }}%) — vérification recommandée.</div>
-  }
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets (Doseur)</div><div class="kpi-val">{{ c.nbFutsNets }}</div></div></div>
-    <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Poudre totale</div><div class="kpi-val">{{ c.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
-    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Production réelle</div><div class="kpi-val">{{ c.productionReelleKg | number:'1.1-1' }} {{ c.uniteProduction }}</div></div></div>
-    <div class="kpi-card" [class.kp-g]="c.ecartPourcentage>=0" [class.kp-r]="c.ecartPourcentage<0">
-      <div class="kpi-body"><div class="kpi-lbl">Écart</div><div class="kpi-val">{{ c.ecartKg | number:'1.1-1' }} kg ({{ c.ecartPourcentage | number:'1.1-1' }}%)</div></div>
-    </div>
+@if (sessionExpiree()) {
+  <div class="cd-alerte cd-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="cd-lien">Se reconnecter</a>
   </div>
-} @else if (!loading()) {
-  <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Sélectionnez un PPH et une date puis cliquez sur Comparer</div>
+} @else if (erreur()) {
+  <div class="cd-alerte cd-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="cd-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
 }
+
+@if (chargement() || chargementComparaison()) {
+  <div class="cd-squelette"></div>
+} @else if (pphs().length === 0) {
+  <section class="cd-carte cd-vide">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <h2>Aucun plan en cours</h2>
+    <p>La comparaison se fait sur un plan démarré, issu d'un bon de commande.</p>
+  </section>
+} @else if (comparaison()) { @let c = comparaison()!;
+
+  @for (msg of alertes(); track msg) {
+    <div class="cd-alerte cd-alerte-avert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ msg }}</span></div>
+  }
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="cd-kpis">
+    <div class="cd-kpi cd-kpi-principal">
+      <span class="cd-lbl">Fûts nets dosés</span>
+      <strong class="cd-grand">{{ c.futs.futsNetsDoses }}</strong>
+      <span class="cd-muet">{{ c.nbSessionsDosage }} session(s) ce jour · prévus {{ c.futs.futsPrevus | number:'1.1-1' }}</span>
+    </div>
+    <div class="cd-kpi" [class.cd-kpi-alerte]="c.futs.futsPrevus > 0 && (c.futs.ecartPct > seuil || c.futs.ecartPct < -seuil)">
+      <span class="cd-lbl">Écart fûts</span>
+      <strong class="cd-grand">{{ c.futs.ecartPct | number:'1.1-1' }} %</strong>
+      <span class="cd-muet">seuil d'alerte ± {{ seuil }} %</span>
+    </div>
+    <div class="cd-kpi">
+      <span class="cd-lbl">Produits du BC</span>
+      <strong class="cd-grand">{{ c.produits.length }}</strong>
+      <span class="cd-muet">prévus pour la journée</span>
+    </div>
+    <div class="cd-kpi">
+      <span class="cd-lbl">Soja : dosé / prévu</span>
+      <strong class="cd-grand cd-grand-court">{{ (soja()?.doseeKg ?? 0) | number:'1.1-1' }} / {{ (soja()?.theoriqueKg ?? 0) | number:'1.1-1' }}</strong>
+      <span class="cd-muet">kg, toutes catégories</span>
+    </div>
+  </section>
+
+  <!-- ═══ 1. FÛTS ═══ -->
+  <section class="cd-carte">
+    <header class="cd-carte-tete">
+      <div class="cd-titre">
+        <span class="cd-numero">1</span>
+        <div>
+          <h3>Fûts : dosés contre prévus</h3>
+          <span class="cd-muet">1 fût = 50 kg de matières ; prévus = besoins du plan ce jour ÷ 50</span>
+        </div>
+      </div>
+    </header>
+    <div class="cd-corps">
+      <div class="cd-barres">
+        <div class="cd-barre-ligne">
+          <span class="cd-lbl-court">Dosés</span>
+          <div class="cd-piste"><div class="cd-barre cd-barre-g" [style.width.%]="c.futs.futsPrevus > 0 ? borne(c.futs.futsNetsDoses / c.futs.futsPrevus * 100) : 0"></div></div>
+          <strong class="cd-valeur">{{ c.futs.futsNetsDoses }}</strong>
+        </div>
+        <div class="cd-barre-ligne">
+          <span class="cd-lbl-court">Prévus</span>
+          <div class="cd-piste"><div class="cd-barre cd-barre-neutre" style="width: 100%"></div></div>
+          <strong class="cd-valeur">{{ c.futs.futsPrevus | number:'1.1-1' }}</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 2. MATIÈRES CONTRE FORMULES ═══ -->
+  <section class="cd-carte">
+    <header class="cd-carte-tete">
+      <div class="cd-titre">
+        <span class="cd-numero">2</span>
+        <div>
+          <h3>Matières dosées contre formules</h3>
+          <span class="cd-muet">Théorique = formules des produits du BC prévus ce jour. Dosé = sessions de l'agent doseur.</span>
+        </div>
+      </div>
+    </header>
+    <div class="cd-table-wrap">
+      <table class="cd-table">
+        <thead>
+          <tr>
+            <th>Matière</th>
+            <th class="cd-num">Prévu (kg)</th>
+            <th class="cd-num">Dosé (kg)</th>
+            <th class="cd-num">Écart (kg)</th>
+            <th class="cd-num">Écart %</th>
+            <th>Prévu par catégorie</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of matieres(); track m.matiere) {
+            <tr [class.cd-ligne-alerte]="m.theoriqueKg > 0 && (m.ecartPct > seuil || m.ecartPct < -seuil)">
+              <td><strong>{{ m.matiere }}</strong></td>
+              <td class="cd-num">{{ m.theoriqueKg | number:'1.1-1' }}</td>
+              <td class="cd-num">{{ m.doseeKg | number:'1.1-1' }}</td>
+              <td class="cd-num">{{ m.ecartKg | number:'1.1-1' }}</td>
+              <td class="cd-num">
+                <span class="cd-ecart cd-ecart-{{ classeEcart(m.ecartPct, m.theoriqueKg) }}">
+                  {{ m.theoriqueKg > 0 ? (m.ecartPct | number:'1.1-1') + ' %' : '—' }}
+                </span>
+              </td>
+              <td>
+                <div class="cd-chips">
+                  @for (p of m.theoriqueParCategorie; track p.categorie) {
+                    <span class="cd-chip" [class.cd-chip-prioritaire]="p.categorie === categoriePrioritaire">
+                      {{ libelle(p.categorie) }} · {{ p.theoriqueKg | number:'1.1-1' }}
+                    </span>
+                  } @empty {
+                    <span class="cd-muet">aucun besoin prévu</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="cd-centre cd-muet">Aucune matière prévue ni dosée ce jour.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ 3. BOUILLIE DE SOJA (BC) ═══ -->
+  <section class="cd-carte cd-carte-bouillie">
+    <header class="cd-carte-tete">
+      <div class="cd-titre">
+        <span class="cd-numero cd-numero-bouillie"><i class="fa-solid fa-mug-hot"></i></span>
+        <div>
+          <h3>Bouillie de soja : produits du BC</h3>
+          <span class="cd-muet">Prévus pour la journée, à rapprocher du soja dosé et des conditionnements réalisés.</span>
+        </div>
+      </div>
+    </header>
+
+    @if (produitsBouillie().length > 0) {
+      <div class="cd-table-wrap">
+        <table class="cd-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th class="cd-num">Cartons</th>
+              <th class="cd-num">Unités prévues</th>
+              <th class="cd-num">Poids prévu (kg)</th>
+              <th class="cd-num">Matières prévues (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of produitsBouillie(); track p.codeProduit) {
+              <tr>
+                <td><strong>{{ p.nomProduit }}</strong> <code class="cd-code">{{ p.codeProduit }}</code></td>
+                <td class="cd-num">{{ p.cartonsPrevus }}</td>
+                <td class="cd-num">{{ p.unitesPrevues }}</td>
+                <td class="cd-num">{{ p.poidsPrevuKg | number:'1.1-1' }}</td>
+                <td class="cd-num">{{ p.matieresPrevuesKg | number:'1.1-1' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="cd-bouillie-chiffres">
+        <div class="cd-bouillie-chiffre">
+          <span class="cd-lbl">Soja prévu (bouillie)</span>
+          <strong class="cd-bouillie-valeur">{{ sojaBouillie() | number:'1.1-1' }} kg</strong>
+        </div>
+        <div class="cd-bouillie-chiffre">
+          <span class="cd-lbl">Soja dosé (toutes catégories)</span>
+          <strong class="cd-bouillie-valeur">{{ (soja()?.doseeKg ?? 0) | number:'1.1-1' }} kg</strong>
+        </div>
+        <div class="cd-bouillie-chiffre">
+          <span class="cd-lbl">Bouillie produite</span>
+          @if (c.productionBouillie.convertible) {
+            <strong class="cd-bouillie-valeur">{{ c.productionBouillie.quantiteKg | number:'1.1-1' }} kg</strong>
+          } @else {
+            <strong class="cd-bouillie-valeur cd-muet">—</strong>
+          }
+        </div>
+      </div>
+      <footer class="cd-carte-pied">
+        @if (c.productionBouillie.convertible) {
+          <span class="cd-muet">
+            Bouillie produite convertie en kg à partir des sceaux réalisés et du poids du conditionnement.
+            Le dosage n'est pas ventilé par produit : la comparaison du soja reste au niveau de la matière.
+          </span>
+        } @else {
+          <span class="cd-muet">
+            <i class="fa-solid fa-circle-info"></i> Bouillie produite non convertible en kg : {{ c.productionBouillie.motifNonConvertible }}
+          </span>
+        }
+      </footer>
+    } @else {
+      <div class="cd-vide-section">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Aucun produit de bouillie de soja prévu au plan pour cette journée.</span>
+      </div>
+    }
+  </section>
+
+  <!-- ═══ 4. AUTRES PRODUITS DU BC ═══ -->
+  @for (g of groupesProduits(); track g.categorie) {
+    @if (g.categorie !== categoriePrioritaire) {
+      <section class="cd-carte">
+        <header class="cd-carte-tete">
+          <div class="cd-titre">
+            <span class="cd-numero"><i class="fa-solid fa-box"></i></span>
+            <div>
+              <h3>{{ g.libelle }}</h3>
+              <span class="cd-muet">{{ g.produits.length }} produit(s) prévu(s) ce jour</span>
+            </div>
+          </div>
+        </header>
+        <div class="cd-table-wrap">
+          <table class="cd-table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th class="cd-num">Cartons</th>
+                <th class="cd-num">Unités prévues</th>
+                <th class="cd-num">Poids prévu (kg)</th>
+                <th class="cd-num">Matières prévues (kg)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of g.produits; track p.codeProduit) {
+                <tr>
+                  <td><strong>{{ p.nomProduit }}</strong> <code class="cd-code">{{ p.codeProduit }}</code></td>
+                  <td class="cd-num">{{ p.cartonsPrevus }}</td>
+                  <td class="cd-num">{{ p.unitesPrevues }}</td>
+                  <td class="cd-num">{{ p.poidsPrevuKg | number:'1.1-1' }}</td>
+                  <td class="cd-num">{{ p.matieresPrevuesKg | number:'1.1-1' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  }
+
+  <!-- ═══ 5. PRODUCTION RÉALISÉE PAR POSTE ═══ -->
+  <section class="cd-carte">
+    <header class="cd-carte-tete">
+      <div class="cd-titre">
+        <span class="cd-numero">5</span>
+        <div>
+          <h3>Production réalisée par poste</h3>
+          <span class="cd-muet">Dans l'unité de chaque poste (sachets, sceaux, étiquettes, kg) : les unités ne sont pas additionnées.</span>
+        </div>
+      </div>
+    </header>
+    @if (c.postesRealises.length > 0) {
+      <div class="cd-table-wrap">
+        <table class="cd-table">
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th>Catégories</th>
+              <th class="cd-num">Réalisé</th>
+              <th class="cd-num">Objectif</th>
+              <th>Taux</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of c.postesRealises; track p.codePoste) {
+              <tr>
+                <td><strong>{{ p.libelle }}</strong></td>
+                <td>
+                  <div class="cd-chips">
+                    @for (cat of p.categories; track cat) {
+                      <span class="cd-chip" [class.cd-chip-prioritaire]="cat === categoriePrioritaire">{{ libelle(cat) }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="cd-num">{{ p.quantiteRealisee | number:'1.1-1' }} <span class="cd-unite">{{ p.unite }}</span></td>
+                <td class="cd-num">{{ p.objectifAjuste | number:'1.1-1' }}</td>
+                <td>
+                  <span class="cd-ecart cd-ecart-{{ p.objectifAjuste > 0 ? (tauxPoste(p.quantiteRealisee, p.objectifAjuste) >= 100 ? 'ok' : 'alerte') : 'neutre' }}">
+                    {{ p.objectifAjuste > 0 ? (tauxPoste(p.quantiteRealisee, p.objectifAjuste) | number:'1.0-0') + ' %' : '—' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="cd-vide-section">
+        <i class="fa-solid fa-inbox"></i>
+        <span>Aucune production réalisée ce jour (pas d'affectation ou pas de réalisation saisie).</span>
+      </div>
+    }
+  </section>
+} @else if (pphs().length > 0) {
+  <section class="cd-carte cd-vide">
+    <i class="fa-solid fa-hand-pointer"></i>
+    <h2>Choisissez un plan et une journée</h2>
+    <p>La comparaison se calcule dès que le plan et la date sont renseignés.</p>
+  </section>
+}
+
+</div>

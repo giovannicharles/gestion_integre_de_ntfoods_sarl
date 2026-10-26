@@ -1,91 +1,204 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-simple ph-ico"></i>
+<div class="pf">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="pf-hero">
+  <div class="pf-hero-gauche">
+    <i class="fa-solid fa-chart-simple pf-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Performances des Postes</h1>
-      <p class="ph-sub">Objectif recalculé, quantité produite, taux d'atteinte — classement journalier</p>
+      <div class="pf-kicker">Responsable de salle · Performance</div>
+      <h1 class="pf-hero-titre">Performances des postes</h1>
+      <p class="pf-hero-sous">{{ libelleIntervalle() }} · aujourd'hui : {{ aujourdhui | date:'EEEE d MMMM y' }}</p>
     </div>
   </div>
-</div>
-
-<div class="card">
-  <div class="toolbar-row">
-    <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
-      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-    </select>
+  <div class="pf-segment" role="group" aria-label="Période">
+    <button class="pf-segment-bouton" [class.pf-segment-actif]="periode() === 'jour'" (click)="choisirPeriode('jour')">Jour</button>
+    <button class="pf-segment-bouton" [class.pf-segment-actif]="periode() === 'semaine'" (click)="choisirPeriode('semaine')">Semaine</button>
+    <button class="pf-segment-bouton" [class.pf-segment-actif]="periode() === 'mois'" (click)="choisirPeriode('mois')">Mois</button>
+    <button class="pf-segment-bouton" [class.pf-segment-actif]="periode() === 'libre'" (click)="periode.set('libre')">Intervalle</button>
   </div>
-</div>
+</header>
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Performances par période</h2></div>
-  <div class="toolbar-row">
-    <button class="btn btn-sm" [class.btn-primary]="periode()==='jour'" [class.btn-ghost]="periode()!=='jour'" (click)="changerPeriode('jour')">Jour</button>
-    <button class="btn btn-sm" [class.btn-primary]="periode()==='semaine'" [class.btn-ghost]="periode()!=='semaine'" (click)="changerPeriode('semaine')">Semaine</button>
-    <button class="btn btn-sm" [class.btn-primary]="periode()==='mois'" [class.btn-ghost]="periode()!=='mois'" (click)="changerPeriode('mois')">Mois</button>
-    <button class="btn btn-sm" [class.btn-primary]="periode()==='libre'" [class.btn-ghost]="periode()!=='libre'" (click)="changerPeriode('libre')">Intervalle libre</button>
-    @if (periode() === 'libre') {
-      <label>Du <input type="date" class="input" [(ngModel)]="debutLibre" (ngModelChange)="chargerPerformances()"></label>
-      <label>Au <input type="date" class="input" [(ngModel)]="finLibre" (ngModelChange)="chargerPerformances()"></label>
-    }
+@if (periode() === 'libre') {
+  <div class="pf-intervalle">
+    <label class="pf-champ">
+      <span class="pf-lbl">Du</span>
+      <input class="pf-input" type="date" [ngModel]="debutLibre()" (ngModelChange)="debutLibre.set($event)" />
+    </label>
+    <label class="pf-champ">
+      <span class="pf-lbl">Au</span>
+      <input class="pf-input" type="date" [ngModel]="finLibre()" (ngModelChange)="finLibre.set($event)" />
+    </label>
+    <button class="pf-bouton pf-bouton-primaire" (click)="appliquerIntervalle()">Appliquer</button>
   </div>
+}
 
-  @if (performancesErreur()) {
-    <div class="gap-note">{{ performancesErreur() }}</div>
+@if (sessionExpiree()) {
+  <div class="pf-alerte pf-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="pf-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="pf-alerte pf-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="pf-lien" (click)="erreur.set('')">Fermer</button>
+  </div>
+}
+
+@if (chargement()) {
+  <div class="pf-squelette"></div>
+} @else if (performances() === null) {
+  <section class="pf-carte pf-vide">
+    <i class="fa-solid fa-chart-simple"></i>
+    <h2>Choisissez une période</h2>
+    <p>Les performances se calculent sur les affectations et les réalisations de la période.</p>
+  </section>
+} @else if (lignes().length === 0) {
+  <section class="pf-carte pf-vide">
+    <i class="fa-solid fa-inbox"></i>
+    <h2>Aucune affectation sur cette période</h2>
+    <p>Aucun poste n'a été affecté entre le {{ intervalle().debut }} et le {{ intervalle().fin }}.</p>
+  </section>
+} @else {
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="pf-kpis">
+    <div class="pf-kpi">
+      <span class="pf-lbl">Postes saisis</span>
+      <strong class="pf-grand">{{ nbSaisis() }} / {{ nbAffectes() }}</strong>
+      <span class="pf-muet">postes affectés ayant une réalisation</span>
+    </div>
+    <div class="pf-kpi pf-kpi-principal">
+      <span class="pf-lbl">Taux moyen</span>
+      @if (tauxMoyen() !== null) {
+        <strong class="pf-grand">{{ tauxMoyen() | number:'1.0-0' }} %</strong>
+        <span class="pf-muet">moyenne des postes saisis</span>
+      } @else {
+        <strong class="pf-grand">—</strong>
+        <span class="pf-muet">aucune réalisation saisie</span>
+      }
+    </div>
+    <div class="pf-kpi" [class.pf-kpi-alerte]="nbAlertes() > 0">
+      <span class="pf-lbl">Sous le seuil</span>
+      <strong class="pf-grand">{{ nbAlertes() }}</strong>
+      <span class="pf-muet">poste(s) en dessous de {{ seuilVigilance }} %</span>
+    </div>
+    <div class="pf-kpi">
+      <span class="pf-lbl">Meilleur poste</span>
+      @if (meilleur(); as m) {
+        <strong class="pf-grand pf-grand-court">{{ m.libelle }}</strong>
+        <span class="pf-muet">{{ m.tauxRealisation | number:'1.0-0' }} % sur la période</span>
+      } @else {
+        <strong class="pf-grand">—</strong>
+        <span class="pf-muet">pas encore de classement</span>
+      }
+    </div>
+  </section>
+
+  <!-- ═══ GRAPHIQUE ═══ -->
+  @if (labelsTaux().length > 0) {
+    <section class="pf-carte">
+      <header class="pf-carte-tete">
+        <div class="pf-titre">
+          <span class="pf-numero"><i class="fa-solid fa-chart-column"></i></span>
+          <div>
+            <h3>Taux de réalisation par poste</h3>
+            <span class="pf-muet">Pourcentage de l'objectif sur les journées saisies ; chaque poste garde son unité.</span>
+          </div>
+        </div>
+      </header>
+      <div class="pf-graphique">
+        <app-mini-chart type="bar" [labels]="labelsTaux()" [series]="serieTaux()" [height]="220" />
+      </div>
+    </section>
   }
 
-  @if (performancesLoading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Poste</th><th>Jours affectés</th><th>Jours saisis</th><th>Objectif</th><th>Réalisé</th><th>Taux</th><th>Effectif moyen</th><th>Rendement / pers.</th></tr></thead>
+  <!-- ═══ TABLEAU DES POSTES ═══ -->
+  <section class="pf-carte">
+    <header class="pf-carte-tete">
+      <div class="pf-titre">
+        <span class="pf-numero"><i class="fa-solid fa-trophy"></i></span>
+        <div>
+          <h3>Classement et détail par poste</h3>
+          <span class="pf-muet">
+            Seuils : moins de {{ seuilVigilance }} % sous le seuil ; {{ seuilAtteint }} % objectif atteint ; {{ seuilDepassement }} % et plus à vérifier.
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="pf-table-wrap">
+      <table class="pf-table">
+        <thead>
+          <tr>
+            <th class="pf-rang">Rang</th>
+            <th>Poste</th>
+            <th class="pf-num">Jours affectés</th>
+            <th class="pf-num">Jours saisis</th>
+            <th class="pf-num">Objectif</th>
+            <th class="pf-num">Réalisé</th>
+            <th>Taux</th>
+            <th class="pf-num">Effectif moyen</th>
+            <th class="pf-num">Par personne</th>
+            <th>Niveau</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (p of performances(); track p.codePoste) {
-            <tr>
-              <td>{{ p.rang ?? '—' }}</td>
-              <td>{{ p.libellePoste }}</td>
-              <td>{{ p.joursAffectes }}</td>
-              <td>{{ p.joursSaisis }}</td>
-              <td>{{ p.objectifCumule | number:'1.0-1' }}</td>
-              <td>{{ p.realiseCumule | number:'1.0-1' }} {{ p.unite }}</td>
-              <td>{{ p.taux != null ? (p.taux | number:'1.1-1') + '%' : '—' }}</td>
-              <td>{{ p.effectifMoyen != null ? (p.effectifMoyen | number:'1.1-1') : '—' }}</td>
-              <td>{{ p.rendementParPersonne != null ? (p.rendementParPersonne | number:'1.1-1') : '—' }}</td>
+          @for (l of lignes(); track l.codePoste) {
+            <tr [class.pf-ligne-attente]="l.joursSaisis === 0">
+              <td class="pf-rang">
+                @if (l.rang !== null) {
+                  @if (medaille(l.rang)) { <span class="pf-medaille">{{ medaille(l.rang) }}</span> }
+                  @else { <span class="pf-rang-num">#{{ l.rang }}</span> }
+                } @else {
+                  <span class="pf-muet">—</span>
+                }
+              </td>
+              <td><strong>{{ l.libelle }}</strong></td>
+              <td class="pf-num">{{ l.joursAffectes }}</td>
+              <td class="pf-num">{{ l.joursSaisis }}</td>
+              <td class="pf-num">
+                @if (l.joursSaisis > 0) { {{ l.objectifTotal | number:'1.1-1' }} <span class="pf-unite">{{ l.unite }}</span> }
+                @else { <span class="pf-muet">—</span> }
+              </td>
+              <td class="pf-num">
+                @if (l.joursSaisis > 0) { {{ l.realiseTotal | number:'1.1-1' }} <span class="pf-unite">{{ l.unite }}</span> }
+                @else { <span class="pf-muet">non saisi</span> }
+              </td>
+              <td>
+                @if (l.joursSaisis > 0) {
+                  <div class="pf-progression">
+                    <div class="pf-piste">
+                      <div class="pf-barre pf-barre-{{ niveau(l.tauxRealisation) }}" [style.width.%]="borne(l.tauxRealisation)"></div>
+                    </div>
+                    <span class="pf-pct">{{ l.tauxRealisation | number:'1.0-0' }} %</span>
+                  </div>
+                } @else {
+                  <span class="pf-muet">—</span>
+                }
+              </td>
+              <td class="pf-num">{{ l.joursSaisis > 0 ? (l.effectifMoyen | number:'1.1-1') : '—' }}</td>
+              <td class="pf-num">
+                @if (l.joursSaisis > 0) { {{ l.rendementParPersonne | number:'1.1-1' }} <span class="pf-unite">{{ l.unite }}</span> }
+                @else { <span class="pf-muet">—</span> }
+              </td>
+              <td>
+                <span class="pf-niveau pf-niveau-{{ l.joursSaisis === 0 ? 'attente' : niveau(l.tauxRealisation) }}">
+                  {{ libelleNiveau(l.joursSaisis === 0 ? 'attente' : niveau(l.tauxRealisation)) }}
+                </span>
+              </td>
             </tr>
-          } @empty {
-            <tr><td colspan="9" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune affectation sur la période</td></tr>
           }
         </tbody>
       </table>
     </div>
-  }
-</div>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else {
-  @if (affectation(); as a) {
-
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Taux de réalisation par poste</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsClassement()" [series]="serieClassement()" [height]="220" /></div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-trophy"></i> Classement journalier</h2></div>
-    @for (c of a.classement; track c.codePoste) {
-      <div class="rank-row">
-        <div class="rank-num"><span class="medal">{{ medaille(c.rang) }}</span>{{ !medaille(c.rang) ? '#' + c.rang : '' }}</div>
-        <div class="rank-info">
-          <div class="rank-name">{{ c.libellePoste }}</div>
-          <div class="rank-meta">{{ c.quantiteRealisee }} / {{ c.objectifAjuste }} {{ c.unite }}</div>
-        </div>
-        <span class="badge bg-success">{{ c.pctRealisation | number:'1.1-1' }}%</span>
-      </div>
-    } @empty {
-      <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune saisie enregistrée aujourd'hui</div>
-    }
-  </div>
-
-  }
+    <footer class="pf-carte-pied">
+      <span class="pf-muet">
+        <i class="fa-solid fa-circle-info"></i>
+        Taux = réalisé ÷ objectif, sur les journées saisies. Par personne = réalisé ÷ effectif cumulé des journées saisies.
+      </span>
+    </footer>
+  </section>
 }
+
+</div>

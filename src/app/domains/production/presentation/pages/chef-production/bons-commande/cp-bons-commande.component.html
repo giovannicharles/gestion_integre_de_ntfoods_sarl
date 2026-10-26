@@ -1,119 +1,147 @@
-<!-- ═══════════════════════════════════════════════════════
-     EN-TÊTE DE PAGE
-     ═══════════════════════════════════════════════════════ -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="ph-icon"><i class="fa-solid fa-file-invoice"></i></div>
+<!-- ═══ BANDEAU ═══ -->
+<header class="bc-hero">
+  <div class="bc-hero-gauche">
+    <div class="bc-hero-ico"><i class="fa-solid fa-file-invoice"></i></div>
     <div>
-      <h1 class="ph-title">Bons de Commande</h1>
-      <p class="ph-sub">Création et suivi des commandes fournisseurs</p>
+      <div class="bc-hero-kicker">Chef de Production</div>
+      <h1 class="bc-hero-titre">Bons de commande</h1>
+      <p class="bc-hero-sous">Création, validation et suivi des commandes. La validation génère le plan de production.</p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary" (click)="ouvrirFormulaire()">
-      <i class="fa-solid fa-plus"></i> Nouveau BC
-    </button>
-  </div>
-</div>
+  <button class="bc-bouton bc-bouton-blanc" (click)="ouvrirFormulaire()">
+    <i class="fa-solid fa-plus"></i> Nouveau bon de commande
+  </button>
+</header>
 
-<!-- Toasts ─────────────────────────────────────────────── -->
 @if (successMsg()) {
-  <div class="toast toast-success animate-fadeInUp">
-    <i class="fa-solid fa-circle-check"></i> {{ successMsg() }}
+  <div class="bc-notif" role="status" aria-live="polite">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{{ successMsg() }}</span>
+    <button class="bc-icone" aria-label="Fermer" (click)="successMsg.set('')"><i class="fa-solid fa-xmark"></i></button>
   </div>
 }
 
-<!-- ═══════════════════════════════════════════════════════
-     LISTE DES BONS DE COMMANDE
-     ═══════════════════════════════════════════════════════ -->
-<div class="card">
-  <!-- Barre de filtres -->
-  <div class="toolbar-row">
-    <input class="input search-input"
-           placeholder="Rechercher par numéro…"
-           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <select class="input" style="min-width:160px"
-            [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)">
-      <option value="">Tous les statuts</option>
-      <option value="BROUILLON">Brouillon</option>
-      <option value="VALIDE">Validé</option>
-      <option value="ENVOYE">Envoyé</option>
-      <option value="RECEPTIONNE">Réceptionné</option>
-      <option value="CLOTURE">Clôturé</option>
-      <option value="ANNULE">Annulé</option>
-    </select>
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
+<!-- ═══ INDICATEURS ═══ -->
+<section class="bc-kpis">
+  <div class="bc-kpi">
+    <span class="bc-kpi-lbl">Bons de commande</span>
+    <span class="bc-kpi-val">{{ nbTotal() }}</span>
+    <span class="bc-kpi-meta">tous statuts confondus</span>
   </div>
+  <div class="bc-kpi bc-kpi-jaune">
+    <span class="bc-kpi-lbl">En cours</span>
+    <span class="bc-kpi-val">{{ nbEnCours() }}</span>
+    <span class="bc-kpi-meta">{{ montantEnCours() | number:'1.0-0' }} FCFA engagés</span>
+  </div>
+  <div class="bc-kpi" [class.bc-kpi-alerte]="nbEnRetard() > 0">
+    <span class="bc-kpi-lbl">En retard</span>
+    <span class="bc-kpi-val">{{ nbEnRetard() }}</span>
+    <span class="bc-kpi-meta">livraison dépassée</span>
+  </div>
+  <div class="bc-kpi bc-kpi-vert">
+    <span class="bc-kpi-lbl">Brouillons à valider</span>
+    <span class="bc-kpi-val">{{ nbBrouillons() }}</span>
+    <span class="bc-kpi-meta">en attente de validation</span>
+  </div>
+</section>
+
+<!-- ═══ FILTRES ═══ -->
+<section class="bc-carte">
+  <div class="bc-filtres">
+    <div class="bc-pilles" role="tablist" aria-label="Filtrer par statut">
+      <button class="bc-pille" [class.bc-pille-active]="filtreStatut() === ''" (click)="filtreStatut.set('')">
+        Tous <span class="bc-pille-n">{{ compteStatut('') }}</span>
+      </button>
+      @for (s of statuts; track s.code) {
+        @if (compteStatut(s.code) > 0) {
+          <button class="bc-pille" [class.bc-pille-active]="filtreStatut() === s.code" (click)="filtreStatut.set(s.code)">
+            {{ s.libelle }} <span class="bc-pille-n">{{ compteStatut(s.code) }}</span>
+          </button>
+        }
+      }
+    </div>
+    <div class="bc-outils">
+      <input class="bc-recherche" type="search" aria-label="Rechercher un bon de commande"
+             placeholder="Numéro ou fournisseur…"
+             [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+      <button class="bc-icone-bouton" (click)="charger()" title="Actualiser" aria-label="Actualiser la liste">
+        <i class="fa-solid fa-arrows-rotate"></i>
+      </button>
+    </div>
+  </div>
+  <p class="bc-compte">{{ bcsFiltres().length }} bon(s) de commande</p>
+
+  @if (error()) {
+    <div class="bc-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span>
+      <button class="bc-bouton bc-bouton-petit bc-bouton-rouge" (click)="charger()">Réessayer</button>
+    </div>
+  }
 
   @if (loading()) {
-    @for (i of [1,2,3,4]; track i) {
-      <div class="sk-shimmer skeleton-row"></div>
-    }
+    <div class="bc-squelette"></div>
+    <div class="bc-squelette bc-squelette-court"></div>
   } @else {
-    @if (error()) {
-      <div class="banner banner-warning" style="margin:1rem">
-        <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
-      </div>
-    }
     <div class="tbl-wrap">
-      <table class="data-table">
+      <table class="bc-table">
         <thead>
           <tr>
             <th>N° BC</th>
-            <th>Date commande</th>
-            <th>Livraison prévue</th>
-            <th>Nb lignes</th>
-            <th>Montant HT</th>
-            <th>Réalisation prod.</th>
+            <th>Fournisseur</th>
+            <th>Commandé le</th>
+            <th>Livraison</th>
+            <th>Production</th>
+            <th class="num">Lignes</th>
+            <th class="num">Montant HT</th>
+            <th>Réalisation</th>
             <th>Statut</th>
-            <th></th>
+            <th class="bc-col-action"></th>
           </tr>
         </thead>
         <tbody>
           @for (bc of bcsFiltres(); track bc.id) {
-            <tr class="table-row-anim" [class.row-alert]="bc.enRetard">
-              <td><strong>{{ bc.numero }}</strong></td>
-              <td>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</td>
-              <td>
-                {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}
+            <tr [class.bc-ligne-retard]="bc.enRetard">
+              <td><span class="bc-numero mono">{{ bc.numero }}</span></td>
+              <td><span class="bc-nom">{{ bc.nomFournisseur ?? bc.codeFournisseur }}</span></td>
+              <td [class.bc-date-critique]="bc.enRetard">
+                {{ bc.dateCommande | date:'dd/MM/yyyy' }}
                 @if (bc.enRetard) {
-                  <span class="taux-chip taux-warn" style="margin-left:6px">
-                    <i class="fa-solid fa-clock"></i> Retard
+                  <span class="bc-retard bc-retard-critique" [title]="'Livraison dépassée de ' + joursRetard(bc) + ' jour(s)'">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ joursRetard(bc) }} j de retard
                   </span>
                 }
               </td>
-              <td>{{ bc.lignes.length }} ligne(s)</td>
-              <td class="text-right mono">
-                {{ montantTotal(bc) > 0 ? ((montantTotal(bc) | number:'1.0-0') + ' FCFA') : '—' }}
-              </td>
               <td>
-                <div class="progress-cell">
-                  <div class="prog-bar-wrap">
-                    <div class="prog-bar" [style.width.%]="bc.tauxRealisation"
-                         [class.prog-ok]="bc.tauxRealisation >= 100"
-                         [class.prog-y]="bc.tauxRealisation >= 50 && bc.tauxRealisation < 100"
-                         [class.prog-r]="bc.tauxRealisation < 50"></div>
-                  </div>
-                  <span class="prog-pct">{{ bc.tauxRealisation }}%</span>
+                {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}
+                @if (bc.enRetard) { <span class="bc-retard"><i class="fa-solid fa-clock"></i> Retard</span> }
+              </td>
+              <td class="bc-muet">{{ libellePeriode(bc) }}</td>
+              <td class="num">{{ bc.lignes.length }}</td>
+              <td class="num mono">{{ montantTotal(bc) > 0 ? ((montantTotal(bc) | number:'1.0-0') + ' FCFA') : '—' }}</td>
+              <td>
+                <div class="bc-progres">
+                  <div class="bc-barre"><div class="bc-barre-fill" [ngClass]="'bc-tone-' + teinte(bc.statut)" [style.width.%]="bc.tauxRealisation ?? 0"></div></div>
+                  <span class="mono bc-pct">{{ bc.tauxRealisation === null ? '—' : bc.tauxRealisation + ' %' }}</span>
                 </div>
               </td>
               <td>
-                <span class="badge" [ngClass]="statutClass(bc.statut)">{{ bc.statutLibelle }}</span>
+                <span class="bc-pastille" [ngClass]="'bc-tone-' + teinte(bc.statut)">{{ statutLibelle(bc) }}</span>
               </td>
-              <td>
-                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(bc)">
+              <td class="bc-col-action">
+                <button class="bc-bouton bc-bouton-petit bc-bouton-contour" (click)="ouvrirDetail(bc)">
                   <i class="fa-solid fa-eye"></i> Détail
                 </button>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="8">
-                <div class="empty-state">
+              <td colspan="10">
+                <div class="bc-vide">
                   <i class="fa-solid fa-inbox"></i>
-                  <p>Aucun bon de commande trouvé</p>
+                  <h3>Aucun bon de commande</h3>
+                  <p>{{ bcs().length ? 'Aucun bon de commande ne correspond aux filtres.' : 'Créez le premier bon de commande pour lancer une production.' }}</p>
+                  @if (bcs().length) {
+                    <button class="bc-bouton bc-bouton-primaire bc-bouton-petit" (click)="recherche.set(''); filtreStatut.set('')">Réinitialiser</button>
+                  }
                 </div>
               </td>
             </tr>
@@ -122,313 +150,278 @@
       </table>
     </div>
   }
-</div>
+</section>
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL — CRÉER UN BON DE COMMANDE
-     ═══════════════════════════════════════════════════════ -->
+<!-- ═══ CRÉATION ═══ -->
 @if (showForm()) {
-<div class="modal-overlay" (click)="fermerFormulaire()">
-  <div class="modal-box bc-modal" (click)="$event.stopPropagation()">
+<div class="bc-voile" (click)="fermerFormulaire()">
+  <div class="bc-fenetre" role="dialog" aria-modal="true" aria-labelledby="bc-form-titre" (click)="$event.stopPropagation()">
 
-    <!-- En-tête -->
-    <div class="modal-header">
-      <div class="modal-title">
-        <div class="modal-title-ico"><i class="fa-solid fa-file-invoice"></i></div>
-        Nouveau Bon de Commande
+    <header class="bc-fenetre-tete">
+      <div>
+        <div class="bc-hero-kicker">Nouveau</div>
+        <h2 class="bc-fenetre-titre" id="bc-form-titre">Bon de commande</h2>
       </div>
-      <button class="modal-close" (click)="fermerFormulaire()" [disabled]="saving()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
+      <button class="bc-icone" aria-label="Fermer" (click)="fermerFormulaire()" [disabled]="saving()"><i class="fa-solid fa-xmark"></i></button>
+    </header>
 
-    <!-- Corps -->
-    <div class="modal-body bc-body">
-
-      <!-- Bloc infos générales -->
-      <div class="bc-section">
-        <div class="bc-section-title">
-          <i class="fa-solid fa-circle-info"></i> Informations générales
+    <div class="bc-fenetre-corps">
+      <section class="bc-bloc">
+        <h3 class="bc-bloc-titre"><i class="fa-solid fa-circle-info"></i> Informations générales</h3>
+        <div class="bc-grille">
+          <label class="bc-champ">
+            <span class="bc-etiquette">Date de commande <span class="bc-req">*</span></span>
+            <input id="bc-date-cmd" type="date" class="bc-input" [(ngModel)]="formDateCommande" name="dateCmd">
+          </label>
+          <label class="bc-champ">
+            <span class="bc-etiquette">Livraison prévue</span>
+            <input id="bc-date-liv" type="date" class="bc-input" [(ngModel)]="formDateLivraison" name="dateLiv">
+          </label>
+          <label class="bc-champ">
+            <span class="bc-etiquette">Fournisseur <span class="bc-optionnel">(optionnel)</span></span>
+            <select id="bc-fournisseur" class="bc-input" [(ngModel)]="formCodeFournisseur" name="fournisseur">
+              <option value="">— Non défini —</option>
+              @for (f of fournisseurs(); track f.id) { <option [value]="f.code">{{ f.raisonSociale }} ({{ f.code }})</option> }
+            </select>
+          </label>
+          <label class="bc-champ">
+            <span class="bc-etiquette">Début de production <span class="bc-optionnel">(optionnel)</span></span>
+            <input id="bc-debut-prod" type="date" class="bc-input" [(ngModel)]="formDateDebutProd" name="debutProd">
+          </label>
+          <label class="bc-champ">
+            <span class="bc-etiquette">Fin de production <span class="bc-optionnel">(optionnel)</span></span>
+            <input id="bc-fin-prod" type="date" class="bc-input" [(ngModel)]="formDateFinProd" name="finProd">
+          </label>
+          <p class="bc-aide">Sans période, le plan couvre la semaine ouvrée de la date de commande.</p>
         </div>
-        <div class="bc-fields-row">
-          <div class="form-group">
-            <label class="form-label">Date de commande <span class="req">*</span></label>
-            <input type="date" class="form-control" [(ngModel)]="formDateCommande" name="dateCmd">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Date de livraison prévue</label>
-            <input type="date" class="form-control" [(ngModel)]="formDateLivraison" name="dateLiv">
-          </div>
-        </div>
-        <div class="bc-fields-row">
-          <div class="form-group">
-            <label class="form-label">Début de production (optionnel)</label>
-            <input type="date" class="form-control" [(ngModel)]="formDateDebutProduction" name="dateDebutProd">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fin de production (optionnel)</label>
-            <input type="date" class="form-control" [(ngModel)]="formDateFinProduction" name="dateFinProd">
-          </div>
-        </div>
-        @if (!!formDateDebutProduction !== !!formDateFinProduction) {
-          <p class="form-hint form-hint-warning">Les deux dates de production sont nécessaires ensemble, ou aucune.</p>
-        } @else if (formDateDebutProduction && formDateFinProduction && formDateFinProduction < formDateDebutProduction) {
-          <p class="form-hint form-hint-warning">La fin de production doit être après son début.</p>
-        } @else {
-          <p class="form-hint">Sans ces dates, le plan de production généré à la validation retombe sur la semaine en cours.</p>
+        @if (messagePeriodeForm) {
+          <div class="bc-alerte bc-alerte-jaune"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ messagePeriodeForm }}</span></div>
         }
-      </div>
+      </section>
 
-      <!-- Bloc lignes -->
-      <div class="bc-section">
-        <div class="bc-section-title">
-          <i class="fa-solid fa-list"></i> Lignes de commande <span class="req">*</span>
-          <button class="btn btn-sm btn-outline" style="margin-left:auto" (click)="ajouterLigne()">
-            <i class="fa-solid fa-plus"></i> Ajouter une ligne
-          </button>
+      <section class="bc-bloc">
+        <div class="bc-bloc-entete">
+          <h3 class="bc-bloc-titre"><i class="fa-solid fa-list"></i> Lignes de commande <span class="bc-req">*</span></h3>
+          <button class="bc-bouton bc-bouton-petit bc-bouton-contour" (click)="ajouterLigne()"><i class="fa-solid fa-plus"></i> Ajouter une ligne</button>
         </div>
 
-        <div class="lignes-list">
+        <div class="bc-lignes">
           @for (ligne of lignesForm; track $index; let i = $index) {
-            <div class="ligne-card">
-              <!-- Numéro de ligne -->
-              <div class="ligne-num">{{ i + 1 }}</div>
-
-              <div class="ligne-fields">
-                <!-- Sélection produit depuis catalogue -->
-                <div class="form-group ligne-select">
-                  <label class="form-label">
-                    <i class="fa-solid fa-box-archive" style="color:var(--g)"></i>
-                    Produit du catalogue
-                  </label>
-                  <select class="form-control"
-                          [name]="'prod-' + i"
-                          [ngModel]="ligne.produitCode"
-                          (ngModelChange)="ligne.produitCode = $event; selectionnerProduit($event, i)">
+            <article class="bc-ligne">
+              <span class="bc-ligne-num">{{ i + 1 }}</span>
+              <div class="bc-ligne-corps">
+                <label class="bc-champ">
+                  <span class="bc-etiquette"><i class="fa-solid fa-box-archive"></i> Produit du catalogue</span>
+                  <select class="bc-input" [attr.id]="'prod-' + i" [name]="'prod-' + i"
+                          [ngModel]="ligne.produitCode" (ngModelChange)="selectionnerProduit($event, i)">
                     <option value="">— Sélectionner un produit —</option>
-                    @for (grp of groupesProduits; track grp.label) {
+                    @for (grp of groupesProduits(); track grp.label) {
                       <optgroup [label]="grp.label">
-                        @for (p of grp.produits; track p.code) {
-                          <option [value]="p.code">{{ p.designation }}</option>
-                        }
+                        @for (p of grp.produits; track p.code) { <option [value]="p.code">{{ p.designation }}</option> }
                       </optgroup>
                     }
                   </select>
-                </div>
+                </label>
 
-                <div class="ligne-fields-row2">
-                  <!-- Code produit (pré-rempli, éditable) -->
-                  <div class="form-group">
-                    <label class="form-label">Code produit <span class="req">*</span></label>
-                    <div class="input-with-badge">
-                      <input type="text" class="form-control code-input"
-                             placeholder="TBS-SAC-001"
-                             [(ngModel)]="ligne.codeProduit"
-                             [name]="'code-' + i"
-                             [class.pre-filled]="!!ligne.produitCode">
+                <div class="bc-grille-ligne">
+                  <label class="bc-champ">
+                    <span class="bc-etiquette">Code produit <span class="bc-req">*</span></span>
+                    <span class="bc-avec-chip">
+                      <input type="text" class="bc-input bc-code" [attr.id]="'code-' + i" placeholder="TBS-SAC-001"
+                             [(ngModel)]="ligne.codeProduit" [name]="'code-' + i" [class.bc-input-rempli]="!!ligne.produitCode">
                       @if (ligne.produitCode) {
-                        <span class="pre-fill-chip">
-                          <i class="fa-solid fa-check"></i>
-                        </span>
+                        <span class="bc-chip-ok" aria-label="Pré-rempli depuis le catalogue"><i class="fa-solid fa-check"></i></span>
                       }
-                    </div>
-                  </div>
-
-                  <!-- SKU (pré-rempli, éditable) -->
-                  <div class="form-group">
-                    <label class="form-label">Conditionnement (SKU)</label>
-                    <input type="text" class="form-control"
-                           placeholder="Ex: 25 sachets x 57g"
-                           [(ngModel)]="ligne.sku"
-                           [name]="'sku-' + i">
-                  </div>
-
-                  <!-- Quantité -->
-                  <div class="form-group qty-field">
-                    <label class="form-label">Qté commandée <span class="req">*</span></label>
-                    <input type="number" class="form-control"
-                           placeholder="0" min="1"
-                           [(ngModel)]="ligne.quantiteCommandee"
-                           [name]="'qty-' + i">
-                  </div>
-
-                  <!-- Prix unitaire -->
-                  <div class="form-group prix-field">
-                    <label class="form-label">Prix unitaire HT (FCFA)</label>
-                    <input type="number" class="form-control"
-                           placeholder="0" min="0" step="0.01"
-                           [(ngModel)]="ligne.prixUnitaireHT"
-                           [name]="'pu-' + i">
-                  </div>
+                    </span>
+                  </label>
+                  <label class="bc-champ">
+                    <span class="bc-etiquette">Conditionnement (SKU)</span>
+                    <input type="text" class="bc-input" [attr.id]="'sku-' + i" placeholder="Ex. 25 sachets × 57 g"
+                           [(ngModel)]="ligne.sku" [name]="'sku-' + i">
+                  </label>
+                  <label class="bc-champ">
+                    <span class="bc-etiquette">Quantité <span class="bc-req">*</span></span>
+                    <input type="number" class="bc-input bc-droite" [attr.id]="'qty-' + i" placeholder="0" min="1"
+                           [(ngModel)]="ligne.quantiteCommandee" [name]="'qty-' + i">
+                  </label>
+                  <label class="bc-champ">
+                    <span class="bc-etiquette">Prix unitaire HT (FCFA)</span>
+                    <input type="number" class="bc-input bc-droite" [attr.id]="'pu-' + i" placeholder="0" min="0" step="0.01"
+                           [(ngModel)]="ligne.prixUnitaireHT" [name]="'pu-' + i">
+                  </label>
                 </div>
 
-                <!-- Désignation (lecture seule si pré-remplie) -->
                 @if (ligne.designation) {
-                  <div class="designation-preview">
-                    <i class="fa-solid fa-tag"></i>
-                    {{ ligne.designation }}
-                  </div>
+                  <div class="bc-designation"><i class="fa-solid fa-tag"></i> {{ ligne.designation }}</div>
                 }
               </div>
-
-              <!-- Bouton supprimer -->
-              <button class="btn-remove-ligne" [disabled]="lignesForm.length <= 1"
-                      (click)="supprimerLigne(i)" title="Supprimer cette ligne">
+              <button class="bc-icone bc-icone-suppr" [disabled]="lignesForm.length <= 1" (click)="supprimerLigne(i)"
+                      [attr.aria-label]="'Supprimer la ligne ' + (i + 1)" title="Supprimer cette ligne">
                 <i class="fa-solid fa-trash"></i>
               </button>
-            </div>
+            </article>
           }
         </div>
 
-        <!-- Récap lignes -->
-        @if (lignesForm.length > 0) {
-          <div class="lignes-recap">
-            <span>{{ lignesForm.length }} ligne(s)</span>
-            @if (aLignesAvecPrix) {
-              <span class="recap-montant">
-                Total estimé :
-                <strong>{{ totalEstimeHT | number:'1.0-0' }} FCFA</strong>
-              </span>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Message d'erreur -->
-      @if (error()) {
-        <div class="banner banner-warning">
-          <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+        <div class="bc-recap">
+          <span>{{ lignesForm.length }} ligne(s)</span>
+          @if (aLignesAvecPrix) {
+            <span>Total estimé : <strong class="mono">{{ totalEstimeHT | number:'1.0-0' }} FCFA HT</strong></span>
+          }
         </div>
+      </section>
+
+      @if (error()) {
+        <div class="bc-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
       }
-
-    </div><!-- /modal-body -->
-
-    <!-- Pied -->
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="fermerFormulaire()" [disabled]="saving()">
-        Annuler
-      </button>
-      <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']" (click)="soumettre()"
-              [disabled]="saving() || !formulaireValide()">
-        @if (saving()) {
-          <span class="spinner spinner-sm"></span> Enregistrement…
-        } @else {
-          <i class="fa-solid fa-check"></i> Créer le bon de commande
-        }
-      </button>
     </div>
 
+    <footer class="bc-fenetre-pied">
+      <button class="bc-bouton bc-bouton-contour" (click)="fermerFormulaire()" [disabled]="saving()">Annuler</button>
+      <button class="bc-bouton bc-bouton-primaire" (click)="soumettre()" [disabled]="saving() || !formulaireValide()">
+        @if (saving()) { <i class="fa-solid fa-spinner bc-tourne"></i> Enregistrement… }
+        @else { <i class="fa-solid fa-check"></i> Créer le bon de commande }
+      </button>
+    </footer>
   </div>
 </div>
 }
 
-<!-- ═══════════════════════════════════════════════════════
-     MODAL — DÉTAIL D'UN BC
-     ═══════════════════════════════════════════════════════ -->
+<!-- ═══ DÉTAIL ═══ -->
 @if (bcDetail(); as bc) {
-<div class="modal-overlay" (click)="fermerDetail()">
-  <div class="modal-box bc-modal" (click)="$event.stopPropagation()">
+<div class="bc-voile bc-voile-droite" (click)="fermerDetail()">
+  <aside class="bc-tiroir" role="dialog" aria-modal="true" aria-labelledby="bc-detail-titre" (click)="$event.stopPropagation()">
 
-    <div class="modal-header">
-      <div class="modal-title">
-        <div class="modal-title-ico"><i class="fa-solid fa-file-invoice"></i></div>
-        {{ bc.numero }}
+    <header class="bc-tiroir-tete">
+      <div>
+        <div class="bc-hero-kicker">Bon de commande</div>
+        <h2 class="bc-tiroir-titre mono" id="bc-detail-titre">{{ bc.numero }}</h2>
+        <span class="bc-pastille" [ngClass]="'bc-tone-' + teinte(bc.statut)">{{ statutLibelle(bc) }}</span>
       </div>
-      <span class="badge" [ngClass]="statutClass(bc.statut)" style="margin-right:8px">{{ bc.statutLibelle }}</span>
-      <button class="modal-close" (click)="fermerDetail()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
+      <button class="bc-icone" aria-label="Fermer" (click)="fermerDetail()" [disabled]="actionEnCours()"><i class="fa-solid fa-xmark"></i></button>
+    </header>
 
-    <div class="modal-body bc-body">
-      <!-- KPIs détail -->
-      <div class="detail-kpis">
-        <div class="fiche-kpi">
-          <span class="fk-lbl"><i class="fa-solid fa-calendar"></i> Date commande</span>
-          <span class="fk-val">{{ bc.dateCommande | date:'dd/MM/yyyy' }}</span>
-        </div>
-        <div class="fiche-kpi">
-          <span class="fk-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
-          <span class="fk-val">{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</span>
-        </div>
-        <div class="fiche-kpi">
-          <span class="fk-lbl"><i class="fa-solid fa-industry"></i> Période de production</span>
-          <span class="fk-val">
-            @if (bc.dateDebutProduction && bc.dateFinProduction) {
-              {{ bc.dateDebutProduction | date:'dd/MM/yyyy' }} → {{ bc.dateFinProduction | date:'dd/MM/yyyy' }}
-            } @else {
-              Semaine en cours
-            }
-          </span>
-        </div>
-        <div class="fiche-kpi">
-          <span class="fk-lbl"><i class="fa-solid fa-user"></i> Créateur</span>
-          <span class="fk-val">{{ bc.matriculeCreateur }}</span>
-        </div>
-        <div class="fiche-kpi" style="border-left-color:var(--y)">
-          <span class="fk-lbl"><i class="fa-solid fa-coins"></i> Montant HT</span>
-          <span class="fk-val">{{ montantTotal(bc) | number:'1.0-0' }} FCFA</span>
-        </div>
-        <div class="fiche-kpi" style="border-left-color:var(--g)">
-          <span class="fk-lbl"><i class="fa-solid fa-chart-pie"></i> Réalisation prod.</span>
-          <span class="fk-val">{{ bc.tauxRealisation }}%</span>
-        </div>
-      </div>
+    <div class="bc-tiroir-corps">
+      <dl class="bc-fiches">
+        <div><dt><i class="fa-solid fa-truck-field"></i> Fournisseur</dt><dd>{{ bc.nomFournisseur ?? bc.codeFournisseur }}</dd></div>
+        <div><dt><i class="fa-solid fa-calendar"></i> Commandé le</dt><dd>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</dd></div>
+        <div><dt><i class="fa-solid fa-truck"></i> Livraison prévue</dt><dd>{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</dd></div>
+        <div><dt><i class="fa-solid fa-user"></i> Créé par</dt><dd class="mono">{{ bc.matriculeCreateur ?? '—' }}</dd></div>
+        <div><dt><i class="fa-solid fa-coins"></i> Montant HT</dt><dd class="mono">{{ montantTotal(bc) | number:'1.0-0' }} FCFA</dd></div>
+        <div><dt><i class="fa-solid fa-chart-pie"></i> Réalisation</dt><dd class="mono">{{ bc.tauxRealisation === null ? 'non fourni par l\'API' : bc.tauxRealisation + ' %' }}</dd></div>
+      </dl>
 
-      <!-- Table des lignes -->
-      <div class="bc-section-title" style="margin-top:var(--sp-4)">
-        <i class="fa-solid fa-list"></i> Lignes de commande
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Code produit</th>
-              <th>Désignation</th>
-              <th>SKU</th>
-              <th class="text-right">Qté commandée</th>
-              <th class="text-right">Qté reçue</th>
-              <th class="text-right">Qté produite</th>
-              <th class="text-right">Réalisation</th>
-              <th class="text-right">Prix unitaire HT</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (l of bc.lignes; track l.id; let idx = $index) {
+      <div class="bc-barre bc-barre-large"><div class="bc-barre-fill" [ngClass]="'bc-tone-' + teinte(bc.statut)" [style.width.%]="bc.tauxRealisation ?? 0"></div></div>
+
+      @if (actionErreur()) {
+        <div class="bc-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ actionErreur() }}</span></div>
+      }
+
+      <!-- Période de production -->
+      <section class="bc-bloc">
+        <div class="bc-bloc-entete">
+          <h3 class="bc-bloc-titre"><i class="fa-solid fa-calendar-days"></i> Période de production</h3>
+          @if (peutModifierPeriode(bc) && !periodeOuverte()) {
+            <button class="bc-bouton bc-bouton-petit bc-bouton-contour" (click)="ouvrirPeriode(bc)"><i class="fa-solid fa-pen"></i> Modifier</button>
+          }
+        </div>
+        @if (!periodeOuverte()) {
+          <p class="bc-texte"><strong>{{ libellePeriode(bc) }}</strong></p>
+          <p class="bc-aide">Une modification ne change pas le plan déjà généré : recalculez-le ensuite depuis la page du plan.</p>
+        } @else {
+          <div class="bc-grille">
+            <label class="bc-champ">
+              <span class="bc-etiquette">Début</span>
+              <input id="per-debut" type="date" class="bc-input" [(ngModel)]="periodeDraft.debut" name="perDebut">
+            </label>
+            <label class="bc-champ">
+              <span class="bc-etiquette">Fin</span>
+              <input id="per-fin" type="date" class="bc-input" [(ngModel)]="periodeDraft.fin" name="perFin">
+            </label>
+          </div>
+          <p class="bc-aide">Renseignez les deux dates, ou aucune pour revenir à la semaine de commande.</p>
+          @if (periodeErreur()) {
+            <div class="bc-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ periodeErreur() }}</span></div>
+          }
+          <div class="bc-actions-fin">
+            <button class="bc-bouton bc-bouton-petit bc-bouton-contour" (click)="fermerPeriode()" [disabled]="actionEnCours()">Annuler</button>
+            <button class="bc-bouton bc-bouton-petit bc-bouton-primaire" (click)="enregistrerPeriode(bc)" [disabled]="actionEnCours()">
+              @if (actionEnCours()) { <i class="fa-solid fa-spinner bc-tourne"></i> }
+              Enregistrer la période
+            </button>
+          </div>
+        }
+      </section>
+
+      <!-- Plan de production -->
+      <section class="bc-bloc">
+        <h3 class="bc-bloc-titre"><i class="fa-solid fa-calendar-week"></i> Plan de production</h3>
+        @if (pphDuBc(); as pph) {
+          <div class="bc-plan">
+            <span class="bc-plan-ref mono">{{ pph.referencePPH }}</span>
+            <span>{{ pph.semaine }}</span>
+            <span class="bc-pastille bc-tone-gris">{{ pph.statut }}</span>
+            <span class="bc-aide">Consultable dans « Plans de production (PPH) ».</span>
+          </div>
+        } @else {
+          <p class="bc-aide">
+            @if (bc.statut === 'BROUILLON') { Aucun plan : il sera généré à la validation du bon de commande. }
+            @else { Aucun plan de production généré pour ce bon de commande. }
+          </p>
+        }
+      </section>
+
+      <!-- Lignes -->
+      <section class="bc-bloc">
+        <h3 class="bc-bloc-titre"><i class="fa-solid fa-list"></i> Lignes de commande</h3>
+        <div class="tbl-wrap">
+          <table class="bc-table bc-table-compact">
+            <thead>
               <tr>
-                <td class="text-center" style="color:var(--n400);font-size:11px">{{ idx + 1 }}</td>
-                <td><strong class="mono" style="color:var(--g)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '—' }}</td>
-                <td><span class="zone-chip">{{ l.sku ?? '—' }}</span></td>
-                <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
-                <td class="text-right mono">{{ l.quantiteRecue }}</td>
-                <td class="text-right mono">{{ l.quantiteProduite }}</td>
-                <td class="text-right mono">
-                  <div class="progress-cell">
-                    <div class="prog-bar-wrap">
-                      <div class="prog-bar" [style.width.%]="l.tauxRealisation"
-                           [class.prog-ok]="l.tauxRealisation >= 100"
-                           [class.prog-y]="l.tauxRealisation >= 50 && l.tauxRealisation < 100"
-                           [class.prog-r]="l.tauxRealisation < 50"></div>
-                    </div>
-                    <span class="prog-pct">{{ l.tauxRealisation }}%</span>
-                  </div>
-                </td>
-                <td class="text-right mono">
-                  {{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '—' }}
-                </td>
+                <th>Produit</th>
+                <th class="num">Commandé</th>
+                <th class="num">Reçu</th>
+                <th class="num">Produit</th>
+                <th>Réalisation</th>
+                <th class="num">Prix HT</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              @for (l of bc.lignes; track l.id) {
+                <tr>
+                  <td>
+                    <div class="bc-produit">
+                      <span class="bc-nom">{{ l.designation ?? '—' }}</span>
+                      <span class="bc-muet mono">{{ l.codeProduit }}@if (l.sku) { · {{ l.sku }} }</span>
+                    </div>
+                  </td>
+                  <td class="num mono fw">{{ l.quantiteCommandee }}</td>
+                  <td class="num mono">{{ l.quantiteRecue }}</td>
+                  <td class="num mono">{{ l.quantiteProduite ?? '—' }}</td>
+                  <td>
+                    <div class="bc-progres">
+                      <div class="bc-barre"><div class="bc-barre-fill" [ngClass]="'bc-tone-' + teinte(bc.statut)" [style.width.%]="l.tauxRealisation ?? 0"></div></div>
+                      <span class="mono bc-pct">{{ l.tauxRealisation === null ? '—' : l.tauxRealisation + ' %' }}</span>
+                    </div>
+                  </td>
+                  <td class="num mono">{{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-primary" (click)="fermerDetail()">
-        <i class="fa-solid fa-xmark"></i> Fermer
-      </button>
-    </div>
-
-  </div>
+    <footer class="bc-tiroir-pied">
+      @if (peutValider(bc)) {
+        <button class="bc-bouton bc-bouton-primaire" (click)="validerBc(bc)" [disabled]="actionEnCours()">
+          @if (actionEnCours()) { <i class="fa-solid fa-spinner bc-tourne"></i> } @else { <i class="fa-solid fa-stamp"></i> }
+          Valider le bon de commande
+        </button>
+      } @else { <span></span> }
+      <button class="bc-bouton bc-bouton-contour" (click)="fermerDetail()" [disabled]="actionEnCours()"><i class="fa-solid fa-xmark"></i> Fermer</button>
+    </footer>
+  </aside>
 </div>
 }

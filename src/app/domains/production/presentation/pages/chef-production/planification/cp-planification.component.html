@@ -1,86 +1,188 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-calendar-days ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="cpl-hero">
+  <div class="cpl-hero-gauche">
+    <div class="cpl-hero-ico"><i class="fa-solid fa-calendar-days"></i></div>
     <div>
-      <h1 class="ph-title">Planification de la Production</h1>
-      <p class="ph-sub">Répartition journalière, ajustement des objectifs, ressources planifiées</p>
+      <div class="cpl-hero-kicker">Planification de la production</div>
+      @if (plan(); as p) {
+        <h1 class="cpl-hero-titre">{{ p.referencePPH }}</h1>
+        <div class="cpl-hero-meta">
+          <span>{{ p.semaine }}</span>
+          <span class="cpl-sep">•</span>
+          <span>{{ p.dateDebut | date:'dd/MM/yyyy' }} → {{ p.dateFin | date:'dd/MM/yyyy' }}</span>
+          <span [class]="statutClass(p.statut)">{{ libelleStatut(p.statut) }}</span>
+        </div>
+      } @else {
+        <h1 class="cpl-hero-titre">Aucun plan à planifier</h1>
+      }
     </div>
   </div>
-</div>
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <select class="input" (ngModelChange)="selectionner($event)" [ngModel]="pphSelectionne()">
-      @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }} — {{ p.semaine }}</option> }
-    </select>
+  <div class="cpl-hero-droite">
+    <label class="cpl-choix">
+      <span>Plan</span>
+      <select class="cpl-select" aria-label="Choisir un plan"
+              [ngModel]="plan()?.referencePPH ?? ''" (ngModelChange)="selectionner($event)">
+        <option value="" disabled>— Choisir un plan —</option>
+        @for (p of plans(); track p.id) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ libelleStatut(p.statut) }}</option>
+        }
+      </select>
+    </label>
   </div>
-</div>
+</header>
+
+@if (message()) {
+  <div class="cpl-message" role="status">
+    <i class="fa-solid fa-circle-check"></i> <span>{{ message() }}</span>
+    <button class="cpl-icone" aria-label="Fermer" (click)="message.set('')"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+}
+@if (erreur()) {
+  <div class="cpl-message cpl-message-erreur" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i> <span>{{ erreur() }}</span>
+    <button class="cpl-icone" aria-label="Fermer" (click)="erreur.set('')"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+}
 
 @if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else {
-  @if (pphSelectionne(); as p) {
-
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Avancement global</div><div class="kpi-val">{{ avancementGlobal() }}%</div></div></div>
-    <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Fûts prévus (semaine)</div><div class="kpi-val">{{ totalRessourcesSemaine().futs }}</div></div></div>
-    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poudre totale prévue</div><div class="kpi-val">{{ totalRessourcesSemaine().poudreTotale | number:'1.1-1' }} kg</div></div></div>
+  <div class="cpl-squelette"></div>
+  <div class="cpl-squelette cpl-squelette-court"></div>
+} @else if (!plan()) {
+  <div class="cpl-vide">
+    <div class="cpl-vide-ico"><i class="fa-solid fa-calendar-xmark"></i></div>
+    <h2>Aucun plan de production</h2>
+    <p>Un plan apparaît ici dès qu'un bon de commande est validé.</p>
   </div>
+} @else if (plan()) { @let p = plan()!;
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production — {{ p.dateDebut }} → {{ p.dateFin }}</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Jour</th><th>Maïs (kg)</th><th>Soja (kg)</th><th>Arachide (kg)</th><th>Poudre totale (kg)</th><th>Fûts prévus</th><th>Maïs/fût</th><th>Soja/fût</th><th>Arachide/fût</th><th>Sachets prévus</th><th>Couvercles prévus</th></tr></thead>
-        <tbody>
-          @for (j of p.repartitionJours; track j.dateJour) {
-            <tr>
-              <td><strong>{{ j.dateJour }}</strong></td>
-              <td>{{ j.poudreMaisKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreSojaKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreArachideKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreTotaleKg | number:'1.1-1' }}</td>
-              <td>{{ j.futsPrevus }}</td>
-              <td>{{ j.poudreMaisParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.poudreSojaParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.poudreArachideParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.sachetsPrevus }}</td>
-              <td>{{ j.couverclesPrevus }}</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="11" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune répartition journalière définie</td></tr>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="cpl-kpis">
+    <div class="cpl-kpi cpl-kpi-av">
+      <span class="cpl-kpi-lbl">Avancement</span>
+      <span class="cpl-kpi-val">{{ avancement() }}<small>%</small></span>
+      <div class="cpl-barre"><div class="cpl-barre-fill" [style.width.%]="avancement()"></div></div>
+      <span class="cpl-kpi-meta">{{ realiseTotal() }} réalisés sur {{ objectifTotal() }} prévus</span>
+    </div>
+    <div class="cpl-kpi">
+      <span class="cpl-kpi-lbl">Produits planifiés</span>
+      <span class="cpl-kpi-val">{{ lignes().length }}</span>
+      <span class="cpl-kpi-meta">objectif total : {{ objectifTotal() }}</span>
+    </div>
+    <div class="cpl-kpi">
+      <span class="cpl-kpi-lbl">Fûts prévus</span>
+      <span class="cpl-kpi-val">{{ futsTotal() | number:'1.0-1' }}</span>
+      <span class="cpl-kpi-meta">fûts de 50 kg sur la semaine</span>
+    </div>
+    <div class="cpl-kpi">
+      <span class="cpl-kpi-lbl">Matières prévues</span>
+      <span class="cpl-kpi-val">{{ matieresTotalKg() | number:'1.0-1' }}<small> kg</small></span>
+      <span class="cpl-kpi-meta">{{ matieresResume().length }} matière(s)</span>
+    </div>
+  </section>
+
+  <!-- ═══ CALENDRIER ═══ -->
+  <section class="cpl-carte">
+    <header class="cpl-carte-tete">
+      <h2><i class="fa-solid fa-calendar"></i> Calendrier de production</h2>
+      <span class="cpl-carte-note">Hauteur proportionnelle aux matières du jour</span>
+    </header>
+
+    @if (jours().length) {
+      <div class="cpl-jours">
+        @for (j of jours(); track trackJour($index, j)) {
+          <article class="cpl-jour">
+            <div class="cpl-jour-barre">
+              <div class="cpl-jour-fill" [style.height.%]="hauteurJour(j)"></div>
+            </div>
+            <div class="cpl-jour-info">
+              <span class="cpl-jour-date">{{ libelleJour(j.dateJour) }}</span>
+              <span class="cpl-jour-kg mono">{{ totalKg(j.besoinsMatieresPremiere) | number:'1.1-1' }} kg</span>
+              <span class="cpl-jour-sub">{{ j.futsPrevus | number:'1.0-1' }} fût(s)</span>
+              <span class="cpl-jour-sub">{{ emballageJour(j) | number:'1.0-0' }} emballage(s)</span>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (matieresResume().length) {
+        <ul class="cpl-matieres">
+          @for (m of matieresResume(); track m.nom) {
+            <li><span>{{ m.nom }}</span><strong class="mono">{{ m.quantite | number:'1.1-2' }} kg</strong></li>
           }
-        </tbody>
-      </table>
-    </div>
-  </div>
+        </ul>
+      }
+    } @else {
+      <p class="cpl-carte-vide">Ce plan n'a pas encore de répartition journalière.</p>
+    }
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-sliders"></i> Ajustement des objectifs par produit</h2></div>
-    <div style="padding: var(--sp-4)">
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Produit</th><th>Objectif semaine (modifiable)</th><th>Réalisé</th></tr></thead>
-          <tbody>
-            @for (l of lignesEdition; track l.codeProduit; let i = $index) {
-              <tr>
-                <td>{{ l.codeProduit }}</td>
-                <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:120px"></td>
-                <td>{{ p.lignes[i]?.productionRealisee ?? 0 }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+    <details class="cpl-details">
+      <summary>Voir le détail des besoins par jour</summary>
+      <app-besoins-par-jour [repartition]="jours()" />
+    </details>
+  </section>
+
+  <!-- ═══ OBJECTIFS ═══ -->
+  <section class="cpl-carte">
+    <header class="cpl-carte-tete">
+      <h2><i class="fa-solid fa-sliders"></i> Objectifs par produit</h2>
+      @if (!modifiable()) { <span class="cpl-carte-note">Plan clôturé : lecture seule</span> }
+    </header>
+
+    @if (lignes().length) {
+      <div class="cpl-objectifs">
+        @for (l of lignes(); track l.codeProduit) {
+          <article class="cpl-objectif" [class.cpl-objectif-modifie]="l.objectif !== l.objectifInitial">
+            <div class="cpl-objectif-tete">
+              <div>
+                <div class="cpl-code mono">{{ l.codeProduit }}</div>
+                <div class="cpl-nom">{{ l.nomProduit }}</div>
+              </div>
+              @if (l.objectif !== l.objectifInitial) {
+                <span class="cpl-delta" [class.cpl-delta-hausse]="l.objectif > l.objectifInitial">
+                  {{ l.objectif > l.objectifInitial ? '+' : '' }}{{ (l.objectif - l.objectifInitial) }}
+                </span>
+              }
+            </div>
+
+            <div class="cpl-objectif-progres">
+              <div class="cpl-barre cpl-barre-fine">
+                <div class="cpl-barre-fill" [class.cpl-ok]="progression(l.productionRealisee, l.objectif) >= 100"
+                     [style.width.%]="progression(l.productionRealisee, l.objectif)"></div>
+              </div>
+              <span class="mono cpl-pct">{{ l.productionRealisee }} / {{ l.objectif }}</span>
+            </div>
+
+            <label class="cpl-champ">
+              <span>Objectif de la semaine</span>
+              <div class="cpl-champ-ligne">
+                <button class="cpl-pas" aria-label="Diminuer" [disabled]="!modifiable() || l.objectif <= 1"
+                        (click)="majObjectif(l.codeProduit, l.objectif - 1)">−</button>
+                <input type="number" min="1" class="cpl-input mono" [disabled]="!modifiable()"
+                       [ngModel]="l.objectif" (ngModelChange)="majObjectif(l.codeProduit, $event)" [name]="'obj-' + l.codeProduit">
+                <button class="cpl-pas" aria-label="Augmenter" [disabled]="!modifiable()"
+                        (click)="majObjectif(l.codeProduit, l.objectif + 1)">+</button>
+              </div>
+            </label>
+          </article>
+        }
       </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" (click)="enregistrerAjustements()"><i class="fa-solid fa-check"></i> Enregistrer les ajustements</button>
+    } @else {
+      <p class="cpl-carte-vide">Aucun produit dans ce plan.</p>
+    }
+  </section>
+
+  <!-- ═══ BARRE D'ENREGISTREMENT ═══ -->
+  @if (modifie()) {
+    <div class="cpl-barre-action" role="region" aria-label="Enregistrer les objectifs">
+      <span><i class="fa-solid fa-pen"></i> {{ nbModifies() }} objectif(s) modifié(s)</span>
+      <div class="cpl-barre-boutons">
+        <button class="cpl-btn cpl-btn-fantome" (click)="annuler()" [disabled]="enregistrement()">Annuler</button>
+        <button class="cpl-btn cpl-btn-primaire" (click)="enregistrer()" [disabled]="enregistrement() || !modifiable()">
+          @if (enregistrement()) { <span class="cpl-spinner"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-check"></i> Enregistrer }
+        </button>
       </div>
     </div>
-  </div>
-
-  } @else {
-    <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun PPH en cours à planifier</div>
   }
 }

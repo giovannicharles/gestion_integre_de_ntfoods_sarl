@@ -1,99 +1,289 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-book ph-ico"></i>
+<div class="rj">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="rj-hero">
+  <div class="rj-hero-gauche">
+    <i class="fa-solid fa-book rj-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Registre Journalier des Employés</h1>
-      <p class="ph-sub">Présence, poste, quantité produite, date, PPH</p>
+      <div class="rj-kicker">Responsable de salle · Registre</div>
+      <h1 class="rj-hero-titre">Registre journalier des employés</h1>
+      <p class="rj-hero-sous">Présence, poste et quantité réalisée, consultés sur la période choisie.</p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary" (click)="exporterCsv()"><i class="fa-solid fa-download"></i> Exporter CSV</button>
+  <div class="rj-hero-choix">
+    <label class="rj-champ">
+      <span class="rj-lbl">Du</span>
+      <input class="rj-select" type="date" [ngModel]="debut()" (ngModelChange)="debut.set($event)" />
+    </label>
+    <label class="rj-champ">
+      <span class="rj-lbl">Au</span>
+      <input class="rj-select" type="date" [ngModel]="fin()" (ngModelChange)="fin.set($event)" />
+    </label>
+    <button class="rj-bouton rj-bouton-blanc" (click)="charger()">
+      <i class="fa-solid fa-arrows-rotate"></i> Actualiser
+    </button>
   </div>
-</div>
+</header>
 
-<div class="gap-note">
-  <i class="fa-solid fa-circle-info"></i>
-  <div>Pas d'endpoint d'export PDF/Excel dédié au registre journalier — export CSV généré côté client à partir des données réelles.</div>
-</div>
-
-@if (registreAujourdhui()) {
-  <div class="card">
-    <div class="toolbar-row">
-      <strong>Registre d'aujourd'hui — {{ registreAujourdhui()!.referencePPH }}</strong>
-      @if (!modeCorrection()) {
-        <button class="btn btn-secondary btn-sm" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="demarrerCorrection()"><i class="fa-solid fa-pen"></i> Corriger</button>
-      }
-    </div>
-
-    @if (message()) {
-      <div class="gap-note">{{ message() }}</div>
-    }
-
-    @if (modeCorrection()) {
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Matricule</th><th>Nom</th><th>Poste</th><th>Présent</th><th>Heure arrivée</th><th>Quantité</th><th>Unité</th><th></th></tr></thead>
-          <tbody>
-            @for (l of lignesCorrection(); track $index) {
-              <tr>
-                <td><input class="input" [ngModel]="l.matriculeEmploye" (ngModelChange)="l.matriculeEmploye = $event"></td>
-                <td><input class="input" [ngModel]="l.nomEmploye" (ngModelChange)="l.nomEmploye = $event"></td>
-                <td>
-                  <select class="input" [ngModel]="l.poste" (ngModelChange)="l.poste = $event">
-                    <option value="">—</option>
-                    @for (c of codesPoste(); track c.code) {
-                      <option [value]="c.code">{{ c.libelle }}</option>
-                    }
-                  </select>
-                </td>
-                <td><input type="checkbox" [ngModel]="l.present" (ngModelChange)="l.present = $event"></td>
-                <td><input class="input" placeholder="HH:mm" [ngModel]="l.heureArrivee" (ngModelChange)="l.heureArrivee = $event"></td>
-                <td><input type="number" class="input" [ngModel]="l.qteRealisee" (ngModelChange)="l.qteRealisee = $event"></td>
-                <td><input class="input" [ngModel]="l.unite" (ngModelChange)="l.unite = $event"></td>
-                <td><button class="btn btn-ghost btn-sm" (click)="retirerLigneCorrection($index)"><i class="fa-solid fa-trash"></i></button></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="toolbar-row">
-        <button class="btn btn-secondary btn-sm" (click)="ajouterLigneCorrection()"><i class="fa-solid fa-plus"></i> Ajouter un employé</button>
-        <button class="btn btn-primary btn-sm" [disabled]="enregistrementEnCours()" (click)="enregistrerCorrection()">Enregistrer la correction</button>
-        <button class="btn btn-ghost btn-sm" (click)="annulerCorrection()">Annuler</button>
-      </div>
-    }
+@if (sessionExpiree()) {
+  <div class="rj-alerte rj-alerte-erreur">
+    <i class="fa-solid fa-lock"></i><span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rj-lien">Se reconnecter</a>
+  </div>
+} @else if (erreur()) {
+  <div class="rj-alerte rj-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="rj-lien" (click)="erreur.set('')">Fermer</button>
   </div>
 }
 
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input" placeholder="Rechercher un employé..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
-    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+@if (registreAujourdhuiManquant()) {
+  <div class="rj-alerte rj-alerte-info">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>Aucun registre n'a encore été créé pour aujourd'hui. La saisie se fait depuis une autre page, pré-remplie avec l'affectation du jour.</span>
+    <a routerLink="/production/employes" class="rj-lien">Créer le registre du jour</a>
   </div>
+}
 
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Date</th><th>PPH</th><th>Employé</th><th>Poste</th><th>Présent</th><th>Quantité produite</th></tr></thead>
+@if (chargement()) {
+  <div class="rj-squelette"></div>
+} @else {
+
+  <!-- ═══ CORRECTION DU REGISTRE DU JOUR ═══ -->
+  @if (registreDuJour(); as rj) {
+    <section class="rj-carte rj-carte-correction">
+      <header class="rj-carte-tete">
+        <div class="rj-titre">
+          <span class="rj-numero rj-numero-correction"><i class="fa-solid fa-pen-to-square"></i></span>
+          <div>
+            <h3>Registre d'aujourd'hui — {{ rj.referencePPH }}</h3>
+            <span class="rj-muet">
+              {{ rj.nbPresents }} présent(s), {{ rj.nbAbsents }} absent(s) · corrigible jusqu'à minuit, après quoi il devient définitif.
+            </span>
+          </div>
+        </div>
+        @if (!correctionOuverte()) {
+          <button class="rj-bouton rj-bouton-secondaire" (click)="ouvrirCorrection()">
+            <i class="fa-solid fa-pen"></i> Corriger
+          </button>
+        }
+      </header>
+
+      @if (correctionOuverte()) {
+        @if (erreurCorrection()) {
+          <div class="rj-alerte rj-alerte-erreur" style="margin: 0 20px 0; margin-top: 16px;">
+            <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreurCorrection() }}</span>
+          </div>
+        }
+
+        <div class="rj-lignes">
+          @for (l of lignesCorrection(); track $index; let i = $index) {
+            <article class="rj-ligne">
+              <div class="rj-ligne-tete">
+                <span class="rj-ligne-num">
+                  @if (l.matriculeEmploye) { {{ l.nomEmploye }} · <code class="rj-code">{{ l.matriculeEmploye }}</code> }
+                  @else { Nouvel employé }
+                </span>
+                <button class="rj-icone" (click)="retirerLigneCorrection(i)" aria-label="Retirer cette ligne"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+
+              <div class="rj-ligne-champs">
+                @if (!l.matriculeEmploye) {
+                  <label class="rj-champ">
+                    <span class="rj-lbl">Employé</span>
+                    <select class="rj-select-filtre" [ngModel]="l.matriculeEmploye" (ngModelChange)="choisirAgentCorrection(i, $event)">
+                      <option value="">— Choisir —</option>
+                      @for (a of agentsDisponibles(i); track a.matricule) {
+                        <option [value]="a.matricule">{{ a.nomComplet }} · {{ a.matricule }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+                <label class="rj-champ">
+                  <span class="rj-lbl">Poste</span>
+                  <select class="rj-select-filtre" [ngModel]="l.poste" (ngModelChange)="majLigneCorrection(i, 'poste', $event)">
+                    <option value="">— Choisir —</option>
+                    @for (p of postes(); track p.code) {
+                      <option [value]="p.code">{{ p.libelle }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="rj-champ rj-champ-presence">
+                  <span class="rj-lbl">Présence</span>
+                  <div class="rj-presence-choix">
+                    <button type="button" class="rj-presence-bouton" [class.rj-presence-bouton-actif]="l.present"
+                            (click)="majLigneCorrection(i, 'present', true)">Présent</button>
+                    <button type="button" class="rj-presence-bouton" [class.rj-presence-bouton-actif]="!l.present"
+                            (click)="majLigneCorrection(i, 'present', false)">Absent</button>
+                  </div>
+                </label>
+              </div>
+
+              @if (l.present) {
+                <div class="rj-ligne-champs">
+                  <label class="rj-champ">
+                    <span class="rj-lbl">Heure d'arrivée</span>
+                    <input class="rj-select-filtre" type="text" placeholder="08:00" [ngModel]="l.heureArrivee"
+                           (ngModelChange)="majLigneCorrection(i, 'heureArrivee', $event)" />
+                  </label>
+                  <label class="rj-champ">
+                    <span class="rj-lbl">Quantité réalisée</span>
+                    <input class="rj-select-filtre" type="number" min="0" step="0.1" [ngModel]="l.qteRealisee"
+                           (ngModelChange)="majLigneCorrection(i, 'qteRealisee', $event)" />
+                  </label>
+                  <label class="rj-champ">
+                    <span class="rj-lbl">Unité</span>
+                    <input class="rj-select-filtre" type="text" [ngModel]="l.unite"
+                           (ngModelChange)="majLigneCorrection(i, 'unite', $event)" />
+                  </label>
+                </div>
+              } @else {
+                <div class="rj-ligne-champs rj-ligne-champs-simple">
+                  <label class="rj-champ">
+                    <span class="rj-lbl">Motif d'absence</span>
+                    <input class="rj-select-filtre" type="text" placeholder="Maladie, congé…" [ngModel]="l.motifAbsence"
+                           (ngModelChange)="majLigneCorrection(i, 'motifAbsence', $event)" />
+                  </label>
+                </div>
+              }
+            </article>
+          }
+        </div>
+
+        @if (erreursCorrection().length > 0) {
+          <ul class="rj-erreurs">
+            @for (msg of erreursCorrection(); track msg) { <li>{{ msg }}</li> }
+          </ul>
+        }
+
+        <footer class="rj-carte-pied">
+          <button class="rj-bouton rj-bouton-secondaire" (click)="ajouterLigneCorrection()">
+            <i class="fa-solid fa-plus"></i> Ajouter un employé
+          </button>
+          <div class="rj-actions">
+            <button class="rj-bouton rj-bouton-secondaire" (click)="fermerCorrection()" [disabled]="envoiCorrection()">Annuler</button>
+            <button class="rj-bouton rj-bouton-primaire" (click)="enregistrerCorrection()" [disabled]="!peutEnregistrerCorrection()">
+              @if (envoiCorrection()) { <i class="fa-solid fa-spinner rj-tourne"></i> Enregistrement… }
+              @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer la correction }
+            </button>
+          </div>
+        </footer>
+      }
+    </section>
+  }
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="rj-kpis">
+    <div class="rj-kpi">
+      <span class="rj-lbl">Registres</span>
+      <strong class="rj-grand">{{ nbRegistres() }}</strong>
+      <span class="rj-muet">sur la période</span>
+    </div>
+    <div class="rj-kpi">
+      <span class="rj-lbl">Lignes employés</span>
+      <strong class="rj-grand">{{ nbLignes() }}</strong>
+      <span class="rj-muet">présences et absences cumulées</span>
+    </div>
+    <div class="rj-kpi rj-kpi-principal">
+      <span class="rj-lbl">Taux de présence</span>
+      @if (tauxPresence() !== null) {
+        <strong class="rj-grand">{{ tauxPresence() }} %</strong>
+        <span class="rj-muet">{{ nbPresents() }} présent(s) sur {{ nbLignes() }}</span>
+      } @else {
+        <strong class="rj-grand">—</strong>
+        <span class="rj-muet">aucune donnée sur la période</span>
+      }
+    </div>
+    <div class="rj-kpi">
+      <span class="rj-lbl">Résultat filtré</span>
+      <strong class="rj-grand">{{ lignesFiltrees().length }}</strong>
+      <span class="rj-muet">ligne(s) après recherche et filtres</span>
+    </div>
+  </section>
+
+  <!-- ═══ RECHERCHE ET TABLEAU ═══ -->
+  <section class="rj-carte">
+    <header class="rj-carte-tete">
+      <div class="rj-titre">
+        <span class="rj-numero"><i class="fa-solid fa-list"></i></span>
+        <div>
+          <h3>Présences et réalisations</h3>
+          <span class="rj-muet">L'export CSV porte sur les lignes affichées ci-dessous, après filtres.</span>
+        </div>
+      </div>
+      <button class="rj-bouton rj-bouton-primaire" (click)="exporterCsv()" [disabled]="lignesFiltrees().length === 0">
+        <i class="fa-solid fa-download"></i> Exporter CSV
+      </button>
+    </header>
+
+    <div class="rj-filtres">
+      <label class="rj-recherche">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" placeholder="Rechercher un employé…" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)" />
+      </label>
+      <select class="rj-select-filtre" [ngModel]="posteChoisi()" (ngModelChange)="posteChoisi.set($event)">
+        <option value="">Tous les postes</option>
+        @for (p of postesDisponibles(); track p) { <option [value]="p">{{ p }}</option> }
+      </select>
+      <select class="rj-select-filtre" [ngModel]="presenceChoisie()" (ngModelChange)="presenceChoisie.set($event)">
+        <option value="tous">Présents et absents</option>
+        <option value="present">Présents seulement</option>
+        <option value="absent">Absents seulement</option>
+      </select>
+      @if (recherche() || posteChoisi() || presenceChoisie() !== 'tous') {
+        <button class="rj-lien" (click)="reinitialiserFiltres()">Réinitialiser</button>
+      }
+    </div>
+
+    <div class="rj-table-wrap">
+      <table class="rj-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>PPH</th>
+            <th>Employé</th>
+            <th>Poste</th>
+            <th>Présence</th>
+            <th>Heure / motif</th>
+            <th class="rj-num">Quantité réalisée</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (l of lignesAplaties(); track l.matriculeEmploye + l.date) {
+          @for (l of lignesFiltrees(); track l.date + l.referencePPH + l.matriculeEmploye) {
             <tr>
               <td>{{ l.date | date:'dd/MM/yyyy' }}</td>
-              <td class="mono">{{ l.referencePPH }}</td>
-              <td>{{ l.nomEmploye }} <span class="text-muted">({{ l.matriculeEmploye }})</span></td>
+              <td><code class="rj-code">{{ l.referencePPH }}</code></td>
+              <td>
+                <strong>{{ l.nomEmploye }}</strong>
+                <div><code class="rj-code">{{ l.matriculeEmploye }}</code></div>
+              </td>
               <td>{{ l.poste }}</td>
-              <td><span [class]="l.present ? 'badge bg-success' : 'badge bg-red'">{{ l.present ? 'Présent' : 'Absent' }}</span></td>
-              <td>{{ l.qteRealisee }} {{ l.unite }}</td>
+              <td>
+                <span class="rj-presence" [class.rj-presence-oui]="l.present" [class.rj-presence-non]="!l.present">
+                  {{ l.present ? 'Présent' : 'Absent' }}
+                </span>
+              </td>
+              <td class="rj-muet">
+                @if (l.present) { {{ l.heureArrivee ?? '—' }} }
+                @else { {{ l.motifAbsence ?? '—' }} }
+              </td>
+              <td class="rj-num">
+                @if (l.present) { {{ l.qteRealisee | number:'1.0-1' }} <span class="rj-unite">{{ l.unite }}</span> }
+                @else { <span class="rj-muet">—</span> }
+              </td>
             </tr>
           } @empty {
-            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée sur la période</td></tr>
+            <tr>
+              <td colspan="7" class="rj-centre rj-muet">
+                @if (nbLignes() === 0) { Aucun registre sur cette période. }
+                @else { Aucune ligne ne correspond à la recherche. }
+              </td>
+            </tr>
           }
         </tbody>
       </table>
     </div>
-  }
+  </section>
+}
+
 </div>

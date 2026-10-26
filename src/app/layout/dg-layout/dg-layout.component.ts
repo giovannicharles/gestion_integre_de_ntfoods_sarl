@@ -102,6 +102,7 @@ export class DgLayoutComponent implements OnInit {
       label: 'Stock & Production', icon: 'fa-warehouse', children: [
         { label: 'Synthèse Stock & Production', icon: 'fa-warehouse', route: '/dg/supervision' },
         { label: 'Seuils de réapprovisionnement', icon: 'fa-gauge-high', route: '/dg/seuils' },
+        { label: "Types d'emballage", icon: 'fa-box-open', route: '/dg/types-emballage' },
       ]
     },
     {

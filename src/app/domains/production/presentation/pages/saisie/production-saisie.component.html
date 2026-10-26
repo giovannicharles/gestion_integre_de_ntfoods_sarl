@@ -1,229 +1,301 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-pen-to-square ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="rj-hero">
+  <div class="rj-hero-gauche">
+    <div class="rj-hero-ico"><i class="fa-solid fa-book-open"></i></div>
     <div>
-      <h1 class="ph-title">Saisie Journalière</h1>
-      <p class="ph-sub">Registres broyage et dosage — {{ today | date:'dd MMMM yyyy' }}</p>
+      <div class="rj-hero-kicker">
+        Production
+        @if (lectureSeule()) { <span class="rj-tag"><i class="fa-solid fa-eye"></i> Consultation</span> }
+      </div>
+      <h1 class="rj-hero-titre">Registres journaliers</h1>
+      <p class="rj-hero-sous">
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }} }
+        @else { Broyage, dosage et affectations de la journée }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
-  </div>
-</div>
 
-@if (message()) {
-  <div class="alert alert-info">{{ message() }}</div>
-}
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-gear"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Broyé aujourd'hui</div>
-      <div class="kpi-val">{{ totalBroyeAujourd_hui() }} kg</div>
-      <div class="kpi-meta">production nette</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-fill-drip"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Fûts dosés aujourd'hui</div>
-      <div class="kpi-val">{{ totalFuts() }}</div>
-      <div class="kpi-meta">unités dosées</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-arrow-trend-down"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Perte moyenne broyage</div>
-      <div class="kpi-val">{{ perteMoyenne() }}%</div>
-      <div class="kpi-meta">sur {{ broyage().length }} sessions</div>
-    </div>
-  </div>
-</div>
-
-<!-- BROYAGE -->
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-gears"></i> Registre Broyage</h2>
-    <button class="btn btn-primary btn-sm" (click)="showFormBroyage.set(!showFormBroyage())">
-      <i class="fa-solid fa-plus"></i> Nouvelle Saisie Broyage
+  <div class="rj-jour" role="group" aria-label="Choix du jour">
+    <button class="rj-bouton rj-bouton-verre" (click)="naviguer(-1)" [disabled]="chargement()" aria-label="Jour précédent">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <input type="date" class="rj-date" [value]="jour()" [max]="aujourdhui"
+           aria-label="Date du registre" (change)="allerA($any($event.target).value)">
+    <button class="rj-bouton rj-bouton-verre" (click)="naviguer(1)" [disabled]="chargement() || estAujourdhui()" aria-label="Jour suivant">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    @if (!estAujourdhui()) {
+      <button class="rj-bouton rj-bouton-verre" (click)="naviguer(0)">Aujourd'hui</button>
+    }
+    <button class="rj-bouton rj-bouton-blanc" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.rj-tourne]="chargement()"></i>
     </button>
   </div>
+</header>
 
-  @if (showFormBroyage()) {
-    <div class="form-placeholder">
-      <i class="fa-solid fa-file-pen"></i>
-      Formulaire de saisie broyage — à brancher sur le service de production.
-      <button class="btn btn-ghost btn-sm" (click)="showFormBroyage.set(false)">Fermer</button>
-    </div>
-  }
-
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Chef machiniste</th>
-          <th>Type poudre</th>
-          <th>Objectif (kg)</th>
-          <th>Quantité nette (kg)</th>
-          <th>% Pertes</th>
-          <th>Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of broyage(); track r.id) {
-          <tr>
-            <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ r.matriculeChefMachiniste }}</strong></td>
-            <td>{{ r.typePoudreLibelle }}</td>
-            <td>{{ r.objectifJournalierKg }}</td>
-            <td class="txt-success"><strong>{{ r.quantiteNetteBroyeeKg ?? 0 }}</strong></td>
-            <td>{{ r.pctPertes != null ? (r.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
-            <td>
-              <span [class]="r.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ r.statut }}</span>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune session de broyage aujourd'hui</td></tr>
-        }
-      </tbody>
-    </table>
+@if (message(); as m) {
+  <div class="rj-notif" [class.rj-notif-erreur]="m.type === 'erreur'" role="status">
+    <i class="fa-solid" [class.fa-circle-check]="m.type === 'ok'" [class.fa-triangle-exclamation]="m.type === 'erreur'"></i>
+    <span>{{ m.texte }}</span>
+    <button class="rj-icone" aria-label="Fermer" (click)="message.set(null)"><i class="fa-solid fa-xmark"></i></button>
   </div>
-</div>
-
-<!-- AFFECTATIONS -->
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-users-gear"></i> Affectations du jour</h2>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr><th>PPH</th><th>Date</th><th>Postes</th><th>Saisies</th><th>Statut</th><th>Actions</th></tr>
-      </thead>
-      <tbody>
-        @for (a of affectations(); track a.id) {
-          <tr>
-            <td><strong>{{ a.referencePPH }}</strong></td>
-            <td>{{ a.date | date:'dd/MM/yyyy' }}</td>
-            <td>{{ a.lignes.length }} postes</td>
-            <td>{{ a.saisies.length }} saisies</td>
-            <td><span class="badge bg-neutral">{{ a.statut }}</span></td>
-            <td>
-              <div class="row-actions">
-                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(a)">Détail</button>
-                @if (a.statut !== 'VALIDEE') {
-                  <button class="btn btn-sm btn-primary" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'ADMIN']" (click)="validerAffectation(a.id)">Valider</button>
-                }
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune affectation aujourd'hui</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-@if (selectedAffectation()) {
-<div class="modal-overlay" (click)="selectedAffectation.set(null)">
-  <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3>Détail affectation {{ selectedAffectation()!.referencePPH }}</h3></div>
-    <div class="modal-body">
-      <h4>Postes</h4>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Poste</th><th>Effectif réf.</th><th>Effectif réel</th><th>Objectif ajusté</th><th>Employés</th></tr></thead>
-          <tbody>
-            @for (l of selectedAffectation()!.lignes; track l.codePoste) {
-              <tr>
-                <td><strong>{{ l.libellePoste }}</strong></td>
-                <td>{{ l.effectifReference }}</td>
-                <td>{{ l.effectifReel }}</td>
-                <td>{{ l.objectifAjuste }} {{ l.unite }}</td>
-                <td>{{ l.matriculesEmployes.join(', ') }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <h4 style="margin-top:var(--sp-3)">Saisies</h4>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Poste</th><th>Qté réalisée</th><th>%</th><th>Unité</th></tr></thead>
-          <tbody>
-            @for (s of selectedAffectation()!.saisies; track s.codePoste) {
-              <tr>
-                <td><strong>{{ s.libellePoste }}</strong></td>
-                <td>{{ s.quantiteRealisee }}</td>
-                <td>{{ s.pctRealisation }}%</td>
-                <td>{{ s.unite }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="selectedAffectation.set(null)">Fermer</button>
-    </div>
-  </div>
-</div>
 }
-<!-- DOSAGE -->
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-fill-drip"></i> Registre Dosage</h2>
-    <button class="btn btn-primary btn-sm" (click)="showFormDosage.set(!showFormDosage())">
-      <i class="fa-solid fa-plus"></i> Nouvelle Saisie Dosage
-    </button>
+
+<!-- ═══ ERREURS PAR REGISTRE ═══ -->
+@if (erreurs()[registre()]; as msg) {
+  <div class="rj-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ msg }}</span>
+    <button class="rj-bouton rj-bouton-petit rj-bouton-rouge" (click)="charger()">Réessayer</button>
   </div>
+}
 
-  @if (showFormDosage()) {
-    <div class="form-placeholder">
-      <i class="fa-solid fa-file-pen"></i>
-      Formulaire de saisie dosage — à brancher sur le service de production.
-      <button class="btn btn-ghost btn-sm" (click)="showFormDosage.set(false)">Fermer</button>
-    </div>
-  }
+@if (chargement() && !derniereMaj()) {
+  <div class="rj-squelette"></div>
+  <div class="rj-squelette rj-squelette-court"></div>
+} @else {
+<div class="rj-contenu" [class.rj-attente]="chargement()" [attr.aria-busy]="chargement()">
 
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Agent Doseur</th>
-          <th>Fûts produits</th>
-          <th>Fûts nets</th>
-          <th>Machines</th>
-          <th>Statut</th>
-          <th>Matières</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (r of dosage(); track r.id) {
-          <tr>
-            <td>{{ r.date | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ r.matriculeAgentDoseur }}</strong></td>
-            <td class="txt-success"><strong>{{ r.nbFutsProduits }}</strong></td>
-            <td>{{ r.nbFutsNets }}</td>
-            <td>{{ r.machinesMobilisees.join(', ') || '—' }}</td>
-            <td>
-              <span [class]="r.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ r.cloturee ? 'Clôturée' : 'Ouverte' }}</span>
-            </td>
-            <td>
-              @for (m of r.matieresUtilisees; track m.typeMatiere) {
-                <span class="matiere-tag">{{ m.typeMatiere }}: {{ m.quantiteKg }} kg</span>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="rj-kpis">
+    @for (k of kpis(); track k.libelle) {
+      <div class="rj-kpi" [class.rj-kpi-alerte]="k.alerte">
+        <span class="rj-kpi-lbl">{{ k.libelle }}</span>
+        <span class="rj-kpi-val">{{ k.valeur }}</span>
+        <span class="rj-kpi-meta">{{ k.detail }}</span>
+      </div>
+    }
+  </section>
+
+  <!-- ═══ REGISTRES ═══ -->
+  <section class="rj-carte">
+    <nav class="rj-onglets" role="tablist" aria-label="Registres">
+      @for (r of registres; track r.code) {
+        <button class="rj-onglet" role="tab" [attr.aria-selected]="registre() === r.code"
+                [class.rj-onglet-actif]="registre() === r.code" (click)="changerRegistre(r.code)">
+          <i class="fa-solid" [class]="'fa-solid ' + r.icone"></i>
+          <span>{{ r.libelle }}</span>
+          @if (erreurs()[r.code]) { <i class="fa-solid fa-triangle-exclamation rj-onglet-alerte" title="Erreur de chargement"></i> }
+        </button>
+      }
+    </nav>
+
+    <header class="rj-carte-tete">
+      <div class="rj-pilles" role="tablist" aria-label="Filtrer par statut">
+        @for (f of pillesStatut(); track f.code) {
+          <button class="rj-pille" role="tab" [attr.aria-selected]="statut() === f.code"
+                  [class.rj-pille-active]="statut() === f.code" (click)="statut.set(f.code)">
+            {{ f.libelle }} <span class="rj-pille-n">{{ compteStatut(f.code) }}</span>
+          </button>
+        }
+      </div>
+      <input type="search" class="rj-recherche" placeholder="PPH, matricule, poudre…" aria-label="Rechercher"
+             [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+    </header>
+
+    <!-- ── Broyage ── -->
+    @if (registre() === 'broyage') {
+      @if (broyageFiltres().length) {
+        <div class="tbl-wrap">
+          <table class="rj-table">
+            <thead>
+              <tr>
+                <th>PPH</th>
+                <th>Poudre</th>
+                <th>Chef machiniste</th>
+                <th class="num">Objectif</th>
+                <th class="num">Net broyé</th>
+                <th class="num">% pertes</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of broyageFiltres(); track s.id) {
+                <tr>
+                  <td><span class="rj-code mono">{{ s.referencePPH }}</span></td>
+                  <td class="rj-nom">{{ s.typePoudreLibelle }}</td>
+                  <td class="mono rj-muet">{{ s.matriculeChefMachiniste }}</td>
+                  <td class="num mono">{{ formaterKg(s.objectifJournalierKg) }} kg</td>
+                  <td class="num mono rj-nom">{{ formaterKg(s.quantiteNetteBroyeeKg ?? 0) }} kg</td>
+                  <td class="num mono" [class.rj-ecart]="(s.pctPertes ?? 0) > 5">{{ s.pctPertes != null ? formaterPct(s.pctPertes) : '—' }}</td>
+                  <td>
+                    <span class="rj-statut" [class.rj-statut-ok]="s.statut === 'CLOTUREE'" [class.rj-statut-attente]="s.statut !== 'CLOTUREE'">
+                      {{ s.statut === 'CLOTUREE' ? 'Clôturée' : 'Ouverte' }}
+                    </span>
+                    @if (s.journeeValidee) { <span class="rj-statut rj-statut-info">Validée</span> }
+                  </td>
+                </tr>
               }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune session de dosage aujourd'hui</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="rj-vide">
+          <i class="fa-solid fa-gears"></i>
+          <h3>Aucune session de broyage</h3>
+          <p>{{ broyage().length ? 'Aucune session ne correspond aux filtres.' : 'Aucune session de broyage pour ce jour.' }}</p>
+        </div>
+      }
+    }
+
+    <!-- ── Dosage ── -->
+    @if (registre() === 'dosage') {
+      @if (dosageFiltres().length) {
+        <div class="tbl-wrap">
+          <table class="rj-table">
+            <thead>
+              <tr>
+                <th>PPH</th>
+                <th>Agent doseur</th>
+                <th class="num">Fûts produits</th>
+                <th class="num">Fûts nets</th>
+                <th>Machines</th>
+                <th>Matières</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of dosageFiltres(); track s.id) {
+                <tr>
+                  <td><span class="rj-code mono">{{ s.referencePPH }}</span></td>
+                  <td class="mono rj-muet">{{ s.matriculeAgentDoseur }}</td>
+                  <td class="num mono">{{ s.nbFutsProduits }}</td>
+                  <td class="num mono rj-nom">{{ s.nbFutsNets }}</td>
+                  <td class="rj-muet">{{ s.machinesMobilisees.join(', ') || '—' }}</td>
+                  <td>
+                    @for (m of s.matieresUtilisees; track m.typeMatiere) {
+                      <span class="rj-tag-matiere">{{ m.typeMatiere }} · {{ formaterKg(m.quantiteKg) }} kg</span>
+                    } @empty { <span class="rj-muet">—</span> }
+                  </td>
+                  <td>
+                    <span class="rj-statut" [class.rj-statut-ok]="s.cloturee" [class.rj-statut-attente]="!s.cloturee">{{ s.cloturee ? 'Clôturé' : 'Ouvert' }}</span>
+                    @if (s.enPause) { <span class="rj-statut rj-statut-alerte">En pause</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="rj-vide">
+          <i class="fa-solid fa-fill-drip"></i>
+          <h3>Aucune session de dosage</h3>
+          <p>{{ dosage().length ? 'Aucune session ne correspond aux filtres.' : 'Aucune session de dosage pour ce jour.' }}</p>
+        </div>
+      }
+    }
+
+    <!-- ── Affectations ── -->
+    @if (registre() === 'affectations') {
+      @if (affectationsFiltrees().length) {
+        <div class="tbl-wrap">
+          <table class="rj-table">
+            <thead>
+              <tr>
+                <th>PPH</th>
+                <th>Responsable</th>
+                <th class="num">Postes</th>
+                <th class="num">Saisies</th>
+                <th>Statut</th>
+                <th class="rj-actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of affectationsFiltrees(); track a.id) {
+                <tr>
+                  <td><span class="rj-code mono">{{ a.referencePPH }}</span></td>
+                  <td class="mono rj-muet">{{ a.matriculeAgent }}</td>
+                  <td class="num mono">{{ a.lignes.length }}</td>
+                  <td class="num mono">{{ a.saisies.length }}</td>
+                  <td>
+                    <span class="rj-statut" [class.rj-statut-ok]="a.statut === 'VALIDEE'" [class.rj-statut-attente]="a.statut !== 'VALIDEE'">{{ libelleStatutAffectation(a.statut) }}</span>
+                  </td>
+                  <td>
+                    <div class="rj-actions">
+                      <button class="rj-bouton rj-bouton-petit rj-bouton-contour" (click)="ouvrirDetail(a)">
+                        <i class="fa-solid fa-eye"></i> Détail
+                      </button>
+                      @if (peutValider() && a.statut !== 'VALIDEE') {
+                        <button class="rj-bouton rj-bouton-petit rj-bouton-primaire" (click)="validerAffectation(a)">
+                          <i class="fa-solid fa-circle-check"></i> Valider
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="rj-vide">
+          <i class="fa-solid fa-users-gear"></i>
+          <h3>Aucune affectation</h3>
+          <p>{{ affectations().length ? 'Aucune affectation ne correspond aux filtres.' : 'Aucune affectation pour ce jour.' }}</p>
+        </div>
+      }
+    }
+  </section>
 </div>
+}
+
+<!-- ═══ DÉTAIL D'UNE AFFECTATION ═══ -->
+@if (affectationDetail(); as a) {
+  <div class="rj-voile" (click)="fermerDetail()">
+    <aside class="rj-tiroir" role="dialog" aria-modal="true" aria-label="Détail de l'affectation" (click)="$event.stopPropagation()">
+      <header class="rj-tiroir-tete">
+        <div>
+          <div class="rj-hero-kicker">Affectation</div>
+          <h2 class="rj-tiroir-titre mono">{{ a.referencePPH }}</h2>
+          <span class="rj-muet">{{ a.date | date:'dd/MM/yyyy' }} · Responsable {{ a.matriculeAgent }}</span>
+        </div>
+        <button class="rj-icone" aria-label="Fermer" (click)="fermerDetail()"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+
+      <div class="rj-tiroir-corps">
+        <h3 class="rj-section">Postes et effectifs</h3>
+        <div class="tbl-wrap">
+          <table class="rj-table">
+            <thead><tr><th>Poste</th><th class="num">Effectif</th><th class="num">Objectif ajusté</th><th>Employés</th></tr></thead>
+            <tbody>
+              @for (l of a.lignes; track l.codePoste) {
+                <tr>
+                  <td class="rj-nom">{{ l.libellePoste }}</td>
+                  <td class="num mono" [class.rj-ecart]="l.effectifReel !== l.effectifReference">{{ l.effectifReel }} <span class="rj-muet">/ {{ l.effectifReference }}</span></td>
+                  <td class="num mono">{{ l.objectifAjuste }} <span class="rj-muet">{{ l.unite }}</span></td>
+                  <td class="rj-muet">{{ l.matriculesEmployes.join(', ') || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="rj-section">Réalisé</h3>
+        @if (a.saisies.length) {
+          <ul class="rj-realise">
+            @for (l of a.lignes; track l.codePoste) {
+              @if (saisiePourPoste(a, l.codePoste); as s) {
+                <li>
+                  <div class="rj-realise-tete"><span class="rj-nom">{{ s.libellePoste }}</span><strong class="mono">{{ s.quantiteRealisee }} {{ s.unite }}</strong></div>
+                  <div class="rj-barre"><div class="rj-barre-fill" [class.rj-ok]="s.pctRealisation >= 100" [style.width.%]="pourcentage(s.quantiteRealisee, s.objectifAjuste)"></div></div>
+                  <span class="rj-muet">sur {{ s.objectifAjuste }} {{ s.unite }} visés ({{ formaterPct(s.pctRealisation) }})</span>
+                </li>
+              }
+            }
+          </ul>
+        } @else {
+          <p class="rj-muet">Aucune saisie de réalisé pour cette affectation.</p>
+        }
+      </div>
+
+      <footer class="rj-tiroir-pied">
+        @if (peutValider() && a.statut !== 'VALIDEE') {
+          <button class="rj-bouton rj-bouton-primaire" (click)="validerAffectation(a); fermerDetail()">
+            <i class="fa-solid fa-circle-check"></i> Valider l'affectation
+          </button>
+        }
+        <button class="rj-bouton rj-bouton-contour" (click)="fermerDetail()">Fermer</button>
+      </footer>
+    </aside>
+  </div>
+}

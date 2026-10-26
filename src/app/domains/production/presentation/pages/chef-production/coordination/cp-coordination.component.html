@@ -1,94 +1,239 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-people-arrows ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="cc-hero">
+  <div class="cc-hero-gauche">
+    <div class="cc-hero-ico"><i class="fa-solid fa-people-arrows"></i></div>
     <div>
-      <h1 class="ph-title">Coordination des Acteurs</h1>
-      <p class="ph-sub">Activité du jour — Responsable Salle, Chef Machiniste, Agent Doseur</p>
+      <div class="cc-hero-kicker">Chef de Production</div>
+      <h1 class="cc-hero-titre">Coordination des acteurs</h1>
+      <p class="cc-hero-sous">
+        @if (derniereMaj(); as d) { Mise à jour à {{ d | date:'HH:mm' }} }
+        @else { Activité de la journée : salle, broyage et dosage }
+      </p>
     </div>
   </div>
-</div>
 
-<nav class="rp-tabs">
-  <button [class.active]="onglet()==='salle'" (click)="changerOnglet('salle')">Responsable Salle</button>
-  <button [class.active]="onglet()==='machiniste'" (click)="changerOnglet('machiniste')">Chef Machiniste</button>
-  <button [class.active]="onglet()==='doseur'" (click)="changerOnglet('doseur')">Agent Doseur</button>
+  <div class="cc-jour" role="group" aria-label="Choix du jour">
+    <button class="cc-bouton cc-bouton-verre" (click)="naviguer(-1)" [disabled]="chargement()" aria-label="Jour précédent">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <input type="date" class="cc-date" [value]="jour()" [max]="aujourdhui"
+           aria-label="Date de l'activité" (change)="allerA($any($event.target).value)">
+    <button class="cc-bouton cc-bouton-verre" (click)="naviguer(1)" [disabled]="chargement() || estAujourdhui()" aria-label="Jour suivant">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    @if (!estAujourdhui()) {
+      <button class="cc-bouton cc-bouton-verre" (click)="naviguer(0)">Aujourd'hui</button>
+    }
+    <button class="cc-bouton cc-bouton-blanc" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.cc-tourne]="chargement()"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ ONGLETS ═══ -->
+<nav class="cc-onglets" role="tablist" aria-label="Acteurs">
+  @for (o of onglets; track o.code) {
+    <button class="cc-onglet" role="tab" [attr.aria-selected]="onglet() === o.code"
+            [class.cc-onglet-actif]="onglet() === o.code" (click)="changerOnglet(o.code)">
+      <i class="fa-solid" [class]="'fa-solid ' + o.icone"></i>
+      <span>{{ o.libelle }}</span>
+      @if (erreurs()[o.code]) {
+        <i class="fa-solid fa-triangle-exclamation cc-onglet-alerte" title="Erreur de chargement"></i>
+      }
+    </button>
+  }
 </nav>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+@if (erreurOngletCourant(); as msg) {
+  <div class="cc-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ msg }}</span>
+    <button class="cc-bouton cc-bouton-petit cc-bouton-rouge" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement() && !derniereMaj()) {
+  <div class="cc-squelette"></div>
+  <div class="cc-squelette cc-squelette-court"></div>
 } @else {
+<div class="cc-contenu" [class.cc-attente]="chargement()" [attr.aria-busy]="chargement()">
 
-@if (onglet() === 'salle') {
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-user-gear"></i> Affectations du jour</h2></div>
-  @for (a of affectations(); track a.id) {
-    <div class="tbl-wrap" style="margin-bottom:var(--sp-3)">
-      <h4 style="padding: var(--sp-2) var(--sp-4) 0">{{ a.referencePPH }} — <span class="badge bg-orange">{{ a.statut }}</span></h4>
-      <table class="data-table">
-        <thead><tr><th>Poste</th><th>Effectif</th><th>Objectif ajusté</th><th>Réalisé</th></tr></thead>
-        <tbody>
-          @for (l of a.lignes; track l.codePoste) {
-            <tr>
-              <td>{{ l.libellePoste }}</td>
-              <td>{{ l.effectifReel }} / {{ l.effectifReference }}</td>
-              <td>{{ l.objectifAjuste }} {{ l.unite }}</td>
-              <td>{{ saisiePourPoste(a, l.codePoste) ?? '—' }}</td>
-            </tr>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="cc-kpis">
+    @for (k of kpis(); track k.libelle) {
+      <div class="cc-kpi" [class.cc-kpi-alerte]="k.alerte">
+        <span class="cc-kpi-lbl">{{ k.libelle }}</span>
+        <span class="cc-kpi-val">{{ k.valeur }}</span>
+        <span class="cc-kpi-meta">{{ k.detail }}</span>
+      </div>
+    }
+  </section>
+
+  <!-- ═══ FILTRES ═══ -->
+  <section class="cc-carte">
+    <header class="cc-carte-tete">
+      <div class="cc-pilles" role="tablist" aria-label="Filtrer par statut">
+        @for (f of pillesStatut(); track f.code) {
+          <button class="cc-pille" role="tab" [attr.aria-selected]="statut() === f.code"
+                  [class.cc-pille-active]="statut() === f.code" (click)="statut.set(f.code)">
+            {{ f.libelle }} <span class="cc-pille-n">{{ compteStatut(f.code) }}</span>
+          </button>
+        }
+      </div>
+      <input type="search" class="cc-recherche" placeholder="PPH, agent, poudre…" aria-label="Rechercher"
+             [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+    </header>
+
+    <!-- ── Responsable Salle : affectations ── -->
+    @if (onglet() === 'salle') {
+      @if (affectationsFiltrees().length) {
+        <div class="cc-affectations">
+          @for (a of affectationsFiltrees(); track a.id) {
+            <article class="cc-affectation">
+              <header class="cc-affectation-tete">
+                <div>
+                  <span class="cc-code mono">{{ a.referencePPH }}</span>
+                  <span class="cc-muet">Responsable : <span class="mono">{{ a.matriculeAgent }}</span></span>
+                </div>
+                <span class="cc-statut" [class.cc-statut-ok]="a.statut === 'VALIDEE'" [class.cc-statut-attente]="a.statut !== 'VALIDEE'">{{ libelleStatutAffectation(a.statut) }}</span>
+              </header>
+
+              <div class="tbl-wrap">
+                <table class="cc-table">
+                  <thead>
+                    <tr>
+                      <th>Poste</th>
+                      <th class="num">Effectif</th>
+                      <th class="num">Objectif ajusté</th>
+                      <th>Réalisé</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (l of a.lignes; track l.codePoste) {
+                      <tr>
+                        <td class="cc-nom">{{ l.libellePoste }}</td>
+                        <td class="num mono" [class.cc-ecart]="effectifEcart(l)">
+                          {{ l.effectifReel }} <span class="cc-muet">/ {{ l.effectifReference }}</span>
+                        </td>
+                        <td class="num mono">{{ l.objectifAjuste }} <span class="cc-muet">{{ l.unite }}</span></td>
+                        <td>
+                          @if (saisiePourPoste(a, l.codePoste); as s) {
+                            <div class="cc-progres">
+                              <div class="cc-barre"><div class="cc-barre-fill" [class.cc-ok]="s.pctRealisation >= 100" [style.width.%]="pourcentage(s.quantiteRealisee, s.objectifAjuste)"></div></div>
+                              <span class="mono cc-pct">{{ s.quantiteRealisee }} {{ s.unite }}</span>
+                            </div>
+                          } @else {
+                            <span class="cc-muet">Pas encore saisi</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </article>
           }
-        </tbody>
-      </table>
-    </div>
-  } @empty {
-    <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune affectation aujourd'hui</div>
-  }
-</div>
-}
+        </div>
+      } @else {
+        <div class="cc-vide">
+          <i class="fa-solid fa-user-gear"></i>
+          <h3>Aucune affectation</h3>
+          <p>{{ affectations().length ? 'Aucune affectation ne correspond aux filtres.' : 'Aucune affectation pour ce jour.' }}</p>
+        </div>
+      }
+    }
 
-@if (onglet() === 'machiniste') {
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Sessions de broyage du jour</h2></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>PPH</th><th>Type poudre</th><th>Objectif</th><th>Réalisé</th><th>Statut</th></tr></thead>
-      <tbody>
-        @for (s of sessionsBroyage(); track s.id) {
-          <tr>
-            <td class="mono">{{ s.referencePPH }}</td>
-            <td>{{ s.typePoudreLibelle }}</td>
-            <td>{{ s.objectifJournalierKg }} kg</td>
-            <td>{{ s.totalRealiseKg }} kg</td>
-            <td><span [class]="s.journeeValidee ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
-          </tr>
-        } @empty {
-          <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-}
+    <!-- ── Chef Machiniste : broyage ── -->
+    @if (onglet() === 'machiniste') {
+      @if (broyageFiltres().length) {
+        <div class="tbl-wrap">
+          <table class="cc-table">
+            <thead>
+              <tr>
+                <th>PPH</th>
+                <th>Poudre</th>
+                <th>Chef machiniste</th>
+                <th>Avancement</th>
+                <th class="num">Pertes</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of broyageFiltres(); track s.id) {
+                <tr>
+                  <td><span class="cc-code mono">{{ s.referencePPH }}</span></td>
+                  <td class="cc-nom">{{ s.typePoudreLibelle }}</td>
+                  <td class="mono cc-muet">{{ s.matriculeChefMachiniste }}</td>
+                  <td>
+                    <div class="cc-progres">
+                      <div class="cc-barre"><div class="cc-barre-fill" [class.cc-ok]="s.totalRealiseKg >= s.objectifJournalierKg" [style.width.%]="pourcentage(s.totalRealiseKg, s.objectifJournalierKg)"></div></div>
+                      <span class="mono cc-pct">{{ formaterKg(s.totalRealiseKg) }} / {{ formaterKg(s.objectifJournalierKg) }} kg</span>
+                    </div>
+                  </td>
+                  <td class="num mono">{{ s.pertesKg !== null ? formaterKg(s.pertesKg) + ' kg' : '—' }}</td>
+                  <td>
+                    <span class="cc-statut" [class.cc-statut-ok]="s.statut === 'CLOTUREE'" [class.cc-statut-attente]="s.statut !== 'CLOTUREE'">
+                      {{ s.statut === 'CLOTUREE' ? 'Clôturée' : 'Ouverte' }}
+                    </span>
+                    @if (s.journeeValidee) { <span class="cc-statut cc-statut-info">Validée</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="cc-vide">
+          <i class="fa-solid fa-gears"></i>
+          <h3>Aucune session de broyage</h3>
+          <p>{{ sessionsBroyage().length ? 'Aucune session ne correspond aux filtres.' : 'Aucune session de broyage pour ce jour.' }}</p>
+        </div>
+      }
+    }
 
-@if (onglet() === 'doseur') {
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flask"></i> Sessions de dosage du jour</h2></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>PPH</th><th>Agent</th><th>Fûts nets</th><th>Statut</th></tr></thead>
-      <tbody>
-        @for (s of sessionsDosage(); track s.id) {
-          <tr>
-            <td class="mono">{{ s.referencePPH }}</td>
-            <td>{{ s.matriculeAgentDoseur }}</td>
-            <td>{{ s.nbFutsNets }}</td>
-            <td><span [class]="s.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ s.cloturee ? 'Clôturée' : 'Ouverte' }}</span></td>
-          </tr>
-        } @empty {
-          <tr><td colspan="4" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
+    <!-- ── Agent Doseur : dosage ── -->
+    @if (onglet() === 'doseur') {
+      @if (dosageFiltres().length) {
+        <div class="tbl-wrap">
+          <table class="cc-table">
+            <thead>
+              <tr>
+                <th>PPH</th>
+                <th>Agent doseur</th>
+                <th class="num">Fûts produits</th>
+                <th class="num">Fûts nets</th>
+                <th class="num">Cassés</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of dosageFiltres(); track s.id) {
+                <tr [class.cc-ligne-alerte]="s.justificationEcart">
+                  <td><span class="cc-code mono">{{ s.referencePPH }}</span></td>
+                  <td class="mono cc-muet">{{ s.matriculeAgentDoseur }}</td>
+                  <td class="num mono">{{ s.nbFutsProduits }}</td>
+                  <td class="num mono cc-nom">{{ s.nbFutsNets }}</td>
+                  <td class="num mono" [class.cc-ecart]="s.nbFutsCasses > 0">{{ s.nbFutsCasses }}</td>
+                  <td>
+                    <span class="cc-statut" [class.cc-statut-ok]="s.cloturee" [class.cc-statut-attente]="!s.cloturee">
+                      {{ s.cloturee ? 'Clôturé' : 'Ouvert' }}
+                    </span>
+                    @if (s.enPause) { <span class="cc-statut cc-statut-alerte">En pause</span> }
+                    @if (s.validee) { <span class="cc-statut cc-statut-info">Validé</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="cc-vide">
+          <i class="fa-solid fa-flask"></i>
+          <h3>Aucune session de dosage</h3>
+          <p>{{ sessionsDosage().length ? 'Aucune session ne correspond aux filtres.' : 'Aucune session de dosage pour ce jour.' }}</p>
+        </div>
+      }
+    }
+  </section>
 </div>
-}
-
 }

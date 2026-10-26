@@ -59,10 +59,6 @@
 .info-item .value { font-size: 16px; font-weight: 700; color: var(--n900); }
 .modal-ft { padding: 16px 20px; border-top: 1px solid var(--n150); display: flex; justify-content: flex-end; background: var(--n50); }
 
-@media (max-width: 480px) {
-  .form-grid.mini { grid-template-columns: 1fr; }
-}
-
 /* ── Note « fûts à zéro » ── */
 .futs-zero-note { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; background: var(--y-gh); border: 1px solid var(--y-l); border-radius: var(--r-md, 12px); color: var(--y-d); font-size: 13px; }
 .futs-zero-note i { margin-top: 2px; }

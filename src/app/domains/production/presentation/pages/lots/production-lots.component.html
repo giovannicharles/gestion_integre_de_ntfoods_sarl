@@ -1,255 +1,388 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-boxes-packing ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="lo-hero">
+  <div class="lo-hero-gauche">
+    <div class="lo-hero-ico"><i class="fa-solid fa-boxes-packing"></i></div>
     <div>
-      <h1 class="ph-title">Lots & Conversion Produits Finis</h1>
-      <p class="ph-sub">Déclarations de production et validation stock</p>
+      <div class="lo-hero-kicker">
+        Produits finis
+        @if (!peutDeclarer()) { <span class="lo-tag"><i class="fa-solid fa-eye"></i> Consultation</span> }
+      </div>
+      <h1 class="lo-hero-titre">Lots de production</h1>
+      <p class="lo-hero-sous">
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }} }
+        @else { Déclaration des lots et validation par le stock }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary" (click)="ouvrirDeclarerLot()">
-      <i class="fa-solid fa-plus"></i> Déclarer Lot
+  <div class="lo-actions">
+    <button class="lo-bouton lo-bouton-verre" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.lo-tourne]="chargement()"></i>
     </button>
-  </div>
-</div>
-
-@if (message()) {
-  <div class="alert alert-info">{{ message() }}</div>
-}
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots déclarés (en attente)</div>
-      <div class="kpi-val">{{ nbDeclares() }}</div>
-      <div class="kpi-meta">en attente validation stock</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Validés par le Stock</div>
-      <div class="kpi-val">{{ nbValidesStock() }}</div>
-      <div class="kpi-meta">intégrés en inventaire</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-xmark"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Rejetés</div>
-      <div class="kpi-val">{{ nbRejetes() }}</div>
-      <div class="kpi-meta">non conformes</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total déclaré (kg)</div>
-      <div class="kpi-val">{{ totalKgDeclares() }} kg</div>
-      <div class="kpi-meta">masse totale produite</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-box"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Cartons</div>
-      <div class="kpi-val">{{ totalCartons() }}</div>
-      <div class="kpi-meta">total conditionné</div>
-    </div>
-  </div>
-</div>
-
-@if (lotsAValider().length > 0) {
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Lots en attente de validation stock</h2>
-    <span class="badge bg-orange badge-sm">{{ lotsAValider().length }} à traiter</span>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>N° Lot</th><th>Produit</th><th>PPH</th><th>Quantité</th><th>Cartons</th><th>DLC</th><th>Déclaré par</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (l of lotsAValider(); track l.numeroLot) {
-        <tr>
-          <td><strong>{{ l.numeroLot }}</strong></td>
-          <td><span class="badge bg-neutral">{{ l.productSku }}</span> {{ l.productName }}</td>
-          <td class="mono">{{ l.referencePPH }}</td>
-          <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
-          <td>{{ l.equivalentUnits }}</td>
-          <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
-          <td>{{ l.matriculeChefProduction }}</td>
-          <td>
-            <div class="row-actions" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
-              <button class="btn btn-sm btn-primary" (click)="validerLot(l)">Valider</button>
-              <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(l)">Rejeter</button>
-            </div>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-}
-
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des Lots</h2>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>N° Lot</th>
-          <th>Code Produit</th>
-          <th>Désignation</th>
-          <th>PPH</th>
-          <th>Date Production</th>
-          <th>DLC</th>
-          <th>Quantité (kg)</th>
-          <th>Cartons</th>
-          <th>Déclaré par</th>
-          <th>Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (l of lots(); track l.numeroLot) {
-          <tr [class]="l.statut === 'DECLARE' ? 'row-pending' : ''">
-            <td><strong>{{ l.numeroLot }}</strong></td>
-            <td><span class="badge bg-neutral">{{ l.productSku }}</span></td>
-            <td>{{ l.productName }}</td>
-            <td class="mono">{{ l.referencePPH }}</td>
-            <td>{{ l.dateProduction | date:'dd/MM/yyyy' }}</td>
-            <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
-            <td>{{ l.equivalentUnits }}</td>
-            <td>{{ l.matriculeChefProduction }}</td>
-            <td>
-              <span [class]="statutClass(l.statut)">{{ statutLabel(l.statut) }}</span>
-              @if (l.statut === 'REJETE' && l.motifRejet) {
-                <div class="text-muted" style="font-size:11px;margin-top:2px">{{ l.motifRejet }}</div>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="10" class="text-center text-muted">Aucun lot déclaré</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-@if (showDeclarerLot()) {
-<div class="modal-overlay" (click)="showDeclarerLot.set(false)">
-  <div class="modal-box" style="max-width:900px;" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fa-solid fa-plus" style="color:var(--g)"></i>
-        Déclarer un lot de production
-      </div>
-      <button class="modal-close" (click)="showDeclarerLot.set(false)">
-        <i class="fa-solid fa-xmark"></i>
+    @if (peutDeclarer()) {
+      <button class="lo-bouton lo-bouton-blanc" (click)="ouvrirDeclaration()">
+        <i class="fa-solid fa-plus"></i> Déclarer un lot
       </button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
-        <label style="flex:1;min-width:160px;">
-          <span class="lot-lbl">Date de production</span>
-          <input type="date" class="input" [value]="dateProduction" disabled style="background:var(--n50);color:var(--n500);">
-        </label>
-        <span class="lot-date-chip">Date figée : {{ dateProduction | date:'dd/MM/yyyy' }}</span>
+    }
+  </div>
+</header>
+
+@if (notification(); as n) {
+  <div class="lo-notif" [class.lo-notif-erreur]="n.type === 'erreur'" role="status" aria-live="polite">
+    <i class="fa-solid" [class.fa-circle-check]="n.type === 'ok'" [class.fa-triangle-exclamation]="n.type === 'erreur'"></i>
+    <span>{{ n.texte }}</span>
+    <button class="lo-icone" aria-label="Fermer" (click)="notification.set(null)"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+}
+
+@if (erreurs().lots; as msg) {
+  <div class="lo-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Registre des lots : {{ msg }}</span>
+    <button class="lo-bouton lo-bouton-petit lo-bouton-rouge" (click)="charger()">Réessayer</button>
+  </div>
+}
+
+@if (chargement() && !derniereMaj()) {
+  <div class="lo-squelette"></div>
+  <div class="lo-squelette lo-squelette-court"></div>
+} @else {
+<div class="lo-contenu" [class.lo-attente]="chargement()" [attr.aria-busy]="chargement()">
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="lo-kpis">
+    @for (k of kpis(); track k.libelle) {
+      <div class="lo-kpi" [class.lo-kpi-alerte]="k.alerte">
+        <span class="lo-kpi-lbl">{{ k.libelle }}</span>
+        <span class="lo-kpi-val">{{ k.valeur }}</span>
+        <span class="lo-kpi-meta">{{ k.detail }}</span>
       </div>
-      @if (erreurDeclaration()) {
-      <div class="alert alert-danger" style="margin-top:12px">
-        <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurDeclaration() }}
+    }
+  </section>
+
+  <!-- ═══ FILE DE VALIDATION ═══ -->
+  @if (peutValider() && lotsAValider().length) {
+    <section class="lo-carte lo-carte-alerte">
+      <header class="lo-carte-tete">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> À valider par le stock</h2>
+        <span class="lo-pastille">{{ lotsAValider().length }} lot(s)</span>
+      </header>
+      <ul class="lo-file">
+        @for (l of lotsAValider(); track l.numeroLot) {
+          <li>
+            <div class="lo-file-infos">
+              <span class="lo-code mono">{{ l.numeroLot }}</span>
+              <span class="lo-nom">{{ l.productName }}</span>
+              <span class="lo-muet">{{ l.productSku }} · PPH <span class="mono">{{ l.referencePPH ?? '—' }}</span></span>
+            </div>
+            <div class="lo-file-chiffres">
+              <strong class="mono">{{ formaterKg(l.declaredQuantityKg) }} kg</strong>
+              <span class="lo-muet">DLC {{ l.dlc | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="lo-actions-ligne">
+              <button class="lo-bouton lo-bouton-petit lo-bouton-primaire" (click)="demanderValidation(l)" [disabled]="actionEnCours() === l.numeroLot">
+                <i class="fa-solid fa-circle-check"></i> Valider
+              </button>
+              <button class="lo-bouton lo-bouton-petit lo-bouton-contour-rouge" (click)="ouvrirRejet(l)" [disabled]="actionEnCours() === l.numeroLot">
+                <i class="fa-solid fa-xmark"></i> Rejeter
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- ═══ REGISTRE ═══ -->
+  <section class="lo-carte">
+    <header class="lo-carte-tete">
+      <div class="lo-pilles" role="tablist" aria-label="Filtrer par statut">
+        @for (f of filtres; track f.code) {
+          <button class="lo-pille" role="tab" [attr.aria-selected]="statut() === f.code"
+                  [class.lo-pille-active]="statut() === f.code" (click)="statut.set(f.code)">
+            {{ f.libelle }} <span class="lo-pille-n">{{ compteStatut(f.code) }}</span>
+          </button>
+        }
       </div>
-      }
-      <div class="tbl-wrap" style="margin-top:12px;">
-        <table class="data-table">
+      <input type="search" class="lo-recherche" placeholder="N° lot, produit, PPH…" aria-label="Rechercher un lot"
+             [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+    </header>
+
+    @if (lotsFiltres().length) {
+      <div class="tbl-wrap">
+        <table class="lo-table">
           <thead>
             <tr>
+              <th>N° lot</th>
+              <th>Produit</th>
               <th>PPH</th>
-              <th style="min-width:260px">Produit (sélection obligatoire)</th>
-              <th class="text-right">Quantité (kg)</th>
-              <th class="text-right">Conditionnement</th>
+              <th>Fabrication</th>
               <th>DLC</th>
-              <th></th>
+              <th class="num">Quantité</th>
+              <th class="num">Unités</th>
+              <th>Statut</th>
+              @if (peutValider()) { <th class="lo-col-actions">Actions</th> }
             </tr>
           </thead>
           <tbody>
-            @for (l of lignesLot; track $index; let i = $index) {
-              <tr>
+            @for (l of lotsFiltres(); track l.numeroLot) {
+              <tr [class.lo-ligne-attente]="l.statut === 'DECLARE'">
+                <td><span class="lo-code mono">{{ l.numeroLot }}</span></td>
                 <td>
-                  <select class="input" [(ngModel)]="l.referencePPH">
-                    <option value="">— Choisir —</option>
-                    @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-                  </select>
+                  <div class="lo-produit">
+                    <span class="lo-nom">{{ l.productName }}</span>
+                    <span class="lo-muet mono">{{ l.productSku }}</span>
+                  </div>
                 </td>
+                <td class="mono lo-muet">{{ l.referencePPH ?? '—' }}</td>
+                <td>{{ l.dateProduction | date:'dd/MM/yyyy' }}</td>
                 <td>
-                  <app-product-search
-                    [products]="produits()"
-                    [initialLabel]="l.productLabel"
-                    placeholder="Code ou nom du produit fini…"
-                    (productSelected)="surSelectionProduit(l, $event)"
-                    (cleared)="surEffacementProduit(l)">
-                  </app-product-search>
+                  {{ l.dlc | date:'dd/MM/yyyy' }}
+                  @if (jourRestant(l.dlc) <= 30 && jourRestant(l.dlc) >= 0) {
+                    <span class="lo-alerte-dlc">{{ jourRestant(l.dlc) }} j</span>
+                  }
                 </td>
-                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1" style="text-align:right;"></td>
-                <td class="text-right">
-                  <app-conditioning-quantity [codeProduit]="l.product?.sku ?? null" (lignesChange)="surLignesConditionnement(l, $event)" />
+                <td class="num mono lo-nom">{{ formaterKg(l.declaredQuantityKg) }} kg</td>
+                <td class="num mono">{{ l.equivalentUnits }}</td>
+                <td>
+                  <span class="lo-statut" [class]="'lo-statut ' + classeStatut(l.statut)">{{ libelleStatut(l.statut) }}</span>
+                  @if (l.statut === 'REJETE' && l.motifRejet) {
+                    <div class="lo-muet lo-motif">{{ l.motifRejet }}</div>
+                  }
                 </td>
-                <td><input type="date" class="input" [(ngModel)]="l.dlc"></td>
-                <td class="text-right">
-                  <button class="btn btn-sm btn-danger" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </td>
+                @if (peutValider()) {
+                  <td>
+                    @if (peutAgirSur(l)) {
+                      <div class="lo-actions-ligne">
+                        <button class="lo-bouton lo-bouton-petit lo-bouton-primaire" (click)="demanderValidation(l)" [disabled]="actionEnCours() === l.numeroLot">Valider</button>
+                        <button class="lo-bouton lo-bouton-petit lo-bouton-contour-rouge" (click)="ouvrirRejet(l)" [disabled]="actionEnCours() === l.numeroLot">Rejeter</button>
+                      </div>
+                    } @else {
+                      <span class="lo-muet">—</span>
+                    }
+                  </td>
+                }
               </tr>
             }
           </tbody>
         </table>
       </div>
-      <button class="btn btn-ghost" (click)="ajouterLigne()">
-        <i class="fa-solid fa-plus"></i> Ajouter une ligne
-      </button>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="showDeclarerLot.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="declarerLot()">
-        <i class="fa-solid fa-check"></i> Déclarer {{ lignesLot.length }} lot(s)
-      </button>
-    </div>
-  </div>
+    } @else {
+      <div class="lo-vide">
+        <i class="fa-solid fa-box-open"></i>
+        @if (lots().length === 0) {
+          <h3>Aucun lot déclaré</h3>
+          <p>{{ peutDeclarer() ? 'Déclarez le premier lot à partir d\'un PPH.' : 'Les lots déclarés par la production apparaîtront ici.' }}</p>
+          @if (peutDeclarer()) {
+            <button class="lo-bouton lo-bouton-primaire" (click)="ouvrirDeclaration()"><i class="fa-solid fa-plus"></i> Déclarer un lot</button>
+          }
+        } @else {
+          <h3>Aucun résultat</h3>
+          <p>Aucun lot ne correspond à ces critères.</p>
+          <button class="lo-bouton lo-bouton-primaire lo-bouton-petit" (click)="recherche.set(''); statut.set('TOUS')">Réinitialiser</button>
+        }
+      </div>
+    }
+  </section>
 </div>
 }
 
-@if (showRejeter()) {
-<div class="modal-overlay" (click)="showRejeter.set(null)">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fa-solid fa-xmark" style="color:var(--r)"></i>
-        Rejeter le lot {{ showRejeter()?.numeroLot }}
+<!-- ═══ TIROIR DE DÉCLARATION ═══ -->
+@if (drawerOuvert()) {
+  <div class="lo-voile" (click)="fermerDrawer()">
+    <aside class="lo-tiroir" role="dialog" aria-modal="true" aria-label="Déclarer un lot" (click)="$event.stopPropagation()">
+      <header class="lo-tiroir-tete">
+        <div>
+          <div class="lo-hero-kicker">Nouveau lot</div>
+          <h2 class="lo-tiroir-titre">Déclarer un lot de production</h2>
+          <span class="lo-muet-clair">Chaque ligne correspond à un produit fini d'un PPH.</span>
+        </div>
+        <button class="lo-icone" aria-label="Fermer" (click)="fermerDrawer()" [disabled]="envoi()"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+
+      <div class="lo-tiroir-corps">
+        <div class="lo-date-bloc">
+          <label class="lo-champ">
+            <span class="lo-etiquette">Date de production</span>
+            <input type="date" class="lo-input" [value]="dateProduction()" [max]="aujourdhui"
+                   (change)="dateProduction.set($any($event.target).value)">
+          </label>
+          <div class="lo-datage">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Enregistrée au <strong>{{ dateFabricationPrevue() | date:'dd/MM/yyyy' }}</strong>
+              <span class="lo-muet">(datage : 1er si le jour est avant le 15, sinon le 15)</span></span>
+          </div>
+        </div>
+
+        @if (erreurFormulaire()) {
+          <div class="lo-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ erreurFormulaire() }}</span></div>
+        }
+
+        <ol class="lo-lignes">
+          @for (l of lignes(); track $index; let i = $index) {
+            <li class="lo-ligne-form" [class.lo-ligne-erreur]="erreurLigne(l) && l.referencePPH">
+              <div class="lo-ligne-tete">
+                <span class="lo-numero">Lot {{ i + 1 }}</span>
+                <div class="lo-actions-ligne">
+                  <button class="lo-bouton lo-bouton-petit lo-bouton-contour" (click)="dupliquerLigne(i)" title="Copier cette ligne">
+                    <i class="fa-solid fa-copy"></i>
+                  </button>
+                  <button class="lo-bouton lo-bouton-petit lo-bouton-contour-rouge" (click)="supprimerLigne(i)"
+                          [disabled]="lignes().length === 1 || envoi()" title="Supprimer cette ligne">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="lo-grille">
+                <label class="lo-champ">
+                  <span class="lo-etiquette">PPH</span>
+                  <select class="lo-input" (change)="choisirPph(i, $any($event.target).value)" [disabled]="envoi()">
+                    <option value="">— Choisir un PPH —</option>
+                    @for (p of pphs(); track p.id) { <option [value]="p.referencePPH" [selected]="p.referencePPH === l.referencePPH">{{ p.referencePPH }}</option> }
+                  </select>
+                </label>
+
+                <label class="lo-champ">
+                  <span class="lo-etiquette">Produit fini</span>
+                  @if (!l.referencePPH) {
+                    <input class="lo-input" value="Choisissez d'abord un PPH" disabled />
+                  } @else {
+                    <app-product-search
+                      [products]="itemsDuPph(l.referencePPH)"
+                      [initialLabel]="selectedDisplayText(l)"
+                      placeholder="Code produit ou nom…"
+                      (productSelected)="choisirProduit(i, $event.sku)"
+                      (cleared)="choisirProduit(i, '')">
+                    </app-product-search>
+                  }
+                </label>
+
+                <label class="lo-champ">
+                  <span class="lo-etiquette">Quantité (kg)</span>
+                  <input type="number" class="lo-input lo-droite" min="0" step="0.1" [value]="l.declaredQuantityKg ?? ''" [disabled]="envoi()"
+                         (input)="majLigne(i, 'declaredQuantityKg', $any($event.target).valueAsNumber)">
+                </label>
+
+                <label class="lo-champ">
+                  <span class="lo-etiquette">Unités équivalentes</span>
+                  <input type="number" class="lo-input lo-droite" min="0" step="1" [value]="l.equivalentUnits ?? ''" [disabled]="envoi()"
+                         (input)="majLigne(i, 'equivalentUnits', $any($event.target).valueAsNumber)">
+                </label>
+
+                <label class="lo-champ">
+                  <span class="lo-etiquette">DLC</span>
+                  <input type="date" class="lo-input" [value]="l.dlc" [min]="dateProduction()" [disabled]="envoi()"
+                         (change)="majLigne(i, 'dlc', $any($event.target).value)">
+                </label>
+
+                <label class="lo-champ">
+                  <span class="lo-etiquette">Conditionnement</span>
+                  <div class="lo-duo">
+                    <select class="lo-input" [disabled]="envoi()" (change)="majLigne(i, 'conditioningType', $any($event.target).value)">
+                      <option value="">Aucun</option>
+                      @for (t of typesEmballage; track t.code) { <option [value]="t.code" [selected]="t.code === l.conditioningType">{{ t.libelle }}</option> }
+                    </select>
+                    <input type="number" class="lo-input lo-droite lo-court" min="0" step="1" placeholder="Nombre"
+                           [value]="l.conditioningQty ?? ''" [disabled]="envoi()"
+                           (input)="majLigne(i, 'conditioningQty', $any($event.target).valueAsNumber)">
+                  </div>
+                </label>
+
+                <label class="lo-champ lo-champ-large">
+                  <span class="lo-etiquette">Notes <span class="lo-muet">(optionnel)</span></span>
+                  <input type="text" class="lo-input" placeholder="Observations…" [value]="l.notes" [disabled]="envoi()"
+                         (input)="majLigne(i, 'notes', $any($event.target).value)">
+                </label>
+              </div>
+
+              @if (l.productSku) {
+                @if (descriptionConditionnement(l.productSku); as d) {
+                  <div class="lo-conditionnement">
+                    <i class="fa-solid fa-box-archive"></i>
+                    <span>Conditionnement du produit : <strong>{{ d.libelle }}</strong>
+                      @if (d.regle) { <span class="lo-muet"> · {{ d.regle }}</span> }
+                    </span>
+                    @if (l.conditionnementManuel) {
+                      <button class="lo-bouton lo-bouton-petit lo-bouton-contour" (click)="choisirProduit(i, l.productSku)">
+                        Recalculer
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <div class="lo-conditionnement lo-conditionnement-vide">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Ce produit n'a pas de conditionnement défini. Définissez-le dans « Composition d'emballage ».</span>
+                  </div>
+                }
+              }
+
+              @if (l.referencePPH && erreurLigne(l); as msg) {
+                <p class="lo-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> {{ msg }}</p>
+              }
+            </li>
+          }
+        </ol>
+
+        <button class="lo-bouton lo-bouton-contour lo-ajout" (click)="ajouterLigne()" [disabled]="envoi()">
+          <i class="fa-solid fa-plus"></i> Ajouter une ligne
+        </button>
       </div>
-      <button class="modal-close" (click)="showRejeter.set(null)">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <label>
-        <span class="lot-lbl">Motif du rejet</span>
-        <textarea class="input" rows="3" [(ngModel)]="motifRejet" placeholder="Précisez le motif de non-conformité..."></textarea>
-      </label>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="showRejeter.set(null)">Annuler</button>
-      <button class="btn btn-danger" (click)="confirmerRejet()">Confirmer le rejet</button>
+
+      <footer class="lo-tiroir-pied">
+        <div class="lo-total">
+          <span class="lo-muet">{{ lignes().length }} lot(s) · total</span>
+          <strong class="mono">{{ formaterKg(totalKgFormulaire()) }} kg</strong>
+        </div>
+        <div class="lo-actions-ligne">
+          <button class="lo-bouton lo-bouton-contour" (click)="fermerDrawer()" [disabled]="envoi()">Annuler</button>
+          <button class="lo-bouton lo-bouton-primaire" (click)="declarerTout()" [disabled]="!formulaireValide() || envoi()">
+            @if (envoi()) { <i class="fa-solid fa-spinner lo-tourne"></i> Envoi… }
+            @else { <i class="fa-solid fa-check"></i> Déclarer {{ lignes().length }} lot(s) }
+          </button>
+        </div>
+      </footer>
+    </aside>
+  </div>
+}
+
+<!-- ═══ CONFIRMATION DE VALIDATION ═══ -->
+@if (aConfirmer(); as lot) {
+  <div class="lo-voile lo-voile-centre" (click)="aConfirmer.set(null)">
+    <div class="lo-dialogue" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="lo-dialogue-ico lo-dialogue-ico-ok"><i class="fa-solid fa-circle-check"></i></div>
+      <h2>Valider le lot {{ lot.numeroLot }} ?</h2>
+      <p>{{ lot.productName }} — {{ formaterKg(lot.declaredQuantityKg) }} kg. Le lot sera intégré au stock central et la fiche de production sera verrouillée.</p>
+      <div class="lo-dialogue-pied">
+        <button class="lo-bouton lo-bouton-contour" (click)="aConfirmer.set(null)">Annuler</button>
+        <button class="lo-bouton lo-bouton-primaire" (click)="confirmerValidation()" [disabled]="actionEnCours() === lot.numeroLot">
+          <i class="fa-solid fa-circle-check"></i> Valider le lot
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}
+
+<!-- ═══ REJET ═══ -->
+@if (aRejeter(); as lot) {
+  <div class="lo-voile lo-voile-centre" (click)="aRejeter.set(null)">
+    <div class="lo-dialogue" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="lo-dialogue-ico lo-dialogue-ico-erreur"><i class="fa-solid fa-xmark"></i></div>
+      <h2>Rejeter le lot {{ lot.numeroLot }}</h2>
+      <p>Indiquez le motif de non-conformité. Il sera visible par le Chef de Production.</p>
+      <label class="lo-champ">
+        <span class="lo-etiquette">Motif du rejet</span>
+        <textarea class="lo-input" rows="3" placeholder="Ex. : étiquetage non conforme, DLC illisible…"
+                  [value]="motifRejet()" (input)="motifRejet.set($any($event.target).value)"></textarea>
+      </label>
+      @if (motifRejet().trim().length > 0 && motifRejet().trim().length < 3) {
+        <p class="lo-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> Motif trop court (3 caractères minimum).</p>
+      }
+      <div class="lo-dialogue-pied">
+        <button class="lo-bouton lo-bouton-contour" (click)="aRejeter.set(null)">Annuler</button>
+        <button class="lo-bouton lo-bouton-rouge" (click)="confirmerRejet()" [disabled]="motifRejet().trim().length < 3 || actionEnCours() === lot.numeroLot">
+          <i class="fa-solid fa-xmark"></i> Confirmer le rejet
+        </button>
+      </div>
+    </div>
+  </div>
 }

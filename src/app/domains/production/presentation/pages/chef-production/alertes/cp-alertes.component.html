@@ -1,51 +1,115 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-triangle-exclamation ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="al-hero">
+  <div class="al-hero-gauche">
+    <div class="al-hero-ico"><i class="fa-solid fa-bell"></i></div>
     <div>
-      <h1 class="ph-title">Gestion des Alertes</h1>
-      <p class="ph-sub">Retards, dépassements, pertes, objectifs, écarts — calculés en temps réel</p>
+      <div class="al-hero-kicker">Chef de Production</div>
+      <h1 class="al-hero-titre">Alertes de production</h1>
+      <p class="al-hero-sous">
+        @if (derniereMaj(); as d) { Calculées à {{ d | date:'HH:mm' }} · }
+        {{ alertes().length }} alerte(s) sur la production en cours
+      </p>
     </div>
   </div>
-</div>
+  <button class="al-bouton" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+    <i class="fa-solid fa-arrows-rotate" [class.al-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-<div class="gap-note">
-  <i class="fa-solid fa-triangle-exclamation"></i>
-  <div>
-    Aucun moteur d'alertes persistées côté backend : ces alertes sont <strong>calculées à la volée</strong> à partir
-    de seuils sur des données réelles. Il n'est pas possible de les "traiter" ou "clôturer" durablement — l'action
-    correspondante reste à faire sur l'objet concerné (OF, session...).
+@if (erreurs().length) {
+  <div class="al-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Certaines sources n'ont pas pu être lues ({{ erreurs().join(', ') }}). Les alertes qui en dépendent peuvent être incomplètes.</span>
+    <button class="al-bouton al-bouton-petit al-bouton-rouge" (click)="charger()">Réessayer</button>
   </div>
-</div>
+}
 
-<div class="card">
-  <div class="toolbar-row">
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()===''" [class.btn-ghost]="filtreType()!==''" (click)="filtreType.set('')">Toutes</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='retard'" [class.btn-ghost]="filtreType()!=='retard'" (click)="filtreType.set('retard')">Retards</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='depassement'" [class.btn-ghost]="filtreType()!=='depassement'" (click)="filtreType.set('depassement')">Dépassements</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='pertes'" [class.btn-ghost]="filtreType()!=='pertes'" (click)="filtreType.set('pertes')">Pertes</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='objectif'" [class.btn-ghost]="filtreType()!=='objectif'" (click)="filtreType.set('objectif')">Objectifs</button>
-    <button class="btn btn-sm" [class.btn-primary]="filtreType()==='ecart'" [class.btn-ghost]="filtreType()!=='ecart'" (click)="filtreType.set('ecart')">Écarts</button>
-  </div>
+@if (chargement() && !derniereMaj()) {
+  <div class="al-squelette"></div>
+  <div class="al-squelette al-squelette-court"></div>
+} @else {
+<div class="al-contenu" [class.al-attente]="chargement()" [attr.aria-busy]="chargement()">
 
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Gravité</th><th>Alerte</th><th>Détail</th><th>Date</th></tr></thead>
-        <tbody>
-          @for (a of alertesFiltrees(); track a.titre + a.date) {
-            <tr>
-              <td><span [class]="a.gravite === 'danger' ? 'badge bg-red' : 'badge bg-orange'"><i class="fa-solid fa-triangle-exclamation"></i> {{ a.gravite === 'danger' ? 'Critique' : 'Attention' }}</span></td>
-              <td><strong>{{ a.titre }}</strong></td>
-              <td class="text-muted">{{ a.detail }}</td>
-              <td>{{ a.date | date:'dd/MM/yyyy' }}</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="4" class="empty-state-block"><i class="fa-solid fa-circle-check"></i>Aucune alerte — tout est sous contrôle</td></tr>
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="al-kpis">
+    <div class="al-kpi al-kpi-critique" [class.al-kpi-vide]="nbCritiques() === 0">
+      <span class="al-kpi-lbl">Critiques</span>
+      <span class="al-kpi-val">{{ nbCritiques() }}</span>
+      <span class="al-kpi-meta">à traiter en priorité</span>
+    </div>
+    <div class="al-kpi al-kpi-attention" [class.al-kpi-vide]="nbAttention() === 0">
+      <span class="al-kpi-lbl">À surveiller</span>
+      <span class="al-kpi-val">{{ nbAttention() }}</span>
+      <span class="al-kpi-meta">attention sans urgence</span>
+    </div>
+    <div class="al-kpi">
+      <span class="al-kpi-lbl">Total</span>
+      <span class="al-kpi-val">{{ alertes().length }}</span>
+      <span class="al-kpi-meta">sur 14 derniers jours et aujourd'hui</span>
+    </div>
+  </section>
+
+  <!-- ═══ FILTRES ═══ -->
+  <section class="al-carte">
+    <div class="al-filtres">
+      <div class="al-pilles" role="tablist" aria-label="Type d'alerte">
+        <button class="al-pille" [class.al-pille-active]="filtreType() === ''" (click)="filtreType.set('')">Tous <span class="al-pille-n">{{ alertes().length }}</span></button>
+        @for (t of types; track t.code) {
+          @if (compteType(t.code) > 0) {
+            <button class="al-pille" [class.al-pille-active]="filtreType() === t.code" (click)="filtreType.set(t.code)">
+              <i class="fa-solid" [class]="'fa-solid ' + icone(t.code)"></i> {{ t.libelle }} <span class="al-pille-n">{{ compteType(t.code) }}</span>
+            </button>
           }
-        </tbody>
-      </table>
+        }
+      </div>
+      <div class="al-outils">
+        <div class="al-segment" role="group" aria-label="Gravité">
+          <button class="al-segment-bouton" [class.al-segment-actif]="filtreGravite() === ''" (click)="filtreGravite.set('')">Toutes</button>
+          <button class="al-segment-bouton" [class.al-segment-actif]="filtreGravite() === 'critique'" (click)="filtreGravite.set('critique')">Critiques</button>
+          <button class="al-segment-bouton" [class.al-segment-actif]="filtreGravite() === 'attention'" (click)="filtreGravite.set('attention')">Attention</button>
+        </div>
+        <input type="search" class="al-recherche" placeholder="Rechercher…" aria-label="Rechercher une alerte"
+               [value]="recherche()" (input)="recherche.set($any($event.target).value)">
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ LISTE ═══ -->
+  @if (alertesFiltrees().length) {
+    <ul class="al-liste">
+      @for (a of alertesFiltrees(); track a.id) {
+        <li class="al-alerte-carte" [class.al-critique]="a.gravite === 'critique'" [class.al-attention]="a.gravite === 'attention'">
+          <div class="al-icone-bloc"><i class="fa-solid" [class]="'fa-solid ' + icone(a.type)"></i></div>
+          <div class="al-corps">
+            <div class="al-tete">
+              <span class="al-gravite">{{ a.gravite === 'critique' ? 'Critique' : 'Attention' }}</span>
+              <span class="al-type">{{ libelleType(a.type) }}</span>
+              <span class="al-date">{{ a.date | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <h3 class="al-titre">{{ a.titre }}</h3>
+            <p class="al-detail">{{ a.detail }}</p>
+          </div>
+          <a class="al-action" [routerLink]="a.lien">{{ a.libelleLien }} <i class="fa-solid fa-arrow-right"></i></a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="al-vide">
+      <i class="fa-solid" [class.fa-circle-check]="alertes().length === 0" [class.fa-filter-circle-xmark]="alertes().length > 0"></i>
+      @if (alertes().length === 0) {
+        <h3>Tout est sous contrôle</h3>
+        <p>Aucune alerte sur la production en cours : pas de retard, de pertes excessives, de lot rejeté ni de besoin en attente.</p>
+      } @else {
+        <h3>Aucune alerte ne correspond</h3>
+        <p>Modifiez les filtres ou la recherche pour voir les autres alertes.</p>
+        <button class="al-bouton al-bouton-primaire al-bouton-petit" (click)="reinitialiser()">Réinitialiser les filtres</button>
+      }
     </div>
   }
+
+  <p class="al-pied">
+    <i class="fa-solid fa-circle-info"></i>
+    Les alertes sont calculées à la lecture à partir des données réelles. Elles ne sont pas enregistrées : pour les traiter, ouvrez l'élément concerné avec le lien.
+  </p>
 </div>
+}

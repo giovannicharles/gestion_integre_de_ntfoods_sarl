@@ -1,0 +1,286 @@
+<div class="dash animate-fadeInUp">
+
+  <!-- HEADER -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-box-open"></i></div>
+      <div>
+        <h1 class="ph-title">Types d'emballage</h1>
+        <p class="ph-sub">Référentiel des emballages (sachet, étui, carton, palette…) et poids des conditionnements</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="charger()" [disabled]="loading()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+      @if (peutGerer()) {
+        <button class="btn btn-primary btn-sm" (click)="ouvrirCreation()">
+          <i class="fa-solid fa-plus"></i> Nouveau type
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- KPI BAR -->
+  <div class="kpi-bar">
+    <div class="kpi-item"><span class="kpi-val">{{ types().length }}</span><span class="kpi-lbl">Types actifs</span></div>
+    <div class="kpi-sep"></div>
+    <div class="kpi-item"><span class="kpi-val">{{ niveauxPresents().length }}</span><span class="kpi-lbl">Niveaux utilisés</span></div>
+    <div class="kpi-sep"></div>
+    <div class="kpi-item"><span class="kpi-val">{{ nbMateriaux() }}</span><span class="kpi-lbl">Matériaux</span></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-filter"></i> Filtres</span>
+    </div>
+    <div class="filter-row">
+      <div class="fg">
+        <label for="te-recherche">Recherche</label>
+        <input id="te-recherche" type="search" class="form-control" placeholder="Code, nom, matériau ou couleur…"
+               [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+      </div>
+      <div class="fg">
+        <label for="te-niveau">Niveau hiérarchique</label>
+        <select id="te-niveau" class="form-control" [ngModel]="filtreNiveau()" (ngModelChange)="filtreNiveau.set($event)">
+          <option value="">Tous</option>
+          @for (n of niveauxPresents(); track n) { <option [value]="n">Niveau {{ n }}</option> }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner spinner-lg"></div>
+      <p>Chargement des types d'emballage…</p>
+    </div>
+  } @else if (erreurChargement()) {
+    <div class="card">
+      <div class="empty-state">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>Impossible de charger les types d'emballage : {{ erreurChargement() }}</p>
+        <button class="btn btn-ghost btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+      </div>
+    </div>
+  } @else {
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table"></i> Types d'emballage actifs</span>
+        <span class="mono">{{ typesFiltres().length }} / {{ types().length }}</span>
+      </div>
+      <div class="tbl-wrap">
+        @if (typesFiltres().length === 0) {
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <p>{{ types().length === 0 ? 'Aucun type d\'emballage enregistré.' : 'Aucun type ne correspond aux filtres.' }}</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Niveau</th>
+                <th>Code</th>
+                <th>Nom</th>
+                <th>Matériau</th>
+                <th>Couleur</th>
+                <th style="text-align:right">Poids vide</th>
+                <th>Dimensions (L × l × H)</th>
+                <th style="text-align:right">Capacité max</th>
+                @if (peutGerer()) { <th style="text-align:right">Actions</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of typesFiltres(); track t.id) {
+                <tr>
+                  <td><span class="te-niveau">N{{ t.niveauHierarchie }}</span></td>
+                  <td class="mono">{{ t.code }}</td>
+                  <td>
+                    <div class="fw-bold">{{ t.nom }}</div>
+                    @if (t.description) { <div class="te-desc">{{ t.description }}</div> }
+                  </td>
+                  <td>{{ t.materiau || '—' }}</td>
+                  <td>{{ t.couleur || '—' }}</td>
+                  <td class="mono" style="text-align:right">{{ t.poidsVideG !== null ? (t.poidsVideG | number:'1.0-0') + ' g' : '—' }}</td>
+                  <td class="mono">{{ dimensions(t) }}</td>
+                  <td class="mono" style="text-align:right">{{ t.capaciteMaxKg !== null ? (t.capaciteMaxKg | number:'1.0-3') + ' kg' : '—' }}</td>
+                  @if (peutGerer()) {
+                    <td>
+                      <div class="row-actions">
+                        <button class="btn btn-sm btn-ghost" (click)="ouvrirEdition(t)" title="Modifier" aria-label="Modifier">
+                          <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" (click)="demanderDesactivation(t)" title="Désactiver" aria-label="Désactiver">
+                          <i class="fa-solid fa-ban"></i>
+                        </button>
+                      </div>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+  }
+
+  <!-- CALCULATEUR DE POIDS -->
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-weight-scale"></i> Calculateur de poids d'un conditionnement</span>
+    </div>
+    <div class="te-calc">
+      @if (varietesErreur()) {
+        <p class="modal-text-muted">Impossible de charger les variétés : {{ varietesErreur() }}</p>
+      } @else if (varietes().length === 0) {
+        <p class="modal-text-muted">Aucune variété n'est encore définie dans le référentiel : le calcul n'est pas disponible.</p>
+      } @else {
+        <div class="form-grid">
+          <div class="fg">
+            <label for="calc-variete">Variété</label>
+            <select id="calc-variete" class="form-control" [ngModel]="varieteId" (ngModelChange)="choisirVariete($event)">
+              <option [ngValue]="null">— Choisir une variété —</option>
+              @for (v of varietes(); track v.id) { <option [ngValue]="v.id">{{ v.nom }} ({{ v.code }}) — {{ v.marqueNom }}</option> }
+            </select>
+          </div>
+          <div class="fg">
+            <label for="calc-config">Configuration</label>
+            <select id="calc-config" class="form-control" [ngModel]="configurationId" (ngModelChange)="choisirConfiguration($event)"
+                    [disabled]="varieteId === null || chargementConfigs()">
+              <option [ngValue]="null">{{ chargementConfigs() ? 'Chargement…' : (varieteId !== null && configurations().length === 0 ? 'Aucune configuration' : '— Choisir —') }}</option>
+              @for (c of configurations(); track c.id) {
+                <option [ngValue]="c.id">N{{ c.niveau }} · {{ c.typeEmballageNom }} · {{ c.codeConfiguration }} ({{ c.quantiteUnites }} u.){{ c.poidsTotalKg === null && c.poidsNetG === null ? ' — poids non renseigné' : '' }}</option>
+              }
+            </select>
+          </div>
+          <div class="fg">
+            <label for="calc-unites">Nombre d'unités de ce niveau</label>
+            <input id="calc-unites" type="number" min="1" step="1" class="form-control" [(ngModel)]="nombreUnites" (keyup.enter)="calculer()">
+          </div>
+        </div>
+        <div class="te-calc-actions">
+          <button class="btn btn-primary" (click)="calculer()" [disabled]="calcul() || configurationId === null">
+            <i class="fa-solid" [class.fa-calculator]="!calcul()" [class.fa-spinner]="calcul()" [class.fa-spin]="calcul()"></i>
+            {{ calcul() ? 'Calcul…' : 'Calculer le poids' }}
+          </button>
+          @if (configurationSansPoids()) {
+            <span class="te-erreur"><i class="fa-solid fa-circle-info"></i> Poids net non renseigné pour cette configuration : le calcul sera refusé.</span>
+          }
+          @if (erreurCalcul()) {
+            <span class="te-erreur"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurCalcul() }}</span>
+          }
+          @if (poidsCalcule(); as p) {
+            <div class="te-resultat">
+              <span class="kpi-val">{{ p.kg | number:'1.0-3' }} kg</span>
+              <span class="kpi-lbl">{{ p.unites }} × {{ p.config.typeEmballageNom }} · {{ p.config.codeConfiguration }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- MODAL : création / modification -->
+  @if (showForm()) {
+    <div class="modal-overlay animate-fadeIn" (click)="fermerForm()">
+      <div class="modal-box te-modal animate-fadeInUp" role="dialog" aria-modal="true" aria-labelledby="te-form-titre" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title" id="te-form-titre">
+            <i class="fa-solid" [class.fa-plus-circle]="!enEdition()" [class.fa-pen]="enEdition()"></i>
+            {{ enEdition() ? 'Modifier le type ' + enEdition()!.code : 'Nouveau type d\'emballage' }}
+          </div>
+          <button class="modal-close" aria-label="Fermer" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          @if (erreurForm()) {
+            <div class="te-alerte"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurForm() }}</div>
+          }
+          <div class="form-grid">
+            <div class="fg">
+              <label for="te-code">Code <span class="req">*</span></label>
+              <input id="te-code" class="form-control mono" maxlength="50" [(ngModel)]="form.code" placeholder="ex : CARTON-20">
+            </div>
+            <div class="fg">
+              <label for="te-nom">Nom <span class="req">*</span></label>
+              <input id="te-nom" class="form-control" maxlength="100" [(ngModel)]="form.nom" placeholder="ex : Carton de 20 sachets">
+            </div>
+            <div class="fg">
+              <label for="te-niveau-form">Niveau hiérarchique <span class="req">*</span></label>
+              <input id="te-niveau-form" type="number" min="1" max="10" step="1" class="form-control" [(ngModel)]="form.niveauHierarchie"
+                     placeholder="1 = unité · 10 = le plus grand">
+            </div>
+            <div class="fg">
+              <label for="te-materiau">Matériau</label>
+              <input id="te-materiau" class="form-control" maxlength="100" [(ngModel)]="form.materiau" placeholder="ex : carton ondulé">
+            </div>
+            <div class="fg">
+              <label for="te-couleur">Couleur</label>
+              <input id="te-couleur" class="form-control" maxlength="50" [(ngModel)]="form.couleur" placeholder="ex : kraft">
+            </div>
+            <div class="fg">
+              <label for="te-poids">Poids à vide (g)</label>
+              <input id="te-poids" type="number" min="0" step="1" class="form-control" [(ngModel)]="form.poidsVideG">
+            </div>
+            <div class="fg">
+              <label for="te-long">Longueur (mm)</label>
+              <input id="te-long" type="number" min="0" step="1" class="form-control" [(ngModel)]="form.dimensionsLongueurMm">
+            </div>
+            <div class="fg">
+              <label for="te-larg">Largeur (mm)</label>
+              <input id="te-larg" type="number" min="0" step="1" class="form-control" [(ngModel)]="form.dimensionsLargeurMm">
+            </div>
+            <div class="fg">
+              <label for="te-haut">Hauteur (mm)</label>
+              <input id="te-haut" type="number" min="0" step="1" class="form-control" [(ngModel)]="form.dimensionsHauteurMm">
+            </div>
+            <div class="fg">
+              <label for="te-capa">Capacité maximale (kg)</label>
+              <input id="te-capa" type="number" min="0" step="0.001" class="form-control" [(ngModel)]="form.capaciteMaxKg">
+            </div>
+          </div>
+          <div class="fg">
+            <label for="te-desc">Description</label>
+            <textarea id="te-desc" class="form-control" rows="2" maxlength="2000" [(ngModel)]="form.description"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="fermerForm()" [disabled]="saving()">Annuler</button>
+          <button class="btn btn-primary" (click)="enregistrer()" [disabled]="saving()">
+            <i class="fa-solid" [class.fa-save]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i>
+            {{ saving() ? 'Enregistrement…' : (enEdition() ? 'Enregistrer' : 'Créer') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL : confirmation de désactivation -->
+  @if (aDesactiver(); as t) {
+    <div class="modal-overlay animate-fadeIn" (click)="annulerDesactivation()">
+      <div class="modal-box animate-fadeInUp" role="dialog" aria-modal="true" aria-labelledby="te-desac-titre" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-danger">
+          <div class="modal-title" id="te-desac-titre"><i class="fa-solid fa-triangle-exclamation"></i> Désactiver le type d'emballage</div>
+          <button class="modal-close" aria-label="Fermer" (click)="annulerDesactivation()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-text">Désactiver <strong>{{ t.code }} — {{ t.nom }}</strong> ?</p>
+          <p class="modal-text-muted">
+            Le type disparaît de la liste et ne peut plus être choisi pour de nouvelles configurations. La désactivation
+            est refusée tant qu'une configuration active l'utilise. L'application ne permet pas de le réactiver ensuite.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="annulerDesactivation()" [disabled]="desactivation()">Annuler</button>
+          <button class="btn btn-danger" (click)="confirmerDesactivation()" [disabled]="desactivation()">
+            <i class="fa-solid" [class.fa-ban]="!desactivation()" [class.fa-spinner]="desactivation()" [class.fa-spin]="desactivation()"></i>
+            {{ desactivation() ? 'Désactivation…' : 'Désactiver' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

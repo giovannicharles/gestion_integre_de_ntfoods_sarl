@@ -6,7 +6,6 @@ import {
 } from '../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
-import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-agent-doseur',
@@ -17,7 +16,6 @@ import { ToastService } from '../../../../../core/services/toast.service';
 })
 export class AgentDoseurComponent implements OnInit {
   private readonly prodSvc = inject(ProductionService);
-  private readonly toast = inject(ToastService);
 
   today = new Date().toISOString().split('T')[0];
   semaineDebut = signal(this.debutSemaine(new Date()));
@@ -64,11 +62,10 @@ export class AgentDoseurComponent implements OnInit {
   donutMatieres = computed<DonutSlice[]>(() => {
     const s = this.statsHebdo();
     if (!s) return [];
-    return [
-      { label: 'Maïs', value: Math.round(s.poudreMaisKg * 10) / 10, color: '#f9a825' },
-      { label: 'Soja', value: Math.round(s.poudreSojaKg * 10) / 10, color: '#558b2f' },
-      { label: 'Arachide', value: Math.round(s.poudreArachideKg * 10) / 10, color: '#6d4c41' },
-    ];
+    const palette = ['#f9a825', '#558b2f', '#6d4c41', '#1976d2', '#7b1fa2', '#d81b60', '#00897b', '#546e7a'];
+    return s.matieresPremieres.map((m, i) => ({
+      label: m.matierePremiere, value: Math.round(m.quantiteKg * 10) / 10, color: palette[i % palette.length],
+    }));
   });
 
   ngOnInit(): void {
@@ -77,16 +74,13 @@ export class AgentDoseurComponent implements OnInit {
 
   chargerDonnees(): void {
     this.prodSvc.getSessionsDosageParDate(this.today).subscribe({
-      next: s => this.sessions.set(s),
-      error: () => this.toast.error('Impossible de charger les sessions de dosage du jour')
+      next: s => this.sessions.set(s)
     });
     this.prodSvc.getStatistiquesFuts(this.semaineDebut(), this.semaineFin()).subscribe({
-      next: r => this.statsHebdo.set(r),
-      error: () => this.toast.error('Impossible de charger les statistiques de la semaine')
+      next: r => this.statsHebdo.set(r)
     });
     this.prodSvc.getStatistiquesFuts(this.moisDebut(), this.moisFin()).subscribe({
-      next: r => this.statsMois.set(r),
-      error: () => this.toast.error('Impossible de charger les statistiques du mois')
+      next: r => this.statsMois.set(r)
     });
     const debut7j = this.joursDesSeptDerniers()[0];
     this.prodSvc.getSessionsDosageParPeriode(debut7j, this.today).subscribe({

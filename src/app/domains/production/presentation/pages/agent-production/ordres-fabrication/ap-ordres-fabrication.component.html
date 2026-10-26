@@ -1,0 +1,68 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-industry ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Ordres de Fabrication</h1>
+      <p class="ph-sub">Consultation des OF générés à partir des plans de production</p>
+    </div>
+  </div>
+</div>
+
+<div class="gap-note">
+  <i class="fa-solid fa-circle-info"></i>
+  <div>Le statut peut être changé directement depuis la liste (brouillon, en pause, en cours, terminé). L'annulation d'un OF reste réservée au Chef de Production.</div>
+</div>
+
+@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
+
+<div class="card">
+  <div class="toolbar-row">
+    <input class="input search-input" placeholder="Rechercher un OF, un PPH ou un produit..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <select class="input" [ngModel]="statutFiltre()" (ngModelChange)="statutFiltre.set($event); charger()">
+      <option value="">Tous les statuts</option>
+      @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
+    </select>
+    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>OF</th><th>PPH</th><th>Produit</th><th>Demandé</th><th>Réalisé</th><th>Progression</th><th>Échéance</th><th>Statut</th><th>Changer le statut</th></tr></thead>
+        <tbody>
+          @for (o of ofsFiltres(); track o.idOF) {
+            <tr>
+              <td class="mono">{{ o.idOF }}</td>
+              <td class="mono">{{ o.referencePPH }}</td>
+              <td>{{ o.designationProduit }} <span class="text-muted">({{ o.codeProduit }})</span></td>
+              <td>{{ o.qteDemandee }}</td>
+              <td>{{ o.qteRealisee }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="progression(o)>=100" [class.prog-y]="progression(o)<100" [style.width.%]="progression(o)"></div></div>
+                  <span>{{ progression(o) }}%</span>
+                </div>
+              </td>
+              <td>{{ o.dateButoir ? (o.dateButoir | date:'dd/MM/yyyy') : '—' }}</td>
+              <td><span [class]="badgeStatut(o.statut)">{{ o.statut }}</span></td>
+              <td>
+                @if (o.statut === 'HONORE' || o.statut === 'ANNULE') {
+                  <span class="text-muted">—</span>
+                } @else {
+                  <select class="input" style="min-width:140px" [disabled]="enCours() === o.idOF"
+                          [ngModel]="o.statut" (ngModelChange)="changerStatut(o, $event)">
+                    @for (s of statutsAssignables; track s.valeur) { <option [value]="s.valeur">{{ s.libelle }}</option> }
+                  </select>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun ordre de fabrication</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

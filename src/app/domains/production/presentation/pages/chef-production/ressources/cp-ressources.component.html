@@ -1,55 +1,179 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-boxes-stacked ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="cr-hero">
+  <div class="cr-hero-gauche">
+    <div class="cr-hero-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
     <div>
-      <h1 class="ph-title">Gestion des Ressources</h1>
-      <p class="ph-sub">Consommation des matières premières et utilisation des machines (7 derniers jours)</p>
-    </div>
-  </div>
-</div>
-
-<div class="gap-note">
-  <i class="fa-solid fa-triangle-exclamation"></i>
-  <div>Pas d'entité stock/équipement côté backend Production : cette vue montre la <strong>consommation réelle</strong>, pas la disponibilité ni les alertes de rupture (nécessiterait un module Stock).</div>
-</div>
-
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else {
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Matières premières consommées</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-donut-chart title="" unit="kg" [data]="donutMatieres()" /></div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Utilisation des machines</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Machine</th><th>Nombre de sessions</th></tr></thead>
-        <tbody>
-          @for (m of machinesUtilisees(); track m.machine) { <tr><td>{{ m.machine }}</td><td>{{ m.nbSessions }}</td></tr> }
-          @empty { <tr><td colspan="2" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-@if (rapport(); as r) {
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Pertes par type de poudre</h2></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>Type</th><th>Pertes (kg)</th><th>% pertes</th></tr></thead>
-      <tbody>
-        @for (k of objectKeys(r.pertesParTypePoudre); track k) {
-          <tr><td>{{ k }}</td><td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td><td>{{ r.pctPertesParTypePoudre[k] ?? 0 | number:'1.1-1' }}%</td></tr>
+      <div class="cr-hero-kicker">Chef de Production</div>
+      <h1 class="cr-hero-titre">Gestion des ressources</h1>
+      <p class="cr-hero-sous">
+        @if (debut() && fin()) {
+          Consommation du {{ debut() | date:'dd/MM/yyyy' }} au {{ fin() | date:'dd/MM/yyyy' }}
+        } @else {
+          Consommation réelle des matières et des machines
         }
-      </tbody>
-    </table>
+      </p>
+    </div>
   </div>
-</div>
+
+  <div class="cr-actions" role="group" aria-label="Période">
+    <div class="cr-segment">
+      @for (p of periodes; track p) {
+        <button class="cr-segment-bouton" [class.cr-segment-actif]="periode() === p" [attr.aria-pressed]="periode() === p"
+                [disabled]="chargement()" (click)="choisirPeriode(p)">{{ p }} jours</button>
+      }
+    </div>
+    <button class="cr-bouton cr-bouton-blanc" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.cr-tourne]="chargement()"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ ERREURS PAR SOURCE ═══ -->
+@if (erreurs().rapport; as msg) {
+  <div class="cr-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Rapport de consommation : {{ msg }}</span>
+    <button class="cr-bouton cr-bouton-petit cr-bouton-rouge" (click)="charger()">Réessayer</button>
+  </div>
+}
+@if (erreurs().dosage; as msg) {
+  <div class="cr-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Sessions de dosage : {{ msg }}</span>
+    <button class="cr-bouton cr-bouton-petit cr-bouton-rouge" (click)="charger()">Réessayer</button>
+  </div>
 }
 
+@if (chargement() && !derniereMaj()) {
+  <div class="cr-squelette"></div>
+  <div class="cr-squelette cr-squelette-court"></div>
+} @else {
+<div class="cr-contenu" [class.cr-attente]="chargement()" [attr.aria-busy]="chargement()">
+
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="cr-kpis">
+    @for (k of kpis(); track k.libelle) {
+      <div class="cr-kpi" [class.cr-kpi-alerte]="k.alerte">
+        <span class="cr-kpi-lbl">{{ k.libelle }}</span>
+        <span class="cr-kpi-val">{{ k.valeur }}</span>
+        <span class="cr-kpi-meta">{{ k.detail }}</span>
+      </div>
+    }
+  </section>
+
+  <div class="cr-deux">
+
+    <!-- ═══ MATIÈRES ═══ -->
+    <section class="cr-carte">
+      <header class="cr-carte-tete">
+        <h2><i class="fa-solid fa-chart-pie"></i> Matières broyées</h2>
+      </header>
+      @if (poudres().length) {
+        <div class="cr-donut">
+          @if (donutMatieres().length) {
+            <app-donut-chart title="" unit="kg" [data]="donutMatieres()" />
+          } @else {
+            <p class="cr-note">Aucune matière broyée sur la période.</p>
+          }
+        </div>
+        <ul class="cr-poudres">
+          @for (p of poudres(); track p.code) {
+            <li>
+              <div class="cr-poudre-tete">
+                <span class="cr-pastille" [style.background]="p.couleur"></span>
+                <span class="cr-nom">{{ p.libelle }}</span>
+                <span class="cr-muet mono">{{ p.partTotale | number:'1.0-0' }} %</span>
+              </div>
+              <div class="cr-barre"><div class="cr-barre-fill" [style.width.%]="pourcentage(p.partTotale)"></div></div>
+              <div class="cr-poudre-detail">
+                <span><strong class="mono">{{ formaterKg(p.broye) }}</strong> kg broyés</span>
+                <span [class.cr-ecart]="p.pctPertes > 5"><strong class="mono">{{ formaterKg(p.pertes) }}</strong> kg de pertes ({{ formaterPct(p.pctPertes) }})</span>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="cr-vide">
+          <i class="fa-solid fa-box-open"></i>
+          <h3>Aucune matière consommée</h3>
+          <p>Aucun broyage n'a été enregistré sur la période.</p>
+        </div>
+      }
+    </section>
+
+    <!-- ═══ RÉFÉRENCES PRODUITES ═══ -->
+    <section class="cr-carte">
+      <header class="cr-carte-tete">
+        <h2><i class="fa-solid fa-boxes-packing"></i> Production par référence</h2>
+      </header>
+      @if (references().length) {
+        <ul class="cr-liste">
+          @for (r of references(); track r.code) {
+            <li>
+              <div class="cr-liste-tete">
+                <span class="cr-code mono">{{ r.code }}</span>
+                <strong class="mono">{{ r.quantite }}</strong>
+              </div>
+              <div class="cr-barre"><div class="cr-barre-fill cr-barre-vert" [style.width.%]="pourcentage(r.part)"></div></div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="cr-vide">
+          <i class="fa-solid fa-inbox"></i>
+          <h3>Aucune production</h3>
+          <p>Aucune référence produite sur la période.</p>
+        </div>
+      }
+    </section>
+  </div>
+
+  <div class="cr-deux">
+
+    <!-- ═══ MACHINES ═══ -->
+    <section class="cr-carte">
+      <header class="cr-carte-tete">
+        <h2><i class="fa-solid fa-gears"></i> Machines mobilisées</h2>
+        <span class="cr-note">Nombre de sessions de dosage</span>
+      </header>
+      @if (machines().length) {
+        <ul class="cr-liste">
+          @for (m of machines(); track m.machine) {
+            <li>
+              <div class="cr-liste-tete">
+                <span class="cr-nom">{{ m.machine }}</span>
+                <strong class="mono">{{ m.nb }} session(s)</strong>
+              </div>
+              <div class="cr-barre"><div class="cr-barre-fill" [style.width.%]="pourcentage(m.part)"></div></div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="cr-vide">
+          <i class="fa-solid fa-gears"></i>
+          <h3>Aucune machine utilisée</h3>
+          <p>Aucune session de dosage avec machine sur la période.</p>
+        </div>
+      }
+    </section>
+
+    <!-- ═══ QUALITÉ ET ACTIVITÉ ═══ -->
+    <section class="cr-carte">
+      <header class="cr-carte-tete">
+        <h2><i class="fa-solid fa-vial-circle-check"></i> Lots et fûts</h2>
+      </header>
+      <dl class="cr-resume">
+        <div><dt>Lots validés</dt><dd class="mono">{{ rapport()?.totalLotsValides ?? 0 }}</dd></div>
+        <div><dt>Quantité en lots</dt><dd class="mono">{{ formaterKg(rapport()?.totalQuantiteLots ?? 0) }}</dd></div>
+        <div><dt>Fiches de production</dt><dd class="mono">{{ rapport()?.nbFiches ?? 0 }}</dd></div>
+        <div><dt>Fûts produits</dt><dd class="mono">{{ rapport()?.totalFutsProduits ?? 0 }}</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <p class="cr-pied">
+    <i class="fa-solid fa-circle-info"></i>
+    Vue de consommation réelle. Il n'existe pas de stock ni d'inventaire côté Production : la disponibilité et les alertes de rupture ne sont pas affichées.
+  </p>
+</div>
 }

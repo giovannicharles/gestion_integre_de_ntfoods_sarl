@@ -1,140 +1,187 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-bullseye ph-ico"></i>
+<div class="obj">
+
+<header class="obj-hero">
+  <div class="obj-hero-gauche">
+    <i class="fa-solid fa-bullseye obj-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Objectifs des Machinistes</h1>
-      <p class="ph-sub">Définition des objectifs de broyage par PPH, machiniste et poste</p>
+      <div class="obj-hero-kicker">Chef machiniste</div>
+      <h1 class="obj-hero-titre">Objectifs des machinistes</h1>
+      <p class="obj-hero-sous">
+        Ouvrez la session de broyage d'un plan avec l'objectif de chaque machiniste.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="obj-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.obj-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-<div class="gap-note">
-  <i class="fa-solid fa-triangle-exclamation"></i>
-  <div>
-    <strong>Limite backend actuelle :</strong> les objectifs ne peuvent être créés que <em>groupés</em>, à l'ouverture
-    d'une session de broyage. Le backend n'expose pas encore de modification ou de suppression d'un objectif isolé
-    après création — une fois la session ouverte, ses objectifs sont consultables ci-dessous mais non modifiables
-    depuis cette vue tant que l'endpoint correspondant n'existe pas côté serveur.
+@if (sessionExpiree()) {
+  <div class="obj-alerte obj-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="obj-lien">Se reconnecter</a>
   </div>
-</div>
+} @else if (erreur()) {
+  <div class="obj-alerte obj-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
+}
+@if (succes()) {
+  <div class="obj-alerte obj-alerte-succes"><i class="fa-solid fa-circle-check"></i><span>{{ succes() }}</span></div>
+}
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
+@if (chargement()) {
+  <div class="obj-squelette"></div>
+  <div class="obj-squelette obj-squelette-haut"></div>
+} @else {
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-users"></i> Machinistes de l'application</h2></div>
-  @if (loading()) {
-    @for (i of [1,2,3]; track i) { <div class="skeleton skeleton-row"></div> }
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Matricule</th><th>Nom</th><th>Prénom</th><th>Rôle</th><th>Zone de travail</th><th>Actif</th></tr></thead>
-        <tbody>
-          @for (m of machinistes(); track m.matricule) {
-            <tr>
-              <td class="mono">{{ m.matricule }}</td>
-              <td><strong>{{ m.nom }}</strong></td>
-              <td>{{ m.prenom }}</td>
-              <td>{{ m.role }}</td>
-              <td>{{ m.zoneTravail }}</td>
-              <td><span [class]="m.actif ? 'badge bg-success' : 'badge bg-orange'">{{ m.actif ? 'Oui' : 'Non' }}</span></td>
-            </tr>
-          } @empty {
-            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun machiniste trouvé</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
-</div>
+  <div class="obj-deux">
+    <!-- Nouvelle session -->
+    <section class="obj-carte">
+      <h2 class="obj-titre"><i class="fa-solid fa-circle-plus"></i> Nouvelle session de broyage</h2>
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Créer des objectifs (nouvelle session)</h2></div>
-  <div class="modal-body" style="padding: var(--sp-4)">
-    <div class="form-grid">
-      <label>PPH
-        <select class="input" [(ngModel)]="nouvelleSession.referencePPH">
-          <option value="">— Choisir —</option>
-          @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-        </select>
-      </label>
-      <label>Date<input type="date" class="input" [(ngModel)]="nouvelleSession.date"></label>
-      <label>Type de poudre
-        <select class="input" [(ngModel)]="nouvelleSession.typePoudre">
-          @for (t of typesPoudre; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
-        </select>
-      </label>
-      <label>Objectif journalier global (kg)<input type="number" class="input" [(ngModel)]="nouvelleSession.objectifJournalierKg"></label>
-    </div>
-
-    <h4 style="margin-top:var(--sp-3)">Objectifs par machiniste</h4>
-    <div class="form-grid">
-      <label>Machiniste
-        <select class="input" [ngModel]="nouvelObjectif.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
-          <option value="">— Choisir —</option>
-          @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
-        </select>
-      </label>
-      <label>Poste
-        <select class="input" [(ngModel)]="nouvelObjectif.operation">
-          @for (o of operations; track o.code) { <option [value]="o.code">{{ o.libelle }}</option> }
-        </select>
-      </label>
-      <label>Objectif (kg)<input type="number" class="input" [(ngModel)]="nouvelObjectif.objectifKg"></label>
-    </div>
-    <button class="btn btn-ghost btn-sm" (click)="ajouterAuBrouillon()"><i class="fa-solid fa-plus"></i> Ajouter à la liste</button>
-
-    @if (brouillonObjectifs().length > 0) {
-      <div class="tbl-wrap" style="margin-top:var(--sp-3)">
-        <table class="data-table">
-          <thead><tr><th>Machiniste</th><th>Poste</th><th>Objectif (kg)</th><th></th></tr></thead>
-          <tbody>
-            @for (o of brouillonObjectifs(); track $index; let i = $index) {
-              <tr>
-                <td>{{ o.nomMachiniste }}</td>
-                <td>{{ libelleOperation(o.operation) }}</td>
-                <td>{{ o.objectifKg }}</td>
-                <td><button class="btn btn-sm btn-danger" (click)="retirerDuBrouillon(i)">×</button></td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="obj-grille-4">
+        <label class="obj-champ obj-champ-large">
+          <span class="obj-lbl">Plan de production</span>
+          <select class="obj-input" [ngModel]="referencePPH()" (ngModelChange)="choisirPph($event)">
+            <option value="">— Choisir un plan —</option>
+            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.statut }}</option> }
+          </select>
+        </label>
+        <label class="obj-champ">
+          <span class="obj-lbl">Date</span>
+          <input type="date" class="obj-input" [ngModel]="date()" (ngModelChange)="date.set($event)">
+        </label>
+        <label class="obj-champ">
+          <span class="obj-lbl">Poudre</span>
+          <select class="obj-input" [ngModel]="typePoudre()" (ngModelChange)="typePoudre.set($event)">
+            @for (t of typesPoudre; track t.code) { <option [value]="t.code">{{ t.libelle }}</option> }
+          </select>
+        </label>
+        <label class="obj-champ">
+          <span class="obj-lbl">Objectif journalier (kg)</span>
+          <input type="number" min="0" class="obj-input" [ngModel]="objectifGlobal()" (ngModelChange)="objectifGlobal.set($event === '' || $event === null ? null : +$event)">
+        </label>
       </div>
-      <p class="text-muted" style="margin-top:var(--sp-2)">Total : <strong>{{ totalObjectifsBrouillon() }} kg</strong></p>
-    }
 
-    <div class="form-actions">
-      <button class="btn btn-primary" (click)="creerObjectifs()">
-        <i class="fa-solid fa-check"></i> Créer les objectifs
-      </button>
-    </div>
-  </div>
-</div>
+      @if (conflit(); as c) {
+        <div class="obj-alerte obj-alerte-avert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Une session existe déjà pour ce plan, cette date et cette poudre (session #{{ c.id }}). Choisissez une autre date ou un autre type de poudre.</span>
+        </div>
+      }
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list-check"></i> Objectifs existants (7 derniers jours)</h2></div>
-  @if (loading()) {
-    @for (i of [1,2,3]; track i) { <div class="skeleton skeleton-row"></div> }
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Date</th><th>PPH</th><th>Type poudre</th><th>Machiniste</th><th>Poste</th><th>Objectif (kg)</th></tr></thead>
-        <tbody>
-          @for (s of sessions(); track s.id) {
-            @for (o of s.objectifsMachinistes; track o.machinisteMatricule + o.operation) {
-              <tr>
-                <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
-                <td class="mono">{{ s.referencePPH }}</td>
-                <td>{{ s.typePoudreLibelle }}</td>
-                <td>{{ o.nomMachiniste }}</td>
-                <td>{{ o.operationLibelle }}</td>
-                <td><strong>{{ o.objectifKg }}</strong></td>
-              </tr>
+      <div class="obj-sous-carte">
+        <h3 class="obj-sous-titre">Objectifs par machiniste</h3>
+        <div class="obj-ajout">
+          <select class="obj-input" [ngModel]="nouvel.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
+            <option value="">— Machiniste —</option>
+            @for (m of machinistesActifs(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
+          </select>
+          <select class="obj-input" [(ngModel)]="nouvel.operation">
+            @for (o of operations; track o.code) { <option [value]="o.code">{{ o.libelle }}</option> }
+          </select>
+          <input type="number" min="0" class="obj-input obj-input-court" placeholder="kg" [(ngModel)]="nouvel.objectifKg">
+          <button class="obj-bouton obj-bouton-primaire" (click)="ajouterAuBrouillon()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+        </div>
+
+        @if (brouillon().length === 0) {
+          <p class="obj-vide">Aucun machiniste ajouté pour l'instant.</p>
+        } @else {
+          <ul class="obj-liste">
+            @for (o of brouillon(); track $index; let i = $index) {
+              <li>
+                <span class="obj-nom">{{ o.nomMachiniste }}</span>
+                <span class="obj-meta">{{ libelleOperation(o.operation) }}</span>
+                <strong>{{ o.objectifKg | number:'1.0-1' }} kg</strong>
+                <button class="obj-icone" (click)="retirerDuBrouillon(i)" aria-label="Retirer"><i class="fa-solid fa-xmark"></i></button>
+              </li>
             }
-          } @empty {
-            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun objectif défini récemment</td></tr>
+          </ul>
+          <div class="obj-total" [class.obj-total-ecart]="objectifGlobal() !== null && ecartGlobal() !== 0">
+            <span>Total des objectifs machinistes : <strong>{{ totalBrouillon() | number:'1.0-1' }} kg</strong></span>
+            @if (objectifGlobal() !== null && ecartGlobal() !== 0) {
+              <span>Écart avec l'objectif journalier : {{ ecartGlobal() | number:'1.0-1' }} kg</span>
+            }
+          </div>
+        }
+      </div>
+
+      @if (bloquants().length > 0) {
+        <p class="obj-pour">Pour enregistrer : {{ bloquants().join(' · ') }}.</p>
+      }
+      <div class="obj-actions">
+        <button class="obj-bouton obj-bouton-primaire" (click)="creerObjectifs()" [disabled]="!peutCreer()">
+          @if (enCreation()) { <i class="fa-solid fa-spinner obj-tourne"></i> Enregistrement… } @else { <i class="fa-solid fa-check"></i> Ouvrir la session }
+        </button>
+      </div>
+    </section>
+
+    <!-- Machinistes -->
+    <section class="obj-carte">
+      <div class="obj-entete">
+        <h2 class="obj-titre"><i class="fa-solid fa-users"></i> Machinistes</h2>
+        <span class="obj-meta">{{ machinistesActifs().length }} actif(s) sur {{ machinistes().length }}</span>
+      </div>
+      @if (machinistes().length === 0) {
+        <p class="obj-vide">Aucun machiniste trouvé.</p>
+      } @else {
+        <ul class="obj-liste">
+          @for (m of machinistes(); track m.matricule) {
+            <li [class.obj-inactif]="!m.actif">
+              <div>
+                <span class="obj-nom">{{ m.nomComplet }}</span>
+                <span class="obj-meta">{{ m.matricule }} · {{ m.zoneTravail || '—' }}</span>
+              </div>
+              <span class="obj-badge" [class.obj-badge-ok]="m.actif">{{ m.actif ? 'Actif' : 'Inactif' }}</span>
+            </li>
           }
-        </tbody>
-      </table>
+        </ul>
+      }
+    </section>
+  </div>
+
+  <!-- Sessions des 7 derniers jours -->
+  <section class="obj-carte">
+    <div class="obj-entete">
+      <h2 class="obj-titre"><i class="fa-solid fa-list-check"></i> Sessions des 7 derniers jours</h2>
+      <span class="obj-meta">Les objectifs ne se modifient pas après l'ouverture de la session.</span>
     </div>
-  }
+    @if (sessionsRecentes().length === 0) {
+      <p class="obj-vide">Aucune session ouverte sur les 7 derniers jours.</p>
+    } @else {
+      <div class="obj-sessions">
+        @for (s of sessionsRecentes(); track s.id) {
+          <article class="obj-session">
+            <header class="obj-session-tete">
+              <div>
+                <span class="obj-code">{{ s.referencePPH }}</span>
+                <strong>{{ s.date | date:'EEE dd/MM' }}</strong>
+                <span class="obj-meta">{{ s.typePoudreLibelle || libelleTypePoudre(s.typePoudre) }}</span>
+              </div>
+              <div class="obj-session-droite">
+                <span class="obj-meta">Objectif journalier : <strong>{{ s.objectifJournalierKg | number:'1.0-1' }} kg</strong></span>
+                <span class="obj-badge" [class.obj-badge-ok]="s.journeeValidee">{{ s.journeeValidee ? 'Journée validée' : 'En cours' }}</span>
+              </div>
+            </header>
+            @if (s.objectifsMachinistes.length === 0) {
+              <p class="obj-vide">Aucun objectif enregistré.</p>
+            } @else {
+              <ul class="obj-liste obj-liste-fine">
+                @for (o of s.objectifsMachinistes; track o.machinisteMatricule + o.operation) {
+                  <li>
+                    <span class="obj-nom">{{ o.nomMachiniste }}</span>
+                    <span class="obj-meta">{{ o.operationLibelle }}</span>
+                    <strong>{{ o.objectifKg | number:'1.0-1' }} kg</strong>
+                  </li>
+                }
+              </ul>
+            }
+          </article>
+        }
+      </div>
+    }
+  </section>
+}
+
 </div>

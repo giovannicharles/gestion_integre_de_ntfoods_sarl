@@ -1,63 +1,222 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
+<header class="sv-hero">
+  <div class="sv-hero-gauche">
+    <i class="fa-solid fa-chart-line sv-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Suivi de Production</h1>
-      <p class="ph-sub">Progression du PPH, des fûts et alertes en temps réel</p>
+      <div class="sv-hero-kicker">Agent doseur</div>
+      <h1 class="sv-hero-titre">Suivi de production</h1>
+      <p class="sv-hero-sous">
+        Avancement de chaque produit du plan, statut par rapport au calendrier, fûts prédits et comparaison
+        fûts dosés / production aval.
+        @if (derniereMaj(); as d) { <span class="sv-maj">Mis à jour à {{ d | date:'HH:mm' }}</span> }
+      </p>
     </div>
   </div>
-</div>
+  <button class="sv-bouton" (click)="charger()" [disabled]="chargementPlans()">
+    <i class="fa-solid fa-rotate" [class.sv-tourne]="chargementPlans()"></i> Actualiser
+  </button>
+</header>
 
-@if (message()) { <div class="alert alert-error">{{ message() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <select class="input" (ngModelChange)="selectionnerPph($event)" [ngModel]="pphSelectionne()">
-      <option [ngValue]="null">— Choisir un PPH —</option>
-      @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }} ({{ p.statut }})</option> }
-    </select>
+@if (sessionExpiree()) {
+  <div class="sv-alerte sv-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="sv-lien">Se reconnecter</a>
   </div>
-</div>
-
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-} @else if (pphSelectionne()) {
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Quantité produite</div><div class="kpi-val">{{ quantiteProduite() }}</div></div></div>
-  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Quantité restante</div><div class="kpi-val">{{ quantiteRestante() }}</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Taux d'avancement</div><div class="kpi-val">{{ tauxAvancement() }}%</div></div></div>
-</div>
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Progression du PPH</h2></div>
-  <div style="padding: var(--sp-4)">
-    <div class="prog-bar-wrap"><div class="prog-bar" [class.prog-g]="tauxAvancement()>=100" [class.prog-y]="tauxAvancement()<100 && tauxAvancement()>=60" [class.prog-r]="tauxAvancement()<60" [style.width.%]="tauxAvancement()>100?100:tauxAvancement()"></div></div>
-  </div>
-</div>
-
-@for (a of alertes(); track a.texte) {
-  <div class="alert" [class.alert-error]="a.type==='danger'" [class.alert-info]="a.type!=='danger'">
-    <i class="fa-solid" [class.fa-triangle-exclamation]="a.type!=='success'" [class.fa-circle-check]="a.type==='success'"></i> {{ a.texte }}
-  </div>
+} @else if (erreur()) {
+  <div class="sv-alerte sv-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
 }
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Comparaison fûts dosés vs production réelle</h2></div>
-  <div class="toolbar-row">
-    <input type="date" class="input" [(ngModel)]="dateComparaison">
-    <button class="btn btn-primary btn-sm" (click)="comparerFuts()">Comparer</button>
+<section class="sv-carte">
+  @if (chargementPlans()) {
+    <div class="sv-squelette"></div>
+  } @else if (plansSuivis().length === 0) {
+    <p class="sv-vide"><i class="fa-solid fa-inbox"></i> Aucun plan de production à suivre. Un plan apparaît ici dès qu'il n'est plus en brouillon.</p>
+  } @else {
+    <label class="sv-champ">
+      <span class="sv-champ-lbl">Plan de production</span>
+      <select class="sv-input" [ngModel]="referenceChoisie()" (ngModelChange)="choisirPlan($event)">
+        <option value="">— Choisir un plan —</option>
+        @for (p of plansSuivis(); track p.referencePPH) {
+          <option [value]="p.referencePPH">{{ p.referencePPH }} · {{ p.statut }} · {{ p.dateDebut | date:'dd/MM' }} → {{ p.dateFin | date:'dd/MM/yyyy' }}</option>
+        }
+      </select>
+    </label>
+  }
+</section>
+
+@if (planChoisi(); as plan) {
+  <div class="sv-entete">
+    <span class="sv-badge sv-badge-{{ plan.statut.toLowerCase() }}">{{ plan.statut }}</span>
+    <span class="sv-meta">BC {{ plan.referenceBC ?? '—' }}</span>
+    <span class="sv-meta">Calendrier : {{ plan.dateDebut | date:'dd/MM' }} → {{ plan.dateFin | date:'dd/MM/yyyy' }}</span>
+    <span class="sv-meta">Avancement attendu aujourd'hui : <strong>{{ avancementAttendu() | number:'1.0-1' }} %</strong></span>
   </div>
-  @if (comparaison(); as c) {
-    <div class="kpi-grid" style="padding: 0 var(--sp-4) var(--sp-4)">
-      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets</div><div class="kpi-val">{{ c.nbFutsNets }}</div></div></div>
-      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poids poudre</div><div class="kpi-val">{{ c.poidsTotalPoudreKg | number:'1.1-1' }} kg</div></div></div>
-      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Production réelle</div><div class="kpi-val">{{ c.productionReelleKg | number:'1.1-1' }} {{ c.uniteProduction }}</div></div></div>
-      <div class="kpi-card" [class.kp-g]="c.ecartPourcentage>=0" [class.kp-r]="c.ecartPourcentage<0"><div class="kpi-body"><div class="kpi-lbl">Écart</div><div class="kpi-val">{{ c.ecartPourcentage | number:'1.1-1' }}%</div></div></div>
+
+  <div class="sv-kpis">
+    <div class="sv-kpi sv-kpi-principal">
+      <div class="sv-kpi-lbl">Avancement du plan</div>
+      <div class="sv-kpi-val">{{ tauxGlobal() | number:'1.0-1' }} <small>%</small></div>
+      <div class="sv-kpi-meta">{{ realiseTotal() }} / {{ objectifTotal() }} unités</div>
+    </div>
+    <div class="sv-kpi">
+      <div class="sv-kpi-lbl">Reste à produire</div>
+      <div class="sv-kpi-val">{{ resteTotal() }} <small>unités</small></div>
+      <div class="sv-kpi-meta">tous produits</div>
+    </div>
+    <div class="sv-kpi" [class.sv-kpi-alerte]="nbEnRetard() > 0">
+      <div class="sv-kpi-lbl">Produits en retard</div>
+      <div class="sv-kpi-val">{{ nbEnRetard() }}</div>
+      <div class="sv-kpi-meta">{{ nbAtteints() }} atteint(s) sur {{ lignes().length }}</div>
+    </div>
+    <div class="sv-kpi">
+      <div class="sv-kpi-lbl">Fûts prévus (planification)</div>
+      <div class="sv-kpi-val">{{ futsPrevus() }}</div>
+      <div class="sv-kpi-meta">sur la durée du plan</div>
+    </div>
+  </div>
+
+  @for (a of alertes(); track a.texte) {
+    <div class="sv-alerte" [class.sv-alerte-erreur]="a.type === 'danger'" [class.sv-alerte-avert]="a.type === 'warning'" [class.sv-alerte-succes]="a.type === 'success'">
+      <i class="fa-solid" [class.fa-triangle-exclamation]="a.type !== 'success'" [class.fa-circle-check]="a.type === 'success'"></i>
+      <span>{{ a.texte }}</span>
     </div>
   }
-</div>
 
-} @else {
-  <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Sélectionnez un PPH pour afficher son suivi</div>
+  <section class="sv-carte">
+    <h2 class="sv-carte-titre"><i class="fa-solid fa-boxes-stacked"></i> Avancement par produit</h2>
+    @if (lignes().length === 0) {
+      <p class="sv-vide"><i class="fa-solid fa-inbox"></i> Ce plan ne contient aucun produit.</p>
+    } @else {
+      <div class="sv-table-wrap">
+        <table class="sv-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th class="sv-num">Objectif</th>
+              <th class="sv-num">Réalisé</th>
+              <th class="sv-num">Reste</th>
+              <th class="sv-num">Prévu aujourd'hui</th>
+              <th>Avancement</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lignes(); track l.codeProduit) {
+              <tr>
+                <td>
+                  <span class="sv-code">{{ l.codeProduit }}</span>
+                  <div class="sv-designation">{{ l.nomProduit }}</div>
+                  <div class="sv-categorie">{{ l.categorie }}</div>
+                </td>
+                <td class="sv-num">{{ l.objectif }}</td>
+                <td class="sv-num"><strong>{{ l.realise }}</strong></td>
+                <td class="sv-num">{{ l.reste }}</td>
+                <td class="sv-num">{{ l.prevuAujourdhui }}</td>
+                <td>
+                  <div class="sv-barre"><div class="sv-barre-fill" [class.sv-barre-ok]="l.statut === 'ATTEINT'" [class.sv-barre-retard]="l.statut === 'EN_RETARD'" [style.width.%]="l.pourcent"></div></div>
+                  <div class="sv-pct">{{ l.pourcent | number:'1.0-1' }} %</div>
+                </td>
+                <td>
+                  @switch (l.statut) {
+                    @case ('ATTEINT') { <span class="sv-statut sv-statut-ok"><i class="fa-solid fa-circle-check"></i> Atteint</span> }
+                    @case ('EN_RETARD') { <span class="sv-statut sv-statut-retard"><i class="fa-solid fa-triangle-exclamation"></i> En retard</span> }
+                    @case ('SANS_OBJECTIF') { <span class="sv-statut sv-statut-neutre">Sans objectif</span> }
+                    @default { <span class="sv-statut sv-statut-cours"><i class="fa-solid fa-arrows-rotate"></i> En cours</span> }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="sv-carte">
+    <h2 class="sv-carte-titre"><i class="fa-solid fa-flask-vial"></i> Avancement du dosage</h2>
+    <p class="sv-note"><i class="fa-solid fa-circle-info"></i> Fûts dosés par les sessions de ce plan, comparés aux fûts prévus. Lecture seule : l'avancement de production (unités) reste alimenté par les fiches de production.</p>
+    @if (dosage(); as d) {
+      @if (d.nbSessions === 0) {
+        <p class="sv-vide"><i class="fa-solid fa-flask"></i> Aucune session de dosage pour ce plan pour l'instant.</p>
+      } @else {
+        <div class="sv-predit">
+          <div><span class="sv-predit-lbl">Fûts prévus</span><strong>{{ futsPrevus() }}</strong></div>
+          <div><span class="sv-predit-lbl">Dosés (validés)</span><strong>{{ d.futsValides }}</strong></div>
+          <div><span class="sv-predit-lbl">Dosés (en cours)</span><strong>{{ d.futsEnCours }}</strong></div>
+          <div><span class="sv-predit-lbl">Reste à doser</span><strong>{{ resteDosage() }}</strong></div>
+        </div>
+        <div class="sv-barre-large"><div class="sv-barre-fill" [class.sv-barre-retard]="dosageEnRetard()" [style.width.%]="tauxDosage()"></div></div>
+        <div class="sv-pct">{{ tauxDosage() | number:'1.0-1' }} % des fûts prévus · {{ d.nbSessionsValidees }} session(s) validée(s) sur {{ d.nbSessions }}</div>
+        @if (dosageParJour().length > 0) {
+          <div class="sv-table-wrap">
+            <table class="sv-table">
+              <thead><tr><th>Journée</th><th class="sv-num">Prévus</th><th class="sv-num">Validés</th><th class="sv-num">En cours</th><th class="sv-num">Écart</th></tr></thead>
+              <tbody>
+                @for (j of dosageParJour(); track j.date) {
+                  <tr>
+                    <td>{{ j.date | date:'dd/MM/yyyy' }}</td>
+                    <td class="sv-num">{{ j.prevus }}</td>
+                    <td class="sv-num"><strong>{{ j.valides }}</strong></td>
+                    <td class="sv-num">{{ j.enCours }}</td>
+                    <td class="sv-num" [class.sv-ecart-ok]="j.ecart >= 0" [class.sv-ecart-ko]="j.ecart < 0">{{ j.ecart > 0 ? '+' : '' }}{{ j.ecart }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    } @else {
+      <p class="sv-vide"><i class="fa-solid fa-flask"></i> Avancement du dosage indisponible pour l'instant.</p>
+    }
+  </section>
+
+  <section class="sv-carte">
+    <h2 class="sv-carte-titre"><i class="fa-solid fa-wand-magic-sparkles"></i> Prédiction des fûts du plan</h2>
+    @if (chargementDetail()) {
+      <div class="sv-squelette"></div>
+    } @else if (prediction()) { @let p = prediction()!;
+      <div class="sv-predit">
+        <div><span class="sv-predit-lbl">Fûts saisis</span><strong>{{ p.nbFuts }}</strong></div>
+        <div><span class="sv-predit-lbl">Poudre totale</span><strong>{{ p.poudreKg | number:'1.0-1' }} kg</strong></div>
+        <div><span class="sv-predit-lbl">Produits prédits</span><strong>{{ p.predictions.length }}</strong></div>
+        <div><span class="sv-predit-lbl">Calculée le</span><strong>{{ p.dateCalcul | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+      </div>
+      <p class="sv-note"><i class="fa-solid fa-circle-info"></i> Cette prédiction est celle qui sert de référence aux autres rôles. Elle se recalcule sur la page Prédictions.</p>
+    } @else {
+      <p class="sv-vide"><i class="fa-solid fa-flask"></i> Aucune prédiction pour ce plan. Calculez-la sur la page Prédictions à partir du nombre de fûts.</p>
+    }
+  </section>
+
+  <section class="sv-carte">
+    <div class="sv-carte-entete">
+      <h2 class="sv-carte-titre"><i class="fa-solid fa-scale-balanced"></i> Fûts dosés et production aval</h2>
+      <div class="sv-date">
+        <input type="date" class="sv-input sv-input-court" [ngModel]="dateComparaison()" (ngModelChange)="dateComparaison.set($event)">
+        <button class="sv-bouton sv-bouton-primaire" (click)="comparer()" [disabled]="chargementComparaison()">
+          <i class="fa-solid fa-scale-balanced"></i> Comparer
+        </button>
+      </div>
+    </div>
+
+    @if (chargementComparaison()) {
+      <div class="sv-squelette"></div>
+    } @else if (comparaison()) { @let c = comparaison()!;
+      <div class="sv-predit">
+        <div><span class="sv-predit-lbl">Fûts nets dosés</span><strong>{{ c.nbFutsNets }}</strong></div>
+        <div><span class="sv-predit-lbl">Poudre dosée</span><strong>{{ c.poidsTotalPoudreKg | number:'1.0-1' }} kg</strong></div>
+        <div><span class="sv-predit-lbl">Production aval</span><strong>{{ c.productionReelleKg | number:'1.0-1' }} {{ c.uniteProduction }}</strong></div>
+        <div>
+          <span class="sv-predit-lbl">Écart</span>
+          <strong [class.sv-ecart-ok]="c.ecartPourcentage >= 0" [class.sv-ecart-ko]="c.ecartPourcentage < 0">{{ c.ecartPourcentage | number:'1.0-1' }} %</strong>
+        </div>
+      </div>
+    } @else if (comparaisonInfo()) {
+      <p class="sv-vide"><i class="fa-solid fa-calendar-xmark"></i> {{ comparaisonInfo() }}</p>
+    }
+  </section>
+} @else if (!chargementPlans() && plansSuivis().length > 0) {
+  <section class="sv-carte">
+    <p class="sv-vide"><i class="fa-solid fa-hand-pointer"></i> Choisissez un plan pour afficher son suivi.</p>
+  </section>
 }

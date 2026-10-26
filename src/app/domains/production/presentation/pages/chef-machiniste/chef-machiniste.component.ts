@@ -8,7 +8,6 @@ import {
 } from '../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
-import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-chef-machiniste',
@@ -19,7 +18,6 @@ import { ToastService } from '../../../../../core/services/toast.service';
 })
 export class ChefMachinisteComponent implements OnInit {
   private readonly prodSvc = inject(ProductionService);
-  private readonly toast = inject(ToastService);
 
   today = new Date().toISOString().split('T')[0];
   semaineDebut = signal(this.debutSemaine(new Date()));
@@ -150,12 +148,10 @@ export class ChefMachinisteComponent implements OnInit {
       error: () => this.loading.set(false)
     });
     this.prodSvc.getClassementMachinistes(this.semaineDebut(), this.semaineFin()).subscribe({
-      next: c => this.classementHebdo.set(c),
-      error: () => this.toast.error('Impossible de charger le classement hebdomadaire')
+      next: c => this.classementHebdo.set(c)
     });
     this.prodSvc.getClassementMachinistes(this.moisDebut(), this.moisFin()).subscribe({
-      next: c => this.classementMensuel.set(c),
-      error: () => this.toast.error('Impossible de charger le classement mensuel')
+      next: c => this.classementMensuel.set(c)
     });
     const debut7j = this.joursDesSeptDerniers()[0];
     this.prodSvc.getSessionsBroyage({ debut: debut7j, fin: this.today }).subscribe({
@@ -166,8 +162,7 @@ export class ChefMachinisteComponent implements OnInit {
 
   ouvrirSession(): void {
     this.prodSvc.ouvrirSessionBroyage(this.nouvelleSession).subscribe({
-      next: s => { this.sessions.update(list => [s, ...list]); this.showFormSession.set(false); },
-      error: () => this.toast.error("Impossible d'ouvrir la session de broyage")
+      next: s => { this.sessions.update(list => [s, ...list]); this.showFormSession.set(false); }
     });
   }
 
@@ -215,8 +210,7 @@ export class ChefMachinisteComponent implements OnInit {
         this.sessions.update(list => list.map(x => x.id === s.id ? s : x));
         this.showFormRealisation.set(false);
         this.selectedSession.set(null);
-      },
-      error: () => this.toast.error("Impossible d'enregistrer la réalisation")
+      }
     });
   }
 
@@ -229,8 +223,7 @@ export class ChefMachinisteComponent implements OnInit {
         quantiteNetteBroyeeKg: Number(quantite),
         pertesKg: Number(pertes)
       }).subscribe({
-        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x)),
-        error: () => this.toast.error('Impossible de clôturer la session')
+        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x))
       });
     }
   }
@@ -239,8 +232,7 @@ export class ChefMachinisteComponent implements OnInit {
     const qte = prompt('Quantité supplémentaire à autoriser (kg) ?');
     if (qte) {
       this.prodSvc.autoriserDepassementBroyage(session.id, Number(qte)).subscribe({
-        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x)),
-        error: () => this.toast.error('Impossible d\'autoriser le dépassement')
+        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x))
       });
     }
   }
@@ -249,28 +241,24 @@ export class ChefMachinisteComponent implements OnInit {
     const motif = prompt('Justificatif de non-validation (moins de 85 %) :');
     if (motif) {
       this.prodSvc.justifierNonValidationBroyage(session.id, motif).subscribe({
-        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x)),
-        error: () => this.toast.error('Impossible d\'enregistrer le justificatif')
+        next: s => this.sessions.update(list => list.map(x => x.id === s.id ? s : x))
       });
     }
   }
 
   reloadClassements(): void {
     this.prodSvc.getClassementMachinistes(this.semaineDebut(), this.semaineFin()).subscribe({
-      next: c => this.classementHebdo.set(c),
-      error: () => this.toast.error('Impossible de charger le classement hebdomadaire')
+      next: c => this.classementHebdo.set(c)
     });
     this.prodSvc.getClassementMachinistes(this.moisDebut(), this.moisFin()).subscribe({
-      next: c => this.classementMensuel.set(c),
-      error: () => this.toast.error('Impossible de charger le classement mensuel')
+      next: c => this.classementMensuel.set(c)
     });
   }
 
   rechercherPerformance(): void {
     if (!this.performanceMatricule) return;
     this.prodSvc.getPerformancesMachiniste(this.performanceMatricule, this.moisDebut(), this.moisFin()).subscribe({
-      next: s => this.performanceSessions.set(s),
-      error: () => this.toast.error('Impossible de charger les performances de ce machiniste')
+      next: s => this.performanceSessions.set(s)
     });
   }
 

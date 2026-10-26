@@ -1,302 +1,306 @@
-<!-- EN-TÊTE -->
-<div class="ph">
-  <div class="ph-left">
-    <div class="aj-ph-ico"><i class="fa-solid fa-sliders"></i></div>
+<div class="aj">
+
+<!-- ═══ BANDEAU ═══ -->
+<header class="aj-hero">
+  <div class="aj-hero-gauche">
+    <i class="fa-solid fa-sliders aj-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Ajustement du Plan de Production</h1>
-      <p class="ph-sub">Modifier les ressources journalières, démarrer et clôturer la production</p>
+      <div class="aj-hero-kicker">Responsable de salle</div>
+      <h1 class="aj-hero-titre">Ajustement du plan de production</h1>
+      <p class="aj-hero-sous">Objectifs, matières premières et ressources par jour du plan sélectionné.</p>
     </div>
   </div>
-</div>
+  <div class="aj-hero-choix">
+    <label class="aj-champ">
+      <span class="aj-lbl">Plan</span>
+      <select class="aj-select" [ngModel]="pphSelectionne()" (ngModelChange)="selectionner($event)">
+        @for (p of pphs(); track p.id) {
+          <option [ngValue]="p">{{ p.referencePPH }} · {{ p.semaine }} · {{ p.statut }}</option>
+        }
+      </select>
+    </label>
+    <button class="aj-bouton-icone" (click)="charger()" title="Actualiser" aria-label="Actualiser">
+      <i class="fa-solid fa-rotate"></i>
+    </button>
+  </div>
+</header>
 
-<!-- Toasts -->
+<!-- ═══ NOTIFICATIONS ═══ -->
 @if (message()) {
-  <div class="aj-toast aj-toast-ok">
-    <i class="fa-solid fa-circle-check"></i> {{ message() }}
-    <button class="aj-toast-close" (click)="message.set('')">×</button>
+  <div class="aj-alerte aj-alerte-ok">
+    <i class="fa-solid fa-circle-check"></i><span>{{ message() }}</span>
+    <button class="aj-fermer" (click)="message.set('')" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
   </div>
 }
 @if (erreur()) {
-  <div class="aj-toast aj-toast-err">
-    <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
-    <button class="aj-toast-close" (click)="erreur.set('')">×</button>
+  <div class="aj-alerte aj-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span>
+    <button class="aj-fermer" (click)="erreur.set('')" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
   </div>
 }
 
 @if (loading()) {
-  @for (i of [1,2,3]; track i) {
-    <div class="skeleton skeleton-row" style="margin:6px 0"></div>
-  }
-} @else {
+  <div class="aj-squelette"></div>
+  <div class="aj-squelette aj-squelette-haut"></div>
+} @else if (!pphSelectionne()) {
+  <section class="aj-carte aj-vide-plan">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <h2>Aucun plan à ajuster</h2>
+    <p>Les plans apparaissent ici dès qu'ils ont été générés à partir d'un bon de commande.</p>
+  </section>
+} @else if (pphSelectionne()) { @let p = pphSelectionne()!;
 
-<!-- SÉLECTEUR -->
-<div class="card">
-  <div class="aj-selector-row">
-    <div class="aj-selector-label"><i class="fa-solid fa-list-check"></i> Plan de production</div>
-    <select class="input aj-select" [ngModel]="pphSelectionne()" (ngModelChange)="selectionner($event)">
-      @for (p of pphs(); track p.id) {
-        <option [ngValue]="p">{{ p.referencePPH }} — {{ p.semaine }} [{{ p.statut }}]</option>
-      }
-    </select>
-    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </button>
-  </div>
-
-  @if (pphSelectionne(); as p) {
-    <div class="aj-meta-band">
-      <div class="aj-meta-item">
-        <span class="aj-meta-lbl">Référence</span>
-        <span class="aj-meta-val mono">{{ p.referencePPH }}</span>
-      </div>
-      <div class="aj-meta-item">
-        <span class="aj-meta-lbl">Semaine</span>
-        <span class="aj-meta-val">{{ p.semaine }}</span>
-      </div>
-      <div class="aj-meta-item">
-        <span class="aj-meta-lbl">Période</span>
-        <span class="aj-meta-val">{{ p.dateDebut }} → {{ p.dateFin }}</span>
-      </div>
-      <div class="aj-meta-item">
-        <span class="aj-meta-lbl">BC lié</span>
-        <span class="aj-meta-val mono">{{ p.referenceBC ?? '—' }}</span>
-      </div>
-      <div class="aj-meta-item">
-        <span class="aj-meta-lbl">Statut</span>
-        <span [class]="statutClass(p.statut)">
-          @if (p.statut === 'EN_COURS' && enPause()) { EN PAUSE } @else { {{ p.statut }} }
-        </span>
-      </div>
+  <!-- ═══ PARCOURS DU PLAN ═══ -->
+  <section class="aj-parcours" aria-label="Étapes du plan">
+    <div class="aj-etape" [class.aj-etape-faite]="true">
+      <span class="aj-etape-num"><i class="fa-solid fa-check"></i></span>
+      <span>Généré</span>
     </div>
-  }
-</div>
-
-@if (pphSelectionne(); as p) {
-
-<!-- ═══ SECTION 1 : LIGNES DE PRODUCTION — LECTURE SEULE ═══ -->
-<div class="card">
-  <div class="aj-card-header">
-    <div class="aj-card-title">
-      <div class="aj-card-ico aj-ico-n"><i class="fa-solid fa-boxes-stacked"></i></div>
-      <span>Lignes de production</span>
-      <span class="aj-readonly-badge">Lecture seule — issu du BC</span>
+    <div class="aj-etape" [class.aj-etape-faite]="p.statut !== 'BROUILLON'" [class.aj-etape-active]="p.statut === 'BROUILLON'">
+      <span class="aj-etape-num">2</span><span>Validé</span>
     </div>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Code</th>
-          <th>Produit</th>
-          <th class="text-right">Objectif semaine</th>
-          <th class="text-right">Réalisé</th>
-          <th>Progression</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (l of p.lignes; track l.codeProduit; let i = $index) {
+    <div class="aj-etape" [class.aj-etape-faite]="p.statut === 'EN_COURS' || p.statut === 'CLOTURE'" [class.aj-etape-active]="p.statut === 'VALIDE'">
+      <span class="aj-etape-num">3</span><span>Démarré</span>
+    </div>
+    <div class="aj-etape" [class.aj-etape-faite]="p.statut === 'CLOTURE'" [class.aj-etape-active]="p.statut === 'EN_COURS'">
+      <span class="aj-etape-num">4</span>
+      <span>{{ p.statut === 'EN_COURS' && enPause() ? 'En pause' : 'En production' }}</span>
+    </div>
+    <div class="aj-etape" [class.aj-etape-active]="p.statut === 'CLOTURE'">
+      <span class="aj-etape-num">5</span><span>Clôturé</span>
+    </div>
+  </section>
+
+  <!-- ═══ FICHE DU PLAN ═══ -->
+  <section class="aj-fiche">
+    <div class="aj-fiche-tete">
+      <div>
+        <span class="aj-code">{{ p.referencePPH }}</span>
+        <h2 class="aj-titre-plan">Semaine {{ p.semaine }}</h2>
+        <span class="aj-muet">du {{ p.dateDebut | date:'dd/MM/yyyy' }} au {{ p.dateFin | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <span class="aj-badge aj-badge-{{ p.statut === 'EN_COURS' ? 'encours' : p.statut === 'VALIDE' ? 'valide' : p.statut === 'CLOTURE' ? 'cloture' : 'brouillon' }}">
+        {{ p.statut === 'EN_COURS' && enPause() ? 'En pause' : statutLibelle(p.statut) }}
+      </span>
+    </div>
+    <dl class="aj-chiffres">
+      <div><dt>BC lié</dt><dd>{{ p.referenceBC ?? '—' }}</dd></div>
+      <div><dt>Chef de production</dt><dd>{{ p.matriculeChefProduction }}</dd></div>
+      <div><dt>Produits</dt><dd>{{ p.lignes.length }}</dd></div>
+      <div><dt>Objectif / réalisé</dt><dd>{{ totalObjectif() | number:'1.0-0' }} / {{ totalRealise() | number:'1.0-0' }}</dd></div>
+      <div><dt>Matières prévues</dt><dd>{{ totauxMP().total | number:'1.1-1' }} kg</dd></div>
+      <div><dt>Fûts prévus</dt><dd>{{ totalFuts() | number:'1.0-1' }}</dd></div>
+    </dl>
+  </section>
+
+  <!-- ═══ 1. OBJECTIFS PAR PRODUIT ═══ -->
+  <section class="aj-carte">
+    <header class="aj-carte-tete">
+      <div class="aj-titre">
+        <span class="aj-numero">1</span>
+        <div>
+          <h3>Objectifs par produit</h3>
+          <span class="aj-muet">Objectif hebdomadaire issu du bon de commande, ajustable avant démarrage</span>
+        </div>
+      </div>
+    </header>
+    <div class="aj-table-wrap">
+      <table class="aj-table">
+        <thead>
           <tr>
-            <td class="text-muted mono">{{ i + 1 }}</td>
-            <td><strong class="mono" style="color:var(--g,#14532D)">{{ l.codeProduit }}</strong></td>
-            <td>{{ l.nomProduit }}</td>
-            <td class="text-right mono fw-bold">{{ l.objectifSemaine }}</td>
-            <td class="text-right mono">{{ l.productionRealisee }}</td>
-            <td>
-              <div class="aj-prog-wrap">
-                <div class="aj-prog-track">
-                  <div class="aj-prog-bar"
-                       [style.width.%]="progression(l.productionRealisee, l.objectifSemaine)"
-                       [class.aj-prog-g]="progression(l.productionRealisee, l.objectifSemaine) >= 100"
-                       [class.aj-prog-y]="progression(l.productionRealisee, l.objectifSemaine) >= 50 && progression(l.productionRealisee, l.objectifSemaine) < 100"
-                       [class.aj-prog-r]="progression(l.productionRealisee, l.objectifSemaine) < 50">
-                  </div>
-                </div>
-                <span class="aj-prog-pct">{{ progression(l.productionRealisee, l.objectifSemaine) }}%</span>
-              </div>
-            </td>
+            <th>Produit</th>
+            <th class="aj-num">Objectif</th>
+            <th class="aj-num">Réalisé</th>
+            <th>Progression</th>
           </tr>
-        } @empty {
-          <tr><td colspan="6" class="empty-state-block">Aucune ligne</td></tr>
+        </thead>
+        <tbody>
+          @for (l of lignesEdition(); track l.codeProduit; let i = $index) {
+            <tr>
+              <td>
+                <span class="aj-code">{{ l.codeProduit }}</span>
+                <div class="aj-nom">{{ l.nomProduit }}</div>
+              </td>
+              <td class="aj-num">
+                <input type="number" class="aj-saisie"
+                       [ngModel]="lignesEdition()[i].objectifSemaine"
+                       (ngModelChange)="mettreAJourObjectif(i, $event)"
+                       min="0" step="1" [disabled]="p.statut === 'EN_COURS'" aria-label="Objectif">
+              </td>
+              <td class="aj-num"><strong>{{ l.productionRealisee | number:'1.0-0' }}</strong></td>
+              <td>
+                <div class="aj-barre"><div class="aj-barre-fill" [class.aj-barre-ok]="progression(l.productionRealisee, l.objectifSemaine) >= 100" [class.aj-barre-retard]="progression(l.productionRealisee, l.objectifSemaine) < 50" [style.width.%]="progression(l.productionRealisee, l.objectifSemaine)"></div></div>
+                <span class="aj-muet">{{ progression(l.productionRealisee, l.objectifSemaine) }} %</span>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="aj-vide-cellule">Aucun produit dans ce plan.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (p.statut !== 'EN_COURS') {
+      <footer class="aj-carte-pied">
+        <button class="aj-bouton aj-bouton-primaire" (click)="enregistrerLignes()" [disabled]="savingLignes()">
+          @if (savingLignes()) { <i class="fa-solid fa-spinner aj-tourne"></i> Enregistrement… }
+          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les objectifs }
+        </button>
+      </footer>
+    }
+  </section>
+
+  <!-- ═══ 2. MATIÈRES PREMIÈRES ═══ -->
+  <section class="aj-carte">
+    <header class="aj-carte-tete">
+      <div class="aj-titre">
+        <span class="aj-numero">2</span>
+        <div>
+          <h3>Matières premières</h3>
+          <span class="aj-muet">Total du plan, prévu par le système et saisi après ajustement</span>
+        </div>
+      </div>
+    </header>
+    @if (totauxMP().parMatiere.length === 0) {
+      <p class="aj-vide">Aucun besoin en matière première : les produits de ce plan n'ont pas de formule de production, ou leur poids unitaire est à zéro.</p>
+    } @else {
+      <div class="aj-matieres">
+        @for (m of totauxMP().parMatiere; track m.nom; let i = $index) {
+          <article class="aj-matiere aj-mat-{{ i % 4 }}">
+            <header class="aj-matiere-tete"><i class="fa-solid fa-seedling"></i> {{ m.nom }}</header>
+            <strong class="aj-grand">{{ m.total | number:'1.1-1' }} <small>kg</small></strong>
+            <div class="aj-matiere-ligne">
+              <span>Prévu système</span><span>{{ systemeTotal(m.nom) | number:'1.1-1' }} kg</span>
+            </div>
+            <div class="aj-matiere-ligne" [class.aj-ecart]="m.total - systemeTotal(m.nom) !== 0">
+              <span>Écart</span>
+              <span>{{ (m.total - systemeTotal(m.nom)) > 0 ? '+' : '' }}{{ (m.total - systemeTotal(m.nom)) | number:'1.1-1' }} kg</span>
+            </div>
+          </article>
         }
-      </tbody>
-    </table>
-  </div>
-</div>
+      </div>
+    }
+  </section>
 
-<!-- ═══ SECTION 2 : MATIÈRES PREMIÈRES — ÉDITABLE ═══ -->
-<div class="card">
-  <div class="aj-card-header">
-    <div class="aj-card-title">
-      <div class="aj-card-ico aj-ico-y"><i class="fa-solid fa-seedling"></i></div>
-      <span>Matières Premières</span>
-      <span class="aj-editable-badge">Modifiable</span>
-    </div>
-    <span class="aj-total-chip">Total : {{ totauxMP().total | number:'1.1-1' }} kg</span>
-  </div>
+  <!-- ═══ 3. RESSOURCES PAR JOUR ═══ -->
+  <section class="aj-carte">
+    <header class="aj-carte-tete">
+      <div class="aj-titre">
+        <span class="aj-numero">3</span>
+        <div>
+          <h3>Ressources par jour</h3>
+          <span class="aj-muet">Matières et emballage de chaque journée. Les fûts se calculent sur 50 kg de poudre.</span>
+        </div>
+      </div>
+      @if (modifie()) {
+        <span class="aj-non-enregistre"><i class="fa-solid fa-circle-exclamation"></i> Modifications non enregistrées</span>
+      }
+    </header>
 
-  <div class="aj-mp-edit-grid">
-    <div class="aj-mp-edit-card aj-mp-mais">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-leaf"></i> <span>Maïs</span>
+    @if (repartitionEdition().length === 0) {
+      <p class="aj-vide">Aucune répartition journalière disponible pour ce plan.</p>
+    } @else {
+      <div class="aj-table-wrap">
+        <table class="aj-table aj-table-jours">
+          <thead>
+            <tr>
+              <th class="aj-colonne-jour">Jour</th>
+              @for (m of colonnesMatieres(); track m; let i = $index) {
+                <th class="aj-num aj-mat-entete aj-mat-{{ i % 4 }}">{{ m }} (kg)</th>
+              }
+              <th class="aj-num">Fûts</th>
+              @for (t of colonnesEmballage(); track t) {
+                <th class="aj-num">{{ libelleEmballage(t) }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (j of repartitionEdition(); track j.dateJour; let i = $index) {
+              <tr>
+                <td class="aj-colonne-jour"><strong>{{ j.dateJour | date:'EEE dd/MM' }}</strong></td>
+                @for (m of colonnesMatieres(); track m) {
+                  <td class="aj-num">
+                    <input type="number" class="aj-saisie"
+                           [ngModel]="j.matieres[m]"
+                           (ngModelChange)="mettreAJourMatiere(i, m, $event)"
+                           min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'" [attr.aria-label]="m + ' ' + j.dateJour">
+                    <div class="aj-repere" [class.aj-repere-ecart]="ecart(j.dateJour, m, j.matieres[m]) !== 0">
+                      Système {{ systemeDe(j.dateJour, m) | number:'1.1-1' }}
+                      @if (ecart(j.dateJour, m, j.matieres[m]) !== 0) {
+                        <span>({{ ecart(j.dateJour, m, j.matieres[m]) > 0 ? '+' : '' }}{{ ecart(j.dateJour, m, j.matieres[m]) | number:'1.1-1' }})</span>
+                      }
+                    </div>
+                  </td>
+                }
+                <td class="aj-num"><span class="aj-futs" title="Calculé : poudre totale du jour ÷ 50 kg">{{ j.futsPrevus | number:'1.0-1' }}</span></td>
+                @for (t of colonnesEmballage(); track t) {
+                  <td class="aj-num">
+                    <input type="number" class="aj-saisie"
+                           [ngModel]="j.emballages[t]"
+                           (ngModelChange)="mettreAJourEmballage(i, t, $event)"
+                           min="0" step="1" [disabled]="p.statut === 'EN_COURS'" [attr.aria-label]="libelleEmballage(t) + ' ' + j.dateJour">
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().mais | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
-    <div class="aj-mp-edit-card aj-mp-soja">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-circle-dot"></i> <span>Soja</span>
-      </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().soja | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
-    <div class="aj-mp-edit-card aj-mp-arachide">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-droplet"></i> <span>Arachide</span>
-      </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().arachide | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
-  </div>
-</div>
+    }
 
-<!-- ═══ SECTION 3 : RÉPARTITION PAR JOUR — ÉDITABLE ═══ -->
-<div class="card">
-  <div class="aj-card-header">
-    <div class="aj-card-title">
-      <div class="aj-card-ico aj-ico-b"><i class="fa-solid fa-calendar-days"></i></div>
-      <span>Ressources et matières premières par jour</span>
-      <span class="aj-editable-badge">Modifiable</span>
-    </div>
-  </div>
-
-  <div class="tbl-wrap">
-    <table class="data-table aj-edit-table">
-      <thead>
-        <tr>
-          <th>Jour</th>
-          <th class="text-right">Maïs (kg)</th>
-          <th class="text-right">Soja (kg)</th>
-          <th class="text-right">Arachide (kg)</th>
-          <th class="text-right">Fûts</th>
-          <th class="text-right">Sachets</th>
-          <th class="text-right">Couvercles</th>
-          <th class="text-right">Scellés</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (j of repartitionEdition(); track j.dateJour; let i = $index) {
-          <tr [class.aj-row-editing]="p.statut !== 'EN_COURS'">
-            <td><strong class="aj-date-cell">{{ j.dateJour }}</strong></td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreMaisKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreMaisKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreSojaKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreSojaKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreArachideKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreArachideKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input aj-cell-readonly"
-                     [ngModel]="repartitionEdition()[i].futsPrevus"
-                     min="0" step="0.01" disabled
-                     title="Fûts calculés automatiquement depuis la poudre totale du jour (50 kg/fût)">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].sachetsPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'sachetsPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].couverclesPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'couverclesPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].scellesPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'scellesPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="8" class="empty-state-block">Aucune répartition journalière disponible</td></tr>
+    @if (p.statut !== 'EN_COURS' && repartitionEdition().length > 0) {
+      <footer class="aj-carte-pied">
+        @if (modifie()) {
+          <button class="aj-bouton aj-bouton-secondaire" (click)="annulerModifications()" [disabled]="saving()">
+            <i class="fa-solid fa-rotate-left"></i> Annuler
+          </button>
         }
-      </tbody>
-    </table>
-  </div>
+        <button class="aj-bouton aj-bouton-primaire" (click)="enregistrer()" [disabled]="saving() || !modifie() || !valeursValides()">
+          @if (saving()) { <i class="fa-solid fa-spinner aj-tourne"></i> Enregistrement… }
+          @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les ressources }
+        </button>
+      </footer>
+    }
+  </section>
 
-  @if (p.statut !== 'EN_COURS') {
-    <div class="aj-save-row">
-      <button class="btn btn-primary" (click)="enregistrer()" [disabled]="saving()">
-        @if (saving()) { <span class="spinner spinner-sm"></span> Enregistrement… }
-        @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer les ajustements }
-      </button>
+  <!-- ═══ BARRE D'ACTIONS ═══ -->
+  <footer class="aj-actions">
+    <p class="aj-actions-info">
+      <i class="fa-solid fa-circle-info"></i>
+      @if (p.statut === 'BROUILLON') {
+        Le plan est en brouillon : enregistrez vos ajustements. Le chef de production doit le valider avant son démarrage.
+      } @else if (p.statut === 'VALIDE') {
+        Le plan est validé : enregistrez vos derniers ajustements, puis démarrez la production.
+      } @else if (p.statut === 'EN_COURS') {
+        La production est en cours : les ressources ne sont plus modifiables. Mettez en pause ou clôturez.
+      } @else {
+        Plan clôturé : consultation uniquement.
+      }
+    </p>
+    <div class="aj-actions-boutons">
+      @if (p.statut === 'BROUILLON' || p.statut === 'VALIDE') {
+        <button class="aj-bouton aj-bouton-secondaire" (click)="recalculer()" [disabled]="actionning()"
+                title="Recalcule le plan depuis le bon de commande et le catalogue actuels (remplace vos ajustements)">
+          <i class="fa-solid fa-rotate"></i> Recalculer depuis le BC
+        </button>
+      }
+      @if (p.statut === 'VALIDE') {
+        <button class="aj-bouton aj-bouton-primaire" (click)="demarrer()" [disabled]="actionning()">
+          @if (actionning()) { <i class="fa-solid fa-spinner aj-tourne"></i> En cours… }
+          @else { <i class="fa-solid fa-circle-play"></i> Démarrer la production }
+        </button>
+      }
+      @if (p.statut === 'EN_COURS') {
+        <button class="aj-bouton aj-bouton-secondaire" (click)="togglePause()">
+          @if (enPause()) { <i class="fa-solid fa-circle-play"></i> Reprendre }
+          @else { <i class="fa-solid fa-circle-pause"></i> Mettre en pause }
+        </button>
+        <button class="aj-bouton aj-bouton-danger" (click)="cloturer()" [disabled]="actionning()">
+          @if (actionning()) { <i class="fa-solid fa-spinner aj-tourne"></i> Clôture… }
+          @else { <i class="fa-solid fa-flag-checkered"></i> Clôturer le plan }
+        </button>
+      }
     </div>
-  }
+  </footer>
+}
+
 </div>
-
-<!-- ═══ BARRE D'ACTIONS ═══ -->
-<div class="aj-action-bar">
-  <div class="aj-action-bar-info">
-    <i class="fa-solid fa-circle-info"></i>
-    @if (p.statut === 'BROUILLON') {
-      <strong>BROUILLON</strong> — Enregistrez vos ajustements. Le Chef de Production doit valider ce plan avant que vous puissiez le démarrer.
-    }
-    @if (p.statut === 'VALIDE') {
-      <strong>VALIDÉ</strong> — Enregistrez vos derniers ajustements puis démarrez la production.
-    }
-    @if (p.statut === 'EN_COURS') {
-      Production <strong>EN COURS</strong> — Les ressources ne sont plus modifiables. Mettez en pause ou clôturez.
-    }
-  </div>
-
-  <div class="aj-action-btns">
-    @if (p.statut === 'BROUILLON' || p.statut === 'VALIDE') {
-      <button class="btn btn-ghost" (click)="enregistrer()" [disabled]="saving()">
-        @if (saving()) { <span class="spinner spinner-sm"></span> } @else { <i class="fa-solid fa-floppy-disk"></i> }
-        Enregistrer
-      </button>
-    }
-    @if (p.statut === 'VALIDE') {
-      <button class="btn aj-btn-demarrer" (click)="demarrer()" [disabled]="actionning()">
-        @if (actionning()) { <span class="spinner spinner-sm"></span> En cours… }
-        @else { <i class="fa-solid fa-circle-play"></i> Démarrer la production }
-      </button>
-    }
-    @if (p.statut === 'EN_COURS') {
-      <button class="btn aj-btn-pause" [class.aj-btn-reprendre]="enPause()" (click)="togglePause()">
-        @if (enPause()) { <i class="fa-solid fa-circle-play"></i> Reprendre }
-        @else { <i class="fa-solid fa-circle-pause"></i> Pause }
-      </button>
-      <button class="btn btn-danger aj-btn-cloturer" (click)="cloturer()" [disabled]="actionning()">
-        @if (actionning()) { <span class="spinner spinner-sm"></span> Clôture… }
-        @else { <i class="fa-solid fa-flag-checkered"></i> Clôturer }
-      </button>
-    }
-  </div>
-</div>
-
-}<!-- fin pphSelectionne -->
-}<!-- fin @else loading -->

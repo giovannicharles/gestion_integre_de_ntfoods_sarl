@@ -1,84 +1,191 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-pen-to-square ph-ico"></i>
+<div class="rl">
+
+<header class="rl-hero">
+  <div class="rl-hero-gauche">
+    <i class="fa-solid fa-pen-to-square rl-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Réalisations Journalières</h1>
-      <p class="ph-sub">Saisie des quantités réalisées par machiniste et par poste</p>
+      <div class="rl-hero-kicker">Chef machiniste · {{ aujourdhui | date:'EEEE dd MMMM' }}</div>
+      <h1 class="rl-hero-titre">Réalisations journalières</h1>
+      <p class="rl-hero-sous">
+        Saisissez le réalisé de chaque machiniste. Le poste et l'objectif viennent de la session.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="rl-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.rl-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-plus"></i> Nouvelle saisie</h2></div>
-  <div style="padding: var(--sp-4)">
-    <div class="form-grid">
-      <label>Session (PPH / type poudre du jour)
-        <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="saisie.sessionId">
-          <option [ngValue]="0">— Choisir —</option>
-          @for (s of sessionsJour(); track s.id) {
-            <option [ngValue]="s.id">{{ s.referencePPH }} — {{ s.typePoudreLibelle }} ({{ s.date | date:'dd/MM' }})</option>
-          }
-        </select>
-      </label>
-      <label>Machiniste
-        <select class="input" [ngModel]="saisie.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
-          <option value="">— Choisir —</option>
-          @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
-        </select>
-      </label>
-      <label>Poste
-        <select class="input" [(ngModel)]="saisie.operation">
-          @for (o of operations; track o) { <option [value]="o">{{ o }}</option> }
-        </select>
-      </label>
-      <label>Type de poudre<input class="input" [(ngModel)]="saisie.typePoudre" disabled></label>
-      <label>Date<input class="input" [value]="today" disabled></label>
-      <label>Quantité réalisée (kg)<input type="number" class="input" [(ngModel)]="saisie.realiseKg"></label>
-    </div>
-
-    <div class="kpi-grid" style="margin-top:var(--sp-3)">
-      <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Objectif</div><div class="kpi-val">{{ saisie.objectifKg }} kg</div></div></div>
-      <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Réalisé</div><div class="kpi-val">{{ saisie.realiseKg }} kg</div></div></div>
-      <div class="kpi-card" [class.kp-g]="difference() >= 0" [class.kp-r]="difference() < 0">
-        <div class="kpi-body"><div class="kpi-lbl">Différence</div><div class="kpi-val">{{ difference() > 0 ? '+' : '' }}{{ difference() }} kg</div></div>
-      </div>
-      <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">% de réalisation</div><div class="kpi-val">{{ pctRealisation() }}%</div></div></div>
-    </div>
-
-    <div class="form-actions">
-      <button class="btn btn-primary" (click)="enregistrer()"><i class="fa-solid fa-check"></i> Enregistrer la réalisation</button>
-    </div>
+@if (sessionExpiree()) {
+  <div class="rl-alerte rl-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="rl-lien">Se reconnecter</a>
   </div>
-</div>
+} @else if (erreur()) {
+  <div class="rl-alerte rl-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
+}
+@if (succes()) {
+  <div class="rl-alerte rl-alerte-succes"><i class="fa-solid fa-circle-check"></i><span>{{ succes() }}</span></div>
+}
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list"></i> Réalisations du jour</h2></div>
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>PPH</th><th>Type</th><th>Machiniste</th><th>Poste</th><th>Objectif</th><th>Réalisé</th><th>%</th></tr></thead>
-        <tbody>
-          @for (s of sessionsJour(); track s.id) {
-            @for (r of s.realisations; track r.machinisteMatricule + r.operation) {
-              <tr>
-                <td class="mono">{{ s.referencePPH }}</td>
-                <td>{{ s.typePoudreLibelle }}</td>
-                <td>{{ r.nomMachiniste }}</td>
-                <td>{{ r.operationLibelle }}</td>
-                <td>{{ r.objectifKg }} kg</td>
-                <td>{{ r.realiseKg }} kg</td>
-                <td><span [class]="r.pctRealisation >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ r.pctRealisation | number:'1.1-1' }}%</span></td>
-              </tr>
+@if (chargement()) {
+  <div class="rl-squelette"></div>
+  <div class="rl-squelette rl-squelette-haut"></div>
+} @else if (sessionsJour().length === 0) {
+  <section class="rl-carte">
+    <p class="rl-vide"><i class="fa-solid fa-inbox"></i> Aucune session de broyage aujourd'hui. Elle est ouverte par le chef machiniste, avec les objectifs des machinistes.</p>
+    <a routerLink="/production/chef-machiniste/objectifs" class="rl-lien-centre">Ouvrir une session d'objectifs</a>
+  </section>
+} @else {
+
+  <!-- Saisie -->
+  <section class="rl-carte">
+    <h2 class="rl-titre"><i class="fa-solid fa-circle-plus"></i> Nouvelle réalisation</h2>
+
+    <div class="rl-saisie">
+      <div class="rl-colonne">
+        <label class="rl-champ">
+          <span class="rl-lbl">Session</span>
+          <select class="rl-input" [ngModel]="sessionId()" (ngModelChange)="choisirSession($event)">
+            <option [ngValue]="null">— Choisir une session —</option>
+            @for (s of sessionsJour(); track s.id) {
+              <option [ngValue]="s.id">{{ s.referencePPH }} · {{ s.typePoudreLibelle }}@if (s.statut === 'CLOTUREE') { (clôturée) }</option>
             }
-          } @empty {
-            <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune réalisation saisie aujourd'hui</td></tr>
+          </select>
+        </label>
+
+        @if (session(); as s) {
+          <div class="rl-deux-champs">
+            <div class="rl-champ">
+              <span class="rl-lbl">Date</span>
+              <div class="rl-fixe">{{ s.date | date:'EEE dd/MM/yyyy' }}</div>
+            </div>
+            <div class="rl-champ">
+              <span class="rl-lbl">Type de poudre</span>
+              <div class="rl-fixe">{{ s.typePoudreLibelle }}</div>
+            </div>
+          </div>
+
+          <label class="rl-champ">
+            <span class="rl-lbl">Machiniste</span>
+            <select class="rl-input" [ngModel]="matricule()" (ngModelChange)="choisirMachiniste($event)" [disabled]="sessionCloturee() || machinistes().length === 0">
+              <option value="">— Choisir un machiniste —</option>
+              @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nom }}</option> }
+            </select>
+            @if (machinistes().length === 0) {
+              <span class="rl-aide">Aucun machiniste n'a d'objectif dans cette session.</span>
+            }
+          </label>
+
+          <label class="rl-champ">
+            <span class="rl-lbl">Poste</span>
+            <select class="rl-input" [ngModel]="operation()" (ngModelChange)="choisirPoste($event)" [disabled]="!matricule() || sessionCloturee()">
+              <option value="">— Choisir un poste —</option>
+              @for (o of objectifsDuMachiniste(); track o.operation) { <option [value]="o.operation">{{ o.operationLibelle }}</option> }
+            </select>
+            <span class="rl-aide">Seuls les postes où ce machiniste a un objectif sont proposés.</span>
+          </label>
+        }
+      </div>
+
+      <div class="rl-colonne">
+        <div class="rl-objectif">
+          <span class="rl-lbl">Objectif</span>
+          <strong class="rl-grand">{{ objectifKg() | number:'1.0-1' }} kg</strong>
+          @if (existante(); as r) {
+            <span class="rl-aide rl-aide-avert">Réalisation déjà saisie : {{ r.realiseKg | number:'1.1-1' }} kg. La nouvelle saisie la remplacera.</span>
           }
-        </tbody>
-      </table>
+        </div>
+
+        <label class="rl-champ">
+          <span class="rl-lbl">Quantité réalisée (kg)</span>
+          <input type="number" min="0" step="0.1" class="rl-input rl-input-grand" [ngModel]="realiseKg()" (ngModelChange)="realiseKg.set($event === '' || $event === null ? null : +$event)" [disabled]="!matricule() || !operation() || sessionCloturee()">
+        </label>
+
+        @if (objectifKg() > 0) {
+          <div class="rl-barre"><div class="rl-barre-fill" [class.rl-barre-depasse]="pct() > 100" [style.width.%]="pct() > 100 ? 100 : pct()"></div></div>
+          <div class="rl-pct">{{ pct() | number:'1.0-1' }} % de l'objectif</div>
+        }
+
+        @if (etat(); as e) {
+          <div class="rl-etat rl-etat-{{ e.type }}">
+            <i class="fa-solid" [class.fa-circle-info]="e.type === 'neutre'" [class.fa-circle-check]="e.type === 'atteint'"
+               [class.fa-arrow-trend-up]="e.type === 'depassement'" [class.fa-triangle-exclamation]="e.type === 'insuffisant' || e.type === 'bloquant'"></i>
+            <span>{{ e.texte }}</span>
+          </div>
+        }
+
+        <button class="rl-bouton rl-bouton-primaire" (click)="enregistrer()" [disabled]="!peutEnregistrer()">
+          @if (enregistrement()) { <i class="fa-solid fa-spinner rl-tourne"></i> Enregistrement… } @else { <i class="fa-solid fa-check"></i> Enregistrer la réalisation }
+        </button>
+      </div>
     </div>
+  </section>
+
+  <!-- Synthèse de la session -->
+  @if (session(); as s) {
+    <section class="rl-synthese">
+      <div class="rl-tuile">
+        <span class="rl-lbl">Objectif journalier</span>
+        <strong class="rl-moyen">{{ s.objectifJournalierKg | number:'1.0-1' }} kg</strong>
+      </div>
+      <div class="rl-tuile" [class.rl-tuile-alerte]="ecartRepartition() !== 0">
+        <span class="rl-lbl">Répartis aux machinistes</span>
+        <strong class="rl-moyen">{{ objectifsRepartis() | number:'1.0-1' }} kg <small>sur {{ s.objectifJournalierKg | number:'1.0-1' }} kg</small></strong>
+        @if (ecartRepartition() > 0) {
+          <span class="rl-aide rl-aide-avert">{{ ecartRepartition() | number:'1.0-1' }} kg de l'objectif journalier ne sont attribués à aucun machiniste.</span>
+        } @else if (ecartRepartition() < 0) {
+          <span class="rl-aide rl-aide-avert">Les objectifs machinistes dépassent l'objectif journalier de {{ -ecartRepartition() | number:'1.0-1' }} kg.</span>
+        }
+      </div>
+      <div class="rl-tuile">
+        <span class="rl-lbl">Total réalisé</span>
+        <strong class="rl-moyen">{{ totalRealiseSession() | number:'1.1-1' }} kg</strong>
+      </div>
+      <div class="rl-tuile" [class.rl-tuile-alerte]="depassementSession()">
+        <span class="rl-lbl">Dépassement autorisé</span>
+        <strong class="rl-moyen">{{ s.depassementAutoriseKg | number:'1.0-1' }} kg</strong>
+        @if (depassementSession()) { <span class="rl-aide rl-aide-avert">Au-delà de l'objectif autorisé : la clôture demandera une autorisation de dépassement.</span> }
+      </div>
+    </section>
   }
+
+  <!-- Réalisations de la journée -->
+  <section class="rl-carte">
+    <h2 class="rl-titre"><i class="fa-solid fa-list"></i> Réalisations du jour</h2>
+    @if (sessionsJour().length === 0) {
+      <p class="rl-vide">Aucune réalisation saisie aujourd'hui.</p>
+    } @else {
+      <div class="rl-table-wrap">
+        <table class="rl-table">
+          <thead>
+            <tr><th>Session</th><th>Machiniste</th><th>Poste</th><th class="rl-num">Objectif</th><th class="rl-num">Réalisé</th><th class="rl-num">Écart</th><th class="rl-num">%</th></tr>
+          </thead>
+          <tbody>
+            @for (s of sessionsJour(); track s.id) {
+              @for (r of s.realisations; track r.machinisteMatricule + r.operation) {
+                <tr>
+                  <td><span class="rl-code">{{ s.referencePPH }}</span> <span class="rl-meta">{{ s.typePoudreLibelle }}</span></td>
+                  <td>{{ r.nomMachiniste }}</td>
+                  <td>{{ r.operationLibelle }}</td>
+                  <td class="rl-num">{{ r.objectifKg | number:'1.0-1' }} kg</td>
+                  <td class="rl-num"><strong>{{ r.realiseKg | number:'1.1-1' }} kg</strong></td>
+                  <td class="rl-num" [class.rl-ecart-ok]="r.realiseKg >= r.objectifKg" [class.rl-ecart-ko]="r.realiseKg < r.objectifKg">{{ (r.realiseKg - r.objectifKg) > 0 ? '+' : '' }}{{ (r.realiseKg - r.objectifKg) | number:'1.1-1' }}</td>
+                  <td class="rl-num">
+                    <span class="rl-badge" [class.rl-badge-ok]="r.pctRealisation >= 100" [class.rl-badge-attention]="r.pctRealisation >= 85 && r.pctRealisation < 100" [class.rl-badge-ko]="r.pctRealisation < 85">{{ r.pctRealisation | number:'1.0-1' }} %</span>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="7" class="rl-vide-cellule">Aucune réalisation saisie aujourd'hui.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
 </div>

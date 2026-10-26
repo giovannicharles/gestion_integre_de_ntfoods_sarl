@@ -1,280 +1,352 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-person-digging ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="em-hero">
+  <div class="em-hero-gauche">
+    <div class="em-hero-ico"><i class="fa-solid fa-user-check"></i></div>
     <div>
-      <h1 class="ph-title">Registre Employés</h1>
-      <p class="ph-sub">Présences et performances — {{ today | date:'dd MMMM yyyy' }}</p>
+      <div class="em-hero-kicker">
+        Production · {{ aujourdhui | date:'dd/MM/yyyy' }}
+        @if (!peutSaisir()) { <span class="em-tag"><i class="fa-solid fa-eye"></i> Consultation</span> }
+      </div>
+      <h1 class="em-hero-titre">Registre des employés</h1>
+      <p class="em-hero-sous">
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }} }
+        @else { Présences et réalisations par PPH }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
-    <button class="btn btn-primary" (click)="ouvrirEnregistrerRegistre()">
-      <i class="fa-solid fa-plus"></i> Enregistrer registre
+  <div class="em-actions">
+    <button class="em-bouton em-bouton-verre" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+      <i class="fa-solid fa-arrows-rotate" [class.em-tourne]="chargement()"></i>
     </button>
+    @if (peutSaisir()) {
+      <button class="em-bouton em-bouton-blanc" (click)="ouvrirTiroir()">
+        <i class="fa-solid fa-plus"></i> Enregistrer le registre
+      </button>
+    }
   </div>
-</div>
+</header>
 
-@if (message()) {
-  <div class="alert alert-info">{{ message() }}</div>
+@if (notification(); as n) {
+  <div class="em-notif" [class.em-notif-erreur]="n.type === 'erreur'" role="status" aria-live="polite">
+    <i class="fa-solid" [class.fa-circle-check]="n.type === 'ok'" [class.fa-triangle-exclamation]="n.type === 'erreur'"></i>
+    <span>{{ n.texte }}</span>
+    <button class="em-icone" aria-label="Fermer" (click)="notification.set(null)"><i class="fa-solid fa-xmark"></i></button>
+  </div>
 }
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-user-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Présents</div>
-      <div class="kpi-val">{{ nbPresents() }}</div>
-      <div class="kpi-meta">taux {{ tauxPresence() }}%</div>
-    </div>
+@if (erreurs().registres; as msg) {
+  <div class="em-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Registre du jour : {{ msg }}</span>
+    <button class="em-bouton em-bouton-petit em-bouton-rouge" (click)="charger()">Réessayer</button>
   </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-user-xmark"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Absents</div>
-      <div class="kpi-val">{{ nbAbsents() }}</div>
-      <div class="kpi-meta">sur {{ employes().length }} effectif</div>
-    </div>
+}
+@if (erreurs().agents; as msg) {
+  <div class="em-alerte" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>Liste des agents : {{ msg }}</span>
+    <button class="em-bouton em-bouton-petit em-bouton-rouge" (click)="charger()">Réessayer</button>
   </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-briefcase"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Postes distincts</div>
-      <div class="kpi-val">{{ postesDistincts() }}</div>
-      <div class="kpi-meta">types de postes</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-percent"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Taux présence</div>
-      <div class="kpi-val">{{ tauxPresence() }}%</div>
-      <div class="kpi-meta">journée en cours</div>
-    </div>
-  </div>
-</div>
+}
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre du Jour</h2>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Présence</th>
-          <th>Nom</th>
-          <th>Poste</th>
-          <th>Heure arrivée</th>
-          <th>Qté réalisée</th>
-          <th>Unité</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (e of employes(); track e.matriculeEmploye) {
-          <tr [class]="!e.present ? 'row-absent' : ''">
-            <td>
-              @if (e.present) {
-                <span class="badge bg-success"><i class="fa-solid fa-check"></i> Présent</span>
-              } @else {
-                <span class="badge bg-red"><i class="fa-solid fa-times"></i> Absent</span>
-              }
-            </td>
-            <td><strong>{{ e.nomEmploye }}</strong></td>
-            <td>{{ e.poste }}</td>
-            <td>
-              @if (e.heureArrivee) {
-                {{ e.heureArrivee }}
-              } @else {
-                <span class="txt-muted">—</span>
-              }
-            </td>
-            <td>
-              @if (e.present) {
-                <strong class="txt-success">{{ e.qteRealisee }}</strong>
-              } @else {
-                <span class="txt-muted">—</span>
-              }
-            </td>
-            <td>{{ e.present ? e.unite : '—' }}</td>
-          </tr>
-        } @empty {
-          <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun employé dans le registre du jour</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
+@if (chargement() && !derniereMaj()) {
+  <div class="em-squelette"></div>
+  <div class="em-squelette em-squelette-court"></div>
+} @else {
+<div class="em-contenu" [class.em-attente]="chargement()" [attr.aria-busy]="chargement()">
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-chart-bar"></i> Performances du Jour (Présents)</h2>
-  </div>
-  @for (e of presentsSeul(); track e.matriculeEmploye) {
-    <div class="perf-row">
-      <div class="perf-info">
-        <span class="perf-nom">{{ e.nomEmploye }}</span>
-        <span class="perf-poste">{{ e.poste }}</span>
-      </div>
-      <div class="perf-stats">
-        <span class="perf-qty"><strong>{{ e.qteRealisee }}</strong> {{ e.unite }}</span>
-        <span class="perf-heure">Arrivée {{ e.heureArrivee }}</span>
-      </div>
+  <!-- ═══ REGISTRE DU JOUR ═══ -->
+  @if (registresDuJour().length > 1) {
+    <div class="em-onglets" role="tablist" aria-label="PPH du jour">
+      @for (r of registresDuJour(); track r.referencePPH) {
+        <button class="em-onglet" role="tab" [attr.aria-selected]="registreAffiche()?.referencePPH === r.referencePPH"
+                [class.em-onglet-actif]="registreAffiche()?.referencePPH === r.referencePPH" (click)="choisirPphAffiche(r.referencePPH)">
+          <span class="mono">{{ r.referencePPH }}</span>
+          <span class="em-onglet-n">{{ r.lignes.length }}</span>
+        </button>
+      }
     </div>
-  } @empty {
-    <p class="txt-muted" style="padding:16px">Aucun employé présent aujourd'hui.</p>
   }
-</div>
 
-@if (showEnregistrerRegistre()) {
-<div class="modal-overlay" (click)="showEnregistrerRegistre.set(false)">
-  <div class="modal-card modal-lg re-modal" (click)="$event.stopPropagation()">
-    <div class="re-modal-hd">
-      <div class="re-modal-title">
-        <div class="re-modal-ico"><i class="fa-solid fa-user-check"></i></div>
-        <div>
-          <div class="re-modal-ref">Enregistrer le registre du jour</div>
-          <div class="re-modal-sub">Présences et performances — {{ dateRegistre | date:'dd MMMM yyyy' }}</div>
-        </div>
+  @if (registreAffiche(); as r) {
+    <section class="em-kpis">
+      <div class="em-kpi em-kpi-presence">
+        <span class="em-kpi-lbl">Présents</span>
+        <span class="em-kpi-val">{{ presents().length }}<small> / {{ r.lignes.length }}</small></span>
+        <span class="em-kpi-meta">taux de présence {{ tauxPresence() }} %</span>
       </div>
-      <button class="re-modal-close" (click)="showEnregistrerRegistre.set(false)"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-
-    <div class="re-modal-body">
-      <div class="re-meta-row">
-        <div class="re-meta-field">
-          <label class="re-label"><i class="fa-solid fa-calendar-week"></i> PPH</label>
-          <select class="input re-select" [(ngModel)]="referencePPH" (ngModelChange)="onPphChange()">
-            <option value="">— Choisir un PPH —</option>
-            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option> }
-          </select>
-        </div>
-        <div class="re-meta-field">
-          <label class="re-label"><i class="fa-solid fa-calendar-day"></i> Date du registre</label>
-          <div class="re-date-readonly">
-            <i class="fa-solid fa-lock re-date-ico"></i>
-            <span class="mono">{{ dateRegistre | date:'dd/MM/yyyy' }}</span>
-            <span class="re-date-badge">Aujourd'hui</span>
-          </div>
-        </div>
+      <div class="em-kpi" [class.em-kpi-alerte]="absents().length > 0">
+        <span class="em-kpi-lbl">Absents</span>
+        <span class="em-kpi-val">{{ absents().length }}</span>
+        <span class="em-kpi-meta">{{ absents().length ? 'à justifier si besoin' : 'aucune absence' }}</span>
       </div>
-
-      @if (referencePPH && !affectationJour() && !loadingAgents()) {
-        <div class="re-hint re-hint-warn">
-          <i class="fa-solid fa-triangle-exclamation"></i> Aucune affectation trouvée pour ce PPH aujourd'hui. Les agents seront listés sans poste affecté.
-        </div>
-      }
-      @if (loadingAgents()) {
-        <div class="re-agents-loading"><span class="spinner spinner-sm"></span> Chargement des agents…</div>
-      }
-
-      <div class="re-section-title"><i class="fa-solid fa-list-check"></i> Employés affectés</div>
-
-      <div class="re-lines">
-        @for (l of lignesRegistre; track $index; let i = $index) {
-          <div class="re-ligne-card">
-            <div class="re-ligne-header">
-              <span class="re-ligne-num">Ligne {{ i + 1 }}</span>
-              @if (lignesRegistre.length > 1) {
-                <button class="re-remove-btn" (click)="retirerLigne(i)" title="Supprimer cette ligne"><i class="fa-solid fa-xmark"></i></button>
-              }
-            </div>
-            <div class="re-ligne-body">
-              <div class="re-field re-field-agent">
-                <label class="re-label">Agent de production</label>
-                <select class="input re-select" (change)="selectionnerAgent(i, $any($event.target).value); $any($event.target).value = ''">
-                  <option value="">
-                    @if (agentsDuJour().length) { + Sélectionner un agent ({{ agentsDuJour().length }} disponible{{ agentsDuJour().length > 1 ? 's' : '' }}) }
-                    @else { Aucun agent disponible }
-                  </option>
-                  @for (a of agentsDuJour(); track a.matricule) {
-                    <option [value]="a.matricule">{{ a.nomComplet }} — {{ a.libellePoste }} ({{ a.matricule }})</option>
-                  }
-                </select>
-              </div>
-
-              <div class="re-field re-field-sm">
-                <label class="re-label">Matricule</label>
-                <div class="re-readonly"><span class="mono">{{ l.matriculeEmploye || '—' }}</span></div>
-              </div>
-              <div class="re-field re-field-sm">
-                <label class="re-label">Nom</label>
-                <div class="re-readonly">{{ l.nomEmploye || '—' }}</div>
-              </div>
-              <div class="re-field re-field-sm">
-                <label class="re-label">Poste</label>
-                <div class="re-readonly">{{ (libellePoste(l.poste) | titlecase) || '—' }}</div>
-              </div>
-
-              <div class="re-field re-field-xs">
-                <label class="re-label">Présent</label>
-                <input type="checkbox" class="re-checkbox" [(ngModel)]="l.present">
-              </div>
-
-              <div class="re-field re-field-sm">
-                <label class="re-label">Arrivée</label>
-                <input class="input re-input-time" [(ngModel)]="l.heureArrivee" placeholder="08:00">
-              </div>
-
-              <div class="re-field re-field-xs">
-                <label class="re-label">Qté</label>
-                <input type="number" class="input re-input-qty" [(ngModel)]="l.qteRealisee">
-              </div>
-
-              <div class="re-field re-field-xs">
-                <label class="re-label">Unité</label>
-                <input class="input re-input-unit" [(ngModel)]="l.unite">
-              </div>
-
-              <div class="re-field re-field-md">
-                <label class="re-label">Motif absence</label>
-                <input class="input" [(ngModel)]="l.motifAbsence" [disabled]="l.present" placeholder="Si absent">
-              </div>
-            </div>
-          </div>
-        }
+      <div class="em-kpi">
+        <span class="em-kpi-lbl">Postes</span>
+        <span class="em-kpi-val">{{ postesDistincts() }}</span>
+        <span class="em-kpi-meta">postes couverts</span>
       </div>
-
-      <div class="re-actions-row">
-        <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()"><i class="fa-solid fa-plus"></i> Ajouter un agent</button>
-        <button class="btn btn-primary" (click)="enregistrerRegistre()">Enregistrer le registre</button>
+      <div class="em-kpi">
+        <span class="em-kpi-lbl">Réalisé</span>
+        <span class="em-kpi-val">{{ formaterQuantite(production()) }}</span>
+        <span class="em-kpi-meta">quantité des présents</span>
       </div>
-    </div>
-  </div>
-</div>
-}
+    </section>
 
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-magnifying-glass"></i> Consulter un registre précis</h2>
-  </div>
-  <div class="filter-row" style="padding: 0 var(--sp-4) var(--sp-3); display:flex; gap:var(--sp-2); align-items:center">
-    <select class="input" [(ngModel)]="referencePPH">
-      <option value="">— PPH —</option>
-      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-    </select>
-    <input type="date" class="input" [(ngModel)]="rechercheDate">
-    <button class="btn btn-primary" (click)="rechercherRegistre()">Rechercher</button>
-  </div>
-  @if (registreConsulte(); as r) {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Présent</th><th>Matricule</th><th>Nom</th><th>Poste</th><th>Arrivée</th><th>Qté réalisée</th></tr>
-        </thead>
-        <tbody>
-          @for (l of r.lignes; track l.matriculeEmploye) {
+    <section class="em-carte">
+      <header class="em-carte-tete">
+        <h2><i class="fa-solid fa-table-list"></i> Registre de <span class="mono">{{ r.referencePPH }}</span></h2>
+        <span class="em-note">Enregistré par {{ r.matriculeChefProduction }}</span>
+      </header>
+      <div class="tbl-wrap">
+        <table class="em-table">
+          <thead>
             <tr>
-              <td><span [class]="l.present ? 'badge bg-success' : 'badge bg-red'">{{ l.present ? 'Présent' : 'Absent' }}</span></td>
-              <td>{{ l.matriculeEmploye }}</td>
-              <td>{{ l.nomEmploye }}</td>
-              <td>{{ l.poste }}</td>
-              <td>{{ l.heureArrivee ?? '—' }}</td>
-              <td>{{ l.qteRealisee }} {{ l.unite }}</td>
+              <th>Employé</th>
+              <th>Poste</th>
+              <th>Présence</th>
+              <th>Arrivée</th>
+              <th class="num">Réalisé</th>
+              <th>Motif d'absence</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    <p style="padding: 0 var(--sp-4) var(--sp-3)">{{ r.nbPresents }} présent(s) — {{ r.nbAbsents }} absent(s)</p>
+          </thead>
+          <tbody>
+            @for (l of r.lignes; track l.matriculeEmploye) {
+              <tr [class.em-ligne-absent]="!l.present">
+                <td>
+                  <div class="em-personne">
+                    <span class="em-nom">{{ l.nomEmploye }}</span>
+                    <span class="em-muet mono">{{ l.matriculeEmploye }}</span>
+                  </div>
+                </td>
+                <td>{{ libellePoste(l.poste) }}</td>
+                <td>
+                  <span class="em-statut" [class.em-statut-ok]="l.present" [class.em-statut-erreur]="!l.present">
+                    <i class="fa-solid" [class.fa-check]="l.present" [class.fa-xmark]="!l.present"></i>
+                    {{ l.present ? 'Présent' : 'Absent' }}
+                  </span>
+                </td>
+                <td class="mono">{{ l.present && l.heureArrivee ? l.heureArrivee : '—' }}</td>
+                <td class="num mono">
+                  @if (l.present) { <span class="em-nom">{{ formaterQuantite(l.qteRealisee) }}</span> <span class="em-muet">{{ l.unite }}</span> }
+                  @else { <span class="em-muet">—</span> }
+                </td>
+                <td class="em-muet">{{ l.present ? '—' : motifOuTiret(l) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else {
+    <section class="em-vide-carte">
+      <i class="fa-solid fa-calendar-xmark"></i>
+      <h3>Aucun registre aujourd'hui</h3>
+      <p>
+        @if (peutSaisir()) { Enregistrez le registre du jour pour un PPH. Le premier enregistrement bloque la saisie de l'autre : un seul registre est possible par PPH et par date. }
+        @else { Aucun registre n'a encore été enregistré aujourd'hui. }
+      </p>
+      @if (peutSaisir()) {
+        <button class="em-bouton em-bouton-primaire" (click)="ouvrirTiroir()"><i class="fa-solid fa-plus"></i> Enregistrer le registre</button>
+      }
+    </section>
   }
+
+  <!-- ═══ CONSULTATION D'UN REGISTRE ═══ -->
+  <section class="em-carte">
+    <header class="em-carte-tete">
+      <h2><i class="fa-solid fa-magnifying-glass"></i> Consulter un registre</h2>
+    </header>
+    <form class="em-filtres" (submit)="$event.preventDefault(); consulter()">
+      <label class="em-champ">
+        <span class="em-etiquette">PPH</span>
+        <select class="em-input" (change)="consultPph.set($any($event.target).value)">
+          <option value="">— Choisir un PPH —</option>
+          @for (p of pphs(); track p.id) {
+            <option [value]="p.referencePPH" [selected]="p.referencePPH === consultPph()">{{ p.referencePPH }} — {{ p.semaine }}</option>
+          }
+        </select>
+      </label>
+      <label class="em-champ">
+        <span class="em-etiquette">Date</span>
+        <input type="date" class="em-input" [value]="consultDate()" [max]="aujourdhui"
+               (change)="consultDate.set($any($event.target).value)">
+      </label>
+      <button class="em-bouton em-bouton-primaire" type="submit" [disabled]="consultChargement()">
+        @if (consultChargement()) { <i class="fa-solid fa-spinner em-tourne"></i> }
+        @else { <i class="fa-solid fa-magnifying-glass"></i> }
+        Rechercher
+      </button>
+    </form>
+
+    @if (consultMessage()) { <p class="em-note em-note-pad">{{ consultMessage() }}</p> }
+
+    @if (consultResultat(); as c) {
+      <div class="em-consult-bilan">
+        <span class="em-statut em-statut-ok"><i class="fa-solid fa-check"></i> {{ c.nbPresents }} présent(s)</span>
+        <span class="em-statut em-statut-erreur"><i class="fa-solid fa-xmark"></i> {{ c.nbAbsents }} absent(s)</span>
+        <span class="em-note">{{ c.referencePPH }} · {{ c.date | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="em-table">
+          <thead><tr><th>Employé</th><th>Poste</th><th>Présence</th><th>Arrivée</th><th class="num">Réalisé</th></tr></thead>
+          <tbody>
+            @for (l of c.lignes; track l.matriculeEmploye) {
+              <tr [class.em-ligne-absent]="!l.present">
+                <td><div class="em-personne"><span class="em-nom">{{ l.nomEmploye }}</span><span class="em-muet mono">{{ l.matriculeEmploye }}</span></div></td>
+                <td>{{ libellePoste(l.poste) }}</td>
+                <td><span class="em-statut" [class.em-statut-ok]="l.present" [class.em-statut-erreur]="!l.present">{{ l.present ? 'Présent' : 'Absent' }}</span></td>
+                <td class="mono">{{ l.heureArrivee || '—' }}</td>
+                <td class="num mono">{{ l.present ? formaterQuantite(l.qteRealisee) + ' ' + (l.unite ?? '') : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 </div>
+}
+
+<!-- ═══ TIROIR DE SAISIE (Responsable de Salle, Admin) ═══ -->
+@if (tiroirOuvert()) {
+  <div class="em-voile" (click)="fermerTiroir()">
+    <aside class="em-tiroir" role="dialog" aria-modal="true" aria-label="Enregistrer le registre" (click)="$event.stopPropagation()">
+      <header class="em-tiroir-tete">
+        <div>
+          <div class="em-hero-kicker">Registre du {{ aujourdhui | date:'dd/MM/yyyy' }}</div>
+          <h2 class="em-tiroir-titre">Enregistrer le registre</h2>
+          <span class="em-muet-clair">Un registre par PPH et par date. Chaque ligne est un employé et son poste.</span>
+        </div>
+        <button class="em-icone" aria-label="Fermer" (click)="fermerTiroir()" [disabled]="envoi()"><i class="fa-solid fa-xmark"></i></button>
+      </header>
+
+      <div class="em-tiroir-corps">
+        <label class="em-champ">
+          <span class="em-etiquette">PPH</span>
+          <select class="em-input" (change)="choisirPph($any($event.target).value)" [disabled]="envoi()">
+            <option value="">— Choisir un PPH —</option>
+            @for (p of pphs(); track p.id) {
+              <option [value]="p.referencePPH" [selected]="p.referencePPH === referencePPH()" [disabled]="pphDejaSaisis().has(p.referencePPH)">
+                {{ p.referencePPH }} — {{ p.semaine }}{{ pphDejaSaisis().has(p.referencePPH) ? ' (déjà enregistré)' : '' }}
+              </option>
+            }
+          </select>
+        </label>
+
+        @if (registreExistant(); as existant) {
+          <div class="em-alerte" role="alert">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Le registre de <strong class="mono">{{ existant.referencePPH }}</strong> a déjà été enregistré aujourd'hui par <strong class="mono">{{ existant.matriculeChefProduction }}</strong> ({{ existant.lignes.length }} employé(s)). Il ne peut pas être saisi une seconde fois.</span>
+          </div>
+        }
+
+        @if (referencePPH()) {
+          @if (chargementAffectation()) {
+            <p class="em-note"><i class="fa-solid fa-spinner em-tourne"></i> Chargement de l'affectation…</p>
+          } @else if (!affectationJour()) {
+            <div class="em-info">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Aucune affectation aujourd'hui pour ce PPH. Tous les agents actifs sont proposés ; le poste est à choisir à la main.</span>
+            </div>
+          } @else {
+            <div class="em-info em-info-ok">
+              <i class="fa-solid fa-user-gear"></i>
+              <span>Affectation du jour : {{ affectationJour()!.lignes.length }} poste(s). Le poste de chaque agent est repris de l'affectation.</span>
+            </div>
+          }
+
+          <h3 class="em-section">Employés</h3>
+          @if (erreurFormulaire()) {
+            <div class="em-alerte" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ erreurFormulaire() }}</span></div>
+          }
+
+          <ol class="em-lignes">
+            @for (l of lignes(); track $index; let i = $index) {
+              <li class="em-ligne-form" [class.em-ligne-erreur]="erreurLigne(l) && l.matriculeEmploye">
+                <div class="em-ligne-tete">
+                  <span class="em-numero">Employé {{ i + 1 }}</span>
+                  <button class="em-icone" (click)="supprimerLigne(i)" [disabled]="lignes().length === 1 || envoi()" title="Supprimer cette ligne">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+
+                <div class="em-grille">
+                  <label class="em-champ em-champ-large">
+                    <span class="em-etiquette">Agent</span>
+                    <select class="em-input" (change)="choisirAgent(i, $any($event.target).value)" [disabled]="envoi()">
+                      <option value="">— Choisir un agent —</option>
+                      @for (a of agentsProposes(); track a.matricule) {
+                        <option [value]="a.matricule" [selected]="a.matricule === l.matriculeEmploye">{{ a.nomComplet }} ({{ a.matricule }})</option>
+                      }
+                    </select>
+                  </label>
+
+                  <label class="em-champ">
+                    <span class="em-etiquette">Poste</span>
+                    <select class="em-input" [disabled]="envoi()" (change)="majLigne(i, 'poste', $any($event.target).value)">
+                      <option value="">— Choisir un poste —</option>
+                      @for (c of codesPoste(); track c.code) {
+                        <option [value]="c.code" [selected]="c.code === l.poste">{{ c.libelle }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <label class="em-champ em-champ-court">
+                    <span class="em-etiquette">Présent</span>
+                    <span class="em-bascule">
+                      <input type="checkbox" [checked]="l.present" [disabled]="envoi()" (change)="majLigne(i, 'present', $any($event.target).checked)">
+                      <span>{{ l.present ? 'Oui' : 'Non' }}</span>
+                    </span>
+                  </label>
+
+                  @if (l.present) {
+                    <label class="em-champ">
+                      <span class="em-etiquette">Arrivée</span>
+                      <input type="time" class="em-input" [value]="l.heureArrivee" [disabled]="envoi()" (change)="majLigne(i, 'heureArrivee', $any($event.target).value)">
+                    </label>
+                    <label class="em-champ">
+                      <span class="em-etiquette">Réalisé</span>
+                      <div class="em-duo">
+                        <input type="number" class="em-input em-droite" min="0" step="0.1" [value]="l.qteRealisee ?? ''" [disabled]="envoi()"
+                               (input)="majLigne(i, 'qteRealisee', $any($event.target).valueAsNumber)">
+                        <input class="em-input em-court" [value]="l.unite" [disabled]="envoi()" (input)="majLigne(i, 'unite', $any($event.target).value)" aria-label="Unité">
+                      </div>
+                    </label>
+                  } @else {
+                    <label class="em-champ em-champ-large">
+                      <span class="em-etiquette">Motif d'absence</span>
+                      <input class="em-input" [value]="l.motifAbsence" [disabled]="envoi()" placeholder="Ex. : maladie, congé…"
+                             (input)="majLigne(i, 'motifAbsence', $any($event.target).value)">
+                    </label>
+                  }
+                </div>
+
+                @if (l.matriculeEmploye && erreurLigne(l); as msg) {
+                  <p class="em-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> {{ msg }}</p>
+                }
+                @if (matriculesEnDouble().has(l.matriculeEmploye)) {
+                  <p class="em-erreur-ligne"><i class="fa-solid fa-circle-exclamation"></i> Cet agent figure déjà sur une autre ligne.</p>
+                }
+              </li>
+            }
+          </ol>
+
+          <button class="em-bouton em-bouton-contour em-ajout" (click)="ajouterLigne()" [disabled]="envoi()">
+            <i class="fa-solid fa-plus"></i> Ajouter un employé
+          </button>
+        }
+      </div>
+
+      <footer class="em-tiroir-pied">
+        <span class="em-note">{{ lignes().length }} employé(s)</span>
+        <div class="em-actions">
+          <button class="em-bouton em-bouton-contour" (click)="fermerTiroir()" [disabled]="envoi()">Annuler</button>
+          <button class="em-bouton em-bouton-primaire" (click)="enregistrer()" [disabled]="!formulaireValide() || envoi()">
+            @if (envoi()) { <i class="fa-solid fa-spinner em-tourne"></i> Envoi… }
+            @else { <i class="fa-solid fa-floppy-disk"></i> Enregistrer }
+          </button>
+        </div>
+      </footer>
+    </aside>
+  </div>
+}

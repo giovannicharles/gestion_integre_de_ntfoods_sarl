@@ -1,3 +1,111 @@
-.alert { padding: var(--sp-3, 0.75rem); border-radius: 8px; margin-bottom: var(--sp-3, 0.75rem); }
-.alert-error { background: var(--danger-bg, var(--r-gh)); color: var(--danger-text, var(--r)); border: 1px solid var(--danger-border, var(--r-gh)); }
+:host { display: block; }
 
+/* Espacement vertical explicite entre les sections */
+.rp { display: flex; flex-direction: column; gap: 18px; width: 100%; }
+
+/* ── Bandeau ── */
+.rp-hero {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 20px 24px; border-radius: 16px; color: #fff;
+  background: linear-gradient(135deg, var(--g, #14532D), var(--g-m, #1E7A42));
+}
+.rp-hero-gauche { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.rp-hero-ico {
+  width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
+  background: rgba(255,255,255,.16); font-size: 19px; flex-shrink: 0;
+}
+.rp-hero-kicker { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .85; }
+.rp-hero-titre { margin: 2px 0 2px; font-size: 22px; font-weight: 800; }
+.rp-hero-sous { margin: 0; font-size: 13px; opacity: .88; max-width: 640px; line-height: 1.45; }
+
+.rp-bouton {
+  padding: 9px 14px; border-radius: 10px; border: 1px solid var(--n200, #E5E7EB); cursor: pointer;
+  background: var(--w, #fff); color: var(--g, #14532D); font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.rp-hero .rp-bouton { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.35); }
+.rp-bouton:hover:not(:disabled) { background: var(--g-gh, #E6F2EC); }
+.rp-hero .rp-bouton:hover:not(:disabled) { background: rgba(255,255,255,.24); }
+.rp-bouton:disabled { opacity: .45; cursor: not-allowed; }
+.rp-bouton-primaire { background: var(--g, #14532D); color: #fff; border-color: transparent; }
+.rp-bouton-primaire:hover:not(:disabled) { background: var(--g-m, #1E7A42); }
+.rp-tourne { animation: rp-tourne .8s linear infinite; }
+@keyframes rp-tourne { to { transform: rotate(360deg); } }
+
+/* ── Alertes ── */
+.rp-alerte {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; flex-wrap: wrap;
+  font-size: 13px; font-weight: 600;
+}
+.rp-alerte span { flex: 1; min-width: 0; }
+.rp-alerte-erreur { background: var(--r-gh, #FDECEA); color: var(--r-d, #B71C1C); border: 1px solid var(--r, #C62828); }
+.rp-lien { color: inherit; text-decoration: underline; font-weight: 800; background: none; border: none; cursor: pointer; font: inherit; padding: 0; }
+
+/* ── Cartes ── */
+.rp-carte {
+  background: var(--w, #fff); border: 1px solid var(--n200, #E5E7EB); border-radius: 16px;
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+}
+.rp-titre { margin: 0 0 2px; font-size: 15px; font-weight: 800; color: var(--n900, #111827); }
+.rp-entete { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.rp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-meta { font-size: 12px; color: var(--n500, #6B7280); }
+.rp-aide { margin: 0; font-size: 12px; color: var(--n500, #6B7280); }
+.rp-aide-erreur { color: var(--r-d, #B71C1C); font-weight: 600; }
+
+/* ── Période ── */
+.rp-filtres { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.rp-segments { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--n100, #F4F6F8); }
+.rp-segment {
+  padding: 8px 12px; border: none; border-radius: 9px; background: transparent; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--n600, #4B5563);
+}
+.rp-segment-actif { background: var(--w, #fff); color: var(--g, #14532D); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.rp-dates { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.rp-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rp-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--n500, #6B7280); }
+.rp-input {
+  padding: 9px 12px; border-radius: 10px; font-size: 14px; min-width: 0;
+  border: 1px solid var(--n200, #E5E7EB); background: var(--w, #fff); color: var(--n900, #111827);
+}
+.rp-input:focus { outline: none; border-color: var(--g, #14532D); }
+
+/* ── Choix du rapport ── */
+.rp-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.rp-rapport {
+  text-align: left; cursor: pointer; background: var(--w, #fff); color: inherit; font: inherit;
+  border: 1px solid var(--n200, #E5E7EB); border-radius: 14px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.rp-rapport:hover { border-color: var(--g-pale, #B8E0C7); }
+.rp-rapport-actif { border-color: var(--g, #14532D); box-shadow: 0 0 0 1px var(--g, #14532D) inset; background: var(--g-gh, #E6F2EC); }
+.rp-rapport-ico { font-size: 16px; color: var(--g, #14532D); }
+.rp-rapport-titre { font-size: 13px; color: var(--n900, #111827); }
+.rp-rapport-desc { font-size: 12px; color: var(--n500, #6B7280); line-height: 1.4; }
+
+/* ── Aperçu ── */
+.rp-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--n200, #E5E7EB); }
+.rp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rp-table th {
+  text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--n500, #6B7280); background: var(--n100, #F4F6F8); white-space: nowrap;
+}
+.rp-table td { padding: 10px 12px; border-top: 1px solid var(--n100, #F4F6F8); white-space: nowrap; }
+.rp-num { text-align: right !important; font-variant-numeric: tabular-nums; }
+.rp-total td { font-weight: 800; background: var(--n100, #F4F6F8); }
+
+.rp-vide {
+  margin: 0; padding: 22px; text-align: center; color: var(--n500, #6B7280); font-size: 13px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.rp-vide i { font-size: 22px; color: var(--n300, #D1D5DB); }
+.rp-squelette { height: 120px; border-radius: 12px; background: var(--n100, #F4F6F8); animation: rp-pulse 1.2s ease-in-out infinite; }
+@keyframes rp-pulse { 50% { opacity: .55; } }
+
+@media (max-width: 640px) {
+  .rp-grille { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .rp-hero { padding: 16px; }
+  .rp-hero-titre { font-size: 19px; }
+}

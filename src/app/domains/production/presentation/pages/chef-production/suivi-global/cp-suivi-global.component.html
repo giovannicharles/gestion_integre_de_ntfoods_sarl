@@ -1,69 +1,173 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-satellite-dish ph-ico"></i>
+<!-- ═══ BANDEAU ═══ -->
+<header class="sg-hero">
+  <div class="sg-hero-gauche">
+    <div class="sg-hero-ico"><i class="fa-solid fa-satellite-dish"></i></div>
     <div>
-      <h1 class="ph-title">Suivi Global de la Production</h1>
-      <p class="ph-sub">État en temps réel de tous les ordres de fabrication</p>
+      <div class="sg-hero-kicker">Chef de Production</div>
+      <h1 class="sg-hero-titre">Suivi global de la production</h1>
+      <p class="sg-hero-sous">
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }} }
+        @else { Ordres de fabrication et avancement }
+      </p>
     </div>
   </div>
-</div>
+  <button class="sg-bouton sg-bouton-verre" (click)="charger()" [disabled]="chargement()" aria-label="Actualiser">
+    <i class="fa-solid fa-arrows-rotate" [class.sg-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
-} @else {
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">En cours</div><div class="kpi-val">{{ ofEnCours().length }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Terminée</div><div class="kpi-val">{{ ofTermines().length }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Planifiée</div><div class="kpi-val">{{ ofPlanifies().length }}</div></div></div>
-  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Restante</div><div class="kpi-val">{{ productionRestante() }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Taux d'avancement</div><div class="kpi-val">{{ tauxAvancementGlobal() }}%</div></div></div>
-  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">OF en retard</div><div class="kpi-val">{{ ofEnRetard().length }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">OF en dépassement</div><div class="kpi-val">{{ ofEnDepassement().length }}</div></div></div>
-</div>
-
-@if (ofEnRetard().length > 0) {
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger,#d32f2f)"></i> Ordres en retard</h2></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>OF</th><th>Produit</th><th>Échéance</th><th>Avancement</th></tr></thead>
-      <tbody>
-        @for (o of ofEnRetard(); track o.idOF) {
-          <tr><td>{{ o.idOF }}</td><td>{{ o.designationProduit }}</td><td class="text-danger">{{ o.dateButoir | date:'dd/MM/yyyy' }}</td><td>{{ progression(o) }}%</td></tr>
-        }
-      </tbody>
-    </table>
+@if (erreur()) {
+  <div class="sg-alerte sg-alerte-erreur" role="alert">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="sg-bouton sg-bouton-petit" (click)="charger()">Réessayer</button>
   </div>
-</div>
 }
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list"></i> Ordres de fabrication en cours</h2></div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>OF</th><th>PPH</th><th>Produit</th><th>Demandé</th><th>Réalisé</th><th>Progression</th></tr></thead>
-      <tbody>
-        @for (o of ofEnCours(); track o.idOF) {
-          <tr>
-            <td>{{ o.idOF }}</td>
-            <td class="mono">{{ o.referencePPH }}</td>
-            <td>{{ o.designationProduit }}</td>
-            <td>{{ o.qteDemandee }}</td>
-            <td>{{ o.qteRealisee }}</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="progression(o)>=100" [class.prog-y]="progression(o)<100" [style.width.%]="progression(o)"></div></div>
-                <span>{{ progression(o) }}%</span>
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun OF en cours</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
+@if (chargement() && ofs().length === 0) {
+  <div class="sg-squelette"></div>
+  <div class="sg-squelette sg-squelette-court"></div>
+} @else {
 
+  <!-- ═══ INDICATEURS ═══ -->
+  <section class="sg-kpis">
+    <div class="sg-kpi sg-kpi-avancement">
+      <span class="sg-kpi-lbl">Taux d'avancement</span>
+      <span class="sg-kpi-val">{{ tauxAvancementGlobal() | number:'1.0-1' }}<small>%</small></span>
+      <div class="sg-barre"><div class="sg-barre-fill" [style.width.%]="tauxAvancementGlobal()"></div></div>
+      <span class="sg-kpi-meta">{{ productionTotale() }} réalisés sur {{ demandeTotale() }} demandés</span>
+    </div>
+    <div class="sg-kpi">
+      <span class="sg-kpi-lbl">En cours</span>
+      <span class="sg-kpi-val">{{ ofEnCours().length }}</span>
+      <span class="sg-kpi-meta">{{ ofPlanifies().length }} planifié(s), {{ ofTermines().length }} terminé(s)</span>
+    </div>
+    <div class="sg-kpi">
+      <span class="sg-kpi-lbl">Reste à produire</span>
+      <span class="sg-kpi-val">{{ productionRestante() }}</span>
+      <span class="sg-kpi-meta">sur les OF non annulés</span>
+    </div>
+    <div class="sg-kpi" [class.sg-kpi-alerte]="ofEnRetard().length > 0">
+      <span class="sg-kpi-lbl">En retard</span>
+      <span class="sg-kpi-val">{{ ofEnRetard().length }}</span>
+      <span class="sg-kpi-meta">{{ ofEnDepassement().length }} en dépassement</span>
+    </div>
+  </section>
+
+  <!-- ═══ RETARDS ═══ -->
+  @if (ofEnRetard().length > 0) {
+    <section class="sg-carte sg-carte-alerte">
+      <header class="sg-carte-tete">
+        <h2><i class="fa-solid fa-triangle-exclamation"></i> Ordres en retard</h2>
+      </header>
+      <ul class="sg-retards">
+        @for (o of ofEnRetard(); track o.idOF) {
+          <li>
+            <div>
+              <span class="sg-code mono">{{ o.idOF }}</span>
+              <span class="sg-nom">{{ o.designationProduit }}</span>
+            </div>
+            <div class="sg-retard-droite">
+              <span class="sg-jours">{{ joursRetard(o) }} j de retard</span>
+              <span class="sg-echeance">échéance {{ o.dateButoir | date:'dd/MM/yyyy' }}</span>
+              <span class="sg-pct mono">{{ progression(o) }}%</span>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- ═══ LISTE DES OF ═══ -->
+  <section class="sg-carte">
+    <header class="sg-carte-tete">
+      <h2><i class="fa-solid fa-list-check"></i> Ordres de fabrication</h2>
+      <input type="search" class="sg-recherche" placeholder="Numéro, produit, PPH…" aria-label="Rechercher un OF"
+             [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    </header>
+
+    <div class="sg-filtres" role="tablist" aria-label="Filtrer par statut">
+      @for (f of filtres; track f.code) {
+        <button class="sg-filtre" role="tab" [attr.aria-selected]="filtre() === f.code"
+                [class.sg-filtre-actif]="filtre() === f.code" (click)="filtre.set(f.code)">
+          {{ f.libelle }} <span class="sg-filtre-n">{{ compteStatut(f.code) }}</span>
+        </button>
+      }
+    </div>
+
+    @if (ofsFiltres().length) {
+      <div class="tbl-wrap">
+        <table class="sg-table">
+          <thead>
+            <tr>
+              <th>OF</th>
+              <th>PPH</th>
+              <th>Produit</th>
+              <th class="num">Demandé</th>
+              <th class="num">Réalisé</th>
+              <th>Avancement</th>
+              <th>Échéance</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of ofsFiltres(); track o.idOF) {
+              <tr [class.sg-ligne-retard]="ofEnRetard().includes(o)">
+                <td><span class="sg-code mono">{{ o.idOF }}</span></td>
+                <td class="mono sg-muet">{{ o.referencePPH }}</td>
+                <td>
+                  <div class="sg-produit"><span class="mono sg-muet">{{ o.codeProduit }}</span> {{ o.designationProduit }}</div>
+                </td>
+                <td class="num mono">{{ o.qteDemandee }}</td>
+                <td class="num mono">{{ o.qteRealisee }}</td>
+                <td>
+                  <div class="sg-progres">
+                    <div class="sg-barre sg-barre-fine">
+                      <div class="sg-barre-fill" [class.sg-ok]="progression(o) >= 100" [style.width.%]="progression(o)"></div>
+                    </div>
+                    <span class="mono sg-pct">{{ progression(o) }}%</span>
+                  </div>
+                </td>
+                <td>
+                  @if (o.dateButoir) { {{ o.dateButoir | date:'dd/MM/yyyy' }} } @else { <span class="sg-muet">—</span> }
+                </td>
+                <td><span class="sg-statut" [class]="'sg-statut ' + classeStatut(o.statut)">{{ libelleStatut(o.statut) }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="sg-vide">
+        <i class="fa-solid fa-inbox"></i>
+        @if (ofs().length === 0) {
+          <h3>Aucun ordre de fabrication</h3>
+          <p>Les OF apparaissent ici une fois créés à partir des plans de production.</p>
+        } @else {
+          <h3>Aucun résultat</h3>
+          <p>Aucun OF ne correspond à ces critères.</p>
+          <button class="sg-bouton sg-bouton-primaire sg-bouton-petit" (click)="recherche.set(''); filtre.set('TOUS')">Réinitialiser</button>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ═══ DÉPASSEMENTS ═══ -->
+  @if (ofEnDepassement().length > 0) {
+    <section class="sg-carte">
+      <header class="sg-carte-tete">
+        <h2><i class="fa-solid fa-arrow-trend-up"></i> Dépassements</h2>
+        <span class="sg-note">Production supérieure à la demande</span>
+      </header>
+      <ul class="sg-depassements">
+        @for (o of ofEnDepassement(); track o.idOF) {
+          <li>
+            <span class="sg-code mono">{{ o.idOF }}</span>
+            <span class="sg-nom">{{ o.designationProduit }}</span>
+            <span class="sg-plus mono">+{{ o.qteRealisee - o.qteDemandee }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
 }

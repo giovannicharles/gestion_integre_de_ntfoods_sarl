@@ -3,6 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ApiService } from '../../../../../core/http/api.service';
+import { ApiResponse } from '../../../../../core/models/api-response.model';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
+
+/** GET /auth/me (ProfilResponse) — champs modifiables par l'utilisateur lui-même compris. */
+interface ProfilBE {
+  matricule: string; prenom: string; nom: string; email: string; telephone: string | null;
+  residence: string | null; cni: string | null; photo: string | null; dateNaissance: string | null;
+  lieuNaissance: string | null; sexe: string | null;
+}
 
 @Component({
   selector: 'app-settings',
@@ -24,6 +33,10 @@ export class SettingsComponent {
   toastType = signal<'success' | 'error'>('success');
   saving = signal(false);
   passwordError = signal('');
+  /** L'API n'a pas d'endpoint « changer mon mot de passe » : réinitialisation par l'administrateur uniquement. */
+  readonly motDePasseLibreService = false;
+  /** Profil complet chargé : PUT /auth/profil remplace tous les champs, on renvoie donc ceux non édités tels quels. */
+  private profil: ProfilBE | null = null;
 
   constructor() {
     const user = this.auth.getCurrentUser();
@@ -39,14 +52,17 @@ export class SettingsComponent {
     };
     const readableRole = user?.roles?.map(r => roleLabel[r] || r).join(', ') || '—';
 
+    // Identité (nom, prénom, email) : gérée par l'administrateur, affichée en lecture seule.
     this.profileForm = this.fb.group({
-      firstName: [user?.firstname || '', Validators.required],
-      lastName: [user?.lastname || '', Validators.required],
+      firstName: [{ value: user?.firstname || '', disabled: true }],
+      lastName: [{ value: user?.lastname || '', disabled: true }],
       matricule: [{ value: user?.matricule || '', disabled: true }],
-      email: ['', [Validators.email]],
-      phone: ['', []],
+      email: [{ value: '', disabled: true }],
+      phone: ['', [Validators.maxLength(30)]],
+      residence: ['', [Validators.maxLength(255)]],
       role: [{ value: readableRole, disabled: true }]
     });
+    this.chargerProfil();
 
     const savedPrefs = this.loadNotifPrefs();
     this.notificationForm = this.fb.group({
@@ -68,33 +84,38 @@ export class SettingsComponent {
     this.activeTab.set(tab);
   }
 
+  private chargerProfil(): void {
+    this.api.get<ApiResponse<ProfilBE>>('auth/me').subscribe({
+      next: r => {
+        const p = r.donnees;
+        if (!p) return;
+        this.profil = p;
+        this.profileForm.patchValue({ firstName: p.prenom, lastName: p.nom, email: p.email, phone: p.telephone ?? '', residence: p.residence ?? '' });
+      },
+      error: e => this.showToast('Impossible de charger votre profil : ' + extractApiError(e), 'error')
+    });
+  }
+
   saveProfile(): void {
-    if (this.profileForm.valid) {
-      this.saving.set(true);
-      const user = this.auth.getCurrentUser();
-      if (!user) { this.saving.set(false); return; }
-      const matricule = user.matricule;
-      this.api.put(`v1/users/${matricule}/profile`, {
-        firstname: this.profileForm.value.firstName,
-        lastname: this.profileForm.value.lastName,
-        phone: this.profileForm.value.phone || ''
-      }).subscribe({
-        next: () => {
-          const updated = {
-            ...user,
-            firstname: this.profileForm.value.firstName,
-            lastname: this.profileForm.value.lastName
-          };
-          localStorage.setItem('currentUser', JSON.stringify(updated));
-          this.saving.set(false);
-          this.showToast('Profil enregistré', 'success');
-        },
-        error: () => {
-          this.saving.set(false);
-          this.showToast('Erreur lors de l\'enregistrement du profil', 'error');
-        }
-      });
-    }
+    if (!this.profileForm.valid) return;
+    if (!this.profil) { this.showToast('Profil non chargé : rechargez la page avant d\'enregistrer.', 'error'); return; }
+    const p = this.profil;
+    this.saving.set(true);
+    this.api.put<ApiResponse<ProfilBE>>('auth/profil', {
+      telephone: this.profileForm.value.phone || null,
+      residence: this.profileForm.value.residence || null,
+      photo: p.photo, cni: p.cni, dateNaissance: p.dateNaissance, lieuNaissance: p.lieuNaissance, sexe: p.sexe
+    }).subscribe({
+      next: r => {
+        if (r.donnees) this.profil = r.donnees;
+        this.saving.set(false);
+        this.showToast('Profil enregistré', 'success');
+      },
+      error: e => {
+        this.saving.set(false);
+        this.showToast('Enregistrement impossible : ' + extractApiError(e), 'error');
+      }
+    });
   }
 
   saveNotifications(): void {
@@ -108,32 +129,8 @@ export class SettingsComponent {
   }
 
   changePassword(): void {
-    this.passwordError.set('');
-    if (this.securityForm.valid) {
-      const { newPassword, confirmPassword } = this.securityForm.value;
-      if (newPassword !== confirmPassword) {
-        this.passwordError.set('Les mots de passe ne correspondent pas');
-        return;
-      }
-      this.saving.set(true);
-      const user = this.auth.getCurrentUser();
-      if (!user) { this.saving.set(false); return; }
-      this.api.put(`v1/users/${user.matricule}/password`, {
-        currentPassword: this.securityForm.value.currentPassword,
-        newPassword: newPassword
-      }).subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.securityForm.reset();
-          this.showToast('Mot de passe modifié avec succès', 'success');
-        },
-        error: (err: any) => {
-          this.saving.set(false);
-          const msg = err?.error?.message || 'Erreur lors du changement de mot de passe';
-          this.passwordError.set(msg);
-        }
-      });
-    }
+    // Aucun endpoint « changer mon mot de passe » dans l'API : l'administrateur réinitialise.
+    this.passwordError.set('Le changement de mot de passe en libre-service n\'est pas disponible. Demandez une réinitialisation à l\'administrateur.');
   }
 
   private loadNotifPrefs(): any {

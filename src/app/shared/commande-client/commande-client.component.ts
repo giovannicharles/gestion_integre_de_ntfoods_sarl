@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   CommercialService, CommandeDistanceBE, ClientBE, CanalCommande, LigneCommandeDistanceRequest,
 } from '../../domains/commercial/infrastructure/commercial.service';
-import { StockApiRepository } from '../../domains/stock/infrastructure/repositories/stock-api.repository';
+import { StockService } from '../../domains/stock/infrastructure/stock.service';
 import { Product } from '../../domains/stock/domain/models/stock.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -38,7 +38,7 @@ interface LigneFormUI { codeProduit: string; designation: string; conditionnemen
 })
 export class CommandeClientComponent implements OnInit {
   private readonly svc = inject(CommercialService);
-  private readonly stockRepo = inject(StockApiRepository);
+  private readonly stockSvc = inject(StockService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
 
@@ -82,9 +82,15 @@ export class CommandeClientComponent implements OnInit {
   ngOnInit(): void {
     this.charger();
     this.svc.getClients().subscribe({ next: c => this.clients.set(c), error: () => {} });
-    this.stockRepo.getProducts().subscribe({
-      next: p => this.produitsFinis.set(p.filter(x => x.materialType === 'PRODUIT_FINI' && x.active)),
-      error: () => {},
+    // Catalogue officiel (GET /stock/produits, ouvert à tout utilisateur connecté) : l'ancien catalogue
+    // v1/stock/products exige STOCK_PRODUIT_CONSULTER, que comptable, secrétaire et RP n'ont pas (403).
+    // Aucun tarif n'est choisi d'office : le prix unitaire reste à saisir.
+    this.stockSvc.getProduits({ actif: true }).subscribe({
+      next: liste => this.produitsFinis.set(liste.filter(x => x.categorie === 'PRODUIT_FINI').map(x => ({
+        sku: x.code, designation: x.designation, packagingType: x.conditionnementCommercial ?? undefined,
+        unitPriceAmount: 0, active: x.actif, materialType: 'PRODUIT_FINI',
+      } as Product))),
+      error: () => this.produitsFinis.set([]),
     });
   }
 

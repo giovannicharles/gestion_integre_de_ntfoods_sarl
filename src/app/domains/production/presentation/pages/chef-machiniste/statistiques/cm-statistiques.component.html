@@ -1,67 +1,184 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
+<div class="sa">
+
+<header class="sa-hero">
+  <div class="sa-hero-gauche">
+    <i class="fa-solid fa-chart-line sa-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Statistiques</h1>
-      <p class="ph-sub">Comparaisons et évolutions — 8 dernières semaines, données réelles</p>
+      <div class="sa-hero-kicker">Chef machiniste</div>
+      <h1 class="sa-hero-titre">Statistiques du broyage</h1>
+      <p class="sa-hero-sous">
+        Comparaisons à périodes équivalentes et évolution sur 8 semaines.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="sa-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.sa-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+@if (sessionExpiree()) {
+  <div class="sa-alerte sa-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>Votre session a été fermée, probablement parce que ce compte a été ouvert ailleurs.</span>
+    <a routerLink="/auth/login" class="sa-lien">Se reconnecter</a>
+  </div>
+} @else if (semainesEnErreur() > 0) {
+  <div class="sa-alerte sa-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ semainesEnErreur() }} semaine(s) n'ont pas pu être chargées : elles apparaissent vides dans les graphiques.</span>
+    <button class="sa-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
 
-@if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+@if (chargement()) {
+  <div class="sa-squelette"></div>
+  <div class="sa-squelette sa-squelette-haut"></div>
 } @else {
 
-<div class="two-col">
-  @if (comparaisonSemaine(); as c) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-week"></i> Semaine N vs Semaine N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production S</div><div class="kpi-val">{{ c.prodActuelle | number:'1.1-1' }} kg</div><div class="kpi-meta">S-1 : {{ c.prodPrecedente | number:'1.1-1' }} kg</div></div></div>
-        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
-        <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux réalisation</div><div class="kpi-val">{{ c.tauxActuel }}%</div><div class="kpi-meta">S-1 : {{ c.tauxPrecedent }}%</div></div></div>
+  <!-- Vue d'ensemble : 30 derniers jours, tout en graphiques -->
+  <section class="sa-vue">
+    <h2 class="sa-section"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble — 30 derniers jours</h2>
+    @if (apercuErreur()) {
+      <p class="sa-vide"><i class="fa-solid fa-circle-exclamation"></i> La vue d'ensemble n'a pas pu être chargée.</p>
+    } @else if (apercu()) { @let a = apercu()!;
+      <div class="sa-kpis">
+        <div class="sa-kpi sa-kpi-principal"><span class="sa-lbl">Production</span><strong class="sa-grand">{{ a.periode.realise | number:'1.0-0' }} kg</strong><span class="sa-meta">{{ a.periode.nbSessions }} session(s)</span></div>
+        <div class="sa-kpi"><span class="sa-lbl">Taux global</span><strong class="sa-grand">{{ a.periode.taux !== null ? (a.periode.taux | number:'1.1-1') + ' %' : '—' }}</strong><span class="sa-meta">réalisé ÷ objectif</span></div>
+        <div class="sa-kpi"><span class="sa-lbl">% de pertes</span><strong class="sa-grand">{{ a.periode.pctPertes !== null ? (a.periode.pctPertes | number:'1.1-1') + ' %' : '—' }}</strong><span class="sa-meta">{{ a.periode.pertes | number:'1.1-1' }} kg perdus</span></div>
+        <div class="sa-kpi"><span class="sa-lbl">Journées validées</span><strong class="sa-grand">{{ a.periode.nbValidees }} / {{ a.periode.nbSessions }}</strong><span class="sa-meta">à 85 % ou justifiées</span></div>
+        <div class="sa-kpi"><span class="sa-lbl">Machinistes</span><strong class="sa-grand">{{ a.periode.machinistes }}</strong><span class="sa-meta">ayant saisi une réalisation</span></div>
       </div>
-    </div>
-  }
-  @if (comparaisonMois(); as c) {
-    <div class="card">
-      <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar-days"></i> Mois N vs Mois N-1</h2></div>
-      <div class="kpi-grid">
-        <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Production M</div><div class="kpi-val">{{ c.prodActuelle | number:'1.1-1' }} kg</div><div class="kpi-meta">M-1 : {{ c.prodPrecedente | number:'1.1-1' }} kg</div></div></div>
-        <div class="kpi-card" [class.kp-g]="c.variation>=0" [class.kp-r]="c.variation<0"><div class="kpi-body"><div class="kpi-lbl">Variation</div><div class="kpi-val">{{ c.variation>0?'+':'' }}{{ c.variation }}%</div></div></div>
-        <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Taux réalisation</div><div class="kpi-val">{{ c.tauxActuel }}%</div><div class="kpi-meta">M-1 : {{ c.tauxPrecedent }}%</div></div></div>
+
+      <div class="sa-graphiques">
+        <article class="sa-carte">
+          <h3 class="sa-titre">Objectif et réalisé par jour (kg)</h3>
+          <app-mini-chart type="bar" [labels]="labels30()" [series]="serieObjectifRealise30()" [height]="220" />
+        </article>
+        <article class="sa-carte">
+          <h3 class="sa-titre">Taux de réalisation par jour (%)</h3>
+          <app-mini-chart type="line" [labels]="labels30()" [series]="serieTaux30()" [height]="220" />
+        </article>
+        <article class="sa-carte">
+          <h3 class="sa-titre">Nette et pertes par jour (kg)</h3>
+          <app-mini-chart type="bar" [labels]="labels30()" [series]="serieNettePertes30()" [height]="220" />
+        </article>
+        <article class="sa-carte">
+          <h3 class="sa-titre">% de pertes par jour</h3>
+          <app-mini-chart type="line" [labels]="labels30()" [series]="seriePctPertes30()" [height]="220" />
+        </article>
+        <article class="sa-carte">
+          <h3 class="sa-titre">Poudre broyée par type</h3>
+          @if (donutPoudres30().length) {
+            <app-donut-chart title="" unit="kg" [data]="donutPoudres30()" />
+          } @else { <p class="sa-vide">Aucune poudre broyée sur la période.</p> }
+        </article>
+        <article class="sa-carte">
+          <h3 class="sa-titre">Validation des journées</h3>
+          @if (donutValidation30().length) {
+            <app-donut-chart title="" unit="jours" [data]="donutValidation30()" />
+          } @else { <p class="sa-vide">Aucune journée sur la période.</p> }
+        </article>
       </div>
+    }
+  </section>
+
+  <!-- Comparaisons -->
+  <section class="sa-comparaisons">
+    @for (c of [{ titre: 'Semaine en cours', sous: 'Même période que la semaine précédente', d: comparaisonSemaine(), precLibelle: 'S-1' },
+                { titre: 'Mois en cours', sous: 'Même période que ' + libelleMoisPrecedent(), d: comparaisonMois(), precLibelle: 'M-1' }]; track c.titre) {
+      <article class="sa-carte">
+        <div class="sa-entete">
+          <div>
+            <h2 class="sa-titre">{{ c.titre }}</h2>
+            <span class="sa-meta">{{ c.sous }}</span>
+          </div>
+          @if (c.d?.variation !== null && c.d?.variation !== undefined) {
+            <span class="sa-var" [class.sa-var-hausse]="c.d!.variation! >= 0" [class.sa-var-baisse]="c.d!.variation! < 0">
+              {{ c.d!.variation! > 0 ? '+' : '' }}{{ c.d!.variation | number:'1.1-1' }} %
+            </span>
+          }
+        </div>
+
+        @if (!c.d) {
+          <p class="sa-vide"><i class="fa-solid fa-inbox"></i> Données indisponibles pour cette comparaison.</p>
+        } @else {
+          <div class="sa-indic">
+            <div>
+              <span class="sa-lbl">Production réalisée</span>
+              <strong class="sa-grand">{{ c.d.actuel.production | number:'1.1-1' }} kg</strong>
+              <span class="sa-meta">{{ c.precLibelle }} : {{ c.d.precedent.production | number:'1.1-1' }} kg</span>
+            </div>
+            <div>
+              <span class="sa-lbl">Taux de réalisation</span>
+              <strong class="sa-grand">{{ c.d.actuel.taux !== null ? (c.d.actuel.taux | number:'1.1-1') + ' %' : '—' }}</strong>
+              <span class="sa-meta">{{ c.precLibelle }} : {{ c.d.precedent.taux !== null ? (c.d.precedent.taux | number:'1.1-1') + ' %' : '—' }}</span>
+            </div>
+            <div>
+              <span class="sa-lbl">% de pertes</span>
+              <strong class="sa-grand">{{ c.d.actuel.pctPertes !== null ? (c.d.actuel.pctPertes | number:'1.1-1') + ' %' : '—' }}</strong>
+              <span class="sa-meta">{{ c.precLibelle }} : {{ c.d.precedent.pctPertes !== null ? (c.d.precedent.pctPertes | number:'1.1-1') + ' %' : '—' }}</span>
+            </div>
+          </div>
+          @if (c.d.variation === null) {
+            <p class="sa-aide">Pas de production sur la période de comparaison : aucune variation calculée.</p>
+          }
+        }
+      </article>
+    }
+  </section>
+
+  <!-- Évolution sur 8 semaines -->
+  <section class="sa-graphiques">
+    <article class="sa-carte">
+      <h2 class="sa-titre">Production réalisée et objectif</h2>
+      <app-mini-chart type="bar" [labels]="labels()" [series]="serieObjectifsRealise()" [height]="220" />
+    </article>
+    <article class="sa-carte">
+      <h2 class="sa-titre">Taux de réalisation (%)</h2>
+      <app-mini-chart type="line" [labels]="labels()" [series]="serieTaux()" [height]="220" />
+    </article>
+    <article class="sa-carte">
+      <h2 class="sa-titre">% de pertes</h2>
+      <app-mini-chart type="line" [labels]="labels()" [series]="seriePertes()" [height]="220" />
+      <p class="sa-aide">Calculé sur les sessions dont les pertes sont renseignées.</p>
+    </article>
+    <article class="sa-carte">
+      <h2 class="sa-titre">Production par poudre (kg)</h2>
+      <app-mini-chart type="bar" [labels]="labels()" [series]="serieParType()" [height]="220" />
+    </article>
+  </section>
+
+  <!-- Récapitulatif -->
+  <section class="sa-carte">
+    <h2 class="sa-titre">Récapitulatif par semaine</h2>
+    <div class="sa-table-wrap">
+      <table class="sa-table">
+        <thead>
+          <tr>
+            <th>Semaine</th><th class="sa-num">Sessions</th><th class="sa-num">Objectif</th>
+            <th class="sa-num">Réalisé</th><th class="sa-num">Taux</th><th class="sa-num">% pertes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of recapitulatif(); track s.debut) {
+            <tr>
+              <td><strong>{{ s.libelle }}</strong><div class="sa-meta">{{ s.debut | date:'dd/MM' }} → {{ s.fin | date:'dd/MM' }}</div></td>
+              @if (s.ind) {
+                <td class="sa-num">{{ s.ind.sessions }}</td>
+                <td class="sa-num">{{ s.ind.objectif | number:'1.0-1' }} kg</td>
+                <td class="sa-num"><strong>{{ s.ind.production | number:'1.1-1' }} kg</strong></td>
+                <td class="sa-num">{{ s.ind.taux !== null ? (s.ind.taux | number:'1.1-1') + ' %' : '—' }}</td>
+                <td class="sa-num">{{ s.ind.pctPertes !== null ? (s.ind.pctPertes | number:'1.1-1') + ' %' : '—' }}</td>
+              } @else {
+                <td colspan="5" class="sa-meta">Semaine non chargée</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-  }
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution de la production</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProduction()" [height]="200" /></div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="200" /></div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bullseye"></i> Évolution des objectifs</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieEvolutionObjectifs()" [height]="200" /></div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gauge"></i> Évolution des performances</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPerformances()" [height]="200" /></div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution des quantités broyées par type</h2></div>
-  <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieEvolutionQuantitesBroyees()" [height]="220" /></div>
-</div>
-
+  </section>
 }
+
+</div>

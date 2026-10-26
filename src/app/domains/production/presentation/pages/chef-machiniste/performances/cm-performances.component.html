@@ -1,59 +1,165 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-chart-simple ph-ico"></i>
+<div class="pf">
+
+<header class="pf-hero">
+  <div class="pf-hero-gauche">
+    <i class="fa-solid fa-chart-simple pf-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Performances des Machinistes</h1>
-      <p class="ph-sub">{{ classement()?.periode }}</p>
+      <div class="pf-hero-kicker">Chef machiniste</div>
+      <h1 class="pf-hero-titre">Performances des machinistes</h1>
+      <p class="pf-hero-sous">
+        Production, efficacité et régularité de chaque machiniste sur la période.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-  <div class="ph-actions">
-    <button class="btn btn-ghost" (click)="exporterCsv()"><i class="fa-solid fa-download"></i> Exporter CSV</button>
+  <div class="pf-actions">
+    <button class="pf-bouton" (click)="exporterCsv()" [disabled]="lignes().length === 0">
+      <i class="fa-solid fa-download"></i> Exporter CSV
+    </button>
+    <button class="pf-bouton" (click)="charger()" [disabled]="chargement()">
+      <i class="fa-solid fa-rotate" [class.pf-tourne]="chargement()"></i> Actualiser
+    </button>
   </div>
-</div>
+</header>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
-
-<div class="card">
-  <div class="toolbar-row">
-    <input class="input search-input" placeholder="Rechercher un machiniste..." [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
-    <label>Du <input type="date" class="input" [ngModel]="debut()" (ngModelChange)="debut.set($event)"></label>
-    <label>Au <input type="date" class="input" [ngModel]="fin()" (ngModelChange)="fin.set($event)"></label>
-    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+@if (sessionExpiree()) {
+  <div class="pf-alerte pf-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="pf-lien">Se reconnecter</a>
   </div>
+} @else if (erreur()) {
+  <div class="pf-alerte pf-alerte-erreur">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ erreur() }}</span>
+    <button class="pf-lien" (click)="charger()">Réessayer</button>
+  </div>
+}
 
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+<!-- Période -->
+<section class="pf-carte">
+  <div class="pf-filtres">
+    <div class="pf-segments">
+      @for (p of periodes; track p.code) {
+        <button class="pf-segment" [class.pf-segment-actif]="periode() === p.code" (click)="choisirPeriode(p.code)">{{ p.libelle }}</button>
+      }
+    </div>
+    <div class="pf-dates">
+      <label class="pf-champ">
+        <span class="pf-lbl">Du</span>
+        <input type="date" class="pf-input" [ngModel]="debut()" (ngModelChange)="debut.set($event)">
+      </label>
+      <label class="pf-champ">
+        <span class="pf-lbl">Au</span>
+        <input type="date" class="pf-input" [ngModel]="fin()" (ngModelChange)="fin.set($event)">
+      </label>
+      <button class="pf-bouton pf-bouton-primaire" (click)="appliquerPersonnalisee()" [disabled]="dateInvalide() || chargement()">Appliquer</button>
+    </div>
+  </div>
+  @if (dateInvalide()) {
+    <p class="pf-aide pf-aide-erreur">La date de début doit être antérieure à la date de fin.</p>
   } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Machiniste</th><th>Quantité produite</th><th>Objectif</th><th>Taux réalisation</th><th>Efficacité</th><th>Jours</th></tr></thead>
+    <p class="pf-aide">{{ classement()?.periode }}</p>
+  }
+</section>
+
+<!-- Synthèse -->
+<section class="pf-kpis">
+  <div class="pf-kpi pf-kpi-principal">
+    <span class="pf-lbl">Production</span>
+    <strong class="pf-grand">{{ productionTotale() | number:'1.1-1' }} kg</strong>
+    <span class="pf-muet">sur un objectif de {{ objectifTotal() | number:'1.0-1' }} kg</span>
+  </div>
+  <div class="pf-kpi">
+    <span class="pf-lbl">Efficacité de l'équipe</span>
+    <strong class="pf-grand">{{ efficaciteGlobale() | number:'1.1-1' }} %</strong>
+    <span class="pf-muet">réalisé ÷ objectif</span>
+  </div>
+  <div class="pf-kpi">
+    <span class="pf-lbl">Machinistes classés</span>
+    <strong class="pf-grand">{{ lignes().length }}</strong>
+    <span class="pf-muet">ayant une réalisation sur la période</span>
+  </div>
+  <div class="pf-kpi">
+    <span class="pf-lbl">Meilleur</span>
+    <strong class="pf-moyen">{{ meilleur()?.nomMachiniste ?? '—' }}</strong>
+    <span class="pf-muet">{{ meilleur() ? (efficacitePct(meilleur()!) | number:'1.1-1') + ' % d\'efficacité' : 'aucun classement' }}</span>
+  </div>
+</section>
+
+<!-- Classement -->
+<section class="pf-carte">
+  <div class="pf-entete">
+    <h2 class="pf-titre"><i class="fa-solid fa-ranking-star"></i> Classement</h2>
+    <input class="pf-input pf-recherche" placeholder="Rechercher un machiniste" [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+  </div>
+
+  @if (chargement()) {
+    <div class="pf-squelette"></div>
+    <div class="pf-squelette"></div>
+  } @else if (lignes().length === 0) {
+    <p class="pf-vide"><i class="fa-solid fa-inbox"></i>
+      @if ((classement()?.classements ?? []).length === 0) { Aucune réalisation sur cette période. } @else { Aucun machiniste ne correspond à la recherche. }
+    </p>
+  } @else {
+    <div class="pf-table-wrap">
+      <table class="pf-table">
+        <thead>
+          <tr>
+            <th class="pf-num">Rang</th><th>Machiniste</th><th>Postes</th>
+            <th class="pf-num">Production</th><th class="pf-num">Objectif</th><th>Efficacité</th>
+            <th class="pf-num">Taux moyen</th><th class="pf-num">Jours</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (c of lignesPage(); track c.machinisteMatricule) {
-            <tr>
-              <td>#{{ c.rang }}</td>
-              <td>{{ c.nomMachiniste }} <span class="text-muted">({{ c.machinisteMatricule }})</span></td>
-              <td>{{ c.productiviteKg | number:'1.1-1' }} kg</td>
-              <td>{{ c.objectifTotalKg | number:'1.1-1' }} kg</td>
-              <td><span [class]="c.tauxRealisationMoyen >= 100 ? 'badge bg-success' : 'badge bg-orange'">{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</span></td>
-              <td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td>
-              <td>{{ c.nbJours }}</td>
+          @for (c of lignes(); track c.machinisteMatricule) {
+            <tr class="pf-ligne" [class.pf-ligne-ouverte]="ouvert() === c.machinisteMatricule" (click)="basculer(c.machinisteMatricule)">
+              <td class="pf-num"><span class="pf-rang" [class.pf-rang-or]="c.rang === 1">{{ c.rang }}</span></td>
+              <td><strong>{{ c.nomMachiniste }}</strong><div class="pf-meta">{{ c.machinisteMatricule }}</div></td>
+              <td>
+                @for (op of c.operations; track op) { <span class="pf-tag">{{ op }}</span> }
+              </td>
+              <td class="pf-num"><strong>{{ c.productiviteKg | number:'1.1-1' }} kg</strong></td>
+              <td class="pf-num">{{ c.objectifTotalKg | number:'1.1-1' }} kg</td>
+              <td>
+                <div class="pf-barre"><div class="pf-barre-fill" [class.pf-barre-ok]="efficacitePct(c) >= 100" [class.pf-barre-retard]="efficacitePct(c) < 85" [style.width.%]="efficacitePct(c) > 100 ? 100 : efficacitePct(c)"></div></div>
+                <span class="pf-meta">{{ efficacitePct(c) | number:'1.1-1' }} %</span>
+              </td>
+              <td class="pf-num">{{ c.tauxRealisationMoyen | number:'1.1-1' }} %</td>
+              <td class="pf-num">{{ c.nbJours }}</td>
             </tr>
-          } @empty {
-            <tr><td colspan="7" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée sur cette période</td></tr>
+            @if (ouvert() === c.machinisteMatricule) {
+              <tr class="pf-detail">
+                <td colspan="8">
+                  @if (chargementDetail()) {
+                    <div class="pf-squelette pf-squelette-petit"></div>
+                  } @else if (erreurDetail()) {
+                    <p class="pf-alerte pf-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreurDetail() }}</span></p>
+                  } @else if (detail().length === 0) {
+                    <p class="pf-muet">Aucune journée enregistrée pour ce machiniste sur la période.</p>
+                  } @else {
+                    <h3 class="pf-sous-titre"><i class="fa-solid fa-calendar-day"></i> Jour par jour</h3>
+                    <ul class="pf-jours">
+                      @for (j of detail(); track j.date) {
+                        <li>
+                          <span class="pf-nom">{{ j.date | date:'EEE dd/MM' }}</span>
+                          <span class="pf-muet">{{ j.realiseKg | number:'1.1-1' }} / {{ j.objectifKg | number:'1.1-1' }} kg</span>
+                          <span class="pf-badge" [class.pf-badge-ok]="j.objectifKg > 0 && j.realiseKg >= j.objectifKg" [class.pf-badge-ko]="j.objectifKg > 0 && j.realiseKg < j.objectifKg * 0.85">
+                            {{ j.objectifKg > 0 ? (j.realiseKg / j.objectifKg * 100 | number:'1.0-0') + ' %' : '—' }}
+                          </span>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
-
-    <div class="pagination-row">
-      <span class="text-muted">{{ lignesFiltrees().length }} machiniste(s) — page {{ page() }} / {{ totalPages() }}</span>
-      <div class="pagination-btns">
-        <button (click)="allerPage(page()-1)" [disabled]="page()===1"><i class="fa-solid fa-chevron-left"></i></button>
-        @for (p of [].constructor(totalPages()); track $index) {
-          <button [class.active]="page()===$index+1" (click)="allerPage($index+1)">{{ $index+1 }}</button>
-        }
-        <button (click)="allerPage(page()+1)" [disabled]="page()===totalPages()"><i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-    </div>
+    <p class="pf-aide">Cliquez sur un machiniste pour voir son détail jour par jour. Efficacité = réalisé ÷ objectif ; le taux moyen est la moyenne simple des pourcentages par poste.</p>
   }
+</section>
+
 </div>

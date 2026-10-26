@@ -1,72 +1,188 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-clipboard-list ph-ico"></i>
+<div class="ci">
+
+<header class="ci-hero">
+  <div class="ci-hero-gauche">
+    <i class="fa-solid fa-clipboard-list ci-hero-ico"></i>
     <div>
-      <h1 class="ph-title">Indicateurs Journaliers</h1>
-      <p class="ph-sub">Quantité nette broyée, pertes et pourcentage global de pertes</p>
+      <div class="ci-hero-kicker">Chef machiniste · {{ aujourdhui | date:'EEEE dd MMMM' }}</div>
+      <h1 class="ci-hero-titre">Indicateurs journaliers</h1>
+      <p class="ci-hero-sous">
+        Clôturez la session de broyage : quantité nette et pertes. Le pourcentage de pertes est calculé à la saisie.
+        @if (derniereMaj(); as d) { Mis à jour à {{ d | date:'HH:mm' }}. }
+      </p>
     </div>
   </div>
-</div>
+  <button class="ci-bouton" (click)="charger()" [disabled]="chargement()">
+    <i class="fa-solid fa-rotate" [class.ci-tourne]="chargement()"></i> Actualiser
+  </button>
+</header>
 
-@if (message()) { <div class="alert alert-info">{{ message() }}</div> }
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Maïs (jour)</div><div class="kpi-val">{{ maisJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Soja (jour)</div><div class="kpi-val">{{ sojaJour() | number:'1.1-1' }} kg</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Arachide (jour)</div><div class="kpi-val">{{ arachideJour() | number:'1.1-1' }} kg</div></div></div>
-</div>
-
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flag-checkered"></i> Clôturer une session — saisie des indicateurs</h2></div>
-  <div style="padding: var(--sp-4)">
-    <div class="form-grid">
-      <label>Session à clôturer
-        <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="cloture.sessionId">
-          <option [ngValue]="0">— Choisir —</option>
-          @for (s of sessionsJour(); track s.id) {
-            <option [ngValue]="s.id" [disabled]="s.statut === 'CLOTUREE'">
-              {{ s.referencePPH }} — {{ s.typePoudreLibelle }} {{ s.statut === 'CLOTUREE' ? '(déjà clôturée)' : '' }}
-            </option>
-          }
-        </select>
-      </label>
-      <label>Quantité nette broyée (kg)<input type="number" class="input" [(ngModel)]="cloture.quantiteNetteBroyeeKg"></label>
-      <label>Pertes (kg)<input type="number" class="input" [(ngModel)]="cloture.pertesKg"></label>
-    </div>
-
-    <div class="kpi-grid" style="margin-top:var(--sp-3)">
-      <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">% global des pertes (recalculé)</div><div class="kpi-val">{{ pctPertesCalcule() }}%</div></div></div>
-    </div>
-
-    <div class="form-actions">
-      <button class="btn btn-primary" (click)="cloturerSession()"><i class="fa-solid fa-check"></i> Enregistrer & clôturer</button>
-    </div>
+@if (sessionExpiree()) {
+  <div class="ci-alerte ci-alerte-erreur">
+    <i class="fa-solid fa-lock"></i>
+    <span>{{ erreur() }}</span>
+    <a routerLink="/auth/login" class="ci-lien">Se reconnecter</a>
   </div>
-</div>
+} @else if (erreur()) {
+  <div class="ci-alerte ci-alerte-erreur"><i class="fa-solid fa-circle-exclamation"></i><span>{{ erreur() }}</span></div>
+}
+@if (succes()) {
+  <div class="ci-alerte ci-alerte-succes"><i class="fa-solid fa-circle-check"></i><span>{{ succes() }}</span></div>
+}
 
-<div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-list"></i> Sessions du jour</h2></div>
-  @if (loading()) {
-    <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
-  } @else {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>PPH</th><th>Type</th><th>Nette broyée</th><th>Pertes</th><th>% pertes</th><th>Statut</th></tr></thead>
-        <tbody>
-          @for (s of sessionsJour(); track s.id) {
+@if (chargement()) {
+  <div class="ci-squelette"></div>
+  <div class="ci-squelette ci-squelette-haut"></div>
+} @else {
+
+  <!-- Synthèse du jour -->
+  <section class="ci-kpis">
+    <div class="ci-kpi ci-kpi-principal">
+      <span class="ci-lbl">Nette broyée</span>
+      <strong class="ci-grand">{{ netteTotale() | number:'1.1-1' }} kg</strong>
+      <span class="ci-muet">{{ sessionsClosesCount() }} / {{ sessionsJour().length }} session(s) clôturée(s)</span>
+    </div>
+    <div class="ci-kpi">
+      <span class="ci-lbl">Pertes</span>
+      <strong class="ci-grand">{{ pertesTotales() | number:'1.1-1' }} kg</strong>
+      <span class="ci-muet">sur les sessions saisies</span>
+    </div>
+    <div class="ci-kpi" [class.ci-kpi-alerte]="pctPertesGlobal() > 5">
+      <span class="ci-lbl">% de pertes global</span>
+      <strong class="ci-grand">{{ pctPertesGlobal() | number:'1.1-1' }} %</strong>
+      <span class="ci-muet">pertes ÷ (nette + pertes)</span>
+    </div>
+    @for (t of netteParType(); track t.libelle) {
+      <div class="ci-kpi">
+        <span class="ci-lbl">{{ t.libelle }}</span>
+        <strong class="ci-grand">{{ t.kg | number:'1.1-1' }} kg</strong>
+        <span class="ci-muet">nette du jour</span>
+      </div>
+    }
+  </section>
+
+  <div class="ci-deux">
+    <!-- Clôture -->
+    <section class="ci-carte">
+      <h2 class="ci-titre"><i class="fa-solid fa-flag-checkered"></i> Clôturer une session</h2>
+
+      @if (sessionsJour().length === 0) {
+        <p class="ci-vide">Aucune session de broyage aujourd'hui.</p>
+      } @else {
+        <label class="ci-champ">
+          <span class="ci-lbl">Session</span>
+          <select class="ci-input" [ngModel]="sessionId()" (ngModelChange)="choisirSession($event)">
+            <option [ngValue]="null">— Choisir une session —</option>
+            @for (s of sessionsJour(); track s.id) {
+              <option [ngValue]="s.id" [disabled]="s.statut === 'CLOTUREE'">{{ s.referencePPH }} · {{ s.typePoudreLibelle }} · {{ libelleStatut(s) }}</option>
+            }
+          </select>
+        </label>
+
+        @if (session(); as s) {
+          <div class="ci-saisie">
+            <div class="ci-colonne">
+              <label class="ci-champ">
+                <span class="ci-lbl">Quantité nette broyée (kg)</span>
+                <input type="number" min="0" step="0.1" class="ci-input ci-input-grand" [ngModel]="nette()" (ngModelChange)="nette.set($event === '' || $event === null ? null : +$event)" [disabled]="sessionCloturee()">
+                <span class="ci-aide">Pré-remplie depuis le poste écrasage ({{ quantiteNetteDe(s) | number:'1.1-1' }} kg).</span>
+              </label>
+              <label class="ci-champ">
+                <span class="ci-lbl">Pertes (kg)</span>
+                <input type="number" min="0" step="0.1" class="ci-input ci-input-grand" [ngModel]="pertes()" (ngModelChange)="pertes.set($event === '' || $event === null ? null : +$event)" [disabled]="sessionCloturee()">
+                <span class="ci-aide">Obligatoire, même à 0. Mesurée au broyage : rien n'est calculé à votre place.</span>
+                <div class="ci-reperes">
+                  <span class="ci-aide">Repère : écart objectif − réalisé de cette session = <strong>{{ ecartObjectifRealise() | number:'1.1-1' }} kg</strong> (non enregistré).</span>
+                  @if (dernierePertes(); as d) {
+                    <span class="ci-aide">Dernières pertes sur ce type de poudre : {{ d.kg | number:'1.1-1' }} kg le {{ d.date | date:'dd/MM' }}.
+                      <button type="button" class="ci-lien-repere" (click)="reprendrePertes(d.kg)">Reprendre cette valeur</button>
+                    </span>
+                  }
+                </div>
+              </label>
+
+              @if (sousSeuil() && !sessionCloturee()) {
+                <label class="ci-champ">
+                  <span class="ci-lbl">Justification (journée sous 85 %)</span>
+                  <textarea class="ci-input" rows="3" placeholder="Expliquez l'écart avec l'objectif…" [ngModel]="justificatif()" (ngModelChange)="justificatif.set($event)"></textarea>
+                  <span class="ci-aide">Sans justification, la journée restera non validée.</span>
+                </label>
+              }
+            </div>
+
+            <div class="ci-colonne">
+              <div class="ci-pertes">
+                <span class="ci-lbl">% de pertes</span>
+                <strong class="ci-grand">{{ pctPertes() | number:'1.1-1' }} %</strong>
+              </div>
+
+              <div class="ci-etat" [class.ci-etat-ok]="journeeValidee()" [class.ci-etat-attention]="!journeeValidee() && sousSeuil()">
+                <i class="fa-solid" [class.fa-circle-check]="journeeValidee()" [class.fa-triangle-exclamation]="!journeeValidee() && sousSeuil()" [class.fa-circle-info]="!sousSeuil() && !journeeValidee()"></i>
+                <span>
+                  Réalisé {{ totalRealise() | number:'1.0-1' }} kg sur un seuil de validation de {{ seuilKg() | number:'1.0-1' }} kg (85 % de {{ s.objectifJournalierKg | number:'1.0-1' }} kg).
+                  @if (journeeValidee()) { La journée est validée. }
+                  @else if (sousSeuil()) { La journée est sous le seuil. }
+                </span>
+              </div>
+
+              @if (excedent() > 0 && !sessionCloturee()) {
+                <div class="ci-etat ci-etat-bloquant">
+                  <i class="fa-solid fa-arrow-trend-up"></i>
+                  <span>La nette dépasse l'objectif autorisé de {{ excedent() | number:'1.1-1' }} kg (plafond {{ plafond() | number:'1.0-1' }} kg).</span>
+                  <button class="ci-bouton ci-bouton-petit" (click)="autoriserExcedent()" [disabled]="enCours()">Autoriser ce dépassement</button>
+                </div>
+              }
+
+              @if (sessionCloturee()) {
+                <div class="ci-etat ci-etat-neutre"><i class="fa-solid fa-lock"></i><span>Session déjà clôturée : lecture seule.</span></div>
+              } @else if (bloquants().length > 0) {
+                <p class="ci-pour">Pour clôturer : {{ bloquants().join(' · ') }}.</p>
+              }
+
+              <button class="ci-bouton ci-bouton-primaire" (click)="cloturer()" [disabled]="!peutCloturer() || sessionCloturee()">
+                @if (enCours()) { <i class="fa-solid fa-spinner ci-tourne"></i> Enregistrement… } @else { <i class="fa-solid fa-check"></i> Clôturer la session }
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  </div>
+
+  <!-- Sessions du jour -->
+  <section class="ci-carte">
+    <h2 class="ci-titre"><i class="fa-solid fa-list"></i> Sessions du jour</h2>
+    @if (sessionsJour().length === 0) {
+      <p class="ci-vide">Aucune session aujourd'hui.</p>
+    } @else {
+      <div class="ci-table-wrap">
+        <table class="ci-table">
+          <thead>
             <tr>
-              <td class="mono">{{ s.referencePPH }}</td>
-              <td>{{ s.typePoudreLibelle }}</td>
-              <td>{{ s.quantiteNetteBroyeeKg ?? '—' }}</td>
-              <td>{{ s.pertesKg ?? '—' }}</td>
-              <td>{{ s.pctPertes != null ? (s.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
-              <td><span [class]="s.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
+              <th>PPH</th><th>Poudre</th><th class="ci-num">Objectif</th><th class="ci-num">Réalisé</th>
+              <th class="ci-num">Nette</th><th class="ci-num">Pertes</th><th class="ci-num">% pertes</th><th>Validation</th><th>Statut</th>
             </tr>
-          } @empty {
-            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune session aujourd'hui</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+          </thead>
+          <tbody>
+            @for (s of sessionsJour(); track s.id) {
+              <tr class="ci-ligne" [class.ci-ligne-active]="sessionId() === s.id" (click)="s.statut !== 'CLOTUREE' && choisirSession(s.id)">
+                <td><span class="ci-code">{{ s.referencePPH }}</span></td>
+                <td>{{ s.typePoudreLibelle }}</td>
+                <td class="ci-num">{{ s.objectifJournalierKg | number:'1.0-1' }} kg</td>
+                <td class="ci-num">{{ s.totalRealiseKg | number:'1.1-1' }} kg</td>
+                <td class="ci-num"><strong>{{ s.quantiteNetteBroyeeKg != null ? (s.quantiteNetteBroyeeKg | number:'1.1-1') + ' kg' : '—' }}</strong></td>
+                <td class="ci-num">{{ s.pertesKg != null ? (s.pertesKg | number:'1.1-1') + ' kg' : '—' }}</td>
+                <td class="ci-num">{{ s.pctPertes != null ? (s.pctPertes | number:'1.1-1') + ' %' : '—' }}</td>
+                <td><span class="ci-badge" [class.ci-badge-ok]="s.journeeValidee" [class.ci-badge-ko]="!s.journeeValidee">{{ s.journeeValidee ? 'Validée' : 'Non validée' }}</span></td>
+                <td><span class="ci-badge" [class.ci-badge-ok]="s.statut === 'CLOTUREE'">{{ s.statut === 'CLOTUREE' ? 'Clôturée' : 'Ouverte' }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="ci-aide">Cliquez sur une session ouverte pour la sélectionner.</p>
+    }
+  </section>
+}
+
 </div>
