@@ -18,7 +18,12 @@ export const routes: Routes = [
   {
     path: 'dg',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['DIRECTEUR_GENERAL', 'ADMIN'] },
+    // 'DIRECTEUR_COMMERCIAL' manquait ici (2026-10-25, bug signalé) : ROLE_HOMES le fait
+    // atterrir sur /dg/dashboard, mais ce garde ne l'y laissait pas entrer — 403 systématique
+    // à la connexion. Plusieurs écrans de ce module (promotions, zones-admin, objectifs) lui
+    // sont déjà ouverts explicitement par *appCan, confirmant que l'intention était de l'y
+    // laisser accéder.
+    data: { roles: ['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'ADMIN'] },
     loadChildren: () => import('./domains/dg/presentation/dg.routes').then(m => m.DG_ROUTES)
   },
   {
@@ -75,7 +80,11 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'DIRECTEUR_GENERAL'] },
+    // RESPONSABLE_RH (2026-10-25) : n'a côté backend que RH_EMPLOYE_GERER/CONSULTER +
+    // AUTH_USER_CONSULTER (RolePermissionMatrix.java) — accès en lecture à /admin/utilisateurs
+    // uniquement ; les autres pages de cette arborescence lui restent fermées par le serveur
+    // (403), le garde de route n'étant qu'un confort d'affichage (§6.7 du contexte projet).
+    data: { roles: ['ADMIN', 'DIRECTEUR_GENERAL', 'RESPONSABLE_RH'] },
     loadChildren: () => import('./domains/admin/presentation/admin.routes').then(m => m.ADMIN_ROUTES)
   },
   {

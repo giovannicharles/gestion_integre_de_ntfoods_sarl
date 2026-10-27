@@ -9,13 +9,17 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
 @Component({
   selector: 'app-controle-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
   templateUrl: './controle-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -66,6 +70,10 @@ export class ControleLayoutComponent implements OnInit {
     { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
   ];
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 
   ngOnInit() {
     setInterval(() => this.currentTime.set(new Date()), 30000);

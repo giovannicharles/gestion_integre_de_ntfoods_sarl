@@ -48,7 +48,7 @@
   justify-content: center;
   gap: 8px;
   padding: 20px;
-  background: #fff;
+  background: var(--w);
   border-radius: 12px;
   border: 1px solid var(--n100, #e5e7eb);
   margin-bottom: 20px;

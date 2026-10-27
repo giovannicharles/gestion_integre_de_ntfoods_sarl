@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
@@ -17,7 +17,8 @@ interface VersementUI {
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './commercial-versements.component.html',
-  styleUrls: ['./commercial-versements.component.css']
+  styleUrls: ['./commercial-versements.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialVersementsComponent implements OnInit {
   private readonly auth = inject(AuthService);

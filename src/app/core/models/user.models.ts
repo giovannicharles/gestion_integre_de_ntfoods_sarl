@@ -13,7 +13,8 @@ export type UserRole =
   | 'CHEF_MACHINISTE'
   | 'MACHINISTE'
   | 'AGENT_DOSEUR'
-  | 'CONTROLEUR_GENERAL';
+  | 'CONTROLEUR_GENERAL'
+  | 'RESPONSABLE_RH';
 
 /**
  * Correspondance entre les rôles émis par le backend (`Role.java`) et les rôles
@@ -36,6 +37,7 @@ export const BACKEND_ROLE_MAP: Record<string, UserRole> = {
   AGENT_DOSEUR: 'AGENT_DOSEUR',
   AGENT_PRODUCTION: 'AGENT_PRODUCTION',
   CONTROLEUR_GENERAL: 'CONTROLEUR_GENERAL',
+  RESPONSABLE_RH: 'RESPONSABLE_RH',
   SECRETAIRE: 'SECRETAIRE',
   COMPTABLE: 'COMPTABLE',
   CHARGEE_RP: 'CHARGEE_RP',
@@ -66,6 +68,7 @@ export const BACKEND_ROLE_LABEL_MAP: Record<string, UserRole> = {
   'Agent Doseur': 'AGENT_DOSEUR',
   'Agent Production': 'AGENT_PRODUCTION',
   'Contrôleur Général': 'CONTROLEUR_GENERAL',
+  'Responsable RH': 'RESPONSABLE_RH',
 };
 
 /**
@@ -149,6 +152,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   MACHINISTE: 'Machiniste',
   AGENT_DOSEUR: 'Agent Doseur',
   CONTROLEUR_GENERAL: 'Contrôleur Général',
+  RESPONSABLE_RH: 'Responsable RH',
 };
 
 /**
@@ -175,6 +179,10 @@ export const ROLE_HOMES: Record<UserRole, string> = {
   MACHINISTE: '/production/dashboard',
   AGENT_DOSEUR: '/production/dashboard',
   CONTROLEUR_GENERAL: '/controle/dashboard',
+  // Aucun tableau de bord RH dédié n'existe encore (2026-10-25) : le rôle n'a, côté backend,
+  // que RH_EMPLOYE_GERER/CONSULTER + AUTH_USER_CONSULTER (RolePermissionMatrix.java) — la seule
+  // page déjà alignée avec ces droits est la liste des utilisateurs, en lecture.
+  RESPONSABLE_RH: '/admin/utilisateurs',
 };
 
 export const ROLE_ICONS: Record<UserRole, string> = {
@@ -193,4 +201,5 @@ export const ROLE_ICONS: Record<UserRole, string> = {
   MACHINISTE: 'fa-gear',
   AGENT_DOSEUR: 'fa-screwdriver-wrench',
   CONTROLEUR_GENERAL: 'fa-magnifying-glass-chart',
+  RESPONSABLE_RH: 'fa-id-card-clip',
 };

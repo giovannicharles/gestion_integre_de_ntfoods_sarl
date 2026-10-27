@@ -30,8 +30,9 @@
 
       <!-- NAV -->
       <nav class="sb-nav">
+        <app-sidebar-search (queryChange)="sidebarFiltre.set($event)"></app-sidebar-search>
         <span class="sb-section-lbl">MODULE DIRECTION</span>
-        @for (item of navItems; track item.route) {
+        @for (item of navItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -43,16 +44,16 @@
         }
 
         <!-- GROUPS WITH SUB-MENUS -->
-        @for (group of navGroups; track group.label) {
+        @for (group of navGroupsFiltres(); track group.label) {
         <div class="sb-group">
           <button class="sb-item sb-group-header" (click)="toggleGroup(group.label)"
-            [class.sb-group-open]="expandedGroup() === group.label"
+            [class.sb-group-open]="expandedGroup() === group.label || rechercheActive()"
             [title]="!sidebarOpen() ? group.label : ''">
             <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
             <span class="sb-lbl">{{ group.label }}</span>
-            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label"></i>
+            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
           </button>
-          @if (expandedGroup() === group.label) {
+          @if (expandedGroup() === group.label || rechercheActive()) {
             <div class="sb-group-children">
               @for (child of group.children; track child.route) {
               <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
@@ -70,7 +71,7 @@
         }
 
         <span class="sb-section-lbl">ADMINISTRATION</span>
-        @for (item of adminItems; track item.route) {
+        @for (item of adminItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -104,6 +105,7 @@
         </div>
       </div>
       <div class="tb-right">
+        <app-header-search [items]="tousLesItems()"></app-header-search>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
@@ -178,6 +180,8 @@
           <i class="fa-solid fa-money-bill-transfer"></i>
           <span class="tb-badge tb-badge-red">2</span>
         </button>
+        <!-- Signalement d'incident : le DG signale comme tout le monde, il ne gère plus le tableau (admin seul). -->
+        <app-signaler-incident></app-signaler-incident>
         <div class="tb-divider"></div>
         <button class="tb-icon-btn" routerLink="/dg/chat" title="Assistant IA" style="color:#1A6B2A">
           <i class="fa-solid fa-robot"></i>

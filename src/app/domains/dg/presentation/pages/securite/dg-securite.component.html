@@ -1,0 +1,67 @@
+<div class="ph">
+  <div class="ph-left">
+    <div class="ph-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div>
+      <div class="ph-title">Paramètres système</div>
+      <div class="ph-sub">Seuils de sécurité, de session et d'alerte — modification réservée au Directeur Général</div>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-ghost" (click)="charger()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des paramètres…</div>
+} @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+} @else {
+
+<div class="card table-card">
+  <div class="card-hd">
+    <span class="card-title"><i class="fa-solid fa-sliders"></i> Paramètres</span>
+    <span class="badge badge-secondary badge-sm">{{ parametres().length }} paramètre(s)</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Clé</th><th>Description</th><th>Valeur</th><th>Modifié par</th><th>Le</th></tr>
+      </thead>
+      <tbody>
+        @for (p of parametres(); track p.cle) {
+          <tr [class.row-winner]="valeursEditees()[p.cle] !== undefined">
+            <td class="mono" style="font-size:12px">{{ p.cle }}</td>
+            <td>{{ p.description || '—' }}</td>
+            <td>
+              @if (peutModifier()) {
+                <input type="number" class="form-input" style="max-width:140px"
+                       [ngModel]="valeurAffichee(p)" (ngModelChange)="surSaisie(p, $event)">
+              } @else {
+                <span class="mono fw-bold">{{ p.valeurNumerique }}</span>
+              }
+            </td>
+            <td class="text-muted mono">{{ p.modifiePar || '—' }}</td>
+            <td class="text-muted">{{ p.horodatage ? (p.horodatage | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-state">Aucun paramètre système trouvé.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (aDesModifications()) {
+    <div class="table-footer" style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-ghost btn-sm" [disabled]="saving()" (click)="annulerModifications()">Annuler</button>
+      <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
+        @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+        Enregistrer les modifications
+      </button>
+    </div>
+  }
+</div>
+
+}

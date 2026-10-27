@@ -1,7 +1,6 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef,
-  signal, inject, computed
-} from '@angular/core';
+  signal, inject, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -30,6 +29,7 @@ interface PredictionItem {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-ia-predictions',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe, RouterLink],

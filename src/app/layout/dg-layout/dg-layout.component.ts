@@ -12,6 +12,10 @@ import { ROLE_LABELS } from '../../core/models/user.models';
 import { DgService } from '../../domains/dg/infrastructure/dg.service';
 import { ComptableService } from '../../domains/comptable/infrastructure/comptable.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
@@ -19,7 +23,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-dg-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent],
   templateUrl: './dg-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -106,14 +110,17 @@ export class DgLayoutComponent implements OnInit {
     },
     {
       label: 'Système', icon: 'fa-gears', children: [
+        { label: 'Paramètres système', icon: 'fa-shield-halved', route: '/dg/securite' },
         { label: 'Synchronisation', icon: 'fa-rotate', route: '/dg/sync' },
         { label: 'Archivage', icon: 'fa-folder-open', route: '/dg/documents' },
       ]
     },
   ];
 
+  // 2026-10-25 : « Incidents » retiré d'ici (demande explicite du porteur) — la gestion des
+  // incidents est réservée à ADMIN ; le DG les signale via le bouton topbar (signalerIncident()),
+  // comme n'importe quel autre rôle, pas en gérant un tableau.
   adminItems: NavItem[] = [
-    { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/dg/incidents' },
     { label: 'Pouvoirs & délégations', icon: 'fa-user-shield', route: '/dg/pouvoirs' },
     { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/dg/utilisateurs' },
     { label: 'Journal d\'Audit', icon: 'fa-clipboard-list', route: '/dg/audit' },
@@ -124,6 +131,20 @@ export class DgLayoutComponent implements OnInit {
     // les paramétrages datés, que seul le DG administre.
     { label: 'Règles métier', icon: 'fa-scale-balanced', route: '/dg/regles-metier' },
   ];
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  adminItemsFiltres = computed(() => filtrerNavItems(this.adminItems, this.sidebarFiltre()));
+  /** Pendant une recherche active, tout groupe correspondant doit se déplier automatiquement. */
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  /** Pour la recherche du header : tous les items/sous-items à plat, un seul appel de filtre. */
+  tousLesItems = computed(() => [
+    ...this.navItems,
+    ...this.navGroups.flatMap(g => g.children),
+    ...this.adminItems,
+  ]);
 
   expandedGroup = signal<string | null>('Intelligence IA');
   showNotifPanel = signal(false);

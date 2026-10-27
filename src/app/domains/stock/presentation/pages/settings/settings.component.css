@@ -80,7 +80,7 @@
 }
 
 .tab-btn.active {
-  background: white;
+  background: var(--w);
   color: var(--g);
   box-shadow: var(--sh-sm);
 }
@@ -97,7 +97,7 @@
 }
 
 .card {
-  background: white;
+  background: var(--w);
   border-radius: var(--r-lg);
   border: 1px solid var(--n200);
   box-shadow: var(--sh-sm);
@@ -237,7 +237,7 @@
   width: 20px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--w);
   transition: 0.3s;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -268,7 +268,7 @@ input:checked + .slider:before {
 
 .btn-primary {
   background: var(--g);
-  color: white;
+  color: var(--w);
 }
 
 .btn-primary:hover {

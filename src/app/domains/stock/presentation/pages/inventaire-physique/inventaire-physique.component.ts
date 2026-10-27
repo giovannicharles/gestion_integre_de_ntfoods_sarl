@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -6,6 +6,7 @@ import { StockApiRepository, PhysicalInventory, PhysicalInventoryItem, PhysicalI
 import { AuthService } from '../../../../../core/auth/auth.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-inventaire-physique',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe],

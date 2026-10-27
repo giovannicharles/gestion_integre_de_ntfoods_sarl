@@ -1,0 +1,17 @@
+/* 2026-10-25 : bannière hors-ligne globale (NetworkService) — affichée à la racine, par-dessus
+   n'importe quel layout actif, au lieu de n'exister que dans stock-layout. */
+.app-offline-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 2001;
+  background: var(--r, #C22B2B);
+  color: #fff;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.app-offline-banner i { font-size: 15px; }

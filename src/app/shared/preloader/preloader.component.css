@@ -1,5 +1,8 @@
 /* ══════════════════════════════════════════════════════════
    PRELOADER - TANTY DIGITAL ERP
+   Refonte 2026-10-25 (demande explicite du porteur) : motif de grille en fond + loader en
+   grille 3×3 à onde diagonale, au lieu des trois points qui rebondissent. Tokens TANTY
+   existants uniquement (--y/--g/--n900/--font-*, styles.css) — pas de nouvelle palette.
    ══════════════════════════════════════════════════════════ */
 
 .preloader-overlay {
@@ -10,10 +13,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   animation: fadeIn 0.3s ease;
 }
 
+/* ── Motif de grille en fond : lignes fines, légèrement animées ── */
+.preloader-grid-bg {
+  position: absolute;
+  inset: -10%;
+  background-image:
+    linear-gradient(rgba(20, 83, 45, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 83, 45, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: grid-drift 18s linear infinite;
+  pointer-events: none;
+}
+.preloader-overlay::after {
+  /* Vignette pour que le centre (logo) reste net malgré la grille */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--y) 0%, transparent 62%);
+  pointer-events: none;
+}
+
 .preloader-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,38 +49,30 @@
 
 .preloader-logo {
   animation: fadeInUp 0.5s ease 0.2s both;
+  filter: drop-shadow(0 8px 20px rgba(20, 83, 45, 0.18));
 }
 
 .logo-image {
   width: 150px;
   height: auto;
   object-fit: contain;
+  border-radius: 14px;
 }
 
-.preloader-spinner {
-  display: flex;
-  gap: 8px;
+/* ── Loader en grille 3×3, onde diagonale ── */
+.preloader-loader {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
   animation: fadeInUp 0.5s ease 0.4s both;
 }
 
-.spinner-ring {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--g);
-  animation: bounce 1.4s ease-in-out infinite both;
-}
-
-.spinner-ring:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.spinner-ring:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.spinner-ring:nth-child(3) {
-  animation-delay: 0.4s;
+.loader-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(150deg, var(--g-m, var(--g)) 0%, var(--g-d, var(--g)) 100%);
+  animation: cell-pulse 1.2s ease-in-out infinite both;
 }
 
 .preloader-text {
@@ -85,32 +103,29 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes bounce {
-  0%,
-  80%,
-  100% {
-    transform: scale(0);
+@keyframes cell-pulse {
+  0%, 70%, 100% { transform: scale(0.55); opacity: 0.45; }
+  35%           { transform: scale(1); opacity: 1; }
+}
+
+@keyframes grid-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(44px, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader-overlay, .preloader-logo, .preloader-loader, .preloader-text, .preloader-slogan {
+    animation: none !important;
   }
-  40% {
-    transform: scale(1);
-  }
+  .preloader-grid-bg { animation: none !important; }
+  .loader-cell { animation: none !important; opacity: 0.85; transform: scale(0.85); }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -6,7 +6,7 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { CommercialUseCase } from '../../../application/use-cases/commercial/commercial.use-case';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { Commercial, InfoProduits, InfoProduitsLine } from '../../../domain/models';
-@Component({ selector:'app-session', standalone:true, imports:[CommonModule,DatePipe,DecimalPipe,RouterLink,FormsModule], templateUrl:'./session.component.html', styleUrls:['./session.component.css'] })
+@Component({ selector:'app-session', standalone:true, imports:[CommonModule,DatePipe,DecimalPipe,RouterLink,FormsModule], templateUrl:'./session.component.html', styleUrls:['./session.component.css'], changeDetection: ChangeDetectionStrategy.OnPush })
 export class SessionComponent implements OnInit, OnDestroy {
   private d$=new Subject<void>(); private uc=inject(CommercialUseCase); private repo=inject(StockApiRepository);
   loading=signal(true); infos=signal<InfoProduits[]>([]); comms=signal<Commercial[]>([]);

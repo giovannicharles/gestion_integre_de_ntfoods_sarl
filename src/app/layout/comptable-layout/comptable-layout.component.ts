@@ -11,13 +11,17 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { CommercialService } from '../../domains/commercial/infrastructure/commercial.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 
 @Component({
   selector: 'app-comptable-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
   templateUrl: './comptable-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -74,6 +78,10 @@ export class ComptableLayoutComponent implements OnInit {
     { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/comptable/commandes-clients' },
   ];
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);

@@ -153,6 +153,21 @@ export interface DefinirSeuilRequestBE {
   seuilReapprovisionnement: number;
 }
 
+/**
+ * Paramètres système (2026-10-25) — GET/PUT /api/dg/parametres (DgController.java:241,264,
+ * GererParametresSystemeUseCase). Sans rapport avec /admin/parametres (TVA, primes — table
+ * différente côté métier) ni /dg/seuils (seuils de réapprovisionnement par produit) : ce sont
+ * les 9 seuils de sécurité/session (caisse, connexion, alertes), jamais exposés jusqu'ici.
+ */
+export interface ParametreSystemeBE {
+  id: number;
+  cle: string;
+  valeurNumerique: number;
+  description: string;
+  modifiePar: string | null;
+  horodatage: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DgService {
   private readonly api = inject(ApiService);
@@ -170,6 +185,16 @@ export class DgService {
 
   getHistoriqueSeuils(): Observable<HistoriqueSeuilBE[]> {
     return this.api.get<ApiResponse<HistoriqueSeuilBE[]>>('stock/seuils/historique')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  getParametresSysteme(): Observable<ParametreSystemeBE[]> {
+    return this.api.get<ApiResponse<ParametreSystemeBE[]>>('dg/parametres')
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  modifierParametresSysteme(modifications: Record<string, number>): Observable<ParametreSystemeBE[]> {
+    return this.api.put<ApiResponse<ParametreSystemeBE[]>>('dg/parametres', modifications)
       .pipe(map(r => r.donnees ?? []));
   }
 

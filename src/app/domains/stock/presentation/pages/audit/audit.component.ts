@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -6,6 +6,7 @@ import { StockApiRepository } from '../../../infrastructure/repositories/stock-a
 import { StockAuditLog } from '../../../domain/models/stock.models';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-audit',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe, JsonPipe],

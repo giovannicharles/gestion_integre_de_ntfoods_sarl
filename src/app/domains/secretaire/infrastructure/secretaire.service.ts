@@ -48,6 +48,18 @@ export interface DocumentRecuResponse {
   factures: boolean;
 }
 
+export interface MicroStockMouvementResponse {
+  id: number;
+  articleId: number;
+  codeArticle: string;
+  delta: number;
+  quantiteAvant: number;
+  quantiteApres: number;
+  motif: string;
+  matriculeActeur: string;
+  dateOperation: string;
+}
+
 interface ApiResponse<T> {
   succes: boolean;
   message: string;
@@ -72,5 +84,28 @@ export class SecretaireService {
 
   getDocuments(): Observable<DocumentRecuResponse[]> {
     return this.api.get<ApiResponse<DocumentRecuResponse[]>>('secretaire/documents').pipe(map(r => r.donnees));
+  }
+
+  // ── Écritures (2026-10-25) — endpoints déjà prêts côté serveur depuis le 2026-09-23,
+  // jamais appelés jusqu'ici : voir SecretaireController.java. ──
+
+  enregistrerMouvementCaisse(libelle: string, type: 'ENTREE' | 'SORTIE', montant: number, heure?: string, categorie?: string): Observable<PetiteCaisseResponse> {
+    return this.api.post<ApiResponse<PetiteCaisseResponse>>('secretaire/petite-caisse', { libelle, type, montant, heure, categorie }).pipe(map(r => r.donnees));
+  }
+
+  creerArticleMicroStock(code: string, designation: string, qte: number, prixUnite: number, seuil: number): Observable<MicroStockResponse> {
+    return this.api.post<ApiResponse<MicroStockResponse>>('secretaire/micro-stock', { code, designation, qte, prixUnite, seuil }).pipe(map(r => r.donnees));
+  }
+
+  ajusterMicroStock(id: number, delta: number, motif?: string): Observable<MicroStockResponse> {
+    return this.api.put<ApiResponse<MicroStockResponse>>(`secretaire/micro-stock/${id}/ajuster`, { delta, motif }).pipe(map(r => r.donnees));
+  }
+
+  getMouvementsMicroStock(id: number): Observable<MicroStockMouvementResponse[]> {
+    return this.api.get<ApiResponse<MicroStockMouvementResponse[]>>(`secretaire/micro-stock/${id}/mouvements`).pipe(map(r => r.donnees));
+  }
+
+  enregistrerDocumentRecu(matriculeCommercial: string, nom: string, feuilleRoute: boolean, bonCommande: boolean, factures: boolean): Observable<DocumentRecuResponse> {
+    return this.api.post<ApiResponse<DocumentRecuResponse>>('secretaire/documents', { matriculeCommercial, nom, feuilleRoute, bonCommande, factures }).pipe(map(r => r.donnees));
   }
 }

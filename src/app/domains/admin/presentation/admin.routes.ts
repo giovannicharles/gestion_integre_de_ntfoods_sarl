@@ -25,20 +25,12 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./pages/code-validation/admin-code-validation.component').then(m => m.AdminCodeValidationComponent)
       },
       {
-        path: 'parametres',
-        loadComponent: () => import('./pages/parametres/admin-parametres.component').then(m => m.AdminParametresComponent)
-      },
-      {
         path: 'audit',
         loadComponent: () => import('./pages/audit/admin-audit.component').then(m => m.AdminAuditComponent)
       },
       {
         path: 'codes-observation',
         loadComponent: () => import('./pages/codes-observation/codes-observation.component').then(m => m.CodesObservationComponent)
-      },
-      {
-        path: 'postes-production',
-        loadComponent: () => import('./pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent)
       },
       {
         // 2026-09-30 : jamais routé jusqu'ici (aucune entrée de menu ne pointait vers ce composant) et appelait un

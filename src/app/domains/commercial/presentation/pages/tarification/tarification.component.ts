@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -26,6 +26,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
   imports: [CommonModule, FormsModule, DatePipe],
   templateUrl: './tarification.component.html',
   styleUrls: ['./tarification.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TarificationComponent implements OnInit {
   private readonly svc = inject(TarificationService);

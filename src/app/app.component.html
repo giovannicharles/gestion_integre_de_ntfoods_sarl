@@ -1,3 +1,10 @@
 <app-preloader></app-preloader>
 <app-toast-container></app-toast-container>
+@if (network.offlineMessage()) {
+  <div class="app-offline-banner" role="status">
+    <i class="fa-solid fa-wifi-slash"></i>
+    <span>{{ network.offlineMessage() }}</span>
+  </div>
+}
+<app-update-banner></app-update-banner>
 <router-outlet></router-outlet>

@@ -8,6 +8,9 @@ import { ThemeService } from '../../core/services/theme.service';
 import { ClockService } from '../../core/services/clock.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
 // locale 'fr' — la page plantait (NG0701) à chaque rafraîchissement du relogue
 // (`date:'...':'':'fr'` ci-dessous), pas seulement au premier rendu.
@@ -31,7 +34,7 @@ interface NavItem { label: string; icon: string; route: string; }
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -69,12 +72,19 @@ export class AdminLayoutComponent implements OnInit {
     return ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r;
   });
 
-  /** Section « Comptes & Organisation » — module backend `administration`. */
+  /**
+   * Section « Comptes & Organisation » — module backend `administration`.
+   *
+   * « Paramètres métier » (TVA, primes, seuils — ParametresAdminController) et « Postes
+   * production » retirés d'ici le 2026-10-25 (demande explicite du porteur) : ce ne sont pas
+   * des réglages du SYSTÈME (config technique, droits d'accès, comptes) mais des paramètres
+   * d'exploitation du DG — déjà disponibles sous /dg/parametres et /dg/postes-production, sans
+   * doublon de code (même composant). L'Admin garde ici : comptes, droits d'accès, incidents,
+   * audit — strictement « gestion du système » (CLAUDE.md, décision actée n°9).
+   */
   comptesNavItems: NavItem[] = [
     { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/admin/utilisateurs' },
-    { label: 'Paramètres métier', icon: 'fa-sliders', route: '/admin/parametres' },
     { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/admin/codes-observation' },
-    { label: 'Postes production', icon: 'fa-industry', route: '/admin/postes-production' },
     { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
     { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
     { label: 'Codes de validation', icon: 'fa-key', route: '/admin/codes-validation' },
@@ -90,6 +100,12 @@ export class AdminLayoutComponent implements OnInit {
   ];
 
   private allNavItems(): NavItem[] { return [...this.comptesNavItems, ...this.systemeNavItems]; }
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  comptesNavItemsFiltres = computed(() => filtrerNavItems(this.comptesNavItems, this.sidebarFiltre()));
+  systemeNavItemsFiltres = computed(() => filtrerNavItems(this.systemeNavItems, this.sidebarFiltre()));
+  tousLesItems = computed(() => this.allNavItems());
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);

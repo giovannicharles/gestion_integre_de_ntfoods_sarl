@@ -15,7 +15,7 @@
 //    chaque produit. Le formulaire recharge la liste filtrée à chaque
 //    changement de type, et réinitialise les lignes pour éviter qu'une ligne
 //    garde un produit qui n'appartient plus au type sélectionné.
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -52,6 +52,7 @@ const WORKFLOW: Record<ReceptionType, { first: string; second: string }> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-reception-form',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DecimalPipe],

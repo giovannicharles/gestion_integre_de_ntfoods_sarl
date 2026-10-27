@@ -15,6 +15,7 @@ export const DG_ROUTES: Routes = [
       { path: 'reporting', loadComponent: () => import('./pages/reporting/dg-reporting.component').then(m => m.DgReportingComponent) },
       { path: 'supervision', loadComponent: () => import('./pages/supervision/dg-supervision.component').then(m => m.DgSupervisionComponent) },
       { path: 'seuils', loadComponent: () => import('./pages/seuils/dg-seuils.component').then(m => m.DgSeuilsComponent) },
+      { path: 'securite', loadComponent: () => import('./pages/securite/dg-securite.component').then(m => m.DgSecuriteComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
       // Assistance IA. Les miroirs des écrans stock que portait la version
@@ -32,9 +33,6 @@ export const DG_ROUTES: Routes = [
       // ── Administration (rôle ADMIN fusionné avec DG) ──
       { path: 'utilisateurs', loadComponent: () => import('../../admin/presentation/pages/utilisateurs/admin-utilisateurs.component').then(m => m.AdminUtilisateursComponent) },
       { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },
-      // Incidents : même composant que /admin/incidents, monté ici pour que le DG ne quitte
-      // jamais sa propre coquille (sidebar/topbar) en cliquant ce lien.
-      { path: 'incidents', loadComponent: () => import('../../admin/presentation/pages/incidents/incidents.component').then(m => m.IncidentsComponent) },
       { path: 'parametres', loadComponent: () => import('../../admin/presentation/pages/parametres/admin-parametres.component').then(m => m.AdminParametresComponent) },
       { path: 'codes-observation', loadComponent: () => import('../../admin/presentation/pages/codes-observation/codes-observation.component').then(m => m.CodesObservationComponent) },
       { path: 'postes-production', loadComponent: () => import('../../admin/presentation/pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent) },

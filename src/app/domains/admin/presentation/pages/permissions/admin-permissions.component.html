@@ -35,20 +35,36 @@
         </div>
         <input type="text" class="form-control" placeholder="Filtrer les permissions (ex : STOCK, COMMANDE...)"
                [ngModel]="filtrePermission()" (ngModelChange)="filtrePermission.set($event)" style="margin-bottom:10px">
-        <div class="tbl-wrap" style="max-height:420px;overflow-y:auto">
-          <table class="data-table">
-            <thead><tr><th>Permission</th><th>Libellé</th></tr></thead>
-            <tbody>
-              @for (p of permissionsFiltrees(); track p) {
-              <tr>
-                <td class="mono" style="font-size:11px">{{ p }}</td>
-                <td>{{ libelle(p) }}</td>
-              </tr>
-              } @empty {
-              <tr><td colspan="2" class="empty-state">Aucune permission pour ce rôle / ce filtre.</td></tr>
+
+        <div class="module-list" style="max-height:420px;overflow-y:auto">
+          @for (g of groupesRole(); track g.module) {
+            <div class="module-group">
+              <button type="button" class="module-hd" (click)="toggleModule(g.module)">
+                <i class="fa-solid {{ g.icone }}"></i>
+                <span class="module-nom">{{ g.module }}</span>
+                <span class="badge badge-secondary badge-sm">{{ g.items.length }}</span>
+                <i class="fa-solid fa-chevron-down module-arrow" [class.is-open]="moduleEstOuvert(g.module)"></i>
+              </button>
+              @if (moduleEstOuvert(g.module)) {
+                <div class="module-items">
+                  @for (p of g.items; track p) {
+                    <button type="button" class="perm-row" (click)="ouvrirRolesPour(p)" [class.is-active]="permissionSelectionnee()===p">
+                      <span class="mono perm-code">{{ p }}</span>
+                      <span class="perm-lbl">{{ libelle(p) }}</span>
+                    </button>
+                    @if (permissionSelectionnee() === p) {
+                      <div class="perm-reverse">
+                        <i class="fa-solid fa-circle-info"></i> Rôles possédant cette permission par défaut :
+                        <strong>{{ rolesAvecPermission().join(', ') || '—' }}</strong>
+                      </div>
+                    }
+                  }
+                </div>
               }
-            </tbody>
-          </table>
+            </div>
+          } @empty {
+            <div class="empty-state">Aucune permission pour ce rôle / ce filtre.</div>
+          }
         </div>
       </div>
     </div>
@@ -59,6 +75,13 @@
         <span class="card-title"><i class="fa-solid fa-user-gear"></i> Permissions d'un utilisateur</span>
       </div>
       <div style="padding:0 var(--sp-4) var(--sp-4)">
+        @if (permissionSelectionnee(); as pSel) {
+          <div class="perm-reverse" style="margin-bottom:12px">
+            <i class="fa-solid fa-circle-info"></i> <span class="mono">{{ pSel }}</span> — rôles l'ayant par défaut :
+            <strong>{{ rolesAvecPermission().join(', ') || '—' }}</strong>
+            <button type="button" class="perm-reverse-close" (click)="ouvrirRolesPour(pSel)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        }
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <input type="text" class="form-control" placeholder="Matricule (ex : GS-001)"
                  [(ngModel)]="matriculeRecherche" (keyup.enter)="rechercherUtilisateur()">
@@ -95,7 +118,7 @@
             <tbody>
               @for (p of u.permissionsEffectives; track p) {
               <tr [class.row-alert]="estSurchargee(p)==='REFUSER'" [class.row-winner]="estSurchargee(p)==='ACCORDER'">
-                <td class="mono" style="font-size:11px">{{ p }}</td>
+                <td class="mono perm-code-link" style="font-size:11px" (click)="ouvrirRolesPour(p)" title="Voir les rôles qui ont cette permission par défaut">{{ p }}</td>
                 <td>
                   @if (estSurchargee(p)==='ACCORDER') { <span class="badge bg-success badge-sm">Accordée (override)</span> }
                   @else { <span class="badge bg-neutral badge-sm">Rôle {{ u.role }}</span> }

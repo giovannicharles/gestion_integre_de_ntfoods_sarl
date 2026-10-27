@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -38,6 +38,7 @@ interface BufferItem {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-buffer',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe, DatePipe],

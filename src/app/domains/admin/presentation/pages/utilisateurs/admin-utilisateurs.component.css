@@ -43,7 +43,7 @@
 ══════════════════════════════════════════════════════════ */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: var(--sp-4, 16px);
 }
@@ -414,3 +414,58 @@
     transition: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   BASCULE TABLEAU / CARTES — 2026-10-25
+══════════════════════════════════════════════════════════ */
+.vue-toggle {
+  display: inline-flex; margin-left: auto;
+  border: 1.5px solid var(--border, #e5e7eb); border-radius: 9px; overflow: hidden;
+}
+.vue-toggle button {
+  border: none; background: var(--w); padding: 6px 11px; cursor: pointer;
+  color: var(--text-muted, #6b7280); font-size: .85rem;
+  transition: background .15s, color .15s;
+}
+.vue-toggle button + button { border-left: 1.5px solid var(--border, #e5e7eb); }
+.vue-toggle button.active { background: var(--g); color: var(--w); }
+.vue-toggle button:hover:not(.active) { background: var(--n50); }
+
+.actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Vue cartes ── */
+.user-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px; border-radius: 14px;
+  background: var(--w); border: 1px solid var(--border, #e5e7eb);
+  box-shadow: var(--sh-sm); cursor: pointer;
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.user-card:hover { transform: translateY(-3px); box-shadow: var(--sh-md); }
+.user-card.is-inactive { opacity: .6; }
+.uc-top { display: flex; align-items: center; justify-content: space-between; }
+.uc-nom { font-weight: 700; font-size: .95rem; color: var(--n900); }
+.uc-email { font-size: .8rem; }
+.uc-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: auto; padding-top: 8px; border-top: 1px solid var(--n100, #f3f4f6);
+  font-size: .78rem;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODAL DÉTAIL UTILISATEUR
+══════════════════════════════════════════════════════════ */
+.du-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--n100, #f3f4f6);
+}
+.du-nom { font-size: 1.1rem; font-weight: 800; color: var(--n900); }
+.du-sub { font-size: .8rem; color: var(--text-muted, #6b7280); margin-top: 2px; }
+.du-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px;
+}
+@media (max-width: 520px) { .du-grid { grid-template-columns: 1fr; } }
+.du-grid > div { display: flex; flex-direction: column; gap: 2px; }
+.du-lbl { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted, #9ca3af); }
+.du-val { font-size: .88rem; color: var(--n900); font-weight: 600; }
+.du-actions { display: flex; gap: 10px; flex-wrap: wrap; }

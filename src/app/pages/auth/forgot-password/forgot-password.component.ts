@@ -22,7 +22,7 @@ export class ForgotPasswordComponent {
 
   constructor(private fb: FormBuilder) {
     this.forgotForm = this.fb.group({
-      matricule: ['', [Validators.required]]
+      telephone: ['', [Validators.required]]
     });
   }
 
@@ -30,19 +30,23 @@ export class ForgotPasswordComponent {
     if (this.forgotForm.invalid) return;
     this.loading.set(true);
     this.error.set('');
-    const matricule = (this.forgotForm.value.matricule as string).trim().toUpperCase();
+    const telephone = (this.forgotForm.value.telephone as string).trim();
 
-    this.authService.requestOtp(matricule, 'MOT_DE_PASSE_OUBLIE').subscribe({
-      next: () => {
+    this.authService.requestOtp(telephone, 'MOT_DE_PASSE_OUBLIE').subscribe({
+      next: (res) => {
         this.loading.set(false);
         this.submitted.set(true);
         setTimeout(() => {
-          this.router.navigate(['/auth/otp'], { queryParams: { matricule, motif: 'reset' } });
+          // otpRef (référence opaque, jamais le matricule) et telephone (nécessaire pour
+          // renvoyer un code) sont portés à l'étape suivante par l'URL.
+          this.router.navigate(['/auth/otp'], {
+            queryParams: { otpRef: res.otpRef, telephone, motif: 'reset' }
+          });
         }, 1200);
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.erreur || err?.message || 'Matricule invalide. Vérifiez le format (ex: GS-001).');
+        this.error.set(err?.error?.erreur || err?.message || 'Numéro de téléphone invalide.');
       }
     });
   }

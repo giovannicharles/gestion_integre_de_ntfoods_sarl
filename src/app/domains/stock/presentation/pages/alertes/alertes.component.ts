@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,7 +16,8 @@ import { StockRulesDomainService } from '../../../domain/services/stock-rules.do
   standalone: true,
   imports: [CommonModule, DecimalPipe, DatePipe, FormsModule],
   templateUrl: './alertes.component.html',
-  styleUrls: ['./alertes.component.css']
+  styleUrls: ['./alertes.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AlertesComponent implements OnInit, OnDestroy {
   private rules = inject(StockRulesDomainService);

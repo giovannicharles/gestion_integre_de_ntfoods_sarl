@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -20,6 +20,7 @@ interface LineForm {
 const PACKAGING_TYPES = ['SACHET', 'ETUI', 'SEAU', 'DOYPACK', 'BOUTEILLE', 'CARTON', 'SAC', 'BIDON'];
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-dotation-form',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DecimalPipe],

@@ -7,6 +7,13 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 export interface UtilisateurBE {
   id: number; matricule: string; nomComplet: string; email: string;
   role: string; roleLibelle: string; actif: boolean; dateCreation: string;
+  // Champs déjà renvoyés par UtilisateurResponse (backend) mais ignorés jusqu'ici par cette
+  // interface — ajoutés le 2026-10-25 pour le modal détail utilisateur, sans rien changer côté
+  // serveur.
+  prenom?: string; nom?: string; compteBloque?: boolean; tentativesEchouees?: number;
+  sessionActive?: boolean; telephone?: string; residence?: string; cni?: string;
+  photo?: string; dateNaissance?: string; lieuNaissance?: string; dateEmbauche?: string;
+  sexe?: string;
 }
 
 export interface ParametresBE {
@@ -72,6 +79,19 @@ export class AdminService {
   debloquer(matricule: string): Observable<UtilisateurBE> {
     return this.api.patch<ApiResponse<UtilisateurBE>>(
       `administration/utilisateurs/${encodeURIComponent(matricule)}/debloquer`, {}
+    ).pipe(map(r => r.donnees!));
+  }
+
+  consulterUtilisateur(matricule: string): Observable<UtilisateurBE> {
+    return this.api.get<ApiResponse<UtilisateurBE>>(
+      `administration/utilisateurs/${encodeURIComponent(matricule)}`
+    ).pipe(map(r => r.donnees!));
+  }
+
+  reinitialiserMotDePasse(matricule: string, nouveauMotDePasse: string): Observable<UtilisateurBE> {
+    const params: Record<string, string> = { nouveauMotDePasse };
+    return this.api.patch<ApiResponse<UtilisateurBE>>(
+      `administration/utilisateurs/${encodeURIComponent(matricule)}/mot-de-passe`, {}, params
     ).pipe(map(r => r.donnees!));
   }
 

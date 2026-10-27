@@ -8,6 +8,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -15,7 +19,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 @Component({
   selector: 'app-commercial-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
   templateUrl: './commercial-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -53,6 +57,10 @@ export class CommercialLayoutComponent implements OnInit {
     { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/commercial/classement' },
     { label: 'Fiche Synthèse', icon: 'fa-file-lines', route: '/commercial/fiche-synthese' },
   ];
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 
   ngOnInit() {
     setInterval(() => this.currentTime.set(new Date()), 30000);

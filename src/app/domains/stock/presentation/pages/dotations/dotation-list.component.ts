@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, computed, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ import { DotationRequest, DotationItem } from '../../../domain/models';
 type ActionMode = 'verifyPayment' | 'validateQuantities' | 'reviewAndApprove' | 'approve' | 'reject' | 'execute' | 'delete' | null;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-dotation-list',
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink],

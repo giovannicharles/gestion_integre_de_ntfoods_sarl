@@ -1,0 +1,65 @@
+/* ══════════════════════════════════════════════════════════
+   PERMISSIONS & RBAC — groupement par module + vue inverse
+   2026-10-25 : écran déjà fonctionnel (matrice, dérogations), lisibilité améliorée.
+   Tokens globaux uniquement (--g/--y/--r/--n*, styles.css) — pas de nouveau système.
+══════════════════════════════════════════════════════════ */
+
+.module-group {
+  border: 1px solid var(--n150, #e5e7eb);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.module-hd {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  background: var(--n50, #f9fafb);
+  border: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  color: var(--n800, #1f2937);
+  text-align: left;
+}
+.module-hd:hover { background: var(--g-gh); }
+.module-hd i:first-child { color: var(--g); width: 16px; }
+.module-nom { flex: 1; letter-spacing: .02em; }
+.module-arrow {
+  font-size: 11px; color: var(--n400, #9ca3af);
+  transition: transform .18s ease;
+}
+.module-arrow.is-open { transform: rotate(180deg); }
+
+.module-items {
+  display: flex; flex-direction: column;
+  padding: 4px 0;
+}
+
+.perm-row {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; border: none; background: none; cursor: pointer;
+  padding: 6px 14px; text-align: left; font-family: inherit;
+  transition: background .12s;
+}
+.perm-row:hover { background: var(--n50, #f9fafb); }
+.perm-row.is-active { background: var(--g-gh); }
+.perm-code { font-size: 11px; color: var(--n500, #6b7280); min-width: 220px; flex-shrink: 0; }
+.perm-lbl { font-size: 12.5px; color: var(--n800, #1f2937); }
+
+.perm-reverse {
+  background: var(--g-gh);
+  border-left: 3px solid var(--g);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--n700, #374151);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.perm-reverse strong { color: var(--g); }
+.perm-reverse-close {
+  margin-left: auto; border: none; background: none; cursor: pointer;
+  color: var(--n500, #6b7280); font-size: 12px;
+}
+
+.perm-code-link { cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--n300, #d1d5db); }
+.perm-code-link:hover { color: var(--g); }

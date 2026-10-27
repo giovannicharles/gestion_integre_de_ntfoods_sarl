@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { CommercialService, FicheSyntheseBE } from '../../../infrastructure/commercial.service';
 import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
@@ -11,7 +11,8 @@ interface ProduitUI { code: string; designation: string; }
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './fiche-synthese.component.html',
-  styleUrls: ['./fiche-synthese.component.css']
+  styleUrls: ['./fiche-synthese.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FicheSyntheseComponent implements OnInit {
   today = new Date();

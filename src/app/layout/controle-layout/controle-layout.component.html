@@ -26,8 +26,9 @@
       </div>
 
       <nav class="sb-nav">
+        <app-sidebar-search (queryChange)="sidebarFiltre.set($event)"></app-sidebar-search>
         <span class="sb-section-lbl">CONTRÔLE DE GESTION</span>
-        @for (item of navItems; track item.route) {
+        @for (item of navItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -60,6 +61,8 @@
         </div>
       </div>
       <div class="tb-right">
+        <app-header-search [items]="navItems"></app-header-search>
+        <app-signaler-incident></app-signaler-incident>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>

@@ -82,7 +82,7 @@
               <p class="titre">{{ i.titre }}</p>
               <p class="meta">Résolu par {{ i.assigneANom || '—' }}</p>
               <div class="card-actions" (click)="$event.stopPropagation()">
-                <button class="btn btn-xs btn-primary" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
+                <button class="btn btn-xs btn-primary" *appCan="['ADMIN']" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
               </div>
             </div>
           } @empty { <p class="empty-inline">Aucun incident résolu.</p> }
@@ -183,21 +183,62 @@
           <p><strong>Type :</strong> {{ selectedIncident.type }}</p>
           <p><strong>Gravité :</strong> <span [class]="classeGravite(selectedIncident.priorite)" class="gravite-badge">{{ selectedIncident.priorite }}</span></p>
           <p><strong>Module :</strong> {{ selectedIncident.moduleConcerne || '—' }}</p>
-          <p><strong>Signalé par :</strong> {{ selectedIncident.signaleurNom }} ({{ selectedIncident.signaleurMatricule }})</p>
-          <p><strong>Le :</strong> {{ formatDate(selectedIncident.dateCreation) }}</p>
           @if (selectedIncident.description) {
             <p><strong>Description :</strong></p>
             <p class="description-block">{{ selectedIncident.description }}</p>
           }
-          @if (selectedIncident.resolution) {
-            <p><strong>Résolution :</strong></p>
-            <p class="description-block">{{ selectedIncident.resolution }}</p>
-          }
+
+          <p class="histo-titre"><i class="fa-solid fa-timeline"></i> Historique</p>
+          <div class="histo-ligne">
+            @for (e of historique(selectedIncident); track e.cle) {
+              <div class="histo-etape" [class]="e.classe">
+                <div class="histo-point"><i class="fa-solid {{ e.icone }}"></i></div>
+                <div class="histo-contenu">
+                  <span class="histo-titre-etape">{{ e.titre }}</span>
+                  @if (e.detail) { <span class="histo-detail">{{ e.detail }}</span> }
+                  @if (e.date) { <span class="histo-date">{{ formatDate(e.date) }}</span> }
+                </div>
+              </div>
+            }
+          </div>
+
           <app-documents-panel
             [entityType]="'INCIDENT'" [entityId]="selectedIncident.id"
             [defaultType]="'PIECE_JOINTE_INCIDENT'"
             [typesAutorises]="['PIECE_JOINTE_INCIDENT', 'PHOTO_AVARIE', 'RAPPORT']"
             titre="Pièces jointes" [compact]="true" />
+
+          <p class="histo-titre"><i class="fa-solid fa-comments"></i> Commentaires</p>
+          @if (chargementCommentaires()) {
+            <p class="empty-inline"><i class="fa-solid fa-spinner fa-spin"></i> Chargement…</p>
+          } @else {
+            <div class="commentaires-liste">
+              @for (c of commentaires(); track c.id) {
+                <div class="commentaire-item" [class.commentaire-solution]="c.estSolution">
+                  <div class="commentaire-head">
+                    <strong>{{ c.auteurNom || c.auteurMatricule }}</strong>
+                    @if (c.estSolution) { <span class="badge bg-success badge-sm">Solution</span> }
+                    <span class="commentaire-date">{{ formatDate(c.dateCreation) }}</span>
+                  </div>
+                  <p class="commentaire-contenu">{{ c.contenu }}</p>
+                </div>
+              } @empty {
+                <p class="empty-inline">Aucun commentaire pour le moment.</p>
+              }
+            </div>
+          }
+          <div class="commentaire-form">
+            <textarea [(ngModel)]="nouveauCommentaire" rows="2" placeholder="Ajouter un commentaire..."></textarea>
+            <div class="commentaire-form-actions">
+              <label class="checkbox-item" *appCan="['ADMIN']">
+                <input type="checkbox" [(ngModel)]="commentaireEstSolution"> Marquer comme solution
+              </label>
+              <button class="btn btn-sm btn-primary" [disabled]="!nouveauCommentaire.trim() || envoiCommentaireEnCours()" (click)="envoyerCommentaire()">
+                @if (envoiCommentaireEnCours()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-paper-plane"></i> }
+                Envoyer
+              </button>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="fermerDetailsModal()">Fermer</button>
@@ -222,7 +263,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" (click)="fermerResolveModal()" [disabled]="actionEnCours">Annuler</button>
-          <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']" (click)="resoudreIncident()" [disabled]="!resolution.trim() || actionEnCours">
+          <button class="btn btn-primary" *appCan="['ADMIN']" (click)="resoudreIncident()" [disabled]="!resolution.trim() || actionEnCours">
             @if (actionEnCours) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
             Marquer résolu
           </button>

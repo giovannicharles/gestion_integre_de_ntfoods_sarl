@@ -73,14 +73,14 @@
       </thead>
       <tbody>
         @for (log of logsFiltres(); track log.id) {
-          <tr [class]="!log.succes ? 'row-alerte' : log.typeAction === 'IMPORTANT' ? 'row-important' : ''">
+          <tr [class]="!log.succes ? 'row-alerte' : niveauDe(log.typeAction) === 'IMPORTANT' ? 'row-important' : ''">
             <td><span class="ts-cell">{{ log.horodatage | date:'dd/MM HH:mm:ss' }}</span></td>
             <td><strong>{{ log.matricule }}</strong></td>
             <td><span class="badge bg-neutral">{{ log.role }}</span></td>
             <td><code class="action-code">{{ log.typeAction }}</code></td>
             <td class="details-cell">{{ log.details }}</td>
             <td><span class="ip-code">{{ log.adresseIp }}</span></td>
-            <td><span [class]="niveauClass(log.typeAction)">{{ log.typeAction }}</span></td>
+            <td><span [class]="niveauClass(niveauDe(log.typeAction))">{{ niveauDe(log.typeAction) }}</span></td>
           </tr>
         } @empty {
           <tr><td colspan="7" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune entrée d'audit pour ces filtres</td></tr>

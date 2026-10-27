@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ComptableService, ObjectifCommercialBE, PrimeSemaineBE } from '../../../infrastructure/comptable.service';
+import { CommercialService } from '../../../../commercial/infrastructure/commercial.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
@@ -19,13 +20,17 @@ interface LigneCommercial {
 /**
  * Gestion des primes hebdomadaires — calcul, validation, versement.
  *
- * Le calcul (règle 80/75) est entièrement fait par le serveur à partir du
- * barème en vigueur : cet écran ne fait que transmettre la réalisation de la
- * semaine (CA global + détail par gamme), qui n'existe nulle part ailleurs de
- * façon fiable dans l'API (le contrôleur backend le dit explicitement : cette
- * agrégation est fournie par l'appelant). Les gammes proposées dans le
- * formulaire sont reprises telles quelles de l'objectif fixé pour ce
- * commercial cette semaine — jamais inventées.
+ * Le calcul de l'éligibilité (règle 80/75) est entièrement fait par le serveur à partir du
+ * barème en vigueur : cet écran transmet la réalisation de la semaine (CA global + détail par
+ * gamme) pour ce calcul.
+ *
+ * Correction 2026-10-25 (signalé par audit) : cette réalisation était jusqu'ici **toujours**
+ * saisie à la main, alors qu'un calcul automatique existe déjà et tourne sur les vraies ventes
+ * (`CalculerPrimesHebdoUseCase`, exposé par `GET /api/commercial/rapports/primes`) — jamais
+ * appelé depuis cet écran. Le formulaire se pré-remplit maintenant avec ce calcul quand une
+ * ligne existe pour ce commercial sur la semaine ; le Comptable reste libre de corriger avant de
+ * confirmer (les champs restent des saisies, pas un simple affichage) — aucune donnée n'est
+ * jamais envoyée sans qu'il l'ait vue.
  */
 @Component({
   selector: 'app-comptable-primes',
@@ -36,6 +41,7 @@ interface LigneCommercial {
 })
 export class ComptablePrimesComponent implements OnInit {
   private readonly cptSvc = inject(ComptableService);
+  private readonly comSvc = inject(CommercialService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
 
@@ -58,6 +64,9 @@ export class ComptablePrimesComponent implements OnInit {
   totalVentesGlobal = signal(0);
   realisationsParGamme = signal<Record<string, number>>({});
   saving = signal(false);
+  /** Les valeurs ci-dessus viennent-elles du calcul automatique (vraies ventes) ? Juste informatif. */
+  preRempliAutomatiquement = signal(false);
+  chargementAuto = signal(false);
 
   gammesDuCalcul = computed(() => Object.keys(this.calculPour()?.objectifsParGammeFCFA ?? {}));
 
@@ -107,20 +116,49 @@ export class ComptablePrimesComponent implements OnInit {
   // ── Calcul ──────────────────────────────────────────────────────────────
 
   ouvrirCalcul(ligne: LigneCommercial): void {
-    if (!ligne.objectif) {
+    const objectif = ligne.objectif;
+    if (!objectif) {
       this.toast.error('Aucun objectif fixé pour ce commercial cette semaine — impossible de calculer une prime sans cible.');
       return;
     }
-    this.calculPour.set(ligne.objectif);
+    this.calculPour.set(objectif);
     this.totalVentesGlobal.set(0);
     const init: Record<string, number> = {};
-    for (const g of Object.keys(ligne.objectif.objectifsParGammeFCFA ?? {})) init[g] = 0;
+    for (const g of Object.keys(objectif.objectifsParGammeFCFA ?? {})) init[g] = 0;
     this.realisationsParGamme.set(init);
+    this.preRempliAutomatiquement.set(false);
     this.showCalculForm.set(true);
+
+    // Pré-remplissage depuis les vraies ventes (2026-10-25) — le Comptable garde la main pour
+    // corriger avant de confirmer ; en l'absence de résultat (pas de ventes cette semaine pour
+    // ce commercial), les champs restent à 0, jamais une valeur inventée.
+    this.chargementAuto.set(true);
+    this.comSvc.getPrimesHebdoAutomatique(objectif.semaineDebut, objectif.semaineFin).subscribe({
+      next: resultats => {
+        this.chargementAuto.set(false);
+        const resultat = resultats.find(r => r.matriculeCommercial === objectif.matriculeCommercial);
+        if (!resultat || this.calculPour() !== objectif) return;
+        this.totalVentesGlobal.set(Math.round(resultat.caRealise));
+        const realisations: Record<string, number> = {};
+        for (const [gamme, cibleFCFA] of Object.entries(objectif.objectifsParGammeFCFA ?? {})) {
+          const tauxPct = resultat.tauxParGamme[gamme] ?? 0;
+          realisations[gamme] = Math.round((tauxPct / 100) * cibleFCFA);
+        }
+        this.realisationsParGamme.set(realisations);
+        this.preRempliAutomatiquement.set(true);
+      },
+      error: () => this.chargementAuto.set(false),
+    });
   }
 
   actualiserRealisationGamme(gamme: string, valeur: number): void {
     this.realisationsParGamme.update(r => ({ ...r, [gamme]: valeur }));
+    this.preRempliAutomatiquement.set(false);
+  }
+
+  actualiserTotalVentesGlobal(valeur: number): void {
+    this.totalVentesGlobal.set(valeur);
+    this.preRempliAutomatiquement.set(false);
   }
 
   fermerCalcul(): void {

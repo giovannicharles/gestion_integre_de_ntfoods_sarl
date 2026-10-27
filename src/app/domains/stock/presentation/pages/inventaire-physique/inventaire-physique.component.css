@@ -65,7 +65,7 @@
 }
 
 .disc-zero { color: var(--n400); }
-.disc-positive { color: #16a34a; }
+.disc-positive { color: var(--s); }
 .disc-negative { color: var(--r, #dc2626); }
 
 .row-validated {
@@ -80,7 +80,7 @@
 
 .btn-success {
   background: #1A6B2A;
-  color: white;
+  color: var(--w);
   border: none;
 }
 .btn-success:hover { background: #155722; }
@@ -93,7 +93,7 @@
   animation: fadeIn 0.15s;
 }
 .modal {
-  background: white;
+  background: var(--w);
   border-radius: 12px;
   width: 90%; max-width: 560px;
   max-height: 90vh; overflow-y: auto;

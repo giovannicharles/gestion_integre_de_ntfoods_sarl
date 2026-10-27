@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -7,6 +7,7 @@ import { Product } from '../../../domain/models';
 import { ApiService } from '../../../../../core/http/api.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-materiel-list',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe],

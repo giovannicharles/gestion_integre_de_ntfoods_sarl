@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -39,6 +39,7 @@ interface ProductWithStock {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-commande-production',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DecimalPipe, DatePipe],

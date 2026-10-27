@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService, NiveauStockBE, TransfertBE } from '../../../infrastructure/stock.service';
@@ -21,6 +21,7 @@ interface LigneSaisie {
  * Le stock ne bouge PAS à la soumission : une demande est créée, à valider depuis « Mes validations ».
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-demande-transfert',
   standalone: true,
   imports: [CommonModule, FormsModule, ConditioningQuantityComponent],

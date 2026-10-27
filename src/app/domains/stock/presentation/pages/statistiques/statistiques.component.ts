@@ -1,7 +1,6 @@
 import {
   Component, OnInit, signal, inject, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, ChangeDetectorRef, computed
-} from '@angular/core';
+  ViewChild, ElementRef, ChangeDetectorRef, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
@@ -18,6 +17,7 @@ import {
 Chart.register(...registerables);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-statistiques',
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe, DecimalPipe],

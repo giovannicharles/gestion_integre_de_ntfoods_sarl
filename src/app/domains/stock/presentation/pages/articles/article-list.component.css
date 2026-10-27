@@ -188,19 +188,19 @@
 
 /* ═══ INVENTORY STATS DASHBOARD ═══ */
 .inv-stats-toggle { margin-bottom:12px; }
-.inv-stats-btn { display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1.5px solid var(--n200);background:white;border-radius:var(--r-md);cursor:pointer;font-size:12px;font-weight:600;color:var(--n600);transition:all .15s; }
+.inv-stats-btn { display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1.5px solid var(--n200);background:var(--w);border-radius:var(--r-md);cursor:pointer;font-size:12px;font-weight:600;color:var(--n600);transition:all .15s; }
 .inv-stats-btn:hover { border-color:var(--g);color:var(--g);background:var(--g-gh); }
 
 .inv-stats-dashboard { margin-bottom:20px; }
 
 .inv-chart-selector { display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap; }
-.inv-chart-tab { padding:7px 14px;border:1.5px solid var(--n200);background:white;border-radius:var(--r-md);cursor:pointer;font-size:12px;font-weight:600;color:var(--n500);transition:all .15s;display:flex;align-items:center;gap:6px; }
+.inv-chart-tab { padding:7px 14px;border:1.5px solid var(--n200);background:var(--w);border-radius:var(--r-md);cursor:pointer;font-size:12px;font-weight:600;color:var(--n500);transition:all .15s;display:flex;align-items:center;gap:6px; }
 .inv-chart-tab:hover { border-color:var(--g);color:var(--g); }
-.inv-chart-tab.active { background:var(--g);color:white;border-color:var(--g); }
+.inv-chart-tab.active { background:var(--g);color:var(--w);border-color:var(--g); }
 
 .inv-charts-grid { display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px; }
 
-.inv-chart-card { background:white;border:1px solid var(--n150);border-radius:var(--r-md);box-shadow:var(--sh-sm);overflow:hidden; }
+.inv-chart-card { background:var(--w);border:1px solid var(--n150);border-radius:var(--r-md);box-shadow:var(--sh-sm);overflow:hidden; }
 .inv-chart-header { padding:14px 18px;border-bottom:1px solid var(--n100); }
 .inv-chart-title { font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--n800);display:flex;align-items:center;gap:8px; }
 .inv-chart-title i { color:var(--g);font-size:14px; }
@@ -216,13 +216,13 @@
 .inv-top-list { display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto; }
 .inv-top-row { display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);background:var(--n50);transition:background .15s; }
 .inv-top-row:hover { background:var(--n100); }
-.inv-top-rank { width:24px;height:24px;border-radius:50%;background:var(--g);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.inv-top-rank { width:24px;height:24px;border-radius:50%;background:var(--g);color:var(--w);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
 .inv-top-name { flex:1;font-size:12px;color:var(--n700);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .inv-top-qty { font-family:var(--font-d);font-size:13px;font-weight:800;color:var(--n900); }
 .inv-top-empty { text-align:center;color:var(--n400);font-size:12px;padding:24px; }
 
 .inv-alert-cards { display:grid;grid-template-columns:repeat(4,1fr);gap:12px; }
-.inv-alert-card { display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--n150);background:white;box-shadow:var(--sh-sm); }
+.inv-alert-card { display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--n150);background:var(--w);box-shadow:var(--sh-sm); }
 .inv-alert-icon { width:40px;height:40px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
 .inv-alert-info { display:flex;flex-direction:column; }
 .inv-alert-val { font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--n900);line-height:1; }

@@ -7,9 +7,10 @@ import { AuthService } from '../../../core/auth/auth.service';
 const CODE_LENGTH = 6;
 
 /**
- * Vérification OTP — parcours « mot de passe oublié » (matricule connu sans mot de passe,
- * prouvé par possession du téléphone). `verifyOtp` ouvre une vraie session JWT au même titre
- * qu'une connexion normale ; l'étape suivante (reset-password) s'appuie sur cette session.
+ * Vérification OTP — parcours « mot de passe oublié par téléphone » (2026-10-25 : identifié par
+ * téléphone, pas par matricule — le matricule n'est jamais connu côté client). `verifyOtp` ouvre
+ * une vraie session JWT au même titre qu'une connexion normale ; l'étape suivante
+ * (reset-password) s'appuie sur cette session.
  */
 @Component({
   selector: 'app-two-fa',
@@ -32,7 +33,10 @@ export class TwoFaComponent implements OnInit, OnDestroy {
   error = signal('');
   countdown = signal(60);
   canResend = signal(false);
-  matricule = '';
+  /** Référence opaque de l'OTP en cours (jamais le matricule — voir auth.service.ts). */
+  otpRef = 0;
+  /** Numéro de téléphone saisi à l'étape précédente, nécessaire pour un renvoi de code. */
+  telephone = '';
   readonly codeLength = CODE_LENGTH;
   readonly indices = Array.from({ length: CODE_LENGTH }, (_, i) => i);
 
@@ -45,10 +49,13 @@ export class TwoFaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.matricule = (this.route.snapshot.queryParamMap.get('matricule') || '').toUpperCase();
-    if (!this.matricule) {
-      // Cette page n'a de sens qu'après avoir demandé un OTP (elle a besoin du matricule) :
-      // arrivée directe sans contexte → retour au point de départ du parcours.
+    const otpRefParam = this.route.snapshot.queryParamMap.get('otpRef');
+    this.telephone = this.route.snapshot.queryParamMap.get('telephone') || '';
+    this.otpRef = otpRefParam ? Number(otpRefParam) : NaN;
+    if (!this.telephone || Number.isNaN(this.otpRef)) {
+      // Cette page n'a de sens qu'après avoir demandé un OTP (elle a besoin de la référence
+      // opaque et du téléphone pour un éventuel renvoi) : arrivée directe sans contexte →
+      // retour au point de départ du parcours.
       this.router.navigate(['/auth/forgot-password']);
       return;
     }
@@ -103,7 +110,7 @@ export class TwoFaComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set('');
 
-    this.authService.verifyOtp(this.matricule, this.otpForm.value.otp).subscribe({
+    this.authService.verifyOtp(this.otpRef, this.otpForm.value.otp).subscribe({
       next: () => {
         this.loading.set(false);
         this.router.navigate(['/auth/reset-password']);
@@ -136,8 +143,9 @@ export class TwoFaComponent implements OnInit, OnDestroy {
     if (!this.canResend() || this.resending()) return;
     this.resending.set(true);
     this.error.set('');
-    this.authService.requestOtp(this.matricule, 'MOT_DE_PASSE_OUBLIE').subscribe({
-      next: () => {
+    this.authService.requestOtp(this.telephone, 'MOT_DE_PASSE_OUBLIE').subscribe({
+      next: (res) => {
+        this.otpRef = res.otpRef;
         this.resending.set(false);
         this.digits.set(Array(CODE_LENGTH).fill(''));
         this.otpForm.get('otp')?.setValue('');

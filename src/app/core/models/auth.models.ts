@@ -72,17 +72,24 @@ export interface RegisterRequest {
 /**
  * Corps pour POST /api/auth/otp/demander.
  *
- * Le double facteur n'est pas activé pour l'instant (voir `AuthService`), mais
- * les routes existent côté serveur et le contrat reste décrit ici : le
- * réactiver ne doit pas demander de le réécrire.
+ * Mot de passe oublié par téléphone (2026-10-25, demande explicite du porteur) : identifié par
+ * téléphone, pas par matricule — le serveur ne renvoie jamais le matricule (voir OtpResponse).
  */
 export interface OtpRequest {
-  matricule: string;
+  telephone: string;
   raison: string;
 }
 
-/** Corps pour POST /api/auth/otp/verifier. */
+/** Réponse de POST /api/auth/otp/demander — `otpRef` est une référence opaque à reporter telle quelle. */
+export interface OtpResponse {
+  otpRef: number;
+  otpEnvoye: boolean;
+  telephoneMasque: string;
+  dureeValiditeMinutes: number;
+}
+
+/** Corps pour POST /api/auth/otp/verifier — `otpRef` vient de OtpResponse, jamais un matricule. */
 export interface OtpVerifyRequest {
-  matricule: string;
+  otpRef: number;
   codeOtp: string;
 }

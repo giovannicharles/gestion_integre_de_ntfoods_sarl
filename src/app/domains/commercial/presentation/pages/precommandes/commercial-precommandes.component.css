@@ -33,7 +33,7 @@
 .toast-success { background: var(--s-gh); color: var(--s); }
 .toast-error { background: var(--r-gh); color: var(--r); }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-box { background: white; border-radius: var(--r-lg); padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-box { background: var(--w); border-radius: var(--r-lg); padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--n600); margin-bottom: 5px; }
 .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--n200); border-radius: var(--r-sm); font-size: 14px; outline: none; }

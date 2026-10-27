@@ -12,6 +12,10 @@ import { NotificationCenterComponent } from '../../shared/notification-center/no
 import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 import { ThemeService } from '../../core/services/theme.service';
 import { Subject, takeUntil, timer } from 'rxjs';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { correspond, filtrerNavItems } from '../../shared/utils/nav-filter.util';
 
 registerLocaleData(localeFr);
 
@@ -32,7 +36,7 @@ interface NotifItem {
 @Component({
   selector: 'app-stock-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
   templateUrl: './stock-layout.component.html',
   styleUrls: ['./stock-layout.component.css']
 })
@@ -191,6 +195,37 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   // Backward compat: flat list for any code referencing filteredNav
   filteredNav = computed(() => {
     return this.filteredNavSections().flatMap(s => s.items);
+  });
+
+  /**
+   * Recherche + sections dépliables (2026-10-25, demande explicite du porteur) : ~25 items
+   * répartis en 7 sections toujours dépliées jusqu'ici (aucun repli possible). Replis
+   * individuels ajoutés ; toutes ouvertes par défaut pour ne rien changer visuellement sans
+   * action de l'utilisateur.
+   */
+  sidebarFiltre = signal('');
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  sectionsRepliees = signal<Set<string>>(new Set());
+  estSectionOuverte(titre: string): boolean {
+    return this.rechercheActive() || !this.sectionsRepliees().has(titre);
+  }
+  toggleSection(titre: string): void {
+    this.sectionsRepliees.update(s => {
+      const next = new Set(s);
+      if (next.has(titre)) next.delete(titre); else next.add(titre);
+      return next;
+    });
+  }
+  navSectionsFiltrees = computed(() => {
+    const q = this.sidebarFiltre();
+    if (!q.trim()) return this.filteredNavSections();
+    return this.filteredNavSections()
+      .map(section => {
+        if (correspond(section.title, q)) return section;
+        const items = filtrerNavItems(section.items, q);
+        return items.length > 0 ? { ...section, items } : null;
+      })
+      .filter((s): s is NavSection => s !== null);
   });
 
   private getBadgeForRoute(route: string): number {

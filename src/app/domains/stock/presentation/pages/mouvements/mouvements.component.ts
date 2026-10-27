@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
@@ -10,7 +10,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { ApiService } from '../../../../../core/http/api.service';
 Chart.register(...registerables);
 
-@Component({ selector:'app-mouvements', standalone:true, imports:[CommonModule,DatePipe,DecimalPipe,FormsModule], templateUrl:'./mouvements.component.html', styleUrls:['./mouvements.component.css'] })
+@Component({ selector:'app-mouvements', standalone:true, imports:[CommonModule,DatePipe,DecimalPipe,FormsModule], templateUrl:'./mouvements.component.html', styleUrls:['./mouvements.component.css'], changeDetection: ChangeDetectionStrategy.OnPush })
 export class MouvementsComponent implements OnInit, OnDestroy {
   private d$=new Subject<void>(); private uc=inject(StockLevelUseCase); private repo=inject(StockApiRepository); private auth=inject(AuthService); private api=inject(ApiService);
   loading=signal(true); all=signal<StockMovement[]>([]); filtered=signal<StockMovement[]>([]); paginated=signal<StockMovement[]>([]);

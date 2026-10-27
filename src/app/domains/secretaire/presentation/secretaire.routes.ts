@@ -8,6 +8,7 @@ export const SECRETAIRE_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/secretaire-dashboard.component').then(m => m.SecretaireDashboardComponent) },
+      { path: 'caisse', loadComponent: () => import('./pages/caisse/secretaire-caisse.component').then(m => m.SecretaireCaisseComponent) },
       { path: 'versements', loadComponent: () => import('./pages/versements/secretaire-versements.component').then(m => m.SecretaireVersementsComponent) },
       { path: 'validation', loadComponent: () => import('./pages/validation/secretaire-validation.component').then(m => m.SecretaireValidationComponent) },
       { path: 'commandes', loadComponent: () => import('./pages/commandes/secretaire-commandes.component').then(m => m.SecretaireCommandesComponent) },

@@ -27,6 +27,29 @@ export interface PreCommandeBE {
   motifRefus?: string; soumiseEnSoiree: boolean; lignes: LignePCBE[];
 }
 
+/**
+ * Calcul automatique des primes hebdomadaires (2026-10-25) — GET /api/commercial/rapports/primes
+ * (RapportCommercialController.java:66, CalculerPrimesHebdoUseCase) : calcule déjà le CA réalisé
+ * et le taux par gamme à partir des vraies ventes, jamais consommé par l'écran
+ * `comptable-primes` qui forçait jusqu'ici une saisie manuelle des mêmes chiffres.
+ */
+export interface PrimeResultatAutoBE {
+  matriculeCommercial: string;
+  caRealise: number;
+  caCible: number;
+  tauxGlobal: number;
+  tauxParGamme: Record<string, number>;
+  eligible: boolean;
+  montantPrime: number;
+  montantCashFCFA: number;
+  montantNatureFCFA: number;
+  gammesValidees: string[];
+  gammesBloquantes: string[];
+  conditionGlobaleOK: boolean;
+  joursValides: number;
+  joursTotal: number;
+}
+
 export interface RecouvrementBE {
   id: number; referenceRecouvrement: string; codeClient: string; nomClient: string;
   montantDu: number; montantRembourse: number; montantRestant: number;
@@ -117,6 +140,11 @@ export interface LigneFicheSyntheseBE {
 @Injectable({ providedIn: 'root' })
 export class CommercialService {
   private readonly api = inject(ApiService);
+
+  getPrimesHebdoAutomatique(semaineDebut: string, semaineFin: string): Observable<PrimeResultatAutoBE[]> {
+    return this.api.get<ApiResponse<PrimeResultatAutoBE[]>>('commercial/rapports/primes', { semaineDebut, semaineFin })
+      .pipe(map(r => r.donnees ?? []));
+  }
 
   // ── Clients ─────────────────────────────────────────────────
 

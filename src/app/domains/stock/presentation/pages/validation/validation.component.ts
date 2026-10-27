@@ -3,7 +3,7 @@
 // (number) aux méthodes de validation qui attendent désormais le receiptNumber, et
 // affichait des montants FCFA — une violation du principe d'isolation financière du
 // module Stock (seules les quantités physiques doivent y apparaître).
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
@@ -15,6 +15,7 @@ import { Receipt, ReceptionType } from '../../../domain/models/stock.models';
 type ValidationAction = 'v1' | 'v2' | 'rej';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-validation',
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink],

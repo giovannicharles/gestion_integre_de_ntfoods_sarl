@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, OnDestroy, AfterViewInit, ViewChild, ElementRef, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
@@ -10,6 +10,7 @@ import { IaService, AnalysisResponse } from '../../../../../core/services/ia.ser
 Chart.register(...registerables);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-produits',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe],

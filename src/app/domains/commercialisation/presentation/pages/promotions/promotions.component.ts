@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { of } from 'rxjs';
@@ -27,6 +27,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   imports: [CommonModule, FormsModule, DatePipe, CanDirective],
   templateUrl: './promotions.component.html',
   styleUrls: ['./promotions.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PromotionsComponent implements OnInit {
   private readonly svc = inject(CommercialisationService);

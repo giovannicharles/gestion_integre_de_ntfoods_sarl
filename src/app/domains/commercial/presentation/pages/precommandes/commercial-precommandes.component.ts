@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -23,7 +23,8 @@ interface PrecommandeUI {
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './commercial-precommandes.component.html',
-  styleUrls: ['./commercial-precommandes.component.css']
+  styleUrls: ['./commercial-precommandes.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);

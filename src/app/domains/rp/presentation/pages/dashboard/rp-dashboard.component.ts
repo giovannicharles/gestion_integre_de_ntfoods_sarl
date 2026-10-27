@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RpService, RpDashboard, PrimeResponse, GrandCompteResponse, OccupationMarcheResponse, PerformanceGammeResponse } from '../../../infrastructure/rp.service';
@@ -10,6 +10,7 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink],
   templateUrl: './rp-dashboard.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RpDashboardComponent implements OnInit {
   today = new Date();

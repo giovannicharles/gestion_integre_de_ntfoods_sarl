@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from '../http/api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { LoginRequest, LoginResponse, User } from '../models/auth.models';
+import { LoginRequest, LoginResponse, OtpResponse, User } from '../models/auth.models';
 import { UserRole, mapBackendRole } from '../models/user.models';
 
 const TOKEN_KEY = 'tanty_token';
@@ -21,12 +21,10 @@ export type SessionUser = User;
 /**
  * Service d'authentification — branché sur le backend Spring Boot.
  *
- * ── Double facteur ─────────────────────────────────────────────────────────
- * `requestOtp` et `verifyOtp` restent disponibles et alignés sur les routes
- * serveur, mais **aucun parcours ne les emprunte pour l'instant** : la
- * connexion est directe. C'est une décision de configuration, pas une
- * suppression — rebrancher l'écran `two-fa` suffit à rétablir le second
- * facteur, sans réécrire quoi que ce soit.
+ * ── OTP par téléphone ──────────────────────────────────────────────────────
+ * `requestOtp`/`verifyOtp` servent exclusivement au parcours « mot de passe
+ * oublié » (forgot-password → two-fa → reset-password) — pas à une
+ * authentification à deux facteurs au login, qui reste directe.
  *
  * ── Clés de stockage ───────────────────────────────────────────────────────
  * `tanty_token` / `tanty_token_expiration` / `tanty_user`. La date
@@ -70,11 +68,13 @@ export class AuthService {
   }
 
   /**
-   * POST /api/auth/otp/demander → demande un code OTP.
-   * Conservé et fonctionnel ; aucun parcours ne l'appelle actuellement.
+   * POST /api/auth/otp/demander → demande un code OTP envoyé au téléphone fourni (mot de passe
+   * oublié, 2026-10-25 — identifié par téléphone, plus par matricule). `otpRef` (dans la
+   * réponse) est une référence opaque à conserver pour `verifyOtp` : le serveur ne renvoie
+   * jamais le matricule réel.
    */
-  requestOtp(matricule: string, raison: string = 'AUTHENTIFICATION'): Observable<{ otpId: string }> {
-    return this.api.post<ApiResponse<{ otpId: string }>>('auth/otp/demander', { matricule, raison }).pipe(
+  requestOtp(telephone: string, raison: string = 'MOT_DE_PASSE_OUBLIE'): Observable<OtpResponse> {
+    return this.api.post<ApiResponse<OtpResponse>>('auth/otp/demander', { telephone, raison }).pipe(
       map((res) => {
         if (!res.succes || !res.donnees) {
           throw new Error(res.erreur || res.message || 'Échec de l\'envoi de l\'OTP');
@@ -84,9 +84,9 @@ export class AuthService {
     );
   }
 
-  /** POST /api/auth/otp/verifier → vérifie le code OTP et ouvre une session JWT. */
-  verifyOtp(matricule: string, otpCode: string): Observable<LoginResponse> {
-    return this.api.post<ApiResponse<LoginResponse>>('auth/otp/verifier', { matricule, codeOtp: otpCode }).pipe(
+  /** POST /api/auth/otp/verifier → vérifie le code OTP (via `otpRef`) et ouvre une session JWT. */
+  verifyOtp(otpRef: number, otpCode: string): Observable<LoginResponse> {
+    return this.api.post<ApiResponse<LoginResponse>>('auth/otp/verifier', { otpRef, codeOtp: otpCode }).pipe(
       map((res) => {
         const data = res.donnees;
         if (!res.succes || !data) {

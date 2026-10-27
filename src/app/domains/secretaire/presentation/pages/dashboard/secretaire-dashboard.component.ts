@@ -1,5 +1,6 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ComptableService, VersementBE } from '../../../../comptable/infrastructure/comptable.service';
 import { CommercialService, PreCommandeBE } from '../../../../commercial/infrastructure/commercial.service';
@@ -7,11 +8,13 @@ import {
   fCFA
 } from '../../../../../shared/utils/format.utils';
 import { SecretaireService, PetiteCaisseResponse, MicroStockResponse, DocumentRecuResponse } from '../../../infrastructure/secretaire.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 @Component({
   selector: 'app-secretaire-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink],
+  imports: [CommonModule, DatePipe, RouterLink, FormsModule],
   templateUrl: './secretaire-dashboard.component.html',
   styleUrls: ['./secretaire-dashboard.component.css']
 })
@@ -24,6 +27,7 @@ export class SecretaireDashboardComponent implements OnInit {
   private readonly cptSvc = inject(ComptableService);
   private readonly comSvc = inject(CommercialService);
   private readonly secSvc = inject(SecretaireService);
+  private readonly toast = inject(ToastService);
 
   versements = signal<VersementBE[]>([]);
   commandes = signal<PreCommandeBE[]>([]);
@@ -58,6 +62,31 @@ export class SecretaireDashboardComponent implements OnInit {
   valeurMicroStock = computed(() => this.microStock().reduce((s, m) => s + m.qte * m.prixUnite, 0));
 
   docsIncomplets = computed(() => this.documents().filter(d => !d.feuilleRoute || !d.bonCommande || !d.factures).length);
+
+  // ── Signaler une réception (2026-10-25) — endpoint déjà prêt, jamais appelé jusqu'ici. ──
+  showReceptionModal = signal(false);
+  savingReception = signal(false);
+  receptionForm = { matriculeCommercial: '', nom: '', feuilleRoute: false, bonCommande: false, factures: false };
+
+  ouvrirReception(): void {
+    this.receptionForm = { matriculeCommercial: '', nom: '', feuilleRoute: false, bonCommande: false, factures: false };
+    this.showReceptionModal.set(true);
+  }
+  fermerReception(): void { this.showReceptionModal.set(false); }
+  confirmerReception(): void {
+    const f = this.receptionForm;
+    if (!f.matriculeCommercial.trim() || this.savingReception()) return;
+    this.savingReception.set(true);
+    this.secSvc.enregistrerDocumentRecu(f.matriculeCommercial.trim().toUpperCase(), f.nom.trim(), f.feuilleRoute, f.bonCommande, f.factures).subscribe({
+      next: (d) => {
+        this.savingReception.set(false);
+        this.showReceptionModal.set(false);
+        this.documents.update(list => [d, ...list]);
+        this.toast.success('Réception enregistrée.');
+      },
+      error: (err) => { this.savingReception.set(false); this.toast.error(extractApiError(err), 'Enregistrement impossible'); },
+    });
+  }
 
   ngOnInit(): void {
     this.cptSvc.getVersements().subscribe({

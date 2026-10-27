@@ -20,11 +20,40 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
  * masqués sans AUTH_PERMISSION_GERER (DG, Admin) — le serveur reste la seule
  * autorité réelle, ce masquage n'est qu'un confort d'affichage.
  */
+/** Icône par préfixe de module (code de permission = MODULE_RESSOURCE_ACTION). */
+const MODULE_ICONS: Record<string, string> = {
+  STOCK: 'fa-warehouse', PRODUCTION: 'fa-industry', COMMERCIAL: 'fa-handshake',
+  COMMERCIALISATION: 'fa-tags', COMPTABILITE: 'fa-calculator', AUTH: 'fa-user-shield',
+  ADMINISTRATION: 'fa-screwdriver-wrench', INCIDENT: 'fa-triangle-exclamation',
+  NOTIFICATION: 'fa-bell', DG: 'fa-user-tie', RP: 'fa-briefcase', SECRETARIAT: 'fa-cash-register',
+  SYNC: 'fa-rotate', IA: 'fa-brain', CONTROLE: 'fa-magnifying-glass-chart',
+  RH: 'fa-id-card-clip', SYSTEM: 'fa-gears',
+};
+
+function moduleDe(code: string): string {
+  return code.split('_')[0] ?? code;
+}
+
+interface GroupePermission { module: string; icone: string; items: string[]; }
+
+function grouperParModule(codes: string[]): GroupePermission[] {
+  const parModule = new Map<string, string[]>();
+  for (const c of codes) {
+    const m = moduleDe(c);
+    if (!parModule.has(m)) parModule.set(m, []);
+    parModule.get(m)!.push(c);
+  }
+  return Array.from(parModule.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([module, items]) => ({ module, icone: MODULE_ICONS[module] ?? 'fa-circle', items }));
+}
+
 @Component({
   selector: 'app-admin-permissions',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './admin-permissions.component.html',
+  styleUrls: ['./admin-permissions.component.css'],
 })
 export class AdminPermissionsComponent implements OnInit {
   private readonly svc = inject(AdminService);
@@ -51,6 +80,31 @@ export class AdminPermissionsComponent implements OnInit {
     const f = this.filtrePermission().toUpperCase().trim();
     return f ? this.permissionsDuRole().filter(p => p.includes(f)) : this.permissionsDuRole();
   });
+  /** Regroupement par module (2026-10-25) — ~150 permissions à plat étaient illisibles. */
+  groupesRole = computed(() => grouperParModule(this.permissionsFiltrees()));
+  modulesReplies = signal<Set<string>>(new Set());
+  moduleEstOuvert(module: string): boolean { return !this.modulesReplies().has(module); }
+  toggleModule(module: string): void {
+    this.modulesReplies.update(s => {
+      const next = new Set(s);
+      if (next.has(module)) next.delete(module); else next.add(module);
+      return next;
+    });
+  }
+
+  /** Vue inverse « qui a cette permission par défaut » — calculée depuis la matrice déjà en mémoire. */
+  permissionSelectionnee = signal<string | null>(null);
+  rolesAvecPermission = computed(() => {
+    const code = this.permissionSelectionnee();
+    if (!code) return [];
+    return Object.entries(this.matrice())
+      .filter(([, perms]) => perms.includes(code))
+      .map(([role]) => role)
+      .sort();
+  });
+  ouvrirRolesPour(code: string): void {
+    this.permissionSelectionnee.set(this.permissionSelectionnee() === code ? null : code);
+  }
 
   // ── Recherche d'un utilisateur ──────────────────────────────────────────
   matriculeRecherche = '';

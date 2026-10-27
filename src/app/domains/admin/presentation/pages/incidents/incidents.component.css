@@ -176,6 +176,47 @@
 
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.35rem; }
+/* ── Historique (timeline verticale) ── */
+.histo-titre {
+  font-weight: 700; font-size: 0.85rem; margin: 1.25rem 0 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  color: var(--primary-green, #14532D);
+}
+.histo-ligne { display: flex; flex-direction: column; gap: 0; padding-left: 4px; }
+.histo-etape {
+  display: flex; gap: 0.75rem; position: relative; padding-bottom: 1.1rem;
+}
+.histo-etape:not(:last-child)::before {
+  content: ''; position: absolute; left: 13px; top: 28px; bottom: 0;
+  width: 2px; background: var(--n-200, #E5E7EB);
+}
+.histo-point {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; color: white; background: var(--n-400, #9CA3AF); z-index: 1;
+}
+.histo-etape.etape-signale .histo-point { background: #6B7280; }
+.histo-etape.etape-cours .histo-point { background: var(--warning, #F6B60B); }
+.histo-etape.etape-resolu .histo-point { background: var(--success, #16A34A); }
+.histo-etape.etape-cloture .histo-point { background: var(--primary-green, #14532D); }
+.histo-etape.etape-rejete .histo-point { background: var(--danger, #C22B2B); }
+.histo-contenu { display: flex; flex-direction: column; gap: 0.15rem; padding-top: 0.2rem; }
+.histo-titre-etape { font-weight: 700; font-size: 0.85rem; }
+.histo-detail { font-size: 0.8rem; color: var(--text-secondary, #6B7280); }
+.histo-date { font-size: 0.72rem; color: var(--n-400, #9CA3AF); }
+
+/* ── Commentaires d'incident (2026-10-25) ── */
+.commentaires-liste { display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; margin-bottom: 12px; }
+.commentaire-item { background: var(--n-50, #f9fafb); border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--n-200, #e5e7eb); }
+.commentaire-item.commentaire-solution { border-left-color: var(--success, #16a34a); background: rgba(22, 163, 74, 0.06); }
+.commentaire-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.82rem; }
+.commentaire-date { margin-left: auto; color: var(--text-secondary, #6b7280); font-size: 0.75rem; }
+.commentaire-contenu { margin: 0; font-size: 0.85rem; white-space: pre-wrap; }
+.commentaire-form { display: flex; flex-direction: column; gap: 8px; }
+.commentaire-form textarea { width: 100%; border: 1px solid var(--n-200, #e5e7eb); border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 0.85rem; resize: vertical; }
+.commentaire-form-actions { display: flex; align-items: center; gap: 12px; }
+.commentaire-form-actions .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; margin: 0; }
+
 .form-group select, .form-group input, .form-group textarea {
   width: 100%;
   padding: 0.6rem 0.75rem;

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -12,7 +12,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { Commercial, InfoProduits, InfoProduitsLine, StockLevel, UnitType, CreateDotationRequest, DotationItem, DotationRequest } from '../../../domain/models';
 Chart.register(...registerables);
 
-@Component({ selector:'app-commercial', standalone:true, imports:[CommonModule,DecimalPipe,FormsModule,RouterLink], templateUrl:'./commercial.component.html', styleUrls:['./commercial.component.css'] })
+@Component({ selector:'app-commercial', standalone:true, imports:[CommonModule,DecimalPipe,FormsModule,RouterLink], templateUrl:'./commercial.component.html', styleUrls:['./commercial.component.css'], changeDetection: ChangeDetectionStrategy.OnPush })
 export class CommercialComponent implements OnInit, AfterViewInit, OnDestroy {
   private d$=new Subject<void>();
   private uc=inject(CommercialUseCase);

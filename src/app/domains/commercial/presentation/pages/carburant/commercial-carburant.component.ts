@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
@@ -17,7 +17,8 @@ interface CarburantUI {
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './commercial-carburant.component.html',
-  styleUrls: ['./commercial-carburant.component.css']
+  styleUrls: ['./commercial-carburant.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialCarburantComponent implements OnInit {
   readonly auth = inject(AuthService);

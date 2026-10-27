@@ -12,8 +12,8 @@
 .tab-pill{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-md);font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;background:transparent;color:var(--n500);transition:all .15s;font-family:var(--font-b)}
 .tab-pill.t-active{background:var(--g-gh);color:var(--g);border-color:var(--g-pale)}
 .tab-count{background:var(--n200);color:var(--n600);font-size:10px;font-weight:800;padding:1px 6px;border-radius:var(--r-full)}
-.tab-pill.t-active .tab-count{background:var(--g);color:white}
-.ip-card{background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh-sm);animation:cardIn .35s ease both}
+.tab-pill.t-active .tab-count{background:var(--g);color:var(--w)}
+.ip-card{background:var(--w);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--sh-sm);animation:cardIn .35s ease both}
 .ip-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ip-av{width:38px;height:38px;border-radius:50%;background:var(--g);color:var(--y);font-weight:900;font-size:13px;font-family:var(--font-d);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ip-name{font-size:14px;font-weight:700;color:var(--n900);display:block}
@@ -31,7 +31,7 @@
 .rpt-search i{color:var(--n400);font-size:12px}
 .rpt-search input{background:transparent;border:none;outline:none;font-size:13px;color:var(--n800);width:100%}
 .ki-m{background:var(--g-gh);color:var(--g)}
-.comm-card{background:white;border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:var(--sh-sm);animation:cardIn .35s ease both;transition:transform .1s,box-shadow .15s}
+.comm-card{background:var(--w);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;box-shadow:var(--sh-sm);animation:cardIn .35s ease both;transition:transform .1s,box-shadow .15s}
 .comm-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--g)}
 .comm-meta{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--n400)}
 .sales-amount{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--g)}

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval } from 'rxjs';
 import { ApiService } from '../../../../../core/http/api.service';
@@ -52,6 +52,7 @@ const NOTIF_TYPE_ICONS: Record<string, string> = {
 };
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-notifications',
   standalone: true,
   imports: [CommonModule],

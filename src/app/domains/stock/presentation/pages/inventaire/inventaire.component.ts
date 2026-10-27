@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -40,6 +40,7 @@ interface GammeStat {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-inventaire',
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule, RouterLink, EmptyIllustrationComponent],

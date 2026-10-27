@@ -5,10 +5,11 @@ import { AdminService, UtilisateurBE } from '../../../infrastructure/admin.servi
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ROLE_LABELS } from '../../../../../core/models/user.models';
+import { CanDirective } from '../../../../../shared/directives/can.directive';
 
 interface UserUI {
   id: string; matricule: string; nom: string; prenom: string | null;
-  email: string; role: string; actif: boolean; dateCreation: Date;
+  email: string; role: string; actif: boolean; compteBloque: boolean; dateCreation: Date;
   terminalImei: string | null; derniereConnexion: Date | null;
 }
 
@@ -27,7 +28,7 @@ const FORM_VIDE = (): NouvelUtilisateurForm => ({
 @Component({
   selector: 'app-admin-utilisateurs',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './admin-utilisateurs.component.html',
   styleUrls: ['./admin-utilisateurs.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -46,30 +47,56 @@ export class AdminUtilisateursComponent implements OnInit {
 
   users = signal<UserUI[]>([]);
   filtreRole = signal<string>('TOUS');
+  filtreTexte = signal<string>('');
+  /** Deux modes d'affichage de la même liste — demande explicite du porteur (2026-10-25). */
+  vueAffichage = signal<'table' | 'cartes'>('table');
 
   form: NouvelUtilisateurForm = FORM_VIDE();
+
+  // ── Détail utilisateur (2026-10-25) : débloquer, réinitialiser le mot de passe, changer le
+  // rôle — les trois endpoints existaient déjà côté AdministrationController, jamais appelés
+  // depuis cet écran. ──
+  showDetailModal = signal(false);
+  detailLoading = signal(false);
+  detailErreur = signal('');
+  utilisateurDetail = signal<UtilisateurBE | null>(null);
+  actionDetailEnCours = signal(false);
+
+  showResetPwdModal = signal(false);
+  nouveauMotDePasse = '';
+
+  showChangeRoleModal = signal(false);
+  nouveauRole = '';
 
   rolesDisponibles = [
     'TOUS', 'DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'GESTIONNAIRE_STOCK', 'COMMERCIAL',
     'COMPTABLE', 'SECRETAIRE', 'ADMIN', 'CHARGEE_RP',
     'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'MACHINISTE',
-    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL',
+    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL', 'RESPONSABLE_RH',
   ];
 
   rolesCreation = [
     'DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'GESTIONNAIRE_STOCK', 'COMMERCIAL',
     'COMPTABLE', 'SECRETAIRE', 'ADMIN', 'CHARGEE_RP',
     'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'MACHINISTE',
-    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL',
+    'AGENT_DOSEUR', 'AGENT_PRODUCTION', 'CONTROLEUR_GENERAL', 'RESPONSABLE_RH',
   ];
 
   usersFiltres = computed(() => {
     const r = this.filtreRole();
-    return r === 'TOUS' ? this.users() : this.users().filter(u => u.role === r);
+    const t = this.filtreTexte().trim().toLowerCase();
+    let list = r === 'TOUS' ? this.users() : this.users().filter(u => u.role === r);
+    if (t) {
+      list = list.filter(u =>
+        u.matricule.toLowerCase().includes(t) || u.nom.toLowerCase().includes(t) || u.email.toLowerCase().includes(t)
+      );
+    }
+    return list;
   });
 
   nbActifs   = computed(() => this.users().filter(u => u.actif).length);
   nbInactifs = computed(() => this.users().filter(u => !u.actif).length);
+  nbBloques  = computed(() => this.users().filter(u => u.compteBloque).length);
 
   ngOnInit(): void {
     this.charger();
@@ -146,11 +173,97 @@ export class AdminUtilisateursComponent implements OnInit {
     });
   }
 
+  // ── Détail utilisateur ──────────────────────────────────────────────────
+
+  ouvrirDetails(matricule: string): void {
+    this.showDetailModal.set(true);
+    this.detailLoading.set(true);
+    this.detailErreur.set('');
+    this.utilisateurDetail.set(null);
+    this.svc.consulterUtilisateur(matricule).subscribe({
+      next: u => { this.utilisateurDetail.set(u); this.detailLoading.set(false); },
+      error: (err) => { this.detailErreur.set(extractApiError(err)); this.detailLoading.set(false); },
+    });
+  }
+
+  fermerDetailModal(): void {
+    this.showDetailModal.set(false);
+    this.utilisateurDetail.set(null);
+  }
+
+  private rafraichirApresAction(u: UtilisateurBE): void {
+    this.utilisateurDetail.set(u);
+    this.users.update(list => list.map(usr => usr.matricule === u.matricule ? this.mapU(u) : usr));
+  }
+
+  debloquerCompte(): void {
+    const u = this.utilisateurDetail();
+    if (!u || this.actionDetailEnCours()) return;
+    if (!confirm(`Débloquer le compte ${u.matricule} ?`)) return;
+    this.actionDetailEnCours.set(true);
+    this.svc.debloquer(u.matricule).subscribe({
+      next: res => { this.actionDetailEnCours.set(false); this.rafraichirApresAction(res); this.toast.success('Compte débloqué.'); },
+      error: (err) => { this.actionDetailEnCours.set(false); this.toast.error(extractApiError(err), 'Déblocage impossible'); },
+    });
+  }
+
+  ouvrirResetPwd(): void {
+    this.nouveauMotDePasse = '';
+    this.showResetPwdModal.set(true);
+  }
+  fermerResetPwd(): void { this.showResetPwdModal.set(false); }
+
+  confirmerResetPwd(): void {
+    const u = this.utilisateurDetail();
+    if (!u || !this.nouveauMotDePasse.trim() || this.actionDetailEnCours()) return;
+    this.actionDetailEnCours.set(true);
+    this.svc.reinitialiserMotDePasse(u.matricule, this.nouveauMotDePasse.trim()).subscribe({
+      next: res => {
+        this.actionDetailEnCours.set(false);
+        this.rafraichirApresAction(res);
+        this.showResetPwdModal.set(false);
+        this.toast.success('Mot de passe réinitialisé.');
+      },
+      error: (err) => { this.actionDetailEnCours.set(false); this.toast.error(extractApiError(err), 'Réinitialisation impossible'); },
+    });
+  }
+
+  ouvrirChangeRole(): void {
+    this.nouveauRole = this.utilisateurDetail()?.role ?? '';
+    this.showChangeRoleModal.set(true);
+  }
+  fermerChangeRole(): void { this.showChangeRoleModal.set(false); }
+
+  confirmerChangeRole(): void {
+    const u = this.utilisateurDetail();
+    if (!u || !this.nouveauRole || this.actionDetailEnCours()) return;
+    if (!confirm(`Changer le rôle de ${u.matricule} en « ${this.getRoleLabel(this.nouveauRole)} » ?`)) return;
+    this.actionDetailEnCours.set(true);
+    this.svc.changerRole(u.matricule, this.nouveauRole).subscribe({
+      next: res => {
+        this.actionDetailEnCours.set(false);
+        this.rafraichirApresAction(res);
+        this.showChangeRoleModal.set(false);
+        this.toast.success('Rôle modifié.');
+      },
+      error: (err) => { this.actionDetailEnCours.set(false); this.toast.error(extractApiError(err), 'Changement de rôle impossible'); },
+    });
+  }
+
+  statutDetailLabel(u: UtilisateurBE): string {
+    if (u.compteBloque) return 'Bloqué';
+    return u.actif ? 'Actif' : 'Inactif';
+  }
+  statutDetailClasse(u: UtilisateurBE): string {
+    if (u.compteBloque) return 'badge bg-red';
+    return u.actif ? 'badge bg-success' : 'badge bg-neutral';
+  }
+
   private mapU(u: UtilisateurBE): UserUI {
     return {
       id: u.matricule, matricule: u.matricule, nom: u.nomComplet,
       prenom: null, email: u.email, role: u.role,
-      actif: u.actif, dateCreation: new Date(u.dateCreation),
+      actif: u.actif, compteBloque: u.compteBloque ?? false, dateCreation: new Date(u.dateCreation),
       terminalImei: null, derniereConnexion: null,
     };
   }

@@ -1,7 +1,7 @@
 // ═══ FICHIER : src/app/domains/stock/presentation/pages/reception/reception-list.component.ts ═══
 // Réécrit : aligné sur le nouveau contrat backend (receptionType au lieu de source,
 // destinationLocationName au lieu de warehouseName, receiptNumber comme identifiant).
-import { Component, OnInit, signal, inject, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import { Receipt } from '../../../domain/models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-reception-list',
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe, FormsModule],

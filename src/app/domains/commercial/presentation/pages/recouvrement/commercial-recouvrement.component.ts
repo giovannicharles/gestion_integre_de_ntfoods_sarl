@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, RecouvrementBE } from '../../../infrastructure/commercial.service';
@@ -14,7 +14,8 @@ interface RecouvrementUI {
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './commercial-recouvrement.component.html',
-  styleUrls: ['./commercial-recouvrement.component.css']
+  styleUrls: ['./commercial-recouvrement.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialRecouvrementComponent implements OnInit {
   private readonly auth = inject(AuthService);

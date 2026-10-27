@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ControleService, ControleDashboard, MargeProduit, BudgetItem, VarianceItem, AnomalieItem } from '../../../infrastructure/controle.service';
 import { ComptableService, DecaissementBE } from '../../../../comptable/infrastructure/comptable.service';
+import { StockService } from '../../../../stock/infrastructure/stock.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
@@ -20,6 +21,7 @@ export class ControleDashboardComponent implements OnInit {
 
   private readonly svc = inject(ControleService);
   private readonly cptSvc = inject(ComptableService);
+  private readonly stkSvc = inject(StockService);
 
   loading = signal(true);
   loadError = signal<string | null>(null);
@@ -30,12 +32,17 @@ export class ControleDashboardComponent implements OnInit {
   variances = signal<VarianceItem[]>([]);
   anomalies = signal<AnomalieItem[]>([]);
   decaissementsEnCours = signal<DecaissementBE[]>([]);
-
+  /**
+   * Correction 2026-10-25 : `ControleDashboardResponse.valoStock` est câblé à `0` en dur côté
+   * serveur (ControleDashboardService.java:97) — jamais corrigé depuis. Le vrai calcul existe
+   * déjà et tourne sur `/controle/valorisation` (StockService.getEtatStock(), somme de
+   * `valeurStock`) : repris ici tel quel plutôt que de dupliquer la logique côté serveur.
+   */
+  valoStock = signal(0);
   tresorerie = computed(() => this.data()?.tresorerie ?? 0);
   ecartsRouges = computed(() => this.data()?.ecartsRouges ?? 0);
   ventesCredit = computed(() => this.data()?.ventesCredit ?? 0);
   margeMoyenne = computed(() => this.data()?.margeMoyenne ?? 0);
-  valoStock = computed(() => this.data()?.valoStock ?? 0);
   budgetEngage = computed(() => this.data()?.budgetEngage ?? 0);
   budgetTotal = computed(() => this.data()?.budgetTotal ?? 0);
   budgetDepasse = computed(() => this.data()?.budgetDepasse ?? 0);
@@ -52,8 +59,9 @@ export class ControleDashboardComponent implements OnInit {
     forkJoin({
       dashboard: this.svc.getDashboard(),
       decaissements: this.cptSvc.getDecaissements(),
+      etatStock: this.stkSvc.getEtatStock(),
     }).subscribe({
-      next: ({ dashboard, decaissements }) => {
+      next: ({ dashboard, decaissements, etatStock }) => {
         this.data.set(dashboard);
         this.marges.set(dashboard.marges);
         this.budget.set(dashboard.budget);
@@ -62,6 +70,7 @@ export class ControleDashboardComponent implements OnInit {
         this.decaissementsEnCours.set(
           decaissements.filter(x => x.statut === 'PROPOSE' || x.statut === 'VALIDEE_CG').slice(0, 5)
         );
+        this.valoStock.set(etatStock.reduce((s, m) => s + m.valeurStock, 0));
         this.loading.set(false);
       },
       error: e => {

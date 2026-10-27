@@ -1,9 +1,8 @@
-﻿// â•â•â• FICHIER : src/app/domains/stock/presentation/pages/dashboard/stock-dashboard.component.ts â•â•â•
+// â•â•â• FICHIER : src/app/domains/stock/presentation/pages/dashboard/stock-dashboard.component.ts â•â•â•
 // REMPLACE : le fichier existant â€” Dashboard puissant, connectÃ© au backend, KPIs avancÃ©s
 import {
   Component, OnInit, signal, inject, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, ChangeDetectorRef, computed
-} from '@angular/core';
+  ViewChild, ElementRef, ChangeDetectorRef, computed, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
@@ -22,6 +21,7 @@ import { IaService, AnalysisResponse, IaSuggestion } from '../../../../../core/s
 Chart.register(...registerables);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe, DecimalPipe],

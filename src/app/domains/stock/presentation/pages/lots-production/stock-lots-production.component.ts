@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, LotBE } from '../../../../production/infrastructure/production.service';
@@ -19,6 +19,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
  * consultation et la validation/rejet, le rôle réel du Gestionnaire de Stock dans ce circuit.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-lots-production',
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule, CanDirective],

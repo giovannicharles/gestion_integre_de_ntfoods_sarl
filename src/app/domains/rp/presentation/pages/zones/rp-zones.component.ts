@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DgService, TauxOccupationSecteurBE, ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
 import { CommercialService } from '../../../../commercial/infrastructure/commercial.service';
@@ -9,6 +9,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './rp-zones.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RpZonesComponent implements OnInit {
   Math = Math;

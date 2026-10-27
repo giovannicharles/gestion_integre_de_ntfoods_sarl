@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -13,7 +13,8 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, CanDirective],
   templateUrl: './commercial-ventes.component.html',
-  styleUrls: ['./commercial-ventes.component.css']
+  styleUrls: ['./commercial-ventes.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialVentesComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();

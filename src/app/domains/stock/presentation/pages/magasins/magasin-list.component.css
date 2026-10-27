@@ -64,9 +64,9 @@
   border: 1.5px solid transparent;
 }
 .s-chip-total { background: var(--g-gh); color: var(--g); border-color: var(--g-gh); }
-.s-chip-active { background: #e6f9ee; color: #00875a; border-color: #b3dfcc; }
-.s-chip-inactive { background: #ffebeb; color: #de350b; border-color: #ffbdad; }
-.s-chip-items { background: #deebff; color: #0065ff; border-color: #b3d1ff; }
+.s-chip-active { background: var(--s-gh); color: var(--s); border-color: var(--s-gh); }
+.s-chip-inactive { background: var(--r-gh); color: var(--r); border-color: var(--r-gh); }
+.s-chip-items { background: var(--b-gh); color: var(--b); border-color: var(--b-gh); }
 
 /* Loading / Error / Empty states */
 .loading-state, .error-state, .empty-state {

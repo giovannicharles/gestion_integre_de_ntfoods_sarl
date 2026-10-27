@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, AfterViewInit, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
@@ -43,6 +43,7 @@ type SortDir = 'asc' | 'desc';
 type AlertLevel = 'CRITIQUE' | 'FAIBLE' | 'NORMAL';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-article-list',
   standalone: true,
   imports: [CommonModule, FormsModule, DecimalPipe],

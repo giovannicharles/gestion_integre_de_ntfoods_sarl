@@ -20,8 +20,9 @@
       </div>
 
       <nav class="sb-nav">
+        <app-sidebar-search (queryChange)="sidebarFiltre.set($event)"></app-sidebar-search>
         <span class="sb-section-lbl">COMPTES & ORGANISATION</span>
-        @for (item of comptesNavItems; track item.route) {
+        @for (item of comptesNavItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -29,7 +30,7 @@
         </a>
         }
         <span class="sb-section-lbl">CONFIGURATION TECHNIQUE</span>
-        @for (item of systemeNavItems; track item.route) {
+        @for (item of systemeNavItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
           [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
           <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
@@ -58,6 +59,7 @@
         </div>
       </div>
       <div class="tb-right">
+        <app-header-search [items]="tousLesItems()"></app-header-search>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>

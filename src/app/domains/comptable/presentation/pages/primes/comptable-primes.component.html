@@ -95,10 +95,19 @@
         <button class="modal-close" (click)="fermerCalcul()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
-        <p class="info-text">Objectif de la semaine : <strong>{{ fCFA(calculPour()?.objectifGlobalFCFA ?? 0) }}</strong>. Saisissez le chiffre d'affaires réellement réalisé (issu du rapprochement des ventes de la semaine).</p>
+        <p class="info-text">Objectif de la semaine : <strong>{{ fCFA(calculPour()?.objectifGlobalFCFA ?? 0) }}</strong>.</p>
+        @if (chargementAuto()) {
+          <p class="info-text"><i class="fa-solid fa-spinner fa-spin"></i> Calcul depuis les ventes réelles…</p>
+        } @else if (preRempliAutomatiquement()) {
+          <div class="info-text" style="background:var(--g-gh);border-left:3px solid var(--g);padding:8px 12px;border-radius:6px">
+            <i class="fa-solid fa-check-circle"></i> Pré-rempli automatiquement depuis les ventes réelles de la semaine — vérifiez puis corrigez si besoin avant de confirmer.
+          </div>
+        } @else {
+          <p class="info-text">Aucune vente trouvée pour ce commercial cette semaine — saisissez le chiffre d'affaires réalisé.</p>
+        }
         <div class="form-group">
           <label>CA global réalisé (FCFA) *</label>
-          <input type="number" min="0" [ngModel]="totalVentesGlobal()" (ngModelChange)="totalVentesGlobal.set($event)" />
+          <input type="number" min="0" [ngModel]="totalVentesGlobal()" (ngModelChange)="actualiserTotalVentesGlobal($event)" />
         </div>
         @if (gammesDuCalcul().length > 0) {
         <label class="form-sublabel">Réalisation par gamme</label>

@@ -29,20 +29,26 @@
         </div>
       </div>
 
-      <!-- NAV FILTREE PAR ROLE - GROUPES -->
+      <!-- NAV FILTREE PAR ROLE - GROUPES DEPLIABLES -->
       <nav class="sb-nav">
-        @for (section of filteredNavSections(); track section.title) {
+        <app-sidebar-search (queryChange)="sidebarFiltre.set($event)"></app-sidebar-search>
+        @for (section of navSectionsFiltrees(); track section.title) {
           <div class="sb-section">
-            <span class="sb-section-lbl"><i class="fa-solid {{ section.icon }}"></i> {{ section.title }}</span>
-            @for (item of section.items; track item.route) {
-            <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
-              [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
-              <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
-              <span class="sb-lbl">{{ item.label }}</span>
-              @if (item.badge && item.badge > 0) {
-              <span class="sb-badge {{ item.badgeClass || 'bd-neutral' }}">{{ item.badge }}</span>
+            <button type="button" class="sb-section-lbl sb-section-toggle" (click)="toggleSection(section.title)">
+              <i class="fa-solid {{ section.icon }}"></i> {{ section.title }}
+              <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="estSectionOuverte(section.title)"></i>
+            </button>
+            @if (estSectionOuverte(section.title)) {
+              @for (item of section.items; track item.route) {
+              <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"
+                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? item.label : ''">
+                <span class="sb-ico"><i class="fa-solid {{ item.icon }}"></i></span>
+                <span class="sb-lbl">{{ item.label }}</span>
+                @if (item.badge && item.badge > 0) {
+                <span class="sb-badge {{ item.badgeClass || 'bd-neutral' }}">{{ item.badge }}</span>
+                }
+              </a>
               }
-            </a>
             }
           </div>
         }
@@ -76,6 +82,8 @@
         </div>
       </div>
       <div class="tb-right">
+        <app-header-search [items]="filteredNav()"></app-header-search>
+        <app-signaler-incident></app-signaler-incident>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
@@ -153,12 +161,8 @@
       </div>
     </header>
 
-    @if (network.offlineMessage()) {
-      <div class="offline-banner">
-        <i class="fa-solid fa-wifi"></i>
-        <span>{{ network.offlineMessage() }}</span>
-      </div>
-    }
+    <!-- Bannière hors-ligne déplacée à la racine (app.component.html, 2026-10-25) : visible
+         quel que soit le layout actif, plus seulement ici. -->
 
     <main class="page-content">
       <router-outlet />

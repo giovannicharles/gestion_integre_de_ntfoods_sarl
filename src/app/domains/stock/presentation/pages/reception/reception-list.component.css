@@ -109,7 +109,7 @@
   font-size: 13px;
   color: var(--n800);
   outline: none;
-  background: white;
+  background: var(--w);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .search-box input:focus {
@@ -137,7 +137,7 @@
   border-radius: var(--r-md);
   font-size: 13px;
   color: var(--n700);
-  background: white;
+  background: var(--w);
   cursor: pointer;
   outline: none;
   font-family: var(--font-b);
@@ -231,7 +231,7 @@
 }
 .ab-validate:hover {
   background: var(--g);
-  color: white;
+  color: var(--w);
   box-shadow: 0 3px 10px rgba(20,83,45,.2);
 }
 .ab-view {

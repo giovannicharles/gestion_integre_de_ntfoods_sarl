@@ -9,7 +9,7 @@
 .bg-orange{background:var(--o-gh);color:var(--o)}
 .bg-neutral{background:var(--n150);color:var(--n600)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .15s ease}
-.modal-box{background:white;border-radius:var(--r-lg);padding:24px;width:90%;max-width:440px;box-shadow:var(--sh-lg);animation:slideUp .2s ease}
+.modal-box{background:var(--w);border-radius:var(--r-lg);padding:24px;width:90%;max-width:440px;box-shadow:var(--sh-lg);animation:slideUp .2s ease}
 .form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:12px;font-weight:600;color:var(--n600);margin-bottom:5px}
 .form-input{width:100%;padding:10px 12px;border:1.5px solid var(--n200);border-radius:var(--r-sm);font-size:14px;font-family:var(--font-b);color:var(--n800);outline:none;transition:border-color .15s}
@@ -24,7 +24,7 @@
 .toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:var(--r-md);font-size:13px;font-weight:600;z-index:1100;animation:slideInRight .2s ease}
 .toast-success{background:var(--g);color:white}
 .toast-error{background:var(--r);color:white}
-.card{background:white;border:1px solid var(--n150);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-sm)}
+.card{background:var(--w);border:1px solid var(--n150);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-sm)}
 
 @media (max-width:767px) {
   .tbl { min-width:600px; }

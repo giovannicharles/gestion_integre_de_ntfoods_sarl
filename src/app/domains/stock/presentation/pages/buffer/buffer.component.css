@@ -7,10 +7,10 @@
 
 /* TYPE TABS */
 .type-tabs{display:flex;gap:8px;flex-wrap:wrap}
-.type-tab{display:flex;align-items:center;gap:7px;padding:9px 18px;background:white;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;font-weight:600;color:var(--n600);cursor:pointer;transition:all .2s}
+.type-tab{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--w);border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;font-weight:600;color:var(--n600);cursor:pointer;transition:all .2s}
 .type-tab:hover{border-color:var(--o);color:var(--o)}
-.type-tab.tt-active{background:var(--o);border-color:var(--o);color:white;box-shadow:0 2px 8px rgba(230,81,0,.25)}
-.type-tab.tt-active .tt-count{background:rgba(255,255,255,.25);color:white}
+.type-tab.tt-active{background:var(--o);border-color:var(--o);color:var(--w);box-shadow:0 2px 8px rgba(230,81,0,.25)}
+.type-tab.tt-active .tt-count{background:rgba(255,255,255,.25);color:var(--w)}
 .tt-count{font-size:11px;font-weight:700;background:var(--n100);color:var(--n500);padding:1px 8px;border-radius:10px;min-width:20px;text-align:center}
 
 /* KPI BAR */
@@ -59,9 +59,9 @@
 .mat-cons{background:rgba(255,143,0,.12);color:#FF8F00}
 
 /* SEARCH & FILTER */
-.search-input{width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);outline:none;background:white}
+.search-input{width:100%;padding:9px 36px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);outline:none;background:var(--w)}
 .search-input:focus{border-color:var(--o)}
-.filter-select{padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:white;cursor:pointer;outline:none;font-family:var(--font-b)}
+.filter-select{padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n700);background:var(--w);cursor:pointer;outline:none;font-family:var(--font-b)}
 
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:var(--r-md);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .15s}
@@ -82,7 +82,7 @@
 .form-group{margin-bottom:14px}
 .form-label{display:block;font-size:12px;font-weight:700;color:var(--n700);margin-bottom:6px}
 .req{color:var(--r)}
-.form-control{width:100%;padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n800);outline:none;background:white}.form-control:focus{border-color:var(--o)}
+.form-control{width:100%;padding:9px 12px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n800);outline:none;background:var(--w)}.form-control:focus{border-color:var(--o)}
 
 /* TOAST */
 .toast{position:fixed;top:20px;right:20px;z-index:1100;padding:12px 16px;border-radius:var(--r-md);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.15)}

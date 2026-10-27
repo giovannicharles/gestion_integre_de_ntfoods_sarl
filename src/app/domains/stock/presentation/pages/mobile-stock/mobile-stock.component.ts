@@ -1,7 +1,6 @@
 import {
   Component, OnInit, signal, inject, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, ChangeDetectorRef
-} from '@angular/core';
+  ViewChild, ElementRef, ChangeDetectorRef, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,6 +12,7 @@ import { MobileStockSummary, MobileStockRotation, SlowStockCommercial, DotationR
 Chart.register(...registerables);
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-mobile-stock',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DatePipe, DecimalPipe],

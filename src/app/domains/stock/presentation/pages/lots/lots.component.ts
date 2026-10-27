@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -7,6 +7,7 @@ import { StockBatch, BatchStatus } from '../../../domain/models/stock.models';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-lots',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe, DecimalPipe],

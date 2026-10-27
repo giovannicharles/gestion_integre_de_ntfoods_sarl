@@ -196,6 +196,19 @@
   font-size: 10px;
   opacity: 0.6;
 }
+/* 2026-10-25 : les en-têtes de section deviennent des boutons dépliables — réinitialisation des
+   styles natifs du bouton, la mise en page vient déjà de .sb-section-lbl ci-dessus. */
+.sb-section-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.sb-section-toggle:hover { color: rgba(255, 255, 255, 0.6); }
+.sb-section-toggle .sb-group-arrow { margin-left: auto; }
 .sb-item {
   display: flex;
   align-items: center;
@@ -220,6 +233,13 @@
 .sb-item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
+}
+/* 2026-10-25 (demande explicite du porteur, « couleur bleu bizarre » sur les liens du sidebar) :
+   sans ceci, le navigateur retombe sur son anneau de focus bleu par défaut au clic/tabulation —
+   remplacé par la couleur de marque, sans supprimer l'anneau (accessibilité clavier conservée). */
+.sb-item:focus-visible {
+  outline: 2px solid var(--y);
+  outline-offset: 2px;
 }
 .sb-item.sb-active {
   background: var(--y);

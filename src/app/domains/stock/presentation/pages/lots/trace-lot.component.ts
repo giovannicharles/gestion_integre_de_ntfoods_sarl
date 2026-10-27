@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../core/http/api.service';
@@ -48,6 +48,7 @@ const LIBELLES_RELATION: Record<string, string> = {
  * aurait affiché « lot introuvable » pour la plupart des numéros du premier écran.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-trace-lot',
   standalone: true,
   imports: [CommonModule, FormsModule],

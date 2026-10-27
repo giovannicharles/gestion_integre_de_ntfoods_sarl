@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
 import { CommercialService } from '../../../infrastructure/commercial.service';
@@ -11,7 +11,8 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './commercial-classement.component.html',
-  styleUrls: ['./commercial-classement.component.css']
+  styleUrls: ['./commercial-classement.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommercialClassementComponent implements OnInit {
   today = new Date();
