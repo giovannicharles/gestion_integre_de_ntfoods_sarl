@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ProductionService, RapportHebdomadaireProductionBE, SessionDosageBE } from '../../../../infrastructure/production.service';
 import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-chart.component';
@@ -17,7 +17,8 @@ import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-ch
   standalone: true,
   imports: [CommonModule, DecimalPipe, DonutChartComponent],
   templateUrl: './cp-ressources.component.html',
-  styleUrls: ['./cp-ressources.component.css', '../_shared.css']
+  styleUrls: ['./cp-ressources.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpRessourcesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

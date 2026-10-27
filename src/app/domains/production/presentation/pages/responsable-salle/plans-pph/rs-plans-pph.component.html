@@ -169,22 +169,18 @@
               <thead>
                 <tr>
                   <th>Jour</th>
-                  <th class="text-right">Maïs (kg)</th>
-                  <th class="text-right">Soja (kg)</th>
-                  <th class="text-right">Arachide (kg)</th>
+                  <th class="text-right">Matières premières</th>
                   <th class="text-right">Fûts</th>
-                  <th class="text-right">Sachets</th>
+                  <th class="text-right">Emballage</th>
                 </tr>
               </thead>
               <tbody>
                 @for (j of p.repartitionJours; track j.dateJour) {
                   <tr>
                     <td><strong>{{ j.dateJour }}</strong></td>
-                    <td class="text-right mono">{{ j.poudreMaisKg | number:'1.1-1' }}</td>
-                    <td class="text-right mono">{{ j.poudreSojaKg | number:'1.1-1' }}</td>
-                    <td class="text-right mono">{{ j.poudreArachideKg | number:'1.1-1' }}</td>
+                    <td class="text-right mono">{{ matieresJour(j) }}</td>
                     <td class="text-right mono">{{ j.futsPrevus }}</td>
-                    <td class="text-right mono">{{ j.sachetsPrevus }}</td>
+                    <td class="text-right mono">{{ emballagesJour(j) }}</td>
                   </tr>
                 }
               </tbody>

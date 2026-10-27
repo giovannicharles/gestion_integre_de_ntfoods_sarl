@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { ProductionService, RapportHebdomadaireProductionBE } from '../../../../infrastructure/production.service';
@@ -15,7 +15,8 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
   standalone: true,
   imports: [CommonModule, DecimalPipe, MiniChartComponent],
   templateUrl: './cp-statistiques.component.html',
-  styleUrls: ['./cp-statistiques.component.css', '../_shared.css']
+  styleUrls: ['./cp-statistiques.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpStatistiquesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

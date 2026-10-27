@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -10,7 +10,8 @@ import {
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-realisations-poste.component.html',
-  styleUrls: ['./rs-realisations-poste.component.css', '../_shared.css']
+  styleUrls: ['./rs-realisations-poste.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsRealisationsPosteComponent implements OnInit {
   private readonly svc = inject(ProductionService);

@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE } from '../../../../infrastructure/production.service';
+import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 /**
  * PLANIFICATION DE LA PRODUCTION — Chef de Production
@@ -14,7 +14,8 @@ import { ProductionService, PPHBE } from '../../../../infrastructure/production.
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './cp-planification.component.html',
-  styleUrls: ['./cp-planification.component.css', '../_shared.css']
+  styleUrls: ['./cp-planification.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpPlanificationComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -66,15 +67,27 @@ export class CpPlanificationComponent implements OnInit {
     });
   }
 
-  /** Somme des ressources planifiées sur la semaine (matières + fûts), pour la vue "ressources planifiées". */
-  totalRessourcesSemaine(): { mais: number; soja: number; arachide: number; poudreTotale: number; futs: number } {
+  /** Somme des ressources planifiées sur la semaine (matières, libres, + fûts), pour la vue "ressources planifiées". */
+  totalRessourcesSemaine(): { poudreTotale: number; futs: number } {
     const p = this.pphSelectionne();
-    if (!p) return { mais: 0, soja: 0, arachide: 0, poudreTotale: 0, futs: 0 };
+    if (!p) return { poudreTotale: 0, futs: 0 };
     return p.repartitionJours.reduce((acc, j) => ({
-      mais: acc.mais + j.poudreMaisKg, soja: acc.soja + j.poudreSojaKg,
-      arachide: acc.arachide + j.poudreArachideKg,
-      poudreTotale: acc.poudreTotale + j.poudreTotaleKg,
+      poudreTotale: acc.poudreTotale + (j.totalMatieresPremieresKg || 0),
       futs: acc.futs + j.futsPrevus,
-    }), { mais: 0, soja: 0, arachide: 0, poudreTotale: 0, futs: 0 });
+    }), { poudreTotale: 0, futs: 0 });
+  }
+
+  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  matieresJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsMatieresPremiere ?? [];
+    if (!b.length) return '—';
+    return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
+  }
+
+  /** Composants d'emballage d'un jour, formatés « Type: Qté ». */
+  emballagesJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsEmballage ?? [];
+    if (!b.length) return '—';
+    return b.map(e => `${e.type}: ${e.quantite}`).join(', ');
   }
 }

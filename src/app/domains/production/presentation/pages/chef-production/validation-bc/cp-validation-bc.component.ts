@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,8 @@ import { CanDirective } from '../../../../../../shared/directives/can.directive'
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, CanDirective],
   templateUrl: './cp-validation-bc.component.html',
-  styleUrls: ['./cp-validation-bc.component.css', '../_shared.css']
+  styleUrls: ['./cp-validation-bc.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpValidationBcComponent implements OnInit {
   private readonly stockSvc = inject(StockService);

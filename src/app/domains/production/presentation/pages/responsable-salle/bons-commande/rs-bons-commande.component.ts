@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
@@ -12,7 +12,8 @@ import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
   templateUrl: './rs-bons-commande.component.html',
-  styleUrls: ['./rs-bons-commande.component.css', '../_shared.css']
+  styleUrls: ['./rs-bons-commande.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsBonsCommandeComponent implements OnInit {
   private readonly stockSvc = inject(StockService);

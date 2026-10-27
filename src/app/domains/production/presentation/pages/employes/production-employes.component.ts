@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +16,8 @@ interface AgentAvecPoste {
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink, FormsModule],
   templateUrl: './production-employes.component.html',
-  styleUrls: ['./production-employes.component.css']
+  styleUrls: ['./production-employes.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionEmployesComponent implements OnInit {
   today = new Date();

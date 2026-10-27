@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -11,7 +11,8 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './production-besoins.component.html',
-  styleUrls: ['./production-besoins.component.css']
+  styleUrls: ['./production-besoins.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionBesoinsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

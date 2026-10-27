@@ -1,8 +1,8 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE } from '../../../infrastructure/production.service';
+import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../infrastructure/production.service';
 import { StockService, BonCommandeBE } from '../../../../stock/infrastructure/stock.service';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
 
@@ -11,7 +11,8 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule, CanDirective],
   templateUrl: './production-plan.component.html',
-  styleUrls: ['./production-plan.component.css']
+  styleUrls: ['./production-plan.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionPlanComponent implements OnInit {
   today = new Date();
@@ -55,14 +56,15 @@ export class ProductionPlanComponent implements OnInit {
   lignesMP = computed(() => {
     const p = this.pph();
     if (!p || !p.repartitionJours) return [] as { nom: string; quantite: number; unite: string }[];
-    const totalMais = p.repartitionJours.reduce((s, j) => s + (j.poudreMaisKg || 0), 0);
-    const totalSoja = p.repartitionJours.reduce((s, j) => s + (j.poudreSojaKg || 0), 0);
-    const totalArachide = p.repartitionJours.reduce((s, j) => s + (j.poudreArachideKg || 0), 0);
-    const lignes: { nom: string; quantite: number; unite: string }[] = [];
-    if (totalMais > 0) lignes.push({ nom: 'Maïs', quantite: Math.round(totalMais * 100) / 100, unite: 'kg' });
-    if (totalSoja > 0) lignes.push({ nom: 'Soja', quantite: Math.round(totalSoja * 100) / 100, unite: 'kg' });
-    if (totalArachide > 0) lignes.push({ nom: 'Arachide', quantite: Math.round(totalArachide * 100) / 100, unite: 'kg' });
-    return lignes;
+    const totaux = new Map<string, number>();
+    for (const j of p.repartitionJours) {
+      for (const b of j.besoinsMatieresPremiere ?? []) {
+        totaux.set(b.matierePremiere, (totaux.get(b.matierePremiere) ?? 0) + b.quantiteKg);
+      }
+    }
+    return [...totaux.entries()]
+      .filter(([, quantite]) => quantite > 0)
+      .map(([nom, quantite]) => ({ nom, quantite: Math.round(quantite * 100) / 100, unite: 'kg' }));
   });
 
   totalMP = computed(() => this.lignesMP().length);
@@ -99,11 +101,26 @@ export class ProductionPlanComponent implements OnInit {
 
   totalEmballages = computed(() => {
     const p = this.pph();
-    return p?.repartitionJours?.reduce((s: number, j: any) => s + (j.sachetsPrevus || 0), 0) ?? 0;
+    return p?.repartitionJours?.reduce((s: number, j) =>
+      s + (j.besoinsEmballage ?? []).reduce((t, b) => t + b.quantite, 0), 0) ?? 0;
   });
 
   getProduitDesignation(code: string): string {
     return code;
+  }
+
+  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  matieresJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsMatieresPremiere ?? [];
+    if (!b.length) return '—';
+    return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
+  }
+
+  /** Composants d'emballage d'un jour, formatés « Type: Qté ». */
+  emballagesJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsEmballage ?? [];
+    if (!b.length) return '—';
+    return b.map(e => `${e.type}: ${e.quantite}`).join(', ');
   }
 
   totalObjectifsModifies(): number {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE } from '../../../../infrastructure/production.service';
@@ -14,7 +14,8 @@ import { ProductionService, SessionDosageBE } from '../../../../infrastructure/p
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './ad-registre.component.html',
-  styleUrls: ['./ad-registre.component.css', '../_shared.css']
+  styleUrls: ['./ad-registre.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdRegistreComponent implements OnInit {
   private readonly svc = inject(ProductionService);

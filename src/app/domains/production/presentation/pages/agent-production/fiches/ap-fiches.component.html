@@ -1,0 +1,82 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-file-lines ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Fiches Produit Journalières</h1>
+      <p class="ph-sub">Quantités réelles produites, comparées aux prédictions dosage/postes</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar-row">
+    <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option> }
+    </select>
+    <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3]"></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Agent</th><th>Fûts produits</th><th>Produits</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          @for (f of fiches(); track f.id) {
+            <tr>
+              <td>{{ f.date }}</td>
+              <td>{{ f.matriculeAgentProduction }}</td>
+              <td>{{ f.nbFutsProduits }}</td>
+              <td>{{ f.lignes.length }} ligne(s)</td>
+              <td>@if (f.verrouillee) { <span class="badge bg-orange">🔒 Verrouillée</span> } @else { <span class="badge bg-blue">Ouverte</span> }</td>
+              <td><button class="btn btn-sm btn-ghost" (click)="ouvrir(f)"><i class="fa-solid fa-eye"></i> Détail</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune fiche pour ce PPH</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (ficheOuverte(); as f) {
+<div class="modal-overlay" (click)="fermer()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-hd">
+      <h3><i class="fa-solid fa-file-lines"></i> Fiche {{ f.referencePPH }} — {{ f.date }}</h3>
+      <button class="modal-close" (click)="fermer()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Agent</div><div class="value">{{ f.matriculeAgentProduction }}</div></div>
+        <div class="info-item"><div class="label">Fûts produits</div><div class="value">{{ f.nbFutsProduits }}</div></div>
+        <div class="info-item"><div class="label">Statut</div><div class="value">{{ f.verrouillee ? 'Verrouillée' : 'Ouverte' }}</div></div>
+      </div>
+      @if (f.justificationEcart) {
+        <p><strong>Justification de l'écart :</strong> {{ f.justificationEcart }}</p>
+      }
+      <h4>Produits fabriqués</h4>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Produit</th><th>Qté réelle</th><th>Préd. dosage</th><th>Préd. postes</th><th>Écart</th><th>Progression</th></tr></thead>
+          <tbody>
+            @for (l of f.lignes; track l.codeProduit) {
+              <tr>
+                <td>{{ l.nomProduit }}</td>
+                <td>{{ l.quantiteProduite }}</td>
+                <td>{{ l.quantitePrediteDosage ?? '—' }}</td>
+                <td>{{ l.quantitePreditePostes ?? '—' }}</td>
+                <td>{{ l.ecart ?? '—' }}</td>
+                <td>{{ l.tauxAvancement != null ? (l.tauxAvancement + '%') : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-ghost" (click)="fermer()">Fermer</button></div>
+  </div>
+</div>
+}

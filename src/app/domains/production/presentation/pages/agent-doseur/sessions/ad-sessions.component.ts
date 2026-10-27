@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE, PPHBE } from '../../../../infrastructure/production.service';
@@ -19,7 +19,8 @@ import { AuthService } from '../../../../../../core/auth/auth.service';
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './ad-sessions.component.html',
-  styleUrls: ['./ad-sessions.component.css', '../_shared.css']
+  styleUrls: ['./ad-sessions.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdSessionsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

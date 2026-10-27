@@ -9,12 +9,16 @@ import { ProductionRoleService } from '../../domains/production/infrastructure/p
 import { PRODUCTION_ROLE_CONFIG, PRODUCTION_NAV_PAR_DEFAUT, ProductionNavItem } from '../../domains/production/infrastructure/production-role-config';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
+import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 
 @Component({
   selector: 'app-production-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
   templateUrl: './production-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -55,6 +59,10 @@ export class ProductionLayoutComponent implements OnInit {
 
   /** Nombre d'expressions de besoin en attente (GET /production/besoins?statut=EN_ATTENTE). */
   besoinsEnAttente = signal(0);
+
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  sidebarFiltre = signal('');
+  navItemsFiltres = computed(() => filtrerNavItems(this.navItems(), this.sidebarFiltre()));
 
   ngOnInit() {
     setInterval(() => this.currentTime.set(new Date()), 30000);

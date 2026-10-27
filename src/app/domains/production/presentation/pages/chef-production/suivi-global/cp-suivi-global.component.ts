@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { ProductionService, OFBE, PPHBE } from '../../../../infrastructure/production.service';
 
@@ -12,7 +12,8 @@ import { ProductionService, OFBE, PPHBE } from '../../../../infrastructure/produ
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe],
   templateUrl: './cp-suivi-global.component.html',
-  styleUrls: ['./cp-suivi-global.component.css', '../_shared.css']
+  styleUrls: ['./cp-suivi-global.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpSuiviGlobalComponent implements OnInit {
   private readonly svc = inject(ProductionService);

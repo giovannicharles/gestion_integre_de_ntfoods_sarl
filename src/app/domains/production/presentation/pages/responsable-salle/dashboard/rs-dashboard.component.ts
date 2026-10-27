@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -18,7 +18,8 @@ import { ToastService } from '../../../../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, MiniChartComponent],
   templateUrl: './rs-dashboard.component.html',
-  styleUrls: ['./rs-dashboard.component.css', '../_shared.css']
+  styleUrls: ['./rs-dashboard.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);

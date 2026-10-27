@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -17,7 +17,7 @@ export interface CodePosteRef {
   categoriesMetier?: string[];
 }
 
-/** Fallback local des 11 postes de production (Responsable de Salle). 
+/** Fallback local des 11 postes de production (Responsable de Salle).
  *  Le référentiel canonique est désormais chargé depuis le backend. */
 export const CODES_POSTE: CodePosteRef[] = [
   { code: 'CARAMEL', libelle: 'Caramel', effectifReference: 1, productionParHeure: 8.2, productionJournaliere: 65.6, unite: 'KG', categoriesMetier: ['TANTY_A_GRIGNOTER'] },
@@ -66,23 +66,25 @@ export const STATUTS_PPH = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'] as con
 // Modèles — Lots
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * Forme réelle de LotResponse (backend, LotController) — vérifiée en direct le
- * 2026-10-15 (P3) : les champs étaient auparavant supposés en français
- * (codeProduit/designationProduit/quantiteKg/nbCartons) alors que l'API renvoie
- * et attend productSku/productName/declaredQuantityKg/equivalentUnits. La
- * déclaration de lot échouait systématiquement (400, productSku/productName
- * obligatoires) et l'affichage des lots existants montrait des cellules vides.
- */
+/** Lot de produit fini — noms identiques à la réponse backend (LotResponse). */
 export interface LotBE {
-  id: number; numeroLot: string; referencePPH: string;
-  productSku: string; productName: string; productUnit: string;
+  id: number; numeroLot: string; referencePPH: string | null;
+  productSku: string; productName: string; productUnit: string | null;
   declaredQuantityKg: number; equivalentUnits: number;
   dateProduction: string; dlc: string;
-  matriculeChefProduction: string; declaredBy?: string | null; statut: string;
+  matriculeChefProduction: string; declaredBy: string | null;
+  statut: string;
   matriculeGestionnaireValidation?: string | null; motifRejet?: string | null;
-  conditioningType?: string | null; conditioningQty?: number | null;
-  notes?: string | null; createdAt?: string | null; validatedAt?: string | null;
+  conditioningType: string | null; conditioningQty: number | null; notes: string | null;
+  createdAt: string | null; validatedAt: string | null;
+}
+
+/** Corps de la déclaration d'un lot (DeclarerLotRequest). */
+export interface DeclarerLotBE {
+  referencePPH: string; productSku: string; productName: string; productUnit?: string;
+  declaredQuantityKg: number; equivalentUnits: number;
+  dateProduction: string; dlc: string;
+  conditioningType?: string; conditioningQty?: number; notes?: string; declaredBy?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -114,27 +116,70 @@ export interface PPHLigneBE {
   quantiteAttendueKg: number; quantiteAttendueUnites: number;
 }
 
+/** Besoin en une matière première (kg) — nom libre, issu de la formule de production du produit. */
+export interface BesoinMatiereBE { matierePremiere: string; quantiteKg: number; }
+
+/** Besoin en un composant d'emballage — type issu de la composition du conditionnement (SACHET, COUVERCLE, SEAU...). */
+export interface BesoinEmballageBE { type: string; quantite: number; }
+
 export interface PPHLigneDetailBE {
   codeProduit: string; nomProduit: string; categorieMetier: string;
   quantiteCartons: number; nombreUnites: number; poidsUnitaireGrammes: number;
-  recette: string | null; dateJour: string; quantiteJour: number;
-  poudreMaisKg: number; poudreSojaKg: number; poudreArachideKg: number;
-  poudreTotaleKg: number;
+  dateJour: string; quantiteJour: number;
+  besoinsMatieresPremiere: BesoinMatiereBE[];
+  /** true : le produit n'a pas de formule — aucun besoin en matière calculé (état signalé, pas un zéro). */
+  formuleManquante: boolean;
+  besoinsEmballage: BesoinEmballageBE[];
+  /** true : le conditionnement n'a pas de type/composition d'emballage — aucun besoin calculé. */
+  compositionEmballageManquante: boolean;
+  totalMatieresPremieresKg: number;
   futsPrevus: number;
-  poudreMaisParFutKg: number; poudreSojaParFutKg: number; poudreArachideParFutKg: number;
-  sachetsPrevus: number; couverclesPrevus: number; scellesPrevus: number;
   poidsTotalGrammes: number;
   quantiteAttendueKg: number; quantiteAttendueUnites: number;
 }
 
 export interface PPHRepartitionJourBE {
   dateJour: string;
-  poudreMaisKg: number; poudreSojaKg: number; poudreArachideKg: number;
-  poudreTotaleKg: number;
+  besoinsMatieresPremiere: BesoinMatiereBE[];
+  besoinsEmballage: BesoinEmballageBE[];
+  totalMatieresPremieresKg: number;
   futsPrevus: number;
-  poudreMaisParFutKg: number; poudreSojaParFutKg: number; poudreArachideParFutKg: number;
-  sachetsPrevus: number; couverclesPrevus: number; scellesPrevus: number;
 }
+
+/** Réponse de POST /production/pph/{reference}/recalculer. */
+export interface RecalculerPPHBE {
+  pph: PPHBE;
+  /** true : une répartition ajustée manuellement a été remplacée par la répartition recalculée. */
+  ajustementsManuelsEcrases: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Modèles — Formules de production et composition d'emballage
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface FormuleLigneBE { matierePremiere: string; proportionKg: number; }
+export interface FormuleBE { baseKg: number; lignes: FormuleLigneBE[]; }
+export interface ComposantEmballageBE { type: string; quantiteComposant: number; quantiteUnitesProduites: number; }
+export interface ConditionnementProductionBE {
+  id: string; sku: string; libelle: string; niveau: string; poidsUnitaireGrammes: number;
+  type: string | null; composants: ComposantEmballageBE[];
+}
+export interface ReferentielProductionBE {
+  codeProduit: string; designation: string; categorieMetier: string; actif: boolean;
+  formule: FormuleBE | null;
+  conditionnements: ConditionnementProductionBE[];
+}
+
+/** Miroir de l'enum backend TypeEmballage. */
+export const TYPES_EMBALLAGE = [
+  { code: 'SACHET', libelle: 'Sachet' },
+  { code: 'COUVERCLE', libelle: 'Couvercle' },
+  { code: 'SCELLE', libelle: 'Scellé' },
+  { code: 'CARTON', libelle: 'Carton' },
+  { code: 'SEAU', libelle: 'Seau' },
+  { code: 'GAINE', libelle: 'Gaine' },
+  { code: 'ETUI', libelle: 'Étui' },
+];
 
 // ═══════════════════════════════════════════════════════════════════════
 // Modèles — Broyage
@@ -171,6 +216,27 @@ export interface EmployeBE {
   dateCreation: string; dateModification: string;
 }
 
+/** Synthèse de l'atelier de broyage sur une journée ou une période (ApercuBroyageResponse côté backend). */
+export interface SyntheseBroyageBE {
+  nbSessions: number; nbClotures: number; nbValidees: number;
+  objectif: number; realise: number; taux: number | null;
+  nette: number; pertes: number; pctPertes: number | null; machinistes: number;
+}
+
+/** Vue d'ensemble du broyage : synthèse du jour, de la période, répartition par poudre et série journalière. */
+export interface ApercuBroyageBE {
+  debut: string; fin: string;
+  duJour: SyntheseBroyageBE;
+  periode: SyntheseBroyageBE;
+  poudres: { code: string; objectif: number; realise: number; pertes: number; part: number | null }[];
+  jours: {
+    date: string; nbSessions: number; nbValidees: number; objectif: number; realise: number;
+    nette: number; pertes: number; taux: number | null; pctPertes: number | null;
+  }[];
+  planEnCours: string | null;
+  plansValides: number;
+}
+
 export interface ClassementMachinisteBE {
   classements: {
     rang: number; machinisteMatricule: string; nomMachiniste: string;
@@ -199,7 +265,9 @@ export interface SessionDosageBE {
 export interface StatistiquesFutsBE {
   debut: string; fin: string; periodeLibelle: string;
   nbFutsProduits: number; nbFutsNets: number;
-  poudreMaisKg: number; poudreSojaKg: number; poudreArachideKg: number;
+  matieresPremieres: { matierePremiere: string; quantiteKg: number }[];
+  /** Sessions sans matière saisie dont la formule n'a pas pu être identifiée sans ambiguïté (exclues de l'estimation). */
+  nbSessionsNonEstimees: number;
   comparaison: {
     debutPeriodePrecedente: string; finPeriodePrecedente: string;
     nbFutsNetsPeriodePrecedente: number; variationPourcentage: number;
@@ -207,10 +275,45 @@ export interface StatistiquesFutsBE {
   nbSessions: number;
 }
 
+/** Poudre prévue et écrasée d'un plan PPH, par matière (AvancementBroyageResponse côté backend). */
+export interface AvancementBroyageBE {
+  referencePPH: string;
+  nbSessions: number; nbSessionsCloturees: number;
+  matieres: {
+    code: string; suivie: boolean; prevuKg: number; ecraseKg: number; enCoursKg: number;
+    restantKg: number; ecartKg: number; pourcent: number;
+  }[];
+}
+
+/** Fûts dosés d'un plan PPH (AvancementDosageResponse côté backend). */
+export interface AvancementDosageBE {
+  referencePPH: string;
+  nbSessions: number; nbSessionsValidees: number;
+  futsValides: number; futsEnCours: number; futsDoses: number;
+  parJour: { date: string; futsValides: number; futsEnCours: number }[];
+}
+
+/** Prédiction enregistrée d'un plan PPH (PredictionPPHResponse côté backend). */
+export interface PredictionPPHBE {
+  referencePPH: string;
+  nbFuts: number;
+  poudreKg: number;
+  dateCalcul: string;
+  matricule: string;
+  predictions: PredictionPPHLigneBE[];
+  exclusions: { codeProduit: string; motif: string }[];
+}
+
+export interface PredictionPPHLigneBE {
+  codeProduit: string; designation: string; composition: string;
+  poudreAlloueeKg: number; quantiteUnitesBase: number; quantiteCartons: number;
+  poidsUnitaireGrammes: number; unitesParCarton: number;
+}
+
 export interface PredictionProduitFiniBE {
   nbFutsNets: number; poidsTotalPoudreKg: number;
   predictions: {
-    codeProduit: string; designation: string; recette: string;
+    codeProduit: string; designation: string; composition: string | null;
     quantiteUnitesBase: number; quantiteCartons: number;
     poidsUnitaireGrammes: number; nombreUnitesParCarton: number;
   }[];
@@ -250,7 +353,10 @@ export interface AffectationBE {
   saisies: {
     codePoste: string; libellePoste: string;
     quantiteRealisee: number; objectifAjuste: number; pctRealisation: number; unite: string;
-    productionsIndividuelles: { matriculeEmploye: string; nomEmploye: string; quantiteRealisee: number; unite: string }[];
+    productionsIndividuelles: {
+      matriculeEmploye: string; nomEmploye: string; quantiteRealisee: number; unite: string;
+      objectifIndividuel: number; pctRealisation: number;
+    }[];
     details: {
       nbRegimesEpluches: number | null; nbRegimesDecoupes: number | null;
       nbSceauxEtiquetes: number | null; nbEtiquettesDatees: number | null;
@@ -275,20 +381,12 @@ export interface AgentProductionBE {
   actif: boolean;
 }
 
+/** Classement d'un exécutant : le taux est individuel (sans unité) ; les quantités ne sont jamais additionnées entre unités. */
 export interface ClassementExecuteurBE {
   rang: number; matriculeEmploye: string; nomEmploye: string;
   quantiteTotaleRealisee: number; unite: string;
   tauxRealisationMoyen: number; nbJoursAffectes: number;
-  /** Quantités par unité — jamais additionnées entre elles (sachets, kg, sceaux... distincts). */
   quantitesParUnite?: { unite: string; quantite: number }[];
-}
-
-export interface PerformancePosteBE {
-  codePoste: string; libellePoste: string; unite: string | null;
-  joursAffectes: number; joursSaisis: number;
-  objectifCumule: number; realiseCumule: number;
-  taux: number | null; effectifMoyen: number | null; rendementParPersonne: number | null;
-  rang: number | null;
 }
 
 export interface ComparaisonFutsProductionBE {
@@ -298,10 +396,42 @@ export interface ComparaisonFutsProductionBE {
   uniteProduction: string;
 }
 
+/** Performance d'un poste sur une période (GET /performances-postes). Quantités dans l'unité du poste. */
+export interface PerformancePosteBE {
+  codePoste: string; libelle: string; unite: string;
+  joursAffectes: number; joursSaisis: number;
+  objectifTotal: number; realiseTotal: number; tauxRealisation: number;
+  effectifMoyen: number; rendementParPersonne: number; rang: number | null;
+}
+
+/** Réponse de GET /comparaisons/{referencePPH}?date= : plan du BC contre dosage et production de la journée. */
+export interface ComparaisonBCBE {
+  /** referenceBC est null quand le plan n'est rattaché à aucun bon de commande. */
+  referencePPH: string; referenceBC: string | null; date: string; nbSessionsDosage: number;
+  futs: { futsNetsDoses: number; futsPrevus: number; ecart: number; ecartPct: number };
+  matieres: {
+    /** matiere : libellé normalisé (ex. SOJA) ; codeMP : code catalogue de rapprochement plan / dosage. */
+    matiere: string; codeMP: string; theoriqueKg: number; doseeKg: number; ecartKg: number; ecartPct: number;
+    theoriqueParCategorie: { categorie: string; theoriqueKg: number }[];
+  }[];
+  produits: {
+    codeProduit: string; nomProduit: string; categorie: string;
+    cartonsPrevus: number; unitesPrevues: number; poidsPrevuKg: number; matieresPrevuesKg: number;
+  }[];
+  postesRealises: {
+    codePoste: string; libelle: string; categories: string[];
+    quantiteRealisee: number; objectifAjuste: number; unite: string;
+  }[];
+  /** Bouillie produite, convertie en kg via le poids du conditionnement (#107) ; non convertible si ambigu. */
+  productionBouillie: { quantiteKg: number; convertible: boolean; motifNonConvertible: string | null };
+}
+
 /** Réponse de GET /affectations/rapport-hebdomadaire (forme propre au module Affectation). */
 export interface RapportHebdoAffectationBE {
   debut: string; fin: string; periodeLibelle: string;
-  nbFutsNets: number; poidsTotalPoudreKg: number; productionTotaleKg: number;
+  /** Non fournis par RapportHebdomadaireProductionResponse : absents de l'API actuelle. */
+  nbFutsProduits?: number; nbFutsNets: number; nbFutsCasses?: number;
+  poidsTotalPoudreKg: number; productionTotaleKg: number;
   nbSessionsDosage: number; nbJoursAffectes: number;
   classementExecuteurs: ClassementExecuteurBE[];
   comparaisonsJournalieres: ComparaisonFutsProductionBE[];
@@ -335,6 +465,24 @@ export interface DashboardChefBE {
   tauxAvancementPPH: number; fichesSemaine: number;
   pphEnCoursReference: string | null; pphEnCoursSemaine: string | null;
   debutSemaine: string; finSemaine: string;
+}
+
+/** Tableau de bord du responsable de salle (DashboardResponsableSalleResponse côté backend). */
+export interface DashboardResponsableSalleBE {
+  date: string;
+  planEnCours: {
+    reference: string; semaine: string; dateDebut: string; dateFin: string;
+    nbProduits: number; objectif: number; realise: number; avancementPct: number | null;
+  } | null;
+  plansValides: number;
+  affectation: {
+    existe: boolean; statut: string | null; postes: number; employesAffectes: number;
+    saisies: number; objectifsAtteints: number; ecarts: number; quantiteRealisee: number;
+  };
+  registreSaisi: boolean;
+  besoins: { enAttente: number; valides: number; rejetes: number };
+  lots: { enAttenteStock: number; valides: number; rejetes: number };
+  ofs: { enCours: number; planifies: number; honores: number };
 }
 
 export interface DashboardAgentBE {
@@ -388,6 +536,24 @@ export interface ExpressionBesoinBE {
   dateCreation: string; dateModification: string;
 }
 
+/**
+ * Fonctions de l'écran sans endpoint dans l'API actuelle : on n'émet aucune requête (pas de 404) et on
+ * renvoie une erreur au format de l'API, affichée telle quelle par les écrans (extractApiError lit « erreur »).
+ */
+function indisponible<T>(fonction: string): Observable<T> {
+  return throwError(() => ({
+    status: 501,
+    error: { succes: false, message: 'Fonction indisponible', erreur: `${fonction} n'est pas disponible avec la version actuelle de l'API.` },
+  }));
+}
+
+/** Réponse brute de GET /production/affectations/performances-postes (PerformancePosteResponse). */
+interface PerformancePosteApi {
+  codePoste: string; libellePoste: string; unite: string; joursAffectes: number; joursSaisis: number;
+  objectifCumule: number; realiseCumule: number; taux: number | null; effectifMoyen: number | null;
+  rendementParPersonne: number | null; rang: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductionService {
   private readonly api = inject(ApiService);
@@ -401,11 +567,7 @@ export class ProductionService {
       .pipe(map(r => r.donnees ?? []));
   }
 
-  declarerLot(req: {
-    referencePPH: string; productSku: string; productName: string; productUnit?: string;
-    declaredQuantityKg: number; equivalentUnits: number; dateProduction?: string; dlc: string;
-    conditioningType?: string; conditioningQty?: number; notes?: string;
-  }): Observable<LotBE> {
+  declarerLot(req: DeclarerLotBE): Observable<LotBE> {
     return this.api.post<ApiResponse<LotBE>>('production/lots', req)
       .pipe(map(r => r.donnees!));
   }
@@ -466,6 +628,14 @@ export class ProductionService {
       .pipe(map(r => r.donnees!));
   }
 
+  /** Changer le statut d'un OF : PLANIFIE (brouillon), EN_COURS, EN_PAUSE, HONORE (terminé) ou ANNULE. */
+  changerStatutOF(idOF: string, statut: string): Observable<OFBE> {
+    // L'API n'a pas de PATCH /statut : seules les transitions « démarrer » et « annuler » existent.
+    if (statut === 'EN_COURS') return this.demarrerOF(idOF);
+    if (statut === 'ANNULE') return this.annulerOF(idOF);
+    return indisponible<OFBE>(`Le passage d'un OF au statut ${statut}`);
+  }
+
   // ── PPH ────────────────────────────────────────────────────
 
   getPPHs(statut?: string): Observable<PPHBE[]> {
@@ -520,17 +690,20 @@ export class ProductionService {
 
   ajusterRepartitionPPH(reference: string, repartition: {
     dateJour: string;
-    poudreMaisKg: number;
-    poudreSojaKg: number;
-    poudreArachideKg: number;
     futsPrevus: number;
-    sachetsPrevus: number;
-    couverclesPrevus: number;
-    scellesPrevus: number;
+    besoinsMatieresPremiere: { matierePremiere: string; quantiteKg: number }[];
+    besoinsEmballage: { type: string; quantite: number }[];
   }[]): Observable<PPHBE> {
     return this.api.put<ApiResponse<PPHBE>>(
       `production/pph/${encodeURIComponent(reference)}/repartition`, { repartition }
     ).pipe(map(r => r.donnees!));
+  }
+
+  /** Recalcule un PPH non démarré depuis l'état actuel du BC et du catalogue (refusé si EN_COURS/CLOTURE). */
+  recalculerPPH(reference: string): Observable<RecalculerPPHBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [reference];
+    return indisponible<RecalculerPPHBE>("Le recalcul d'un plan de production");
   }
 
   getPPHParBC(referenceBC: string): Observable<PPHBE[]> {
@@ -600,6 +773,13 @@ export class ProductionService {
     ).pipe(map(r => r.donnees ?? []));
   }
 
+  /** Vue d'ensemble de l'atelier de broyage sur une période (synthèses, poudres, série journalière). */
+  getApercuBroyage(debut: string, fin: string): Observable<ApercuBroyageBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [debut, fin];
+    return indisponible<ApercuBroyageBE>("L'aperçu de l'atelier de broyage");
+  }
+
   getClassementMachinistes(debut: string, fin: string): Observable<ClassementMachinisteBE> {
     return this.api.get<ApiResponse<ClassementMachinisteBE>>('production/broyage/classement', { debut, fin })
       .pipe(map(r => r.donnees!));
@@ -642,6 +822,7 @@ export class ProductionService {
     ).pipe(map(r => r.donnees!));
   }
 
+  /** Les quantités viennent de la formule du produit du BC de la session — plus de « type de mélange » à choisir. */
   mettreAJourDosageAutomatique(id: number, nbFuts: number): Observable<SessionDosageBE> {
     return this.api.post<ApiResponse<SessionDosageBE>>(
       `production/dosage/${id}/dosage-auto?nbFuts=${nbFuts}`, {}
@@ -705,6 +886,39 @@ export class ProductionService {
       .pipe(map(r => r.donnees!));
   }
 
+  /** Calcule et enregistre la prédiction d'un plan à partir du nombre de fûts (référence lue par les autres rôles). */
+  calculerPredictionPPH(referencePPH: string, nbFuts: number): Observable<PredictionPPHBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [referencePPH, nbFuts];
+    return indisponible<PredictionPPHBE>("La prédiction d'un plan de production");
+  }
+
+  /** Prédiction enregistrée d'un plan (erreur 404 si aucune n'a encore été calculée). */
+  getPredictionPPH(referencePPH: string): Observable<PredictionPPHBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [referencePPH];
+    return indisponible<PredictionPPHBE>("La prédiction d'un plan de production");
+  }
+
+  /** Fûts dosés d'un plan (sessions de dosage), en lecture seule : n'alimente pas l'avancement de production. */
+  getAvancementDosage(referencePPH: string): Observable<AvancementDosageBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [referencePPH];
+    return indisponible<AvancementDosageBE>("L'avancement du dosage d'un plan");
+  }
+
+  /** Poudre prévue par le plan et poudre écrasée des sessions de broyage, par matière (lecture seule). */
+  getAvancementBroyage(referencePPH: string): Observable<AvancementBroyageBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [referencePPH];
+    return indisponible<AvancementBroyageBE>("L'avancement du broyage d'un plan");
+  }
+
+  getPredictionsPPH(): Observable<PredictionPPHBE[]> {
+    // Aucun endpoint dans l'API actuelle.
+    return indisponible<PredictionPPHBE[]>("La liste des prédictions de plans");
+  }
+
   telechargerRegistreDosage(id: number, format: 'pdf' | 'excel' = 'pdf'): Observable<Blob> {
     return this.api.getBlob(`production/dosage/${id}/registre?format=${format}`);
   }
@@ -756,6 +970,13 @@ export class ProductionService {
     return this.api.patch<ApiResponse<FicheProductionBE>>(
       `production/fiches/pph/${encodeURIComponent(referencePPH)}/date/${date}`, req
     ).pipe(map(r => r.donnees!));
+  }
+
+  /** Recalcule les prédictions (dosage pour la bouillie, postes pour le grignoter) sans toucher aux quantités saisies. */
+  recalculerPredictionsFiche(referencePPH: string, date: string): Observable<FicheProductionBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [referencePPH, date];
+    return indisponible<FicheProductionBE>("Le recalcul des prédictions d'une fiche");
   }
 
   // ── Affectations ───────────────────────────────────────────
@@ -822,6 +1043,23 @@ export class ProductionService {
     ).pipe(map(r => r.donnees!));
   }
 
+  getPerformancesPostes(debut: string, fin: string): Observable<PerformancePosteBE[]> {
+    return this.api.get<ApiResponse<PerformancePosteApi[]>>('production/affectations/performances-postes', { debut, fin })
+      .pipe(map(r => (r.donnees ?? []).map(p => ({
+        codePoste: p.codePoste, libelle: p.libellePoste, unite: p.unite,
+        joursAffectes: p.joursAffectes, joursSaisis: p.joursSaisis,
+        objectifTotal: p.objectifCumule, realiseTotal: p.realiseCumule, tauxRealisation: p.taux ?? 0,
+        effectifMoyen: p.effectifMoyen ?? 0, rendementParPersonne: p.rendementParPersonne ?? 0, rang: p.rang,
+      }))));
+  }
+
+  /** Comparaison d'une journée : plan du BC contre dosage réel et réalisations des postes (ComparaisonController). */
+  getComparaisonBC(referencePPH: string, date: string): Observable<ComparaisonBCBE> {
+    return this.api.get<ApiResponse<ComparaisonBCBE>>(
+      `production/comparaisons/${encodeURIComponent(referencePPH)}`, { date }
+    ).pipe(map(r => r.donnees!));
+  }
+
   getComparaisonFutsProduction(referencePPH: string, date: string): Observable<ComparaisonFutsProductionBE> {
     return this.api.get<ApiResponse<ComparaisonFutsProductionBE>>(
       `production/affectations/${encodeURIComponent(referencePPH)}/comparaison-futs`, { date }
@@ -831,13 +1069,6 @@ export class ProductionService {
   getClassementExecuteurs(debut: string, fin: string): Observable<ClassementExecuteurBE[]> {
     return this.api.get<ApiResponse<ClassementExecuteurBE[]>>(
       'production/affectations/classement-executeurs', { debut, fin }
-    ).pipe(map(r => r.donnees ?? []));
-  }
-
-  /** Performances des postes sur une période (jour, semaine, mois ou intervalle libre). */
-  getPerformancesPostes(debut: string, fin: string): Observable<PerformancePosteBE[]> {
-    return this.api.get<ApiResponse<PerformancePosteBE[]>>(
-      'production/affectations/performances-postes', { debut, fin }
     ).pipe(map(r => r.donnees ?? []));
   }
 
@@ -873,9 +1104,9 @@ export class ProductionService {
       .pipe(map(r => r.donnees!));
   }
 
-  /** Correction du registre du jour même uniquement (refusée en 409 au-delà, preuve d'audit). */
+  /** Corrige un registre — refusé par le serveur si sa date n'est plus la journée en cours. */
   modifierRegistre(referencePPH: string, date: string, req: {
-    lignes: LigneRegistreBE[];
+    lignes: { matriculeEmploye: string; nomEmploye: string; poste: string; present: boolean; motifAbsence?: string; heureArrivee?: string; qteRealisee?: number; unite?: string }[];
   }): Observable<RegistreProductionBE> {
     return this.api.patch<ApiResponse<RegistreProductionBE>>(
       `production/registres/pph/${encodeURIComponent(referencePPH)}/date/${date}`, req
@@ -887,6 +1118,13 @@ export class ProductionService {
   getDashboardChef(): Observable<DashboardChefBE> {
     return this.api.get<ApiResponse<DashboardChefBE>>('production/dashboard/chef')
       .pipe(map(r => r.donnees!));
+  }
+
+  /** Tableau de bord du responsable de salle pour une journée (plan en cours, affectation, registre, besoins, lots, OF). */
+  getDashboardResponsableSalle(date: string): Observable<DashboardResponsableSalleBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [date];
+    return indisponible<DashboardResponsableSalleBE>("Le tableau de bord du responsable de salle");
   }
 
   getDashboardAgent(): Observable<DashboardAgentBE> {
@@ -993,5 +1231,31 @@ export class ProductionService {
   supprimerPosteProduction(id: number): Observable<unknown> {
     return this.api.delete<ApiResponse<unknown>>(`administration/postes-production/${id}`)
       .pipe(map(r => r.donnees));
+  }
+
+  // ── Formules de production & composition d'emballage ───────────────────
+
+  getReferentielFormules(): Observable<ReferentielProductionBE[]> {
+    // Aucun endpoint dans l'API actuelle.
+    return indisponible<ReferentielProductionBE[]>("Le référentiel des formules de production");
+  }
+
+  sauvegarderFormule(codeProduit: string, req: { baseKg: number; lignes: FormuleLigneBE[] }): Observable<ReferentielProductionBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [codeProduit, req];
+    return indisponible<ReferentielProductionBE>("L'enregistrement d'une formule");
+  }
+
+  supprimerFormule(codeProduit: string): Observable<unknown> {
+    // Aucun endpoint dans l'API actuelle.
+    void [codeProduit];
+    return indisponible<unknown>("La suppression d'une formule");
+  }
+
+  definirCompositionEmballage(codeProduit: string, conditionnementId: string,
+                              req: { type: string | null; composants: ComposantEmballageBE[] }): Observable<ReferentielProductionBE> {
+    // Aucun endpoint dans l'API actuelle.
+    void [codeProduit, conditionnementId, req];
+    return indisponible<ReferentielProductionBE>("La composition d'emballage");
   }
 }

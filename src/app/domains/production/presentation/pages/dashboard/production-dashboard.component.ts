@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,8 @@ interface PlanUI {
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink, FormsModule, MiniChartComponent, DonutChartComponent, CanDirective],
   templateUrl: './production-dashboard.component.html',
-  styleUrls: ['./production-dashboard.component.css']
+  styleUrls: ['./production-dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);

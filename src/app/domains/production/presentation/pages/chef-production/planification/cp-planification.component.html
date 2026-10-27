@@ -33,24 +33,18 @@
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production — {{ p.dateDebut }} → {{ p.dateFin }}</h2></div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Jour</th><th>Maïs (kg)</th><th>Soja (kg)</th><th>Arachide (kg)</th><th>Poudre totale (kg)</th><th>Fûts prévus</th><th>Maïs/fût</th><th>Soja/fût</th><th>Arachide/fût</th><th>Sachets prévus</th><th>Couvercles prévus</th></tr></thead>
+        <thead><tr><th>Jour</th><th>Matières premières</th><th>Poudre totale (kg)</th><th>Fûts prévus</th><th>Emballage</th></tr></thead>
         <tbody>
           @for (j of p.repartitionJours; track j.dateJour) {
             <tr>
               <td><strong>{{ j.dateJour }}</strong></td>
-              <td>{{ j.poudreMaisKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreSojaKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreArachideKg | number:'1.1-1' }}</td>
-              <td>{{ j.poudreTotaleKg | number:'1.1-1' }}</td>
+              <td>{{ matieresJour(j) }}</td>
+              <td>{{ j.totalMatieresPremieresKg | number:'1.1-1' }}</td>
               <td>{{ j.futsPrevus }}</td>
-              <td>{{ j.poudreMaisParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.poudreSojaParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.poudreArachideParFutKg | number:'1.2-2' }}</td>
-              <td>{{ j.sachetsPrevus }}</td>
-              <td>{{ j.couverclesPrevus }}</td>
+              <td>{{ emballagesJour(j) }}</td>
             </tr>
           } @empty {
-            <tr><td colspan="11" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune répartition journalière définie</td></tr>
+            <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune répartition journalière définie</td></tr>
           }
         </tbody>
       </table>

@@ -1,0 +1,248 @@
+<!-- ═══ BANDEAU ═══ -->
+<header class="fp-hero">
+  <div class="fp-hero-gauche">
+    <div class="fp-hero-ico"><i class="fa-solid fa-flask"></i></div>
+    <div>
+      <div class="fp-hero-kicker">Référentiel de production</div>
+      <h1 class="fp-hero-titre">Formules de production</h1>
+      <p class="fp-hero-sous">La composition en matières premières de chaque produit. Elle pilote le calcul des besoins des plans.</p>
+    </div>
+  </div>
+  <div class="fp-hero-stats" aria-label="Indicateurs">
+    <div class="fp-stat"><span class="fp-stat-val">{{ stats().total }}</span><span class="fp-stat-lbl">produits</span></div>
+    <div class="fp-stat fp-stat-ok"><span class="fp-stat-val">{{ stats().avec }}</span><span class="fp-stat-lbl">avec formule</span></div>
+    <div class="fp-stat fp-stat-alerte" [class.fp-stat-vide]="stats().sans === 0"><span class="fp-stat-val">{{ stats().sans }}</span><span class="fp-stat-lbl">sans formule</span></div>
+  </div>
+</header>
+
+<!-- ═══ RECHERCHE ET FILTRES ═══ -->
+<section class="fp-barre" aria-label="Recherche et filtres">
+  <div class="fp-recherche">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input #champRecherche type="search" class="fp-recherche-champ"
+           placeholder="Rechercher un code, un nom, une catégorie ou une matière (ex. arachide)…"
+           aria-label="Rechercher une formule"
+           [ngModel]="recherche()" (ngModelChange)="recherche.set($event)">
+    <kbd class="fp-raccourci" title="Raccourci : appuyez sur /">/</kbd>
+  </div>
+
+  <div class="fp-filtres">
+    <div class="fp-segment" role="tablist" aria-label="Filtrer par formule">
+      @for (f of filtres; track f.code) {
+        <button class="fp-segment-bouton" role="tab" [attr.aria-selected]="filtre() === f.code"
+                [class.fp-segment-actif]="filtre() === f.code" (click)="filtre.set(f.code)">{{ f.libelle }}</button>
+      }
+    </div>
+
+    <select class="fp-select" aria-label="Filtrer par catégorie" [ngModel]="categorieFiltre()" (ngModelChange)="categorieFiltre.set($event)">
+      <option value="">Toutes les catégories</option>
+      @for (c of categories(); track c.code) {
+        <option [value]="c.code">{{ c.libelle }} ({{ c.n }})</option>
+      }
+    </select>
+
+    <select class="fp-select" aria-label="Trier" [ngModel]="tri()" (ngModelChange)="tri.set($event)">
+      <option value="code">Trier par code</option>
+      <option value="designation">Trier par désignation</option>
+      <option value="sans-formule-d-abord">Sans formule d'abord</option>
+    </select>
+
+    <label class="fp-case">
+      <input type="checkbox" [ngModel]="seulementActifs()" (ngModelChange)="seulementActifs.set($event)">
+      Produits actifs seulement
+    </label>
+
+    <button class="fp-lien" (click)="reinitialiserFiltres()">Réinitialiser</button>
+  </div>
+</section>
+
+<!-- ═══ NOTIFICATION ═══ -->
+@if (notification(); as n) {
+  <div class="fp-notif" [class.fp-notif-erreur]="n.type === 'erreur'" role="status" aria-live="polite">
+    <i class="fa-solid" [class.fa-circle-check]="n.type === 'ok'" [class.fa-triangle-exclamation]="n.type === 'erreur'"></i>
+    <span>{{ n.texte }}</span>
+    <button class="fp-icone" aria-label="Fermer" (click)="notification.set(null)"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+}
+
+<!-- ═══ LISTE ═══ -->
+<section class="fp-liste-carte">
+  <div class="fp-liste-entete">
+    <span class="fp-compte">{{ resultats().length }} résultat(s)</span>
+    @if (recherche() && resultats().length === 0) {
+      <span class="fp-aucun">Aucun produit ne correspond à « {{ recherche() }} ».</span>
+    }
+  </div>
+
+  @if (chargement()) {
+    @for (i of [1,2,3,4,5]; track i) { <div class="fp-squelette"></div> }
+  } @else if (resultats().length === 0) {
+    <div class="fp-vide">
+      <div class="fp-vide-ico"><i class="fa-solid fa-flask-vial"></i></div>
+      <h2>Rien à afficher</h2>
+      <p>Essayez une autre recherche ou réinitialisez les filtres.</p>
+      <button class="fp-bouton fp-bouton-primaire" (click)="reinitialiserFiltres()">Réinitialiser les filtres</button>
+    </div>
+  } @else {
+    <ul class="fp-liste" role="list">
+      @for (p of resultats(); track trackProduit($index, p)) {
+        <li class="fp-ligne" [class.fp-ligne-sans]="!p.formule" [class.fp-ligne-inactif]="!p.actif">
+          <button class="fp-ligne-zone" (click)="ouvrir(p)" [attr.aria-label]="'Modifier la formule de ' + p.codeProduit">
+            <div class="fp-ligne-identite">
+              <span class="fp-code mono">{{ p.codeProduit }}</span>
+              <span class="fp-designation">{{ p.designation }}</span>
+              <span class="fp-categorie">{{ libelleCategorie(p.categorieMetier) }}</span>
+              @if (!p.actif) { <span class="fp-tag-inactif">inactif</span> }
+              @if (correspondMatiere(p); as matiere) {
+                <span class="fp-tag-match"><i class="fa-solid fa-seedling"></i> contient {{ matiere }}</span>
+              }
+            </div>
+
+            @if (p.formule; as f) {
+              <div class="fp-composition">
+                <div class="fp-barre-composition" role="img" [attr.aria-label]="'Composition : ' + f.lignes.length + ' matière(s)'">
+                  @for (l of f.lignes; track l.matierePremiere; let i = $index) {
+                    <span class="fp-segment-couleur" [style.width.%]="(l.proportionKg / f.baseKg) * 100"
+                          [style.background]="couleurLigne(i)" [title]="l.matierePremiere + ' : ' + l.proportionKg + ' kg'"></span>
+                  }
+                </div>
+                <div class="fp-resume">
+                  @for (l of f.lignes; track l.matierePremiere; let i = $index) {
+                    <span class="fp-pastille"><i [style.background]="couleurLigne(i)"></i>{{ l.matierePremiere }} {{ l.proportionKg | number:'1.0-3' }}</span>
+                  }
+                  <span class="fp-base">base {{ f.baseKg | number:'1.0-3' }} kg</span>
+                </div>
+              </div>
+            } @else {
+              <div class="fp-sans-formule"><i class="fa-solid fa-circle-exclamation"></i> Pas de formule : aucun besoin en matière calculé</div>
+            }
+          </button>
+
+          <div class="fp-ligne-actions">
+            <button class="fp-bouton fp-bouton-primaire fp-bouton-petit" (click)="ouvrir(p)">
+              <i class="fa-solid fa-pen"></i> {{ p.formule ? 'Modifier' : 'Créer' }}
+            </button>
+            @if (p.formule) {
+              <button class="fp-icone fp-icone-danger" (click)="supprimer(p)" [disabled]="suppressionCode() === p.codeProduit"
+                      [attr.aria-label]="'Retirer la formule de ' + p.codeProduit" title="Retirer la formule">
+                @if (suppressionCode() === p.codeProduit) { <span class="fp-spinner"></span> }
+                @else { <i class="fa-solid fa-trash"></i> }
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<!-- ═══ ÉDITEUR ═══ -->
+@if (edition(); as p) {
+<div class="fp-overlay" (click)="fermer()">
+  <div class="fp-modale" role="dialog" aria-modal="true" aria-labelledby="fp-edition-titre" (click)="$event.stopPropagation()">
+
+    <header class="fp-modale-tete">
+      <div>
+        <div class="fp-modale-kicker">{{ p.formule ? 'Modifier la formule' : 'Créer une formule' }}</div>
+        <h2 id="fp-edition-titre" class="fp-modale-titre"><span class="mono">{{ p.codeProduit }}</span> · {{ p.designation }}</h2>
+      </div>
+      <button class="fp-icone fp-icone-clair" aria-label="Fermer" (click)="fermer()" [disabled]="enregistrement()"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+
+    <div class="fp-modale-corps">
+
+      <!-- Copie -->
+      <details class="fp-copie">
+        <summary><i class="fa-solid fa-copy"></i> Partir d'une formule existante</summary>
+        <input type="search" class="fp-champ" placeholder="Rechercher un produit à copier…" aria-label="Rechercher une formule à copier"
+               [ngModel]="rechercheCopie()" (ngModelChange)="rechercheCopie.set($event)">
+        <div class="fp-copie-liste">
+          @for (s of formulesCopiables(); track s.codeProduit) {
+            <button class="fp-copie-item" (click)="copier(s)">
+              <span class="mono">{{ s.codeProduit }}</span> {{ s.designation }}
+              <span class="fp-copie-resume">{{ s.formule?.lignes?.length }} matière(s)</span>
+            </button>
+          } @empty {
+            <span class="fp-aucun">Aucune formule à copier.</span>
+          }
+        </div>
+      </details>
+
+      <!-- Base -->
+      <div class="fp-champ-bloc">
+        <label class="fp-etiquette" for="fp-base">Base de la formule (kg de produit fini)</label>
+        <div class="fp-base-ligne">
+          <input id="fp-base" type="number" min="0" step="0.001" class="fp-champ fp-champ-court" [ngModel]="baseKg()" (ngModelChange)="majBase($event)">
+          <button class="fp-bouton fp-bouton-fantome fp-bouton-petit" (click)="repartirEgalement()" [disabled]="lignes().length === 0"
+                  title="Répartit la base à parts égales entre les matières">
+            <i class="fa-solid fa-scale-balanced"></i> Répartir également
+          </button>
+        </div>
+      </div>
+
+      <!-- Matières -->
+      <div class="fp-champ-bloc">
+        <div class="fp-etiquette">Matières premières et quantités pour cette base</div>
+        <datalist id="fp-matieres">
+          @for (m of matieresConnues(); track m) { <option [value]="m"></option> }
+        </datalist>
+
+        <div class="fp-lignes">
+          @for (l of lignes(); track $index; let i = $index) {
+            <div class="fp-ligne-edition" [class.fp-ligne-doublon]="doublons().has(l.matierePremiere.trim().toLowerCase())">
+              <span class="fp-puce" [style.background]="couleurLigne(i)"></span>
+              <input class="fp-champ" list="fp-matieres" placeholder="Matière (ex. Maïs)" aria-label="Matière première"
+                     [ngModel]="l.matierePremiere" (ngModelChange)="majLigne(i, 'matierePremiere', $event)">
+              <div class="fp-kg">
+                <input type="number" min="0" step="0.001" class="fp-champ" placeholder="0" aria-label="Quantité en kg"
+                       [ngModel]="l.proportionKg" (ngModelChange)="majLigne(i, 'proportionKg', $event)">
+                <span>kg</span>
+              </div>
+              <button class="fp-icone" (click)="retirerLigne(i)" [disabled]="lignes().length <= 1" aria-label="Retirer cette matière">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          }
+        </div>
+        <button class="fp-lien fp-ajout" (click)="ajouterLigne()"><i class="fa-solid fa-plus"></i> Ajouter une matière</button>
+      </div>
+
+      <!-- Aperçu et contrôles -->
+      <div class="fp-apercu">
+        <div class="fp-apercu-barre" aria-hidden="true">
+          @for (s of segmentsApercu(); track $index) {
+            <span [style.width]="largeurSegment(s.pct)" [style.background]="s.couleur" [title]="s.nom + ' : ' + s.pct.toFixed(1) + ' %'"></span>
+          }
+        </div>
+        <div class="fp-controle" [class.fp-controle-ok]="sommeOk()" [class.fp-controle-ko]="!sommeOk()">
+          @if (sommeOk()) {
+            <i class="fa-solid fa-circle-check"></i> Somme = base ({{ somme() | number:'1.0-3' }} kg)
+          } @else {
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Somme {{ somme() | number:'1.0-3' }} kg ≠ base {{ (baseKg() ?? 0) | number:'1.0-3' }} kg (écart {{ ecart() | number:'1.0-3' }} kg)
+          }
+        </div>
+        @if (doublons().size > 0) {
+          <div class="fp-controle fp-controle-ko"><i class="fa-solid fa-triangle-exclamation"></i> Une même matière apparaît deux fois : fusionnez les lignes.</div>
+        }
+        @if (nomsInvalides()) {
+          <div class="fp-controle fp-controle-ko"><i class="fa-solid fa-triangle-exclamation"></i> Chaque ligne doit avoir une matière.</div>
+        }
+      </div>
+
+      <p class="fp-note">Modifier la formule n'altère pas les plans déjà générés : recalculez-les ensuite.</p>
+    </div>
+
+    <footer class="fp-modale-pied">
+      <span class="fp-indice"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> pour enregistrer</span>
+      <div class="fp-pied-boutons">
+        <button class="fp-bouton fp-bouton-fantome" (click)="fermer()" [disabled]="enregistrement()">Annuler</button>
+        <button class="fp-bouton fp-bouton-primaire" (click)="enregistrer()" [disabled]="enregistrement() || !formValide()">
+          @if (enregistrement()) { <span class="fp-spinner"></span> Enregistrement… }
+          @else { <i class="fa-solid fa-check"></i> Enregistrer }
+        </button>
+      </div>
+    </footer>
+  </div>
+</div>
+}

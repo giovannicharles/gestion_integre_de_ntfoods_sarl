@@ -70,12 +70,12 @@
       <h4>Matières premières attendues & fûts prévus par jour</h4>
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Jour</th><th>Maïs (kg)</th><th>Soja (kg)</th><th>Arachide (kg)</th><th>Fûts prévus</th></tr></thead>
+          <thead><tr><th>Jour</th><th>Matières premières</th><th>Fûts prévus</th></tr></thead>
           <tbody>
             @for (r of p.repartitionJours; track r.dateJour) {
-              <tr><td>{{ r.dateJour }}</td><td>{{ r.poudreMaisKg | number:'1.1-1' }}</td><td>{{ r.poudreSojaKg | number:'1.1-1' }}</td><td>{{ r.poudreArachideKg | number:'1.1-1' }}</td><td>{{ r.futsPrevus }}</td></tr>
+              <tr><td>{{ r.dateJour }}</td><td>{{ matieresJour(r) }}</td><td>{{ r.futsPrevus }}</td></tr>
             } @empty {
-              <tr><td colspan="5" class="text-center text-muted">Aucune répartition</td></tr>
+              <tr><td colspan="3" class="text-center text-muted">Aucune répartition</td></tr>
             }
           </tbody>
         </table>

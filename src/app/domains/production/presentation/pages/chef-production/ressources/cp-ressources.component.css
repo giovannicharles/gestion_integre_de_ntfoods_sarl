@@ -1,1 +1,8 @@
 /* styles spécifiques minimes */
+/* 2026-10-25 : cette note n'annonce pas un défaut, juste un périmètre — ton neutre plutôt que
+   le `.gap-note` orange partagé (_shared.css), qui reste approprié pour un vrai manque ailleurs. */
+.gap-note-info {
+  background: var(--n-100, #f3f4f6);
+  color: var(--n-600, #4b5563);
+  border-color: var(--n-200, #e5e7eb);
+}

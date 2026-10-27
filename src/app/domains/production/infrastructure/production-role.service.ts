@@ -10,21 +10,27 @@ import { AuthService } from '../../../core/auth/auth.service';
  * `/production/*`, `roleActuel()` renverra `null` (rôle non reconnu par ce
  * module) et le menu de repli minimal s'affichera.
  *
- * MACHINISTE et AGENT_PRODUCTION sont de simples exécutants (référencés par
- * matricule dans les saisies) — ils ne s'authentifient jamais et n'ont donc
- * pas d'espace applicatif ici.
+ * MACHINISTE reste un simple exécutant (référencé par matricule dans les
+ * saisies) — il ne s'authentifie jamais et n'a donc pas d'espace applicatif
+ * ici.
+ *
+ * AGENT_PRODUCTION, lui, s'authentifie bel et bien (cf. BACKEND_ROLE_MAP) et
+ * dispose de deux permissions backend de consultation
+ * (AGENT_PRODUCTION, PRODUCTION_OF_CONSULTER) : son espace est
+ * donc géré ici, en lecture seule (dashboard, OF, registres, fiches).
  */
 export type RoleProduction =
   | 'CHEF_PRODUCTION'
   | 'RESPONSABLE_SALLE'
   | 'CHEF_MACHINISTE'
   | 'AGENT_DOSEUR'
+  | 'AGENT_PRODUCTION'
   | 'DIRECTEUR_GENERAL'
   | 'ADMIN';
 
 const ROLES_GERES: readonly RoleProduction[] = [
   'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'AGENT_DOSEUR',
-  'DIRECTEUR_GENERAL', 'ADMIN',
+  'AGENT_PRODUCTION', 'DIRECTEUR_GENERAL', 'ADMIN',
 ];
 
 /**

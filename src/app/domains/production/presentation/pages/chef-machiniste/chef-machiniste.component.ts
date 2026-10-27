@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -15,7 +15,8 @@ import { ToastService } from '../../../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink, MiniChartComponent, DonutChartComponent],
   templateUrl: './chef-machiniste.component.html',
-  styleUrls: ['./chef-machiniste.component.css']
+  styleUrls: ['./chef-machiniste.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChefMachinisteComponent implements OnInit {
   private readonly prodSvc = inject(ProductionService);

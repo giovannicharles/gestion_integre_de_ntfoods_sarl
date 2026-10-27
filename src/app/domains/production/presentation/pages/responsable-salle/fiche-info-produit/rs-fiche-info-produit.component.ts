@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, FicheProductionBE } from '../../../../infrastructure/production.service';
@@ -16,7 +16,8 @@ import { ProductionService, PPHBE, FicheProductionBE } from '../../../../infrast
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-fiche-info-produit.component.html',
-  styleUrls: ['./rs-fiche-info-produit.component.css', '../_shared.css']
+  styleUrls: ['./rs-fiche-info-produit.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsFicheInfoProduitComponent implements OnInit {
   private readonly svc = inject(ProductionService);

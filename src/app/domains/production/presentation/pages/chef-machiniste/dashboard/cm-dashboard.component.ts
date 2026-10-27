@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -24,7 +24,8 @@ import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-ch
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, MiniChartComponent, DonutChartComponent],
   templateUrl: './cm-dashboard.component.html',
-  styleUrls: ['./cm-dashboard.component.css', '../_shared.css']
+  styleUrls: ['./cm-dashboard.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmDashboardComponent implements OnInit {
   private readonly svc = inject(ProductionService);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, AffectationBE, PerformancePosteBE } from '../../../../infrastructure/production.service';
@@ -20,7 +20,8 @@ type PeriodeChoix = 'jour' | 'semaine' | 'mois' | 'libre';
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule, MiniChartComponent],
   templateUrl: './rs-performances-postes.component.html',
-  styleUrls: ['./rs-performances-postes.component.css', '../_shared.css']
+  styleUrls: ['./rs-performances-postes.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsPerformancesPostesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

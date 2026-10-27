@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -16,7 +16,8 @@ interface LigneProdIndiv {
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-production-individuelle.component.html',
-  styleUrls: ['./rs-production-individuelle.component.css', '../_shared.css']
+  styleUrls: ['./rs-production-individuelle.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsProductionIndividuelleComponent implements OnInit {
   private readonly svc = inject(ProductionService);

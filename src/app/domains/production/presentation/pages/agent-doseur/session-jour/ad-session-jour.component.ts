@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE, PPHBE, PredictionProduitFiniBE } from '../../../../infrastructure/production.service';
@@ -28,6 +28,7 @@ type Etape = 1 | 2 | 3 | 4 | 5;
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './ad-session-jour.component.html',
   styleUrls: ['./ad-session-jour.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdSessionJourComponent implements OnInit, OnDestroy {
   private readonly svc = inject(ProductionService);

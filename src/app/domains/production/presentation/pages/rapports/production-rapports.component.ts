@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -10,7 +10,8 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './production-rapports.component.html',
-  styleUrls: ['./production-rapports.component.css']
+  styleUrls: ['./production-rapports.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionRapportsComponent {
   private readonly svc = inject(ProductionService);

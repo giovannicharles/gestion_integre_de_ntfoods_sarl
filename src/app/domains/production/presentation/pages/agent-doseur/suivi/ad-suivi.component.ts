@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../../infrastructure/production.service';
@@ -13,7 +13,8 @@ import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './ad-suivi.component.html',
-  styleUrls: ['./ad-suivi.component.css', '../_shared.css']
+  styleUrls: ['./ad-suivi.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdSuiviComponent implements OnInit {
   private readonly svc = inject(ProductionService);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -29,7 +29,8 @@ interface ObjectifDraft {
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './cm-objectifs.component.html',
-  styleUrls: ['./cm-objectifs.component.css', '../_shared.css']
+  styleUrls: ['./cm-objectifs.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmObjectifsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

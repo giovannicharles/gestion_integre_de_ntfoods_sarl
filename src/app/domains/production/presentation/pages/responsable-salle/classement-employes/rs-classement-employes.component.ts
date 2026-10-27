@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ProductionService, ClassementExecuteurBE } from '../../../../infrastructure/production.service';
 
@@ -12,7 +12,8 @@ import { ProductionService, ClassementExecuteurBE } from '../../../../infrastruc
   standalone: true,
   imports: [CommonModule, DecimalPipe],
   templateUrl: './rs-classement-employes.component.html',
-  styleUrls: ['./rs-classement-employes.component.css', '../_shared.css']
+  styleUrls: ['./rs-classement-employes.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsClassementEmployesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

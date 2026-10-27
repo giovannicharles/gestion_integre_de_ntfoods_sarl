@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -25,7 +25,8 @@ interface LotFormLigne {
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, CanDirective],
   templateUrl: './production-lots.component.html',
-  styleUrls: ['./production-lots.component.css']
+  styleUrls: ['./production-lots.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionLotsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -109,7 +110,7 @@ export class ProductionLotsComponent implements OnInit {
         equivalentUnits: principal.quantite,
         conditioningType: principal.typeEmballageNom || undefined,
         conditioningQty: principal.quantite,
-        dateProduction: this.dateProduction || undefined,
+        dateProduction: this.dateProduction,
         dlc: l.dlc,
         notes: l.notes || undefined,
       };

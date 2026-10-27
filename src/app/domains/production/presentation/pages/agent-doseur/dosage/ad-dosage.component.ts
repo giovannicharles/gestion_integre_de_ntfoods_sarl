@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE } from '../../../../infrastructure/production.service';
@@ -22,6 +22,7 @@ import { extractApiError } from '../../../../../../core/http/api-error-parser';
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './ad-dosage.component.html',
   styleUrls: ['./ad-dosage.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdDosageComponent implements OnInit, OnDestroy {
   private readonly svc = inject(ProductionService);

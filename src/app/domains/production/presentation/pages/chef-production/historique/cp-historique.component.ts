@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ProductionService, PPHBE, LotBE, ExpressionBesoinBE } from '../../../../infrastructure/production.service';
 
@@ -24,7 +24,8 @@ interface EvenementUI {
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './cp-historique.component.html',
-  styleUrls: ['./cp-historique.component.css', '../_shared.css']
+  styleUrls: ['./cp-historique.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpHistoriqueComponent implements OnInit {
   private readonly svc = inject(ProductionService);

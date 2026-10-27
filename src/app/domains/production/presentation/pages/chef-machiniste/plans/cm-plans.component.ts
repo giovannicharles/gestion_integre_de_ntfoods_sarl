@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE, SessionBroyageBE } from '../../../../infrastructure/production.service';
+import { ProductionService, PPHBE, SessionBroyageBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 /**
  * CONSULTATION DES PLANS DE PRODUCTION — Chef Machiniste
@@ -13,7 +13,8 @@ import { ProductionService, PPHBE, SessionBroyageBE } from '../../../../infrastr
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
   templateUrl: './cm-plans.component.html',
-  styleUrls: ['./cm-plans.component.css', '../_shared.css']
+  styleUrls: ['./cm-plans.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmPlansComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -27,6 +28,13 @@ export class CmPlansComponent implements OnInit {
   filtreStatut = signal<string>('');
   filtreDebut = signal('');
   filtreFin = signal('');
+
+  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  matieresJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsMatieresPremiere ?? [];
+    if (!b.length) return '—';
+    return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
+  }
 
   pphSelectionne = signal<PPHBE | null>(null);
 

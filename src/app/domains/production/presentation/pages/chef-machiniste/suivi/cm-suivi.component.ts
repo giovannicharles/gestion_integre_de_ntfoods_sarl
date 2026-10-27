@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/production.service';
@@ -15,7 +15,8 @@ type FiltrePeriode = 'aujourdhui' | 'semaine' | 'mois' | 'personnalise';
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
   templateUrl: './cm-suivi.component.html',
-  styleUrls: ['./cm-suivi.component.css', '../_shared.css']
+  styleUrls: ['./cm-suivi.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmSuiviComponent implements OnInit {
   private readonly svc = inject(ProductionService);

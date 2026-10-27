@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
@@ -106,7 +106,8 @@ interface LigneForm {
   standalone: true,
   imports: [CommonModule, DecimalPipe, DatePipe, FormsModule, CanDirective],
   templateUrl: './cp-bons-commande.component.html',
-  styleUrls: ['./cp-bons-commande.component.css', '../_shared.css']
+  styleUrls: ['./cp-bons-commande.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpBonsCommandeComponent implements OnInit {
   private readonly svc = inject(StockService);

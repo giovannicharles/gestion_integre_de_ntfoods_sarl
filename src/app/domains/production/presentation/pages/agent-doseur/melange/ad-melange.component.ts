@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,7 +22,8 @@ interface MelangeUI {
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './ad-melange.component.html',
-  styleUrls: ['./ad-melange.component.css', '../_shared.css']
+  styleUrls: ['./ad-melange.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdMelangeComponent implements OnInit {
   private readonly svc = inject(ProductionService);

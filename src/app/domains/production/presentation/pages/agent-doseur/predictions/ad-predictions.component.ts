@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PredictionProduitFiniBE } from '../../../../infrastructure/production.service';
@@ -16,6 +16,7 @@ import { AdSessionContextService } from '../ad-session-context.service';
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './ad-predictions.component.html',
   styleUrls: ['./ad-predictions.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdPredictionsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

@@ -217,29 +217,21 @@
       <thead>
         <tr>
           <th>Jour</th>
-          <th>Poudre maïs (kg)</th>
-          <th>Poudre soja (kg)</th>
-          <th>Poudre arachide (kg)</th>
+          <th>Matières premières</th>
           <th>Fûts 50kg</th>
-          <th>Sachets</th>
-          <th>Couvercles</th>
-          <th>Scellés</th>
+          <th>Emballage</th>
         </tr>
       </thead>
       <tbody>
         @for (jour of pph()?.repartitionJours || []; track jour.dateJour) {
           <tr>
             <td>{{ jour.dateJour }}</td>
-            <td>{{ jour.poudreMaisKg | number:'1.2-2' }}</td>
-            <td>{{ jour.poudreSojaKg | number:'1.2-2' }}</td>
-            <td>{{ jour.poudreArachideKg | number:'1.2-2' }}</td>
+            <td>{{ matieresJour(jour) }}</td>
             <td>{{ jour.futsPrevus }}</td>
-            <td>{{ jour.sachetsPrevus }}</td>
-            <td>{{ jour.couverclesPrevus }}</td>
-            <td>{{ jour.scellesPrevus }}</td>
+            <td>{{ emballagesJour(jour) }}</td>
           </tr>
         } @empty {
-          <tr><td colspan="8" class="empty-state">Aucune répartition journalière</td></tr>
+          <tr><td colspan="4" class="empty-state">Aucune répartition journalière</td></tr>
         }
       </tbody>
     </table>

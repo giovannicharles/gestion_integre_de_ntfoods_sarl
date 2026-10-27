@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE } from '../../../../infrastructure/production.service';
+import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 /**
  * CONSULTATION DES PLANS DE PRODUCTION (PPH) — Agent Doseur
@@ -13,7 +13,8 @@ import { ProductionService, PPHBE } from '../../../../infrastructure/production.
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './ad-plans.component.html',
-  styleUrls: ['./ad-plans.component.css', '../_shared.css']
+  styleUrls: ['./ad-plans.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdPlansComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -29,6 +30,13 @@ export class AdPlansComponent implements OnInit {
   pphSelectionne = signal<PPHBE | null>(null);
 
   statuts = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'];
+
+  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  matieresJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsMatieresPremiere ?? [];
+    if (!b.length) return '—';
+    return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
+  }
 
   pphsFiltres = computed(() => {
     const r = this.recherche().trim().toLowerCase();

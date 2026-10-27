@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE, PPHLigneDetailBE } from '../../../../infrastructure/production.service';
+import { ProductionService, PPHBE, PPHLigneDetailBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 interface GroupeDetailsParJour {
   dateJour: string;
@@ -18,7 +18,8 @@ interface GroupeDetailsParJour {
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-plans-pph.component.html',
-  styleUrls: ['./rs-plans-pph.component.css', '../_shared.css']
+  styleUrls: ['./rs-plans-pph.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsPlansPphComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -42,6 +43,20 @@ export class RsPlansPphComponent implements OnInit {
 
   ouvrirDetail(p: PPHBE): void { this.pphSelectionne.set(p); }
   fermerDetail(): void { this.pphSelectionne.set(null); }
+
+  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  matieresJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsMatieresPremiere ?? [];
+    if (!b.length) return '—';
+    return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
+  }
+
+  /** Composants d'emballage d'un jour, formatés « Type: Qté ». */
+  emballagesJour(jour: PPHRepartitionJourBE): string {
+    const b = jour.besoinsEmballage ?? [];
+    if (!b.length) return '—';
+    return b.map(e => `${e.type}: ${e.quantite}`).join(', ');
+  }
 
   detailsParJour(p: PPHBE): GroupeDetailsParJour[] {
     const map = new Map<string, PPHLigneDetailBE[]>();

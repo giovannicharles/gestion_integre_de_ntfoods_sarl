@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, ClassementMachinisteBE } from '../../../../infrastructure/production.service';
@@ -13,7 +13,8 @@ import { ProductionService, ClassementMachinisteBE } from '../../../../infrastru
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './cm-performances.component.html',
-  styleUrls: ['./cm-performances.component.css', '../_shared.css']
+  styleUrls: ['./cm-performances.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmPerformancesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

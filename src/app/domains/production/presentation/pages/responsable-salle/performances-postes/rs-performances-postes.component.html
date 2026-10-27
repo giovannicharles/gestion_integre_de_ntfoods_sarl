@@ -43,14 +43,14 @@
           @for (p of performances(); track p.codePoste) {
             <tr>
               <td>{{ p.rang ?? '—' }}</td>
-              <td>{{ p.libellePoste }}</td>
+              <td>{{ p.libelle }}</td>
               <td>{{ p.joursAffectes }}</td>
               <td>{{ p.joursSaisis }}</td>
-              <td>{{ p.objectifCumule | number:'1.0-1' }}</td>
-              <td>{{ p.realiseCumule | number:'1.0-1' }} {{ p.unite }}</td>
-              <td>{{ p.taux != null ? (p.taux | number:'1.1-1') + '%' : '—' }}</td>
-              <td>{{ p.effectifMoyen != null ? (p.effectifMoyen | number:'1.1-1') : '—' }}</td>
-              <td>{{ p.rendementParPersonne != null ? (p.rendementParPersonne | number:'1.1-1') : '—' }}</td>
+              <td>{{ p.objectifTotal | number:'1.0-1' }}</td>
+              <td>{{ p.realiseTotal | number:'1.0-1' }} {{ p.unite }}</td>
+              <td>{{ p.tauxRealisation | number:'1.1-1' }}%</td>
+              <td>{{ p.effectifMoyen | number:'1.1-1' }}</td>
+              <td>{{ p.rendementParPersonne | number:'1.1-1' }}</td>
             </tr>
           } @empty {
             <tr><td colspan="9" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune affectation sur la période</td></tr>

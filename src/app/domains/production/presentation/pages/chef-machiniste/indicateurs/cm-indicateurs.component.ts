@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/production.service';
@@ -14,7 +14,8 @@ import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/
   standalone: true,
   imports: [CommonModule, DatePipe, DecimalPipe, FormsModule],
   templateUrl: './cm-indicateurs.component.html',
-  styleUrls: ['./cm-indicateurs.component.css', '../_shared.css']
+  styleUrls: ['./cm-indicateurs.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmIndicateursComponent implements OnInit {
   private readonly svc = inject(ProductionService);

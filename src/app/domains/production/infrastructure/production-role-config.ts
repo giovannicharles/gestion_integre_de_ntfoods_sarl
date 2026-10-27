@@ -40,6 +40,8 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Validation des BC', icon: 'fa-stamp', route: '/production/chef-production/validation-bc' },
       { label: 'Plans de Production (PPH)', icon: 'fa-calendar-week', route: '/production/plan' },
       { label: 'Planification', icon: 'fa-calendar-days', route: '/production/chef-production/planification' },
+      { label: 'Formules de production', icon: 'fa-flask', route: '/production/formules' },
+      { label: "Composition d'emballage", icon: 'fa-box-open', route: '/production/composition-emballage' },
       { label: 'Suivi Global de Production', icon: 'fa-satellite-dish', route: '/production/chef-production/suivi-global' },
       { label: 'Coordination des Acteurs', icon: 'fa-people-arrows', route: '/production/chef-production/coordination' },
       { label: 'Gestion des Ressources', icon: 'fa-boxes-stacked', route: '/production/chef-production/ressources' },
@@ -73,10 +75,13 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Performances des Postes', icon: 'fa-chart-simple', route: '/production/responsable-salle/performances-postes' },
       { label: 'Classement des Employés', icon: 'fa-trophy', route: '/production/responsable-salle/classement-employes' },
       { label: 'Fiche Info Produit', icon: 'fa-file-lines', route: '/production/responsable-salle/fiche-info-produit' },
+      { label: 'Formules de production', icon: 'fa-flask', route: '/production/formules' },
+      { label: "Composition d'emballage", icon: 'fa-box-open', route: '/production/composition-emballage' },
       { label: 'Registre Journalier', icon: 'fa-book', route: '/production/responsable-salle/registre-journalier' },
       { label: 'Lots & Conversion', icon: 'fa-industry', route: '/production/lots' },
       { label: 'Registre Employés', icon: 'fa-users', route: '/production/employes' },
-      { label: 'Expressions de Besoin', icon: 'fa-triangle-exclamation', route: '/production/besoins', badgeKey: 'besoinsEnAttente' },
+      // « Expressions de Besoin » retiré du menu RS : l'API la réserve à PRODUCTION_EXPRESSION_BESOIN_GERER,
+      // absente du rôle RESPONSABLE_SALLE (403) — vérifié dans RolePermissionMatrix.java.
       { label: 'Rapports Hebdomadaires', icon: 'fa-file-lines', route: '/production/rapports' },
       { label: 'Statistiques', icon: 'fa-chart-line', route: '/production/responsable-salle/statistiques' },
       { label: 'Téléchargements', icon: 'fa-download', route: '/production/responsable-salle/telechargements' },
@@ -119,6 +124,19 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
     ],
   },
 
+  AGENT_PRODUCTION: {
+    libelleRole: 'Agent de Production',
+    accueil: '/production/agent-production/dashboard',
+    navItems: [
+      { label: 'Dashboard', icon: 'fa-gauge-high', route: '/production/agent-production/dashboard' },
+      { label: 'Plans de Production (PPH)', icon: 'fa-calendar-week', route: '/production/agent-production/plans' },
+      { label: 'Bons de Commande', icon: 'fa-file-invoice', route: '/production/agent-production/bons-commande' },
+      { label: 'Ordres de Fabrication', icon: 'fa-industry', route: '/production/agent-production/ordres-fabrication' },
+      { label: 'Registres de Production', icon: 'fa-book', route: '/production/agent-production/registres' },
+      { label: 'Fiches Produit', icon: 'fa-file-lines', route: '/production/agent-production/fiches' },
+    ],
+  },
+
   // Rôles superviseurs — accès complet à toutes les pages du module.
   DIRECTEUR_GENERAL: {
     libelleRole: 'Directeur Général',
@@ -133,6 +151,9 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Responsable Salle', icon: 'fa-user-gear', route: '/production/responsable-salle/dashboard' },
       { label: 'Chef Machiniste', icon: 'fa-gears', route: '/production/chef-machiniste/dashboard' },
       { label: 'Agent Doseur', icon: 'fa-flask', route: '/production/agent-doseur/dashboard' },
+      { label: 'Agent de Production', icon: 'fa-person-digging', route: '/production/agent-production/dashboard' },
+      { label: 'Formules de production', icon: 'fa-flask', route: '/production/formules' },
+      { label: "Composition d'emballage", icon: 'fa-box-open', route: '/production/composition-emballage' },
       { label: 'Lots & Conversion', icon: 'fa-industry', route: '/production/lots' },
       { label: 'Registre Employés', icon: 'fa-users', route: '/production/employes' },
       { label: 'Expressions de Besoin', icon: 'fa-triangle-exclamation', route: '/production/besoins', badgeKey: 'besoinsEnAttente' },
@@ -158,6 +179,9 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Responsable Salle', icon: 'fa-user-gear', route: '/production/responsable-salle/dashboard' },
       { label: 'Chef Machiniste', icon: 'fa-gears', route: '/production/chef-machiniste/dashboard' },
       { label: 'Agent Doseur', icon: 'fa-flask', route: '/production/agent-doseur/dashboard' },
+      { label: 'Agent de Production', icon: 'fa-person-digging', route: '/production/agent-production/dashboard' },
+      { label: 'Formules de production', icon: 'fa-flask', route: '/production/formules' },
+      { label: "Composition d'emballage", icon: 'fa-box-open', route: '/production/composition-emballage' },
       { label: 'Lots & Conversion', icon: 'fa-industry', route: '/production/lots' },
       { label: 'Registre Employés', icon: 'fa-users', route: '/production/employes' },
       { label: 'Expressions de Besoin', icon: 'fa-triangle-exclamation', route: '/production/besoins', badgeKey: 'besoinsEnAttente' },

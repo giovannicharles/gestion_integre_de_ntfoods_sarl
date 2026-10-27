@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ProductionService, OFBE, SessionBroyageBE, SessionDosageBE } from '../../../../infrastructure/production.service';
 
@@ -24,7 +24,8 @@ interface AlerteUI {
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './cp-alertes.component.html',
-  styleUrls: ['./cp-alertes.component.css', '../_shared.css']
+  styleUrls: ['./cp-alertes.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpAlertesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

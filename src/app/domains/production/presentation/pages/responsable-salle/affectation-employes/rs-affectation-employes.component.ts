@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +17,8 @@ interface LigneForm {
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-affectation-employes.component.html',
-  styleUrls: ['./rs-affectation-employes.component.css', '../_shared.css']
+  styleUrls: ['./rs-affectation-employes.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsAffectationEmployesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

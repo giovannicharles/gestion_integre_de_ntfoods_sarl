@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE } from '../../../../infrastructure/production.service';
@@ -17,6 +17,7 @@ import { AdSessionContextService } from '../ad-session-context.service';
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './ad-machines.component.html',
   styleUrls: ['./ad-machines.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdMachinesComponent implements OnInit {
   private readonly svc = inject(ProductionService);

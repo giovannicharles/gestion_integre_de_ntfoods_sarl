@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductionService, SessionBroyageBE, SessionDosageBE, AffectationBE } from '../../../infrastructure/production.service';
@@ -9,7 +9,8 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink, CanDirective],
   templateUrl: './production-saisie.component.html',
-  styleUrls: ['./production-saisie.component.css']
+  styleUrls: ['./production-saisie.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductionSaisieComponent implements OnInit {
   today = new Date();

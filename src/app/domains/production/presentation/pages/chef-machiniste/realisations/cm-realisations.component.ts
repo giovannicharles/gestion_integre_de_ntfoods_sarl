@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE, EmployeBE } from '../../../../infrastructure/production.service';
@@ -13,7 +13,8 @@ import { ProductionService, SessionBroyageBE, EmployeBE } from '../../../../infr
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule],
   templateUrl: './cm-realisations.component.html',
-  styleUrls: ['./cm-realisations.component.css', '../_shared.css']
+  styleUrls: ['./cm-realisations.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmRealisationsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, RegistreProductionBE, LigneRegistreBE, PPHBE, CodePosteRef, CODES_POSTE } from '../../../../infrastructure/production.service';
@@ -19,7 +19,8 @@ import { CanDirective } from '../../../../../../shared/directives/can.directive'
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule, CanDirective],
   templateUrl: './rs-registre-journalier.component.html',
-  styleUrls: ['./rs-registre-journalier.component.css', '../_shared.css']
+  styleUrls: ['./rs-registre-journalier.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsRegistreJournalierComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -104,7 +105,12 @@ export class RsRegistreJournalierComponent implements OnInit {
       return;
     }
     this.enregistrementEnCours.set(true);
-    this.svc.modifierRegistre(r.referencePPH, r.date, { lignes }).subscribe({
+    const lignesEnvoyees = lignes.map(l => ({
+      matriculeEmploye: l.matriculeEmploye, nomEmploye: l.nomEmploye, poste: l.poste, present: l.present,
+      motifAbsence: l.motifAbsence ?? undefined, heureArrivee: l.heureArrivee ?? undefined,
+      qteRealisee: l.qteRealisee ?? undefined, unite: l.unite ?? undefined,
+    }));
+    this.svc.modifierRegistre(r.referencePPH, r.date, { lignes: lignesEnvoyees }).subscribe({
       next: corrige => {
         this.registres.update(list => list.map(x => (x.id === corrige.id ? corrige : x)));
         this.modeCorrection.set(false);

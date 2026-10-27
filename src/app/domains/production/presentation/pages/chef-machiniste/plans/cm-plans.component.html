@@ -71,12 +71,12 @@
       <h4 style="margin-top:12px">Matières premières & objectifs de broyage par jour</h4>
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Jour</th><th>Maïs (kg)</th><th>Soja (kg)</th><th>Arachide (kg)</th></tr></thead>
+          <thead><tr><th>Jour</th><th>Matières premières</th></tr></thead>
           <tbody>
             @for (r of p.repartitionJours; track r.dateJour) {
-              <tr><td>{{ r.dateJour }}</td><td>{{ r.poudreMaisKg | number:'1.1-1' }}</td><td>{{ r.poudreSojaKg | number:'1.1-1' }}</td><td>{{ r.poudreArachideKg | number:'1.1-1' }}</td></tr>
+              <tr><td>{{ r.dateJour }}</td><td>{{ matieresJour(r) }}</td></tr>
             } @empty {
-              <tr><td colspan="4" class="text-center text-muted">Aucune répartition journalière</td></tr>
+              <tr><td colspan="2" class="text-center text-muted">Aucune répartition journalière</td></tr>
             }
           </tbody>
         </table>

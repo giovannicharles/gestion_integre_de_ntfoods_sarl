@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../../infrastructure/production.service';
@@ -14,7 +14,8 @@ import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-comparaison-doseur.component.html',
-  styleUrls: ['./rs-comparaison-doseur.component.css', '../_shared.css']
+  styleUrls: ['./rs-comparaison-doseur.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsComparaisonDoseurComponent implements OnInit {
   private readonly svc = inject(ProductionService);

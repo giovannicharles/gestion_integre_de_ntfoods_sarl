@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   ProductionService, AffectationBE, SessionBroyageBE, SessionDosageBE
@@ -18,7 +18,8 @@ type Onglet = 'salle' | 'machiniste' | 'doseur';
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './cp-coordination.component.html',
-  styleUrls: ['./cp-coordination.component.css', '../_shared.css']
+  styleUrls: ['./cp-coordination.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CpCoordinationComponent implements OnInit {
   private readonly svc = inject(ProductionService);

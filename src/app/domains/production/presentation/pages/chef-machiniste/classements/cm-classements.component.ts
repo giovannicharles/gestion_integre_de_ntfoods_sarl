@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, ClassementMachinisteBE } from '../../../../infrastructure/production.service';
@@ -15,7 +15,8 @@ type Critere = 'productivite' | 'efficacite' | 'taux';
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './cm-classements.component.html',
-  styleUrls: ['./cm-classements.component.css', '../_shared.css']
+  styleUrls: ['./cm-classements.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CmClassementsComponent implements OnInit {
   private readonly svc = inject(ProductionService);

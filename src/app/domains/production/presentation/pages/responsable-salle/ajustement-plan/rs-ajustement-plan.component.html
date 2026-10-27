@@ -136,36 +136,20 @@
   </div>
 
   <div class="aj-mp-edit-grid">
-    <div class="aj-mp-edit-card aj-mp-mais">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-leaf"></i> <span>Maïs</span>
+    @for (m of totauxMP().parMatiere; track m.nom) {
+      <div class="aj-mp-edit-card">
+        <div class="aj-mp-edit-header">
+          <i class="fa-solid fa-leaf"></i> <span>{{ m.nom }}</span>
+        </div>
+        <div class="aj-mp-edit-total">
+          <span class="aj-mp-edit-val">{{ m.total | number:'1.1-1' }}</span>
+          <span class="aj-mp-edit-unit">kg total</span>
+        </div>
+        <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
       </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().mais | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
-    <div class="aj-mp-edit-card aj-mp-soja">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-circle-dot"></i> <span>Soja</span>
-      </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().soja | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
-    <div class="aj-mp-edit-card aj-mp-arachide">
-      <div class="aj-mp-edit-header">
-        <i class="fa-solid fa-droplet"></i> <span>Arachide</span>
-      </div>
-      <div class="aj-mp-edit-total">
-        <span class="aj-mp-edit-val">{{ totauxMP().arachide | number:'1.1-1' }}</span>
-        <span class="aj-mp-edit-unit">kg total</span>
-      </div>
-      <div class="aj-mp-edit-note">Répartissez via le tableau ci-dessous</div>
-    </div>
+    } @empty {
+      <div class="aj-mp-edit-note">Aucune matière première dans ce plan</div>
+    }
   </div>
 </div>
 
@@ -184,64 +168,40 @@
       <thead>
         <tr>
           <th>Jour</th>
-          <th class="text-right">Maïs (kg)</th>
-          <th class="text-right">Soja (kg)</th>
-          <th class="text-right">Arachide (kg)</th>
+          @for (nom of colonnesMP(); track nom) { <th class="text-right">{{ nom }} (kg)</th> }
           <th class="text-right">Fûts</th>
-          <th class="text-right">Sachets</th>
-          <th class="text-right">Couvercles</th>
-          <th class="text-right">Scellés</th>
+          @for (type of colonnesEmballage(); track type) { <th class="text-right">{{ libelleEmballage(type) }}</th> }
         </tr>
       </thead>
       <tbody>
         @for (j of repartitionEdition(); track j.dateJour; let i = $index) {
           <tr [class.aj-row-editing]="p.statut !== 'EN_COURS'">
             <td><strong class="aj-date-cell">{{ j.dateJour }}</strong></td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreMaisKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreMaisKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreSojaKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreSojaKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].poudreArachideKg"
-                     (ngModelChange)="mettreAJourChamp(i, 'poudreArachideKg', $event); recalculerFuts(i)"
-                     min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
+            @for (nom of colonnesMP(); track nom) {
+              <td class="text-right">
+                <input type="number" class="input aj-cell-input"
+                       [ngModel]="quantiteMatiere(i, nom)"
+                       (ngModelChange)="definirQuantiteMatiere(i, nom, $event)"
+                       min="0" step="0.1" [disabled]="p.statut === 'EN_COURS'">
+              </td>
+            }
             <td class="text-right">
               <input type="number" class="input aj-cell-input aj-cell-readonly"
                      [ngModel]="repartitionEdition()[i].futsPrevus"
                      min="0" step="0.01" disabled
                      title="Fûts calculés automatiquement depuis la poudre totale du jour (50 kg/fût)">
             </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].sachetsPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'sachetsPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].couverclesPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'couverclesPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
-            <td class="text-right">
-              <input type="number" class="input aj-cell-input"
-                     [ngModel]="repartitionEdition()[i].scellesPrevus"
-                     (ngModelChange)="mettreAJourChamp(i, 'scellesPrevus', $event)"
-                     min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
-            </td>
+            @for (type of colonnesEmballage(); track type) {
+              <td class="text-right">
+                <input type="number" class="input aj-cell-input"
+                       [ngModel]="quantiteEmballage(i, type)"
+                       (ngModelChange)="definirQuantiteEmballage(i, type, $event)"
+                       min="0" step="1" [disabled]="p.statut === 'EN_COURS'">
+              </td>
+            }
           </tr>
         } @empty {
-          <tr><td colspan="8" class="empty-state-block">Aucune répartition journalière disponible</td></tr>
+          <tr><td [attr.colspan]="2 + colonnesMP().length + colonnesEmballage().length" class="empty-state-block">Aucune répartition journalière disponible</td></tr>
         }
       </tbody>
     </table>

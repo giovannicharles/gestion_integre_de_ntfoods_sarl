@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
@@ -13,7 +13,8 @@ import { ToastService } from '../../../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, DecimalPipe, RouterLink, MiniChartComponent, DonutChartComponent],
   templateUrl: './agent-doseur.component.html',
-  styleUrls: ['./agent-doseur.component.css', './_shared.css']
+  styleUrls: ['./agent-doseur.component.css', './_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AgentDoseurComponent implements OnInit {
   private readonly prodSvc = inject(ProductionService);
@@ -61,14 +62,17 @@ export class AgentDoseurComponent implements OnInit {
   });
 
   /** Répartition des matières utilisées sur la semaine (issue de statsHebdo, déjà réelle). */
+  private static readonly PALETTE_MATIERES = ['#f9a825', '#558b2f', '#6d4c41', '#1976d2', '#8e24aa'];
+
+  /** Une tranche par matière présente — liste libre, jamais figée sur maïs/soja/arachide. */
   donutMatieres = computed<DonutSlice[]>(() => {
     const s = this.statsHebdo();
     if (!s) return [];
-    return [
-      { label: 'Maïs', value: Math.round(s.poudreMaisKg * 10) / 10, color: '#f9a825' },
-      { label: 'Soja', value: Math.round(s.poudreSojaKg * 10) / 10, color: '#558b2f' },
-      { label: 'Arachide', value: Math.round(s.poudreArachideKg * 10) / 10, color: '#6d4c41' },
-    ];
+    return s.matieresPremieres.map((m, i) => ({
+      label: m.matierePremiere,
+      value: Math.round(m.quantiteKg * 10) / 10,
+      color: AgentDoseurComponent.PALETTE_MATIERES[i % AgentDoseurComponent.PALETTE_MATIERES.length],
+    }));
   });
 
   ngOnInit(): void {

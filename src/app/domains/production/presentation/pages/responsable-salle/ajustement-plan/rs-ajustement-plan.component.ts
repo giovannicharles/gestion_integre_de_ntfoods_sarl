@@ -1,18 +1,15 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductionService, PPHBE } from '../../../../infrastructure/production.service';
+import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
+import { nomsMatieres, typesEmballage, qteMatiere, qteEmballage, libelleEmballage } from '../../../../infrastructure/production-besoins.util';
 
-/** Ligne éditable de répartition journalière */
+/** Ligne éditable de répartition journalière — matières et emballage en listes libres (jamais figées). */
 interface RepartitionEdition {
   dateJour: string;
-  poudreMaisKg: number;
-  poudreSojaKg: number;
-  poudreArachideKg: number;
+  matieres: { matierePremiere: string; quantiteKg: number }[];
   futsPrevus: number;
-  sachetsPrevus: number;
-  couverclesPrevus: number;
-  scellesPrevus: number;
+  emballage: { type: string; quantite: number }[];
 }
 
 @Component({
@@ -20,7 +17,8 @@ interface RepartitionEdition {
   standalone: true,
   imports: [CommonModule, DecimalPipe, FormsModule],
   templateUrl: './rs-ajustement-plan.component.html',
-  styleUrls: ['./rs-ajustement-plan.component.css', '../_shared.css']
+  styleUrls: ['./rs-ajustement-plan.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsAjustementPlanComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -42,13 +40,54 @@ export class RsAjustementPlanComponent implements OnInit {
     this.pphs().filter(p => p.statut !== 'CLOTURE')
   );
 
-  /** Totaux MP calculés depuis les lignes éditées */
+  /** Noms de matières présents dans la répartition éditée, dans l'ordre de première apparition (jamais figé). */
+  colonnesMP = computed(() => nomsMatieres(this.repartitionEdition().map(j => j.matieres)));
+
+  /** Types d'emballage présents dans la répartition éditée. */
+  colonnesEmballage = computed(() => typesEmballage(this.repartitionEdition().map(j => j.emballage)));
+
+  libelleEmballage = libelleEmballage;
+
+  /** Totaux par matière + total global, calculés depuis les lignes éditées. */
   totauxMP = computed(() => {
-    const mais     = this.repartitionEdition().reduce((s, j) => s + (j.poudreMaisKg     ?? 0), 0);
-    const soja     = this.repartitionEdition().reduce((s, j) => s + (j.poudreSojaKg     ?? 0), 0);
-    const arachide = this.repartitionEdition().reduce((s, j) => s + (j.poudreArachideKg ?? 0), 0);
-    return { mais, soja, arachide, total: mais + soja + arachide };
+    const parMatiere = this.colonnesMP().map(nom => ({
+      nom, total: this.repartitionEdition().reduce((s, j) => s + qteMatiere(j.matieres, nom), 0),
+    }));
+    return { parMatiere, total: parMatiere.reduce((s, m) => s + m.total, 0) };
   });
+
+  quantiteMatiere(index: number, nom: string): number {
+    return qteMatiere(this.repartitionEdition()[index]?.matieres, nom);
+  }
+
+  definirQuantiteMatiere(index: number, nom: string, valeur: number): void {
+    this.repartitionEdition.update(arr => {
+      const nouvelle = [...arr];
+      const j = nouvelle[index];
+      if (!j) return arr;
+      const matieres = j.matieres.filter(m => m.matierePremiere !== nom);
+      matieres.push({ matierePremiere: nom, quantiteKg: valeur });
+      nouvelle[index] = { ...j, matieres };
+      return nouvelle;
+    });
+    this.recalculerFuts(index);
+  }
+
+  quantiteEmballage(index: number, type: string): number {
+    return qteEmballage(this.repartitionEdition()[index]?.emballage, type);
+  }
+
+  definirQuantiteEmballage(index: number, type: string, valeur: number): void {
+    this.repartitionEdition.update(arr => {
+      const nouvelle = [...arr];
+      const j = nouvelle[index];
+      if (!j) return arr;
+      const emballage = j.emballage.filter(e => e.type !== type);
+      emballage.push({ type, quantite: valeur });
+      nouvelle[index] = { ...j, emballage };
+      return nouvelle;
+    });
+  }
 
   ngOnInit(): void { this.charger(); }
 
@@ -67,23 +106,16 @@ export class RsAjustementPlanComponent implements OnInit {
     });
   }
 
+  private versEdition(j: PPHRepartitionJourBE): RepartitionEdition {
+    const matieres = (j.besoinsMatieresPremiere ?? []).map(m => ({ ...m }));
+    const emballage = (j.besoinsEmballage ?? []).map(e => ({ ...e }));
+    const total = matieres.reduce((s, m) => s + (m.quantiteKg || 0), 0);
+    return { dateJour: j.dateJour, matieres, emballage, futsPrevus: total <= 0 ? 0 : total / 50 };
+  }
+
   selectionner(p: PPHBE): void {
     this.pphSelectionne.set(p);
-    const edition = (p.repartitionJours ?? []).map(j => ({
-      dateJour:         j.dateJour,
-      poudreMaisKg:     j.poudreMaisKg,
-      poudreSojaKg:     j.poudreSojaKg,
-      poudreArachideKg: j.poudreArachideKg,
-      futsPrevus:       j.futsPrevus,
-      sachetsPrevus:    j.sachetsPrevus,
-      couverclesPrevus: j.couverclesPrevus,
-      scellesPrevus:    j.scellesPrevus
-    }));
-    edition.forEach(j => {
-      const total = (j.poudreMaisKg || 0) + (j.poudreSojaKg || 0) + (j.poudreArachideKg || 0);
-      j.futsPrevus = total <= 0 ? 0 : total / 50;
-    });
-    this.repartitionEdition.set(edition);
+    this.repartitionEdition.set((p.repartitionJours ?? []).map(j => this.versEdition(j)));
     this.message.set('');
     this.erreur.set('');
     this.enPause.set(false);
@@ -94,19 +126,8 @@ export class RsAjustementPlanComponent implements OnInit {
       const nouvelle = [...arr];
       const j = nouvelle[index];
       if (j) {
-        const total = (j.poudreMaisKg || 0) + (j.poudreSojaKg || 0) + (j.poudreArachideKg || 0);
+        const total = j.matieres.reduce((s, m) => s + (m.quantiteKg || 0), 0);
         nouvelle[index] = { ...j, futsPrevus: total <= 0 ? 0 : total / 50 };
-      }
-      return nouvelle;
-    });
-  }
-
-  mettreAJourChamp(index: number, champ: keyof RepartitionEdition, valeur: number): void {
-    this.repartitionEdition.update(arr => {
-      const nouvelle = [...arr];
-      const j = nouvelle[index];
-      if (j) {
-        nouvelle[index] = { ...j, [champ]: valeur } as RepartitionEdition;
       }
       return nouvelle;
     });
@@ -117,25 +138,15 @@ export class RsAjustementPlanComponent implements OnInit {
     if (!p) return;
     this.saving.set(true);
     this.erreur.set('');
-    this.svc.ajusterRepartitionPPH(p.referencePPH, this.repartitionEdition()).subscribe({
+    const repartition = this.repartitionEdition().map(j => ({
+      dateJour: j.dateJour, futsPrevus: j.futsPrevus,
+      besoinsMatieresPremiere: j.matieres, besoinsEmballage: j.emballage,
+    }));
+    this.svc.ajusterRepartitionPPH(p.referencePPH, repartition).subscribe({
       next: updated => {
         this.pphs.update(list => list.map(x => x.referencePPH === updated.referencePPH ? updated : x));
         this.pphSelectionne.set(updated);
-        const edition = (updated.repartitionJours ?? []).map(j => ({
-          dateJour:         j.dateJour,
-          poudreMaisKg:     j.poudreMaisKg,
-          poudreSojaKg:     j.poudreSojaKg,
-          poudreArachideKg: j.poudreArachideKg,
-          futsPrevus:       j.futsPrevus,
-          sachetsPrevus:    j.sachetsPrevus,
-          couverclesPrevus: j.couverclesPrevus,
-          scellesPrevus:    j.scellesPrevus
-        }));
-        edition.forEach(j => {
-          const total = (j.poudreMaisKg || 0) + (j.poudreSojaKg || 0) + (j.poudreArachideKg || 0);
-          j.futsPrevus = total <= 0 ? 0 : total / 50;
-        });
-        this.repartitionEdition.set(edition);
+        this.repartitionEdition.set((updated.repartitionJours ?? []).map(j => this.versEdition(j)));
         this.message.set('Ajustements enregistrés avec succès.');
         this.saving.set(false);
       },

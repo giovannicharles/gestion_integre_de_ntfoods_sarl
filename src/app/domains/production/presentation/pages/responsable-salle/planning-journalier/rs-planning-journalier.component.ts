@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -19,7 +19,8 @@ interface LigneEdit {
   standalone: true,
   imports: [CommonModule, FormsModule, CanDirective],
   templateUrl: './rs-planning-journalier.component.html',
-  styleUrls: ['./rs-planning-journalier.component.css', '../_shared.css']
+  styleUrls: ['./rs-planning-journalier.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RsPlanningJournalierComponent implements OnInit {
   private readonly svc = inject(ProductionService);

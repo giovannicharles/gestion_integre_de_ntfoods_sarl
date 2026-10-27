@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE } from '../../../../infrastructure/production.service';
@@ -19,6 +19,7 @@ import { AdSessionContextService } from '../ad-session-context.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './ad-documents.component.html',
   styleUrls: ['./ad-documents.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdDocumentsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
@@ -72,9 +73,10 @@ export class AdDocumentsComponent implements OnInit {
   genererRapportJournalierCsv(): void {
     this.svc.getStatistiquesFuts(this.today, this.today).subscribe({
       next: s => {
+        const lignesMP = s.matieresPremieres.map(m => `${m.matierePremiere} (kg);${m.quantiteKg}`);
         const csv = ['Indicateur;Valeur',
           `Fûts nets;${s.nbFutsNets}`, `Fûts produits;${s.nbFutsProduits}`,
-          `Maïs (kg);${s.poudreMaisKg}`, `Soja (kg);${s.poudreSojaKg}`, `Arachide (kg);${s.poudreArachideKg}`,
+          ...lignesMP,
           `Sessions;${s.nbSessions}`].join('\n');
         const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
         this.declencher(blob, `rapport-journalier-${this.today}.csv`);

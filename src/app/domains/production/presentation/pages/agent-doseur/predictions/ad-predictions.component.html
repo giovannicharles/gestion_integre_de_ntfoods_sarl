@@ -43,12 +43,12 @@
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Quantités théoriques par conditionnement</h2></div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Produit</th><th>Recette</th><th>Poids unitaire</th><th>Unités de base</th><th>Cartons estimés</th><th>Unités / carton</th></tr></thead>
+        <thead><tr><th>Produit</th><th>Composition</th><th>Poids unitaire</th><th>Unités de base</th><th>Cartons estimés</th><th>Unités / carton</th></tr></thead>
         <tbody>
           @for (l of p.predictions; track l.codeProduit) {
             <tr>
               <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designation }}</td>
-              <td>{{ l.recette }}</td>
+              <td>{{ l.composition ?? '—' }}</td>
               <td>{{ l.poidsUnitaireGrammes }} g</td>
               <td><strong>{{ l.quantiteUnitesBase }}</strong></td>
               <td>{{ l.quantiteCartons }}</td>

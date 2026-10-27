@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ProductionService, StatistiquesFutsBE, SessionDosageBE } from '../../../../infrastructure/production.service';
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
@@ -15,7 +15,8 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
   standalone: true,
   imports: [CommonModule, DecimalPipe, MiniChartComponent],
   templateUrl: './ad-statistiques.component.html',
-  styleUrls: ['./ad-statistiques.component.css', '../_shared.css']
+  styleUrls: ['./ad-statistiques.component.css', '../_shared.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdStatistiquesComponent implements OnInit {
   private readonly svc = inject(ProductionService);
