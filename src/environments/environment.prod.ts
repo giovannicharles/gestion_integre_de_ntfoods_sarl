@@ -9,7 +9,7 @@
  * build (ex. commande de build personnalisée), elle prend le pas sur l'URL Render
  * par défaut ci-dessous — utile si l'API change un jour de nom de service.
  */
-const apiBase = 'https://tanty-erp-api.onrender.com';
+const apiBase = 'https://api-tanty-digital.onrender.com';
 
 export const environment = {
   production: true,
