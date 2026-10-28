@@ -8,7 +8,7 @@
         une zone mal calibrée paraîtra saturée ou sous-exploitée à tort.
       </p>
     </div>
-    <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']" (click)="formulaireOuvert.set(!formulaireOuvert())">
+    <button class="btn btn-primary" *appHasPermission="'COMMERCIAL_ZONE_VENTE_GERER'" (click)="formulaireOuvert.set(!formulaireOuvert())">
       {{ formulaireOuvert() ? 'Fermer' : 'Nouvelle zone' }}
     </button>
   </header>
@@ -105,7 +105,7 @@
                   {{ z.actif ? 'Active' : 'Désactivée' }}
                 </span>
               </td>
-              <td class="actions" *appCan="['DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'COMPTABLE', 'CHARGEE_RP', 'ADMIN']">
+              <td class="actions" *appHasPermission="'COMMERCIAL_ZONE_VENTE_GERER'">
                 @if (calibrage() === z.nom) {
                   <button class="btn btn-sm btn-valider"
                           [disabled]="!calibrageValide(z) || traitementEnCours() === z.nom"

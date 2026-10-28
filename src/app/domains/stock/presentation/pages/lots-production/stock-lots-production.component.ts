@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy} f
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, LotBE } from '../../../../production/infrastructure/production.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 /**
  * Écran Stock — « Lots de Production » (2026-10-01, demande explicite du porteur).
@@ -22,7 +22,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-lots-production',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, FormsModule, HasPermissionDirective],
   templateUrl: './stock-lots-production.component.html',
   styleUrls: ['./stock-lots-production.component.css'],
 })

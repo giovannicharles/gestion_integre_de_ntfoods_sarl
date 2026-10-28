@@ -115,7 +115,7 @@
               <div class="row-actions">
                 <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(a)">Détail</button>
                 @if (a.statut !== 'VALIDEE') {
-                  <button class="btn btn-sm btn-primary" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'ADMIN']" (click)="validerAffectation(a.id)">Valider</button>
+                  <button class="btn btn-sm btn-primary" *appHasPermission="'PRODUCTION_AFFECTATION_GERER'" (click)="validerAffectation(a.id)">Valider</button>
                 }
               </div>
             </td>

@@ -7,7 +7,7 @@ import { StockApiRepository } from '../../../../stock/infrastructure/repositorie
 import { Product } from '../../../../stock/domain/models/stock.models';
 import { ProductSearchComponent } from '../../../../../shared/components/product-search/product-search.component';
 import { ConditioningQuantityComponent, LigneConditionnement } from '../../../../../shared/components/conditioning-quantity/conditioning-quantity.component';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 interface LotFormLigne {
   referencePPH: string;
@@ -23,7 +23,7 @@ interface LotFormLigne {
 @Component({
   selector: 'app-production-lots',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, CanDirective],
+  imports: [CommonModule, DatePipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, HasPermissionDirective],
   templateUrl: './production-lots.component.html',
   styleUrls: ['./production-lots.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

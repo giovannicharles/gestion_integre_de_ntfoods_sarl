@@ -48,10 +48,10 @@
                   <td>
                     <div style="display:flex;gap:6px">
                       @if (v.statut === 'EN_COURS') {
-                        <button class="btn btn-success btn-sm" *appCan="['COMMERCIAL', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
+                        <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_VENTE_FINALISER'" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
                           <i class="fa-solid fa-check"></i>
                         </button>
-                        <button class="btn btn-ghost btn-sm" *appCan="['COMMERCIAL', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'ADMIN']" (click)="openAnnuler(v.numeroVente)" title="Annuler">
+                        <button class="btn btn-ghost btn-sm" *appHasPermission="'COMMERCIAL_VENTE_CREER'" (click)="openAnnuler(v.numeroVente)" title="Annuler">
                           <i class="fa-solid fa-ban" style="color:var(--r)"></i>
                         </button>
                       }
@@ -93,7 +93,7 @@
                   <td><span class="badge" [class.bg-orange]="a.statut==='EMIS'" [class.bg-success]="a.statut==='VALIDE'">{{ a.statut }}</span></td>
                   <td>
                     @if (a.statut === 'EMIS') {
-                      <button class="btn btn-success btn-sm" *appCan="['COMPTABLE', 'DIRECTEUR_COMMERCIAL', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="validerAvoir(a.numeroAvoir)" title="Valider">
+                      <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_FACTURE_AVOIR_GERER'" (click)="validerAvoir(a.numeroAvoir)" title="Valider">
                         <i class="fa-solid fa-check"></i>
                       </button>
                     }

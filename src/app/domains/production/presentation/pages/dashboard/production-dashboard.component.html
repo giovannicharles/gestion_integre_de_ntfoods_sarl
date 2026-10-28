@@ -120,7 +120,7 @@
           <td>
             <div class="row-actions">
               <button class="btn btn-sm btn-ghost" (click)="voirDetailOF(o.idOF)">Détails</button>
-              <ng-container *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'ADMIN']">
+              <ng-container *appHasPermission="'PRODUCTION_OF_CREER'">
                 @if (o.statut === 'PLANIFIE') {
                   <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
                 }

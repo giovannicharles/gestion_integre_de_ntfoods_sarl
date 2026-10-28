@@ -80,7 +80,7 @@
             </td>
             <td>
               @if (b.statut === 'EN_ATTENTE') {
-                <div class="row-actions" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
+                <div class="row-actions" *appHasPermission="'PRODUCTION_EXPRESSION_BESOIN_GERER'">
                   <button class="btn btn-sm btn-primary" (click)="valider(b)">Valider</button>
                   <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(b)">Rejeter</button>
                 </div>

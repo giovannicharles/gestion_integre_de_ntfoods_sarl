@@ -2,12 +2,12 @@ import { Component, signal, computed, inject, OnInit, ChangeDetectionStrategy } 
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductionService, SessionBroyageBE, SessionDosageBE, AffectationBE } from '../../../infrastructure/production.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-production-saisie',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, CanDirective],
+  imports: [CommonModule, DatePipe, RouterLink, HasPermissionDirective],
   templateUrl: './production-saisie.component.html',
   styleUrls: ['./production-saisie.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

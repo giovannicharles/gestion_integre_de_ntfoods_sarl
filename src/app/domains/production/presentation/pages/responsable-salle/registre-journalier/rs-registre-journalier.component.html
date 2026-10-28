@@ -21,7 +21,7 @@
     <div class="toolbar-row">
       <strong>Registre d'aujourd'hui — {{ registreAujourdhui()!.referencePPH }}</strong>
       @if (!modeCorrection()) {
-        <button class="btn btn-secondary btn-sm" *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'ADMIN']" (click)="demarrerCorrection()"><i class="fa-solid fa-pen"></i> Corriger</button>
+        <button class="btn btn-secondary btn-sm" *appHasPermission="'PRODUCTION_REGISTRE_GERER'" (click)="demarrerCorrection()"><i class="fa-solid fa-pen"></i> Corriger</button>
       }
     </div>
 

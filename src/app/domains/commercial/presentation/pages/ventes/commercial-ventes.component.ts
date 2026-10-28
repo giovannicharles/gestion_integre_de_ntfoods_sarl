@@ -6,12 +6,12 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommercialService, VenteBE, AvoirBE } from '../../../infrastructure/commercial.service';
 import { DocumentService } from '../../../../shared/infrastructure/document.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-commercial-ventes',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, HasPermissionDirective],
   templateUrl: './commercial-ventes.component.html',
   styleUrls: ['./commercial-ventes.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

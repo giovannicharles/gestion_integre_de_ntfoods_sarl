@@ -10,7 +10,7 @@ import {
 import { MiniChartComponent, ChartSeries } from '../../shared/charts/mini-chart.component';
 import { DonutChartComponent, DonutSlice } from '../../shared/charts/donut-chart.component';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 interface LotDashUI {
   id: string; codeProduit: string; designationProduit: string;
@@ -25,7 +25,7 @@ interface PlanUI {
 @Component({
   selector: 'app-production-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, FormsModule, MiniChartComponent, DonutChartComponent, CanDirective],
+  imports: [CommonModule, DatePipe, RouterLink, FormsModule, MiniChartComponent, DonutChartComponent, HasPermissionDirective],
   templateUrl: './production-dashboard.component.html',
   styleUrls: ['./production-dashboard.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

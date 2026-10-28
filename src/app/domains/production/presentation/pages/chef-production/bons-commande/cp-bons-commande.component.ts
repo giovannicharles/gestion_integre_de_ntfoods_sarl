@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } 
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
-import { CanDirective } from '../../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 // ── Catalogue produits (extrait de LISTE DES PRODUITS.xlsx) ─────────────────
 export interface ProduitCatalogue {
@@ -104,7 +104,7 @@ interface LigneForm {
 @Component({
   selector: 'app-cp-bons-commande',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe, FormsModule, CanDirective],
+  imports: [CommonModule, DecimalPipe, DatePipe, FormsModule, HasPermissionDirective],
   templateUrl: './cp-bons-commande.component.html',
   styleUrls: ['./cp-bons-commande.component.css', '../_shared.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

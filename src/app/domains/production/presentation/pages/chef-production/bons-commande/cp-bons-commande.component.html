@@ -308,7 +308,7 @@
       <button class="btn btn-ghost" (click)="fermerFormulaire()" [disabled]="saving()">
         Annuler
       </button>
-      <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']" (click)="soumettre()"
+      <button class="btn btn-primary" *appHasPermission="'STOCK_BON_COMMANDE_CREER'" (click)="soumettre()"
               [disabled]="saving() || !formulaireValide()">
         @if (saving()) {
           <span class="spinner spinner-sm"></span> Enregistrement…

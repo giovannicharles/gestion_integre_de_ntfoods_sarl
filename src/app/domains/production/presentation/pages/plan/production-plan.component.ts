@@ -4,12 +4,12 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../infrastructure/production.service';
 import { StockService, BonCommandeBE } from '../../../../stock/infrastructure/stock.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-production-plan',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule, HasPermissionDirective],
   templateUrl: './production-plan.component.html',
   styleUrls: ['./production-plan.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

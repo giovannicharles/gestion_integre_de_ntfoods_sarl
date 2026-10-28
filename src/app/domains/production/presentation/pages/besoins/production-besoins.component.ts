@@ -4,12 +4,12 @@ import { FormsModule } from '@angular/forms';
 import {
   ProductionService, ExpressionBesoinBE, PPHBE, TYPES_BESOIN, STATUTS_BESOIN
 } from '../../../infrastructure/production.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-production-besoins',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, FormsModule, HasPermissionDirective],
   templateUrl: './production-besoins.component.html',
   styleUrls: ['./production-besoins.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

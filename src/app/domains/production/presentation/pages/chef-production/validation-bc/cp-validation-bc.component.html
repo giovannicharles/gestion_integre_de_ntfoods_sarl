@@ -203,7 +203,7 @@
       <button class="btn btn-ghost" (click)="annulerConfirmation()" [disabled]="saving()">
         Annuler
       </button>
-      <button class="btn btn-primary" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']" (click)="valider()" [disabled]="saving()">
+      <button class="btn btn-primary" *appHasPermission="'STOCK_BON_COMMANDE_VALIDER'" (click)="valider()" [disabled]="saving()">
         @if (saving()) {
           <span class="spinner spinner-sm"></span> Validation en cours…
         } @else {

@@ -84,7 +84,7 @@
           <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
           <td>{{ l.matriculeChefProduction }}</td>
           <td>
-            <div class="row-actions" *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
+            <div class="row-actions" *appHasPermission="'PRODUCTION_LOT_VALIDER_STOCK'">
               <button class="btn btn-sm btn-primary" (click)="validerLot(l)">Valider</button>
               <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(l)">Rejeter</button>
             </div>

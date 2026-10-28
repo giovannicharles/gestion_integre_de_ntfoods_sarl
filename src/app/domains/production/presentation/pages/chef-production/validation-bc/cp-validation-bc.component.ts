@@ -3,12 +3,12 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
-import { CanDirective } from '../../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-cp-validation-bc',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, HasPermissionDirective],
   templateUrl: './cp-validation-bc.component.html',
   styleUrls: ['./cp-validation-bc.component.css', '../_shared.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

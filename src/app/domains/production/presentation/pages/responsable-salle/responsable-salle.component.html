@@ -69,7 +69,7 @@
       <div *ngIf="affectation" class="affectation-detail">
         <div class="rs-toolbar" style="margin-bottom:8px">
           <span class="badge">{{ affectation.statut }}</span>
-          <ng-container *appCan="['DIRECTEUR_GENERAL', 'CHEF_PRODUCTION', 'RESPONSABLE_SALLE', 'CHEF_MACHINISTE', 'ADMIN']">
+          <ng-container *appHasPermission="'PRODUCTION_AFFECTATION_GERER'">
             <button class="primary" *ngIf="affectation.statut === 'BROUILLON'" (click)="validerAffectation()">
               Valider (verrouiller la journée)
             </button>

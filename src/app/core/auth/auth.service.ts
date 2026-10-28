@@ -9,6 +9,7 @@ import { UserRole, mapBackendRole } from '../models/user.models';
 const TOKEN_KEY = 'tanty_token';
 const EXPIRATION_KEY = 'tanty_token_expiration';
 const USER_KEY = 'tanty_user';
+const PERMISSIONS_KEY = 'tanty_permissions';
 
 /**
  * Utilisateur connecté tel que conservé côté client.
@@ -46,6 +47,15 @@ export class AuthService {
 
   readonly isAuthenticated = computed(() => this._user() !== null && this.getToken() !== null);
   readonly role = computed(() => this._user()?.role ?? null);
+
+  /**
+   * Permissions effectives (rôle de base + dérogations individuelles) de
+   * l'utilisateur courant — chargées une fois après connexion (2026-10-28,
+   * Stock/Commercial/Production sont gardés côté backend par permission,
+   * jamais par rôle : un `*appCan` à base de rôles ne pouvait que deviner).
+   */
+  private readonly _permissions = signal<ReadonlySet<string>>(this.readStoredPermissions());
+  readonly permissions = this._permissions.asReadonly();
 
   /** POST /api/auth/login → stocke token + utilisateur, renvoie la réponse. */
   login(credentials: LoginRequest): Observable<LoginResponse> {
@@ -120,6 +130,8 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EXPIRATION_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(PERMISSIONS_KEY);
+    this._permissions.set(new Set());
     this.setUser(null);
   }
 
@@ -150,11 +162,38 @@ export class AuthService {
     return r !== null && roles.includes(r);
   }
 
+  hasPermission(code: string): boolean {
+    return this._permissions().has(code);
+  }
+
+  hasAnyPermission(codes: readonly string[]): boolean {
+    const p = this._permissions();
+    return codes.some((c) => p.has(c));
+  }
+
+  /**
+   * GET /api/auth/permissions/moi — auto-service, n'importe quel utilisateur
+   * authentifié. Appelée une fois après connexion ; échec silencieux (les
+   * directives *appHasPermission se refermeraient sur un jeu vide, confort
+   * d'affichage seulement, le serveur reste la seule vraie garde — §6.7).
+   */
+  private loadPermissions(): void {
+    this.api.get<ApiResponse<string[]>>('auth/permissions/moi').subscribe({
+      next: (res) => {
+        const codes = res.donnees ?? [];
+        localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(codes));
+        this._permissions.set(new Set(codes));
+      },
+      error: () => { /* confort d'affichage seulement — le serveur reste la vraie garde */ },
+    });
+  }
+
   private persistSession(data: LoginResponse): void {
     localStorage.setItem(TOKEN_KEY, data.token);
     localStorage.setItem(EXPIRATION_KEY, (Date.now() + data.expirationMs).toString());
     localStorage.setItem(USER_KEY, JSON.stringify(this.toSessionUser(data)));
     this.setUser(this.toSessionUser(data));
+    this.loadPermissions();
   }
 
   /**
@@ -198,6 +237,16 @@ export class AuthService {
       return JSON.parse(raw) as SessionUser;
     } catch {
       return null;
+    }
+  }
+
+  private readStoredPermissions(): ReadonlySet<string> {
+    const raw = localStorage.getItem(PERMISSIONS_KEY);
+    if (!raw) return new Set();
+    try {
+      return new Set(JSON.parse(raw) as string[]);
+    } catch {
+      return new Set();
     }
   }
 }

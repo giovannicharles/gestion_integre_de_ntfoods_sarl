@@ -68,7 +68,7 @@
               <td>{{ lot.dateProduction | date:'dd/MM/yyyy' }}</td>
               <td>{{ lot.dlc | date:'dd/MM/yyyy' }}</td>
               <td>{{ lot.matriculeChefProduction }}</td>
-              <td *appCan="['DIRECTEUR_GENERAL', 'GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN']">
+              <td *appHasPermission="'PRODUCTION_LOT_VALIDER_STOCK'">
                 <button class="btn btn-primary btn-sm" (click)="validerLot(lot)">
                   <i class="fa-solid fa-check"></i> Valider
                 </button>

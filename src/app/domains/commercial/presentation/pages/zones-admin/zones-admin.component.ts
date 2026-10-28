@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ZoneDeVenteService, ZoneDeVenteBE } from '../../../infrastructure/zone-vente.service';
-import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 /**
  * Administration des zones de vente.
@@ -19,7 +19,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
 @Component({
   selector: 'app-zones-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, CanDirective],
+  imports: [CommonModule, FormsModule, DatePipe, HasPermissionDirective],
   templateUrl: './zones-admin.component.html',
   styleUrls: ['./zones-admin.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

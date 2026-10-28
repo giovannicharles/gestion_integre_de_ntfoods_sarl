@@ -5,7 +5,7 @@ import {
   ProductionService, PPHBE, AffectationBE,
   CODES_POSTE, DUREES_AFFECTATION, CodePosteRef
 } from '../../../../infrastructure/production.service';
-import { CanDirective } from '../../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 interface LigneEdit {
   poste: string;
@@ -17,7 +17,7 @@ interface LigneEdit {
 @Component({
   selector: 'app-rs-planning-journalier',
   standalone: true,
-  imports: [CommonModule, FormsModule, CanDirective],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './rs-planning-journalier.component.html',
   styleUrls: ['./rs-planning-journalier.component.css', '../_shared.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

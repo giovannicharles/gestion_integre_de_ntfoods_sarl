@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } 
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, RegistreProductionBE, LigneRegistreBE, PPHBE, CodePosteRef, CODES_POSTE } from '../../../../infrastructure/production.service';
-import { CanDirective } from '../../../../../../shared/directives/can.directive';
+import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 /**
  * REGISTRE JOURNALIER DES EMPLOYÉS — Responsable de Salle
@@ -17,7 +17,7 @@ import { CanDirective } from '../../../../../../shared/directives/can.directive'
 @Component({
   selector: 'app-rs-registre-journalier',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, CanDirective],
+  imports: [CommonModule, DatePipe, FormsModule, HasPermissionDirective],
   templateUrl: './rs-registre-journalier.component.html',
   styleUrls: ['./rs-registre-journalier.component.css', '../_shared.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
