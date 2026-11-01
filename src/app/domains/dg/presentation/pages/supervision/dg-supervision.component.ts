@@ -4,7 +4,7 @@ import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import {
   DgService, DashboardFinancierDgBE, DashboardProductionDgBE, DashboardStockDgBE, AnomalieBE, IncidentResumeBE,
-  MoisSoldeCaisseBE,
+  MoisSoldeCaisseBE, ControleGestionResumeBE,
 } from '../../../infrastructure/dg.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
@@ -39,6 +39,13 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
   fCFA = fCFA;
   libelleCategorie = (c: string) => LIBELLE_CATEGORIE[c] ?? c;
 
+  /** Résumé par module (2026-11-01, bloc 7 DG_MODULE_SPEC.md), trié par effectif décroissant. */
+  incidentsParModule(inc: IncidentResumeBE): { module: string; count: number }[] {
+    return Object.entries(inc.actifsParModule ?? {})
+      .map(([module, count]) => ({ module, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
   loading = signal(true);
   loadError = signal<string | null>(null);
 
@@ -52,6 +59,8 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
   /** 2026-11-01 — solde de caisse en fin de mois, pas la "trésorerie" composite de /dg/kpis
    * (voir HistoriqueTresorerieService backend pour pourquoi cette distinction est délibérée). */
   historiqueTresorerie = signal<MoisSoldeCaisseBE[]>([]);
+  /** 2026-11-01 — pont vers le module Contrôle (bloc 4 DG_MODULE_SPEC.md, ❌ ABSENT jusqu'ici). */
+  controleGestion = signal<ControleGestionResumeBE | null>(null);
 
   ngOnInit(): void {
     this.charger();
@@ -69,14 +78,16 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
       anomalies: this.dgSvc.getAnomalies(),
       incidentsResume: this.dgSvc.getIncidentsResume(),
       historiqueTresorerie: this.dgSvc.getHistoriqueTresorerie(12),
+      controleGestion: this.dgSvc.getControleGestion(),
     }).subscribe({
-      next: ({ financier, production, stock, anomalies, incidentsResume, historiqueTresorerie }) => {
+      next: ({ financier, production, stock, anomalies, incidentsResume, historiqueTresorerie, controleGestion }) => {
         this.financier.set(financier);
         this.production.set(production);
         this.stock.set(stock);
         this.anomalies.set(anomalies);
         this.incidentsResume.set(incidentsResume);
         this.historiqueTresorerie.set(historiqueTresorerie);
+        this.controleGestion.set(controleGestion);
         this.loading.set(false);
         setTimeout(() => this.buildChart(), 100);
       },

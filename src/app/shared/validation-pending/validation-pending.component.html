@@ -25,8 +25,27 @@
         Aucune demande de validation en attente
       </div>
     } @else {
+      <div class="demandes-toolbar">
+        <div class="filtre-group">
+          <label for="filtreModule">Module</label>
+          <select id="filtreModule" [ngModel]="filtreModule()" (ngModelChange)="filtreModule.set($event)">
+            <option value="TOUS">Tous</option>
+            @for (m of modulesDisponibles(); track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+        <div class="filtre-group">
+          <label for="triDemandes">Trier par</label>
+          <select id="triDemandes" [ngModel]="tri()" (ngModelChange)="tri.set($event)">
+            <option value="urgence">Urgence (expirées d'abord)</option>
+            <option value="ancien">Ancienneté (plus anciennes d'abord)</option>
+          </select>
+        </div>
+        <span class="filtre-count">{{ demandesAffichees().length }} demande(s)</span>
+      </div>
       <div class="demandes-list">
-        @for (demande of demandesEnAttente(); track demande.id) {
+        @for (demande of demandesAffichees(); track demande.id) {
           <div class="demande-card" [class.expiree]="estExpiree(demande.dateLimite)">
             <div class="demande-header">
               <div class="demande-info">
@@ -62,13 +81,13 @@
             </div>
             <div class="progress-label">
               Progression de validation : <strong>{{ demande.poidsAccumule }} / {{ demande.seuilRequis }}</strong>
-              @if (demande.poidsAccumule === 0) { — en attente du premier valideur }
+              @if (demande.poidsAccumule === 0) { (en attente du premier valideur) }
             </div>
 
             @if (demande.validations.length > 0) {
               <div class="validateurs-avatars">
                 @for (v of demande.validations; track v.id) {
-                  <span class="avatar-chip" [title]="(v.validateurNomComplet || 'Validateur') + ' — poids ' + v.poidsApporte">
+                  <span class="avatar-chip" [title]="(v.validateurNomComplet || 'Validateur') + ' (poids ' + v.poidsApporte + ')'">
                     {{ (v.validateurNomComplet || v.validateurMatricule || '?').charAt(0) }}
                   </span>
                 }
@@ -124,9 +143,9 @@
         </div>
         <div class="modal-body">
           <div class="demande-summary">
-            <p><strong>Référence :</strong> {{ selectedDemande()!.entityReference || '—' }}</p>
+            <p><strong>Référence :</strong> {{ selectedDemande()!.entityReference || 'Non renseignée' }}</p>
             <p><strong>Module :</strong> {{ selectedDemande()!.moduleSource }}</p>
-            <p><strong>Motif :</strong> {{ selectedDemande()!.motif || '—' }}</p>
+            <p><strong>Motif :</strong> {{ selectedDemande()!.motif || 'Non renseigné' }}</p>
             <p><strong>Poids accumulé :</strong> {{ selectedDemande()!.poidsAccumule }} / {{ selectedDemande()!.seuilRequis }}</p>
           </div>
 

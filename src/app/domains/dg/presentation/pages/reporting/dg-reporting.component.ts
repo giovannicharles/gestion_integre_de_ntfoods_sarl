@@ -42,6 +42,8 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   exportingClassement = signal(false);
   exportingZones = signal(false);
+  exportingHistorique = signal(false);
+  exportingComparatif = signal(false);
 
   ngOnInit() {
     this.dgSvc.getZones().subscribe({
@@ -148,6 +150,31 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
         this.downloadFile(blob, `performance-zones.${format}`);
       },
       error: () => { this.exportingZones.set(false); this.toast.error('Export des zones impossible'); },
+    });
+  }
+
+  exporterHistorique(format: 'pdf' | 'xlsx'): void {
+    if (this.exportingHistorique()) return;
+    this.exportingHistorique.set(true);
+    this.dgSvc.exporterHistoriqueCa(format).subscribe({
+      next: (blob) => {
+        this.exportingHistorique.set(false);
+        this.downloadFile(blob, `historique-ca-mensuel.${format}`);
+      },
+      error: () => { this.exportingHistorique.set(false); this.toast.error("Export de l'historique impossible"); },
+    });
+  }
+
+  /** Exporte le comparatif actuellement affiché à l'écran (période "MOIS", voir comparatifMois). */
+  exporterComparatif(format: 'pdf' | 'xlsx'): void {
+    if (this.exportingComparatif()) return;
+    this.exportingComparatif.set(true);
+    this.dgSvc.exporterComparatif(format, 'MOIS').subscribe({
+      next: (blob) => {
+        this.exportingComparatif.set(false);
+        this.downloadFile(blob, `comparatif-mois.${format}`);
+      },
+      error: () => { this.exportingComparatif.set(false); this.toast.error('Export du comparatif impossible'); },
     });
   }
 

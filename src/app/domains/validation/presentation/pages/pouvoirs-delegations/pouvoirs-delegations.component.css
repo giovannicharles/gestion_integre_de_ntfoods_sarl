@@ -141,6 +141,18 @@
   font-size: 0.8rem;
 }
 
+/* Vue agrégée « par action » (2026-11-01, bloc 3 DG_MODULE_SPEC.md). */
+.pouvoirs-view-toggle { display: flex; gap: .4rem; }
+.pouvoirs-par-action { display: flex; flex-direction: column; gap: .6rem; margin-top: .75rem; }
+.action-groupe-card { border: 1px solid var(--n-200, #E5E7EB); border-radius: var(--r-md, 8px); padding: .7rem .9rem; }
+.action-groupe-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
+.action-groupe-titre { font-weight: 700; font-size: .88rem; color: var(--text-primary, #1F2937); }
+.action-groupe-poids { font-size: .78rem; color: var(--text-secondary, #6B7280); }
+.action-groupe-validateurs { display: flex; flex-wrap: wrap; gap: .4rem; }
+.validateur-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 999px; background: var(--success-ghost, #E6F2EC); color: var(--primary-green, #1E7A42); font-size: .78rem; }
+.validateur-chip.chip-global { background: var(--n-100, #F0F2F5); color: var(--text-secondary, #6B7280); }
+.validateur-chip i { font-size: .7rem; }
+
 /* Modales (mêmes classes que validation-pending) */
 .modal-overlay {
   position: fixed; inset: 0;

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { extractApiError } from '../../core/http/api-error-parser';
@@ -48,6 +48,37 @@ export class ValidationPendingComponent implements OnInit {
   motifRejet = '';
 
   libelleActionType = libelleActionType;
+
+  /**
+   * Filtre/tri (2026-11-01, demande explicite : ni filtre ni tri n'existaient sur cette liste,
+   * seul confort absent de la Boîte de validation d'après l'audit DG_MODULE_SPEC.md bloc 2).
+   * Purement côté client, sur la liste déjà chargée : aucun nouvel appel réseau.
+   */
+  filtreModule = signal<string>('TOUS');
+  tri = signal<'urgence' | 'ancien'>('urgence');
+
+  modulesDisponibles = computed(() => {
+    const modules = new Set(this.demandesEnAttente().map(d => d.moduleSource));
+    return Array.from(modules).sort();
+  });
+
+  demandesAffichees = computed(() => {
+    const module = this.filtreModule();
+    const liste = this.demandesEnAttente().filter(d => module === 'TOUS' || d.moduleSource === module);
+    const tri = this.tri();
+    return [...liste].sort((a, b) => {
+      if (tri === 'urgence') {
+        const aExpiree = this.estExpiree(a.dateLimite);
+        const bExpiree = this.estExpiree(b.dateLimite);
+        if (aExpiree !== bExpiree) return aExpiree ? -1 : 1;
+        if (!a.dateLimite && !b.dateLimite) return 0;
+        if (!a.dateLimite) return 1;
+        if (!b.dateLimite) return -1;
+        return new Date(a.dateLimite).getTime() - new Date(b.dateLimite).getTime();
+      }
+      return new Date(a.dateCreation).getTime() - new Date(b.dateCreation).getTime();
+    });
+  });
 
   ngOnInit() {
     this.chargerDemandesEnAttente();
@@ -176,6 +207,6 @@ export class ValidationPendingComponent implements OnInit {
   }
 
   formatDate(dateStr: string | null): string {
-    return dateStr ? new Date(dateStr).toLocaleString('fr-FR') : '—';
+    return dateStr ? new Date(dateStr).toLocaleString('fr-FR') : 'Non renseignée';
   }
 }

@@ -54,6 +54,44 @@ export class PouvoirsDelegationsComponent implements OnInit {
   });
 
   pouvoirs = signal<PouvoirValidationDto[]>([]);
+
+  /**
+   * Vue agrégée « qui peut valider quoi, maintenant » (2026-11-01, bloc 3 DG_MODULE_SPEC.md :
+   * seul le tableau plat "Qui a du poids de validation" existait, jamais regroupé par action).
+   * Purement dérivé de `pouvoirs()` déjà chargé, aucun nouvel appel réseau. Un pouvoir sans
+   * `actionType` (poids global) apparaît dans chaque groupe d'action réelle, pas seulement dans
+   * un groupe "Toutes les actions" à part : c'est bien lui qui compte pour le quorum de CETTE
+   * action au moment de la validation (même logique que le moteur d'approbation côté serveur).
+   */
+  pouvoirsParAction = computed(() => {
+    const tousLesPouvoirs = this.pouvoirs();
+    const actionsSpecifiques = new Set(tousLesPouvoirs.map(p => p.actionType).filter((a): a is string => !!a));
+    const pouvoirsGlobaux = tousLesPouvoirs.filter(p => !p.actionType);
+
+    const groupes = Array.from(actionsSpecifiques).map(actionType => {
+      const items = [
+        ...tousLesPouvoirs.filter(p => p.actionType === actionType),
+        ...pouvoirsGlobaux,
+      ].sort((a, b) => b.poids - a.poids);
+      return {
+        actionType,
+        libelle: libelleActionType(actionType),
+        items,
+        poidsTotal: items.reduce((s, p) => s + p.poids, 0),
+      };
+    }).sort((a, b) => a.libelle.localeCompare(b.libelle));
+
+    if (pouvoirsGlobaux.length > 0) {
+      groupes.push({
+        actionType: null as unknown as string,
+        libelle: 'Toutes les actions (pouvoir global)',
+        items: [...pouvoirsGlobaux].sort((a, b) => b.poids - a.poids),
+        poidsTotal: pouvoirsGlobaux.reduce((s, p) => s + p.poids, 0),
+      });
+    }
+    return groupes;
+  });
+  vueParAction = signal(true);
   delegationsRecues = signal<DelegationDto[]>([]);
   delegationsDonnees = signal<DelegationDto[]>([]);
 
@@ -99,6 +137,10 @@ export class PouvoirsDelegationsComponent implements OnInit {
       },
       error: (err) => this.toast.error(extractApiError(err), 'Liste des utilisateurs indisponible'),
     });
+  }
+
+  cible(p: PouvoirValidationDto): string {
+    return p.role || this.nomUtilisateur(p.utilisateurId);
   }
 
   nomUtilisateur(id: number | null): string {

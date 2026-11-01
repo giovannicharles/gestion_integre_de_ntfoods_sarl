@@ -3,12 +3,16 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
-import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE, RapportComparatifBE, ValidationEnAttenteBE } from '../../../infrastructure/dg.service';
+import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE, RapportComparatifBE, ValidationEnAttenteBE, IncidentResumeBE, MoisCaBE, MoisSoldeCaisseBE } from '../../../infrastructure/dg.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
-const PERIODE_API: Record<'today' | 'week' | 'month', string> = { today: 'JOUR', week: 'SEMAINE', month: 'MOIS' };
-const PERIODE_LABEL: Record<'today' | 'week' | 'month', string> = { today: "aujourd'hui", week: 'cette semaine', month: 'ce mois' };
+/** 2026-11-01 : ajout de "quarter" (trimestre calendaire), désormais supporté par le backend
+ *  (`PeriodeComparaison.TRIMESTRE`, `RapportComparatifService`). "Personnalisé" (plage de dates
+ *  arbitraire) nécessiterait un contrat backend différent (l'endpoint compare toujours une période
+ *  standard à sa précédente équivalente, pas une plage libre) : signalé, pas construit ce tour. */
+const PERIODE_API: Record<'today' | 'week' | 'month' | 'quarter', string> = { today: 'JOUR', week: 'SEMAINE', month: 'MOIS', quarter: 'TRIMESTRE' };
+const PERIODE_LABEL: Record<'today' | 'week' | 'month' | 'quarter', string> = { today: "aujourd'hui", week: 'cette semaine', month: 'ce mois', quarter: 'ce trimestre' };
 /** Rafraîchissement automatique des données vivantes (KPI, validations, anomalies) — tableau de bord réactif, pas une photo figée au chargement. */
 const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
 
@@ -25,6 +29,8 @@ Chart.register(...registerables);
 export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('caZoneCanvas') caZoneCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('caMensuelCanvas') caMensuelCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('caSparkCanvas') caSparkCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('tresorerieSparkCanvas') tresorerieSparkCanvas?: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
 
@@ -33,7 +39,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   loadError = signal<string | null>(null);
   /** Échec d'un rafraîchissement périodique (pas bloquant — l'affichage précédent reste). */
   liveError = signal<string | null>(null);
-  selectedPeriod = signal<'today' | 'week' | 'month'>('today');
+  selectedPeriod = signal<'today' | 'week' | 'month' | 'quarter'>('today');
   /** Onglets du bas de page : réduit le défilement (12+ cartes empilées avant) sans rien supprimer.
    *  Affichage par CSS (pas @if) pour ne jamais détruire les <canvas> Chart.js en changeant d'onglet. */
   activeTab = signal<'apercu' | 'commercial' | 'marches' | 'arbitrage'>('apercu');
@@ -46,8 +52,13 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   zones = signal<ZonePerformanceBE[]>([]);
   versementsDuJour = signal<VersementDuJourBE[]>([]);
   comparatif = signal<RapportComparatifBE | null>(null);
-  /** Vue unifiée (précommandes, dotations, BC, réceptions, versements, carburant) — jusqu'ici invisible depuis ce tableau de bord, il fallait déjà savoir aller sur /dg/arbitrage. */
+  /** Vue unifiée (précommandes, dotations, BC, réceptions, versements, carburant), jusqu'ici invisible depuis ce tableau de bord : il fallait déjà savoir aller sur /dg/arbitrage. */
   validationsEnAttente = signal<ValidationEnAttenteBE[]>([]);
+  incidentsResume = signal<IncidentResumeBE | null>(null);
+  /** Mini-graphiques par carte KPI (2026-11-01, dernier point du bloc 1 DG_MODULE_SPEC.md) : réutilise les
+   *  mêmes historiques que `/dg/reporting` et `/dg/supervision`, aucune nouvelle API. */
+  historiqueCa = signal<MoisCaBE[]>([]);
+  historiqueTresorerie = signal<MoisSoldeCaisseBE[]>([]);
   derniereMiseAJour = signal<Date | null>(null);
   private refreshHandle: ReturnType<typeof setInterval> | null = null;
 
@@ -63,6 +74,22 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   });
   versementsEnAttente = computed(() => this.kpis()?.ventesCount ?? 0);
   alertesRouges = computed(() => this.anomalies().length);
+
+  /**
+   * Tendance CA réelle (2026-11-01) : les badges "+22.8%"/"+5.1%"/"+18.4%" des cartes KPI
+   * étaient des chiffres fixes dans le template, jamais calculés, en contradiction directe avec
+   * le principe déjà appliqué ailleurs sur cette page ("donnée indisponible plutôt qu'un chiffre
+   * inventé", `ObtenirKpisDgUseCase.java`). `comparatif()` porte déjà une vraie variation CA
+   * période actuelle vs précédente (`variationPourcent`, calculée côté serveur) : réutilisée ici
+   * plutôt qu'une seconde formule. Aucune donnée équivalente n'existe pour la trésorerie
+   * (TrancheComparatifBE ne porte que du CA) : son badge est retiré, pas remplacé par un chiffre
+   * inventé.
+   */
+  tendanceCA = computed(() => {
+    const c = this.comparatif();
+    if (!c) return null;
+    return { pct: Math.abs(c.variationPourcent), hausse: c.variationPourcent >= 0 };
+  });
 
   margeGlobale = computed(() => this.kpis()?.margeGlobale ?? 0);
   valoStock = computed(() => {
@@ -115,6 +142,44 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return DgDashboardComponent.ICONE_VALIDATION[type]?.[1] ?? 'ig';
   }
 
+  /**
+   * Bandeau d'attention unifié (2026-11-01, demande explicite du porteur : « ce qui demande mon
+   * attention maintenant » en haut du Centre de Commande). Regroupe en un seul endroit des
+   * signaux jusqu'ici dispersés sur 4 écrans différents (validations, incidents, anomalies,
+   * caisse) : chaque entrée reste cliquable vers son écran de détail, triée par urgence
+   * (CRITIQUE/HAUTE d'abord). Purement dérivé des signaux déjà chargés, aucun nouvel appel réseau.
+   */
+  bandeauAttention = computed(() => {
+    const items: { label: string; count: number; route: string; urgence: 'critique' | 'haute' | 'normale'; icone: string }[] = [];
+
+    const nbValidations = this.validationsEnAttente().length;
+    if (nbValidations > 0) {
+      items.push({ label: `${nbValidations} validation${nbValidations > 1 ? 's' : ''} en attente`, count: nbValidations, route: '/dg/arbitrage', urgence: 'normale', icone: 'fa-clipboard-check' });
+    }
+
+    const inc = this.incidentsResume();
+    if (inc && inc.critiquesActifs > 0) {
+      items.push({ label: `${inc.critiquesActifs} incident${inc.critiquesActifs > 1 ? 's' : ''} critique${inc.critiquesActifs > 1 ? 's' : ''}`, count: inc.critiquesActifs, route: '/dg/supervision', urgence: 'critique', icone: 'fa-triangle-exclamation' });
+    }
+
+    const anomCritiques = this.anomalies().filter(a => a.priorite === 'CRITIQUE');
+    if (anomCritiques.length > 0) {
+      items.push({ label: `${anomCritiques.length} anomalie${anomCritiques.length > 1 ? 's' : ''} critique${anomCritiques.length > 1 ? 's' : ''}`, count: anomCritiques.length, route: '/dg/supervision', urgence: 'critique', icone: 'fa-circle-exclamation' });
+    }
+    const anomHautes = this.anomalies().filter(a => a.priorite === 'HAUTE');
+    if (anomHautes.length > 0) {
+      items.push({ label: `${anomHautes.length} seuil${anomHautes.length > 1 ? 's' : ''}/écart${anomHautes.length > 1 ? 's' : ''} à surveiller`, count: anomHautes.length, route: '/dg/supervision', urgence: 'haute', icone: 'fa-bell' });
+    }
+
+    const versementsRouges = this.versementsDuJour().filter(v => v.alerteRouge);
+    if (versementsRouges.length > 0) {
+      items.push({ label: `${versementsRouges.length} écart${versementsRouges.length > 1 ? 's' : ''} de caisse`, count: versementsRouges.length, route: '/dg/supervision', urgence: 'critique', icone: 'fa-cash-register' });
+    }
+
+    const rang = { critique: 0, haute: 1, normale: 2 };
+    return items.sort((a, b) => rang[a.urgence] - rang[b.urgence]);
+  });
+
   ngOnInit() {
     this.chargerDonneesStatiques();
     this.chargerComparatif();
@@ -131,13 +196,18 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       occupation: this.dgSvc.getTauxOccupationMarches(),
       zones: this.dgSvc.getZones(),
       versements: this.dgSvc.getVersementsDuJour(),
+      historiqueCa: this.dgSvc.getHistoriqueCaMensuel(6),
+      historiqueTresorerie: this.dgSvc.getHistoriqueTresorerie(6),
     }).subscribe({
-      next: ({ classement, occupation, zones, versements }) => {
+      next: ({ classement, occupation, zones, versements, historiqueCa, historiqueTresorerie }) => {
         this.commerciaux.set(classement);
         this.occupation.set(occupation);
         this.zones.set(zones);
         this.versementsDuJour.set(versements);
+        this.historiqueCa.set(historiqueCa);
+        this.historiqueTresorerie.set(historiqueTresorerie);
         this.loading.set(false);
+        setTimeout(() => this.buildSparklines(), 0);
       },
       error: e => {
         this.loadError.set(extractApiError(e));
@@ -152,11 +222,13 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       kpis: this.dgSvc.getKpis(),
       anomalies: this.dgSvc.getAnomalies(),
       validations: this.dgSvc.getValidationsEnAttente(),
+      incidents: this.dgSvc.getIncidentsResume(),
     }).subscribe({
-      next: ({ kpis, anomalies, validations }) => {
+      next: ({ kpis, anomalies, validations, incidents }) => {
         this.kpis.set(kpis);
         this.anomalies.set(anomalies);
         this.validationsEnAttente.set(validations);
+        this.incidentsResume.set(incidents);
         this.liveError.set(null);
         this.derniereMiseAJour.set(new Date());
       },
@@ -175,7 +247,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => this.buildCharts(), 700);
   }
 
-  setPeriod(p: 'today' | 'week' | 'month') {
+  setPeriod(p: 'today' | 'week' | 'month' | 'quarter') {
     this.selectedPeriod.set(p);
     this.chargerComparatif();
   }
@@ -240,6 +312,33 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } }
+      }
+    }));
+  }
+
+  /**
+   * Mini-graphiques (sparklines) sur les cartes "CA du Jour" et "Créances Total" : simple ligne
+   * sans axe ni légende, juste la tendance des 6 derniers mois. Alertes Rouges n'a pas d'historique
+   * comparable (compteur instantané, pas une série temporelle) : pas de sparkline inventée.
+   */
+  private buildSparklines() {
+    this.buildSparkline(this.caSparkCanvas, this.historiqueCa().map(m => m.caFCFA), this.tokenColor('--color-primary'));
+    this.buildSparkline(this.tresorerieSparkCanvas, this.historiqueTresorerie().map(m => m.soldeFCFA ?? null), this.tokenColor('--color-accent'));
+  }
+
+  private buildSparkline(canvasRef: ElementRef<HTMLCanvasElement> | undefined, data: (number | null)[], couleur: string) {
+    if (!canvasRef?.nativeElement || data.length === 0) return;
+    const existing = this.charts.find(c => c.canvas === canvasRef.nativeElement);
+    if (existing) { existing.destroy(); this.charts = this.charts.filter(c => c !== existing); }
+    const ctx = canvasRef.nativeElement.getContext('2d')!;
+    this.charts.push(new Chart(ctx, {
+      type: 'line',
+      data: { labels: data.map((_, i) => String(i)), datasets: [{ data, borderColor: couleur, borderWidth: 2, pointRadius: 0, tension: .35, spanGaps: true }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        elements: { line: { fill: false } },
       }
     }));
   }

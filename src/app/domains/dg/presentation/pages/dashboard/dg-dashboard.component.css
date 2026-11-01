@@ -41,6 +41,25 @@
 .comparatif-variation.var-up { background: var(--s-gh); color: var(--s); }
 .comparatif-variation.var-down { background: var(--r-gh); color: var(--r); }
 
+/* Cartes KPI cliquables vers leur écran de détail (2026-11-01, bloc 1 DG_MODULE_SPEC.md). */
+.kpi-card-link { cursor: pointer; }
+
+/* Mini-graphique (sparkline) en bas de carte KPI, décoratif, derrière le contenu (2026-11-01). */
+.kpi-sparkline { position: absolute; left: 0; right: 0; bottom: 0; height: 34px; width: 100%; opacity: .35; pointer-events: none; }
+
+/* Bandeau d'attention unifié (2026-11-01) : validations/incidents/anomalies/caisse regroupés
+   en un seul endroit, en haut du Centre de Commande, trié par urgence. Chaque puce reste
+   cliquable vers son écran de détail. */
+.attention-band { display: flex; flex-direction: column; gap: .55rem; padding: .85rem 1rem; border-radius: var(--r-md); background: var(--n50); border: 1px solid var(--n200); margin-bottom: var(--sp-4); }
+.attention-band-title { font-size: .78rem; font-weight: 700; color: var(--n600); text-transform: uppercase; letter-spacing: .03em; display: flex; align-items: center; gap: .4rem; }
+.attention-band-title i { color: var(--y); }
+.attention-band-items { display: flex; flex-wrap: wrap; gap: .5rem; }
+.attention-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .8rem; border-radius: var(--r-full); font-size: .82rem; font-weight: 600; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+.attention-chip:hover { transform: translateY(-1px); box-shadow: var(--sh-sm); }
+.attention-chip.ac-critique { background: var(--r-gh); color: var(--r); }
+.attention-chip.ac-haute { background: var(--y-gh); color: var(--y-d); }
+.attention-chip.ac-normale { background: var(--s-gh); color: var(--s); }
+
 .validations-card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
 .validations-card.validations-urgent { background: var(--r-gh); }
 .validations-list { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .85rem; }

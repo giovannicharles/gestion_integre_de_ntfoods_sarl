@@ -71,6 +71,8 @@ export interface IncidentResumeBE {
   enCours: number;
   critiquesActifs: number;
   resolus: number;
+  /** Incidents actifs (OUVERT+EN_COURS) groupés par module ; "NON_RENSEIGNE" si non renseigné sur l'incident. */
+  actifsParModule: Record<string, number>;
 }
 
 /** GET /dg/concentration-clients (2026-11-01). */
@@ -95,6 +97,23 @@ export interface MoisSoldeCaisseBE {
   mois: string;
   libelleCourt: string;
   soldeFCFA: number | null;
+}
+
+/** GET /dg/controle-gestion (2026-11-01) — pont vers le module Contrôle (budget/marges/variances). */
+export interface TopMargeBE {
+  code: string;
+  designation: string;
+  margePct: number;
+  margeTotaleFCFA: number;
+}
+export interface ControleGestionResumeBE {
+  budgetTotalFCFA: number;
+  budgetEngageFCFA: number;
+  budgetsDepasses: number;
+  nombrePostesBudget: number;
+  margeMoyennePct: number;
+  topMarges: TopMargeBE[];
+  nombreVariances: number;
 }
 
 /**
@@ -140,6 +159,9 @@ export interface AnomalieBE {
   reference: string;
   description: string;
   matriculeConcerne?: string;
+  /** 2026-11-01 — CRITIQUE/HAUTE/MOYENNE/BASSE. Inclut maintenant péremptions imminentes et
+   * seuils franchis (tampon/central), en plus des écarts déjà remontés. */
+  priorite?: string;
 }
 
 export interface VersementDuJourBE {
@@ -302,7 +324,7 @@ export class DgService {
 
   getIncidentsResume(): Observable<IncidentResumeBE> {
     return this.api.get<ApiResponse<IncidentResumeBE>>('dg/incidents-resume')
-      .pipe(map(r => r.donnees ?? { actifs: 0, enCours: 0, critiquesActifs: 0, resolus: 0 }));
+      .pipe(map(r => r.donnees ?? { actifs: 0, enCours: 0, critiquesActifs: 0, resolus: 0, actifsParModule: {} }));
   }
 
   getConcentrationClients(top: number = 10): Observable<ConcentrationClientsBE> {
@@ -313,6 +335,11 @@ export class DgService {
   getHistoriqueTresorerie(mois: number = 12): Observable<MoisSoldeCaisseBE[]> {
     return this.api.get<ApiResponse<MoisSoldeCaisseBE[]>>('dg/historique-tresorerie', { mois: String(mois) })
       .pipe(map(r => r.donnees ?? []));
+  }
+
+  getControleGestion(): Observable<ControleGestionResumeBE> {
+    return this.api.get<ApiResponse<ControleGestionResumeBE>>('dg/controle-gestion')
+      .pipe(map(r => r.donnees ?? { budgetTotalFCFA: 0, budgetEngageFCFA: 0, budgetsDepasses: 0, nombrePostesBudget: 0, margeMoyennePct: 0, topMarges: [], nombreVariances: 0 }));
   }
 
   getAudit(filtres: FiltresAuditDg): Observable<JournalAuditBE[]> {
@@ -391,5 +418,16 @@ export class DgService {
 
   exporterZones(format: 'pdf' | 'xlsx'): Observable<Blob> {
     return this.api.download('dg/rapports/zones', { format });
+  }
+
+  /** Export de l'historique mensuel du CA / du comparatif de période (2026-11-01, bloc 9 DG_MODULE_SPEC.md). */
+  exporterHistoriqueCa(format: 'pdf' | 'xlsx', mois: number = 12): Observable<Blob> {
+    return this.api.download('dg/rapports/historique-ca', { format, mois: String(mois) });
+  }
+
+  exporterComparatif(format: 'pdf' | 'xlsx', periode: string, date?: string): Observable<Blob> {
+    const params: Record<string, string> = { format, periode };
+    if (date) params['date'] = date;
+    return this.api.download('dg/rapports/comparatif', params);
   }
 }

@@ -490,6 +490,20 @@
   color: var(--g);
   border-color: var(--g-pale);
 }
+/* Déclencheur visible de la palette de commandes Ctrl+K (2026-11-01, bloc 12 DG_MODULE_SPEC.md) :
+   le raccourci clavier seul n'est pas découvrable sans ce bouton. */
+.tb-cmdk-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--n50); border: 1px solid var(--n200); color: var(--n500);
+  height: 38px; padding: 0 10px; border-radius: var(--r-md);
+  cursor: pointer; font-size: 13px; transition: all .15s;
+}
+.tb-cmdk-btn:hover { background: var(--g-gh); color: var(--g); border-color: var(--g-pale); }
+.tb-cmdk-btn kbd {
+  font-family: inherit; font-size: 10px; font-weight: 700; color: var(--n500);
+  background: var(--w); border: 1px solid var(--n200); border-radius: 4px; padding: 1px 5px;
+}
+@media (max-width: 1100px) { .tb-cmdk-btn { display: none; } }
 .tb-badge {
   position: absolute;
   top: -4px;

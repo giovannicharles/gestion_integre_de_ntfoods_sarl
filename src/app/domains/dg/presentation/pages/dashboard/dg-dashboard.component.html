@@ -14,6 +14,7 @@
         <button class="period-btn" [class.active]="selectedPeriod()==='today'" (click)="setPeriod('today')">Aujourd'hui</button>
         <button class="period-btn" [class.active]="selectedPeriod()==='week'" (click)="setPeriod('week')">Cette semaine</button>
         <button class="period-btn" [class.active]="selectedPeriod()==='month'" (click)="setPeriod('month')">Ce mois</button>
+        <button class="period-btn" [class.active]="selectedPeriod()==='quarter'" (click)="setPeriod('quarter')">Ce trimestre</button>
       </div>
       <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()" title="Rafraîchir maintenant">
         <i class="fa-solid fa-rotate"></i>
@@ -44,10 +45,25 @@
     <button class="btn btn-outline btn-sm" (click)="chargerDonneesStatiques()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
   </div>
   } @else {
+
+  @if (bandeauAttention().length > 0) {
+  <div class="attention-band">
+    <div class="attention-band-title"><i class="fa-solid fa-bolt"></i> Ce qui demande votre attention</div>
+    <div class="attention-band-items">
+      @for (item of bandeauAttention(); track item.label) {
+      <a [routerLink]="item.route" class="attention-chip" [class.ac-critique]="item.urgence==='critique'" [class.ac-haute]="item.urgence==='haute'" [class.ac-normale]="item.urgence==='normale'">
+        <i class="fa-solid {{ item.icone }}"></i>
+        <span>{{ item.label }}</span>
+      </a>
+      }
+    </div>
+  </div>
+  }
+
   <!-- KPI GRID -->
   <div class="kpi-grid">
 
-    <div class="kpi-card kp-g">
+    <div class="kpi-card kp-g kpi-card-link" routerLink="/dg/reporting" title="Voir le reporting détaillé">
       <div class="kpi-decor"></div>
       <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
       <div class="kpi-body">
@@ -55,10 +71,15 @@
         <span class="kpi-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span>
         <div class="kpi-meta"><i class="fa-solid fa-calendar"></i> CA Mois N-1: {{ fCFA(kpis()?.caMoisN1 ?? 0) }}</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+22.8%</div>
+      @if (tendanceCA(); as t) {
+      <div class="kpi-trend" [class.kpt-up]="t.hausse" [class.kpt-down]="!t.hausse">
+        <i class="fa-solid" [class.fa-arrow-trend-up]="t.hausse" [class.fa-arrow-trend-down]="!t.hausse"></i>{{ t.hausse ? '+' : '-' }}{{ t.pct | number:'1.1-1' }}%
+      </div>
+      }
+      <canvas #caSparkCanvas class="kpi-sparkline"></canvas>
     </div>
 
-    <div class="kpi-card kp-y">
+    <div class="kpi-card kp-y kpi-card-link" routerLink="/dg/supervision" title="Voir le détail financier">
       <div class="kpi-decor kd-y"></div>
       <div class="kpi-ico iy"><i class="fa-solid fa-hand-holding-dollar"></i></div>
       <div class="kpi-body">
@@ -66,10 +87,10 @@
         <span class="kpi-val">{{ fCFA(kpis()?.tresorerie ?? 0) }}</span>
         <div class="kpi-meta"><i class="fa-solid fa-percent"></i> Taux recouvrement {{ tauxRecouvrement() }}%</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+5.1%</div>
+      <canvas #tresorerieSparkCanvas class="kpi-sparkline"></canvas>
     </div>
 
-    <div class="kpi-card kp-r">
+    <div class="kpi-card kp-r kpi-card-link" routerLink="/dg/supervision" title="Voir les anomalies et incidents">
       <div class="kpi-decor kd-r"></div>
       <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <div class="kpi-body">
@@ -79,7 +100,7 @@
       </div>
     </div>
 
-    <div class="kpi-card kp-b">
+    <div class="kpi-card kp-b kpi-card-link" routerLink="/dg/reporting" title="Voir le reporting détaillé">
       <div class="kpi-decor kd-b"></div>
       <div class="kpi-ico ib"><i class="fa-solid fa-calendar-check"></i></div>
       <div class="kpi-body">
@@ -87,7 +108,11 @@
         <span class="kpi-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span>
         <div class="kpi-meta"><i class="fa-solid fa-users"></i> {{ kpis()?.commerciauxActifs ?? 0 }} commerciaux actifs</div>
       </div>
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-arrow-trend-up"></i>+18.4%</div>
+      @if (tendanceCA(); as t) {
+      <div class="kpi-trend" [class.kpt-up]="t.hausse" [class.kpt-down]="!t.hausse">
+        <i class="fa-solid" [class.fa-arrow-trend-up]="t.hausse" [class.fa-arrow-trend-down]="!t.hausse"></i>{{ t.hausse ? '+' : '-' }}{{ t.pct | number:'1.1-1' }}%
+      </div>
+      }
     </div>
 
   </div><!-- /kpi-grid -->

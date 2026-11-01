@@ -84,12 +84,40 @@
     <div class="card">
       <div class="card-header">
         <h3>Qui a du poids de validation</h3>
+        <div class="pouvoirs-view-toggle">
+          <button class="btn btn-sm" [class.btn-primary]="vueParAction()" [class.btn-secondary]="!vueParAction()" (click)="vueParAction.set(true)">
+            <i class="fa-solid fa-layer-group"></i> Par action
+          </button>
+          <button class="btn btn-sm" [class.btn-primary]="!vueParAction()" [class.btn-secondary]="vueParAction()" (click)="vueParAction.set(false)">
+            <i class="fa-solid fa-list"></i> Liste
+          </button>
+        </div>
         <button class="btn btn-primary btn-sm" (click)="ouvrirNouveauPouvoir()">
           <i class="fa-solid fa-plus"></i> Attribuer un pouvoir
         </button>
       </div>
       @if (pouvoirs().length === 0) {
         <p class="empty-inline">Aucun pouvoir actif.</p>
+      } @else if (vueParAction()) {
+        <p class="hint">Pour chaque action, qui peut valider maintenant et avec quel poids. Un pouvoir « global » (sans action spécifique) compte pour toutes les actions, il apparaît donc dans chaque groupe.</p>
+        <div class="pouvoirs-par-action">
+          @for (g of pouvoirsParAction(); track g.actionType ?? 'GLOBAL') {
+          <div class="action-groupe-card">
+            <div class="action-groupe-hd">
+              <span class="action-groupe-titre">{{ g.libelle }}</span>
+              <span class="action-groupe-poids">Poids cumulé : {{ g.poidsTotal }}</span>
+            </div>
+            <div class="action-groupe-validateurs">
+              @for (p of g.items; track p.id) {
+              <span class="validateur-chip" [class.chip-global]="!p.actionType">
+                {{ cible(p) }} <strong>{{ p.poids }}</strong>
+                @if (!p.actionType) { <i class="fa-solid fa-globe" title="Pouvoir global"></i> }
+              </span>
+              }
+            </div>
+          </div>
+          }
+        </div>
       } @else {
         <div class="tbl-wrap">
         <table class="pouvoirs-table">
@@ -99,7 +127,7 @@
           <tbody>
             @for (p of pouvoirs(); track p.id) {
               <tr>
-                <td>{{ p.role || nomUtilisateur(p.utilisateurId) }}</td>
+                <td>{{ cible(p) }}</td>
                 <td>{{ p.actionType ? libelleActionType(p.actionType) : 'Toutes les actions' }}</td>
                 <td><span class="badge-poids">{{ p.poids }}</span></td>
                 <td>{{ formatDate(p.dateAttribution) }}</td>

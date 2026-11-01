@@ -27,6 +27,24 @@
           @if (exportingZones()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-excel"></i> } Excel
         </button>
       </div>
+      <div class="export-group" title="Historique mensuel du CA">
+        <span class="export-group-lbl">Mensuel</span>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingHistorique()" (click)="exporterHistorique('pdf')">
+          @if (exportingHistorique()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-pdf"></i> } PDF
+        </button>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingHistorique()" (click)="exporterHistorique('xlsx')">
+          @if (exportingHistorique()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-excel"></i> } Excel
+        </button>
+      </div>
+      <div class="export-group" title="Comparatif du mois en cours vs mois précédent">
+        <span class="export-group-lbl">Comparatif</span>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingComparatif()" (click)="exporterComparatif('pdf')">
+          @if (exportingComparatif()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-pdf"></i> } PDF
+        </button>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingComparatif()" (click)="exporterComparatif('xlsx')">
+          @if (exportingComparatif()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-excel"></i> } Excel
+        </button>
+      </div>
     </div>
   </div>
 

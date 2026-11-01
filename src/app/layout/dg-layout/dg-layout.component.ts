@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -15,6 +15,7 @@ import { NotificationCenterComponent } from '../../shared/notification-center/no
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -23,7 +24,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-dg-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent],
   templateUrl: './dg-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -42,6 +43,8 @@ export class DgLayoutComponent implements OnInit {
   currentPageTitle = signal('Tableau de Bord DG');
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
+  /** 2026-11-01 : remplace un badge "2" fixe dans le template (jamais une vraie donnée). */
+  decaissementsEnAttente = signal(0);
 
   currentUser = computed(() => this.authService.getCurrentUser());
   userInitials = computed(() => {
@@ -145,6 +148,13 @@ export class DgLayoutComponent implements OnInit {
     ...this.navItems,
     ...this.navGroups.flatMap(g => g.children),
   ]);
+  /** Palette de commandes Ctrl+K (2026-11-01, bloc 12 DG_MODULE_SPEC.md) : mêmes items, avec le
+   *  groupe d'appartenance affiché (utile sur une liste plus longue qu'un simple dropdown). */
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() => [
+    ...this.navItems.map(i => ({ ...i })),
+    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+  ]);
 
   expandedGroup = signal<string | null>('Intelligence IA');
   showNotifPanel = signal(false);
@@ -164,11 +174,11 @@ export class DgLayoutComponent implements OnInit {
       error: () => {},
     });
     this.cptSvc.getDecaissements().subscribe({
-      next: d => this.setBadge(
-        '/dg/decaissements',
-        d.filter(x => x.statut === 'PROPOSE' || x.statut === 'VALIDEE_CG').length,
-        'bd-red'
-      ),
+      next: d => {
+        const n = d.filter(x => x.statut === 'PROPOSE' || x.statut === 'VALIDEE_CG').length;
+        this.setBadge('/dg/decaissements', n, 'bd-red');
+        this.decaissementsEnAttente.set(n);
+      },
       error: () => {},
     });
   }

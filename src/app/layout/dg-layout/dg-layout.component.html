@@ -97,6 +97,10 @@
       </div>
       <div class="tb-right">
         <app-header-search [items]="tousLesItems()"></app-header-search>
+        <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
+          <i class="fa-solid fa-bolt"></i>
+          <kbd>Ctrl</kbd><kbd>K</kbd>
+        </button>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
@@ -169,10 +173,11 @@
         </button>
         <button class="tb-icon-btn" routerLink="/dg/decaissements" title="Décaissements en attente">
           <i class="fa-solid fa-money-bill-transfer"></i>
-          <span class="tb-badge tb-badge-red">2</span>
+          @if (decaissementsEnAttente() > 0) { <span class="tb-badge tb-badge-red">{{ decaissementsEnAttente() }}</span> }
         </button>
         <!-- Signalement d'incident : le DG signale comme tout le monde, il ne gère plus le tableau (admin seul). -->
         <app-signaler-incident></app-signaler-incident>
+        <app-command-palette #commandPalette [items]="commandItems()"></app-command-palette>
         <div class="tb-divider"></div>
         <button class="tb-icon-btn" routerLink="/dg/chat" title="Assistant IA" style="color:#1A6B2A">
           <i class="fa-solid fa-robot"></i>

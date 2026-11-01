@@ -33,6 +33,20 @@
   padding: 1.5rem;
 }
 
+.demandes-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--n200, #E5E7EB);
+}
+.filtre-group { display: flex; flex-direction: column; gap: .3rem; }
+.filtre-group label { font-size: .72rem; font-weight: 700; color: var(--text-secondary, #6B7280); text-transform: uppercase; letter-spacing: .03em; }
+.filtre-group select { padding: .45rem .7rem; border-radius: var(--r-md, 8px); border: 1px solid var(--n200, #E5E7EB); font-size: .85rem; background: white; }
+.filtre-count { margin-left: auto; font-size: .82rem; color: var(--text-secondary, #6B7280); font-weight: 600; }
+
 .loading,
 .error,
 .empty {
