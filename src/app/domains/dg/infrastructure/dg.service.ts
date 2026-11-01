@@ -35,6 +35,14 @@ export interface TrancheComparatifBE {
   nombreVentes: number;
 }
 
+/** Un mois de l'historique de CA — GET /dg/historique-ca-mensuel (2026-11-01). */
+export interface MoisCaBE {
+  mois: string;
+  libelleCourt: string;
+  caFCFA: number;
+  nbVentes: number;
+}
+
 export interface RapportComparatifBE {
   periode: string;
   actuelle: TrancheComparatifBE;
@@ -55,6 +63,68 @@ export interface ZonePerformanceBE {
   caMoisCourantFCFA: number;
   nombreClients: number;
   nombreVentesMoisCourant: number;
+}
+
+/** GET /dg/incidents-resume (2026-11-01) — compteurs seuls, jamais le détail d'un incident. */
+export interface IncidentResumeBE {
+  actifs: number;
+  enCours: number;
+  critiquesActifs: number;
+  resolus: number;
+}
+
+/** GET /dg/concentration-clients (2026-11-01). */
+export interface ClientCaBE {
+  codeClient: string;
+  nomClient: string;
+  localite: string | null;
+  caFCFA: number;
+  nbVentes: number;
+  pourcentDuTotal: number;
+}
+export interface ConcentrationClientsBE {
+  topClients: ClientCaBE[];
+  pourcentTop5: number;
+  pourcentTop10: number;
+  caTotalFCFA: number;
+  nombreClientsActifs: number;
+}
+
+/** GET /dg/historique-tresorerie (2026-11-01) — solde de caisse, pas la trésorerie composite. */
+export interface MoisSoldeCaisseBE {
+  mois: string;
+  libelleCourt: string;
+  soldeFCFA: number | null;
+}
+
+/**
+ * GET /dg/audit (2026-11-01) — écran DG dédié, remplace l'alias vers admin-audit retiré le même
+ * jour (le DG voit tout en lecture seule, l'écran de GESTION de l'audit reste côté Admin).
+ */
+export interface JournalAuditBE {
+  id: number;
+  matricule: string;
+  role: string;
+  typeAction: string;
+  module: string;
+  ressource: string;
+  referenceEntite: string | null;
+  methodeHttp: string;
+  endpoint: string;
+  details: string | null;
+  succes: boolean;
+  messageErreur: string | null;
+  adresseIp: string;
+  dureeMs: number;
+  horodatage: string;
+}
+export interface FiltresAuditDg {
+  matricule?: string;
+  debut?: string;
+  fin?: string;
+  module?: string;
+  typeAction?: string;
+  limite?: number;
 }
 
 export interface ValidationEnAttenteBE {
@@ -225,6 +295,38 @@ export class DgService {
       .pipe(map(r => r.donnees!));
   }
 
+  getHistoriqueCaMensuel(mois: number = 12): Observable<MoisCaBE[]> {
+    return this.api.get<ApiResponse<MoisCaBE[]>>('dg/historique-ca-mensuel', { mois: String(mois) })
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  getIncidentsResume(): Observable<IncidentResumeBE> {
+    return this.api.get<ApiResponse<IncidentResumeBE>>('dg/incidents-resume')
+      .pipe(map(r => r.donnees ?? { actifs: 0, enCours: 0, critiquesActifs: 0, resolus: 0 }));
+  }
+
+  getConcentrationClients(top: number = 10): Observable<ConcentrationClientsBE> {
+    return this.api.get<ApiResponse<ConcentrationClientsBE>>('dg/concentration-clients', { top: String(top) })
+      .pipe(map(r => r.donnees ?? { topClients: [], pourcentTop5: 0, pourcentTop10: 0, caTotalFCFA: 0, nombreClientsActifs: 0 }));
+  }
+
+  getHistoriqueTresorerie(mois: number = 12): Observable<MoisSoldeCaisseBE[]> {
+    return this.api.get<ApiResponse<MoisSoldeCaisseBE[]>>('dg/historique-tresorerie', { mois: String(mois) })
+      .pipe(map(r => r.donnees ?? []));
+  }
+
+  getAudit(filtres: FiltresAuditDg): Observable<JournalAuditBE[]> {
+    const params: Record<string, string> = {};
+    if (filtres.matricule) params['matricule'] = filtres.matricule;
+    if (filtres.debut) params['debut'] = filtres.debut;
+    if (filtres.fin) params['fin'] = filtres.fin;
+    if (filtres.module) params['module'] = filtres.module;
+    if (filtres.typeAction) params['typeAction'] = filtres.typeAction;
+    params['limite'] = String(filtres.limite ?? 200);
+    return this.api.get<ApiResponse<JournalAuditBE[]>>('dg/audit', params)
+      .pipe(map(r => r.donnees ?? []));
+  }
+
   getTauxOccupationMarches(): Observable<TauxOccupationSecteurBE[]> {
     return this.api.get<ApiResponse<TauxOccupationSecteurBE[]>>('dg/taux-occupation-marches')
       .pipe(map(r => r.donnees ?? []));
@@ -276,5 +378,18 @@ export class DgService {
   getAiContext(): Observable<Record<string, unknown>> {
     return this.api.get<ApiResponse<Record<string, unknown>>>('dg/ai-context')
       .pipe(map(r => r.donnees ?? {}));
+  }
+
+  /**
+   * Export du classement commercial / de la performance par zone (2026-11-01) — les boutons
+   * « Exporter PDF »/« Exporter Excel » de /dg/reporting n'appelaient rien jusqu'ici.
+   * `format` : pdf | xlsx | csv | json (voir `FormatRapport` backend).
+   */
+  exporterClassement(format: 'pdf' | 'xlsx'): Observable<Blob> {
+    return this.api.download('dg/rapports/classement', { format });
+  }
+
+  exporterZones(format: 'pdf' | 'xlsx'): Observable<Blob> {
+    return this.api.download('dg/rapports/zones', { format });
   }
 }

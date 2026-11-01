@@ -43,6 +43,11 @@ export const ADMIN_ROUTES: Routes = [
         // utilisateur) existait déjà entièrement côté serveur sans aucun écran.
         path: 'permissions',
         loadComponent: () => import('./pages/permissions/admin-permissions.component').then(m => m.AdminPermissionsComponent)
+      },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      {
+        path: 'profil',
+        loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent)
       }
     ]
   }

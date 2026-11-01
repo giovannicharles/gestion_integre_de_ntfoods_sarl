@@ -93,3 +93,36 @@ export interface OtpVerifyRequest {
   otpRef: number;
   codeOtp: string;
 }
+
+/**
+ * Réponse de GET /api/auth/me (aligné sur ProfilResponse backend) — même forme pour
+ * n'importe quel rôle, utilisée par l'écran « Mon Profil » commun à tous les layouts.
+ */
+export interface ProfilBE {
+  matricule: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  role: UserRole;
+  actif: boolean;
+  telephone?: string;
+  residence?: string;
+  cni?: string;
+  photo?: string;
+  dateNaissance?: string;
+  lieuNaissance?: string;
+  dateEmbauche?: string;
+  sexe?: string;
+  dateCreation: string;
+}
+
+/** Corps attendu par PUT /api/auth/profil (aligné sur ModifierProfilRequest backend). */
+export interface ModifierProfilRequest {
+  telephone?: string;
+  residence?: string;
+  cni?: string;
+  photo?: string;
+  dateNaissance?: string;
+  lieuNaissance?: string;
+  sexe?: string;
+}

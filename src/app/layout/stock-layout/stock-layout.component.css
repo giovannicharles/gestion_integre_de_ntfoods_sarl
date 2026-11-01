@@ -112,11 +112,20 @@
   flex-shrink: 0;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.08);
+  /* Carte cliquable vers « Mon Profil » (2026-11-01) — neutralise les styles de lien natifs. */
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sb-user:hover {
+  background: rgba(0, 0, 0, 0.16);
 }
 .sb-av {
   width: 38px;
   height: 38px;
-  border-radius: 50%;
+  /* 2026-11-01 (copie du langage visuel des références 21st.dev, prompt/) : carré arrondi
+     façon "workspace switcher", plutôt que le cercle — seule la couleur reste TANTY. */
+  border-radius: 9px;
   background: var(--y);
   color: var(--g);
   font-weight: 900;
@@ -214,7 +223,9 @@
   align-items: center;
   gap: 10px;
   padding: 9px 10px;
-  border-radius: var(--r-md);
+  /* 2026-11-01 (copie des références 21st.dev) : rayon plus serré que --r-md (12px) —
+     geometrie de liste de nav plus nette, seule la couleur reste TANTY. */
+  border-radius: 8px;
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
   font-weight: 500;
@@ -342,7 +353,22 @@
   justify-content: center;
   padding: 0 10px;
 }
+/* 2026-11-01 (bug réel corrigé, signalé par le porteur — « quand on réduit l'écran les liens ne
+   se voient plus ») : ce bouton masquait AUTREFOIS le seul contrôle capable de rouvrir le
+   sidebar une fois réduit à 70px (en-dessous de 1024px, le composant le réduit automatiquement,
+   voir onResize()) — l'utilisateur restait coincé en mode icônes seules sans bouton visible pour
+   revenir en arrière dans la sidebar elle-même (seul le bouton hamburger de la topbar, redondant
+   et moins visible, fonctionnait encore). Le logo cède maintenant la place au bouton plutôt que
+   l'inverse : le contrôle qui permet de sortir d'un état reste toujours visible DANS cet état. */
+.layout-root.sidebar-collapsed .brand-content {
+  display: none;
+}
 .layout-root.sidebar-collapsed .sb-collapse-btn {
+  display: flex;
+}
+/* Le champ de recherche sidebar n'a pas de sens en rail d'icônes (70px) : les résultats, eux,
+   sont des libellés texte — invisibles dans cet état de toute façon. Caché plutôt que découpé. */
+.layout-root.sidebar-collapsed app-sidebar-search {
   display: none;
 }
 
@@ -379,6 +405,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Filet de sécurité (2026-11-01) : .layout-root est en overflow:hidden (évite le défilement de
+     toute la page) — sans ceci, des boutons qui ne rentrent plus étaient silencieusement
+     DÉCOUPÉS (invisibles, pas juste décalés) plutôt que défilables. Ne se déclenche qu'en
+     dernier recours, après les paliers ci-dessous qui évitent normalement d'en arriver là. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tb-right::-webkit-scrollbar {
+  display: none;
 }
 .tb-menu-btn {
   background: var(--n100);
@@ -598,6 +633,25 @@
   backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease;
 }
+/* 2026-11-01 (bug réel corrigé, signalé par le porteur) : le composant réduit automatiquement
+   la sidebar sous 1024px (onResize(), tous les layouts) mais aucune règle CSS ne correspondait
+   à ce seuil avant celle-ci — seul le palier à 768px existait. Entre les deux (le cas le plus
+   courant : fenêtre de bureau réduite, pas un vrai mobile), la topbar ne cédait aucune place et
+   ses boutons de droite (recherche, date, notifications, thème, signalement d'incident...)
+   finissaient découpés par .layout-root { overflow:hidden } — invisibles, pas seulement serrés. */
+@media (max-width: 1100px) {
+  .tb-date {
+    display: none;
+  }
+  .tb-module-chip {
+    display: none;
+  }
+  .topbar {
+    padding: 0 14px;
+    gap: 8px;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -674,6 +728,19 @@
   gap: 2px;
   padding-left: 22px;
   animation: fadeInDown 0.2s ease;
+  /* 2026-11-01 (copie du motif exact des références 21st.dev, prompt/) : ligne de connexion
+     verticale sous les enfants dépliés — seule la couleur (blanc translucide, pas de teinte
+     neutre) reste cohérente avec le fond vert de la sidebar. */
+  position: relative;
+}
+.sb-group-children::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 6px;
+  left: 11px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.12);
 }
 @keyframes fadeInDown {
   from { opacity: 0; transform: translateY(-6px); }

@@ -10,7 +10,6 @@
  * par défaut ci-dessous — utile si l'API change un jour de nom de service.
  */
 const apiBase = 'https://api-tanty-digital.onrender.com';
-
 export const environment = {
   production: true,
   apiUrl: `${apiBase}/api`,

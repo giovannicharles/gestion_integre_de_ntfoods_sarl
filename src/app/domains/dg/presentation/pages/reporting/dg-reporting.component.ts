@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
-import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE } from '../../../infrastructure/dg.service';
+import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE, MoisCaBE, ConcentrationClientsBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 import { ToastService } from '../../../../../core/services/toast.service';
 
@@ -17,6 +17,7 @@ Chart.register(...registerables);
 export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('radarCanvas') radarCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('historiqueCanvas') historiqueCanvas!: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
   private readonly toast = inject(ToastService);
@@ -29,9 +30,18 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   commerciaux = signal<ClassementCommercialBE[]>([]);
   comparatifMois = signal<RapportComparatifBE | null>(null);
   comparatifAnnee = signal<RapportComparatifBE | null>(null);
+  /** 2026-11-01 (demande explicite du porteur — fonctionnalités utiles à un DG sur toute
+   * l'activité) : historique réel, remplace le bandeau qui admettait son absence. */
+  historiqueCa = signal<MoisCaBE[]>([]);
+  /** 2026-11-01 (demande explicite du porteur) — motif « Top clients + risque de concentration »,
+   * validé par la pratique courante des tableaux de bord de direction. */
+  concentrationClients = signal<ConcentrationClientsBE | null>(null);
 
   fCFA = fCFA;
   Math = Math;
+
+  exportingClassement = signal(false);
+  exportingZones = signal(false);
 
   ngOnInit() {
     this.dgSvc.getZones().subscribe({
@@ -50,6 +60,14 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
       next: r => this.comparatifAnnee.set(r),
       error: () => this.toast.error("Impossible de charger le comparatif de l'année"),
     });
+    this.dgSvc.getHistoriqueCaMensuel(12).subscribe({
+      next: h => { this.historiqueCa.set(h); this.buildCharts(); },
+      error: () => this.toast.error("Impossible de charger l'historique du CA"),
+    });
+    this.dgSvc.getConcentrationClients(10).subscribe({
+      next: c => this.concentrationClients.set(c),
+      error: () => this.toast.error('Impossible de charger la concentration clients'),
+    });
     setTimeout(() => { this.loading.set(false); this.buildCharts(); }, 500);
   }
 
@@ -59,9 +77,24 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.charts.forEach(c => c.destroy());
     this.charts = [];
 
-    // Pas de série mensuelle N vs N-1 : /dg/comparatif ne renvoie qu'une
-    // tranche actuelle/précédente à la fois (mois précédent, pas année
-    // précédente) — aucune donnée réelle pour un historique 12 mois par an.
+    const historique = this.historiqueCa();
+    if (this.historiqueCanvas?.nativeElement && historique.length > 0) {
+      this.charts.push(new Chart(this.historiqueCanvas.nativeElement.getContext('2d')!, {
+        type: 'bar',
+        data: {
+          labels: historique.map(m => m.libelleCourt),
+          datasets: [
+            { label: 'CA mensuel', data: historique.map(m => m.caFCFA), backgroundColor: '#1A6B2A', borderRadius: 6 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } }
+        }
+      }));
+    }
+
     const zones = this.zones();
     if (this.barCanvas?.nativeElement && zones.length > 0) {
       this.charts.push(new Chart(this.barCanvas.nativeElement.getContext('2d')!, {
@@ -91,4 +124,41 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() { this.charts.forEach(c => c.destroy()); }
+
+  // 2026-11-01 : les boutons « Exporter PDF »/« Exporter Excel » n'appelaient rien jusqu'ici
+  // (signalé par le porteur — « je veux que le module DG soit complet et fonctionnel »).
+  exporterClassement(format: 'pdf' | 'xlsx'): void {
+    if (this.exportingClassement()) return;
+    this.exportingClassement.set(true);
+    this.dgSvc.exporterClassement(format).subscribe({
+      next: (blob) => {
+        this.exportingClassement.set(false);
+        this.downloadFile(blob, `classement-commercial.${format}`);
+      },
+      error: () => { this.exportingClassement.set(false); this.toast.error('Export du classement impossible'); },
+    });
+  }
+
+  exporterZones(format: 'pdf' | 'xlsx'): void {
+    if (this.exportingZones()) return;
+    this.exportingZones.set(true);
+    this.dgSvc.exporterZones(format).subscribe({
+      next: (blob) => {
+        this.exportingZones.set(false);
+        this.downloadFile(blob, `performance-zones.${format}`);
+      },
+      error: () => { this.exportingZones.set(false); this.toast.error('Export des zones impossible'); },
+    });
+  }
+
+  private downloadFile(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }
 }

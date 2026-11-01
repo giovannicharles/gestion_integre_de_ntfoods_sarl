@@ -9,8 +9,24 @@
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-pdf"></i> Exporter PDF</button>
-      <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-excel"></i> Exporter Excel</button>
+      <div class="export-group" title="Classement commercial">
+        <span class="export-group-lbl">Classement</span>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingClassement()" (click)="exporterClassement('pdf')">
+          @if (exportingClassement()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-pdf"></i> } PDF
+        </button>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingClassement()" (click)="exporterClassement('xlsx')">
+          @if (exportingClassement()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-excel"></i> } Excel
+        </button>
+      </div>
+      <div class="export-group" title="Performance par zone">
+        <span class="export-group-lbl">Zones</span>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingZones()" (click)="exporterZones('pdf')">
+          @if (exportingZones()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-pdf"></i> } PDF
+        </button>
+        <button class="btn btn-ghost btn-sm" [disabled]="exportingZones()" (click)="exporterZones('xlsx')">
+          @if (exportingZones()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-file-excel"></i> } Excel
+        </button>
+      </div>
     </div>
   </div>
 
@@ -59,9 +75,12 @@
     </div>
   </div>
 
-  <div class="info-banner">
-    <i class="fa-solid fa-circle-info"></i>
-    L'historique mensuel détaillé (CA par mois sur 12 mois glissants, comparé à l'année précédente) n'est pas encore disponible côté API — seule la comparaison à la période précédente immédiate (jour/semaine/mois/année) est fournie ci-dessus.
+  <!-- HISTORIQUE 12 MOIS -->
+  <div class="card chart-card" style="margin-bottom:var(--sp-4)">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution du CA — 12 derniers mois</span>
+    </div>
+    <div class="chart-wrap"><canvas #historiqueCanvas></canvas></div>
   </div>
 
   <!-- CHARTS -->
@@ -79,6 +98,51 @@
       <div class="chart-wrap"><canvas #radarCanvas></canvas></div>
     </div>
   </div>
+
+  <!-- TOP CLIENTS & RISQUE DE CONCENTRATION -->
+  @if (concentrationClients(); as cc) {
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-building-user"></i> Top Clients & Risque de Concentration — mois en cours</span>
+      <div class="concentration-chips">
+        <span class="taux-chip" [class.taux-ok]="cc.pourcentTop5<40" [class.taux-mid]="cc.pourcentTop5>=40 && cc.pourcentTop5<60" [class.taux-warn]="cc.pourcentTop5>=60">
+          Top 5 : {{ Math.round(cc.pourcentTop5) }}% du CA
+        </span>
+        <span class="taux-chip" [class.taux-ok]="cc.pourcentTop10<55" [class.taux-mid]="cc.pourcentTop10>=55 && cc.pourcentTop10<75" [class.taux-warn]="cc.pourcentTop10>=75">
+          Top 10 : {{ Math.round(cc.pourcentTop10) }}% du CA
+        </span>
+      </div>
+    </div>
+    <p class="concentration-note">
+      <i class="fa-solid fa-circle-info"></i>
+      {{ cc.nombreClientsActifs }} client(s) actif(s) ce mois · {{ fCFA(cc.caTotalFCFA) }} de CA total.
+      Un pourcentage élevé signifie une dépendance à peu de clients — risque stratégique en cas de départ ou de retard de paiement.
+    </p>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Client</th><th>Localité</th><th class="text-right">CA</th><th>Ventes</th><th>Part du CA</th></tr></thead>
+        <tbody>
+          @for (c of cc.topClients; track c.codeClient) {
+          <tr>
+            <td class="fw-bold">{{ c.nomClient }}</td>
+            <td class="text-muted">{{ c.localite || '—' }}</td>
+            <td class="mono text-right">{{ fCFA(c.caFCFA) }}</td>
+            <td class="mono">{{ c.nbVentes }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="prog-bar-wrap" style="max-width:110px"><div class="prog-bar" [class.prog-ok]="c.pourcentDuTotal<20" [style.width.%]="c.pourcentDuTotal"></div></div>
+                <span class="mono fw-bold">{{ Math.round(c.pourcentDuTotal) }}%</span>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucune vente ce mois.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
 
   }
 </div>

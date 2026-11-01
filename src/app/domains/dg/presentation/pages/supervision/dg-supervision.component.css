@@ -5,3 +5,10 @@
 .section-titre:first-of-type { margin-top: 8px; }
 .section-titre i { color: var(--g); }
 .row-alert { background: var(--r-gh); }
+
+/* 2026-11-01 — graphique « Solde de caisse », nouveau sur cette page. */
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.chart-card { padding: var(--sp-4); }
+.chart-wrap { height: 260px; position: relative; }

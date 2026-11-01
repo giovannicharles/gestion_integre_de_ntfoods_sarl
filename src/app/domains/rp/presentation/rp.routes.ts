@@ -21,6 +21,8 @@ export const RP_ROUTES: Routes = [
       // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email) — écran
       // partagé (voir shared/commande-client), accessible aux grands comptes qu'elle suit.
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }
 ];

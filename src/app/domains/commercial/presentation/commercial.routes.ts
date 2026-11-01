@@ -14,6 +14,8 @@ export const COMMERCIAL_ROUTES: Routes = [
       { path: 'versements', loadComponent: () => import('./pages/versements/commercial-versements.component').then(m => m.CommercialVersementsComponent) },
       { path: 'classement', loadComponent: () => import('./pages/classement/commercial-classement.component').then(m => m.CommercialClassementComponent) },
       { path: 'fiche-synthese', loadComponent: () => import('./pages/fiche-synthese/fiche-synthese.component').then(m => m.FicheSyntheseComponent) },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }
 ];

@@ -15,13 +15,13 @@
           <i class="fa-solid" [class.fa-chevron-left]="sidebarOpen()" [class.fa-chevron-right]="!sidebarOpen()"></i>
         </button>
       </div>
-      <div class="sb-user">
+      <a class="sb-user" routerLink="/commercial/profil" [title]="!sidebarOpen() ? 'Mon Profil' : ''">
         <div class="sb-av">{{ userInitials() }}<span class="sb-dot"></span></div>
         <div class="sb-user-info">
           <span class="sb-name">{{ userShortName() }}</span>
           <span class="sb-role"><i class="fa-solid fa-briefcase"></i> Commercial</span>
         </div>
-      </div>
+      </a>
       <nav class="sb-nav">
         <app-sidebar-search (queryChange)="sidebarFiltre.set($event)"></app-sidebar-search>
         <span class="sb-section-lbl">MODULE COMMERCIAL</span>

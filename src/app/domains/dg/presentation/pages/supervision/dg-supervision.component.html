@@ -37,6 +37,17 @@
   </div>
   }
 
+  <!-- 2026-11-01 : tendance du solde de caisse, pas la "trésorerie" composite ci-dessus —
+       voir HistoriqueTresorerieService (backend) pour la distinction délibérée. -->
+  @if (historiqueTresorerie().length > 0) {
+  <div class="card chart-card" style="margin-bottom:var(--sp-4)">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Solde de caisse — 12 derniers mois</span>
+    </div>
+    <div class="chart-wrap"><canvas #tresorerieCanvas></canvas></div>
+  </div>
+  }
+
   <div class="section-titre"><i class="fa-solid fa-industry"></i> Production</div>
   @if (production(); as p) {
   <div class="kpi-grid">
@@ -54,6 +65,15 @@
     <div class="kpi-card kp-b"><div class="kpi-ico ib"><i class="fa-solid fa-dolly"></i></div><div class="kpi-body"><span class="kpi-lbl">Tampon</span><span class="kpi-val">{{ s.totalQuantiteTampon }}</span><span class="kpi-meta">{{ s.nbProduitsTampon }} produit(s)</span></div></div>
     <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-truck"></i></div><div class="kpi-body"><span class="kpi-lbl">Mobile (commerciaux)</span><span class="kpi-val">{{ s.totalQuantiteMobile }}</span><span class="kpi-meta">{{ s.nbProduitsMobile }} produit(s)</span></div></div>
     <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-body"><span class="kpi-lbl">Alertes actives</span><span class="kpi-val">{{ s.nbAlertesActives }}</span><span class="kpi-meta">{{ s.nbProduitsSousSeuil }} produit(s) sous seuil</span></div></div>
+  </div>
+  }
+
+  <div class="section-titre"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</div>
+  @if (incidentsResume(); as inc) {
+  <div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-body"><span class="kpi-lbl">Incidents actifs</span><span class="kpi-val">{{ inc.actifs }}</span><span class="kpi-meta">{{ inc.enCours }} en cours de traitement</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-fire"></i></div><div class="kpi-body"><span class="kpi-lbl">Critiques actifs</span><span class="kpi-val" [style.color]="inc.critiquesActifs>0?'var(--r)':''">{{ inc.critiquesActifs }}</span><span class="kpi-meta">Alerte temps réel déjà envoyée à la déclaration</span></div></div>
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-body"><span class="kpi-lbl">Résolus</span><span class="kpi-val">{{ inc.resolus }}</span><span class="kpi-meta">Historique complet — géré par l'Administration</span></div></div>
   </div>
   }
 

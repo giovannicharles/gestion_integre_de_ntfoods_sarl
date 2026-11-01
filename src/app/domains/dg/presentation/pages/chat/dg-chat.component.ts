@@ -19,6 +19,9 @@ export class DgChatComponent implements OnDestroy {
 
   contextData = signal<Record<string, unknown> | null>(null);
   loading = signal(true);
+  /** 2026-11-01 : l'échec était avalé en silence (loading repassait à false sans aucun signal) —
+   * l'assistant s'affichait quand même, mais sans contexte entreprise, sans que le DG le sache. */
+  contextError = signal(false);
 
   quickReplies = [
     { label: 'État du stock', action: 'stock' },
@@ -30,6 +33,12 @@ export class DgChatComponent implements OnDestroy {
   ];
 
   constructor() {
+    this.chargerContexte();
+  }
+
+  chargerContexte(): void {
+    this.loading.set(true);
+    this.contextError.set(false);
     this.dgSvc.getAiContext().pipe(takeUntil(this.destroy$)).subscribe({
       next: (data) => {
         this.contextData.set(data);
@@ -37,17 +46,23 @@ export class DgChatComponent implements OnDestroy {
       },
       error: () => {
         this.loading.set(false);
+        this.contextError.set(true);
       }
     });
   }
 
+  // 2026-11-01 : stock/alertes/production pointaient vers des routes /dg/* inexistantes
+  // (stock-dashboard, alertes, production) — un clic éjectait l'utilisateur de tout le module
+  // DG via la redirection générique de route inconnue. /dg/supervision agrège déjà financier +
+  // production + stock en lecture seule (même destination que le reste du sidebar DG) ;
+  // "alertes" y mène aussi, à la section Stock (nbAlertesActives, anomalies détaillées).
   onQuickReply(action: string): void {
     const navMap: Record<string, string> = {
-      stock: '/dg/stock-dashboard',
-      alertes: '/dg/alertes',
+      stock: '/dg/supervision',
+      alertes: '/dg/supervision',
       commercial: '/dg/classement',
       financier: '/dg/decaissements',
-      production: '/dg/production',
+      production: '/dg/supervision',
       global: '/dg/dashboard'
     };
     const route = navMap[action];

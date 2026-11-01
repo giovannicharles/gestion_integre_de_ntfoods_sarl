@@ -18,6 +18,13 @@ export const DG_ROUTES: Routes = [
       { path: 'securite', loadComponent: () => import('./pages/securite/dg-securite.component').then(m => m.DgSecuriteComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
+      // Journal d'audit — écran DG propre (2026-11-01), GET /dg/audit (filtres matricule/module/
+      // typeAction/période déjà supportés côté backend). Remplace l'alias direct vers
+      // admin-audit.component retiré le même jour en même temps que les 5 autres écrans
+      // d'administration système : contrairement à ceux-là, celui-ci N'EST PAS un doublon admin —
+      // le DG a son propre point d'entrée backend (« le DG voit TOUTES les actions tracées »,
+      // commentaire du contrôleur), juste jamais eu son propre écran avant aujourd'hui.
+      { path: 'audit', loadComponent: () => import('./pages/audit/dg-audit.component').then(m => m.DgAuditComponent) },
       // Assistance IA. Les miroirs des écrans stock que portait la version
       // actualisée sous /dg ne sont pas repris : le Directeur Général accède
       // déjà à /stock, et les dupliquer n'ajoutait rien qu'un second endroit à
@@ -30,15 +37,12 @@ export const DG_ROUTES: Routes = [
       // propre tableau de bord vers une page nue. Même composant, monté ici sous /dg/*.
       { path: 'validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
       { path: 'pouvoirs', loadComponent: () => import('../../validation/presentation/pages/pouvoirs-delegations/pouvoirs-delegations.component').then(m => m.PouvoirsDelegationsComponent) },
-      // ── Administration (rôle ADMIN fusionné avec DG) ──
-      { path: 'utilisateurs', loadComponent: () => import('../../admin/presentation/pages/utilisateurs/admin-utilisateurs.component').then(m => m.AdminUtilisateursComponent) },
-      { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },
-      { path: 'parametres', loadComponent: () => import('../../admin/presentation/pages/parametres/admin-parametres.component').then(m => m.AdminParametresComponent) },
-      { path: 'codes-observation', loadComponent: () => import('../../admin/presentation/pages/codes-observation/codes-observation.component').then(m => m.CodesObservationComponent) },
-      { path: 'postes-production', loadComponent: () => import('../../admin/presentation/pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent) },
-      // Règles métier datées : chaque version est conservée, si bien qu'un calcul
-      // passé reste justifiable par la règle en vigueur à sa date.
-      { path: 'regles-metier', loadComponent: () => import('../../admin/presentation/pages/parametres/parametrages-metier.component').then(m => m.ParametragesMetierComponent) },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01, demande explicite du
+      // porteur). Les 6 écrans d'administration système (utilisateurs, audit, paramètres, codes
+      // d'observation, postes production, règles métier) qui vivaient ici sous /dg/* ont été
+      // retirés le même jour (même demande) : ce sont des écrans ADMIN (gestion du système),
+      // pas des écrans DG — ils restent accessibles sous /admin/* pour qui a ce rôle.
+      { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
       // Administration commerciale. Les promotions déterminent les remises que le
       // serveur accepte sur les ventes terrain, la grille les prix opposables.
       { path: 'promotions', loadComponent: () => import('../../commercialisation/presentation/pages/promotions/promotions.component').then(m => m.PromotionsComponent) },

@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiService } from '../http/api.service';
 import { ApiResponse } from '../models/api-response.model';
-import { LoginRequest, LoginResponse, OtpResponse, User } from '../models/auth.models';
+import { LoginRequest, LoginResponse, ModifierProfilRequest, OtpResponse, ProfilBE, User } from '../models/auth.models';
 import { UserRole, mapBackendRole } from '../models/user.models';
 
 const TOKEN_KEY = 'tanty_token';
@@ -119,6 +119,34 @@ export class AuthService {
         if (!res.succes) {
           throw new Error(res.erreur || res.message || 'Échec du changement de mot de passe');
         }
+      })
+    );
+  }
+
+  /**
+   * GET /api/auth/me — profil complet de l'utilisateur connecté (n'importe quel rôle). Utilisé
+   * par l'écran « Mon Profil », commun à tous les layouts (2026-11-01, demande explicite du
+   * porteur : chaque module doit offrir la gestion de son propre profil, pas seulement DG).
+   */
+  consulterMonProfil(): Observable<ProfilBE> {
+    return this.api.get<ApiResponse<ProfilBE>>('auth/me').pipe(
+      map((res) => {
+        if (!res.succes || !res.donnees) {
+          throw new Error(res.erreur || res.message || 'Échec de la consultation du profil');
+        }
+        return res.donnees;
+      })
+    );
+  }
+
+  /** PUT /api/auth/profil — modifie les informations personnelles de l'utilisateur connecté. */
+  modifierMonProfil(request: ModifierProfilRequest): Observable<ProfilBE> {
+    return this.api.put<ApiResponse<ProfilBE>>('auth/profil', request).pipe(
+      map((res) => {
+        if (!res.succes || !res.donnees) {
+          throw new Error(res.erreur || res.message || 'Échec de la mise à jour du profil');
+        }
+        return res.donnees;
       })
     );
   }

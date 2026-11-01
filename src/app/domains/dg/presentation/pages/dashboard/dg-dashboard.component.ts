@@ -93,6 +93,28 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.round((com.caRealise / cible) * 100);
   }
 
+  /**
+   * Puce d'icône par type de validation (2026-11-01 — motif « Recent Activity » des références
+   * 21st.dev, prompt/) : chaque ligne de la liste « Validations en attente » gagne une icône
+   * colorée au lieu d'un badge texte seul, réutilise les classes `.ig/.iy/.ir/.ib` déjà posées
+   * partout dans l'app (puce pastel + icône teintée).
+   */
+  private static readonly ICONE_VALIDATION: Record<string, [string, string]> = {
+    PRECOMMANDE_SECRETAIRE: ['fa-file-invoice', 'ib'],
+    PRECOMMANDE_COMPTABLE: ['fa-file-invoice', 'ib'],
+    DOTATION: ['fa-truck', 'iy'],
+    BON_COMMANDE: ['fa-clipboard-list', 'ig'],
+    RECEPTION_ETAPE1: ['fa-dolly', 'ig'],
+    RECEPTION_ETAPE2: ['fa-dolly', 'ig'],
+    VERSEMENT: ['fa-money-bill-wave', 'ir'],
+  };
+  iconeValidation(type: string): string {
+    return DgDashboardComponent.ICONE_VALIDATION[type]?.[0] ?? 'fa-circle-question';
+  }
+  classeIconeValidation(type: string): string {
+    return DgDashboardComponent.ICONE_VALIDATION[type]?.[1] ?? 'ig';
+  }
+
   ngOnInit() {
     this.chargerDonneesStatiques();
     this.chargerComparatif();

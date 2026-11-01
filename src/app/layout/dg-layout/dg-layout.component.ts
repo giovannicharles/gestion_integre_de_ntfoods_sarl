@@ -113,37 +113,37 @@ export class DgLayoutComponent implements OnInit {
         { label: 'Paramètres système', icon: 'fa-shield-halved', route: '/dg/securite' },
         { label: 'Synchronisation', icon: 'fa-rotate', route: '/dg/sync' },
         { label: 'Archivage', icon: 'fa-folder-open', route: '/dg/documents' },
+        // 2026-11-01 : écran DG propre (GET /dg/audit, pas un alias admin) — réajouté le même
+        // jour que son retrait, voir le commentaire du groupe « Mon Compte » ci-dessous.
+        { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/dg/audit' },
       ]
     },
-  ];
-
-  // 2026-10-25 : « Incidents » retiré d'ici (demande explicite du porteur) — la gestion des
-  // incidents est réservée à ADMIN ; le DG les signale via le bouton topbar (signalerIncident()),
-  // comme n'importe quel autre rôle, pas en gérant un tableau.
-  adminItems: NavItem[] = [
-    { label: 'Pouvoirs & délégations', icon: 'fa-user-shield', route: '/dg/pouvoirs' },
-    { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/dg/utilisateurs' },
-    { label: 'Journal d\'Audit', icon: 'fa-clipboard-list', route: '/dg/audit' },
-    { label: 'Paramètres', icon: 'fa-sliders', route: '/dg/parametres' },
-    { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/dg/codes-observation' },
-    { label: 'Postes production', icon: 'fa-industry', route: '/dg/postes-production' },
-    // Barèmes de prime, seuils de caisse, jours ouvrés, seuil de photo d'avarie :
-    // les paramétrages datés, que seul le DG administre.
-    { label: 'Règles métier', icon: 'fa-scale-balanced', route: '/dg/regles-metier' },
+    // 2026-11-01 (demande explicite du porteur) : les 6 écrans d'administration système
+    // (Utilisateurs, Audit, Paramètres, Codes observation, Postes production, Règles métier) qui
+    // vivaient ici en tant qu'`adminItems` ont été retirés — c'était strictement du périmètre
+    // ADMIN (gestion du système, CLAUDE.md décision actée n°9), pas du DG. « Pouvoirs &
+    // délégations » reste, parce que c'est une décision du DG (qui détient quel pouvoir de
+    // validation), pas un réglage système ; « Mon Profil » est le même écran de libre-service
+    // que dans les autres modules (2026-10-25 : les incidents se signalent via le bouton topbar,
+    // pas depuis un groupe de sidebar — pas repris ici non plus).
+    {
+      label: 'Mon Compte', icon: 'fa-user-gear', children: [
+        { label: 'Pouvoirs & délégations', icon: 'fa-user-shield', route: '/dg/pouvoirs' },
+        { label: 'Mon Profil', icon: 'fa-id-card', route: '/dg/profil' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
   navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
-  adminItemsFiltres = computed(() => filtrerNavItems(this.adminItems, this.sidebarFiltre()));
   /** Pendant une recherche active, tout groupe correspondant doit se déplier automatiquement. */
   rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
   /** Pour la recherche du header : tous les items/sous-items à plat, un seul appel de filtre. */
   tousLesItems = computed(() => [
     ...this.navItems,
     ...this.navGroups.flatMap(g => g.children),
-    ...this.adminItems,
   ]);
 
   expandedGroup = signal<string | null>('Intelligence IA');
@@ -153,7 +153,7 @@ export class DgLayoutComponent implements OnInit {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const allItems = [...this.navItems, ...this.adminItems, ...this.navGroups.flatMap(g => g.children)];
+      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);

@@ -132,20 +132,6 @@
     </div>
   </div>
 
-  <!-- STOCK CONSOLIDÉ -->
-  <div class="kpi-grid-3">
-    <div class="card" style="padding:16px;display:flex;align-items:center;gap:14px">
-      <div class="kpi-ico ib"><i class="fa-solid fa-warehouse"></i></div>
-      <div style="flex:1">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span class="kpi-lbl">Valeur Stock Global</span>
-        </div>
-        <div class="kpi-val" style="font-size:17px">{{ fCFA(valoStock()) }}</div>
-        <div class="kpi-meta">{{ kpis()?.ventesCount ?? 0 }} ventes ce mois</div>
-      </div>
-    </div>
-  </div>
-
   <!--
     VALIDATIONS EN ATTENTE — vue unifiée (précommandes, dotations, BC, réceptions, versements,
     carburant) déjà exposée par le backend (GET /api/dg/validations) mais jamais montrée depuis
@@ -165,9 +151,12 @@
     <div class="validations-list">
       @for (v of validationsEnAttente().slice(0, 5); track v.reference) {
       <div class="validation-row">
+        <div class="kpi-ico validation-ico {{ classeIconeValidation(v.type) }}"><i class="fa-solid {{ iconeValidation(v.type) }}"></i></div>
+        <div class="validation-body">
+          <span class="validation-desc">{{ v.description }}</span>
+          <span class="validation-meta">{{ v.matriculeConcerne }} · depuis {{ v.depuis }}</span>
+        </div>
         <span class="badge bg-neutral badge-sm">{{ v.type }}</span>
-        <span class="validation-desc">{{ v.description }}</span>
-        <span class="validation-meta">{{ v.matriculeConcerne }} · depuis {{ v.depuis }}</span>
       </div>
       }
     </div>

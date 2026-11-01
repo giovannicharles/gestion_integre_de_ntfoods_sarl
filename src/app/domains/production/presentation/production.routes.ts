@@ -79,6 +79,12 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'employes', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/employes/production-employes.component').then(m => m.ProductionEmployesComponent) },
       { path: 'besoins', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/besoins/production-besoins.component').then(m => m.ProductionBesoinsComponent) },
       { path: 'rapports', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/rapports/production-rapports.component').then(m => m.ProductionRapportsComponent) },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01). Volontairement SANS
+      // productionRoleGuard : ce garde ne laisse passer que les chemins listés dans le
+      // PRODUCTION_ROLE_CONFIG du sous-rôle (chef-production, agent-doseur...) — « profil » doit
+      // rester joignable par n'importe quel sous-rôle, pas seulement ceux qui l'auraient dans
+      // leur config de navigation.
+      { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }
 ];

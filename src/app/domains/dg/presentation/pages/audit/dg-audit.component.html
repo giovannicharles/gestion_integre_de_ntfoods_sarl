@@ -1,0 +1,88 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+      <div>
+        <h1 class="ph-title">Journal d'Audit</h1>
+        <p class="ph-sub">Toutes les actions tracées — qui, quoi, quand. Lecture seule.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-filter"></i> Filtres</span>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="form-label">Matricule</label>
+        <input class="form-control" type="text" [(ngModel)]="filtreMatricule" placeholder="ex: GS-001">
+      </div>
+      <div>
+        <label class="form-label">Module</label>
+        <input class="form-control" type="text" [(ngModel)]="filtreModule" placeholder="ex: STOCK">
+      </div>
+      <div>
+        <label class="form-label">Type d'action</label>
+        <select class="form-control" [(ngModel)]="filtreTypeAction">
+          <option value="">Tous</option>
+          @for (t of typesAction; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Du</label>
+        <input class="form-control" type="date" [(ngModel)]="filtreDebut">
+      </div>
+      <div>
+        <label class="form-label">Au</label>
+        <input class="form-control" type="date" [(ngModel)]="filtreFin">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost btn-sm" (click)="reinitialiserFiltres()">Réinitialiser</button>
+      <button class="btn btn-primary btn-sm" (click)="charger()"><i class="fa-solid fa-magnifying-glass"></i> Filtrer</button>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-list"></i> Entrées</span>
+      @if (!loading() && !loadError()) { <span class="badge badge-neutral badge-sm">{{ entrees().length }} entrée(s) (max 200)</span> }
+    </div>
+    @if (loading()) {
+      <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du journal…</div>
+    } @else if (loadError()) {
+      <div class="error-state">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>{{ loadError() }}</p>
+        <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+      </div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Matricule</th><th>Rôle</th><th>Action</th><th>Module</th><th>Ressource</th><th>Résultat</th><th>IP</th></tr></thead>
+          <tbody>
+            @for (e of entrees(); track e.id) {
+            <tr [class.row-alert]="!e.succes">
+              <td class="mono" style="font-size:12px">{{ e.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+              <td class="fw-bold">{{ e.matricule }}</td>
+              <td class="text-muted">{{ e.role }}</td>
+              <td><span class="badge badge-neutral badge-sm">{{ e.typeAction }}</span></td>
+              <td>{{ e.module }}</td>
+              <td class="text-muted">{{ e.ressource }}{{ e.referenceEntite ? ' · ' + e.referenceEntite : '' }}</td>
+              <td>
+                @if (e.succes) { <span class="badge badge-success badge-sm">OK</span> }
+                @else { <span class="badge badge-danger badge-sm" [title]="e.messageErreur || ''">Échec</span> }
+              </td>
+              <td class="mono text-muted" style="font-size:11px">{{ e.adresseIp }}</td>
+            </tr>
+            } @empty {
+            <tr><td colspan="8" class="empty-state">Aucune entrée pour ces filtres.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

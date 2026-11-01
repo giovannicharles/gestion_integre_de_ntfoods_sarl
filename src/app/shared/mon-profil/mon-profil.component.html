@@ -1,0 +1,130 @@
+<div class="dash">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-id-card"></i></div>
+      <div>
+        <div class="ph-title">Mon Profil</div>
+        <div class="ph-sub">Vos informations personnelles et votre sécurité de connexion</div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card"><div class="card-body mp-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du profil…</div></div>
+  } @else if (loadError()) {
+    <div class="card"><div class="card-body mp-error">
+      <i class="fa-solid fa-triangle-exclamation"></i> {{ loadError() }}
+      <button class="btn btn-ghost btn-sm" (click)="charger()">Réessayer</button>
+    </div></div>
+  } @else if (profil()) {
+    @if (profil(); as p) {
+
+    <div class="card mp-identity">
+      <div class="mp-avatar">{{ initiales() }}</div>
+      <div class="mp-identity-info">
+        <div class="mp-name">{{ p.prenom }} {{ p.nom }}</div>
+        <div class="mp-meta">
+          <span class="badge badge-primary"><i class="fa-solid fa-user-tie"></i> {{ roleLabel() }}</span>
+          <span class="badge badge-neutral">{{ p.matricule }}</span>
+          @if (p.actif) {
+            <span class="badge badge-success">Compte actif</span>
+          } @else {
+            <span class="badge badge-danger">Compte désactivé</span>
+          }
+        </div>
+        <div class="mp-since">Membre depuis le {{ p.dateCreation | date:'dd/MM/yyyy' }}</div>
+      </div>
+    </div>
+
+    <div class="mp-tabs">
+      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'infos'" (click)="ongletActif.set('infos')">
+        <i class="fa-solid fa-address-card"></i> Informations
+      </button>
+      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'securite'" (click)="ongletActif.set('securite')">
+        <i class="fa-solid fa-lock"></i> Sécurité
+      </button>
+    </div>
+
+    @if (ongletActif() === 'infos') {
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-address-card"></i> Informations personnelles</span>
+        </div>
+
+        <div class="form-grid">
+          <div>
+            <label class="form-label">Email (non modifiable)</label>
+            <input class="form-control" type="text" [value]="p.email" disabled>
+          </div>
+          <div>
+            <label class="form-label">Téléphone</label>
+            <input class="form-control" type="tel" [(ngModel)]="telephone" placeholder="+237 6XX XXX XXX">
+          </div>
+          <div>
+            <label class="form-label">Résidence</label>
+            <input class="form-control" type="text" [(ngModel)]="residence" placeholder="Ville, quartier">
+          </div>
+          <div>
+            <label class="form-label">CNI</label>
+            <input class="form-control" type="text" [(ngModel)]="cni" placeholder="Numéro de CNI">
+          </div>
+          <div>
+            <label class="form-label">Date de naissance</label>
+            <input class="form-control" type="date" [(ngModel)]="dateNaissance">
+          </div>
+          <div>
+            <label class="form-label">Lieu de naissance</label>
+            <input class="form-control" type="text" [(ngModel)]="lieuNaissance">
+          </div>
+          <div>
+            <label class="form-label">Sexe</label>
+            <select class="form-control" [(ngModel)]="sexe">
+              <option value="">Non précisé</option>
+              <option value="M">Masculin</option>
+              <option value="F">Féminin</option>
+            </select>
+          </div>
+          @if (p.dateEmbauche) {
+          <div>
+            <label class="form-label">Date d'embauche (non modifiable)</label>
+            <input class="form-control" type="text" [value]="p.dateEmbauche | date:'dd/MM/yyyy'" disabled>
+          </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="enregistrerInfos()" [disabled]="saving()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (ongletActif() === 'securite') {
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-key"></i> Changer mon mot de passe</span>
+        </div>
+        <p class="mp-hint">Le matricule et le rôle ne peuvent être modifiés que par la Direction ou l'Administration système.</p>
+        <div class="form-grid">
+          <div>
+            <label class="form-label">Nouveau mot de passe</label>
+            <input class="form-control" type="password" [(ngModel)]="nouveauMotDePasse" placeholder="8 caractères minimum" autocomplete="new-password">
+          </div>
+          <div>
+            <label class="form-label">Confirmation</label>
+            <input class="form-control" type="password" [(ngModel)]="confirmationMotDePasse" placeholder="Retapez le mot de passe" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="enregistrerMotDePasse()" [disabled]="savingPwd() || !nouveauMotDePasse">
+            @if (savingPwd()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-shield-halved"></i> }
+            Changer le mot de passe
+          </button>
+        </div>
+      </div>
+    }
+    }
+  }
+</div>

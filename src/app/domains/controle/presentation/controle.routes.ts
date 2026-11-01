@@ -25,6 +25,8 @@ export const CONTROLE_ROUTES: Routes = [
       // correction que DG, 2026-10-16) : le sidebar pointait vers /validations, route de
       // premier niveau sans aucun layout.
       { path: 'validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
+      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }
 ];
