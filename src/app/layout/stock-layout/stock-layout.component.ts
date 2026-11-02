@@ -7,6 +7,7 @@ import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { ClockService } from '../../core/services/clock.service';
 import { ApiService } from '../../core/http/api.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
@@ -47,9 +48,10 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   readonly network = inject(NetworkService);
   readonly theme = inject(ThemeService);
   alertBadge = inject(AlertBadgeService);
+  private readonly clock = inject(ClockService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
-  currentTime = signal(new Date());
+  currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord');
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
@@ -175,6 +177,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   pendingDotationsCount = signal(0);
   pendingOrdersCount = signal(0);
   pendingValidationCount = signal(0);
+  pendingGenericValidationCount = signal(0);
 
   // Filtrer les sections selon le role de l'utilisateur et injecter les badges
   filteredNavSections = computed(() => {
@@ -241,6 +244,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       case '/stock/dotations': return this.pendingDotationsCount();
       case '/stock/orders': return this.pendingOrdersCount();
       case '/stock/validation': return this.pendingValidationCount();
+      case '/stock/mes-validations': return this.pendingGenericValidationCount();
       case '/stock/alertes': return this.alertCount();
       case '/stock/notifications': return this.notifCount();
       default: return 0;
@@ -253,6 +257,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       case '/stock/dotations': return 'bd-blue';
       case '/stock/orders': return 'bd-orange';
       case '/stock/validation': return 'bd-orange';
+      case '/stock/mes-validations': return 'bd-orange';
       case '/stock/alertes': return 'bd-red';
       case '/stock/notifications': return 'bd-red';
       default: return 'bd-neutral';
@@ -260,7 +265,6 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    setInterval(() => this.currentTime.set(new Date()), 30000);
     if (window.innerWidth < 768) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.loadSidebarBadges();
@@ -315,6 +319,13 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
             this.pendingValidationCount.set(c1 + c2);
           }, error: () => this.pendingValidationCount.set(c1) });
       }, error: () => {} });
+
+    // Moteur de validation générique (demandes de transfert, réappro tampon, etc.) : même
+    // endpoint que la Boîte "Mes validations" (shared/validation-pending), raw array, pas
+    // d'enveloppe ApiResponse (ValidationService.mesDemandesEnAttente).
+    this.api.get<any[]>('v1/validation/demandes/en-attente-pour-moi')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (res) => this.pendingGenericValidationCount.set(Array.isArray(res) ? res.length : 0), error: () => {} });
   }
 
   private loadNotifCount() {
