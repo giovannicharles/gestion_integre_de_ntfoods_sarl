@@ -56,7 +56,12 @@
       </div>
       <div class="tb-right">
         <app-header-search [items]="navItems"></app-header-search>
+        <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
+          <i class="fa-solid fa-bolt"></i>
+          <kbd>Ctrl</kbd><kbd>K</kbd>
+        </button>
         <app-signaler-incident></app-signaler-incident>
+        <app-command-palette #commandPalette [items]="commandItems()"></app-command-palette>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>

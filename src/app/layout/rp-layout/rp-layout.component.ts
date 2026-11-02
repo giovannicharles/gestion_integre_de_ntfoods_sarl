@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { NotificationCenterComponent } from '../../shared/notification-center/no
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -20,7 +21,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 @Component({
   selector: 'app-rp-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent],
   templateUrl: './rp-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -76,6 +77,10 @@ export class RpLayoutComponent implements OnInit {
   /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+
+  /** Palette de commandes Ctrl+K (2026-11-02, même composant que DG/Admin/Comptable). */
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() => this.navItems);
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
