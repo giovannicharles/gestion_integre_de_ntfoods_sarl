@@ -169,10 +169,6 @@
 .empty-state i { font-size:40px; }
 .empty-state p { font-size:14px; }
 
-/* ── ANIMATION ── */
-.animate-fadeInUp { animation:fadeInUp .4s ease; }
-@keyframes fadeInUp { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }
-
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .kpi-bar { gap:10px; }
