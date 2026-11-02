@@ -540,7 +540,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   formatDate(date: string | null): string {
-    if (!date) return '—';
+    if (!date) return '-';
     const d = new Date(date);
     return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
@@ -586,7 +586,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getLocationName(id: string): string {
-    return this.locations().find(l => l.id === id)?.name || '—';
+    return this.locations().find(l => l.id === id)?.name || '-';
   }
 
   getLocationTypeLabel(type: string): string {

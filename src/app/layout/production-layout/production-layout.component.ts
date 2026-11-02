@@ -40,7 +40,7 @@ export class ProductionLayoutComponent implements OnInit {
   /** Initiales pour l'avatar (ex: "Essama Paul" → "EP"). */
   initiales = computed(() => {
     const parts = this.nomUtilisateur().trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '—';
+    if (parts.length === 0) return '-';
     return parts.length === 1 ? parts[0].substring(0, 2).toUpperCase()
       : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   });
@@ -60,7 +60,7 @@ export class ProductionLayoutComponent implements OnInit {
   /** Nombre d'expressions de besoin en attente (GET /production/besoins?statut=EN_ATTENTE). */
   besoinsEnAttente = signal(0);
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems(), this.sidebarFiltre()));
 

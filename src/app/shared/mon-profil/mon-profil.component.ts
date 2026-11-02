@@ -8,10 +8,10 @@ import { ToastService } from '../../core/services/toast.service';
 import { extractApiError } from '../../core/http/api-error-parser';
 
 /**
- * « Mon Profil » — écran de libre-service commun à tous les layouts (2026-11-01, demande
+ * « Mon Profil », écran de libre-service commun à tous les layouts (2026-11-01, demande
  * explicite du porteur : « comme dans les autres, il faut la gestion complète de son profil,
  * ses paramètres utilisateurs »). Un seul composant, monté sous `<prefix>/profil` dans chaque
- * arbre de routes — GET /auth/me et PUT /auth/profil sont déjà ouverts à tout rôle authentifié
+ * arbre de routes, GET /auth/me et PUT /auth/profil sont déjà ouverts à tout rôle authentifié
  * (AuthController.java), aucun changement serveur nécessaire.
  */
 @Component({
@@ -44,7 +44,7 @@ export class MonProfilComponent implements OnInit {
     return ((p.prenom?.[0] || '') + (p.nom?.[0] || '')).toUpperCase();
   });
 
-  // Champs éditables (ModifierProfilRequest) — formulaire séparé du signal `profil` pour ne
+  // Champs éditables (ModifierProfilRequest), formulaire séparé du signal `profil` pour ne
   // pousser que des changements volontaires, pas un simple reflet en direct du serveur.
   telephone = '';
   residence = '';

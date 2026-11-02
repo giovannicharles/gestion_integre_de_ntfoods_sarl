@@ -13,7 +13,7 @@ export interface ToastMessage {
 }
 
 /**
- * Service de notification toast — affiche des messages flottants non bloquants.
+ * Service de notification toast, affiche des messages flottants non bloquants.
  *
  * Les messages sont gérés par un signal réactif ; un composant d'affichage
  * s'abonne à `toasts` pour les présenter dans l'interface.

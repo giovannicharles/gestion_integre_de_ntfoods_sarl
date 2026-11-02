@@ -2,13 +2,13 @@ import { Directive, Input, TemplateRef, ViewContainerRef, inject, effect, signal
 import { AuthService } from '../../core/auth/auth.service';
 
 /**
- * `*appHasPermission="'STOCK_X_GERER'"` ou `*appHasPermission="['A','B']"` —
+ * `*appHasPermission="'STOCK_X_GERER'"` ou `*appHasPermission="['A','B']"`,
  * masque le contenu si l'utilisateur courant n'a aucune des permissions
  * listées.
  *
  * À utiliser à la place de `*appCan` (rôles) sur les modules dont le backend
  * garde ses endpoints par permission (`hasAuthority(...)`) et non par rôle
- * (`hasRole`/`hasAnyRole`) — Stock, Commercial et Production, vérifié le
+ * (`hasRole`/`hasAnyRole`), Stock, Commercial et Production, vérifié le
  * 2026-10-28 : un `*appCan` à rôles devinés y affichait des boutons à des
  * utilisateurs qui recevaient un 403 au clic, et pouvait en masquer à
  * d'autres qui avaient réellement le droit (dérogation individuelle qu'un

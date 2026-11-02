@@ -30,7 +30,7 @@ export class SecretaireValidationComponent implements OnInit {
    * l'étape 1, malgré son nom) → VALIDEE_DG (DG a approuvé l'étape 2) → EXECUTE (Secrétaire a payé).
    * Les deux étapes de validation sont toutes les deux faites par le DG, jamais par le Contrôleur
    * Général. La secrétaire n'a qu'une seule action réelle ici : exécuter (payer) un décaissement
-   * une fois VALIDEE_DG — `executerDecaissement` existait déjà côté service mais n'était appelé
+   * une fois VALIDEE_DG, `executerDecaissement` existait déjà côté service mais n'était appelé
    * nulle part dans le frontend (corrigé le 2026-10-16) : la secrétaire n'avait aucun moyen
    * d'exécuter un décaissement pourtant approuvé, malgré le droit que lui donne le backend.
    */

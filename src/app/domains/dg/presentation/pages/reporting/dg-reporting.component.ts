@@ -30,10 +30,10 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   commerciaux = signal<ClassementCommercialBE[]>([]);
   comparatifMois = signal<RapportComparatifBE | null>(null);
   comparatifAnnee = signal<RapportComparatifBE | null>(null);
-  /** 2026-11-01 (demande explicite du porteur — fonctionnalités utiles à un DG sur toute
+  /** 2026-11-01 (demande explicite du porteur, fonctionnalités utiles à un DG sur toute
    * l'activité) : historique réel, remplace le bandeau qui admettait son absence. */
   historiqueCa = signal<MoisCaBE[]>([]);
-  /** 2026-11-01 (demande explicite du porteur) — motif « Top clients + risque de concentration »,
+  /** 2026-11-01 (demande explicite du porteur), motif « Top clients + risque de concentration »,
    * validé par la pratique courante des tableaux de bord de direction. */
   concentrationClients = signal<ConcentrationClientsBE | null>(null);
 
@@ -128,7 +128,7 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy() { this.charts.forEach(c => c.destroy()); }
 
   // 2026-11-01 : les boutons « Exporter PDF »/« Exporter Excel » n'appelaient rien jusqu'ici
-  // (signalé par le porteur — « je veux que le module DG soit complet et fonctionnel »).
+  // (signalé par le porteur, « je veux que le module DG soit complet et fonctionnel »).
   exporterClassement(format: 'pdf' | 'xlsx'): void {
     if (this.exportingClassement()) return;
     this.exportingClassement.set(true);

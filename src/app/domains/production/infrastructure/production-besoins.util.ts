@@ -4,7 +4,7 @@ import { BesoinEmballageBE, BesoinMatiereBE, TYPES_EMBALLAGE } from './productio
  * Utilitaires d'affichage des besoins génériques (matières premières et
  * composants d'emballage) renvoyés par les plans de production. Les noms
  * de matières viennent de la formule de chaque produit (libres, avec ou sans
- * accents) — jamais d'une liste figée maïs/soja/arachide.
+ * accents), jamais d'une liste figée maïs/soja/arachide.
  */
 
 function normaliser(nom: string): string {

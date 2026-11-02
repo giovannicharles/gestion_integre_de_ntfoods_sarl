@@ -63,7 +63,7 @@ export class SecretaireDashboardComponent implements OnInit {
 
   docsIncomplets = computed(() => this.documents().filter(d => !d.feuilleRoute || !d.bonCommande || !d.factures).length);
 
-  // ── Signaler une réception (2026-10-25) — endpoint déjà prêt, jamais appelé jusqu'ici. ──
+  // ── Signaler une réception (2026-10-25), endpoint déjà prêt, jamais appelé jusqu'ici. ──
   showReceptionModal = signal(false);
   savingReception = signal(false);
   receptionForm = { matriculeCommercial: '', nom: '', feuilleRoute: false, bonCommande: false, factures: false };

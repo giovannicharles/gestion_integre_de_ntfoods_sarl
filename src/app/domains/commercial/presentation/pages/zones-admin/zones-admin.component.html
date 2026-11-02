@@ -87,7 +87,7 @@
             <tr [class.ligne-inactive]="!z.actif">
               <td class="fw-bold">{{ z.nom }}</td>
               <td class="mono">{{ z.type }}</td>
-              <td>{{ z.description || '—' }}</td>
+              <td>{{ z.description || '-' }}</td>
               <td>
                 @if (calibrage() === z.nom) {
                   <input type="number" min="0" step="1" class="saisie"

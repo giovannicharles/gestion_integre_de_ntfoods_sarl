@@ -16,15 +16,15 @@
     <div class="form-grid">
       <label>Session (PPH / type poudre du jour)
         <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="saisie.sessionId">
-          <option [ngValue]="0">— Choisir —</option>
+          <option [ngValue]="0">Choisir,</option>
           @for (s of sessionsJour(); track s.id) {
-            <option [ngValue]="s.id">{{ s.referencePPH }} — {{ s.typePoudreLibelle }} ({{ s.date | date:'dd/MM' }})</option>
+            <option [ngValue]="s.id">{{ s.referencePPH }}, {{ s.typePoudreLibelle }} ({{ s.date | date:'dd/MM' }})</option>
           }
         </select>
       </label>
       <label>Machiniste
         <select class="input" [ngModel]="saisie.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
-          <option value="">— Choisir —</option>
+          <option value="">Choisir,</option>
           @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
         </select>
       </label>

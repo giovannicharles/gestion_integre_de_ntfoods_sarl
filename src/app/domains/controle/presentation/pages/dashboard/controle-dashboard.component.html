@@ -28,7 +28,7 @@
   @if (ecartsRouges() > 0) {
   <div class="alert-banner-red">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    {{ ecartsRouges() }} alerte(s) rouge(s) — écart entre CA déclaré et cash versé à justifier.
+    {{ ecartsRouges() }} alerte(s) rouge(s), écart entre CA déclaré et cash versé à justifier.
   </div>
   }
 
@@ -89,7 +89,7 @@
             <td class="fw-bold">{{ d.numeroDecaissement }}</td>
             <td>{{ d.beneficiaire }}</td>
             <td class="text-right mono">{{ fCFA(d.montantFCFA) }}</td>
-            <td>{{ d.statut === 'PROPOSE' ? 'Proposé — att. DG (1)' : 'DG (1) ✓ — att. DG (2)' }}</td>
+            <td>{{ d.statut === 'PROPOSE' ? 'Proposé, att. DG (1)' : 'DG (1) ✓, att. DG (2)' }}</td>
           </tr>
           }
         </tbody>
@@ -186,7 +186,7 @@
             <td class="fw-bold">{{ a.categorie }}</td>
             <td class="mono">{{ a.reference }}</td>
             <td>{{ a.description }}</td>
-            <td>{{ a.matriculeConcerne ?? '—' }}</td>
+            <td>{{ a.matriculeConcerne ?? '-' }}</td>
           </tr>
           }
         </tbody>

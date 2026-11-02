@@ -29,7 +29,7 @@
     <div class="rp-selector-lbl"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
     <select class="input rp-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
       @for (p of pphs(); track p.id) {
-        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+        <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option>
       }
     </select>
     <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
@@ -144,7 +144,7 @@
         <div class="rp-form-ico"><i class="fa-solid fa-seedling"></i></div>
         <div>
           <div class="rp-form-title">Chips Plantain</div>
-          <div class="rp-form-sub">Épluchage + Découpe/Friture — soumis en une seule saisie</div>
+          <div class="rp-form-sub">Épluchage + Découpe/Friture, soumis en une seule saisie</div>
         </div>
       </div>
 
@@ -309,7 +309,7 @@
                   @if (s.warnings.length) {
                     <span class="rp-warn-chip"><i class="fa-solid fa-triangle-exclamation"></i> {{ s.warnings[0] }}</span>
                   } @else {
-                    <span class="text-muted">—</span>
+                    <span class="text-muted">-</span>
                   }
                 </td>
               </tr>

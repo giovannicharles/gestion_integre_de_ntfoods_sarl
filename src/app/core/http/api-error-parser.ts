@@ -1,5 +1,5 @@
 /**
- * Parseur centralisé des erreurs API — Angular.
+ * Parseur centralisé des erreurs API, Angular.
  *
  * Lit `erreur` en priorité puis `message` en fallback, exactement
  * comme le backend GlobalExceptionHandler structure ses réponses
@@ -16,7 +16,7 @@
  * @returns Le message d'erreur précis du backend, ou un fallback générique.
  */
 export function extractApiError(err: any): string {
-  // 423 LOCKED — compte bloqué
+  // 423 LOCKED, compte bloqué
   if (err?.status === 423) {
     return err?.error?.erreur || err?.error?.message || 'Votre compte est bloqué, contactez un administrateur.';
   }
@@ -56,6 +56,6 @@ export function extractApiError(err: any): string {
     return 'Erreur réseau. Vérifiez votre connexion internet.';
   }
 
-  // Generic fallback — try erreur then message then err.message
+  // Generic fallback, try erreur then message then err.message
   return err?.error?.erreur || err?.error?.message || err?.message || 'Une erreur est survenue. Veuillez réessayer.';
 }

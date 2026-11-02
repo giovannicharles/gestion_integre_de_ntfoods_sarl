@@ -6,7 +6,7 @@ import {
 } from '../../../../infrastructure/production.service';
 
 /**
- * TÉLÉCHARGEMENTS — Chef de Production
+ * TÉLÉCHARGEMENTS, Chef de Production
  * Rapports de lots (fichier serveur réel), rapport hebdomadaire / pertes /
  * performances / PPH / statistiques / historique (générés côté client à
  * partir de données réelles, faute d'endpoint d'export dédié pour chacun).
@@ -72,7 +72,7 @@ export class CpTelechargementsComponent {
   telechargerPph(): void {
     this.svc.getPPHs().subscribe({
       next: (pphs: PPHBE[]) => this.exporterTableauCsv('plans-production-pph',
-        pphs.map(p => ({ Référence: p.referencePPH, BC: p.referenceBC ?? '—', Semaine: p.semaine, Statut: p.statut, Début: p.dateDebut, Fin: p.dateFin }))),
+        pphs.map(p => ({ Référence: p.referencePPH, BC: p.referenceBC ?? '-', Semaine: p.semaine, Statut: p.statut, Début: p.dateDebut, Fin: p.dateFin }))),
       error: () => this.message.set('Erreur lors de l\'export des PPH')
     });
   }

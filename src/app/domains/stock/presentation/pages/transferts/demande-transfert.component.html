@@ -1,7 +1,7 @@
 <div class="transfert-page">
   <div class="page-header">
     <h1><i class="fa-solid fa-truck-ramp-box"></i> Demander un transfert vers le tampon</h1>
-    <p class="subtitle">Le stock ne bouge qu'après validation par un second responsable — la demande n'exécute rien seule</p>
+    <p class="subtitle">Le stock ne bouge qu'après validation par un second responsable, la demande n'exécute rien seule</p>
   </div>
 
   @if (loading()) {
@@ -21,7 +21,7 @@
             <div class="niveau-row">
               <div class="niveau-info">
                 <strong>{{ n.designation }}</strong>
-                <span class="niveau-detail">{{ n.codeProduit }} — {{ n.quantite }} disponible(s)</span>
+                <span class="niveau-detail">{{ n.codeProduit }}, {{ n.quantite }} disponible(s)</span>
               </div>
               <button class="btn btn-sm btn-primary" (click)="ajouterLigne(n)">
                 <i class="fa-solid fa-plus"></i> Ajouter

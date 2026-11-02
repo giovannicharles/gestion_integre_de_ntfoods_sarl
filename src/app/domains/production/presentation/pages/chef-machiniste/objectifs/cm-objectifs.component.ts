@@ -13,7 +13,7 @@ interface ObjectifDraft {
 }
 
 /**
- * DÉFINITION DES OBJECTIFS DES MACHINISTES — Chef Machiniste
+ * DÉFINITION DES OBJECTIFS DES MACHINISTES, Chef Machiniste
  *
  * ⚠️ Limite backend : le backend n'expose la création d'objectifs QUE groupée
  * dans l'ouverture d'une session de broyage (POST /broyage/sessions avec
@@ -21,7 +21,7 @@ interface ObjectifDraft {
  * supprimer un objectif isolé après coup.
  *
  * Chargement : forkJoin pour un état de chargement unique, MAIS chaque flux est
- * isolé par catchError — un échec sur les PPH ou les sessions ne doit jamais
+ * isolé par catchError, un échec sur les PPH ou les sessions ne doit jamais
  * faire disparaître la liste des machinistes (et inversement).
  */
 @Component({
@@ -41,7 +41,7 @@ export class CmObjectifsComponent implements OnInit {
   machinistes = signal<EmployeBE[]>([]);
   sessions = signal<SessionBroyageBE[]>([]);
 
-  // Référentiels réels (miroir des enums backend) — { code, libelle }[]
+  // Référentiels réels (miroir des enums backend), { code, libelle }[]
   readonly operations = OPERATIONS_BROYAGE;
   readonly typesPoudre = TYPES_POUDRE;
 
@@ -87,7 +87,7 @@ export class CmObjectifsComponent implements OnInit {
       this.sessions.set(sessions);
       this.loading.set(false);
       if (echecs.length) {
-        this.message.set(`Chargement partiel — échec sur : ${echecs.join(', ')}.`);
+        this.message.set(`Chargement partiel, échec sur : ${echecs.join(', ')}.`);
       }
     });
   }
@@ -134,7 +134,7 @@ export class CmObjectifsComponent implements OnInit {
       next: s => {
         this.sessions.update(list => [s, ...list]);
         this.brouillonObjectifs.set([]);
-        this.message.set(`Objectifs créés — session #${s.id} ouverte pour ${s.date}`);
+        this.message.set(`Objectifs créés, session #${s.id} ouverte pour ${s.date}`);
       },
       error: () => this.message.set('Erreur lors de la création des objectifs')
     });

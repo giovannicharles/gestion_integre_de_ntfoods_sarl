@@ -13,13 +13,13 @@
 
 <div class="gap-note">
   <i class="fa-solid fa-circle-info"></i>
-  <div>Pas d'endpoint d'export PDF/Excel dédié au registre journalier — export CSV généré côté client à partir des données réelles.</div>
+  <div>Pas d'endpoint d'export PDF/Excel dédié au registre journalier, export CSV généré côté client à partir des données réelles.</div>
 </div>
 
 @if (registreAujourdhui()) {
   <div class="card">
     <div class="toolbar-row">
-      <strong>Registre d'aujourd'hui — {{ registreAujourdhui()!.referencePPH }}</strong>
+      <strong>Registre d'aujourd'hui, {{ registreAujourdhui()!.referencePPH }}</strong>
       @if (!modeCorrection()) {
         <button class="btn btn-secondary btn-sm" *appHasPermission="'PRODUCTION_REGISTRE_GERER'" (click)="demarrerCorrection()"><i class="fa-solid fa-pen"></i> Corriger</button>
       }
@@ -40,7 +40,7 @@
                 <td><input class="input" [ngModel]="l.nomEmploye" (ngModelChange)="l.nomEmploye = $event"></td>
                 <td>
                   <select class="input" [ngModel]="l.poste" (ngModelChange)="l.poste = $event">
-                    <option value="">—</option>
+                    <option value="">-</option>
                     @for (c of codesPoste(); track c.code) {
                       <option [value]="c.code">{{ c.libelle }}</option>
                     }

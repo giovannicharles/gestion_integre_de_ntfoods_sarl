@@ -7,7 +7,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 /**
  * Zones de vente : découpage territorial et potentiel client par zone.
  *
- * Le calibrage du potentiel n'est pas décoratif — c'est le dénominateur du taux
+ * Le calibrage du potentiel n'est pas décoratif, c'est le dénominateur du taux
  * d'occupation, qui désigne les zones sous-exploitées.
  */
 export interface ZoneDeVenteBE {

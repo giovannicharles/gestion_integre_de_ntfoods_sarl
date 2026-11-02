@@ -17,7 +17,7 @@ export class AppComponent {
   title = 'tanty_digital_pwa';
   /**
    * Hors ligne / nouvelle version (2026-10-25, demande explicite du porteur) : affichée ici,
-   * à la racine, pour apparaître quel que soit le layout actif — auparavant seul stock-layout
+   * à la racine, pour apparaître quel que soit le layout actif, auparavant seul stock-layout
    * la montrait. Réutilise NetworkService (core/services/network.service.ts), déjà global et
    * déjà alimenté par l'intercepteur HTTP + les évènements online/offline du navigateur.
    */

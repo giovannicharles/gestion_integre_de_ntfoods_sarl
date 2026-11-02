@@ -18,7 +18,7 @@ interface VersementUI {
  * Rapprochement de fin de tournée.
  *
  * Reçoit les tournées que les commerciaux ont déclarées terminées, rapproche la
- * remise d'espèces du montant attendu, puis valide — ce qui transmet la session
+ * remise d'espèces du montant attendu, puis valide, ce qui transmet la session
  * au comptable. Le bouton de validation appelait auparavant un simple indicateur
  * local : rien n'était transmis, et la session restait indéfiniment en attente.
  */

@@ -46,7 +46,7 @@ export class PromotionsComponent implements OnInit {
     { valeur: 'POURCENTAGE', libelle: 'Pourcentage', unite: '%' },
     { valeur: 'MONTANT_FIXE', libelle: 'Montant fixe', unite: 'FCFA' },
     { valeur: 'REMISE_VOLUME', libelle: 'Remise sur volume', unite: '%' },
-    { valeur: 'GRATUITE', libelle: 'Produit offert', unite: '—' },
+    { valeur: 'GRATUITE', libelle: 'Produit offert', unite: '-' },
   ];
 
   readonly segments: SegmentClient[] =
@@ -100,7 +100,7 @@ export class PromotionsComponent implements OnInit {
       case 'MONTANT_FIXE':
         return `−${this.fCFA(p.valeurReduction)} par ligne`;
       case 'GRATUITE':
-        return 'Produit offert — aucune remise en valeur';
+        return 'Produit offert, aucune remise en valeur';
     }
   }
 

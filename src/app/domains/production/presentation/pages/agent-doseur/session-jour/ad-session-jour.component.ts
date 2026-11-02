@@ -9,7 +9,7 @@ import { extractApiError } from '../../../../../../core/http/api-error-parser';
 type Etape = 1 | 2 | 3 | 4 | 5;
 
 /**
- * MA SESSION DU JOUR — Agent Doseur (écran unique guidé)
+ * MA SESSION DU JOUR, Agent Doseur (écran unique guidé)
  *
  * Réunit en un seul assistant pas-à-pas tout le travail d'une session de dosage,
  * qui était auparavant éclaté sur 6 écrans (Sessions, Dosage, Machines, Fûts,
@@ -135,7 +135,7 @@ export class AdSessionJourComponent implements OnInit, OnDestroy {
 
   ouvrir(): void {
     if (!this.referencePPH) { this.erreur.set('Choisissez d’abord un plan de production (PPH).'); return; }
-    if (!this.matricule) { this.erreur.set('Votre matricule agent est introuvable — reconnectez-vous.'); return; }
+    if (!this.matricule) { this.erreur.set('Votre matricule agent est introuvable, reconnectez-vous.'); return; }
     this.chargement.set(true);
     this.svc.ouvrirSessionDosage({
       referencePPH: this.referencePPH, date: this.today, matriculeAgentDoseur: this.matricule,

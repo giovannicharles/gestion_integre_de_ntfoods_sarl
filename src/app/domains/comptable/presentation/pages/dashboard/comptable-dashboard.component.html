@@ -41,7 +41,7 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Commandes à Valider</span>
         <span class="kpi-val" [style.color]="commandesEnAttente()>0?'var(--o)':''">{{ commandesEnAttente() }}</span>
-        <div class="kpi-meta">Précommandes J+1 — délai 17h00</div>
+        <div class="kpi-meta">Précommandes J+1, délai 17h00</div>
       </div>
     </div>
     <div class="kpi-card kp-b">
@@ -97,7 +97,7 @@
       <div class="kpi-decor kd-y"></div>
       <div class="kpi-ico iy"><i class="fa-solid fa-clock-rotate-left"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">DSO — délai paiement</span>
+        <span class="kpi-lbl">DSO, délai paiement</span>
         <span class="kpi-val">{{ dso() }} j</span>
         <div class="kpi-meta">CA réel facturé {{ fCFA(caFactureReel()) }}</div>
       </div>
@@ -118,8 +118,8 @@
             @for (v of versements; track v.id) {
             <tr [class.row-alert]="v.alerteRouge">
               <td>COM-{{ v.commercialId }}</td>
-              <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '—' }}</td>
-              <td>{{ v.typeVersement ?? '—' }}</td>
+              <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '-' }}</td>
+              <td>{{ v.typeVersement ?? '-' }}</td>
               <td>
                 @if (v.statut==='VALIDE') { <span class="badge bg-success">Validé</span> }
                 @else if (v.statut==='EN_ATTENTE') { <span class="badge bg-neutral">Att.</span> }
@@ -237,7 +237,7 @@
             <td class="fw-bold">{{ p.commercialId }}</td>
             <td class="mono">{{ p.tauxGlobal }}%</td>
             <td class="mono">{{ p.gammesValidees }}/{{ p.gammesTotal }}</td>
-            <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">—</span> }</td>
+            <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">-</span> }</td>
           </tr>
           } @empty {
           <tr><td colspan="4" class="empty-state">Aucune prime calculée pour cette semaine.</td></tr>

@@ -35,7 +35,7 @@
 
   <!-- CLASSEMENT COMPLET -->
   <div class="card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet — Semaine {{ numeroSemaine }}</span></div>
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet, Semaine {{ numeroSemaine }}</span></div>
     <div class="ranking-list">
       @for (com of commerciaux(); track com.matricule) {
       <div class="ranking-row" [class.my-row]="com.matricule===monId()">
@@ -53,7 +53,7 @@
           <div class="rank-pct">{{ tauxRealisation(com) }}% · {{ com.nbVentes }} ventes</div>
         </div>
         @if (isEligible(com)) { <span class="badge bg-success badge-sm">✓ Prime</span> }
-        @else { <span class="badge bg-neutral badge-sm">—</span> }
+        @else { <span class="badge bg-neutral badge-sm">-</span> }
       </div>
       } @empty {
       <p class="txt-muted" style="padding:16px">Aucun commercial classé cette semaine.</p>

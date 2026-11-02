@@ -4,7 +4,7 @@
     <div class="af-ph-ico"><i class="fa-solid fa-user-gear"></i></div>
     <div>
       <h1 class="ph-title">Affectation des Employés</h1>
-      <p class="ph-sub">Postes de production — objectifs recalculés automatiquement par le serveur</p>
+      <p class="ph-sub">Postes de production, objectifs recalculés automatiquement par le serveur</p>
     </div>
   </div>
 </div>
@@ -41,9 +41,9 @@
           <div class="skeleton" style="height:36px;border-radius:6px"></div>
         } @else {
           <select class="input af-select" [(ngModel)]="referencePPH">
-            <option value="">— Choisir un PPH —</option>
+            <option value="">Choisir un PPH,</option>
             @for (p of pphs(); track p.id) {
-              <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+              <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option>
             }
           </select>
           @if (!pphs().length) {
@@ -88,7 +88,7 @@
               <div class="af-field">
                 <label class="af-label">Poste</label>
                 <select class="input af-select" [(ngModel)]="l.poste">
-                  <option value="">— Choisir un poste —</option>
+                  <option value="">Choisir un poste,</option>
                   @for (p of codesPoste; track p.code) {
                     <option [value]="p.code">{{ p.libelle }}</option>
                   }
@@ -145,7 +145,7 @@
                     }
                   </option>
                   @for (a of disponiblesPourLigne(i); track a.matricule) {
-                    <option [value]="a.matricule">{{ a.nomComplet }} — {{ a.matricule }}</option>
+                    <option [value]="a.matricule">{{ a.nomComplet }}, {{ a.matricule }}</option>
                   }
                 </select>
               </div>
@@ -173,7 +173,7 @@
     <div class="af-card-header af-header-success">
       <div class="af-card-title">
         <div class="af-card-ico af-ico-success"><i class="fa-solid fa-circle-check"></i></div>
-        <span>Affectation créée — #{{ a.id }}</span>
+        <span>Affectation créée, #{{ a.id }}</span>
         <span class="af-ref-chip mono">{{ a.referencePPH }} · {{ a.date }}</span>
       </div>
     </div>

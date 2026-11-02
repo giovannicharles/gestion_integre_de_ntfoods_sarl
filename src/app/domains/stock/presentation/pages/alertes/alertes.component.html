@@ -5,7 +5,7 @@
       <div class="ph-icon ph-icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <div>
         <h1 class="ph-title">Alertes &amp; Seuils de Stock</h1>
-        <p class="ph-sub">Surveillance automatique — Acquisition et résolution</p>
+        <p class="ph-sub">Surveillance automatique, Acquisition et résolution</p>
       </div>
     </div>
     <div class="hdr-actions">
@@ -29,7 +29,7 @@
   @if (isReadOnly()) {
     <div class="banner banner-primary" style="display:flex;align-items:center;gap:10px">
       <i class="fa-solid fa-eye"></i>
-      <span>Mode consultation — Seul le <strong>Gestionnaire de Stock</strong> peut acquitter, commander ou résoudre les alertes.</span>
+      <span>Mode consultation, Seul le <strong>Gestionnaire de Stock</strong> peut acquitter, commander ou résoudre les alertes.</span>
     </div>
   }
 
@@ -100,7 +100,7 @@
             @if (sl.productSku) {
               <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace;display:block;margin-top:-4px;margin-bottom:4px">{{ sl.productSku }}</span>
             }
-            <p class="al-mag"><i class="fa-solid fa-warehouse"></i> {{ sl.warehouseName || '—' }}</p>
+            <p class="al-mag"><i class="fa-solid fa-warehouse"></i> {{ sl.warehouseName || '-' }}</p>
             <div class="al-bar-wrap">
               <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:5px">
                 <span>Stock actuel</span>

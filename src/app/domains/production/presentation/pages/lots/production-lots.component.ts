@@ -14,7 +14,7 @@ interface LotFormLigne {
   product: Product | null;
   productLabel: string;
   declaredQuantityKg: number;
-  /** Décomposition par conditionnement (P4) — [0] alimente conditioningType/conditioningQty/equivalentUnits. */
+  /** Décomposition par conditionnement (P4), [0] alimente conditioningType/conditioningQty/equivalentUnits. */
   lignesConditionnement: LigneConditionnement[];
   dlc: string;
   notes: string;
@@ -40,9 +40,9 @@ export class ProductionLotsComponent implements OnInit {
   pphs = signal<PPHBE[]>([]);
   /**
    * Produits finis réels (module conditionnement, projetés dans le catalogue opérationnel
-   * — voir CatalogueOperationnelSeeder/ProduitsFinisOperationnelSeeder, backend) : même
+   *, voir CatalogueOperationnelSeeder/ProduitsFinisOperationnelSeeder, backend) : même
    * source que le combobox de Stock (StockApiRepository.getFinishedProducts), réutilisée
-   * ici plutôt que ressaisie en texte libre (P3, 2026-10-15 — cause du 400 systématique
+   * ici plutôt que ressaisie en texte libre (P3, 2026-10-15, cause du 400 systématique
    * corrigée dans la même tranche, voir production.service.ts : LotBE).
    */
   produits = signal<Product[]>([]);
@@ -121,7 +121,7 @@ export class ProductionLotsComponent implements OnInit {
         this.chargerLotsAValider();
         this.showDeclarerLot.set(false);
         this.lignesLot = [];
-        this.message.set(`${crees.length} lot(s) déclaré(s) — en attente de validation stock`);
+        this.message.set(`${crees.length} lot(s) déclaré(s), en attente de validation stock`);
       },
       error: (err) => {
         const detail = err?.error?.erreur || err?.error?.message;
@@ -170,14 +170,14 @@ export class ProductionLotsComponent implements OnInit {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  /** Validation physique par le Gestionnaire de Stock — déclenche le verrouillage de la fiche. */
+  /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
   validerLot(lot: LotBE): void {
     if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
-        this.message.set('Lot validé — fiche de production verrouillée');
+        this.message.set('Lot validé, fiche de production verrouillée');
       },
       error: () => this.message.set('Erreur lors de la validation du lot')
     });

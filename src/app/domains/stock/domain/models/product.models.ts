@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════
-// TANTY DIGITAL ERP — Modèles spécifiques aux Produits
+// TANTY DIGITAL ERP, Modèles spécifiques aux Produits
 // Complément aux modèles de stock pour la gestion des produits
 // ════════════════════════════════════════════════════════════
 

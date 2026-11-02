@@ -20,7 +20,7 @@
                 (change)="selectionnerSessionDepuisSelect($any($event).target.value)">
           <option value="" disabled>Sélectionner une session ouverte...</option>
           @for (s of contexte.sessionsOuvertes(); track s.id) {
-            <option [value]="s.id">#{{ s.id }} — {{ s.referencePPH }} — {{ s.date }}</option>
+            <option [value]="s.id">#{{ s.id }}, {{ s.referencePPH }}, {{ s.date }}</option>
           }
         </select>
       </label>

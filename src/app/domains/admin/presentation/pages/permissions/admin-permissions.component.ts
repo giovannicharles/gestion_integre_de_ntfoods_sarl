@@ -9,15 +9,15 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 /**
- * Gestion des permissions (RBAC) — 2026-10-16.
+ * Gestion des permissions (RBAC), 2026-10-16.
  *
  * Le moteur existe déjà entièrement côté serveur (PermissionController) : matrice
  * rôle→permission, permissions effectives par utilisateur (base + overrides),
  * ajout/suppression d'un override avec motif obligatoire et auteur tracé. Rien
- * n'était exposé côté frontend — cet écran ne fait qu'ouvrir ce qui existait déjà,
+ * n'était exposé côté frontend, cet écran ne fait qu'ouvrir ce qui existait déjà,
  * sans toucher au backend. Lecture ouverte à AUTH_PERMISSION_CONSULTER (DG,
  * Directeur Commercial, Contrôleur Général) ; les boutons d'override restent
- * masqués sans AUTH_PERMISSION_GERER (DG, Admin) — le serveur reste la seule
+ * masqués sans AUTH_PERMISSION_GERER (DG, Admin), le serveur reste la seule
  * autorité réelle, ce masquage n'est qu'un confort d'affichage.
  */
 /** Icône par préfixe de module (code de permission = MODULE_RESSOURCE_ACTION). */
@@ -80,7 +80,7 @@ export class AdminPermissionsComponent implements OnInit {
     const f = this.filtrePermission().toUpperCase().trim();
     return f ? this.permissionsDuRole().filter(p => p.includes(f)) : this.permissionsDuRole();
   });
-  /** Regroupement par module (2026-10-25) — ~150 permissions à plat étaient illisibles. */
+  /** Regroupement par module (2026-10-25), ~150 permissions à plat étaient illisibles. */
   groupesRole = computed(() => grouperParModule(this.permissionsFiltrees()));
   modulesReplies = signal<Set<string>>(new Set());
   moduleEstOuvert(module: string): boolean { return !this.modulesReplies().has(module); }
@@ -92,7 +92,7 @@ export class AdminPermissionsComponent implements OnInit {
     });
   }
 
-  /** Vue inverse « qui a cette permission par défaut » — calculée depuis la matrice déjà en mémoire. */
+  /** Vue inverse « qui a cette permission par défaut », calculée depuis la matrice déjà en mémoire. */
   permissionSelectionnee = signal<string | null>(null);
   rolesAvecPermission = computed(() => {
     const code = this.permissionSelectionnee();
@@ -202,7 +202,7 @@ export class AdminPermissionsComponent implements OnInit {
     const u = this.utilisateurCourant();
     if (!u) return;
     this.svc.supprimerOverridePermission(u.matricule, code).subscribe({
-      next: () => { this.toast.success('Override supprimé — retour à la permission de base du rôle.'); this.rechercherUtilisateur(); },
+      next: () => { this.toast.success('Override supprimé, retour à la permission de base du rôle.'); this.rechercherUtilisateur(); },
       error: e => this.toast.error(extractApiError(e), 'Échec de la suppression'),
     });
   }

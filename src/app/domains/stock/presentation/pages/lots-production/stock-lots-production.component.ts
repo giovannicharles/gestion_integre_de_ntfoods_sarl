@@ -5,11 +5,11 @@ import { ProductionService, LotBE } from '../../../../production/infrastructure/
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 /**
- * Écran Stock — « Lots de Production » (2026-10-01, demande explicite du porteur).
+ * Écran Stock, « Lots de Production » (2026-10-01, demande explicite du porteur).
  *
  * Volontairement séparé de `ProductionLotsComponent` (module Production) : le Gestionnaire de
  * Stock ne doit JAMAIS être renvoyé dans le tableau de bord / la navigation du module Production
- * — chaque module garde sa propre interface, même quand les deux consultent la même ressource
+ *, chaque module garde sa propre interface, même quand les deux consultent la même ressource
  * backend. Cet écran réutilise `ProductionService` (simple injectable partagé, pas une frontière
  * de module) pour les mêmes appels déjà autorisés au Gestionnaire de Stock côté API
  * (`PRODUCTION_LOT_VALIDER_STOCK`, `LotController.java`), mais s'affiche entièrement sous le
@@ -61,14 +61,14 @@ export class StockLotsProductionComponent implements OnInit {
     });
   }
 
-  /** Validation physique par le Gestionnaire de Stock — déclenche le verrouillage de la fiche. */
+  /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
   validerLot(lot: LotBE): void {
     if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
-        this.message.set('Lot validé — fiche de production verrouillée');
+        this.message.set('Lot validé, fiche de production verrouillée');
       },
       error: () => this.message.set('Erreur lors de la validation du lot'),
     });

@@ -43,7 +43,7 @@ export class CommercialRecouvrementComponent implements OnInit {
   }
 
   getClientType(clientId: string): string {
-    return this.recouvrement().find(r => r.clientId === clientId)?.statut ?? '—';
+    return this.recouvrement().find(r => r.clientId === clientId)?.statut ?? '-';
   }
 
   private mapR(r: RecouvrementBE): RecouvrementUI {

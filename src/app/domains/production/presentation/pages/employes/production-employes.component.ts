@@ -49,7 +49,7 @@ export class ProductionEmployesComponent implements OnInit {
         matricule: a.matricule,
         nomComplet: a.nomComplet,
         poste: '',
-        libellePoste: '—'
+        libellePoste: '-'
       }));
     }
     const result: AgentAvecPoste[] = [];

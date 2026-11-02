@@ -6,12 +6,12 @@
 .section-titre i { color: var(--g); }
 .row-alert { background: var(--r-gh); }
 
-/* 2026-11-01 — résumé incidents par module (bloc 7 DG_MODULE_SPEC.md). */
+/* 2026-11-01, résumé incidents par module (bloc 7 DG_MODULE_SPEC.md). */
 .incidents-module-breakdown { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .75rem 0 1.25rem; }
 .imb-label { font-size: .78rem; color: var(--n500); font-weight: 600; margin-right: .25rem; }
 .imb-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .65rem; border-radius: var(--r-full); background: var(--n100); color: var(--n700); font-size: .78rem; }
 
-/* 2026-11-01 — graphique « Solde de caisse », nouveau sur cette page. */
+/* 2026-11-01, graphique « Solde de caisse », nouveau sur cette page. */
 .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }

@@ -5,9 +5,9 @@ import { ProductionService, PPHBE } from '../../../../infrastructure/production.
 
 import { BesoinsParJourComponent } from '../../../shared/besoins-par-jour/besoins-par-jour.component';
 /**
- * PLANS DE PRODUCTION (PPH) — Agent de Production
+ * PLANS DE PRODUCTION (PPH), Agent de Production
  * GET /production/pph (AGENT_PRODUCTION, déjà détenue par ce
- * rôle) — consultation seule : la création/validation/modification d'un PPH
+ * rôle), consultation seule : la création/validation/modification d'un PPH
  * exige PRODUCTION_PPH_GERER, réservée au Chef de Production / Responsable
  * de Salle.
  */

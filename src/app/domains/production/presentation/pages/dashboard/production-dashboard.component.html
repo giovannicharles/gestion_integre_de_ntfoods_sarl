@@ -3,7 +3,7 @@
     <i class="fa-solid fa-industry ph-ico"></i>
     <div>
       <h1 class="ph-title">Tableau de Bord Production</h1>
-      <p class="ph-sub">{{ plan().semaine }} — {{ plan().dateDebut }} au {{ plan().dateFin }}</p>
+      <p class="ph-sub">{{ plan().semaine }}, {{ plan().dateDebut }} au {{ plan().dateFin }}</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -71,7 +71,7 @@
     <div class="kpi-body">
       <div class="kpi-lbl">Avancement PPH</div>
       <div class="kpi-val">{{ tauxAvancementPPH() }}%</div>
-      <div class="kpi-meta">{{ pphEnCoursReference() ?? '—' }}</div>
+      <div class="kpi-meta">{{ pphEnCoursReference() ?? '-' }}</div>
     </div>
   </div>
   <div class="kpi-card kp-r">
@@ -87,7 +87,7 @@
 <!-- ORDRES DE FABRICATION -->
 <div class="card">
   <div class="card-hd">
-    <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Ordres de fabrication — taux de charge {{ tauxCharge() }}%</span>
+    <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Ordres de fabrication, taux de charge {{ tauxCharge() }}%</span>
     <span class="badge badge-secondary badge-sm">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</span>
   </div>
   <div class="tbl-wrap">
@@ -110,7 +110,7 @@
               <span class="mono">{{ progression(o.qteRealisee,o.qteDemandee) }}%</span>
             </div>
           </td>
-          <td class="mono">{{ o.dateButoir ? (o.dateButoir | date:'dd MMM':'':'fr') : '—' }}</td>
+          <td class="mono">{{ o.dateButoir ? (o.dateButoir | date:'dd MMM':'':'fr') : '-' }}</td>
           <td>
             @if (o.statut === 'HONORE') { <span class="badge bg-success badge-sm">Honoré</span> }
             @else if (o.statut === 'EN_COURS') { <span class="badge bg-orange badge-sm">En cours</span> }
@@ -145,7 +145,7 @@
 
 <div class="card">
   <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Avancement Produits Finis — {{ pphEnCours()?.referencePPH ?? 'Aucun PPH en cours' }}</h2>
+    <h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Avancement Produits Finis, {{ pphEnCours()?.referencePPH ?? 'Aucun PPH en cours' }}</h2>
     <a routerLink="/production/plan" class="btn btn-ghost btn-sm">Voir plan complet</a>
   </div>
   @for (ligne of (pphEnCours()?.lignes ?? []); track ligne.codeProduit) {
@@ -206,7 +206,7 @@
     <i class="fa-solid fa-chart-line ph-ico"></i>
     <div>
       <h1 class="ph-title" style="font-size:1.1rem">Statistiques & Tendances</h1>
-      <p class="ph-sub">4 dernières semaines — données calculées automatiquement</p>
+      <p class="ph-sub">4 dernières semaines, données calculées automatiquement</p>
     </div>
   </div>
 </div>
@@ -220,7 +220,7 @@
   <div class="kpi-card kp-b">
     <div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
     <div class="kpi-body">
-      <div class="kpi-lbl">Production — Semaine actuelle</div>
+      <div class="kpi-lbl">Production, Semaine actuelle</div>
       <div class="kpi-val">{{ comp.actuelle }} kg</div>
       <div class="kpi-meta">Semaine précédente : {{ comp.precedente }} kg</div>
     </div>
@@ -354,7 +354,7 @@
         <label>ID OF<input class="input" [(ngModel)]="nouveauOF.idOF" placeholder="OF-..."></label>
         <label>PPH
           <select class="input" [(ngModel)]="nouveauOF.referencePPH">
-            <option value="">— Choisir —</option>
+            <option value="">Choisir,</option>
             @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} ({{ p.referenceBC }})</option> }
           </select>
         </label>
@@ -379,9 +379,9 @@
     <div class="modal-hd"><h3><i class="fa-solid fa-circle-info"></i> Détail OF {{ ofDetail()!.idOF }}</h3></div>
     <div class="modal-body">
       <p><strong>PPH :</strong> {{ ofDetail()!.referencePPH }}</p>
-      <p><strong>Produit :</strong> {{ ofDetail()!.codeProduit }} — {{ ofDetail()!.designationProduit }}</p>
-      <p><strong>Demandé :</strong> {{ ofDetail()!.qteDemandee }} — <strong>Réalisé :</strong> {{ ofDetail()!.qteRealisee }}</p>
-      <p><strong>Date butoir :</strong> {{ ofDetail()!.dateButoir ? (ofDetail()!.dateButoir | date:'dd/MM/yyyy') : '—' }}</p>
+      <p><strong>Produit :</strong> {{ ofDetail()!.codeProduit }}, {{ ofDetail()!.designationProduit }}</p>
+      <p><strong>Demandé :</strong> {{ ofDetail()!.qteDemandee }}, <strong>Réalisé :</strong> {{ ofDetail()!.qteRealisee }}</p>
+      <p><strong>Date butoir :</strong> {{ ofDetail()!.dateButoir ? (ofDetail()!.dateButoir | date:'dd/MM/yyyy') : '-' }}</p>
       <p><strong>Statut :</strong> {{ ofDetail()!.statut }}</p>
     </div>
     <div class="modal-ft">

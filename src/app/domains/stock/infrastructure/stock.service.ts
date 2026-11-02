@@ -47,7 +47,7 @@ export interface NiveauStockBE {
   dateModification: string | null;
 }
 
-/** Miroir de DemandeTransfertResponse (backend) — la demande créée, pas le transfert exécuté. */
+/** Miroir de DemandeTransfertResponse (backend), la demande créée, pas le transfert exécuté. */
 export interface DemandeTransfertBE {
   demandeId: number;
   actionType: string;
@@ -55,7 +55,7 @@ export interface DemandeTransfertBE {
   seuilRequis: number;
 }
 
-/** Miroir de TransfertResponse (backend) — un transfert déjà exécuté. */
+/** Miroir de TransfertResponse (backend), un transfert déjà exécuté. */
 export interface TransfertBE {
   id: number;
   numero: string;
@@ -361,7 +361,7 @@ export class StockService {
   }
 
   /**
-   * @deprecated Écrit directement le stock sans passer par le moteur de demandes (invariant 1) — plus appelé par
+   * @deprecated Écrit directement le stock sans passer par le moteur de demandes (invariant 1), plus appelé par
    * aucun écran (2026-09-30). Utiliser {@link demanderTransfert}, qui crée une demande approuvée par un second
    * acteur avant que le stock ne bouge (`TransfertController`/`StockNiveauTransfertHandler`).
    */
@@ -371,7 +371,7 @@ export class StockService {
   }
 
   /**
-   * Demande un transfert central → tampon (2026-09-30) — le stock ne bouge pas à cet appel (202) : une demande est
+   * Demande un transfert central → tampon (2026-09-30), le stock ne bouge pas à cet appel (202) : une demande est
    * créée, exécutée automatiquement quand un second acteur l'approuve (`TransfertController`). Sans
    * codeEntrepotSource/Cible, le CENTRAL et le TAMPON uniques sont résolus côté serveur.
    */
@@ -383,7 +383,7 @@ export class StockService {
     }).pipe(map((r) => r.donnees!));
   }
 
-  /** Transferts déjà exécutés (historique) — les demandes en attente se suivent sur /validations. */
+  /** Transferts déjà exécutés (historique), les demandes en attente se suivent sur /validations. */
   listerTransfertsExecutes(statut?: string): Observable<TransfertBE[]> {
     const p: Record<string, string> = {};
     if (statut) p['statut'] = statut;

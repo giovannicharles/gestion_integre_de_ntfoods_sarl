@@ -19,7 +19,7 @@ export class DgChatComponent implements OnDestroy {
 
   contextData = signal<Record<string, unknown> | null>(null);
   loading = signal(true);
-  /** 2026-11-01 : l'échec était avalé en silence (loading repassait à false sans aucun signal) —
+  /** 2026-11-01 : l'échec était avalé en silence (loading repassait à false sans aucun signal),
    * l'assistant s'affichait quand même, mais sans contexte entreprise, sans que le DG le sache. */
   contextError = signal(false);
 
@@ -52,7 +52,7 @@ export class DgChatComponent implements OnDestroy {
   }
 
   // 2026-11-01 : stock/alertes/production pointaient vers des routes /dg/* inexistantes
-  // (stock-dashboard, alertes, production) — un clic éjectait l'utilisateur de tout le module
+  // (stock-dashboard, alertes, production), un clic éjectait l'utilisateur de tout le module
   // DG via la redirection générique de route inconnue. /dg/supervision agrège déjà financier +
   // production + stock en lecture seule (même destination que le reste du sidebar DG) ;
   // "alertes" y mène aussi, à la section Stock (nbAlertesActives, anomalies détaillées).

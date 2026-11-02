@@ -118,7 +118,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         { label: 'Réceptions Fournisseurs', icon: 'fa-truck-ramp-box', route: '/stock/reception', roles: ['GESTIONNAIRE_STOCK', 'ADMIN'] },
         { label: 'Validation Entrées', icon: 'fa-clipboard-check', route: '/stock/validation', roles: ['GESTIONNAIRE_STOCK', 'CONTROLEUR_GENERAL', 'ADMIN'] },
         // Écran Stock à part entière (2026-10-01, confidentialité des modules) : jamais
-        // /production/lots — le Gestionnaire de Stock ne doit pas voir la navigation Production.
+        // /production/lots, le Gestionnaire de Stock ne doit pas voir la navigation Production.
         { label: 'Lots de Production', icon: 'fa-industry', route: '/stock/lots-production', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
         { label: 'Commandes Production', icon: 'fa-cart-plus', route: '/stock/orders', roles: ['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN'] },
         { label: 'Dotations', icon: 'fa-hand-holding', route: '/stock/dotations', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
@@ -267,14 +267,14 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
 
   private loadSidebarBadges() {
     // Corrigé le 2026-09-22 (docs/PROGRESS.md) : interrogeait stock/receptions avec un
-    // paramètre 'source' que ReceiptController n'a jamais eu — le compte affiché était
+    // paramètre 'source' que ReceiptController n'a jamais eu, le compte affiché était
     // sans rapport avec le vrai circuit de lots (production/LotController, seul chemin
     // depuis l'unification du doublon de déclaration/validation de lot).
     this.api.get<any>('production/lots/a-valider')
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (res) => this.pendingLotsCount.set(res?.donnees?.length || 0), error: () => {} });
 
-    // Pending dotations — all non-completed/rejected statuses
+    // Pending dotations, all non-completed/rejected statuses
     this.api.get<any>('stock/dotations')
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -292,10 +292,10 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (res) => this.pendingOrdersCount.set(res?.donnees?.length || 0), error: () => {} });
 
-    // Pending validation count — receptions awaiting 1st or 2nd validation.
+    // Pending validation count, receptions awaiting 1st or 2nd validation.
     // Base réelle du contrôleur = /api/v1/stock/receptions (pas /api/stock/receptions), et les
     // deux endpoints dédiés ci-dessous renvoient une liste JSON brute (pas d'enveloppe ApiResponse
-    // ici) — contrairement à la plupart des autres endpoints. Les deux erreurs donnaient un 404
+    // ici), contrairement à la plupart des autres endpoints. Les deux erreurs donnaient un 404
     // (mauvais chemin) suivi d'un comptage toujours à 0 (mauvaise lecture de la réponse).
     this.api.get<any[]>('v1/stock/receptions/en-attente-premiere-validation')
       .pipe(takeUntil(this.destroy$))

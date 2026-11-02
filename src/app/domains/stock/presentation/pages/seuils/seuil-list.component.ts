@@ -439,7 +439,7 @@ export class SeuilListComponent implements OnInit, OnDestroy {
           this.saving.set(false);
           this.closeBatchModal();
           this.loadItems();
-          this.successMsg.set(`Seuils par défaut appliqués (réappro: ${this.batchReorderPoint}, sécurité: ${this.batchSafetyStock}, max: ${this.batchMaxStock || '—'})`);
+          this.successMsg.set(`Seuils par défaut appliqués (réappro: ${this.batchReorderPoint}, sécurité: ${this.batchSafetyStock}, max: ${this.batchMaxStock || '-'})`);
           setTimeout(() => this.successMsg.set(''), 3000);
         },
         error: () => {

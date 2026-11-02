@@ -4,8 +4,8 @@
     <div>
       <h1 class="ph-title">Plan de Production Hebdomadaire</h1>
       <p class="ph-sub">
-        {{ pph()?.referencePPH ?? '—' }} — Semaine {{ pph()?.semaine ?? '—' }} du {{ pph()?.dateDebut ?? '—' }} au {{ pph()?.dateFin ?? '—' }}
-        <br><small>Soumis le {{ pph()?.dateSoumission ?? '—' }}</small>
+        {{ pph()?.referencePPH ?? '-' }}, Semaine {{ pph()?.semaine ?? '-' }} du {{ pph()?.dateDebut ?? '-' }} au {{ pph()?.dateFin ?? '-' }}
+        <br><small>Soumis le {{ pph()?.dateSoumission ?? '-' }}</small>
       </p>
     </div>
   </div>
@@ -13,10 +13,10 @@
     <select class="input" [ngModel]="pph()?.referencePPH" (ngModelChange)="selectionnerPPH($event)">
       <option value="">PPH en cours</option>
       @for (p of pphs(); track p.id) {
-        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+        <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option>
       }
     </select>
-    <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '—' }}</span>
+    <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '-' }}</span>
     <button class="btn btn-primary" (click)="showCreerPPH.set(true)"><i class="fa-solid fa-plus"></i> PPH</button>
     <button class="btn btn-ghost" (click)="ouvrirModifierLignes()" [disabled]="!pph()">Modifier lignes</button>
     @if (pph()?.statut === 'BROUILLON') { <button class="btn btn-primary" *appHasPermission="'PRODUCTION_PPH_GERER'" (click)="validerPPH()">Valider</button> }
@@ -34,7 +34,7 @@
     <div class="kpi-ico ib"><i class="fa-solid fa-industry"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Chef de production</div>
-      <div class="kpi-val">{{ pph()?.matriculeChefProduction ?? '—' }}</div>
+      <div class="kpi-val">{{ pph()?.matriculeChefProduction ?? '-' }}</div>
       <div class="kpi-meta">responsable semaine</div>
     </div>
   </div>
@@ -96,7 +96,7 @@
 
 <div class="card">
   <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-boxes-packing"></i> Produits Finis — Prévisions vs Réalisé</h2>
+    <h2 class="card-title"><i class="fa-solid fa-boxes-packing"></i> Produits Finis, Prévisions vs Réalisé</h2>
   </div>
   <div class="tbl-wrap">
     <table class="data-table">
@@ -143,7 +143,7 @@
         <select class="input bc-select"
                 [ngModel]="rechercheBC"
                 (ngModelChange)="selectionnerBC($event)">
-          <option value="">— Sélectionner un BC —</option>
+          <option value="">Sélectionner un BC,</option>
           @for (ref of bcUniques(); track ref) {
             <option [value]="ref">{{ ref }}</option>
           }

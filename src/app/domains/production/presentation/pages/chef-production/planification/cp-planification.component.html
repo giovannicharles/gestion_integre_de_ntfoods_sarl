@@ -13,7 +13,7 @@
 <div class="card">
   <div class="toolbar-row">
     <select class="input" (ngModelChange)="selectionner($event)" [ngModel]="pphSelectionne()">
-      @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }} — {{ p.semaine }}</option> }
+      @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }}, {{ p.semaine }}</option> }
     </select>
   </div>
 </div>
@@ -30,7 +30,7 @@
   </div>
 
   <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production — {{ p.dateDebut }} → {{ p.dateFin }}</h2></div>
+    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production, {{ p.dateDebut }} → {{ p.dateFin }}</h2></div>
     <div class="tbl-wrap">
       <table class="data-table">
         <thead><tr><th>Jour</th><th>Matières premières</th><th>Poudre totale (kg)</th><th>Fûts prévus</th><th>Emballage</th></tr></thead>

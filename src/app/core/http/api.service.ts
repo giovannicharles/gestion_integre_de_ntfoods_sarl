@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environment/environment';
 
-/** Service HTTP centralisé — tous les appels API passent ici. */
+/** Service HTTP centralisé, tous les appels API passent ici. */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);

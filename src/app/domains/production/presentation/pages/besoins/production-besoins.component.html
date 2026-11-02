@@ -68,9 +68,9 @@
             <td><a href="javascript:void(0)" (click)="voirDetail(b.numero)"><strong>{{ b.numero }}</strong></a></td>
             <td><span class="badge bg-neutral">{{ typeLabel(b.type) }}</span></td>
             <td><span class="badge bg-neutral">{{ b.codeProduit }}</span> {{ b.designationProduit }}</td>
-            <td class="mono">{{ b.referencePPH ?? '—' }}</td>
+            <td class="mono">{{ b.referencePPH ?? '-' }}</td>
             <td><strong>{{ b.quantiteDemandee }} {{ b.unite }}</strong></td>
-            <td>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ b.dateBesoin ? (b.dateBesoin | date:'dd/MM/yyyy') : '-' }}</td>
             <td>{{ b.matriculeDemandeur }}</td>
             <td>
               <span [class]="statutClass(b.statut)">{{ b.statut }}</span>
@@ -112,7 +112,7 @@
         </label>
         <label>PPH (optionnel)
           <select class="input" [(ngModel)]="nouveauBesoin.referencePPH">
-            <option value="">— Aucun —</option>
+            <option value="">Aucun,</option>
             @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
           </select>
         </label>
@@ -162,11 +162,11 @@
     <div class="modal-body">
       <div class="modal-detail-grid">
         <div class="modal-detail-row"><span class="modal-detail-label">Type</span><span class="modal-detail-value">{{ typeLabel(showDetail()!.type) }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Produit</span><span class="modal-detail-value">{{ showDetail()!.codeProduit }} — {{ showDetail()!.designationProduit }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Produit</span><span class="modal-detail-value">{{ showDetail()!.codeProduit }}, {{ showDetail()!.designationProduit }}</span></div>
         <div class="modal-detail-row"><span class="modal-detail-label">Quantité demandée</span><span class="modal-detail-value">{{ showDetail()!.quantiteDemandee }} {{ showDetail()!.unite }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">PPH</span><span class="modal-detail-value">{{ showDetail()!.referencePPH ?? '—' }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">PPH</span><span class="modal-detail-value">{{ showDetail()!.referencePPH ?? '-' }}</span></div>
         <div class="modal-detail-row"><span class="modal-detail-label">Demandeur</span><span class="modal-detail-value">{{ showDetail()!.matriculeDemandeur }}</span></div>
-        <div class="modal-detail-row"><span class="modal-detail-label">Motif</span><span class="modal-detail-value">{{ showDetail()!.motif ?? '—' }}</span></div>
+        <div class="modal-detail-row"><span class="modal-detail-label">Motif</span><span class="modal-detail-value">{{ showDetail()!.motif ?? '-' }}</span></div>
         <div class="modal-detail-row"><span class="modal-detail-label">Statut</span><span class="modal-detail-value"><span [class]="statutClass(showDetail()!.statut)">{{ showDetail()!.statut }}</span></span></div>
         @if (showDetail()!.matriculeValidateur) {
           <div class="modal-detail-row"><span class="modal-detail-label">Traité par</span><span class="modal-detail-value">{{ showDetail()!.matriculeValidateur }}</span></div>

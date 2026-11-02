@@ -13,7 +13,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
  *  standard à sa précédente équivalente, pas une plage libre) : signalé, pas construit ce tour. */
 const PERIODE_API: Record<'today' | 'week' | 'month' | 'quarter', string> = { today: 'JOUR', week: 'SEMAINE', month: 'MOIS', quarter: 'TRIMESTRE' };
 const PERIODE_LABEL: Record<'today' | 'week' | 'month' | 'quarter', string> = { today: "aujourd'hui", week: 'cette semaine', month: 'ce mois', quarter: 'ce trimestre' };
-/** Rafraîchissement automatique des données vivantes (KPI, validations, anomalies) — tableau de bord réactif, pas une photo figée au chargement. */
+/** Rafraîchissement automatique des données vivantes (KPI, validations, anomalies), tableau de bord réactif, pas une photo figée au chargement. */
 const INTERVALLE_RAFRAICHISSEMENT_MS = 60_000;
 
 Chart.register(...registerables);
@@ -37,7 +37,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   today = new Date();
   loading = signal(true);
   loadError = signal<string | null>(null);
-  /** Échec d'un rafraîchissement périodique (pas bloquant — l'affichage précédent reste). */
+  /** Échec d'un rafraîchissement périodique (pas bloquant, l'affichage précédent reste). */
   liveError = signal<string | null>(null);
   selectedPeriod = signal<'today' | 'week' | 'month' | 'quarter'>('today');
   /** Onglets du bas de page : réduit le défilement (12+ cartes empilées avant) sans rien supprimer.
@@ -121,7 +121,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Puce d'icône par type de validation (2026-11-01 — motif « Recent Activity » des références
+   * Puce d'icône par type de validation (2026-11-01, motif « Recent Activity » des références
    * 21st.dev, prompt/) : chaque ligne de la liste « Validations en attente » gagne une icône
    * colorée au lieu d'un badge texte seul, réutilise les classes `.ig/.iy/.ir/.ib` déjà posées
    * partout dans l'app (puce pastel + icône teintée).
@@ -256,7 +256,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.chargerDonneesVivantes();
   }
 
-  /** Couleurs lues depuis les tokens CSS (var(--g)/var(--color-accent)) — cohérent avec le thème clair/sombre, jamais de hex en dur dans les graphiques. */
+  /** Couleurs lues depuis les tokens CSS (var(--g)/var(--color-accent)), cohérent avec le thème clair/sombre, jamais de hex en dur dans les graphiques. */
   private tokenColor(name: string): string {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#999';
   }
@@ -282,7 +282,7 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Comparaison N vs N-1 sur la période choisie (JOUR/SEMAINE/MOIS) — remplace un graphique
+   * Comparaison N vs N-1 sur la période choisie (JOUR/SEMAINE/MOIS), remplace un graphique
    * "Évolution CA mensuelle" qui affichait un tableau vide depuis le début : rien n'alimentait
    * jamais `caMensuel`, et l'API DG n'expose de toute façon qu'une comparaison à deux tranches
    * (actuelle vs précédente), pas une série de 12 mois (vérifié sur RapportComparatifResponse,

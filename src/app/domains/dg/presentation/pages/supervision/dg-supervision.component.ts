@@ -21,7 +21,7 @@ const LIBELLE_CATEGORIE: Record<string, string> = {
 /**
  * Vue consolidée du DG : 3 dashboards agrégés (financier, production, stock)
  * et la détection transversale d'anomalies. Les 4 endpoints existaient côté
- * backend sans aucun écran — cette page ne fait qu'afficher ce qu'ils
+ * backend sans aucun écran, cette page ne fait qu'afficher ce qu'ils
  * renvoient, sans rien recalculer ni compléter côté client.
  */
 @Component({
@@ -53,13 +53,13 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
   production = signal<DashboardProductionDgBE | null>(null);
   stock = signal<DashboardStockDgBE | null>(null);
   anomalies = signal<AnomalieBE[]>([]);
-  /** 2026-11-01 (demande explicite du porteur) : compteurs seuls — la gestion des incidents
+  /** 2026-11-01 (demande explicite du porteur) : compteurs seuls, la gestion des incidents
    * (assigner/résoudre/clôturer, détail) reste réservée à ADMIN, décision actée du 2026-10-25. */
   incidentsResume = signal<IncidentResumeBE | null>(null);
-  /** 2026-11-01 — solde de caisse en fin de mois, pas la "trésorerie" composite de /dg/kpis
+  /** 2026-11-01, solde de caisse en fin de mois, pas la "trésorerie" composite de /dg/kpis
    * (voir HistoriqueTresorerieService backend pour pourquoi cette distinction est délibérée). */
   historiqueTresorerie = signal<MoisSoldeCaisseBE[]>([]);
-  /** 2026-11-01 — pont vers le module Contrôle (bloc 4 DG_MODULE_SPEC.md, ❌ ABSENT jusqu'ici). */
+  /** 2026-11-01, pont vers le module Contrôle (bloc 4 DG_MODULE_SPEC.md, ❌ ABSENT jusqu'ici). */
   controleGestion = signal<ControleGestionResumeBE | null>(null);
 
   ngOnInit(): void {

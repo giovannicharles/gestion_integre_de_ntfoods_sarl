@@ -1,12 +1,12 @@
 /* ══════════════════════════════════════════════════════════
-   GESTION UTILISATEURS — Administration
+   GESTION UTILISATEURS, Administration
    Charte TANTY DIGITAL : Vert #14532D · Jaune #F6B60B
-   Version enrichie — dégradés, profondeur, micro-interactions
+   Version enrichie, dégradés, profondeur, micro-interactions
 ══════════════════════════════════════════════════════════ */
 
 /* Tokens locaux retirés (2026-10-20) : --u-g/--u-y/--u-shadow-* dupliquaient les tokens
    globaux (--g/--y/--sh-*, styles.css) avec des hex en dur, jamais reliés aux overrides
-   :root.dark-mode — cassé en mode sombre. Remplacés ci-dessous par les tokens globaux,
+   :root.dark-mode, cassé en mode sombre. Remplacés ci-dessous par les tokens globaux,
    dégradés/ombres/micro-interactions conservés à l'identique. */
 
 /* ══════════════════════════════════════════════════════════
@@ -431,7 +431,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   BASCULE TABLEAU / CARTES — 2026-10-25
+   BASCULE TABLEAU / CARTES, 2026-10-25
 ══════════════════════════════════════════════════════════ */
 .vue-toggle {
   display: inline-flex; margin-left: auto;

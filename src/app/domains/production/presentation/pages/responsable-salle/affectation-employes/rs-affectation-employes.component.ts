@@ -111,7 +111,7 @@ export class RsAffectationEmployesComponent implements OnInit {
     this.svc.creerAffectation({ referencePPH: this.referencePPH, date: this.date, lignes }).subscribe({
       next: a => {
         this.affectationCreee.set(a);
-        this.message.set('Affectation créée — objectifs recalculés automatiquement par le serveur.');
+        this.message.set('Affectation créée, objectifs recalculés automatiquement par le serveur.');
         this.saving.set(false);
       },
       error: () => {

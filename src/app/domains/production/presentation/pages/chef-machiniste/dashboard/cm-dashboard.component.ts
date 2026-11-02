@@ -9,7 +9,7 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
 import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-chart.component';
 
 /**
- * DASHBOARD — Chef Machiniste
+ * DASHBOARD, Chef Machiniste
  * Vue unique : cartes KPI + graphiques. Aucune action de saisie ici
  * (voir les composants Objectifs / Réalisations / Indicateurs pour cela).
  *

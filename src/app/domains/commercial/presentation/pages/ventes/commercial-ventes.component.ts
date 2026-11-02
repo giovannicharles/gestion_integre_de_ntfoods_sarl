@@ -41,7 +41,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
   nmQuantite = 1;
   nmMotif = '';
 
-  /** Seuil réel (unités de base) au-delà duquel une photo est exigée pour une avarie — jamais codé en dur, lu au serveur. */
+  /** Seuil réel (unités de base) au-delà duquel une photo est exigée pour une avarie, jamais codé en dur, lu au serveur. */
   seuilPhotoAvarie = signal<number | null>(null);
   nmPhotoFile: File | null = null;
   nmPhotoDocId: number | null = null;
@@ -57,7 +57,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
     this.chargerVentes();
     this.svc.getReglesAvarieCourantes().pipe(takeUntil(this.d$)).subscribe({
       next: r => this.seuilPhotoAvarie.set(r.quantiteSeuilPhotoObligatoire),
-      error: () => this.showToast("Seuil photo avarie non chargé — la photo sera exigée par précaution pour toute avarie.", 'error'),
+      error: () => this.showToast("Seuil photo avarie non chargé, la photo sera exigée par précaution pour toute avarie.", 'error'),
     });
   }
 
@@ -66,7 +66,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
    *
    * Si le seuil n'a pas pu être chargé (`null`), on exige la photo par défaut plutôt que de ne
    * jamais la demander : avant ce correctif (2026-10-21, mode autonome), un échec silencieux du
-   * chargement du seuil désactivait entièrement l'obligation de photo pour toute la session —
+   * chargement du seuil désactivait entièrement l'obligation de photo pour toute la session,
    * une déclaration d'avarie de n'importe quelle quantité passait alors sans preuve, contraire à
    * la règle métier (§5.4 du contexte projet : « Avarie > 5% → photo obligatoire »).
    */

@@ -82,12 +82,12 @@
             <tr class="table-row-anim">
               <td><div class="mov-type-cell"><div class="mov-ico {{ getColor(m.type) }}"><i class="fa-solid {{ getIcon(m.type) }}"></i></div><span class="mov-type-label">{{ getLabel(m.type) }}</span></div></td>
               <td><div class="prod-cell"><span class="prod-name">{{ m.product?.designation || m.product?.sku || m.productSku || 'Produit #'+m.productId }}</span><span class="prod-sku">{{ m.productSku || m.product?.sku || '' }}</span></div></td>
-              <td><span class="warehouse-chip">{{ m.warehouse?.name?.substring(0,14)||'—' }}</span></td>
-              <td class="text-right"><span class="qty-before">{{ m.previousStock!=null ? (m.previousStock | number) : '—' }}</span></td>
+              <td><span class="warehouse-chip">{{ m.warehouse?.name?.substring(0,14)||'-' }}</span></td>
+              <td class="text-right"><span class="qty-before">{{ m.previousStock!=null ? (m.previousStock | number) : '-' }}</span></td>
               <td class="text-center"><span class="qty-movement" [class.qty-in]="isEntree(m.type)" [class.qty-out]="!isEntree(m.type)">{{ isEntree(m.type)?'+':'-' }}{{ m.quantity | number }}</span></td>
-              <td class="text-right"><span class="qty-after">{{ m.newStock!=null ? (m.newStock | number) : '—' }}</span></td>
+              <td class="text-right"><span class="qty-after">{{ m.newStock!=null ? (m.newStock | number) : '-' }}</span></td>
               <td><span class="badge {{ getStatusClass(m.status) }}">{{ getStatusLabel(m.status) }}</span></td>
-              <td><span class="ref-code">{{ m.referenceNumber||m.reference||'—' }}</span></td>
+              <td><span class="ref-code">{{ m.referenceNumber||m.reference||'-' }}</span></td>
               <td><div class="date-cell"><span class="date-main">{{ (m.requestedAt||m.createdAt) | date:'dd/MM/yyyy' }}</span><span class="date-time">{{ (m.requestedAt||m.createdAt) | date:'HH:mm' }}</span></div></td>
               <td>
                 @if (m.status === 'PENDING') {
@@ -116,7 +116,7 @@
         </div>
         <div class="modal-body">
           <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Génère un mouvement ADJUSTMENT dans l'audit trail.</span></div>
-          <div class="form-group"><label class="form-label">Niveau de stock <span class="req">*</span></label><select class="form-control" [(ngModel)]="ajustId">@for (sl of levels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }} — {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
+          <div class="form-group"><label class="form-label">Niveau de stock <span class="req">*</span></label><select class="form-control" [(ngModel)]="ajustId">@for (sl of levels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }}, {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
           <div class="form-group"><label class="form-label">Nouvelle quantité réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Après inventaire physique"></div>
           <div class="form-group"><label class="form-label">Motif <span class="req">*</span></label><textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="ajustMotif"></textarea></div>
         </div>
@@ -134,7 +134,7 @@
         </div>
         <div class="modal-body">
           <div class="banner banner-primary"><i class="fa-solid fa-circle-info"></i><span>Le tampon ravitaille la production hebdomadairement. Quantité déduite du stock principal.</span></div>
-          <div class="form-group"><label class="form-label">Matière Première <span class="req">*</span></label><select class="form-control" [(ngModel)]="transfertId">@for (sl of getMPLevels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }} — Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }</select></div>
+          <div class="form-group"><label class="form-label">Matière Première <span class="req">*</span></label><select class="form-control" [(ngModel)]="transfertId">@for (sl of getMPLevels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }}, Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }</select></div>
           <div class="form-group"><label class="form-label">Quantité à transférer <span class="req">*</span></label><input type="number" class="form-control" min="1" [(ngModel)]="transfertQty" placeholder="Quantité tampon hebdo"></div>
         </div>
         <div class="modal-footer"><button class="btn btn-ghost" (click)="showTransfert.set(false)">Annuler</button><button class="btn btn-primary" [disabled]="!transfertId||transfertQty<=0||transfertSaving()" (click)="sauverTransfert()">@if(transfertSaving()){<div class="spinner spinner-sm"></div>}@else{<i class="fa-solid fa-arrow-right"></i>} Effectuer</button></div>

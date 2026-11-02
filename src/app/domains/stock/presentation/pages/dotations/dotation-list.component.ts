@@ -247,11 +247,11 @@ export class DotationListComponent implements OnInit, OnDestroy {
 
   stepLabel(s: string): string {
     const m: Record<string, string> = {
-      PENDING: 'Étape 1/4 — En attente vérification paiement (Secrétaire)',
-      PAYMENT_VERIFIED: 'Étape 2/4 — En attente validation quantités (Comptable)',
-      QUANTITY_VALIDATED: 'Étape 3/4 — En attente révision / approbation (Gestionnaire de stock)',
-      REVIEWED: 'Étape 3/4 — Révisé, en attente approbation finale (Gestionnaire de stock)',
-      APPROVED: 'Étape 4/4 — En attente livraison (Gestionnaire de stock)',
+      PENDING: 'Étape 1/4, En attente vérification paiement (Secrétaire)',
+      PAYMENT_VERIFIED: 'Étape 2/4, En attente validation quantités (Comptable)',
+      QUANTITY_VALIDATED: 'Étape 3/4, En attente révision / approbation (Gestionnaire de stock)',
+      REVIEWED: 'Étape 3/4, Révisé, en attente approbation finale (Gestionnaire de stock)',
+      APPROVED: 'Étape 4/4, En attente livraison (Gestionnaire de stock)',
       REJECTED: 'Demande rejetée',
       COMPLETED: 'Dotation livrée'
     };
@@ -270,7 +270,7 @@ export class DotationListComponent implements OnInit, OnDestroy {
     const current = this.getWorkflowStep(d.status);
     const isRejected = d.status === 'REJECTED';
     return [
-      { label: 'Précommande', actor: d.commercialName || '—', icon: 'fa-cart-plus', color: '#0277D5',
+      { label: 'Précommande', actor: d.commercialName || '-', icon: 'fa-cart-plus', color: '#0277D5',
         done: current >= 0, current: current === 0 && !isRejected, timestamp: d.requestedAt },
       { label: 'Vérification paiement', actor: d.paymentVerifiedBy || 'Secrétaire', icon: 'fa-money-check-dollar', color: '#D97706',
         done: current >= 1, current: current === 1 && !isRejected, timestamp: d.paymentVerifiedAt },

@@ -46,7 +46,7 @@ export interface ValideurPotentielDto {
   dejaValide: boolean;
 }
 
-/** Miroir de l'entité PouvoirValidation (backend — colonnes simples, pas de relation lazy). */
+/** Miroir de l'entité PouvoirValidation (backend, colonnes simples, pas de relation lazy). */
 export interface PouvoirValidationDto {
   id: number;
   role: string | null;
@@ -76,7 +76,7 @@ export interface DelegationDto {
   dateRevocation: string | null;
 }
 
-/** Types d'action connus de la politique d'approbation (ValidationEngineSeeder) — pour l'affichage en clair. */
+/** Types d'action connus de la politique d'approbation (ValidationEngineSeeder), pour l'affichage en clair. */
 export const LIBELLES_ACTION_TYPE: Record<string, string> = {
   STOCK_AJUSTEMENT_INVENTAIRE: "Ajustement d'inventaire",
   STOCK_REAPPRO_TAMPON: 'Réapprovisionnement du tampon',

@@ -49,13 +49,13 @@ export class AdminUtilisateursComponent implements OnInit {
   users = signal<UserUI[]>([]);
   filtreRole = signal<string>('TOUS');
   filtreTexte = signal<string>('');
-  /** Deux modes d'affichage de la même liste — demande explicite du porteur (2026-10-25). */
+  /** Deux modes d'affichage de la même liste, demande explicite du porteur (2026-10-25). */
   vueAffichage = signal<'table' | 'cartes'>('table');
 
   form: NouvelUtilisateurForm = FORM_VIDE();
 
   // ── Détail utilisateur (2026-10-25) : débloquer, réinitialiser le mot de passe, changer le
-  // rôle — les trois endpoints existaient déjà côté AdministrationController, jamais appelés
+  // rôle, les trois endpoints existaient déjà côté AdministrationController, jamais appelés
   // depuis cet écran. ──
   showDetailModal = signal(false);
   detailLoading = signal(false);
@@ -210,7 +210,7 @@ export class AdminUtilisateursComponent implements OnInit {
     });
   }
 
-  /** 2026-11-01 : invalide la session active — oblige l'utilisateur à se reconnecter immédiatement. */
+  /** 2026-11-01 : invalide la session active, oblige l'utilisateur à se reconnecter immédiatement. */
   forcerDeconnexion(): void {
     const u = this.utilisateurDetail();
     if (!u || this.actionDetailEnCours()) return;

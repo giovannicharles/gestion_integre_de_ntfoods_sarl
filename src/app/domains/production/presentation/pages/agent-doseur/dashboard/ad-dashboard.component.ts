@@ -9,7 +9,7 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
 import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-chart.component';
 
 /**
- * DASHBOARD — Agent Doseur
+ * DASHBOARD, Agent Doseur
  *
  * Affiche les KPIs de production et les graphiques à partir des sessions de dosage
  * (GET /dosage/date/{date}, /dosage/periode) autorisées pour AGENT_DOSEUR.

@@ -66,7 +66,7 @@ export class CpValidationBcComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.bcAValider.set(null);
-        this.successMsg.set(`BC ${bc.numero} validé — le plan de production a été généré.`);
+        this.successMsg.set(`BC ${bc.numero} validé, le plan de production a été généré.`);
         setTimeout(() => this.successMsg.set(''), 5000);
         // Recharge la liste (le BC n'est plus BROUILLON)
         this.charger();

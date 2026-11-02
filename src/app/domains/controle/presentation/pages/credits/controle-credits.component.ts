@@ -27,7 +27,7 @@ export class ControleCreditsComponent implements OnInit {
 
   parCommercial = computed(() => this.commerciaux().map(com => ({
     nom: com.nomComplet,
-    zone: '—',
+    zone: '-',
     total: this.recouvrements().filter(r => r.matriculeCommercial === com.matricule).reduce((s, r) => s + r.montantRestant, 0),
     nbClients: this.recouvrements().filter(r => r.matriculeCommercial === com.matricule && r.montantRestant > 0).length,
   })).sort((a, b) => b.total - a.total));

@@ -86,7 +86,7 @@ export class SecretaireService {
     return this.api.get<ApiResponse<DocumentRecuResponse[]>>('secretaire/documents').pipe(map(r => r.donnees));
   }
 
-  // ── Écritures (2026-10-25) — endpoints déjà prêts côté serveur depuis le 2026-09-23,
+  // ── Écritures (2026-10-25), endpoints déjà prêts côté serveur depuis le 2026-09-23,
   // jamais appelés jusqu'ici : voir SecretaireController.java. ──
 
   enregistrerMouvementCaisse(libelle: string, type: 'ENTREE' | 'SORTIE', montant: number, heure?: string, categorie?: string): Observable<PetiteCaisseResponse> {

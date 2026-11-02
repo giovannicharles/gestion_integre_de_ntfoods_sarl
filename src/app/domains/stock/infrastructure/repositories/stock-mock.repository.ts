@@ -8,7 +8,7 @@ import {
   DashboardStatsResponse, StockAlert, MovementType
 } from '../../domain/models';
 
-/** Repository mock — données camerounaises NTFoods pour développement offline. */
+/** Repository mock, données camerounaises NTFoods pour développement offline. */
 @Injectable({ providedIn: 'root' })
 export class StockMockRepository {
   private rules = inject(StockRulesDomainService);
@@ -33,9 +33,9 @@ export class StockMockRepository {
     { id:4, brandId:2, name:'Bouillies Infantiles',         code:'BINI', active:true },
   ];
   readonly variants: ProductVariant[] = [
-    { id:1, productLineId:1, name:'TBSA (Vitamine A — Vision)',    code:'TBSA' },
-    { id:2, productLineId:1, name:'TBSN (Fibres — Transit)',       code:'TBSN' },
-    { id:3, productLineId:1, name:'TBSP (Calcium — Croissance)',   code:'TBSP' },
+    { id:1, productLineId:1, name:'TBSA (Vitamine A, Vision)',    code:'TBSA' },
+    { id:2, productLineId:1, name:'TBSN (Fibres, Transit)',       code:'TBSN' },
+    { id:3, productLineId:1, name:'TBSP (Calcium, Croissance)',   code:'TBSP' },
     { id:4, productLineId:1, name:'Multifruits (Équilibre)',       code:'MULT' },
     { id:5, productLineId:3, name:'TANTY CHOCO',                   code:'CHOC' },
     { id:6, productLineId:3, name:'Classic Arachide',              code:'ARACH'},
@@ -49,9 +49,9 @@ export class StockMockRepository {
     { id:6,  sku:'CONS-SACH-001',designation:'Sachets 42g TANTY',        category:'CONSUMABLE',    unit:'SACHET_42G',unitPriceAmount:25,  leadTimeDays:150, active:true },
     { id:7,  sku:'CONS-SEAU-1L', designation:'Seaux 1L TANTY',           category:'CONSUMABLE',    unit:'SEAU_1L',   unitPriceAmount:180, leadTimeDays:150, active:true },
     { id:8,  sku:'CONS-CART-001',designation:'Cartons 24 sachets',       category:'CONSUMABLE',    unit:'CARTON',    unitPriceAmount:450, leadTimeDays:150, active:true },
-    { id:9,  sku:'PF-TBSA-042',  designation:'TBSA 42g — Bouillie Vit. A',category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:1 },
-    { id:10, sku:'PF-TBSN-042',  designation:'TBSN 42g — Bouillie Fibres',category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:2 },
-    { id:11, sku:'PF-TBSP-042',  designation:'TBSP 42g — Calcium',       category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:3 },
+    { id:9,  sku:'PF-TBSA-042',  designation:'TBSA 42g, Bouillie Vit. A',category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:1 },
+    { id:10, sku:'PF-TBSN-042',  designation:'TBSN 42g, Bouillie Fibres',category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:2 },
+    { id:11, sku:'PF-TBSP-042',  designation:'TBSP 42g, Calcium',       category:'FINISHED_PRODUCT',unit:'SACHET_42G',unitPriceAmount:250,leadTimeDays:0, active:true, variantId:3 },
     { id:12, sku:'PF-SEAU-1L',   designation:'TANTY Seau 1L Classique',  category:'FINISHED_PRODUCT',unit:'SEAU_1L',   unitPriceAmount:3500,leadTimeDays:0, active:true },
     { id:13, sku:'PF-CHOCO-500', designation:'TANTY CHOCO Pâte 500g',    category:'FINISHED_PRODUCT',unit:'SEAU_1L',   unitPriceAmount:4200,leadTimeDays:0, active:true, variantId:5 },
   ];
@@ -188,14 +188,14 @@ export class StockMockRepository {
     return {
       ...sl,
       product: p, warehouse: w,
-      productName: p?.designation || p?.sku || '—',
-      productSku: p?.sku || '—',
-      productUnit: p?.unit || '—',
-      productCategory: p?.category || '—',
+      productName: p?.designation || p?.sku || '-',
+      productSku: p?.sku || '-',
+      productUnit: p?.unit || '-',
+      productCategory: p?.category || '-',
       unitPrice: p?.unitPriceAmount || 0,
       leadTimeDays: p?.leadTimeDays,
-      warehouseName: w?.name || '—',
-      warehouseType: w?.type || '—',
+      warehouseName: w?.name || '-',
+      warehouseType: w?.type || '-',
       materialType: p?.materialType || 'PRODUIT_FINI',
       variantName: v?.name,
       productLineName: l?.name,

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════
-   TANTY DIGITAL ERP — DESIGN SYSTEM GLOBAL v6
+   TANTY DIGITAL ERP, DESIGN SYSTEM GLOBAL v6
    Charte officielle: Vert #14532D · Jaune #F6B60B · Rouge #C22B2B
    Typographie: Poppins (titres) · Inter (corps)
    v6: Design tokens centralisés + login deux colonnes + toasts
@@ -501,9 +501,9 @@ select.form-control    { cursor:pointer; }
 /* KPI Grid */
 .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
 .kpi-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-/* 2026-11-01 (demande explicite du porteur — copier le langage visuel exact des deux
+/* 2026-11-01 (demande explicite du porteur, copier le langage visuel exact des deux
    références 21st.dev de prompt/, charte TANTY seule conservée) : la carte KPI empilait trois
-   couches décoratives (liseré ::before + cercle flou .kpi-decor + puce d'icône) — les deux
+   couches décoratives (liseré ::before + cercle flou .kpi-decor + puce d'icône), les deux
    références n'en ont qu'une (la puce d'icône). Liseré et cercle flou neutralisés ci-dessous
    SANS toucher au HTML des dizaines d'écrans qui posent encore ces classes : les règles
    deviennent inertes plutôt que d'aller les retirer un par un (risque de régression bien plus
@@ -523,7 +523,7 @@ select.form-control    { cursor:pointer; }
 .kpi-trend { position:absolute; top:14px; right:16px; font-size:.7rem; font-weight:700; padding:3px 8px; border-radius:var(--r-full); }
 .kpt-up { background:var(--g-gh); color:var(--g); }
 
-/* Fil d'activité — items avec puce d'icône colorée (réutilise .ig/.iy/.ir/.ib des KPI). */
+/* Fil d'activité, items avec puce d'icône colorée (réutilise .ig/.iy/.ir/.ib des KPI). */
 .activity-feed { display:flex; flex-direction:column; gap:4px; }
 .activity-item { display:flex; align-items:center; gap:12px; padding:9px 8px; border-radius:var(--r-md); transition:background .15s; }
 .activity-item:hover { background:var(--n50); }
@@ -610,7 +610,7 @@ select.form-control    { cursor:pointer; }
    repasse en 1 colonne sur mobile sans aucune règle @media, par repli naturel de auto-fill. */
 .card-grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--sp-4); }
 
-/* Carte « choisir un document/rapport puis le télécharger » — motif réutilisé partout où une
+/* Carte « choisir un document/rapport puis le télécharger », motif réutilisé partout où une
    liste plate de 3-10 types de documents existait auparavant comme simple tableau. */
 .doc-pick-card { display:flex; flex-direction:column; align-items:center; text-align:center; padding:22px 16px; transition:transform .2s, box-shadow .2s; }
 .doc-pick-card:hover { transform:translateY(-3px); box-shadow:var(--sh-md); }
@@ -652,7 +652,7 @@ select.form-control    { cursor:pointer; }
 .toast-success { background:var(--g-gh); color:var(--g); border:1.5px solid var(--g); }
 .toast-error { background:var(--r-gh); color:var(--r); border:1.5px solid var(--r); }
 
-/* Modal (structured — header/body/footer) */
+/* Modal (structured, header/body/footer) */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.48); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
 .modal-box { background:var(--w); border-radius:var(--r-xl); box-shadow:var(--sh-xl); width:100%; max-width:520px; overflow:hidden; display:flex; flex-direction:column; }
 .modal-box:not(.bc-modal):not(.val-modal) { padding:24px; }
@@ -673,7 +673,7 @@ select.form-control    { cursor:pointer; }
 .form-control:focus  { border-color:var(--g);box-shadow:0 0 0 3px rgba(20,83,45,.09); }
 .banner-info    { background:var(--b-gh);color:var(--b); }
 /* ══════════════════════════════════════════════════════════
-   ERP PAGE COMPONENTS — shared across all role modules
+   ERP PAGE COMPONENTS, shared across all role modules
    ══════════════════════════════════════════════════════════ */
 /* Spacing tokens (used by subagent-generated page CSS) */
 :root {
@@ -956,7 +956,7 @@ select.form-control    { cursor:pointer; }
   .kpi-card { padding:14px; }
   .kpi-val { font-size:1.4rem; }
   /* Grilles à colonnes fixes codées en style inline (gap/margin conservés tels quels,
-     seul le nombre de colonnes est forcé à 1 sur mobile) — ajouter la classe sans retirer
+     seul le nombre de colonnes est forcé à 1 sur mobile), ajouter la classe sans retirer
      le style inline existant. */
   .rgrid-2, .rgrid-3, .rgrid-2a { grid-template-columns:1fr !important; }
 }
@@ -970,7 +970,7 @@ select.form-control    { cursor:pointer; }
   .btn-sm { font-size:11px;padding:6px 10px; }
 }
 /* ══════════════════════════════════════════════════════════════════════
-   COMPAT — Espace Agent Doseur
+   COMPAT, Espace Agent Doseur
    Utilitaires génériques employés par le module Agent Doseur mais absents
    du design system. Ajouts seulement, aucune règle existante modifiée.
    ══════════════════════════════════════════════════════════════════════ */
@@ -990,7 +990,7 @@ select.input { cursor:pointer; }
 .row-actions { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
 
 /* ══════════════════════════════════════════════════════════
-   v5 — DARK MODE OVERRIDES & ENHANCED TRANSITIONS
+   v5, DARK MODE OVERRIDES & ENHANCED TRANSITIONS
    Charte TANTY conservée: vert/jaune/rouge adaptés sombre
    ══════════════════════════════════════════════════════════ */
 
@@ -1285,10 +1285,10 @@ select.input { cursor:pointer; }
 }
 
 /* ══════════════════════════════════════════════════════════
-   FILIGRANES DE MODULE — pictogramme de fond, un par module
+   FILIGRANES DE MODULE, pictogramme de fond, un par module
    Discret (opacité faible), posé en haut à droite de l'en-tête
    de page (.ph). Même couleur de marque partout (vert TANTY) :
-   seul le motif change, pas la teinte — cohérence avant tout.
+   seul le motif change, pas la teinte, cohérence avant tout.
    ══════════════════════════════════════════════════════════ */
 .ph { position: relative; overflow: hidden; }
 .ph::after {
@@ -1309,7 +1309,7 @@ select.input { cursor:pointer; }
 :root.dark-mode .ph::after { opacity: .15; }
 .ph > .ph-left, .ph > .ph-actions { position: relative; z-index: 1; }
 
-/* Même filigrane, en plus petit, discrètement posé dans l'angle d'une carte —
+/* Même filigrane, en plus petit, discrètement posé dans l'angle d'une carte,
    prolonge l'identité du module au-delà du seul en-tête de page, sans jamais
    gêner la lecture du contenu (toujours sous le contenu, z-index 0). */
 .card-wm { position: relative; overflow: hidden; }

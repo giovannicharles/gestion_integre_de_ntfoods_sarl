@@ -8,7 +8,7 @@
   <div class="ph">
     <div class="ph-left">
       <div class="ph-icon ph-o"><i class="fa-solid fa-clipboard-check"></i></div>
-      <div><h1 class="ph-title">Validation des Réceptions</h1><p class="ph-sub">Double validation obligatoire — le rôle requis est appliqué automatiquement par le serveur</p></div>
+      <div><h1 class="ph-title">Validation des Réceptions</h1><p class="ph-sub">Double validation obligatoire, le rôle requis est appliqué automatiquement par le serveur</p></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span class="badge badge-neutral"><i class="fa-solid fa-user-tag"></i> {{ currentRoles() }}</span>
@@ -45,8 +45,8 @@
             </div>
             <div class="rc-body">
               <div class="rc-grid">
-                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '—' }}</span></div>
-                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '-' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '-' }}</span></div>
                 <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-box"></i> Lignes</span><span class="rc-val">{{ itemCount(r) }}</span></div>
               </div>
               <div style="background:var(--n50);border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:5px">
@@ -90,12 +90,12 @@
             </div>
             <div class="rc-body">
               <div class="rc-grid">
-                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '—' }}</span></div>
-                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '—' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-building"></i> Source</span><span class="rc-val">{{ r.sourceLabel || '-' }}</span></div>
+                <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-warehouse"></i> Destination</span><span class="rc-val">{{ r.destinationLocationName || '-' }}</span></div>
                 <div class="rc-item"><span class="rc-lbl"><i class="fa-solid fa-box"></i> Lignes</span><span class="rc-val">{{ itemCount(r) }}</span></div>
               </div>
               @if (r.requiresAuthCode) {
-                <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Écart &gt; 10% détecté — code d'autorisation DG requis pour finaliser.</span></div>
+                <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Écart &gt; 10% détecté, code d'autorisation DG requis pour finaliser.</span></div>
               }
               <div class="rc-trail">
                 <div class="trail-item">
@@ -140,7 +140,7 @@
           @if (action()!=='rej') {
             <div class="banner banner-primary">
               <i class="fa-solid fa-circle-info"></i>
-              <span>@if (action()==='v2') { Validation finale — le stock sera mis à jour automatiquement. } @else { Une seconde validation sera ensuite requise. }</span>
+              <span>@if (action()==='v2') { Validation finale, le stock sera mis à jour automatiquement. } @else { Une seconde validation sera ensuite requise. }</span>
             </div>
             @if (action()==='v2' && selected()?.requiresAuthCode) {
               <div class="form-group"><label class="form-label">Code d'autorisation DG <span class="req">*</span></label><input type="text" class="form-control" placeholder="Code fourni par la Direction Générale" [(ngModel)]="authCode"></div>

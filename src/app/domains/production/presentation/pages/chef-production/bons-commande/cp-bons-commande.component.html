@@ -77,7 +77,7 @@
               <td><strong>{{ bc.numero }}</strong></td>
               <td>{{ bc.dateCommande | date:'dd/MM/yyyy' }}</td>
               <td>
-                {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}
+                {{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '-' }}
                 @if (bc.enRetard) {
                   <span class="taux-chip taux-warn" style="margin-left:6px">
                     <i class="fa-solid fa-clock"></i> Retard
@@ -86,7 +86,7 @@
               </td>
               <td>{{ bc.lignes.length }} ligne(s)</td>
               <td class="text-right mono">
-                {{ montantTotal(bc) > 0 ? ((montantTotal(bc) | number:'1.0-0') + ' FCFA') : '—' }}
+                {{ montantTotal(bc) > 0 ? ((montantTotal(bc) | number:'1.0-0') + ' FCFA') : '-' }}
               </td>
               <td>
                 <div class="progress-cell">
@@ -125,7 +125,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     MODAL — CRÉER UN BON DE COMMANDE
+     MODAL, CRÉER UN BON DE COMMANDE
      ═══════════════════════════════════════════════════════ -->
 @if (showForm()) {
 <div class="modal-overlay" (click)="fermerFormulaire()">
@@ -205,7 +205,7 @@
                           [name]="'prod-' + i"
                           [ngModel]="ligne.produitCode"
                           (ngModelChange)="ligne.produitCode = $event; selectionnerProduit($event, i)">
-                    <option value="">— Sélectionner un produit —</option>
+                    <option value="">Sélectionner un produit,</option>
                     @for (grp of groupesProduits; track grp.label) {
                       <optgroup [label]="grp.label">
                         @for (p of grp.produits; track p.code) {
@@ -323,7 +323,7 @@
 }
 
 <!-- ═══════════════════════════════════════════════════════
-     MODAL — DÉTAIL D'UN BC
+     MODAL, DÉTAIL D'UN BC
      ═══════════════════════════════════════════════════════ -->
 @if (bcDetail(); as bc) {
 <div class="modal-overlay" (click)="fermerDetail()">
@@ -347,7 +347,7 @@
         </div>
         <div class="fiche-kpi">
           <span class="fk-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
-          <span class="fk-val">{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '—' }}</span>
+          <span class="fk-val">{{ bc.dateLivraisonPrevue ? (bc.dateLivraisonPrevue | date:'dd/MM/yyyy') : '-' }}</span>
         </div>
         <div class="fiche-kpi">
           <span class="fk-lbl"><i class="fa-solid fa-industry"></i> Période de production</span>
@@ -397,8 +397,8 @@
               <tr>
                 <td class="text-center" style="color:var(--n400);font-size:11px">{{ idx + 1 }}</td>
                 <td><strong class="mono" style="color:var(--g)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '—' }}</td>
-                <td><span class="zone-chip">{{ l.sku ?? '—' }}</span></td>
+                <td>{{ l.designation ?? '-' }}</td>
+                <td><span class="zone-chip">{{ l.sku ?? '-' }}</span></td>
                 <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
                 <td class="text-right mono">{{ l.quantiteRecue }}</td>
                 <td class="text-right mono">{{ l.quantiteProduite }}</td>
@@ -414,7 +414,7 @@
                   </div>
                 </td>
                 <td class="text-right mono">
-                  {{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '—' }}
+                  {{ l.prixUnitaireHT != null ? ((l.prixUnitaireHT | number:'1.0-0') + ' FCFA') : '-' }}
                 </td>
               </tr>
             }

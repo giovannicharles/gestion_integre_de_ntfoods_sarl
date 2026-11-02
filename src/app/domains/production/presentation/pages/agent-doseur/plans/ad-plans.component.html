@@ -56,7 +56,7 @@
 <div class="modal-overlay" (click)="fermerDetail()">
   <div class="modal-card" (click)="$event.stopPropagation()" style="max-width:700px">
     <div class="modal-hd">
-      <h3><i class="fa-solid fa-calendar-week"></i> {{ p.referencePPH }} — {{ p.semaine }}</h3>
+      <h3><i class="fa-solid fa-calendar-week"></i> {{ p.referencePPH }}, {{ p.semaine }}</h3>
       <button class="modal-close" (click)="fermerDetail()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">

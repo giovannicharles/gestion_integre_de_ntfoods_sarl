@@ -43,7 +43,7 @@
     </div>
 
     @if (r.status === 'REJECTED') {
-      <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-ban"></i><span><strong>Rejetée</strong> par {{ r.rejectedBy }} — {{ r.rejectionReason }}</span></div>
+      <div class="banner banner-danger" style="margin-bottom:16px"><i class="fa-solid fa-ban"></i><span><strong>Rejetée</strong> par {{ r.rejectedBy }}, {{ r.rejectionReason }}</span></div>
     }
 
     <div class="card">
@@ -60,7 +60,7 @@
             @for (it of r.items; track it.productSku) {
               <tr>
                 <td><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:600;color:var(--n800)">{{ it.productName || it.productSku }}</span><span style="font-size:10px;color:var(--n400);font-family:monospace">{{ it.productSku }}</span></div></td>
-                <td>{{ it.packagingType || '—' }}</td>
+                <td>{{ it.packagingType || '-' }}</td>
                 <td>{{ it.orderedQty | number }} {{ it.productUnit }}</td>
                 <td>{{ it.receivedQty | number }} {{ it.productUnit }}</td>
                 <td>
@@ -68,7 +68,7 @@
                     <span class="badge badge-warning">{{ it.deviation! > 0 ? '+' : '' }}{{ it.deviation | number }}</span>
                   } @else { <span class="badge badge-success">Conforme</span> }
                 </td>
-                <td>{{ it.lotNumber || '—' }}</td>
+                <td>{{ it.lotNumber || '-' }}</td>
               </tr>
             }
           </tbody>
@@ -118,7 +118,7 @@
             <div class="form-group">
               <label class="form-label">Emplacement de destination <span class="req">*</span></label>
               <select class="form-control" [(ngModel)]="destinationLocationId">
-                <option value="">— Sélectionner —</option>
+                <option value="">Sélectionner,</option>
                 @for (loc of locations(); track loc.id) { <option [value]="loc.id">{{ loc.name }}</option> }
               </select>
               @if (!locations().length) {
@@ -136,7 +136,7 @@
       <!-- LIGNES -->
       <div class="card">
         <div class="card-header">
-          <div class="sec-head"><span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span><div><h3>Lignes de réception</h3><p class="sec-sub">Quantités réelles reçues — priorité au réel constaté</p></div></div>
+          <div class="sec-head"><span class="sh-ico sh-o"><i class="fa-solid fa-list-check"></i></span><div><h3>Lignes de réception</h3><p class="sec-sub">Quantités réelles reçues, priorité au réel constaté</p></div></div>
           <button class="btn btn-outline btn-sm" (click)="addLine()"><i class="fa-solid fa-plus"></i> Ajouter</button>
         </div>
         <div class="card-body">
@@ -158,7 +158,7 @@
                       <p style="color:var(--r);font-size:12px;padding:8px 0">Aucun produit "{{ receptionType }}" dans le catalogue.</p>
                     } @else {
                       <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
-                        <option [value]="0">— Sélectionner un produit —</option>
+                        <option [value]="0">Sélectionner un produit,</option>
                         @for (p of getFilteredProducts(); track p.id) { <option [value]="p.id">[{{ p.sku }}] {{ p.designation || p.sku }}</option> }
                       </select>
                     }
@@ -174,7 +174,7 @@
                     </div>
                     <div class="form-group"><label class="form-label">Conditionnement</label>
                       <select class="form-control" [(ngModel)]="l.packagingType">
-                        <option value="">—</option>
+                        <option value="">-</option>
                         @for (pt of packagingTypes; track pt) { <option [value]="pt">{{ pt }}</option> }
                       </select>
                     </div>

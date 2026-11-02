@@ -7,7 +7,7 @@ import { extractApiError } from '../../core/http/api-error-parser';
 
 /**
  * Panneau de pièces jointes, réutilisable partout (2026-10-16) : un module n'a plus
- * besoin de réinventer l'upload/liste/téléchargement — il dépose <app-documents-panel>
+ * besoin de réinventer l'upload/liste/téléchargement, il dépose <app-documents-panel>
  * avec son entityType/entityId, et obtient les documents liés à CETTE entité précise
  * (incident, facture, décaissement, avarie...). S'appuie sur DocumentArchiveService
  * (backend), premier et seul point d'écriture documentaire.
@@ -27,7 +27,7 @@ export class DocumentsPanelComponent implements OnInit {
   entityId = input.required<number>();
   /** Type de document présélectionné à l'import (ex. "PHOTO_AVARIE" dans un formulaire d'avarie). */
   defaultType = input<string>('RAPPORT');
-  /** Restreint la liste déroulante — par défaut, tous les types autorisés côté serveur. */
+  /** Restreint la liste déroulante, par défaut, tous les types autorisés côté serveur. */
   typesAutorises = input<string[] | null>(null);
   /** Titre affiché en tête de panneau. */
   titre = input('Pièces jointes');

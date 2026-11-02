@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, SessionBroyageBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 /**
- * CONSULTATION DES PLANS DE PRODUCTION — Chef Machiniste
+ * CONSULTATION DES PLANS DE PRODUCTION, Chef Machiniste
  * Lecture seule : recherche, filtres période/état, quantités prévues,
  * matières premières, objectifs de broyage, dépassements autorisés.
  */
@@ -29,10 +29,10 @@ export class CmPlansComponent implements OnInit {
   filtreDebut = signal('');
   filtreFin = signal('');
 
-  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  /** Matières premières d'un jour, formatées « Nom: Qté kg », liste libre, jamais figée sur maïs/soja/arachide. */
   matieresJour(jour: PPHRepartitionJourBE): string {
     const b = jour.besoinsMatieresPremiere ?? [];
-    if (!b.length) return '—';
+    if (!b.length) return '-';
     return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
   }
 

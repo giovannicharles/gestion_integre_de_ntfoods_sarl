@@ -91,7 +91,7 @@ function normalizeRole(raw: string): string {
  * non reconnu la navigation d'un administrateur. Le backend continuait certes
  * d'appliquer ses propres autorisations, mais un défaut de correspondance ne
  * doit jamais élargir un accès : il doit le refuser. Le `null` remonte donc à
- * l'appelant, qui décide — et aucun appelant n'a le droit de le remplacer par
+ * l'appelant, qui décide, et aucun appelant n'a le droit de le remplacer par
  * un rôle privilégié.
  *
  * La recherche accepte maintenant trois formes :
@@ -180,7 +180,7 @@ export const ROLE_HOMES: Record<UserRole, string> = {
   AGENT_DOSEUR: '/production/dashboard',
   CONTROLEUR_GENERAL: '/controle/dashboard',
   // Aucun tableau de bord RH dédié n'existe encore (2026-10-25) : le rôle n'a, côté backend,
-  // que RH_EMPLOYE_GERER/CONSULTER + AUTH_USER_CONSULTER (RolePermissionMatrix.java) — la seule
+  // que RH_EMPLOYE_GERER/CONSULTER + AUTH_USER_CONSULTER (RolePermissionMatrix.java), la seule
   // page déjà alignée avec ces droits est la liste des utilisateurs, en lecture.
   RESPONSABLE_RH: '/admin/utilisateurs',
 };

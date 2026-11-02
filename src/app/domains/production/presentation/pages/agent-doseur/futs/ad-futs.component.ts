@@ -5,7 +5,7 @@ import { ProductionService, SessionDosageBE } from '../../../../infrastructure/p
 import { AdSessionContextService } from '../ad-session-context.service';
 
 /**
- * CONDITIONNEMENT DES FÛTS — Agent Doseur
+ * CONDITIONNEMENT DES FÛTS, Agent Doseur
  * Le nombre de fûts sortis correspond au nombre de fûts produits.
  * La sélection de session est déléguée à AdSessionContextService.
  */
@@ -62,7 +62,7 @@ export class AdFutsComponent implements OnInit {
     }
     this.svc.enregistrerFutsDosage(active.id, this.nbProduits).subscribe({
       next: s => {
-        this.message.set(`Fûts enregistrés — ${s.nbFutsNets} fûts sortis pour la session #${s.id}`);
+        this.message.set(`Fûts enregistrés, ${s.nbFutsNets} fûts sortis pour la session #${s.id}`);
         this.nbProduits = 0;
         this.chargerHistorique();
         this.contexte.chargerSessionsOuvertes(true);

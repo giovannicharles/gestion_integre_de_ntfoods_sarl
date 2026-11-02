@@ -28,7 +28,7 @@ export class SettingsComponent {
 
   constructor() {
     const user = this.auth.getCurrentUser();
-    const roles = user?.roles?.join(', ') || '—';
+    const roles = user?.roles?.join(', ') || '-';
     const roleLabel: Record<string, string> = {
       GESTIONNAIRE_STOCK: 'Gestionnaire de Stock',
       CHEF_PRODUCTION: 'Chef de Production',
@@ -38,7 +38,7 @@ export class SettingsComponent {
       DIRECTEUR_GENERAL: 'Directeur Général',
       ADMIN: 'Administrateur'
     };
-    const readableRole = user?.roles?.map(r => roleLabel[r] || r).join(', ') || '—';
+    const readableRole = user?.roles?.map(r => roleLabel[r] || r).join(', ') || '-';
 
     this.profileForm = this.fb.group({
       firstName: [user?.firstname || '', Validators.required],

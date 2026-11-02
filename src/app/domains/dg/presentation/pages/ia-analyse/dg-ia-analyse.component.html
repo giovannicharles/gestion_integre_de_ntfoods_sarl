@@ -3,7 +3,7 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-brain"></i></div>
       <div>
-        <h1 class="ph-title">Analyse IA — Entreprise 360°</h1>
+        <h1 class="ph-title">Analyse IA · Entreprise 360°</h1>
         <p class="ph-sub">Analyses intelligentes par domaine · TantyAI</p>
       </div>
     </div>
@@ -55,7 +55,7 @@
       @if (!result() && !loading()) {
         <div class="analysis-empty">
           <i class="fa-solid fa-magnifying-glass-chart"></i>
-          <h3>Analyse IA — {{ getDomainLabel() }}</h3>
+          <h3>Analyse IA, {{ getDomainLabel() }}</h3>
           <p>L'IA va automatiquement récupérer les données réelles de votre entreprise et les analyser.</p>
           <button class="btn-run" (click)="runAnalysis()">
             <i class="fa-solid fa-play"></i> Lancer l'analyse
@@ -149,7 +149,7 @@
       @if (!suggestions() && !loading()) {
         <div class="analysis-empty">
           <i class="fa-solid fa-lightbulb"></i>
-          <h3>Suggestions IA — {{ getDomainLabel() }}</h3>
+          <h3>Suggestions IA, {{ getDomainLabel() }}</h3>
           <p>Obtenez des recommandations proactives basées sur les données réelles de votre entreprise.</p>
           <button class="btn-run" (click)="runSuggestions()">
             <i class="fa-solid fa-play"></i> Générer des suggestions
@@ -199,7 +199,7 @@
       @if (!predictions() && !loading()) {
         <div class="analysis-empty">
           <i class="fa-solid fa-crystal-ball"></i>
-          <h3>Prédictions IA — Ruptures de stock</h3>
+          <h3>Prédictions IA, Ruptures de stock</h3>
           <p>L'IA analyse vos données de stock réelles pour prédire les ruptures, détecter les patterns saisonniers et optimiser les seuils.</p>
           <button class="btn-run" (click)="runPredictions()">
             <i class="fa-solid fa-play"></i> Lancer les prédictions
@@ -278,7 +278,7 @@
                 @for (an of predictions()!.anomalies; track $index) {
                   <div class="reco-item">
                     <div class="reco-body">
-                      <span class="reco-action">{{ an.type }} — {{ an.productSku }}</span>
+                      <span class="reco-action">{{ an.type }}, {{ an.productSku }}</span>
                       <p class="reco-detail">{{ an.description }}</p>
                       <p class="reco-detail">Action: {{ an.suggestedAction }}</p>
                     </div>

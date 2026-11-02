@@ -173,7 +173,7 @@
       <div class="form-group">
         <label>
           Photo justificative
-          @if (photoRequise()) { <span style="color:var(--r)">— obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
+          @if (photoRequise()) { <span style="color:var(--r)">obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
           @else if (seuilPhotoAvarie() !== null) { <span style="color:var(--n400)">(facultative en dessous de {{ seuilPhotoAvarie() }} unité(s))</span> }
         </label>
         <input type="file" class="form-input" accept=".jpg,.jpeg,.png,.pdf" (change)="onPhotoSelected($event)">
@@ -194,7 +194,7 @@
 @if (showAvoir()) {
   <div class="modal-overlay" (click)="showAvoir.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Émettre un avoir — {{ selectedNumero }}</h3>
+      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Émettre un avoir, {{ selectedNumero }}</h3>
       <div class="form-group">
         <label>Motif de l'avoir</label>
         <input type="text" class="form-input" [(ngModel)]="avoirMotif" placeholder="Motif obligatoire">

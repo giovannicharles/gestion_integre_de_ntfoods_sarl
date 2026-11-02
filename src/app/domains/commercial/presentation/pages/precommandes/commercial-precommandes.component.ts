@@ -63,7 +63,7 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
         this.produits.set(list.map(p => ({
           code: p.sku,
           designation: p.designation ?? p.sku,
-          gamme: p.variant?.name ?? '—',
+          gamme: p.variant?.name ?? '-',
           prixHT: p.unitPriceAmount,
           unite: p.unit ?? 'u',
         })));

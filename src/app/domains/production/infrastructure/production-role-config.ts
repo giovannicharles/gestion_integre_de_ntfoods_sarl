@@ -22,7 +22,7 @@ export interface ProductionRoleConfig {
  * que ses propres actions, et atterrit sur son propre tableau de bord.
  *
  * Rôles gérés ici : CHEF_PRODUCTION, RESPONSABLE_SALLE, CHEF_MACHINISTE,
- * AGENT_DOSEUR. GESTIONNAIRE_STOCK n'est PAS pris en charge par ce module —
+ * AGENT_DOSEUR. GESTIONNAIRE_STOCK n'est PAS pris en charge par ce module,
  * son espace est géré ailleurs dans l'application.
  *
  * DIRECTEUR_GENERAL et ADMIN sont des rôles superviseurs : ils conservent
@@ -81,7 +81,7 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Lots & Conversion', icon: 'fa-industry', route: '/production/lots' },
       { label: 'Registre Employés', icon: 'fa-users', route: '/production/employes' },
       // « Expressions de Besoin » retiré du menu RS : l'API la réserve à PRODUCTION_EXPRESSION_BESOIN_GERER,
-      // absente du rôle RESPONSABLE_SALLE (403) — vérifié dans RolePermissionMatrix.java.
+      // absente du rôle RESPONSABLE_SALLE (403), vérifié dans RolePermissionMatrix.java.
       { label: 'Rapports Hebdomadaires', icon: 'fa-file-lines', route: '/production/rapports' },
       { label: 'Statistiques', icon: 'fa-chart-line', route: '/production/responsable-salle/statistiques' },
       { label: 'Téléchargements', icon: 'fa-download', route: '/production/responsable-salle/telechargements' },
@@ -137,7 +137,7 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
     ],
   },
 
-  // Rôles superviseurs — accès complet à toutes les pages du module.
+  // Rôles superviseurs, accès complet à toutes les pages du module.
   DIRECTEUR_GENERAL: {
     libelleRole: 'Directeur Général',
     accueil: '/production/dashboard',

@@ -120,7 +120,7 @@
                       <div>
                         <label style="font-size:11px;color:var(--n400);margin-bottom:3px;display:block">Sélectionner</label>
                         <select class="form-control" [(ngModel)]="l.productId" (ngModelChange)="onProductChange(l)">
-                          <option [value]="0">— Choisir —</option>
+                          <option [value]="0">Choisir,</option>
                           <optgroup label="Produits Finis">
                             @for (p of getFinishedProducts(); track p.id) {
                               <option [value]="p.id">{{ p.designation || p.sku }} ({{ p.sku }})</option>
@@ -218,7 +218,7 @@
                     <div class="form-group">
                       <label class="form-label">Conditionnement</label>
                       <select class="form-control" [(ngModel)]="l.packagingType">
-                        <option value="">—</option>
+                        <option value="">-</option>
                         @for (pt of packagingTypes; track pt) { <option [value]="pt">{{ pt }}</option> }
                       </select>
                     </div>
@@ -245,7 +245,7 @@
         <div class="card-header"><div class="sec-head"><span class="sh-ico sh-y"><i class="fa-solid fa-receipt"></i></span><div><h3>Récapitulatif</h3></div></div></div>
         <div class="card-body">
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Commercial</span><span style="font-weight:600;color:var(--n800)">{{ selectedCommercialName || '—' }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Commercial</span><span style="font-weight:600;color:var(--n800)">{{ selectedCommercialName || '-' }}</span></div>
             <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--n500)">Lignes</span><span style="font-weight:600;color:var(--n800)">{{ validLineCount }}</span></div>
           </div>
           @if (errorMsg()) {

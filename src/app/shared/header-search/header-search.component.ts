@@ -5,9 +5,9 @@ import { Router } from '@angular/router';
 import { NavItemLike, filtrerNavItems } from '../utils/nav-filter.util';
 
 /**
- * Recherche du header (2026-10-25, demande explicite du porteur — « une barre aussi dans le
+ * Recherche du header (2026-10-25, demande explicite du porteur, « une barre aussi dans le
  * header ») : contrairement au sidebar, il n'y a pas de longue liste à filtrer en place dans la
- * topbar — un petit menu de résultats cliquables sert d'équivalent. Réutilise le même utilitaire
+ * topbar, un petit menu de résultats cliquables sert d'équivalent. Réutilise le même utilitaire
  * de filtrage que le sidebar (`nav-filter.util.ts`), pas un second système de recherche.
  */
 @Component({

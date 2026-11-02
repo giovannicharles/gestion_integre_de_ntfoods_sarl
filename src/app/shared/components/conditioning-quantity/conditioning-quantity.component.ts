@@ -14,16 +14,16 @@ export interface LigneConditionnement {
  *
  * Reçoit un code produit/SKU, interroge la vraie hiérarchie de SA variété (module conditionnement,
  * `ConditionnementService.getHierarchieParCode`) et ne propose QUE les niveaux réellement définis pour
- * CE produit — jamais un schéma fixe (sachet/gaine/carton/palette) : vérifié en base que la profondeur
+ * CE produit, jamais un schéma fixe (sachet/gaine/carton/palette) : vérifié en base que la profondeur
  * varie, et qu'aujourd'hui la plupart des produits n'ont qu'un seul niveau renseigné (pas encore de
- * chaînage multi-niveaux côté données — signalé, pas corrigé ici, ce composant s'adapte dans les deux
+ * chaînage multi-niveaux côté données, signalé, pas corrigé ici, ce composant s'adapte dans les deux
  * cas sans rien inventer).
  *
  * Cas « carton incomplet » : si le niveau choisi a un niveau inférieur chaîné
  * (`contientNiveauInferieurId`), une seconde ligne de saisie apparaît pour le reste à ce niveau
- * inférieur — n'apparaît que si la donnée existe réellement pour ce produit.
+ * inférieur, n'apparaît que si la donnée existe réellement pour ce produit.
  *
- * Sortie : liste de lignes `{codeConfiguration, quantite}` — la même forme que les champs déjà
+ * Sortie : liste de lignes `{codeConfiguration, quantite}`, la même forme que les champs déjà
  * existants côté backend (`LigneDotation.sku`, `LigneReception.sku`, `DeclarerLotRequest.conditioningType`),
  * jamais une conversion inventée en unités de base.
  */

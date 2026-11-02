@@ -40,7 +40,7 @@
           @for (p of pphsFiltres(); track p.id) {
             <tr>
               <td><strong>{{ p.referencePPH }}</strong></td>
-              <td class="mono">{{ p.referenceBC ?? '—' }}</td>
+              <td class="mono">{{ p.referenceBC ?? '-' }}</td>
               <td>{{ p.semaine }}</td>
               <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
               <td>
@@ -96,7 +96,7 @@
       <div class="pph-recap-grid">
         <div class="pph-recap-item">
           <span class="pph-recap-lbl"><i class="fa-solid fa-link"></i> BC lié</span>
-          <span class="pph-recap-val mono">{{ p.referenceBC ?? '—' }}</span>
+          <span class="pph-recap-val mono">{{ p.referenceBC ?? '-' }}</span>
         </div>
         <div class="pph-recap-item">
           <span class="pph-recap-lbl"><i class="fa-solid fa-user-tie"></i> Chef production</span>
@@ -108,7 +108,7 @@
         </div>
         <div class="pph-recap-item">
           <span class="pph-recap-lbl"><i class="fa-solid fa-calendar-check"></i> Soumis le</span>
-          <span class="pph-recap-val">{{ p.dateSoumission ?? '—' }}</span>
+          <span class="pph-recap-val">{{ p.dateSoumission ?? '-' }}</span>
         </div>
       </div>
 

@@ -17,13 +17,13 @@ export interface NotificationTempsReel {
 }
 
 /**
- * Client STOMP/SockJS pour les notifications temps réel (2026-09-30) — le backend diffuse déjà sur
+ * Client STOMP/SockJS pour les notifications temps réel (2026-09-30), le backend diffuse déjà sur
  * `/topic/notifications` (global) et `/topic/notifications/{ROLE}` (par rôle), authentifié au CONNECT
  * (`WebSocketAuthInterceptor`) ; aucun client Angular n'existait pour s'y abonner. `withSockJS()` côté serveur
  * impose un client compatible SockJS, pas un WebSocket natif.
  *
  * Un seul service, partagé par le centre de notifications (cloche) et tout écran qui veut un flux ciblé
- * (ex. alertes stock sur `/topic/alertes`) — pas une connexion par composant.
+ * (ex. alertes stock sur `/topic/alertes`), pas une connexion par composant.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationWebSocketService implements OnDestroy {

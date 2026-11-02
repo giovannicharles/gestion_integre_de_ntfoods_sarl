@@ -46,7 +46,7 @@
       <!-- KPIs -->
       <section class="card kpi-section">
         <div class="section-header">
-          <h2><i class="fa-solid fa-gauge-high"></i> Indicateurs clés — {{ statYear() }}</h2>
+          <h2><i class="fa-solid fa-gauge-high"></i> Indicateurs clés, {{ statYear() }}</h2>
           <select class="year-select" [value]="statYear()" (change)="setStatYear(+$any($event.target).value)">
             @for (y of availableYears(); track y) { <option [value]="y">{{ y }}</option> }
           </select>
@@ -85,7 +85,7 @@
     <!-- ═══ ROW 2: Evolution + Trend Line ═══ -->
     <div class="bento-row-2">
       <section class="card chart-section">
-        <h2><i class="fa-solid fa-chart-column"></i> Évolution mensuelle — Entrées vs Sorties</h2>
+        <h2><i class="fa-solid fa-chart-column"></i> Évolution mensuelle, Entrées vs Sorties</h2>
         <div class="chart-container">
           <canvas #evolutionCanvas></canvas>
         </div>
@@ -235,7 +235,7 @@
               <div class="conc-bar">
                 <div class="conc-fill" [style.width.%]="item.pct" [style.background]="item.color"></div>
               </div>
-              <div class="conc-value">{{ item.pct }}% — {{ formatCFA(item.value) }}</div>
+              <div class="conc-value">{{ item.pct }}%, {{ formatCFA(item.value) }}</div>
             </div>
           }
         </div>
@@ -488,7 +488,7 @@
 
     <div class="bento-row-2">
       <section class="card chart-section">
-        <h2><i class="fa-solid fa-industry"></i> Production — Lots par statut</h2>
+        <h2><i class="fa-solid fa-industry"></i> Production, Lots par statut</h2>
         <div class="chart-container">
           <canvas #sectorProductionCanvas></canvas>
         </div>

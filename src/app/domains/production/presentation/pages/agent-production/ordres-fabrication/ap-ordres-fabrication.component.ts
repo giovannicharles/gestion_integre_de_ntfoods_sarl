@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, OFBE } from '../../../../infrastructure/production.service';
 
 /**
- * ORDRES DE FABRICATION — Agent de Production
- * GET /production/ordres-fabrication (PRODUCTION_OF_CONSULTER) — consultation.
- * PATCH /{idOF}/statut (PRODUCTION_OF_VALIDER) — l'agent peut faire basculer un
+ * ORDRES DE FABRICATION, Agent de Production
+ * GET /production/ordres-fabrication (PRODUCTION_OF_CONSULTER), consultation.
+ * PATCH /{idOF}/statut (PRODUCTION_OF_VALIDER), l'agent peut faire basculer un
  * OF entre brouillon, en pause, en cours et terminé, mais ne peut ni le créer,
  * ni le démarrer depuis zéro, ni l'annuler (réservé à PRODUCTION_OF_CREER).
  */

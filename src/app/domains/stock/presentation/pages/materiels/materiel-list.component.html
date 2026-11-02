@@ -143,8 +143,8 @@
                 <tr class="table-row-anim">
                   <td><span class="rec-num">{{ m.sku }}</span></td>
                   <td style="font-weight:600">{{ m.designation || m.sku }}</td>
-                  <td>{{ m.unit || '—' }}</td>
-                  <td>{{ m.packagingType || '—' }}</td>
+                  <td>{{ m.unit || '-' }}</td>
+                  <td>{{ m.packagingType || '-' }}</td>
                   <td>
                     @if (m.active !== false) {
                       <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Disponible</span>

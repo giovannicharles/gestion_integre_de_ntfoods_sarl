@@ -12,11 +12,11 @@ export const SECRETAIRE_ROUTES: Routes = [
       { path: 'versements', loadComponent: () => import('./pages/versements/secretaire-versements.component').then(m => m.SecretaireVersementsComponent) },
       { path: 'validation', loadComponent: () => import('./pages/validation/secretaire-validation.component').then(m => m.SecretaireValidationComponent) },
       { path: 'commandes', loadComponent: () => import('./pages/commandes/secretaire-commandes.component').then(m => m.SecretaireCommandesComponent) },
-      // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email) — écran
+      // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email), écran
       // partagé (voir shared/commande-client), pas un doublon des précommandes J+1.
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       { path: 'session', loadComponent: () => import('./pages/session/secretaire-session.component').then(m => m.SecretaireSessionComponent) },
-      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }

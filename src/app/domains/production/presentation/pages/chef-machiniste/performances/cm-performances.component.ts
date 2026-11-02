@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, ClassementMachinisteBE } from '../../../../infrastructure/production.service';
 
 /**
- * CONSULTATION DES PERFORMANCES — Chef Machiniste
+ * CONSULTATION DES PERFORMANCES, Chef Machiniste
  * Pour chaque machiniste : quantité produite, objectif, taux de réalisation,
  * efficacité, productivité. Recherche + filtres période + pagination + export CSV.
  */

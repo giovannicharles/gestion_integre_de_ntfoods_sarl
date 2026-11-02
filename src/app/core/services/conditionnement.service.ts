@@ -27,7 +27,7 @@ export interface ConfigurationNiveauBE {
 /**
  * Point d'entrée unique pour la saisie de quantité consciente du conditionnement (P4, 2026-10-15).
  * Un seul appel : code produit/SKU → hiérarchie complète de SA variété (GET /api/conditionnement/
- * hierarchie/{code}, backend). Ne décide rien sur la forme de la hiérarchie — certains produits n'ont
+ * hierarchie/{code}, backend). Ne décide rien sur la forme de la hiérarchie, certains produits n'ont
  * qu'un seul niveau aujourd'hui, d'autres pourront en avoir plusieurs chaînés (carton→gaine→sachet) une
  * fois cette donnée renseignée côté module conditionnement ; le composant partagé qui consomme ceci
  * s'adapte dans les deux cas plutôt que de supposer une profondeur fixe.

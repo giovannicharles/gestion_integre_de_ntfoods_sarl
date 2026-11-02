@@ -35,7 +35,7 @@
     <div class="aj-selector-label"><i class="fa-solid fa-list-check"></i> Plan de production</div>
     <select class="input aj-select" [ngModel]="pphSelectionne()" (ngModelChange)="selectionner($event)">
       @for (p of pphs(); track p.id) {
-        <option [ngValue]="p">{{ p.referencePPH }} — {{ p.semaine }} [{{ p.statut }}]</option>
+        <option [ngValue]="p">{{ p.referencePPH }}, {{ p.semaine }} [{{ p.statut }}]</option>
       }
     </select>
     <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
@@ -59,7 +59,7 @@
       </div>
       <div class="aj-meta-item">
         <span class="aj-meta-lbl">BC lié</span>
-        <span class="aj-meta-val mono">{{ p.referenceBC ?? '—' }}</span>
+        <span class="aj-meta-val mono">{{ p.referenceBC ?? '-' }}</span>
       </div>
       <div class="aj-meta-item">
         <span class="aj-meta-lbl">Statut</span>
@@ -73,13 +73,13 @@
 
 @if (pphSelectionne(); as p) {
 
-<!-- ═══ SECTION 1 : LIGNES DE PRODUCTION — LECTURE SEULE ═══ -->
+<!-- ═══ SECTION 1 : LIGNES DE PRODUCTION, LECTURE SEULE ═══ -->
 <div class="card">
   <div class="aj-card-header">
     <div class="aj-card-title">
       <div class="aj-card-ico aj-ico-n"><i class="fa-solid fa-boxes-stacked"></i></div>
       <span>Lignes de production</span>
-      <span class="aj-readonly-badge">Lecture seule — issu du BC</span>
+      <span class="aj-readonly-badge">Lecture seule, issu du BC</span>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -124,7 +124,7 @@
   </div>
 </div>
 
-<!-- ═══ SECTION 2 : MATIÈRES PREMIÈRES — ÉDITABLE ═══ -->
+<!-- ═══ SECTION 2 : MATIÈRES PREMIÈRES, ÉDITABLE ═══ -->
 <div class="card">
   <div class="aj-card-header">
     <div class="aj-card-title">
@@ -153,7 +153,7 @@
   </div>
 </div>
 
-<!-- ═══ SECTION 3 : RÉPARTITION PAR JOUR — ÉDITABLE ═══ -->
+<!-- ═══ SECTION 3 : RÉPARTITION PAR JOUR, ÉDITABLE ═══ -->
 <div class="card">
   <div class="aj-card-header">
     <div class="aj-card-title">
@@ -222,13 +222,13 @@
   <div class="aj-action-bar-info">
     <i class="fa-solid fa-circle-info"></i>
     @if (p.statut === 'BROUILLON') {
-      <strong>BROUILLON</strong> — Enregistrez vos ajustements. Le Chef de Production doit valider ce plan avant que vous puissiez le démarrer.
+      <strong>BROUILLON</strong>, Enregistrez vos ajustements. Le Chef de Production doit valider ce plan avant que vous puissiez le démarrer.
     }
     @if (p.statut === 'VALIDE') {
-      <strong>VALIDÉ</strong> — Enregistrez vos derniers ajustements puis démarrez la production.
+      <strong>VALIDÉ</strong>, Enregistrez vos derniers ajustements puis démarrez la production.
     }
     @if (p.statut === 'EN_COURS') {
-      Production <strong>EN COURS</strong> — Les ressources ne sont plus modifiables. Mettez en pause ou clôturez.
+      Production <strong>EN COURS</strong>, Les ressources ne sont plus modifiables. Mettez en pause ou clôturez.
     }
   </div>
 

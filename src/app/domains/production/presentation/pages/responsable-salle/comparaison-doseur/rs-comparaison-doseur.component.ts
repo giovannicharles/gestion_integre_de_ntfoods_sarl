@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../../infrastructure/production.service';
 
 /**
- * COMPARAISON AGENT DOSEUR / PRODUCTION — Responsable de Salle
+ * COMPARAISON AGENT DOSEUR / PRODUCTION, Responsable de Salle
  * GET /affectations/{referencePPH}/comparaison-futs (réel, autorisé) :
  * quantité théorique attendue (fûts × poudre) vs production réellement
  * enregistrée, écart, pourcentage. Alerte automatique si écart important.
@@ -43,7 +43,7 @@ export class RsComparaisonDoseurComponent implements OnInit {
     if (!this.referencePPH) { this.message.set('Sélectionnez un PPH'); return; }
     this.svc.getComparaisonFutsProduction(this.referencePPH, this.date).subscribe({
       next: c => this.comparaison.set(c),
-      error: () => { this.comparaison.set(null); this.message.set('Erreur lors de la comparaison — aucune donnée pour cette date/PPH'); }
+      error: () => { this.comparaison.set(null); this.message.set('Erreur lors de la comparaison, aucune donnée pour cette date/PPH'); }
     });
   }
 }

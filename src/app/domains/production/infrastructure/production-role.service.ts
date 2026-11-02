@@ -5,13 +5,13 @@ import { AuthService } from '../../../core/auth/auth.service';
  * Rôles du module Production réellement gérés par ce cloisonnement.
  *
  * GESTIONNAIRE_STOCK existe côté backend (et dans `AuthService.role`) mais
- * n'est PAS géré ici — cet espace est pris en charge ailleurs dans l'application.
+ * n'est PAS géré ici, cet espace est pris en charge ailleurs dans l'application.
  * Si un utilisateur avec ce rôle atterrit malgré tout sur une route
  * `/production/*`, `roleActuel()` renverra `null` (rôle non reconnu par ce
  * module) et le menu de repli minimal s'affichera.
  *
  * MACHINISTE reste un simple exécutant (référencé par matricule dans les
- * saisies) — il ne s'authentifie jamais et n'a donc pas d'espace applicatif
+ * saisies), il ne s'authentifie jamais et n'a donc pas d'espace applicatif
  * ici.
  *
  * AGENT_PRODUCTION, lui, s'authentifie bel et bien (cf. BACKEND_ROLE_MAP) et
@@ -36,7 +36,7 @@ const ROLES_GERES: readonly RoleProduction[] = [
 /**
  * Adapte `AuthService.role()` (source de vérité de l'application) au
  * cloisonnement propre au module Production. Ne contient aucune logique
- * de lecture de token — tout est délégué au vrai service d'authentification.
+ * de lecture de token, tout est délégué au vrai service d'authentification.
  */
 @Injectable({ providedIn: 'root' })
 export class ProductionRoleService {

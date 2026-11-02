@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════
-   Agent Doseur — utilitaires composites PROPRES au module.
+   Agent Doseur, utilitaires composites PROPRES au module.
    Alignés sur le design system TANTY (tokens --g/--y/--r/--o/--b/--s/--n*).
    Les badges (.badge, .bg-*), boutons (.btn*), cartes, tables, KPI, page
    header proviennent du thème global : rien n'est redéfini ici pour éviter

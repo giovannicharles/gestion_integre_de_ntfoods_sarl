@@ -6,7 +6,7 @@ import { AdminSystemeService, SauvegardeBE } from '../../../infrastructure/admin
 /**
  * Déclenchement manuel = action directe (sûre, réversible). Modifier la planification
  * automatique = demande soumise au moteur d'approbation (un second membre haut placé doit
- * valider) — jamais appliquée directement depuis cet écran.
+ * valider), jamais appliquée directement depuis cet écran.
  */
 @Component({
   selector: 'app-admin-systeme-sauvegardes',
@@ -50,7 +50,7 @@ export class AdminSystemeSauvegardesComponent implements OnInit {
       next: (s) => {
         this.sauvegardes.set([s, ...this.sauvegardes()]);
         this.declenchementEnCours.set(false);
-        this.succes.set(s.statut === 'REUSSIE' ? 'Sauvegarde réussie.' : 'Sauvegarde échouée — voir détail.');
+        this.succes.set(s.statut === 'REUSSIE' ? 'Sauvegarde réussie.' : 'Sauvegarde échouée, voir détail.');
         setTimeout(() => this.succes.set(null), 4000);
       },
       error: (err) => {
@@ -70,7 +70,7 @@ export class AdminSystemeSauvegardesComponent implements OnInit {
     this.svc.demanderModificationPlanification(this.formPlanification.actif, this.formPlanification.frequenceHeures, motif)
       .subscribe({
         next: () => {
-          this.succes.set("Demande de modification de la planification créée — en attente d'approbation.");
+          this.succes.set("Demande de modification de la planification créée, en attente d'approbation.");
           this.afficherFormPlanification.set(false);
           this.formPlanification.motif = '';
           setTimeout(() => this.succes.set(null), 4000);

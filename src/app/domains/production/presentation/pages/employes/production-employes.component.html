@@ -3,7 +3,7 @@
     <i class="fa-solid fa-person-digging ph-ico"></i>
     <div>
       <h1 class="ph-title">Registre Employés</h1>
-      <p class="ph-sub">Présences et performances — {{ today | date:'dd MMMM yyyy' }}</p>
+      <p class="ph-sub">Présences et performances, {{ today | date:'dd MMMM yyyy' }}</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -85,17 +85,17 @@
               @if (e.heureArrivee) {
                 {{ e.heureArrivee }}
               } @else {
-                <span class="txt-muted">—</span>
+                <span class="txt-muted">-</span>
               }
             </td>
             <td>
               @if (e.present) {
                 <strong class="txt-success">{{ e.qteRealisee }}</strong>
               } @else {
-                <span class="txt-muted">—</span>
+                <span class="txt-muted">-</span>
               }
             </td>
-            <td>{{ e.present ? e.unite : '—' }}</td>
+            <td>{{ e.present ? e.unite : '-' }}</td>
           </tr>
         } @empty {
           <tr><td colspan="6" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun employé dans le registre du jour</td></tr>
@@ -133,7 +133,7 @@
         <div class="re-modal-ico"><i class="fa-solid fa-user-check"></i></div>
         <div>
           <div class="re-modal-ref">Enregistrer le registre du jour</div>
-          <div class="re-modal-sub">Présences et performances — {{ dateRegistre | date:'dd MMMM yyyy' }}</div>
+          <div class="re-modal-sub">Présences et performances, {{ dateRegistre | date:'dd MMMM yyyy' }}</div>
         </div>
       </div>
       <button class="re-modal-close" (click)="showEnregistrerRegistre.set(false)"><i class="fa-solid fa-xmark"></i></button>
@@ -144,8 +144,8 @@
         <div class="re-meta-field">
           <label class="re-label"><i class="fa-solid fa-calendar-week"></i> PPH</label>
           <select class="input re-select" [(ngModel)]="referencePPH" (ngModelChange)="onPphChange()">
-            <option value="">— Choisir un PPH —</option>
-            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option> }
+            <option value="">Choisir un PPH,</option>
+            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option> }
           </select>
         </div>
         <div class="re-meta-field">
@@ -187,22 +187,22 @@
                     @else { Aucun agent disponible }
                   </option>
                   @for (a of agentsDuJour(); track a.matricule) {
-                    <option [value]="a.matricule">{{ a.nomComplet }} — {{ a.libellePoste }} ({{ a.matricule }})</option>
+                    <option [value]="a.matricule">{{ a.nomComplet }}, {{ a.libellePoste }} ({{ a.matricule }})</option>
                   }
                 </select>
               </div>
 
               <div class="re-field re-field-sm">
                 <label class="re-label">Matricule</label>
-                <div class="re-readonly"><span class="mono">{{ l.matriculeEmploye || '—' }}</span></div>
+                <div class="re-readonly"><span class="mono">{{ l.matriculeEmploye || '-' }}</span></div>
               </div>
               <div class="re-field re-field-sm">
                 <label class="re-label">Nom</label>
-                <div class="re-readonly">{{ l.nomEmploye || '—' }}</div>
+                <div class="re-readonly">{{ l.nomEmploye || '-' }}</div>
               </div>
               <div class="re-field re-field-sm">
                 <label class="re-label">Poste</label>
-                <div class="re-readonly">{{ (libellePoste(l.poste) | titlecase) || '—' }}</div>
+                <div class="re-readonly">{{ (libellePoste(l.poste) | titlecase) || '-' }}</div>
               </div>
 
               <div class="re-field re-field-xs">
@@ -249,7 +249,7 @@
   </div>
   <div class="filter-row" style="padding: 0 var(--sp-4) var(--sp-3); display:flex; gap:var(--sp-2); align-items:center">
     <select class="input" [(ngModel)]="referencePPH">
-      <option value="">— PPH —</option>
+      <option value="">PPH,</option>
       @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
     </select>
     <input type="date" class="input" [(ngModel)]="rechercheDate">
@@ -268,13 +268,13 @@
               <td>{{ l.matriculeEmploye }}</td>
               <td>{{ l.nomEmploye }}</td>
               <td>{{ l.poste }}</td>
-              <td>{{ l.heureArrivee ?? '—' }}</td>
+              <td>{{ l.heureArrivee ?? '-' }}</td>
               <td>{{ l.qteRealisee }} {{ l.unite }}</td>
             </tr>
           }
         </tbody>
       </table>
     </div>
-    <p style="padding: 0 var(--sp-4) var(--sp-3)">{{ r.nbPresents }} présent(s) — {{ r.nbAbsents }} absent(s)</p>
+    <p style="padding: 0 var(--sp-4) var(--sp-3)">{{ r.nbPresents }} présent(s), {{ r.nbAbsents }} absent(s)</p>
   }
 </div>

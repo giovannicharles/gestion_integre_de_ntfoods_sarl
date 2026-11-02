@@ -28,17 +28,17 @@ export class ComptableReportingComponent implements OnInit {
       .reduce((s, f) => s + f.lignes.reduce((ls, l) => ls + l.montantTTC, 0), 0)
   );
 
-  // Créances = factures (hors avoirs) dont le statut n'est pas PAYEE — dérivé
+  // Créances = factures (hors avoirs) dont le statut n'est pas PAYEE, dérivé
   // des factures déjà chargées, pas une valeur inventée. Le module comptable
   // ne calcule pas encore un "solde restant" par facture (paiement partiel) :
   // ce total suppose donc une facture soit intégralement payée, soit pas du
-  // tout — à affiner si un paiement partiel est introduit un jour.
+  // tout, à affiner si un paiement partiel est introduit un jour.
   totalCreances = computed(() =>
     this.factures().filter(f => f.typeFacture === 'FACTURE' && f.statut !== 'PAYEE')
       .reduce((s, f) => s + f.lignes.reduce((ls, l) => ls + l.montantTTC, 0), 0)
   );
 
-  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  /** Composition manuelle en heure locale, `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
   private dateLocaleIso(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }

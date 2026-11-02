@@ -3,7 +3,7 @@
     <i class="fa-solid fa-hand-holding-dollar ph-ico"></i>
     <div>
       <h1 class="ph-title">Suivi Recouvrement Global</h1>
-      <p class="ph-sub">Créances clients — tous commerciaux confondus</p>
+      <p class="ph-sub">Créances clients, tous commerciaux confondus</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -77,7 +77,7 @@
               @if (r.dateEncaissement) {
                 {{ r.dateEncaissement | date:'dd/MM/yyyy' }}
               } @else {
-                <span class="text-muted">—</span>
+                <span class="text-muted">-</span>
               }
             </td>
             <td><span [class]="statutClass(r.statut)">{{ r.statut }}</span></td>

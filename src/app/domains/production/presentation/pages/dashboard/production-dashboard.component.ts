@@ -42,14 +42,14 @@ export class ProductionDashboardComponent implements OnInit {
   pphs = signal<PPHBE[]>([]);
 
   plan = signal<PlanUI>({
-    semaine: '—', dateDebut: '—', dateFin: '—',
-    chefProduction: '—', statut: '—',
+    semaine: '-', dateDebut: '-', dateFin: '-',
+    chefProduction: '-', statut: '-',
   });
 
   dashboard = signal<DashboardChefBE | null>(null);
   pphEnCours = signal<PPHBE | null>(null);
 
-  // ── Section statistiques (Section 2 du document — DG/Chef Production) ──
+  // ── Section statistiques (Section 2 du document, DG/Chef Production) ──
   /** 4 dernières semaines (S-3 à S courante), chacune un vrai appel à /rapports/hebdomadaire. */
   tendance4Semaines = signal<{ label: string; rapport: RapportHebdomadaireProductionBE }[]>([]);
   classementExecuteurs = signal<ClassementExecuteurBE[]>([]);
@@ -65,7 +65,7 @@ export class ProductionDashboardComponent implements OnInit {
     return t.length >= 2 ? t[t.length - 2].rapport : null;
   });
 
-  /** Évolution hebdomadaire de la production (kg) — 4 dernières semaines. */
+  /** Évolution hebdomadaire de la production (kg), 4 dernières semaines. */
   serieEvolutionProductionKg = computed<ChartSeries[]>(() => [{
     name: 'Production (kg)', color: 'var(--primary, #1976d2)',
     values: this.tendance4Semaines().map(t => t.rapport.totalQuantiteLots),

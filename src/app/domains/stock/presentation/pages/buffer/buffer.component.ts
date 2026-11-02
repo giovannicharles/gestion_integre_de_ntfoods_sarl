@@ -134,7 +134,7 @@ export class BufferComponent implements OnInit, OnDestroy {
       const bufferItems = allRaw.filter(r => this.bufferLocationIds.includes(r.locationId || ''));
       const centralItems = allRaw.filter(r => this.centralLocationIds.includes(r.locationId || ''));
 
-      // Group by productSku — a product can have multiple packaging types
+      // Group by productSku, a product can have multiple packaging types
       const bufferBySku = new Map<string, any[]>();
       bufferItems.forEach(r => {
         const sku = r.productSku || '';

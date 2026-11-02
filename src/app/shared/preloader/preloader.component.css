@@ -2,7 +2,7 @@
    PRELOADER - TANTY DIGITAL ERP
    Refonte 2026-10-25 (demande explicite du porteur) : motif de grille en fond + loader en
    grille 3×3 à onde diagonale, au lieu des trois points qui rebondissent. Tokens TANTY
-   existants uniquement (--y/--g/--n900/--font-*, styles.css) — pas de nouvelle palette.
+   existants uniquement (--y/--g/--n900/--font-*, styles.css), pas de nouvelle palette.
    ══════════════════════════════════════════════════════════ */
 
 .preloader-overlay {

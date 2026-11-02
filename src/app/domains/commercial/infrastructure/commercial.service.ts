@@ -28,7 +28,7 @@ export interface PreCommandeBE {
 }
 
 /**
- * Calcul automatique des primes hebdomadaires (2026-10-25) — GET /api/commercial/rapports/primes
+ * Calcul automatique des primes hebdomadaires (2026-10-25), GET /api/commercial/rapports/primes
  * (RapportCommercialController.java:66, CalculerPrimesHebdoUseCase) : calcule déjà le CA réalisé
  * et le taux par gamme à partir des vraies ventes, jamais consommé par l'écran
  * `comptable-primes` qui forçait jusqu'ici une saisie manuelle des mêmes chiffres.
@@ -65,7 +65,7 @@ export interface CarburantBE {
   caZoneMoisCourantFCFA: number; ratioCarburantSurCaPourcent: number;
 }
 
-/** Forme réelle de FeuillRouteResponse (backend) — champs pertinents pour le sélecteur carburant. */
+/** Forme réelle de FeuillRouteResponse (backend), champs pertinents pour le sélecteur carburant. */
 export interface FeuillRouteBE {
   id: number; numeroFeuillRoute: string; numeroSession: string; matriculeCommercial: string;
   date: string; nombreVisites: number; nombreNonVisites: number; tousArretsTranches: boolean;
@@ -262,7 +262,7 @@ export class CommercialService {
   }
 
   /**
-   * Feuilles de route du commercial à une date donnée — nécessaire pour renseigner
+   * Feuilles de route du commercial à une date donnée, nécessaire pour renseigner
    * `numeroFeuillRoute` lors d'une demande de carburant (CarburantController : confronté à un
    * trajet réel, sans quoi toute demande échoue avec RegleMetierException, voir P5 2026-10-15).
    */
@@ -315,7 +315,7 @@ export class CommercialService {
 
   /**
    * Seuil (en unités de base) à partir duquel une photo devient obligatoire pour une
-   * déclaration d'avarie — jamais codé en dur côté client, administrable par le DG.
+   * déclaration d'avarie, jamais codé en dur côté client, administrable par le DG.
    */
   getReglesAvarieCourantes(): Observable<ReglesAvarieBE> {
     return this.api.get<ApiResponse<ReglesAvarieBE>>('commercial/regles-avarie/courantes')
@@ -373,14 +373,14 @@ export class CommercialService {
    * cas d'usage et renvoient le même DTO :
    *
    *   - `/api/dg/classement-commerciaux`, sous le garde de classe du contrôleur
-   *     DG — `hasAnyRole('DIRECTEUR_GENERAL', 'ADMIN')` ;
+   *     DG, `hasAnyRole('DIRECTEUR_GENERAL', 'ADMIN')` ;
    *   - `/api/commercial/dashboard/classement`, gardé par la permission
    *     `COMMERCIAL_VENTE_CONSULTER`.
    *
    * Les écrans du Contrôleur Général, de la Chargée RP et du commercial
    * passaient par la première : chacun recevait un 403 sur un classement
    * auquel la seconde lui donne pleinement droit. On emprunte donc la porte
-   * ouverte. Aucun accès n'est élargi — la donnée est rigoureusement la même,
+   * ouverte. Aucun accès n'est élargi, la donnée est rigoureusement la même,
    * seul le garde diffère.
    */
   getClassementCommerciaux(): Observable<ClassementCommercialBE[]> {
@@ -390,7 +390,7 @@ export class CommercialService {
 
   // ── Commandes à distance (client hors tournée : téléphone, WhatsApp, SMS, email) ──
   // Création ouverte à tout poste pouvant être contacté par un client (2026-10-16,
-  // COMMERCIAL_COMMANDE_DISTANCE_RECEVOIR), pas seulement au commercial — voir
+  // COMMERCIAL_COMMANDE_DISTANCE_RECEVOIR), pas seulement au commercial, voir
   // CommandeDistanceController, backend.
 
   getCommandesDistance(): Observable<CommandeDistanceBE[]> {

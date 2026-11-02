@@ -7,7 +7,7 @@ import {
 type Onglet = 'salle' | 'machiniste' | 'doseur';
 
 /**
- * COORDINATION DES ACTEURS — Chef de Production
+ * COORDINATION DES ACTEURS, Chef de Production
  * Supervision de l'activité du jour de chaque rôle opérationnel :
  * Responsable Salle (affectations), Chef Machiniste (broyage), Agent Doseur
  * (dosage). Tous les appels utilisés ici sont explicitement autorisés pour

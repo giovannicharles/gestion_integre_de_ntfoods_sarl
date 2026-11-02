@@ -19,7 +19,7 @@ export const STOCK_ROUTES: Routes = [
       { path: 'reception/:id', loadComponent: () => import('./pages/reception/reception-form.component').then(m => m.ReceptionFormComponent) },
       { path: 'validation', loadComponent: () => import('./pages/validation/validation.component').then(m => m.ValidationComponent) },
       // Moteur de validation générique (demandes de transfert, réappro tampon, etc.), distinct
-      // de 'validation' ci-dessus (spécifique aux réceptions) — réutilisé sans quitter la
+      // de 'validation' ci-dessus (spécifique aux réceptions), réutilisé sans quitter la
       // coquille Stock (même correction que DG/Contrôle/Comptable, 2026-10-16) : le sidebar
       // pointait vers /validations, route de premier niveau sans aucun layout.
       { path: 'mes-validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
@@ -42,7 +42,7 @@ export const STOCK_ROUTES: Routes = [
       { path: 'mobile-stock', loadComponent: () => import('./pages/mobile-stock/mobile-stock.component').then(m => m.MobileStockComponent) },
       { path: 'alertes', loadComponent: () => import('./pages/alertes/alertes.component').then(m => m.AlertesComponent) },
       { path: 'lots', loadComponent: () => import('./pages/lots/lots.component').then(m => m.LotsComponent) },
-      // Parcours d'un lot (2026-09-30) : distinct de 'lots' ci-dessus — celui-ci lit LotStock (le grand livre de
+      // Parcours d'un lot (2026-09-30) : distinct de 'lots' ci-dessus, celui-ci lit LotStock (le grand livre de
       // traçabilité réellement alimenté par les réceptions/entrées de production), pas StockBatch (stock/batches).
       { path: 'lots/trace', loadComponent: () => import('./pages/lots/trace-lot.component').then(m => m.TraceLotComponent) },
       { path: 'audit', loadComponent: () => import('./pages/audit/audit.component').then(m => m.AuditComponent) },
@@ -64,7 +64,7 @@ export const STOCK_ROUTES: Routes = [
       { path: 'valorisation', loadComponent: () => import('./pages/valorisation/valorisation.component').then(m => m.ValorisationComponent) },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },
       { path: 'notifications', loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent) },
-      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]
   }

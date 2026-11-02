@@ -159,7 +159,7 @@ export class TantybotComponent implements AfterViewChecked {
     this.api.get<any>('v1/stock/dashboard/stats').subscribe({
       next: (data: any) => {
         this.isTyping.set(false);
-        const totalProducts = data?.totalProducts ?? '—';
+        const totalProducts = data?.totalProducts ?? '-';
         const totalValue = data?.totalStockValue ?? 0;
         const lowStock = data?.lowStockCount ?? 0;
         const msg = `📊 État du stock :\n• Produits : ${totalProducts}\n• Valeur totale : ${this.formatCFA(totalValue)}\n• Alertes stock bas : ${lowStock}`;

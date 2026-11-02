@@ -4,9 +4,9 @@ import { ProductionService, StatistiquesFutsBE, SessionDosageBE } from '../../..
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
 /**
- * STATISTIQUES — Agent Doseur
+ * STATISTIQUES, Agent Doseur
  * GET /dosage/statistiques/futs autorise explicitement AGENT_DOSEUR (contrairement
- * aux autres endpoints de consultation) — comparaisons N/N-1 pleinement fonctionnelles.
+ * aux autres endpoints de consultation), comparaisons N/N-1 pleinement fonctionnelles.
  * Les graphiques d'évolution jour par jour dépendent en revanche de /dosage/periode
  * (réserve identique aux autres vues).
  */

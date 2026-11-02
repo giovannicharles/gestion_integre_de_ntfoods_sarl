@@ -35,7 +35,7 @@ export interface TrancheComparatifBE {
   nombreVentes: number;
 }
 
-/** Un mois de l'historique de CA — GET /dg/historique-ca-mensuel (2026-11-01). */
+/** Un mois de l'historique de CA, GET /dg/historique-ca-mensuel (2026-11-01). */
 export interface MoisCaBE {
   mois: string;
   libelleCourt: string;
@@ -65,7 +65,7 @@ export interface ZonePerformanceBE {
   nombreVentesMoisCourant: number;
 }
 
-/** GET /dg/incidents-resume (2026-11-01) — compteurs seuls, jamais le détail d'un incident. */
+/** GET /dg/incidents-resume (2026-11-01), compteurs seuls, jamais le détail d'un incident. */
 export interface IncidentResumeBE {
   actifs: number;
   enCours: number;
@@ -92,14 +92,14 @@ export interface ConcentrationClientsBE {
   nombreClientsActifs: number;
 }
 
-/** GET /dg/historique-tresorerie (2026-11-01) — solde de caisse, pas la trésorerie composite. */
+/** GET /dg/historique-tresorerie (2026-11-01), solde de caisse, pas la trésorerie composite. */
 export interface MoisSoldeCaisseBE {
   mois: string;
   libelleCourt: string;
   soldeFCFA: number | null;
 }
 
-/** GET /dg/controle-gestion (2026-11-01) — pont vers le module Contrôle (budget/marges/variances). */
+/** GET /dg/controle-gestion (2026-11-01), pont vers le module Contrôle (budget/marges/variances). */
 export interface TopMargeBE {
   code: string;
   designation: string;
@@ -117,7 +117,7 @@ export interface ControleGestionResumeBE {
 }
 
 /**
- * GET /dg/audit (2026-11-01) — écran DG dédié, remplace l'alias vers admin-audit retiré le même
+ * GET /dg/audit (2026-11-01), écran DG dédié, remplace l'alias vers admin-audit retiré le même
  * jour (le DG voit tout en lecture seule, l'écran de GESTION de l'audit reste côté Admin).
  */
 export interface JournalAuditBE {
@@ -159,7 +159,7 @@ export interface AnomalieBE {
   reference: string;
   description: string;
   matriculeConcerne?: string;
-  /** 2026-11-01 — CRITIQUE/HAUTE/MOYENNE/BASSE. Inclut maintenant péremptions imminentes et
+  /** 2026-11-01, CRITIQUE/HAUTE/MOYENNE/BASSE. Inclut maintenant péremptions imminentes et
    * seuils franchis (tampon/central), en plus des écarts déjà remontés. */
   priorite?: string;
 }
@@ -246,8 +246,8 @@ export interface DefinirSeuilRequestBE {
 }
 
 /**
- * Paramètres système (2026-10-25) — GET/PUT /api/dg/parametres (DgController.java:241,264,
- * GererParametresSystemeUseCase). Sans rapport avec /admin/parametres (TVA, primes — table
+ * Paramètres système (2026-10-25), GET/PUT /api/dg/parametres (DgController.java:241,264,
+ * GererParametresSystemeUseCase). Sans rapport avec /admin/parametres (TVA, primes, table
  * différente côté métier) ni /dg/seuils (seuils de réapprovisionnement par produit) : ce sont
  * les 9 seuils de sécurité/session (caisse, connexion, alertes), jamais exposés jusqu'ici.
  */
@@ -264,7 +264,7 @@ export interface ParametreSystemeBE {
 export class DgService {
   private readonly api = inject(ApiService);
 
-  /** Gouvernance des seuils (DG) — GET/POST /api/stock/seuils (SeuilController, backend). */
+  /** Gouvernance des seuils (DG), GET/POST /api/stock/seuils (SeuilController, backend). */
   getSeuils(): Observable<SeuilBE[]> {
     return this.api.get<ApiResponse<SeuilBE[]>>('stock/seuils')
       .pipe(map(r => r.donnees ?? []));
@@ -295,9 +295,9 @@ export class DgService {
       .pipe(map(r => r.donnees!));
   }
 
-  /** Versements du jour, tous commerciaux — lecture directe du module comptabilité (COMPTABILITE_VERSEMENT_CONSULTER, déjà accordée au DG). */
+  /** Versements du jour, tous commerciaux, lecture directe du module comptabilité (COMPTABILITE_VERSEMENT_CONSULTER, déjà accordée au DG). */
   getVersementsDuJour(date?: string): Observable<VersementDuJourBE[]> {
-    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT).
+    // Composition manuelle en heure locale, `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT).
     const aujourdhui = new Date();
     const dateLocale = `${aujourdhui.getFullYear()}-${String(aujourdhui.getMonth() + 1).padStart(2, '0')}-${String(aujourdhui.getDate()).padStart(2, '0')}`;
     const params: Record<string, string> = { date: date ?? dateLocale };
@@ -397,7 +397,7 @@ export class DgService {
   }
 
   /**
-   * Contexte remis à l'assistance IA — chiffres du jour, alertes, validations
+   * Contexte remis à l'assistance IA, chiffres du jour, alertes, validations
    * en attente. Le serveur l'expose sur `GET /api/dg/ai-context`
    * (`DgController:234`) ; la forme est libre et volontairement non typée ici,
    * car c'est le serveur qui décide de ce qu'il juge utile d'y mettre.
@@ -408,7 +408,7 @@ export class DgService {
   }
 
   /**
-   * Export du classement commercial / de la performance par zone (2026-11-01) — les boutons
+   * Export du classement commercial / de la performance par zone (2026-11-01), les boutons
    * « Exporter PDF »/« Exporter Excel » de /dg/reporting n'appelaient rien jusqu'ici.
    * `format` : pdf | xlsx | csv | json (voir `FormatRapport` backend).
    */

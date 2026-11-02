@@ -13,17 +13,17 @@ const TYPES_DEPENSE = [
 ] as const;
 
 /**
- * Écran Contrôle — Décaissements (2026-10-16, confidentialité des modules).
+ * Écran Contrôle, Décaissements (2026-10-16, confidentialité des modules).
  *
- * `/controle/decaissements` pointait jusqu'ici vers `DgDecaissementsComponent` (module DG) —
+ * `/controle/decaissements` pointait jusqu'ici vers `DgDecaissementsComponent` (module DG),
  * le Contrôleur Général se retrouvait dans l'espace de travail du DG, avec ses boutons
  * "Valider DG"/"Approuver DG" qu'il n'a de toute façon pas le droit d'actionner
- * (`@PreAuthorize hasAnyRole('DIRECTEUR_GENERAL','ADMIN')`, backend) — exactement la violation
+ * (`@PreAuthorize hasAnyRole('DIRECTEUR_GENERAL','ADMIN')`, backend), exactement la violation
  * déjà corrigée une fois pour Stock↔Production, reproduite ici sans avoir été détectée.
  *
  * Le rôle réel du Contrôleur Général dans ce circuit (DecaissementController) : il PROPOSE
  * (`hasAnyRole('CONTROLEUR_GENERAL','ADMIN')`) et peut ANNULER sa proposition avant exécution
- * (`hasAnyRole('DIRECTEUR_GENERAL','CONTROLEUR_GENERAL','ADMIN')`) — jamais valider/approuver,
+ * (`hasAnyRole('DIRECTEUR_GENERAL','CONTROLEUR_GENERAL','ADMIN')`), jamais valider/approuver,
  * qui restent strictement DG. Cet écran n'affiche donc que ces deux actions.
  */
 @Component({
@@ -105,7 +105,7 @@ export class ControleDecaissementsComponent implements OnInit {
         this.saving.set(false);
         this.showForm.set(false);
         this.decaissements.update(list => [d, ...list]);
-        this.toast.success(`Décaissement ${d.numeroDecaissement} proposé — en attente de validation DG.`);
+        this.toast.success(`Décaissement ${d.numeroDecaissement} proposé, en attente de validation DG.`);
       },
       error: e => { this.saving.set(false); this.toast.error(extractApiError(e), 'Échec de la proposition'); },
     });
@@ -140,8 +140,8 @@ export class ControleDecaissementsComponent implements OnInit {
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {
-      PROPOSE: 'Proposé — att. DG (1)', VALIDEE_CG: 'DG (1) ✓ — att. DG (2)',
-      VALIDEE_DG: 'DG (2) ✓ — att. Secrétaire', EXECUTE: 'Exécuté', ANNULE: 'Annulé',
+      PROPOSE: 'Proposé, att. DG (1)', VALIDEE_CG: 'DG (1) ✓, att. DG (2)',
+      VALIDEE_DG: 'DG (2) ✓, att. Secrétaire', EXECUTE: 'Exécuté', ANNULE: 'Annulé',
     };
     return map[s] ?? s;
   }

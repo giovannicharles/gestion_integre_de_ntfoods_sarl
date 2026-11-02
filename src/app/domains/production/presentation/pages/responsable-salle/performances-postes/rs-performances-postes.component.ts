@@ -7,12 +7,12 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
 type PeriodeChoix = 'jour' | 'semaine' | 'mois' | 'libre';
 
 /**
- * CALCUL AUTOMATIQUE DES PERFORMANCES — Responsable de Salle
+ * CALCUL AUTOMATIQUE DES PERFORMANCES, Responsable de Salle
  * Objectif recalculé, quantité produite, taux d'atteinte et classement
- * journalier des postes — calculés côté backend (AffectationJournaliere.getClassementPostes()).
+ * journalier des postes, calculés côté backend (AffectationJournaliere.getClassementPostes()).
  *
  * Vue par période (§99) : les mêmes postes vus sur jour / semaine / mois / intervalle libre,
- * via GET /affectations/performances-postes — l'affectation du jour ci-dessus ne couvre que
+ * via GET /affectations/performances-postes, l'affectation du jour ci-dessus ne couvre que
  * la journée en cours, faute de prendre une date en paramètre.
  */
 @Component({

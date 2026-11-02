@@ -27,7 +27,7 @@ export class AdminAuditComponent implements OnInit {
    * `TypeActionAudit.java` : CONSULTATION, CREATION, MODIFICATION, VALIDATION,
    * SUPPRESSION_TENTATIVE, ANNULATION, IMPRESSION_EXPORT, CONNEXION, ECHEC_CONNEXION,
    * DEBLOCAGE_PRIX, AUTRE) à des libellés `INFO`/`IMPORTANT`/`ALERTE` qui n'existent nulle
-   * part côté serveur — chaque bouton sauf « TOUS » vidait silencieusement la liste, et la
+   * part côté serveur, chaque bouton sauf « TOUS » vidait silencieusement la liste, et la
    * tuile « Importants » affichait toujours 0. Le niveau est maintenant dérivé ici.
    */
   niveauDe(typeAction: string): 'INFO' | 'IMPORTANT' | 'ALERTE' {
@@ -52,7 +52,7 @@ export class AdminAuditComponent implements OnInit {
   nbAlertes = computed(() => this.auditLog().filter(l => !l.succes || this.niveauDe(l.typeAction) === 'ALERTE').length);
   nbImportants = computed(() => this.auditLog().filter(l => this.niveauDe(l.typeAction) === 'IMPORTANT').length);
 
-  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  /** Composition manuelle en heure locale, `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
   private dateLocaleIso(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }

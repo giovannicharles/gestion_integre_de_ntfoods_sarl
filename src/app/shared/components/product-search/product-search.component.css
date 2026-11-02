@@ -1,5 +1,5 @@
 /* Copié depuis commande-production.component.css (combobox local, pas de classes globales
-   équivalentes dans styles.css) — même rendu, un seul composant partagé désormais. */
+   équivalentes dans styles.css), même rendu, un seul composant partagé désormais. */
 .combobox{position:relative;margin-bottom:0}
 .cb-input-wrap{position:relative}
 .cb-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n400);font-size:14px;z-index:1}

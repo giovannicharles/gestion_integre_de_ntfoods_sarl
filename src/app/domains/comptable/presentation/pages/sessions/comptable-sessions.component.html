@@ -56,15 +56,15 @@
             <tr [class.ligne-alerte]="v?.alerteRouge && !v?.justificationEcart">
               <td class="mono">{{ s.numeroSession }}</td>
               <td>{{ s.matriculeCommercial }}</td>
-              <td>{{ s.matriculeValidateurSecretaire || '—' }}</td>
-              <td>{{ v ? fCFA(v.montantAttendu) : '—' }}</td>
-              <td>{{ v ? fCFA(v.cashVerse) : '—' }}</td>
-              <td [class]="v ? ecartClass(v.ecart) : ''">{{ v ? fCFA(v.ecart) : '—' }}</td>
+              <td>{{ s.matriculeValidateurSecretaire || '-' }}</td>
+              <td>{{ v ? fCFA(v.montantAttendu) : '-' }}</td>
+              <td>{{ v ? fCFA(v.cashVerse) : '-' }}</td>
+              <td [class]="v ? ecartClass(v.ecart) : ''">{{ v ? fCFA(v.ecart) : '-' }}</td>
               <td>
                 @if (v?.alerteRouge) {
                   {{ v?.justificationEcart || '⚠ manquante' }}
                 } @else {
-                  —
+                ,
                 }
               </td>
               <td>
@@ -98,8 +98,8 @@
               <td class="mono">{{ s.numeroSession }}</td>
               <td>{{ s.matriculeCommercial }}</td>
               <td>{{ s.dateEffet | date:'dd/MM/yyyy' }}</td>
-              <td>{{ s.matriculeValidateurSecretaire || '—' }}</td>
-              <td>{{ s.matriculeValidateurComptable || '—' }}</td>
+              <td>{{ s.matriculeValidateurSecretaire || '-' }}</td>
+              <td>{{ s.matriculeValidateurComptable || '-' }}</td>
             </tr>
           } @empty {
             <tr><td colspan="5" class="vide">Aucune tournée clôturée.</td></tr>

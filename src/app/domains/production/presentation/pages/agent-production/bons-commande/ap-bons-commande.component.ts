@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
 
 /**
- * BONS DE COMMANDE — Agent de Production (consultation)
+ * BONS DE COMMANDE, Agent de Production (consultation)
  *
  * Le Bon de Commande est une entité du module Stock (fournisseur), pas de
  * Production. GET /stock/bons-commande et /stock/bons-commande/{numero} ne
@@ -13,7 +13,7 @@ import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure
  *
  * En revanche, valider / envoyer / clôturer / annuler un BC exige
  * STOCK_BON_COMMANDE_CREER ou STOCK_BON_COMMANDE_VALIDER, qu'AGENT_PRODUCTION
- * ne détient pas — ces actions restent réservées au Gestionnaire de Stock et
+ * ne détient pas, ces actions restent réservées au Gestionnaire de Stock et
  * au Chef de Production. Cet écran est donc volontairement lecture seule.
  */
 @Component({

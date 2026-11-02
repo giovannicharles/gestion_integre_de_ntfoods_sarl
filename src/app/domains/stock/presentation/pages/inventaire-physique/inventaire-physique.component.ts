@@ -199,7 +199,7 @@ export class InventairePhysiqueComponent implements OnInit, OnDestroy {
           this.completing.set(false);
           this.selectedInventory.set(updated);
           this.loadInventoryDetail(inv.id);
-          this.showToast('Inventaire complété — écarts calculés', 'success');
+          this.showToast('Inventaire complété, écarts calculés', 'success');
           this.loadData();
         },
         error: () => {
@@ -230,7 +230,7 @@ export class InventairePhysiqueComponent implements OnInit, OnDestroy {
           this.selectedInventory.set(updated);
           this.loadInventoryDetail(inv.id);
           this.showToast(this.applyCorrections
-            ? 'Inventaire validé — corrections appliquées au stock'
+            ? 'Inventaire validé, corrections appliquées au stock'
             : 'Inventaire validé sans corrections', 'success');
           this.loadData();
         },

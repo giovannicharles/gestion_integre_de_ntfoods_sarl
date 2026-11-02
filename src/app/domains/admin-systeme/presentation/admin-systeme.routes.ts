@@ -3,12 +3,12 @@ import { AdminLayoutComponent } from '../../../layout/admin-layout/admin-layout.
 import { authGuard } from '../../../core/auth/auth.guard';
 
 /**
- * Configuration technique de la plateforme (module `admin` backend) — section interne
+ * Configuration technique de la plateforme (module `admin` backend), section interne
  * de l'espace Admin unique, distincte de `domains/admin` (comptes/organisation,
  * module `administration` backend). Les deux partagent désormais la même coquille
  * visuelle (AdminLayoutComponent, deux sections de sidebar) : ce n'est plus "deux
  * espaces" côté frontend, seuls les préfixes d'URL et les modules backend restent
- * distincts (demande explicite du porteur, 2026-10-15 — annule la décision du
+ * distincts (demande explicite du porteur, 2026-10-15, annule la décision du
  * 2026-09-23 qui gardait ces deux arbres de routes totalement séparés).
  */
 export const ADMIN_SYSTEME_ROUTES: Routes = [

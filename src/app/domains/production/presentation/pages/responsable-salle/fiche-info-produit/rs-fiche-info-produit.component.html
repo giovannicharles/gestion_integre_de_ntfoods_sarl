@@ -37,7 +37,7 @@
 
   <div class="card">
     <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-list"></i> Produits fabriqués — {{ f.date }}</h2>
+      <h2 class="card-title"><i class="fa-solid fa-list"></i> Produits fabriqués, {{ f.date }}</h2>
       @if (f.verrouillee) { <span class="badge bg-orange">🔒 Verrouillée</span> }
     </div>
     <div class="tbl-wrap">
@@ -48,9 +48,9 @@
             <tr>
               <td>{{ l.nomProduit }}</td>
               <td><input type="number" class="input" [ngModel]="l.quantiteProduite" (ngModelChange)="modifierQuantite(i, $event)" [disabled]="f.verrouillee" style="width:100px"></td>
-              <td>{{ l.quantitePrediteDosage ?? '—' }}</td>
-              <td>{{ l.quantitePreditePostes ?? '—' }}</td>
-              <td>{{ l.ecart ?? '—' }}</td>
+              <td>{{ l.quantitePrediteDosage ?? '-' }}</td>
+              <td>{{ l.quantitePreditePostes ?? '-' }}</td>
+              <td>{{ l.ecart ?? '-' }}</td>
               <td>
                 @if (l.tauxAvancement != null) {
                   <div class="rp-prog-wrap">
@@ -62,7 +62,7 @@
                     </div>
                     <span class="rp-prog-pct">{{ l.tauxAvancement }}%</span>
                   </div>
-                } @else { — }
+                } @else {, }
               </td>
             </tr>
           }

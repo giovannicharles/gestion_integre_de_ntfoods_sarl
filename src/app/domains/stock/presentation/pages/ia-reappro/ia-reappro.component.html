@@ -20,7 +20,7 @@
   @if (!iaConfigured()) {
     <div class="ia-status-warning">
       <i class="fa-solid fa-circle-info"></i>
-      <span>IA non configurée — Les recommandations locales sont affichées. Configurez OPENAI_API_KEY pour l'analyse prédictive avancée.</span>
+      <span>IA non configurée, Les recommandations locales sont affichées. Configurez OPENAI_API_KEY pour l'analyse prédictive avancée.</span>
     </div>
   }
 
@@ -77,7 +77,7 @@
     <div class="ia-summary">
       <div class="ia-summary-header">
         <i class="fa-solid fa-brain"></i>
-        <span>Analyse IA — {{ iaResult()!.model }}</span>
+        <span>Analyse IA, {{ iaResult()!.model }}</span>
       </div>
       <p>{{ iaResult()!.summary }}</p>
     </div>
@@ -141,7 +141,7 @@
                 @if (item.daysUntilRupture < 999) {
                   <span class="days-chip" [class.days-urgent]="item.daysUntilRupture <= 7">{{ item.daysUntilRupture }}j</span>
                 } @else {
-                  <span class="days-chip">—</span>
+                  <span class="days-chip">-</span>
                 }
               </td>
               <td>

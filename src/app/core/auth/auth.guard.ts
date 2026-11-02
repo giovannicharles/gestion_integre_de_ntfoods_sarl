@@ -12,7 +12,7 @@ export const authGuard: CanActivateFn = () => {
     return false;
   }
 
-  // A9/A10: COMMERCIAL is a mobile-only role — show explicit message on web
+  // A9/A10: COMMERCIAL is a mobile-only role, show explicit message on web
   const role = auth.role();
   if (role === 'COMMERCIAL') {
     auth.logout();

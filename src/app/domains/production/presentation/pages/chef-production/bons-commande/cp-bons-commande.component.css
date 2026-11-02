@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   BONS DE COMMANDE — Chef de Production
+   BONS DE COMMANDE, Chef de Production
    Charte TANTY DIGITAL : Vert var(--g) · Jaune var(--y)
    ═══════════════════════════════════════════════════════════ */
 
@@ -228,7 +228,7 @@
 
 .recap-montant { color: var(--g, var(--g)); font-weight: 700; }
 
-/* ── Détail BC — grille KPIs ──────────────────────────────── */
+/* ── Détail BC, grille KPIs ──────────────────────────────── */
 .detail-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

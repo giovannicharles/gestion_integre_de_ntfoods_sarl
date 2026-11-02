@@ -52,12 +52,12 @@ export interface EtapeHistorique {
 }
 
 /**
- * Kanban Incidents (2026-09-30) — réécrit : jamais routé (aucune entrée de menu, aucune route ne pointait vers ce
+ * Kanban Incidents (2026-09-30), réécrit : jamais routé (aucune entrée de menu, aucune route ne pointait vers ce
  * composant) et appelait `/api/v1/incidents` (le vrai chemin est `incidents`, sans `v1`), `resoudre`/`assigner`
- * en POST (le backend exige PUT), `assigner` avec un corps vide (le backend exige `{assigneAMatricule}`) — 0 appel
+ * en POST (le backend exige PUT), `assigner` avec un corps vide (le backend exige `{assigneAMatricule}`), 0 appel
  * n'aurait fonctionné.
  *
- * Gestion (ce tableau) réservée à ADMIN seul depuis le 2026-10-25 (demande explicite du porteur) — le DG ne
+ * Gestion (ce tableau) réservée à ADMIN seul depuis le 2026-10-25 (demande explicite du porteur), le DG ne
  * gère plus les incidents, il les signale comme tout le monde (voir `shared/signaler-incident`). Monté
  * uniquement sous `/admin/incidents` désormais.
  */
@@ -155,7 +155,7 @@ export class IncidentsComponent implements OnInit {
     });
   }
 
-  // ── Commentaires (2026-10-25) — endpoints déjà prêts (IncidentController.java:108,117),
+  // ── Commentaires (2026-10-25), endpoints déjà prêts (IncidentController.java:108,117),
   // jamais appelés : ni fil de discussion, ni « mes incidents » pour le signaleur. ──
   commentaires = signal<IncidentComment[]>([]);
   chargementCommentaires = signal(false);
@@ -196,7 +196,7 @@ export class IncidentsComponent implements OnInit {
     });
   }
 
-  /** « Prendre en charge » — s'assigne l'incident à soi-même, aucun annuaire de techniciens n'étant exposé ici. */
+  /** « Prendre en charge », s'assigne l'incident à soi-même, aucun annuaire de techniciens n'étant exposé ici. */
   prendreEnCharge(incident: Incident) {
     if (this.actionEnCours) return;
     this.actionEnCours = true;
@@ -312,7 +312,7 @@ export class IncidentsComponent implements OnInit {
   /**
    * Historique vertical de l'incident (2026-10-25, demande explicite du porteur : « améliore
    * l'affichage des historiques »). Construit uniquement à partir des champs réellement renvoyés
-   * par IncidentResponse — pas de date de prise en charge ni de clôture côté backend aujourd'hui :
+   * par IncidentResponse, pas de date de prise en charge ni de clôture côté backend aujourd'hui :
    * ces étapes s'affichent donc sans horodatage plutôt que d'en inventer un.
    */
   historique(i: Incident): EtapeHistorique[] {
@@ -332,7 +332,7 @@ export class IncidentsComponent implements OnInit {
     if (i.statut === 'RESOLU' || i.statut === 'CLOTURE') {
       etapes.push({
         cle: 'resolu', icone: 'fa-check', classe: 'etape-resolu',
-        titre: 'Résolu', detail: i.resolution || '—',
+        titre: 'Résolu', detail: i.resolution || '-',
         date: i.dateResolution ?? null,
       });
     }

@@ -211,10 +211,10 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
           return {
             ...sl,
             product: p || sl.product,
-            productName: sl.productName || p?.designation || p?.sku || sl.productSku || '—',
-            productSku: sl.productSku || p?.sku || '—',
+            productName: sl.productName || p?.designation || p?.sku || sl.productSku || '-',
+            productSku: sl.productSku || p?.sku || '-',
             materialType: sl.materialType || p?.materialType || 'Autre',
-            productUnit: sl.productUnit || p?.unit || '—',
+            productUnit: sl.productUnit || p?.unit || '-',
             unitPrice: sl.unitPrice || p?.unitPriceAmount || 0,
             stockValue: sl.stockValue || ((p?.unitPriceAmount || 0) * sl.quantity),
           } as StockLevel;
@@ -927,7 +927,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (ctx: any) => `Classe ${data[ctx.dataIndex].class} — ${this.formatCFA(ctx.raw)}` } }
+          tooltip: { callbacks: { label: (ctx: any) => `Classe ${data[ctx.dataIndex].class}, ${this.formatCFA(ctx.raw)}` } }
         },
         scales: {
           x: { ticks: { font: { size: 8, family: 'Inter' }, maxRotation: 45 } },

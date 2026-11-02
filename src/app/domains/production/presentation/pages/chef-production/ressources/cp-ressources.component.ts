@@ -4,12 +4,12 @@ import { ProductionService, RapportHebdomadaireProductionBE, SessionDosageBE } f
 import { DonutChartComponent, DonutSlice } from '../../../shared/charts/donut-chart.component';
 
 /**
- * GESTION DES RESSOURCES — Chef de Production
+ * GESTION DES RESSOURCES, Chef de Production
  *
  * ⚠️ Aucune entité "stock de matières premières" ou "équipement" n'existe
  * côté backend Production (ce serait le rôle d'un module Stock, non fourni).
  * Cette vue montre donc la CONSOMMATION réelle (matières broyées/dosées,
- * machines mobilisées) déduite des rapports et sessions existants — pas de
+ * machines mobilisées) déduite des rapports et sessions existants, pas de
  * disponibilité ni d'alerte de rupture, qui nécessiteraient un inventaire.
  */
 @Component({

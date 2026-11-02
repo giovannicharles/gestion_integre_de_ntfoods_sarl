@@ -186,7 +186,7 @@
               <tr>
                 <td>
                   <select class="input" [(ngModel)]="l.referencePPH">
-                    <option value="">— Choisir —</option>
+                    <option value="">Choisir,</option>
                     @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
                   </select>
                 </td>

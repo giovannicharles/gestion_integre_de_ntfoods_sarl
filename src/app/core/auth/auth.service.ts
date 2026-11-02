@@ -20,11 +20,11 @@ const PERMISSIONS_KEY = 'tanty_permissions';
 export type SessionUser = User;
 
 /**
- * Service d'authentification — branché sur le backend Spring Boot.
+ * Service d'authentification, branché sur le backend Spring Boot.
  *
  * ── OTP par téléphone ──────────────────────────────────────────────────────
  * `requestOtp`/`verifyOtp` servent exclusivement au parcours « mot de passe
- * oublié » (forgot-password → two-fa → reset-password) — pas à une
+ * oublié » (forgot-password → two-fa → reset-password), pas à une
  * authentification à deux facteurs au login, qui reste directe.
  *
  * ── Clés de stockage ───────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ export class AuthService {
 
   /**
    * Permissions effectives (rôle de base + dérogations individuelles) de
-   * l'utilisateur courant — chargées une fois après connexion (2026-10-28,
+   * l'utilisateur courant, chargées une fois après connexion (2026-10-28,
    * Stock/Commercial/Production sont gardés côté backend par permission,
    * jamais par rôle : un `*appCan` à base de rôles ne pouvait que deviner).
    */
@@ -59,7 +59,7 @@ export class AuthService {
 
   /** POST /api/auth/login → stocke token + utilisateur, renvoie la réponse. */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    // Le backend (LoginRequest.java) n'accepte que "motDePasse" — "password" était silencieusement
+    // Le backend (LoginRequest.java) n'accepte que "motDePasse", "password" était silencieusement
     // ignoré par Jackson, laissant motDePasse null et échouant la validation @NotBlank (400).
     const payload = {
       matricule: credentials.matricule,
@@ -79,7 +79,7 @@ export class AuthService {
 
   /**
    * POST /api/auth/otp/demander → demande un code OTP envoyé au téléphone fourni (mot de passe
-   * oublié, 2026-10-25 — identifié par téléphone, plus par matricule). `otpRef` (dans la
+   * oublié, 2026-10-25, identifié par téléphone, plus par matricule). `otpRef` (dans la
    * réponse) est une référence opaque à conserver pour `verifyOtp` : le serveur ne renvoie
    * jamais le matricule réel.
    */
@@ -124,7 +124,7 @@ export class AuthService {
   }
 
   /**
-   * GET /api/auth/me — profil complet de l'utilisateur connecté (n'importe quel rôle). Utilisé
+   * GET /api/auth/me, profil complet de l'utilisateur connecté (n'importe quel rôle). Utilisé
    * par l'écran « Mon Profil », commun à tous les layouts (2026-11-01, demande explicite du
    * porteur : chaque module doit offrir la gestion de son propre profil, pas seulement DG).
    */
@@ -139,7 +139,7 @@ export class AuthService {
     );
   }
 
-  /** PUT /api/auth/profil — modifie les informations personnelles de l'utilisateur connecté. */
+  /** PUT /api/auth/profil, modifie les informations personnelles de l'utilisateur connecté. */
   modifierMonProfil(request: ModifierProfilRequest): Observable<ProfilBE> {
     return this.api.put<ApiResponse<ProfilBE>>('auth/profil', request).pipe(
       map((res) => {
@@ -200,10 +200,10 @@ export class AuthService {
   }
 
   /**
-   * GET /api/auth/permissions/moi — auto-service, n'importe quel utilisateur
+   * GET /api/auth/permissions/moi, auto-service, n'importe quel utilisateur
    * authentifié. Appelée une fois après connexion ; échec silencieux (les
    * directives *appHasPermission se refermeraient sur un jeu vide, confort
-   * d'affichage seulement, le serveur reste la seule vraie garde — §6.7).
+   * d'affichage seulement, le serveur reste la seule vraie garde, §6.7).
    */
   private loadPermissions(): void {
     this.api.get<ApiResponse<string[]>>('auth/permissions/moi').subscribe({
@@ -212,7 +212,7 @@ export class AuthService {
         localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(codes));
         this._permissions.set(new Set(codes));
       },
-      error: () => { /* confort d'affichage seulement — le serveur reste la vraie garde */ },
+      error: () => { /* confort d'affichage seulement, le serveur reste la vraie garde */ },
     });
   }
 

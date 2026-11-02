@@ -11,7 +11,7 @@
 <div class="card">
   <div class="toolbar-row">
     <select class="input" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
-      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option> }
+      @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option> }
     </select>
     <button class="btn btn-primary btn-sm" (click)="charger()">Actualiser</button>
   </div>
@@ -45,7 +45,7 @@
 <div class="modal-overlay" (click)="fermer()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-hd">
-      <h3><i class="fa-solid fa-file-lines"></i> Fiche {{ f.referencePPH }} — {{ f.date }}</h3>
+      <h3><i class="fa-solid fa-file-lines"></i> Fiche {{ f.referencePPH }}, {{ f.date }}</h3>
       <button class="modal-close" (click)="fermer()">✕</button>
     </div>
     <div class="modal-body">
@@ -66,10 +66,10 @@
               <tr>
                 <td>{{ l.nomProduit }}</td>
                 <td>{{ l.quantiteProduite }}</td>
-                <td>{{ l.quantitePrediteDosage ?? '—' }}</td>
-                <td>{{ l.quantitePreditePostes ?? '—' }}</td>
-                <td>{{ l.ecart ?? '—' }}</td>
-                <td>{{ l.tauxAvancement != null ? (l.tauxAvancement + '%') : '—' }}</td>
+                <td>{{ l.quantitePrediteDosage ?? '-' }}</td>
+                <td>{{ l.quantitePreditePostes ?? '-' }}</td>
+                <td>{{ l.ecart ?? '-' }}</td>
+                <td>{{ l.tauxAvancement != null ? (l.tauxAvancement + '%') : '-' }}</td>
               </tr>
             }
           </tbody>

@@ -109,17 +109,17 @@ export class ProductionPlanComponent implements OnInit {
     return code;
   }
 
-  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  /** Matières premières d'un jour, formatées « Nom: Qté kg », liste libre, jamais figée sur maïs/soja/arachide. */
   matieresJour(jour: PPHRepartitionJourBE): string {
     const b = jour.besoinsMatieresPremiere ?? [];
-    if (!b.length) return '—';
+    if (!b.length) return '-';
     return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
   }
 
   /** Composants d'emballage d'un jour, formatés « Type: Qté ». */
   emballagesJour(jour: PPHRepartitionJourBE): string {
     const b = jour.besoinsEmballage ?? [];
-    if (!b.length) return '—';
+    if (!b.length) return '-';
     return b.map(e => `${e.type}: ${e.quantite}`).join(', ');
   }
 

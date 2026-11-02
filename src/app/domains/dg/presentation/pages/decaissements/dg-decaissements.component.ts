@@ -14,7 +14,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
   styleUrls: ['./dg-decaissements.component.css']
 })
 /**
- * Statuts réels (StatutDecaissement, backend) — corrigé le 2026-10-15 (P5) : les anciens
+ * Statuts réels (StatutDecaissement, backend), corrigé le 2026-10-15 (P5) : les anciens
  * EN_ATTENTE_DG/DG_APPROUVE/VALIDE n'existent nulle part côté serveur (vérifié par grep +
  * lecture de l'enum), si bien que chaque KPI de cet écran affichait 0 et aucun filtre ne
  * matchait jamais rien. Workflow réel (DecaissementController, 3 étapes) : le Contrôleur

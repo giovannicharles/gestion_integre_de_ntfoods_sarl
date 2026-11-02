@@ -22,9 +22,9 @@ interface UtilisateurOption {
 type Onglet = 'pouvoirs' | 'delegations';
 
 /**
- * Écran DG/Admin — pouvoirs de validation et délégations temporaires ("absence").
+ * Écran DG/Admin, pouvoirs de validation et délégations temporaires ("absence").
  *
- * Nouveau (2026-09-30) : jusqu'ici, il n'existait aucun écran pour gérer ces deux ressources — seuls les endpoints
+ * Nouveau (2026-09-30) : jusqu'ici, il n'existait aucun écran pour gérer ces deux ressources, seuls les endpoints
  * backend existaient. Les noms des utilisateurs sont résolus via `/api/dg/utilisateurs` (déjà réservé DG/ADMIN,
  * cohérent avec la restriction de cet écran) : les entités `PouvoirValidation`/`Delegation` ne portent que des IDs.
  */
@@ -144,7 +144,7 @@ export class PouvoirsDelegationsComponent implements OnInit {
   }
 
   nomUtilisateur(id: number | null): string {
-    if (id === null) return '—';
+    if (id === null) return '-';
     const u = this.utilisateursParId().get(id);
     return u ? `${u.nomComplet} (${u.matricule})` : `#${id}`;
   }
@@ -217,7 +217,7 @@ export class PouvoirsDelegationsComponent implements OnInit {
       next: () => {
         this.actionEnCours = false;
         this.showNouvelleDelegation = false;
-        this.toast.success('Délégation créée — vos validations seront transférées pendant cette période.');
+        this.toast.success('Délégation créée, vos validations seront transférées pendant cette période.');
         this.chargerDelegationsDonnees();
       },
       error: (err) => {

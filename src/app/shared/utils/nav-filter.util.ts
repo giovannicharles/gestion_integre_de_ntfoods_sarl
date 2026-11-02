@@ -7,7 +7,7 @@
 /**
  * Volontairement sans index signature (2026-10-25) : un index signature rendrait les NavItem[]
  * concrets de chaque layout (icon/badge/badgeClass en plus) incompatibles avec ce type lors de
- * leur passage en `[items]`/`@Input` — erreur TS2345 constatée à la compilation. Seuls `label`
+ * leur passage en `[items]`/`@Input`, erreur TS2345 constatée à la compilation. Seuls `label`
  * et `route` sont nécessaires au filtrage et à la navigation ; les champs additionnels passent
  * tels quels par structural typing, sans qu'il faille les déclarer ici.
  */

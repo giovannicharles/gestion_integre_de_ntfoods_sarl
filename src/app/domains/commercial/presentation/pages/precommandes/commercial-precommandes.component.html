@@ -15,7 +15,7 @@
   </div>
 
   @if (submitted()) {
-  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Précommande soumise — en attente validation Secrétaire Caisse puis Comptable.</div>
+  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Précommande soumise, en attente validation Secrétaire Caisse puis Comptable.</div>
   }
 
   @if (toastMsg()) {
@@ -36,11 +36,11 @@
           <tr>
             <td>
               <select class="form-select-sm" [(ngModel)]="ligne.produitCode">
-                @for (p of produits(); track p.code) { <option [value]="p.code">{{ p.code }} — {{ p.designation }}</option> }
+                @for (p of produits(); track p.code) { <option [value]="p.code">{{ p.code }}, {{ p.designation }}</option> }
               </select>
             </td>
-            <td>{{ getProduit(ligne.produitCode)?.gamme ?? '—' }}</td>
-            <td class="mono">{{ getProduit(ligne.produitCode)?.prixHT ? fCFA(getProduit(ligne.produitCode)!.prixHT) : '—' }}</td>
+            <td>{{ getProduit(ligne.produitCode)?.gamme ?? '-' }}</td>
+            <td class="mono">{{ getProduit(ligne.produitCode)?.prixHT ? fCFA(getProduit(ligne.produitCode)!.prixHT) : '-' }}</td>
             <td><input type="number" class="qty-input" [(ngModel)]="ligne.quantite" min="0" placeholder="0" /></td>
             <td><button class="btn-rm" (click)="removeLigne(i)" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>
           </tr>

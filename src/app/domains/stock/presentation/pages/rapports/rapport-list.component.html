@@ -91,7 +91,7 @@
             <label class="rpt-filter-label">Quantité</label>
             <div style="display:flex;gap:8px;align-items:center">
               <input class="input" type="number" placeholder="Min" [(ngModel)]="customFilters.minQuantity" style="width:80px">
-              <span>—</span>
+              <span>-</span>
               <input class="input" type="number" placeholder="Max" [(ngModel)]="customFilters.maxQuantity" style="width:80px">
             </div>
           </div>
@@ -101,7 +101,7 @@
             <label class="rpt-filter-label">Valeur (FCFA)</label>
             <div style="display:flex;gap:8px;align-items:center">
               <input class="input" type="number" placeholder="Min" [(ngModel)]="customFilters.minValue" style="width:100px">
-              <span>—</span>
+              <span>-</span>
               <input class="input" type="number" placeholder="Max" [(ngModel)]="customFilters.maxValue" style="width:100px">
             </div>
           </div>
@@ -207,7 +207,7 @@
             <!-- Top 10 products sidebar -->
             <div class="rpt-chart-card">
               <div class="rpt-chart-header">
-                <span class="rpt-chart-title"><i class="fa-solid fa-trophy"></i> Top 10 — Stock</span>
+                <span class="rpt-chart-title"><i class="fa-solid fa-trophy"></i> Top 10, Stock</span>
               </div>
               <div class="rpt-chart-body">
                 <div class="rpt-top-list">
@@ -476,9 +476,9 @@
                       <div><div class="rpt-item-title">{{ report.title || getReportTypeLabel(report.type) }}</div><div class="rpt-item-sub">{{ getReportTypeLabel(report.type) }}</div></div>
                     </div>
                   </td>
-                  <td>{{ report.periodStart | date:'dd/MM/yyyy' }} — {{ report.periodEnd | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ report.periodStart | date:'dd/MM/yyyy' }}, {{ report.periodEnd | date:'dd/MM/yyyy' }}</td>
                   <td><span class="rpt-format">{{ report.format }}</span></td>
-                  <td>{{ report.generatedBy || '—' }}</td>
+                  <td>{{ report.generatedBy || '-' }}</td>
                   <td>{{ report.generatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
                   <td>
                     <div class="rpt-row-actions">
@@ -490,7 +490,7 @@
               } @empty {
                 <tr><td colspan="6">
                   <app-empty-illustration title="Aucun rapport généré pour le moment"
-                    sub="Lancez-en un depuis « Nouveau rapport » ou téléchargez un document ci-dessus — il apparaîtra ici." />
+                    sub="Lancez-en un depuis « Nouveau rapport » ou téléchargez un document ci-dessus, il apparaîtra ici." />
                 </td></tr>
               }
             </tbody>
@@ -512,9 +512,9 @@
       <div class="modal-body">
         <div class="rpt-detail-grid">
           <div><span class="rpt-detail-label">Type</span><strong>{{ getReportTypeLabel(sr.type) }}</strong></div>
-          <div><span class="rpt-detail-label">Période</span><strong>{{ sr.periodStart | date:'dd/MM/yyyy' }} — {{ sr.periodEnd | date:'dd/MM/yyyy' }}</strong></div>
+          <div><span class="rpt-detail-label">Période</span><strong>{{ sr.periodStart | date:'dd/MM/yyyy' }}, {{ sr.periodEnd | date:'dd/MM/yyyy' }}</strong></div>
           <div><span class="rpt-detail-label">Format</span><strong>{{ sr.format }}</strong></div>
-          <div><span class="rpt-detail-label">Généré par</span><strong>{{ sr.generatedBy || '—' }}</strong></div>
+          <div><span class="rpt-detail-label">Généré par</span><strong>{{ sr.generatedBy || '-' }}</strong></div>
           <div><span class="rpt-detail-label">Généré le</span><strong>{{ sr.generatedAt | date:'dd/MM/yyyy à HH:mm' }}</strong></div>
         </div>
       </div>
@@ -530,7 +530,7 @@
   <div class="modal-overlay" (click)="showNtFoodsForm.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:560px">
       <div class="modal-header">
-        <div class="modal-title"><i class="fa-solid fa-clipboard-list"></i> Fiche NTFoods — Infos Produits TANTY</div>
+        <div class="modal-title"><i class="fa-solid fa-clipboard-list"></i> Fiche NTFoods, Infos Produits TANTY</div>
         <button class="modal-close" (click)="showNtFoodsForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
@@ -549,7 +549,7 @@
           <div class="form-group"><label class="form-label">Nom</label><input type="text" class="form-control" [ngModel]="ntFoodsNom()" (ngModelChange)="ntFoodsNom.set($event)" placeholder="Nom"></div>
           <div class="form-group"><label class="form-label">Ville</label><input type="text" class="form-control" [ngModel]="ntFoodsVille()" (ngModelChange)="ntFoodsVille.set($event)" placeholder="Ville"></div>
           <div class="form-group"><label class="form-label">Zone</label><input type="text" class="form-control" [ngModel]="ntFoodsZone()" (ngModelChange)="ntFoodsZone.set($event)" placeholder="Zone"></div>
-          <div class="form-group"><label class="form-label">Nbre de colis</label><input type="number" class="form-control" [ngModel]="ntFoodsColis()" (ngModelChange)="ntFoodsColis.set($event)" placeholder="—"></div>
+          <div class="form-group"><label class="form-label">Nbre de colis</label><input type="number" class="form-control" [ngModel]="ntFoodsColis()" (ngModelChange)="ntFoodsColis.set($event)" placeholder="-"></div>
         </div>
       </div>
       <div class="modal-footer">

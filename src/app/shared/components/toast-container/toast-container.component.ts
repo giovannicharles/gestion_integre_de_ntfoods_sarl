@@ -4,14 +4,14 @@ import { ToastService } from '../../../core/services/toast.service';
 /**
  * Rendu global du ToastService (shared/.../toast.service.ts) : le service existait déjà
  * (signal `toasts`, utilisé par ~20 composants via success()/error()/warning()/info()) mais
- * aucun composant ne le lisait nulle part — chaque appel était silencieusement sans effet
+ * aucun composant ne le lisait nulle part, chaque appel était silencieusement sans effet
  * visuel (trouvé le 2026-10-21 en auditant incidents.component.ts : il appelle this.toast
  * .success(...)/.error(...) mais son template n'a aucun markup de toast). Monté une seule
  * fois à la racine (app.component.html) pour que les ~20 appelants existants fonctionnent
  * enfin, sans toucher à aucun d'eux.
  *
  * CSS local (pas styles.css global) : plusieurs écrans ont déjà leur propre `.toast`/
- * `.toast-success`/`.toast-error` en style global, à une seule position fixe — les
+ * `.toast-success`/`.toast-error` en style global, à une seule position fixe, les
  * réutiliser pour un conteneur empilable aurait risqué de les casser. Classes distinctes ici.
  */
 @Component({

@@ -64,7 +64,7 @@
           <span class="sb-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
           <span class="sb-lbl">Deconnexion</span>
         </button>
-        <div class="sb-version"><span>v3.0 — Sprint 3</span></div>
+        <div class="sb-version"><span>v3.0, Sprint 3</span></div>
       </div>
     </div>
   </aside>
@@ -92,7 +92,7 @@
           <i class="fa-solid fa-triangle-exclamation"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
         </button>
-        <!-- Centre de notifications temps réel (2026-09-30) — distinct de la cloche d'alertes stock ci-dessus -->
+        <!-- Centre de notifications temps réel (2026-09-30), distinct de la cloche d'alertes stock ci-dessus -->
         <app-notification-center></app-notification-center>
         <div class="tb-notif-wrap">
           <button class="tb-icon-btn" (click)="toggleNotifPanel()" [class.tb-alert-pulse]="notifCount() > 0" title="Notifications">

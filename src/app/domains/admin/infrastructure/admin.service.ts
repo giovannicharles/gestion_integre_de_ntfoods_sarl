@@ -8,7 +8,7 @@ export interface UtilisateurBE {
   id: number; matricule: string; nomComplet: string; email: string;
   role: string; roleLibelle: string; actif: boolean; dateCreation: string;
   // Champs déjà renvoyés par UtilisateurResponse (backend) mais ignorés jusqu'ici par cette
-  // interface — ajoutés le 2026-10-25 pour le modal détail utilisateur, sans rien changer côté
+  // interface, ajoutés le 2026-10-25 pour le modal détail utilisateur, sans rien changer côté
   // serveur.
   prenom?: string; nom?: string; compteBloque?: boolean; tentativesEchouees?: number;
   sessionActive?: boolean; telephone?: string; residence?: string; cni?: string;
@@ -24,7 +24,7 @@ export interface ParametresBE {
 
 export interface PermissionDto { code: string; libelle: string; }
 
-/** Valeurs réelles de UtilisateurPermissionJpaEntity.TypeOverride (backend) — pas GRANT/REVOKE. */
+/** Valeurs réelles de UtilisateurPermissionJpaEntity.TypeOverride (backend), pas GRANT/REVOKE. */
 export type TypeOverride = 'ACCORDER' | 'REFUSER';
 
 export interface OverridePermissionBE {
@@ -172,7 +172,7 @@ export class AdminService {
 
   // ── Permissions RBAC (PermissionController, backend) ──────────────────────
   // Déjà entièrement configurable côté serveur (matrice rôle→permission +
-  // overrides par utilisateur en base, avec motif et auteur tracés) — il
+  // overrides par utilisateur en base, avec motif et auteur tracés), il
   // manquait seulement l'écran. Aucun changement backend ici.
 
   listerPermissions(): Observable<PermissionDto[]> {

@@ -142,7 +142,7 @@ export class RsRealisationsPosteComponent implements OnInit {
       next: updated => {
         this.affectation.set(updated);
         const s = updated.saisies.find(x => x.codePoste === this.posteActif());
-        const warn = s?.warnings?.length ? ` — ⚠ ${s.warnings.join(' ; ')}` : '';
+        const warn = s?.warnings?.length ? `, ⚠ ${s.warnings.join(' ; ')}` : '';
         this.message.set(`Réalisation enregistrée pour ${this.libellePoste(this.posteActif())}${warn}`);
         this.saving.set(false);
       },

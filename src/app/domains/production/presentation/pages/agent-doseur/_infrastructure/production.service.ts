@@ -58,7 +58,7 @@ export const STATUTS_OF = ['PLANIFIE', 'EN_COURS', 'HONORE', 'ANNULE'] as const;
 export const STATUTS_PPH = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'] as const;
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Lots
+// Modèles, Lots
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface LotBE {
@@ -69,7 +69,7 @@ export interface LotBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Ordres de fabrication
+// Modèles, Ordres de fabrication
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface OFBE {
@@ -78,7 +78,7 @@ export interface OFBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — PPH
+// Modèles, PPH
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface PPHBE {
@@ -118,7 +118,7 @@ export interface PPHRepartitionJourBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Broyage
+// Modèles, Broyage
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface SessionBroyageBE {
@@ -163,7 +163,7 @@ export interface ClassementMachinisteBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Dosage
+// Modèles, Dosage
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface SessionDosageBE {
@@ -198,7 +198,7 @@ export interface PredictionProduitFiniBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Fiches
+// Modèles, Fiches
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface FicheProductionBE {
@@ -215,7 +215,7 @@ export interface FicheProductionBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Affectations
+// Modèles, Affectations
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface AffectationBE {
@@ -278,7 +278,7 @@ export interface RapportHebdoAffectationBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Registres
+// Modèles, Registres
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface LigneRegistreBE {
@@ -296,7 +296,7 @@ export interface RegistreProductionBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Dashboards
+// Modèles, Dashboards
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface DashboardChefBE {
@@ -314,7 +314,7 @@ export interface DashboardAgentBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Rapports (module /production/rapports, generation automatique)
+// Modèles, Rapports (module /production/rapports, generation automatique)
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface RapportHebdomadaireProductionBE {
@@ -346,7 +346,7 @@ export interface RapportComparatifBCBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Expressions de besoin
+// Modèles, Expressions de besoin
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface ExpressionBesoinBE {

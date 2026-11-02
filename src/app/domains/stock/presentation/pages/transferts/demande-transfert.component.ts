@@ -10,14 +10,14 @@ interface LigneSaisie {
   codeProduit: string;
   designation: string;
   disponible: number;
-  /** Décomposition par niveau de conditionnement (P4, 2026-10-15) — remplace l'ancien `sku` toujours null. */
+  /** Décomposition par niveau de conditionnement (P4, 2026-10-15), remplace l'ancien `sku` toujours null. */
   lignesConditionnement: LigneConditionnement[];
 }
 
 /**
- * Demander un transfert central → tampon (2026-09-30) — écran absent jusqu'ici : le seul chemin qui déplaçait
+ * Demander un transfert central → tampon (2026-09-30), écran absent jusqu'ici : le seul chemin qui déplaçait
  * réellement le stock (`transfer-to-buffer`) n'était appelé par aucun composant, et le chemin correct
- * (`POST /api/stock/transferts`, approbation obligatoire — CLAUDE.md invariant 1) n'avait donc aucune interface.
+ * (`POST /api/stock/transferts`, approbation obligatoire, CLAUDE.md invariant 1) n'avait donc aucune interface.
  * Le stock ne bouge PAS à la soumission : une demande est créée, à valider depuis « Mes validations ».
  */
 @Component({
@@ -124,7 +124,7 @@ export class DemandeTransfertComponent implements OnInit {
         this.soumission = false;
         this.lignesChoisies.set([]);
         this.toast.success(
-          `Demande créée — le stock n'a pas bougé, en attente de validation (seuil requis : ${demande.seuilRequis}).`,
+          `Demande créée, le stock n'a pas bougé, en attente de validation (seuil requis : ${demande.seuilRequis}).`,
           'Demande de transfert envoyée'
         );
         this.chargerNiveaux();
@@ -137,6 +137,6 @@ export class DemandeTransfertComponent implements OnInit {
   }
 
   formatDate(dateStr: string | null): string {
-    return dateStr ? new Date(dateStr).toLocaleString('fr-FR') : '—';
+    return dateStr ? new Date(dateStr).toLocaleString('fr-FR') : '-';
   }
 }

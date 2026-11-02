@@ -17,15 +17,15 @@
 </div>
 
 <div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flag-checkered"></i> Clôturer une session — saisie des indicateurs</h2></div>
+  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-flag-checkered"></i> Clôturer une session, saisie des indicateurs</h2></div>
   <div style="padding: var(--sp-4)">
     <div class="form-grid">
       <label>Session à clôturer
         <select class="input" (ngModelChange)="selectionnerSession($event)" [ngModel]="cloture.sessionId">
-          <option [ngValue]="0">— Choisir —</option>
+          <option [ngValue]="0">Choisir,</option>
           @for (s of sessionsJour(); track s.id) {
             <option [ngValue]="s.id" [disabled]="s.statut === 'CLOTUREE'">
-              {{ s.referencePPH }} — {{ s.typePoudreLibelle }} {{ s.statut === 'CLOTUREE' ? '(déjà clôturée)' : '' }}
+              {{ s.referencePPH }}, {{ s.typePoudreLibelle }} {{ s.statut === 'CLOTUREE' ? '(déjà clôturée)' : '' }}
             </option>
           }
         </select>
@@ -57,9 +57,9 @@
             <tr>
               <td class="mono">{{ s.referencePPH }}</td>
               <td>{{ s.typePoudreLibelle }}</td>
-              <td>{{ s.quantiteNetteBroyeeKg ?? '—' }}</td>
-              <td>{{ s.pertesKg ?? '—' }}</td>
-              <td>{{ s.pctPertes != null ? (s.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
+              <td>{{ s.quantiteNetteBroyeeKg ?? '-' }}</td>
+              <td>{{ s.pertesKg ?? '-' }}</td>
+              <td>{{ s.pctPertes != null ? (s.pctPertes | number:'1.1-1') + '%' : '-' }}</td>
               <td><span [class]="s.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
             </tr>
           } @empty {

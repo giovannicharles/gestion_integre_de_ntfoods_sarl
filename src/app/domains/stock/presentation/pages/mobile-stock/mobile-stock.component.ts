@@ -252,7 +252,7 @@ export class MobileStockComponent implements OnInit, AfterViewInit, OnDestroy {
     const productMap = new Map<string, number>();
     this.summaries().forEach(s => {
       (s.stockItems || []).forEach((item: any) => {
-        const sku = item.productSku || '—';
+        const sku = item.productSku || '-';
         productMap.set(sku, (productMap.get(sku) || 0) + (item.quantity || 0));
       });
     });
@@ -286,7 +286,7 @@ export class MobileStockComponent implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
-  /** Bar: Stock dormant — ventes par commercial (les plus faibles) */
+  /** Bar: Stock dormant, ventes par commercial (les plus faibles) */
   private buildSlowStockChart() {
     const data = this.slowStocks().slice(0, 10);
     if (data.length === 0) return;

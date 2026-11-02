@@ -45,11 +45,11 @@
                   <span>{{ progression(o) }}%</span>
                 </div>
               </td>
-              <td>{{ o.dateButoir ? (o.dateButoir | date:'dd/MM/yyyy') : '—' }}</td>
+              <td>{{ o.dateButoir ? (o.dateButoir | date:'dd/MM/yyyy') : '-' }}</td>
               <td><span [class]="badgeStatut(o.statut)">{{ o.statut }}</span></td>
               <td>
                 @if (o.statut === 'HONORE' || o.statut === 'ANNULE') {
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">-</span>
                 } @else {
                   <select class="input" style="min-width:140px" [disabled]="enCours() === o.idOF"
                           [ngModel]="o.statut" (ngModelChange)="changerStatut(o, $event)">

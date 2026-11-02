@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, ClassementExecuteurBE, RapportHebdoAffectationBE } from '../../../../infrastructure/production.service';
 
 /**
- * TÉLÉCHARGEMENTS — Responsable de Salle
- * Registre, rapport hebdomadaire, classements — générés en CSV côté client
+ * TÉLÉCHARGEMENTS, Responsable de Salle
+ * Registre, rapport hebdomadaire, classements, générés en CSV côté client
  * (aucun export serveur dédié pour ces données autres que le rapport lots).
  */
 @Component({

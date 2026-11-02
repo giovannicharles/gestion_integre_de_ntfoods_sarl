@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, FicheProductionBE } from '../../../../infrastructure/production.service';
 
 /**
- * FICHES PRODUIT JOURNALIÈRES — Agent de Production
- * GET /production/fiches/pph/{ref} (AGENT_PRODUCTION) — liste
+ * FICHES PRODUIT JOURNALIÈRES, Agent de Production
+ * GET /production/fiches/pph/{ref} (AGENT_PRODUCTION), liste
  * des fiches d'un PPH. Consultation seule : la création/correction d'une
  * fiche exige PRODUCTION_FICHE_PRODUIT_GERER, qu'AGENT_PRODUCTION ne détient
  * pas (réservée au Chef de Production).

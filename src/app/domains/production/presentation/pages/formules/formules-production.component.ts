@@ -22,7 +22,7 @@ export function libelleCategorie(code: string): string {
 }
 
 /**
- * FORMULES DE PRODUCTION — Chef de Production / Responsable de Salle.
+ * FORMULES DE PRODUCTION, Chef de Production / Responsable de Salle.
  *
  * Une formule est propre à un produit : des matières premières et, pour chacune,
  * les kg pour une base de produit fini. Elle pilote les besoins des plans.
@@ -163,7 +163,7 @@ export class FormulesProductionComponent implements OnInit {
   segmentsApercu = computed(() => {
     const total = this.somme();
     return this.lignes().map((l, i) => ({
-      nom: l.matierePremiere || '—',
+      nom: l.matierePremiere || '-',
       pct: total > 0 ? ((Number(l.proportionKg) || 0) / total) * 100 : 0,
       couleur: PALETTE[i % PALETTE.length],
     }));
@@ -251,7 +251,7 @@ export class FormulesProductionComponent implements OnInit {
     this.lignes.update(liste => liste.filter((_, idx) => idx !== i));
   }
 
-  /** Répartit la base à parts égales — point de départ rapide pour une nouvelle formule. */
+  /** Répartit la base à parts égales, point de départ rapide pour une nouvelle formule. */
   repartirEgalement(): void {
     const n = this.lignes().length;
     const base = Number(this.baseKg()) || 0;

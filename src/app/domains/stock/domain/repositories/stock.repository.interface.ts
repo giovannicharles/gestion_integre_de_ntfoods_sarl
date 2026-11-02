@@ -5,7 +5,7 @@ import {
 } from '../models/stock.models';
 
 /**
- * Contrat du repository Stock — Domain Layer (Clean Architecture)
+ * Contrat du repository Stock, Domain Layer (Clean Architecture)
  * Implémenté par l'infrastructure, consommé par les use-cases.
  */
 export interface IStockRepository {

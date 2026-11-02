@@ -7,7 +7,7 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 /**
  * Route de chaque catégorie vers l'écran du module où la validation RÉELLE a
- * lieu — /dg/validations/{ref}/resoudre ne fait que masquer l'élément de
+ * lieu, /dg/validations/{ref}/resoudre ne fait que masquer l'élément de
  * cette vue transversale (voir ResoudreValidationDgUseCase, backend) sans
  * jamais approuver/rejeter la précommande, dotation, BC, réception ou
  * versement sous-jacent. Cet écran est donc un tableau de suivi, pas un
@@ -24,12 +24,12 @@ const ROUTE_PAR_TYPE: Record<string, string> = {
 };
 
 const LIBELLE_PAR_TYPE: Record<string, string> = {
-  PRECOMMANDE_SECRETAIRE: 'Précommande — validation secrétaire',
-  PRECOMMANDE_COMPTABLE: 'Précommande — validation comptable',
+  PRECOMMANDE_SECRETAIRE: 'Précommande, validation secrétaire',
+  PRECOMMANDE_COMPTABLE: 'Précommande, validation comptable',
   DOTATION: 'Dotation commercial',
   BON_COMMANDE: 'Bon de commande',
-  RECEPTION_ETAPE1: 'Réception — constat physique',
-  RECEPTION_ETAPE2: 'Réception — 2ᵉ validation',
+  RECEPTION_ETAPE1: 'Réception, constat physique',
+  RECEPTION_ETAPE2: 'Réception, 2ᵉ validation',
   VERSEMENT: 'Versement',
 };
 
@@ -85,7 +85,7 @@ export class DgArbitrageComponent implements OnInit {
   }
 
   /**
-   * Retire l'élément de CETTE vue de suivi DG uniquement — n'approuve ni ne
+   * Retire l'élément de CETTE vue de suivi DG uniquement, n'approuve ni ne
    * rejette rien dans le module concerné (voir commentaire d'en-tête).
    */
   marquerCommeSuivi(item: ValidationEnAttenteBE, problematique: boolean): void {

@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionDosageBE } from '../../../../infrastructure/production.service';
 
 /**
- * REGISTRE DE DOSAGE — Agent Doseur
+ * REGISTRE DE DOSAGE, Agent Doseur
  * GET /dosage/{id}/registre est bien autorisé pour AGENT_DOSEUR (téléchargement
  * fonctionnel). La LISTE des sessions à afficher dépend en revanche de
- * /dosage/periode, non autorisé — réserve identique aux autres vues.
+ * /dosage/periode, non autorisé, réserve identique aux autres vues.
  */
 @Component({
   selector: 'app-ad-registre',

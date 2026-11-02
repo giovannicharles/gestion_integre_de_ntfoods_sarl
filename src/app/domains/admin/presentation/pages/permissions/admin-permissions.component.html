@@ -55,7 +55,7 @@
                     @if (permissionSelectionnee() === p) {
                       <div class="perm-reverse">
                         <i class="fa-solid fa-circle-info"></i> Rôles possédant cette permission par défaut :
-                        <strong>{{ rolesAvecPermission().join(', ') || '—' }}</strong>
+                        <strong>{{ rolesAvecPermission().join(', ') || '-' }}</strong>
                       </div>
                     }
                   }
@@ -77,8 +77,8 @@
       <div style="padding:0 var(--sp-4) var(--sp-4)">
         @if (permissionSelectionnee(); as pSel) {
           <div class="perm-reverse" style="margin-bottom:12px">
-            <i class="fa-solid fa-circle-info"></i> <span class="mono">{{ pSel }}</span> — rôles l'ayant par défaut :
-            <strong>{{ rolesAvecPermission().join(', ') || '—' }}</strong>
+            <i class="fa-solid fa-circle-info"></i> <span class="mono">{{ pSel }}</span>, rôles l'ayant par défaut :
+            <strong>{{ rolesAvecPermission().join(', ') || '-' }}</strong>
             <button type="button" class="perm-reverse-close" (click)="ouvrirRolesPour(pSel)"><i class="fa-solid fa-xmark"></i></button>
           </div>
         }
@@ -177,7 +177,7 @@
         </div>
         <div class="form-group">
           <label>Motif *</label>
-          <textarea class="form-control" rows="3" [ngModel]="overrideForm().motif" (ngModelChange)="majOverride('motif', $event)" placeholder="Raison de cette dérogation — tracée avec votre matricule et la date"></textarea>
+          <textarea class="form-control" rows="3" [ngModel]="overrideForm().motif" (ngModelChange)="majOverride('motif', $event)" placeholder="Raison de cette dérogation, tracée avec votre matricule et la date"></textarea>
         </div>
       </div>
       <div class="form-actions">

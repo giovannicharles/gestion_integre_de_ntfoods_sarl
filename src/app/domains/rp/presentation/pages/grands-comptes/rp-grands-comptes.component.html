@@ -3,7 +3,7 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-handshake"></i></div>
       <div>
-        <div class="ph-title">CRM — Grands Comptes</div>
+        <div class="ph-title">CRM · Grands Comptes</div>
         <div class="ph-sub">Hôtels · GMS · Boulangeries · {{ fCFA(caTotal()) }} CA mensuel cumulé</div>
       </div>
     </div>
@@ -24,7 +24,7 @@
 
   @if (relancesDues().length > 0) {
   <div class="alert-banner-red">
-    <i class="fa-solid fa-bell"></i> {{ relancesDues().length }} compte(s) en attente de relance — commande récurrente non renouvelée.
+    <i class="fa-solid fa-bell"></i> {{ relancesDues().length }} compte(s) en attente de relance, commande récurrente non renouvelée.
   </div>
   }
 
@@ -42,7 +42,7 @@
       </div>
       <div class="fiche-kpis rgrid-2" style="grid-template-columns:1fr 1fr">
         <div class="fiche-kpi"><span class="fk-lbl">CA mensuel</span><span class="fk-val" style="font-size:13px">{{ fCFA(c.caMensuel) }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">Prochaine relance</span><span class="fk-val" style="font-size:13px">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '—' }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Prochaine relance</span><span class="fk-val" style="font-size:13px">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '-' }}</span></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-outline btn-sm" style="flex:1" (click)="ouvrirEdition(c)"><i class="fa-solid fa-pen"></i> Modifier</button>

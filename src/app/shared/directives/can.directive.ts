@@ -3,7 +3,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UserRole } from '../../core/models/user.models';
 
 /**
- * `*appCan="['ROLE_A','ROLE_B']"` — masque le contenu si l'utilisateur courant n'a aucun des
+ * `*appCan="['ROLE_A','ROLE_B']"`, masque le contenu si l'utilisateur courant n'a aucun des
  * rôles listés. Confort d'affichage uniquement (§6.7 CLAUDE.md) : le serveur reste la seule
  * source de vérité, cette directive ne fait qu'éviter d'afficher un bouton que l'utilisateur ne
  * pourra pas utiliser. Les rôles passés doivent correspondre à ceux déjà déclarés sur la route

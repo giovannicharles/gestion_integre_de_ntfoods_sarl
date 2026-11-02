@@ -46,7 +46,7 @@
     </div>
 
     <div class="pagination-row">
-      <span class="text-muted">{{ lignesFiltrees().length }} machiniste(s) — page {{ page() }} / {{ totalPages() }}</span>
+      <span class="text-muted">{{ lignesFiltrees().length }} machiniste(s), page {{ page() }} / {{ totalPages() }}</span>
       <div class="pagination-btns">
         <button (click)="allerPage(page()-1)" [disabled]="page()===1"><i class="fa-solid fa-chevron-left"></i></button>
         @for (p of [].constructor(totalPages()); track $index) {

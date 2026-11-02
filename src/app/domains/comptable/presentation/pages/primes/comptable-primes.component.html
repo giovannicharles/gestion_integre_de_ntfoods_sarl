@@ -3,7 +3,7 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-money-bill-trend-up"></i></div>
       <div>
-        <div class="ph-title">Primes Commerciales — Règle d'or 80/75</div>
+        <div class="ph-title">Primes Commerciales · Règle d'or 80/75</div>
         <div class="ph-sub">Semaine du {{ semaineDebut() | date:'dd/MM/yyyy':'':"fr" }}</div>
       </div>
     </div>
@@ -46,9 +46,9 @@
           @for (l of lignes(); track l.matriculeCommercial) {
           <tr>
             <td class="fw-bold">{{ l.matriculeCommercial }}</td>
-            <td class="mono">{{ l.objectif ? fCFA(l.objectif.objectifGlobalFCFA) : '—' }}</td>
-            <td class="mono">{{ l.prime ? fCFA(l.prime.totalVentesGlobalFCFA) : '—' }}</td>
-            <td>{{ l.prime ? l.prime.tauxRealisationGlobalPourcent + '%' : '—' }}</td>
+            <td class="mono">{{ l.objectif ? fCFA(l.objectif.objectifGlobalFCFA) : '-' }}</td>
+            <td class="mono">{{ l.prime ? fCFA(l.prime.totalVentesGlobalFCFA) : '-' }}</td>
+            <td>{{ l.prime ? l.prime.tauxRealisationGlobalPourcent + '%' : '-' }}</td>
             <td>
               @if (l.prime) {
               <span class="badge" [class.bg-orange]="l.prime.statut==='CALCULEE'" [class.bg-success]="l.prime.statut==='VALIDEE' || l.prime.statut==='VERSEE'">
@@ -59,7 +59,7 @@
               <span class="badge bg-neutral">Non calculée</span>
               }
             </td>
-            <td class="mono fw-bold">{{ l.prime ? fCFA(l.prime.montantPrimeFCFA) : '—' }}</td>
+            <td class="mono fw-bold">{{ l.prime ? fCFA(l.prime.montantPrimeFCFA) : '-' }}</td>
             <td>
               @if (!l.prime) {
               <button class="btn btn-primary btn-sm" *appCan="['COMPTABLE', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="ouvrirCalcul(l)"><i class="fa-solid fa-calculator"></i> Calculer</button>
@@ -74,7 +74,7 @@
               } @else if (l.prime.statut === 'VALIDEE') {
               <span class="text-muted" title="Le versement est réservé au Comptable">En attente de versement</span>
               } @else {
-              <span class="text-muted">—</span>
+              <span class="text-muted">-</span>
               }
             </td>
           </tr>
@@ -91,7 +91,7 @@
   <div class="modal-overlay" (click)="fermerCalcul()">
     <div class="modal-box" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-calculator"></i> Calculer la prime — {{ calculPour()?.matriculeCommercial }}</h3>
+        <h3><i class="fa-solid fa-calculator"></i> Calculer la prime, {{ calculPour()?.matriculeCommercial }}</h3>
         <button class="modal-close" (click)="fermerCalcul()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
@@ -100,10 +100,10 @@
           <p class="info-text"><i class="fa-solid fa-spinner fa-spin"></i> Calcul depuis les ventes réelles…</p>
         } @else if (preRempliAutomatiquement()) {
           <div class="info-text" style="background:var(--g-gh);border-left:3px solid var(--g);padding:8px 12px;border-radius:6px">
-            <i class="fa-solid fa-check-circle"></i> Pré-rempli automatiquement depuis les ventes réelles de la semaine — vérifiez puis corrigez si besoin avant de confirmer.
+            <i class="fa-solid fa-check-circle"></i> Pré-rempli automatiquement depuis les ventes réelles de la semaine, vérifiez puis corrigez si besoin avant de confirmer.
           </div>
         } @else {
-          <p class="info-text">Aucune vente trouvée pour ce commercial cette semaine — saisissez le chiffre d'affaires réalisé.</p>
+          <p class="info-text">Aucune vente trouvée pour ce commercial cette semaine, saisissez le chiffre d'affaires réalisé.</p>
         }
         <div class="form-group">
           <label>CA global réalisé (FCFA) *</label>

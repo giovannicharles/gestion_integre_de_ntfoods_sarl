@@ -76,7 +76,7 @@ export class ControleLayoutComponent implements OnInit {
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 
@@ -94,7 +94,7 @@ export class ControleLayoutComponent implements OnInit {
     });
 
     // 2026-11-02 : les badges "Décaissements"/"Budget & Achats" étaient des littéraux fixes
-    // (toujours "2"), jamais recalculés — même défaut que dg-layout (décaissements) corrigé le
+    // (toujours "2"), jamais recalculés, même défaut que dg-layout (décaissements) corrigé le
     // 2026-11-01. ControleDashboardService expose déjà decaissementsAttente/budgetDepasse.
     this.controleSvc.getDashboard().subscribe({
       next: d => {

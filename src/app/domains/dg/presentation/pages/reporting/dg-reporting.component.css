@@ -22,7 +22,7 @@
 .mono { font-variant-numeric: tabular-nums; }
 .fw-bold { font-weight: 700; }
 .table-card { padding: var(--sp-4); }
-/* 2026-11-01 — carte « Top Clients & Risque de Concentration » (motif « top customers with
+/* 2026-11-01, carte « Top Clients & Risque de Concentration » (motif « top customers with
    concentration risk », validé par la pratique des tableaux de bord de direction). */
 .concentration-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .concentration-note { font-size: 12px; color: var(--n500); margin: 0 0 var(--sp-3); display: flex; align-items: flex-start; gap: 6px; }

@@ -21,10 +21,10 @@ const CANAUX: { value: CanalCommande; label: string; icon: string }[] = [
 interface LigneFormUI { codeProduit: string; designation: string; conditionnement: string; quantite: number; prixUnitaire: number; }
 
 /**
- * Commandes clients hors tournée (§5.7, CommandeDistance) — téléphone, WhatsApp, SMS,
+ * Commandes clients hors tournée (§5.7, CommandeDistance), téléphone, WhatsApp, SMS,
  * email. Écran UNIQUE et partagé : jusqu'au 2026-10-16, cette fonctionnalité existait
  * entièrement côté backend (contrôleur, workflow de validation croisée Secrétaire→
- * Comptable) sans AUCUNE interface, et seul le rôle Commercial pouvait la déclencher —
+ * Comptable) sans AUCUNE interface, et seul le rôle Commercial pouvait la déclencher,
  * alors qu'un client contacte aussi bien le secrétariat, la Chargée RP, le comptable
  * ou le Contrôleur Général. Routé depuis plusieurs modules (voir *.routes.ts) plutôt que
  * dupliqué : les actions visibles s'adaptent au rôle courant (`AuthService.hasAnyRole`),
@@ -122,7 +122,7 @@ export class CommandeClientComponent implements OnInit {
   }
   statutLabel(s: string): string {
     const map: Record<string, string> = {
-      RECUE: 'Reçue — att. secrétaire', VALIDEE_SECRETAIRE: 'Att. comptable',
+      RECUE: 'Reçue, att. secrétaire', VALIDEE_SECRETAIRE: 'Att. comptable',
       VALIDEE_COMPTABLE: 'Prête à livrer', LIVREE: 'Livrée',
       REJETEE: 'Rejetée', ANNULEE: 'Annulée',
     };
@@ -194,7 +194,7 @@ export class CommandeClientComponent implements OnInit {
         this.saving.set(false);
         this.showForm.set(false);
         this.commandes.update(list => [c, ...list]);
-        this.toast.success(`Commande ${c.numeroCommande} enregistrée — en attente de validation secrétaire.`);
+        this.toast.success(`Commande ${c.numeroCommande} enregistrée, en attente de validation secrétaire.`);
       },
       error: e => { this.saving.set(false); this.toast.error(extractApiError(e), "Échec de l'enregistrement"); },
     });
@@ -209,7 +209,7 @@ export class CommandeClientComponent implements OnInit {
   validerSecretaire(c: CommandeDistanceBE): void {
     this.actionEnCours.set(c.numeroCommande);
     this.svc.validerCommandeDistanceSecretaire(c.numeroCommande, this.matriculeActeur).subscribe({
-      next: u => { this.actionEnCours.set(null); this.remplacer(u); this.toast.success(`${u.numeroCommande} validée — en attente du comptable.`); },
+      next: u => { this.actionEnCours.set(null); this.remplacer(u); this.toast.success(`${u.numeroCommande} validée, en attente du comptable.`); },
       error: e => { this.actionEnCours.set(null); this.toast.error(extractApiError(e), 'Échec de la validation'); },
     });
   }
@@ -217,7 +217,7 @@ export class CommandeClientComponent implements OnInit {
   validerComptable(c: CommandeDistanceBE): void {
     this.actionEnCours.set(c.numeroCommande);
     this.svc.validerCommandeDistanceComptable(c.numeroCommande, this.matriculeActeur).subscribe({
-      next: u => { this.actionEnCours.set(null); this.remplacer(u); this.toast.success(`${u.numeroCommande} validée — prête à livrer.`); },
+      next: u => { this.actionEnCours.set(null); this.remplacer(u); this.toast.success(`${u.numeroCommande} validée, prête à livrer.`); },
       error: e => { this.actionEnCours.set(null); this.toast.error(extractApiError(e), 'Échec de la validation'); },
     });
   }

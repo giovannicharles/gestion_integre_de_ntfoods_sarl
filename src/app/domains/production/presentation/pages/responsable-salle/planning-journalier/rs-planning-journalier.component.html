@@ -4,7 +4,7 @@
     <div class="pj-ph-ico"><i class="fa-solid fa-calendar-day"></i></div>
     <div>
       <h1 class="ph-title">Planning Journalier</h1>
-      <p class="ph-sub">Postes, employés affectés, objectifs recalculés — {{ today }}</p>
+      <p class="ph-sub">Postes, employés affectés, objectifs recalculés, {{ today }}</p>
     </div>
   </div>
 </div>
@@ -29,7 +29,7 @@
     <div class="pj-selector-label"><i class="fa-solid fa-calendar-week"></i> PPH en cours</div>
     <select class="input pj-select" [(ngModel)]="referencePPH" (ngModelChange)="charger()">
       @for (p of pphs(); track p.id) {
-        <option [value]="p.referencePPH">{{ p.referencePPH }} — {{ p.semaine }}</option>
+        <option [value]="p.referencePPH">{{ p.referencePPH }}, {{ p.semaine }}</option>
       }
     </select>
     <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser">
@@ -72,7 +72,7 @@
           }
           @if (a.statut === 'VALIDEE') {
             <div class="pj-locked-info">
-              <i class="fa-solid fa-lock"></i> Planning verrouillé — vous pouvez maintenant saisir les réalisations
+              <i class="fa-solid fa-lock"></i> Planning verrouillé, vous pouvez maintenant saisir les réalisations
             </div>
           }
         </div>
@@ -152,7 +152,7 @@
                   <div class="pj-field pj-field-lg">
                     <label class="pj-label">Poste</label>
                     <select class="input" [(ngModel)]="l.poste" (ngModelChange)="onPosteChange(i, $event)">
-                      <option value="">— Choisir —</option>
+                      <option value="">Choisir,</option>
                       @for (p of codesPoste; track p.code) {
                         <option [value]="p.code">{{ p.libelle }}</option>
                       }

@@ -6,7 +6,7 @@
       <div class="ph-icon"><i class="fa-solid fa-map-location-dot"></i></div>
       <div>
         <h1 class="ph-title">Gestion des Localisations</h1>
-        <p class="ph-sub">Emplacements de stock — central, tampon, mobile, magasins</p>
+        <p class="ph-sub">Emplacements de stock, central, tampon, mobile, magasins</p>
       </div>
     </div>
     <div class="ph-actions">
@@ -111,14 +111,14 @@
                   <td class="mono">{{ loc.id }}</td>
                   <td><span class="badge {{ getTypeClass(loc.type) }}">{{ getTypeLabel(loc.type) }}</span></td>
                   <td class="fw-bold">{{ loc.name }}</td>
-                  <td>{{ loc.description || '—' }}</td>
+                  <td>{{ loc.description || '-' }}</td>
                   <td>{{ loc.assignedUserId || 'Non assigné' }}</td>
                   <td>
                     @if (loc.type === 'STOCK_MOBILE') {
                       <input type="text" class="assign-input" placeholder="ID commercial"
                              #commercialId (keyup.enter)="assignCommercial(loc.id, commercialId.value)">
                     } @else {
-                      <span class="text-muted">—</span>
+                      <span class="text-muted">-</span>
                     }
                   </td>
                 </tr>

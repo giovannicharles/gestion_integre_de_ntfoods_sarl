@@ -22,7 +22,7 @@
 
 @if (comparaison(); as c) {
   @if (alerteEcartImportant()) {
-    <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> Écart important détecté ({{ c.ecartPourcentage | number:'1.1-1' }}%) — vérification recommandée.</div>
+    <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> Écart important détecté ({{ c.ecartPourcentage | number:'1.1-1' }}%), vérification recommandée.</div>
   }
   <div class="kpi-grid">
     <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fûts nets (Doseur)</div><div class="kpi-val">{{ c.nbFutsNets }}</div></div></div>

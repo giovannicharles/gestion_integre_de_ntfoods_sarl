@@ -96,7 +96,7 @@
                   <span class="rec-num">{{ d.referenceNumber }}</span>
                 </td>
                 <td>
-                  <div style="font-weight:600">{{ d.commercialName || '—' }}</div>
+                  <div style="font-weight:600">{{ d.commercialName || '-' }}</div>
                   <div style="font-size:11px;color:var(--n500)">{{ d.commercialMatricule }}</div>
                 </td>
                 <td>
@@ -254,7 +254,7 @@
             </div>
             @if (d.status === 'REJECTED') {
               <div class="wf-rejected-banner">
-                <i class="fa-solid fa-xmark-circle"></i> Demande rejetée — {{ d.reviewComments || 'Sans motif' }}
+                <i class="fa-solid fa-xmark-circle"></i> Demande rejetée, {{ d.reviewComments || 'Sans motif' }}
               </div>
             }
           </div>
@@ -271,8 +271,8 @@
                   <td>{{ item.productName }} ({{ item.productSku }})</td>
                   <td>{{ item.requestedQuantity | number }}</td>
                   <td>{{ item.approvedQuantity || item.requestedQuantity | number }}</td>
-                  <td>{{ item.packagingType || '—' }}</td>
-                  <td>{{ item.quantityPerCarton || '—' }}</td>
+                  <td>{{ item.packagingType || '-' }}</td>
+                  <td>{{ item.quantityPerCarton || '-' }}</td>
                 </tr>
               }
             </tbody>

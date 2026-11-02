@@ -105,7 +105,7 @@ export class DgObjectifsComponent implements OnInit {
 
   gammesDe(o: ObjectifCommercialBE): string {
     const gammes = Object.keys(o.objectifsParGammeFCFA ?? {});
-    return gammes.length ? gammes.join(', ') : '—';
+    return gammes.length ? gammes.join(', ') : '-';
   }
 
   // ── Révision ──────────────────────────────────────────────────────────────

@@ -150,7 +150,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loading.set(true);
     // Load dashboard + backend alerts directly.
-    // Do NOT call triggerAlertChecks() here — it recreates resolved alerts on every refresh.
+    // Do NOT call triggerAlertChecks() here, it recreates resolved alerts on every refresh.
     // The scheduled task (@Scheduled in StockAlertService) handles threshold checks automatically.
     forkJoin({
       dashboard: this.uc.getAlerts(),
@@ -503,7 +503,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
   }
 
   needsUrgentOrder(al: any): boolean { return (al.leadTimeDays || 0) >= 90; }
-  getMagasinLabel(m: string): string { return m || '—'; }
+  getMagasinLabel(m: string): string { return m || '-'; }
   getValeurStockAlert(al: any): number { return al.valeurStock || 0; }
 
   formatCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }

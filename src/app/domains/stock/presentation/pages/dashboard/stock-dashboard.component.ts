@@ -98,7 +98,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   // 6. Taux de rotation
   turnoverRates = signal<{ productName: string; sku: string; turnoverRate: number; daysOfCover: number }[]>([]);
 
-  // 7. Inventaire produits — recherche, filtre, tri
+  // 7. Inventaire produits, recherche, filtre, tri
   productSearch = signal('');
   warehouseFilter = signal('');
   alertFilter = signal('');
@@ -122,7 +122,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.invPage.set(page);
   }
 
-  // 8. Insights IA (TantyAI — GPT-OSS via OpenRouter)
+  // 8. Insights IA (TantyAI, GPT-OSS via OpenRouter)
   iaConfigured = signal(false);
   iaInsight = signal<AnalysisResponse | null>(null);
   iaInsightLoading = signal(false);
@@ -330,7 +330,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.criticalCount.set(levels.filter(sl => sl.alertLevel === 'CRITIQUE').length);
         this.lowCount.set(levels.filter(sl => sl.alertLevel === 'FAIBLE').length);
         this.surplusCount.set(levels.filter(sl => sl.alertLevel === 'SURPLUS').length);
-        // Top 5 par valeur — agrégé par SKU pour éviter les doublons
+        // Top 5 par valeur, agrégé par SKU pour éviter les doublons
         const topBySku = new Map<string, StockLevel>();
         for (const sl of levels) {
           const sku = sl.productSku || `id-${sl.id}`;

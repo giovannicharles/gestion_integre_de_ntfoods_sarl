@@ -82,7 +82,7 @@
                 <td>{{ fCFA(b.montantMaximumFCFA) }}</td>
                 <td>{{ b.dateDebut | date:'dd/MM/yy' }} → {{ b.dateFin ? (b.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
                 <td>{{ b.matriculeAuteur }}</td>
-                <td>{{ b.motif || '—' }}</td>
+                <td>{{ b.motif || '-' }}</td>
               </tr>
             } @empty {
               <tr><td colspan="8" class="vide">Aucun barème enregistré : les valeurs historiques s'appliquent.</td></tr>
@@ -137,7 +137,7 @@
                 <td>{{ fCFA(c.seuilAlerteRougeVersementFCFA) }}</td>
                 <td>{{ c.dateDebut | date:'dd/MM/yy' }} → {{ c.dateFin ? (c.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
                 <td>{{ c.matriculeAuteur }}</td>
-                <td>{{ c.motif || '—' }}</td>
+                <td>{{ c.motif || '-' }}</td>
               </tr>
             } @empty {
               <tr><td colspan="6" class="vide">Aucun paramétrage enregistré : les valeurs historiques s'appliquent.</td></tr>
@@ -189,7 +189,7 @@
                 <td>{{ o.nombreJoursOuvres }}</td>
                 <td>{{ o.dateDebut | date:'dd/MM/yy' }} → {{ o.dateFin ? (o.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
                 <td>{{ o.matriculeAuteur }}</td>
-                <td>{{ o.motif || '—' }}</td>
+                <td>{{ o.motif || '-' }}</td>
               </tr>
             } @empty {
               <tr><td colspan="5" class="vide">Aucun paramétrage enregistré : six jours ouvrés s'appliquent.</td></tr>
@@ -244,7 +244,7 @@
                 <td>{{ a.quantiteSeuilPhotoObligatoire }}</td>
                 <td>{{ a.dateDebut | date:'dd/MM/yy' }} → {{ a.dateFin ? (a.dateFin | date:'dd/MM/yy') : 'en cours' }}</td>
                 <td>{{ a.matriculeAuteur }}</td>
-                <td>{{ a.motif || '—' }}</td>
+                <td>{{ a.motif || '-' }}</td>
               </tr>
             } @empty {
               <tr><td colspan="5" class="vide">Aucune règle enregistrée : le seuil historique de 3 unités s'applique.</td></tr>

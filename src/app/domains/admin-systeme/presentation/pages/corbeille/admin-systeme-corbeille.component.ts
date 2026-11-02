@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { AdminSystemeService, ElementCorbeilleBE } from '../../../infrastructure/admin-systeme.service';
 
 /**
- * Corbeille (§7.3 du contexte projet) — la restauration ne s'exécute jamais ici : elle crée une
+ * Corbeille (§7.3 du contexte projet), la restauration ne s'exécute jamais ici : elle crée une
  * demande sur le moteur d'approbation, qu'un DG/Contrôleur général/Admin doit ensuite valider
- * (écran « Mes validations », déjà existant — pas dupliqué ici).
+ * (écran « Mes validations », déjà existant, pas dupliqué ici).
  */
 @Component({
   selector: 'app-admin-systeme-corbeille',
@@ -50,7 +50,7 @@ export class AdminSystemeCorbeilleComponent implements OnInit {
     this.erreur.set(null);
     this.svc.demanderRestauration(e.typeEntite, e.id, motif).subscribe({
       next: () => {
-        this.succes.set(`Demande de restauration créée pour ${e.reference} — en attente d'approbation.`);
+        this.succes.set(`Demande de restauration créée pour ${e.reference}, en attente d'approbation.`);
         setTimeout(() => this.succes.set(null), 4000);
       },
       error: (err) => this.erreur.set(err?.error?.erreur ?? 'Échec de la demande de restauration.')

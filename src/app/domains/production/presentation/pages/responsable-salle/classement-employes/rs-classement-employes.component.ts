@@ -3,9 +3,9 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { ProductionService, ClassementExecuteurBE } from '../../../../infrastructure/production.service';
 
 /**
- * CLASSEMENT DES EMPLOYÉS — Responsable de Salle
+ * CLASSEMENT DES EMPLOYÉS, Responsable de Salle
  * Hebdomadaire et mensuel, selon quantité produite / productivité / taux
- * d'atteinte — GET /affectations/classement-executeurs (réel).
+ * d'atteinte, GET /affectations/classement-executeurs (réel).
  */
 @Component({
   selector: 'app-rs-classement-employes',

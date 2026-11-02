@@ -14,7 +14,7 @@
 <div class="gap-note">
   <i class="fa-solid fa-triangle-exclamation"></i>
   <div>
-    <strong>Limite backend :</strong> aucune entité "Mélange" indépendante n'existe — chaque session de dosage
+    <strong>Limite backend :</strong> aucune entité "Mélange" indépendante n'existe, chaque session de dosage
     correspond à un mélange. La création se fait depuis la vue <strong>Dosage</strong>. Modifier ou supprimer un
     mélange déjà enregistré n'est pas possible : le backend n'expose pas de <code>PATCH</code>/<code>DELETE</code>
     sur une matière déjà ajoutée à une session.
@@ -54,7 +54,7 @@
 <div class="modal-overlay" (click)="fermerDetail()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-hd">
-      <h3><i class="fa-solid fa-blender"></i> Mélange — session #{{ m.session.id }}</h3>
+      <h3><i class="fa-solid fa-blender"></i> Mélange, session #{{ m.session.id }}</h3>
       <button class="modal-close" (click)="fermerDetail()" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">

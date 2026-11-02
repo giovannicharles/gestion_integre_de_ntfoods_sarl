@@ -8,7 +8,7 @@
   <div class="page-header">
     <div>
       <h1><i class="fa-solid fa-boxes-stacked"></i> Gestion des Produits</h1>
-      <p class="page-subtitle">Configuration centralisée : Gammes, Variantes, Produits & Prix — Marque TANTY</p>
+      <p class="page-subtitle">Configuration centralisée : Gammes, Variantes, Produits & Prix, Marque TANTY</p>
     </div>
     <div style="display:flex;gap:10px">
       <button class="btn-ia-prod" (click)="runIaInsight()" [disabled]="iaInsightLoading()">
@@ -46,7 +46,7 @@
       <div class="ia-insight-head">
         <div class="ia-insight-title">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Analyse IA du catalogue — TantyAI</span>
+          <span>Analyse IA du catalogue, TantyAI</span>
           @if (iaConfigured()) {
             <span class="badge badge-success" style="font-size:10px">GPT-OSS 120B</span>
           } @else {
@@ -79,7 +79,7 @@
                   <span class="badge" [class]="getIaPriorityClass(rec.priority)">{{ rec.priority }}</span>
                   <div>
                     <strong>{{ rec.action }}</strong>
-                    @if (rec.product) { <span class="ia-insight-rec-product"> — {{ rec.product }}</span> }
+                    @if (rec.product) { <span class="ia-insight-rec-product">, {{ rec.product }}</span> }
                     <p>{{ rec.detail }}</p>
                   </div>
                 </div>
@@ -249,18 +249,18 @@
           @for (p of paginatedProducts(); track p.id) {
             <tr>
               <td><strong style="font-family:monospace">{{ p.sku }}</strong></td>
-              <td><span style="font-weight:600;color:var(--n800)">{{ p.designation || '—' }}</span></td>
-              <td>{{ p.category || '—' }}</td>
+              <td><span style="font-weight:600;color:var(--n800)">{{ p.designation || '-' }}</span></td>
+              <td>{{ p.category || '-' }}</td>
               <td>
                 <span class="mat-badge" [style.color]="getMaterialColor(p.materialType || 'PRODUIT_FINI')">
                   <i class="fa-solid" [class]="getMaterialIcon(p.materialType || 'PRODUIT_FINI')"></i>
                   {{ getMaterialLabel(p.materialType || 'PRODUIT_FINI') }}
                 </span>
               </td>
-              <td>{{ p.variantId ? getLineName(p.variantId) : '—' }}</td>
-              <td>{{ p.unit || '—' }}</td>
+              <td>{{ p.variantId ? getLineName(p.variantId) : '-' }}</td>
+              <td>{{ p.unit || '-' }}</td>
               <td><strong>{{ formatCFA(p.unitPriceAmount || 0) }}</strong></td>
-              <td>{{ p.packagingType ? p.packagingType + (p.quantityPerCarton ? ' (' + p.quantityPerCarton + '/carton)' : '') : '—' }}</td>
+              <td>{{ p.packagingType ? p.packagingType + (p.quantityPerCarton ? ' (' + p.quantityPerCarton + '/carton)' : '') : '-' }}</td>
               <td>
                 @if (p.active) {
                   <span class="badge badge-success">Actif</span>
@@ -318,8 +318,8 @@
             }
           </div>
           <div class="prod-grid-sku">{{ p.sku }}</div>
-          <div class="prod-grid-name">{{ p.designation || '—' }}</div>
-          <div class="prod-grid-meta">{{ p.category || '—' }} · {{ p.unit || '—' }}</div>
+          <div class="prod-grid-name">{{ p.designation || '-' }}</div>
+          <div class="prod-grid-meta">{{ p.category || '-' }} · {{ p.unit || '-' }}</div>
           <div class="prod-grid-price">{{ formatCFA(p.unitPriceAmount || 0) }}</div>
           <div class="prod-grid-actions">
             <button class="btn-icon" title="Prix" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i></button>
@@ -362,13 +362,13 @@
               <button class="btn-icon btn-danger" title="Supprimer" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
-          <div class="prod-card-name">{{ p.designation || '—' }}</div>
+          <div class="prod-card-name">{{ p.designation || '-' }}</div>
           <div class="prod-card-mid">
-            <div class="prod-card-stat"><span class="prod-card-stat-label">Catégorie</span><span class="prod-card-stat-val">{{ p.category || '—' }}</span></div>
+            <div class="prod-card-stat"><span class="prod-card-stat-label">Catégorie</span><span class="prod-card-stat-val">{{ p.category || '-' }}</span></div>
             <div class="prod-card-stat"><span class="prod-card-stat-label">Type</span><span class="prod-card-stat-val">{{ getMaterialLabel(p.materialType || 'PRODUIT_FINI') }}</span></div>
-            <div class="prod-card-stat"><span class="prod-card-stat-label">Unité</span><span class="prod-card-stat-val">{{ p.unit || '—' }}</span></div>
+            <div class="prod-card-stat"><span class="prod-card-stat-label">Unité</span><span class="prod-card-stat-val">{{ p.unit || '-' }}</span></div>
             <div class="prod-card-stat"><span class="prod-card-stat-label">Prix</span><span class="prod-card-stat-val">{{ formatCFA(p.unitPriceAmount || 0) }}</span></div>
-            <div class="prod-card-stat"><span class="prod-card-stat-label">Conditionnement</span><span class="prod-card-stat-val">{{ p.packagingType ? p.packagingType + (p.quantityPerCarton ? ' (' + p.quantityPerCarton + '/carton)' : '') : '—' }}</span></div>
+            <div class="prod-card-stat"><span class="prod-card-stat-label">Conditionnement</span><span class="prod-card-stat-val">{{ p.packagingType ? p.packagingType + (p.quantityPerCarton ? ' (' + p.quantityPerCarton + '/carton)' : '') : '-' }}</span></div>
           </div>
         </div>
       } @empty {
@@ -465,8 +465,8 @@
           @for (p of paginatedProducts(); track p.id) {
             <tr>
               <td><strong style="font-family:monospace">{{ p.sku }}</strong></td>
-              <td><span style="font-weight:600;color:var(--n800)">{{ p.designation || '—' }}</span></td>
-              <td>{{ p.category || '—' }}</td>
+              <td><span style="font-weight:600;color:var(--n800)">{{ p.designation || '-' }}</span></td>
+              <td>{{ p.category || '-' }}</td>
               <td><span class="mat-badge" [style.color]="getMaterialColor(p.materialType || 'PRODUIT_FINI')">{{ getMaterialLabel(p.materialType || 'PRODUIT_FINI') }}</span></td>
               <td>{{ formatCFA(p.unitPriceAmount || 0) }}</td>
               <td><button class="btn btn-ghost btn-sm" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i> Gérer les prix</button></td>
@@ -511,7 +511,7 @@
           <div class="form-group">
             <label class="form-label">Gamme <span class="req">*</span></label>
             <select class="form-control" [(ngModel)]="formLineId">
-              <option [ngValue]="null">— Sélectionner —</option>
+              <option [ngValue]="null">Sélectionner,</option>
               @for (l of lines(); track l.id) { <option [value]="l.id">{{ l.name }} ({{ getBrandName(l.brandId) }})</option> }
             </select>
           </div>
@@ -556,7 +556,7 @@
             <div class="form-group">
               <label class="form-label">Variante</label>
               <select class="form-control" [ngModel]="formVariantId" (ngModelChange)="formVariantId=$event">
-                <option [ngValue]="null">— Aucune (matière première/consommable) —</option>
+                <option [ngValue]="null">Aucune (matière première/consommable),</option>
                 @for (v of variants(); track v.id) { <option [value]="v.id">{{ v.name }} ({{ getLineName(v.productLineId) }})</option> }
               </select>
             </div>
@@ -619,7 +619,7 @@
   <div class="modal-overlay animate-fadeIn" (click)="closePriceModal()">
     <div class="modal-box animate-fadeInUp" style="max-width:640px" (click)="$event.stopPropagation()">
       <div class="modal-header" style="background:var(--o-gh)">
-        <div class="modal-title" style="color:var(--o)"><i class="fa-solid fa-coins"></i> Prix — {{ prod.sku }}</div>
+        <div class="modal-title" style="color:var(--o)"><i class="fa-solid fa-coins"></i> Prix, {{ prod.sku }}</div>
         <button class="modal-close" (click)="closePriceModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">

@@ -17,7 +17,7 @@ export interface CommandPaletteItem extends NavItemLike {
  *
  * Portée honnête de cette première version : recherche sur les éléments de navigation du module
  * (déjà ~20 écrans pour le DG), pas encore un index transversal des entités métier (produits,
- * lots, commandes, utilisateurs, demandes) — construire cet index transversal est un chantier
+ * lots, commandes, utilisateurs, demandes), construire cet index transversal est un chantier
  * backend séparé (un nouvel agrégateur de recherche), pas fait ce tour, signalé dans
  * DG_MODULE_SPEC.md plutôt que simulé avec des résultats inventés.
  */

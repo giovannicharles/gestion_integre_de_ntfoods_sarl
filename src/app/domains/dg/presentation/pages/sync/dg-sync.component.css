@@ -1,5 +1,5 @@
-/* 2026-11-01 : ce fichier redéfinissait localement .card/.btn/.badge/.toast/.form-input — déjà
-   posés globalement dans styles.css — ce qui rendait cette seule page visuellement différente
+/* 2026-11-01 : ce fichier redéfinissait localement .card/.btn/.badge/.toast/.form-input, déjà
+   posés globalement dans styles.css, ce qui rendait cette seule page visuellement différente
    du reste du module DG (couleurs, rayons, tailles divergents). Template réécrit pour réutiliser
    les classes globales (.ph, .card-title, .form-label, .form-control, .data-table, .tbl-wrap,
    .btn-primary) ; il ne reste ici que ce qui est propre à cette page. */

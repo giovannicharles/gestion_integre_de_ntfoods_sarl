@@ -5,7 +5,7 @@ import { Injectable, signal } from '@angular/core';
  *
  * Deux choses distinctes y sont suivies : la connexion réseau du poste, que le
  * navigateur signale, et la joignabilité de l'API, que seul un appel réel
- * renseigne. Un poste peut être en ligne et l'API éteinte — c'est même le cas
+ * renseigne. Un poste peut être en ligne et l'API éteinte, c'est même le cas
  * le plus fréquent en développement, et le message doit alors désigner le
  * serveur, pas le réseau.
  *

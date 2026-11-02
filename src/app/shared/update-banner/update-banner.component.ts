@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
 
 /**
- * Bannière de mise à jour (2026-10-25, demande explicite du porteur — notification de nouvelle
+ * Bannière de mise à jour (2026-10-25, demande explicite du porteur, notification de nouvelle
  * version + bouton pour mettre à jour). S'appuie sur `SwUpdate.versionUpdates`, natif à
  * `@angular/service-worker` : aucun endpoint backend de version à construire. Désactivé en
- * développement (le service worker lui-même l'est, voir `app.config.ts` — `enabled: !isDevMode()`).
+ * développement (le service worker lui-même l'est, voir `app.config.ts`, `enabled: !isDevMode()`).
  */
 @Component({
   selector: 'app-update-banner',

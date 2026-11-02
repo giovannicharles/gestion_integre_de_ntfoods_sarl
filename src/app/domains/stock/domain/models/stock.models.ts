@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════
-// TANTY DIGITAL ERP — Modèles du Domaine Stock v3
+// TANTY DIGITAL ERP, Modèles du Domaine Stock v3
 // Correspond exactement aux entités JPA du backend Spring Boot
 // ════════════════════════════════════════════════════════════
 

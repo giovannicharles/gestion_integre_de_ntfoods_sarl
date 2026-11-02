@@ -13,9 +13,9 @@ import { ROLE_HOMES, UserRole } from '../models/user.models';
  * session est intacte. Il ne lui restait qu'à se reconnecter sans raison.
  *
  * On distingue donc les deux cas : connecté, l'utilisateur est ramené à son
- * accueil ; anonyme, il va se connecter. Le `COMMERCIAL` n'a pas d'accueil web —
+ * accueil ; anonyme, il va se connecter. Le `COMMERCIAL` n'a pas d'accueil web,
  * `ROLE_HOMES` pointe volontairement vers la connexion pour lui, `authGuard` le
- * refusant sur le web — et retombe donc au bon endroit sans cas particulier.
+ * refusant sur le web, et retombe donc au bon endroit sans cas particulier.
  */
 export const redirigerRouteInconnue: RedirectFunction = (): UrlTree => {
   const auth = inject(AuthService);

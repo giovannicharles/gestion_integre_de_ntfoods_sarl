@@ -29,7 +29,7 @@ export class ResetPasswordComponent implements OnInit {
   constructor(private fb: FormBuilder) {
     this.resetForm = this.fb.group({
       // Même politique que le serveur (PolitiqueMotDePasse.java) : au moins 8 caractères,
-      // une lettre et un chiffre — vérifié ici pour un retour immédiat, imposé côté serveur.
+      // une lettre et un chiffre, vérifié ici pour un retour immédiat, imposé côté serveur.
       password: ['', [Validators.required, Validators.minLength(8), this.complexityValidator]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
@@ -46,7 +46,7 @@ export class ResetPasswordComponent implements OnInit {
   ngOnInit(): void {
     if (!this.authService.isLoggedIn()) {
       // Cette page suppose une identité déjà prouvée par OTP (voir two-fa) : sans session,
-      // changer "son" mot de passe n'a pas de sens — retour au point de départ du parcours.
+      // changer "son" mot de passe n'a pas de sens, retour au point de départ du parcours.
       this.router.navigate(['/auth/forgot-password']);
     }
   }

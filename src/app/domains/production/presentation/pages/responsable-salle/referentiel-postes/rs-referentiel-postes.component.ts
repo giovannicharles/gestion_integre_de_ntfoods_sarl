@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ProductionService, CODES_POSTE, CodePosteRef } from '../../../../infrastructure/production.service';
 
 /**
- * RÉFÉRENTIEL DES POSTES — Responsable de Salle
+ * RÉFÉRENTIEL DES POSTES, Responsable de Salle
  * Référentiel chargé depuis le backend. En cas d'indisponibilité, le fallback
  * local est utilisé.
  */

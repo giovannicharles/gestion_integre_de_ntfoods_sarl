@@ -33,7 +33,7 @@
                   (change)="selectionnerSessionDepuisSelect($any($event).target.value)">
             <option value="" disabled>Sélectionner une session...</option>
             @for (s of sessionsHistorique(); track s.id) {
-              <option [value]="s.id">#{{ s.id }} — {{ s.referencePPH }} — {{ s.date }}</option>
+              <option [value]="s.id">#{{ s.id }}, {{ s.referencePPH }}, {{ s.date }}</option>
             }
           </select>
         </label>

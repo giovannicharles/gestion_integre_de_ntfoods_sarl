@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 
 /**
- * CONSULTATION DES PLANS DE PRODUCTION (PPH) — Agent Doseur
+ * CONSULTATION DES PLANS DE PRODUCTION (PPH), Agent Doseur
  * Recherche, filtres état/période, quantités prévues, matières premières
  * attendues, nombre de fûts à produire, taux d'avancement.
  */
@@ -31,10 +31,10 @@ export class AdPlansComponent implements OnInit {
 
   statuts = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'];
 
-  /** Matières premières d'un jour, formatées « Nom: Qté kg » — liste libre, jamais figée sur maïs/soja/arachide. */
+  /** Matières premières d'un jour, formatées « Nom: Qté kg », liste libre, jamais figée sur maïs/soja/arachide. */
   matieresJour(jour: PPHRepartitionJourBE): string {
     const b = jour.besoinsMatieresPremiere ?? [];
-    if (!b.length) return '—';
+    if (!b.length) return '-';
     return b.map(m => `${m.matierePremiere}: ${(Math.round(m.quantiteKg * 100) / 100)} kg`).join(', ');
   }
 

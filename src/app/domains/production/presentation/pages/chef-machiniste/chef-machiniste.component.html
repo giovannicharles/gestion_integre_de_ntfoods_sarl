@@ -3,7 +3,7 @@
     <i class="fa-solid fa-user-gear ph-ico"></i>
     <div>
       <h1 class="ph-title">Espace Chef Machiniste</h1>
-      <p class="ph-sub">Pilotage des poudres — maïs, soja, arachide</p>
+      <p class="ph-sub">Pilotage des poudres, maïs, soja, arachide</p>
     </div>
   </div>
 </div>
@@ -136,7 +136,7 @@
 @if (showFormRealisation()) {
   <div class="card">
     <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-pen-to-square"></i> Réalisation — {{ selectedSession()?.typePoudreLibelle }}</h2>
+      <h2 class="card-title"><i class="fa-solid fa-pen-to-square"></i> Réalisation, {{ selectedSession()?.typePoudreLibelle }}</h2>
     </div>
     <div class="form-grid">
       <label>
@@ -313,7 +313,7 @@
   </div>
   <div class="filter-row" style="padding: 0 var(--sp-4) var(--sp-3); display:flex; gap:var(--sp-2); align-items:center">
     <select class="input" [(ngModel)]="performanceMatricule">
-      <option value="">— Choisir un machiniste —</option>
+      <option value="">Choisir un machiniste,</option>
       @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
     </select>
     <button class="btn btn-primary" (click)="rechercherPerformance()">Rechercher (période du mois)</button>
@@ -345,11 +345,11 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-hd"><h3><i class="fa-solid fa-circle-info"></i> Détail session {{ detailSession()!.id }}</h3></div>
     <div class="modal-body">
-      <p><strong>PPH :</strong> {{ detailSession()!.referencePPH }} — <strong>Date :</strong> {{ detailSession()!.date | date:'dd/MM/yyyy' }}</p>
+      <p><strong>PPH :</strong> {{ detailSession()!.referencePPH }}, <strong>Date :</strong> {{ detailSession()!.date | date:'dd/MM/yyyy' }}</p>
       <p><strong>Type poudre :</strong> {{ detailSession()!.typePoudreLibelle }}</p>
-      <p><strong>Objectif journalier :</strong> {{ detailSession()!.objectifJournalierKg }} kg — <strong>Réalisé :</strong> {{ detailSession()!.totalRealiseKg }} kg</p>
-      <p><strong>Quantité nette broyée :</strong> {{ detailSession()!.quantiteNetteBroyeeKg ?? '—' }} kg — <strong>Pertes :</strong> {{ detailSession()!.pertesKg ?? '—' }} kg</p>
-      <p><strong>Statut :</strong> {{ detailSession()!.statut }} — <strong>Journée validée :</strong> {{ detailSession()!.journeeValidee ? 'Oui' : 'Non' }}</p>
+      <p><strong>Objectif journalier :</strong> {{ detailSession()!.objectifJournalierKg }} kg, <strong>Réalisé :</strong> {{ detailSession()!.totalRealiseKg }} kg</p>
+      <p><strong>Quantité nette broyée :</strong> {{ detailSession()!.quantiteNetteBroyeeKg ?? '-' }} kg, <strong>Pertes :</strong> {{ detailSession()!.pertesKg ?? '-' }} kg</p>
+      <p><strong>Statut :</strong> {{ detailSession()!.statut }}, <strong>Journée validée :</strong> {{ detailSession()!.journeeValidee ? 'Oui' : 'Non' }}</p>
     </div>
     <div class="modal-ft">
       <button class="btn btn-primary" (click)="detailSession.set(null)">Fermer</button>

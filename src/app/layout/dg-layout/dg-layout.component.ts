@@ -116,19 +116,19 @@ export class DgLayoutComponent implements OnInit {
         { label: 'Paramètres système', icon: 'fa-shield-halved', route: '/dg/securite' },
         { label: 'Synchronisation', icon: 'fa-rotate', route: '/dg/sync' },
         { label: 'Archivage', icon: 'fa-folder-open', route: '/dg/documents' },
-        // 2026-11-01 : écran DG propre (GET /dg/audit, pas un alias admin) — réajouté le même
+        // 2026-11-01 : écran DG propre (GET /dg/audit, pas un alias admin), réajouté le même
         // jour que son retrait, voir le commentaire du groupe « Mon Compte » ci-dessous.
         { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/dg/audit' },
       ]
     },
     // 2026-11-01 (demande explicite du porteur) : les 6 écrans d'administration système
     // (Utilisateurs, Audit, Paramètres, Codes observation, Postes production, Règles métier) qui
-    // vivaient ici en tant qu'`adminItems` ont été retirés — c'était strictement du périmètre
+    // vivaient ici en tant qu'`adminItems` ont été retirés, c'était strictement du périmètre
     // ADMIN (gestion du système, CLAUDE.md décision actée n°9), pas du DG. « Pouvoirs &
     // délégations » reste, parce que c'est une décision du DG (qui détient quel pouvoir de
     // validation), pas un réglage système ; « Mon Profil » est le même écran de libre-service
     // que dans les autres modules (2026-10-25 : les incidents se signalent via le bouton topbar,
-    // pas depuis un groupe de sidebar — pas repris ici non plus).
+    // pas depuis un groupe de sidebar, pas repris ici non plus).
     {
       label: 'Mon Compte', icon: 'fa-user-gear', children: [
         { label: 'Pouvoirs & délégations', icon: 'fa-user-shield', route: '/dg/pouvoirs' },
@@ -137,7 +137,7 @@ export class DgLayoutComponent implements OnInit {
     },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
   navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));

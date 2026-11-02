@@ -38,7 +38,7 @@ export class AdminCodeValidationComponent implements OnInit {
 
   /**
    * Corrigé le 2026-10-16 : appelait un chemin inexistant (/api/auth/utilisateurs, jamais
-   * aucun endpoint réel) via un ApiService fantôme (core/services/api.service, inexistant —
+   * aucun endpoint réel) via un ApiService fantôme (core/services/api.service, inexistant,
    * le vrai vit dans core/http/). Réutilise AdminService.getUtilisateurs(), déjà correct et
    * déjà utilisé par l'écran Utilisateurs.
    */

@@ -1,4 +1,4 @@
-# Module Agent Doseur — refactorisé + aligné charte TANTY
+# Module Agent Doseur, refactorisé + aligné charte TANTY
 
 Refactorisation UX + architecture du module `agent-doseur`, branchée exclusivement
 sur `ProductionService`, et **alignée sur le design system global TANTY**
@@ -8,7 +8,7 @@ fonctionnalités métier existantes sont conservées.
 ## Contenu du livrable
 - `agent-doseur/` : le module refactorisé (à déposer à la place de l'ancien).
 - `styles.css` : votre design system **inchangé**, complété en fin de fichier d'un
-  petit bloc « COMPAT — Espace Agent Doseur ». À placer à la racine des styles
+  petit bloc « COMPAT, Espace Agent Doseur ». À placer à la racine des styles
   globaux (ex. `src/styles.css`).
 
 ---
@@ -36,7 +36,7 @@ Câblage du routage (fichier de routes non fourni) :
   redéfinitions divergentes de `.badge` / `.bg-*` ont été **supprimées** pour laisser
   gagner le thème (badges « pill » verts/pâles uniformes partout).
 - `styles.css` complété : alias `.input` (= `.form-control`), plus `.text-muted`,
-  `.sr-only`, `.row-actions` — classes utilisées par le module mais absentes du thème.
+  `.sr-only`, `.row-actions`, classes utilisées par le module mais absentes du thème.
   **Ajouts uniquement, aucune règle existante modifiée.**
 - Correctifs de classes : `bg-warning` → `bg-orange` (mélange) ; le composant racine
   importe désormais `_shared.css` (ses `.gap-note` étaient sans style).

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, PPHRepartitionJourBE } from '../../../../infrastructure/production.service';
 import { nomsMatieres, typesEmballage, qteMatiere, qteEmballage, libelleEmballage } from '../../../../infrastructure/production-besoins.util';
 
-/** Ligne éditable de répartition journalière — matières et emballage en listes libres (jamais figées). */
+/** Ligne éditable de répartition journalière, matières et emballage en listes libres (jamais figées). */
 interface RepartitionEdition {
   dateJour: string;
   matieres: { matierePremiere: string; quantiteKg: number }[];
@@ -163,7 +163,7 @@ export class RsAjustementPlanComponent implements OnInit {
       next: updated => {
         this.pphs.update(list => list.map(x => x.referencePPH === updated.referencePPH ? updated : x));
         this.pphSelectionne.set(updated);
-        this.message.set('Production démarrée — PPH EN COURS.');
+        this.message.set('Production démarrée, PPH EN COURS.');
         this.actionning.set(false);
         this.enPause.set(false);
       },

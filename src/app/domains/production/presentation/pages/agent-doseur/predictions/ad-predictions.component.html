@@ -14,15 +14,15 @@
   <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Calculer une prédiction</h2></div>
   <div class="toolbar-row">
     <select class="input" (change)="selectionnerSessionDepuisSelect($any($event.target).value)">
-      <option value="">— Choisir une session ouverte —</option>
+      <option value="">Choisir une session ouverte,</option>
       @for (s of contexte.sessionsOuvertes(); track s.id) {
-        <option [value]="s.id" [selected]="contexte.sessionActive()?.id === s.id">#{{ s.id }} — {{ s.referencePPH }} ({{ s.date }})</option>
+        <option [value]="s.id" [selected]="contexte.sessionActive()?.id === s.id">#{{ s.id }}, {{ s.referencePPH }} ({{ s.date }})</option>
       }
     </select>
   </div>
   @if (contexte.sessionActive(); as s) {
     <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <span class="badge bg-success">Session #{{ s.id }} — PPH {{ s.referencePPH }}</span>
+      <span class="badge bg-success">Session #{{ s.id }}, PPH {{ s.referencePPH }}</span>
       <span class="badge bg-neutral" style="margin-left:8px">Fûts nets enregistrés : {{ s.nbFutsNets }}</span>
     </div>
   } @else if (contexte.sessionsOuvertes().length === 0) {
@@ -48,7 +48,7 @@
           @for (l of p.predictions; track l.codeProduit) {
             <tr>
               <td><span class="badge bg-neutral">{{ l.codeProduit }}</span> {{ l.designation }}</td>
-              <td>{{ l.composition ?? '—' }}</td>
+              <td>{{ l.composition ?? '-' }}</td>
               <td>{{ l.poidsUnitaireGrammes }} g</td>
               <td><strong>{{ l.quantiteUnitesBase }}</strong></td>
               <td>{{ l.quantiteCartons }}</td>
@@ -68,7 +68,7 @@
       elle utilise ses fûts nets, résout le PPH associé puis le Bon de Commande,
       et ne concerne que les produits de la catégorie métier <strong>TANTY BOUILLIE DE SOJA</strong>.
       Les colonnes "sachets / étuis / gaines" correspondent aux différents types de conditionnement listés
-      ci-dessus selon le produit (chaque référence a son unité propre — sachet, étui, gaine ou carton).
+      ci-dessus selon le produit (chaque référence a son unité propre, sachet, étui, gaine ou carton).
     </p>
   </div>
   }

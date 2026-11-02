@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, FicheProductionBE } from '../../../../infrastructure/production.service';
 
 /**
- * FICHE INFO PRODUIT JOURNALIÈRE — Responsable de Salle
+ * FICHE INFO PRODUIT JOURNALIÈRE, Responsable de Salle
  *
  * ⚠️ Correction d'un bug du module précédent : `GET /fiches/pph/{ref}` (liste)
- * n'autorise PAS RESPONSABLE_SALLE — seule la consultation d'UNE fiche précise
+ * n'autorise PAS RESPONSABLE_SALLE, seule la consultation d'UNE fiche précise
  * (`GET /fiches/pph/{ref}/date/{date}`) l'est. Cette vue n'utilise donc que
  * cet endpoint, jamais la liste.
  */
@@ -70,7 +70,7 @@ export class RsFicheInfoProduitComponent implements OnInit {
       lignes: f.lignes.map(l => ({ codeProduit: l.codeProduit, nomProduit: l.nomProduit, quantiteProduite: l.quantiteProduite }))
     }).subscribe({
       next: updated => { this.fiche.set(updated); this.message.set('Fiche corrigée'); },
-      error: () => this.message.set('Erreur — fiche probablement verrouillée')
+      error: () => this.message.set('Erreur, fiche probablement verrouillée')
     });
   }
 
@@ -79,10 +79,10 @@ export class RsFicheInfoProduitComponent implements OnInit {
     if (!f) return;
     const w = window.open('', '_blank');
     if (!w) { this.message.set('Autorisez les pop-ups pour imprimer'); return; }
-    const lignes = f.lignes.map(l => `<tr><td>${l.nomProduit}</td><td>${l.quantiteProduite}</td><td>${l.quantitePrediteDosage ?? '—'}</td><td>${l.quantitePreditePostes ?? '—'}</td><td>${l.ecart ?? '—'}</td><td>${l.tauxAvancement ?? '—'}%</td></tr>`).join('');
+    const lignes = f.lignes.map(l => `<tr><td>${l.nomProduit}</td><td>${l.quantiteProduite}</td><td>${l.quantitePrediteDosage ?? '-'}</td><td>${l.quantitePreditePostes ?? '-'}</td><td>${l.ecart ?? '-'}</td><td>${l.tauxAvancement ?? '-'}%</td></tr>`).join('');
     w.document.write(`<html><head><title>Fiche Info Produit ${f.referencePPH} ${f.date}</title>
       <style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #ccc;padding:6px;font-size:12px}</style></head>
-      <body><h1>Fiche Info Produit</h1><p>PPH : ${f.referencePPH} — Date : ${f.date}</p>
+      <body><h1>Fiche Info Produit</h1><p>PPH : ${f.referencePPH}, Date : ${f.date}</p>
       <table><thead><tr><th>Produit</th><th>Quantité réelle</th><th>Prédiction dosage</th><th>Prédiction postes</th><th>Écart</th><th>Progression</th></tr></thead><tbody>${lignes}</tbody></table>
       </body></html>`);
     w.document.close(); w.print();

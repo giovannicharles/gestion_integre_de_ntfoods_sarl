@@ -4,7 +4,7 @@ import { ProductionService, ClassementMachinisteBE, ClassementExecuteurBE } from
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
 /**
- * ANALYSE DES PERFORMANCES — Chef de Production
+ * ANALYSE DES PERFORMANCES, Chef de Production
  * Performance des machinistes (broyage) et des exécutants de postes
  * (Responsable Salle), rendement global et taux d'atteinte des objectifs.
  */

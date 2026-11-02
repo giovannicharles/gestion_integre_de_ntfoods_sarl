@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 /**
- * Champ de recherche du sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger :
+ * Champ de recherche du sidebar (2026-10-25, demande explicite du porteur), filtre inline léger :
  * ce composant ne porte AUCUNE logique de filtrage lui-même (les formes de NavItem/NavGroup diffèrent
  * entre layouts) ; il émet seulement la saisie, chaque layout filtre ses propres items via
  * `shared/utils/nav-filter.util.ts`.

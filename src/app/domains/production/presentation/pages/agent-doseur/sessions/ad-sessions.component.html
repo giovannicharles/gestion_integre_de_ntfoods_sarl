@@ -19,7 +19,7 @@
     <div class="form-grid">
       <label>PPH
         <select class="input" [(ngModel)]="nouvelleSession.referencePPH" [disabled]="!!sessionOuverteActive()">
-          <option value="">— Choisir —</option>
+          <option value="">Choisir,</option>
           @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
         </select>
       </label>
@@ -45,7 +45,7 @@
             <td>{{ s.id }}</td>
             <td class="mono">{{ s.referencePPH }}</td>
             <td>{{ s.dateCreation | date:'dd/MM HH:mm' }}</td>
-            <td>{{ s.cloturee ? (s.dateModification | date:'dd/MM HH:mm') : '—' }}</td>
+            <td>{{ s.cloturee ? (s.dateModification | date:'dd/MM HH:mm') : '-' }}</td>
             <td>{{ duree(s) }}</td>
             <td><span [class]="s.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ s.cloturee ? 'Clôturée' : 'Ouverte' }}</span></td>
             <td>

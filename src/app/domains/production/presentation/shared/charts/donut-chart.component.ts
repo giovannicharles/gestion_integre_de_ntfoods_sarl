@@ -24,7 +24,7 @@ export interface DonutSlice {
               [attr.stroke-dasharray]="seg.dash" [attr.stroke-dashoffset]="seg.offset"
               transform="rotate(-90 60 60)" stroke-linecap="butt"
             >
-              <title>{{ seg.label }} — {{ seg.pct }}%</title>
+              <title>{{ seg.label }}, {{ seg.pct }}%</title>
             </circle>
           }
           <text x="60" y="56" text-anchor="middle" class="dc-center-val">{{ total() }}</text>

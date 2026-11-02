@@ -7,7 +7,7 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 /**
  * Gouvernance des seuils de réapprovisionnement (P2, 2026-10-15) : écran manquant
- * jusqu'ici — DefinirSeuilUseCase/ListerSeuilsUseCase (backend) n'avaient aucun
+ * jusqu'ici, DefinirSeuilUseCase/ListerSeuilsUseCase (backend) n'avaient aucun
  * endpoint ni aucun écran (vérifié par grep avant ce correctif). Backend complété
  * (SeuilController) dans la même tranche. Volontairement dans l'espace DG, jamais
  * dans l'espace Stock opérationnel (§5.4 du contexte projet : « les seuils sont

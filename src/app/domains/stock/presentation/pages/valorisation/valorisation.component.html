@@ -158,7 +158,7 @@
               @for (item of currentDetail!.items; track item.productSku) {
                 <tr>
                   <td><strong>{{ item.productSku }}</strong></td>
-                  <td>{{ item.productName || '—' }}</td>
+                  <td>{{ item.productName || '-' }}</td>
                   <td class="mono">{{ item.quantity | number:'1.0-2' }}</td>
                   <td class="mono">{{ fCFA(item.unitPrice) }}</td>
                   <td class="mono fw-bold">{{ fCFA(item.totalValue) }}</td>

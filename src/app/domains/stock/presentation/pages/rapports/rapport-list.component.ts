@@ -377,14 +377,14 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
           return {
             ...sl,
             product: p || sl.product,
-            productName: sl.productName || p?.designation || p?.sku || sl.productSku || '—',
-            productSku: sl.productSku || p?.sku || '—',
+            productName: sl.productName || p?.designation || p?.sku || sl.productSku || '-',
+            productSku: sl.productSku || p?.sku || '-',
             materialType: sl.materialType || p?.materialType || 'Autre',
-            productUnit: sl.productUnit || p?.unit || '—',
+            productUnit: sl.productUnit || p?.unit || '-',
             unitPrice: sl.unitPrice || p?.unitPriceAmount || 0,
             stockValue: sl.stockValue || ((p?.unitPriceAmount || 0) * sl.quantity),
             quantityPerCarton: sl.quantityPerCarton || p?.quantityPerCarton || 1,
-            packagingType: sl.packagingType || p?.packagingType || '—',
+            packagingType: sl.packagingType || p?.packagingType || '-',
           } as StockLevel;
         });
         this.stockLevels.set(enriched);
@@ -691,7 +691,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     obs$.pipe(takeUntil(this.d$)).subscribe({
       next: (res: any) => {
         this.generating.set(false);
-        this.showToast(`Rapport ${mode === 'weekly' ? 'hebdomadaire' : 'quotidien'} généré et sauvegardé (id: ${res?.id ?? '—'})`, 'success');
+        this.showToast(`Rapport ${mode === 'weekly' ? 'hebdomadaire' : 'quotidien'} généré et sauvegardé (id: ${res?.id ?? '-'})`, 'success');
         this.loadReports();
       },
       error: () => {

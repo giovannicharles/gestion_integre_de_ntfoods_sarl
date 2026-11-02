@@ -138,7 +138,7 @@ export class RsPlanningJournalierComponent implements OnInit {
     this.svc.validerAffectation(a.id).subscribe({
       next: updated => {
         this.affectation.set(updated);
-        this.message.set('Planning confirmé — production de la journée verrouillée.');
+        this.message.set('Planning confirmé, production de la journée verrouillée.');
         this.actionning.set(false);
       },
       error: (err) => {

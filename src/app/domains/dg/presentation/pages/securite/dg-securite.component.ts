@@ -8,8 +8,8 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
 import { AuthService } from '../../../../../core/auth/auth.service';
 
 /**
- * Paramètres système — seuils de sécurité & session (2026-10-25) : GET/PUT /api/dg/parametres
- * existaient déjà côté serveur (GererParametresSystemeUseCase), aucun écran ne les exposait —
+ * Paramètres système, seuils de sécurité & session (2026-10-25) : GET/PUT /api/dg/parametres
+ * existaient déjà côté serveur (GererParametresSystemeUseCase), aucun écran ne les exposait,
  * seul moyen de changer `SEUIL_SECURITE_CAISSE`, `MAX_TENTATIVES_CONNEXION`,
  * `DUREE_SESSION_HEURES`, etc. était une modification directe en base. Distinct de
  * `/dg/parametres-metier` (TVA/primes, autre table) et de `/dg/seuils` (seuils de
@@ -29,7 +29,7 @@ export class DgSecuriteComponent implements OnInit {
   private readonly auth = inject(AuthService);
 
   /** PUT /api/dg/parametres est gardé `hasRole('DIRECTEUR_GENERAL')` exclusivement (DgController.java:265)
-   * — plus strict que le GET (ADMIN compris) : l'ADMIN voit les valeurs, ne peut pas les modifier. */
+   *, plus strict que le GET (ADMIN compris) : l'ADMIN voit les valeurs, ne peut pas les modifier. */
   peutModifier = computed(() => this.auth.hasAnyRole(['DIRECTEUR_GENERAL']));
 
   loading = signal(true);
@@ -37,7 +37,7 @@ export class DgSecuriteComponent implements OnInit {
   parametres = signal<ParametreSystemeBE[]>([]);
   saving = signal(false);
 
-  /** Valeurs en cours d'édition, par clé — seules celles qui diffèrent de la valeur serveur sont envoyées. */
+  /** Valeurs en cours d'édition, par clé, seules celles qui diffèrent de la valeur serveur sont envoyées. */
   valeursEditees = signal<Record<string, number>>({});
 
   aDesModifications = computed(() => Object.keys(this.valeursEditees()).length > 0);

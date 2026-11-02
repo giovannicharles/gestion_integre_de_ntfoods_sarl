@@ -58,7 +58,7 @@
 .pagination-btns button.active { background: var(--primary, #1976d2); color: #fff; border-color: var(--primary, #1976d2); }
 .pagination-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Classement — médailles */
+/* Classement, médailles */
 .medal { font-size: 1.1rem; margin-right: 4px; }
 .rank-row { display: flex; align-items: center; gap: var(--sp-3, 0.75rem); padding: var(--sp-3, 0.75rem); border-bottom: 1px solid var(--border); }
 .rank-row:last-child { border-bottom: none; }

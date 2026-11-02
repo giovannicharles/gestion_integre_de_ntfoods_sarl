@@ -5,7 +5,7 @@ import { ProductionService, SessionDosageBE } from '../../../../infrastructure/p
 import { AdSessionContextService } from '../ad-session-context.service';
 
 /**
- * GESTION DES MACHINES — Agent Doseur
+ * GESTION DES MACHINES, Agent Doseur
  *
  * ⚠️ Le backend enregistre uniquement l'identifiant de chaque machine mobilisée
  * sur une session (liste plate), sans horodatage ni durée. La sélection de

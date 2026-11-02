@@ -9,10 +9,10 @@ import {
 } from '../../../infrastructure/secretaire.service';
 
 /**
- * Petite caisse + micro-stock accueil (2026-10-25) — les 5 endpoints d'écriture existaient déjà
+ * Petite caisse + micro-stock accueil (2026-10-25), les 5 endpoints d'écriture existaient déjà
  * côté serveur depuis le 2026-09-23 (SecretaireController.java), jamais appelés : aucun écran
  * n'avait de formulaire. Le bouton « Vente comptant accueil » du dashboard pointait vers la
- * session de tournée (RG-10), sans rapport — redirigé vers cette page.
+ * session de tournée (RG-10), sans rapport, redirigé vers cette page.
  */
 @Component({
   selector: 'app-secretaire-caisse',

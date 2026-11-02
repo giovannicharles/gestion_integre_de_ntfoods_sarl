@@ -6,11 +6,11 @@ import { ProductionService, SessionBroyageBE, ClassementMachinisteBE } from '../
 type TypeRapport = 'journalier' | 'hebdomadaire' | 'mensuel' | 'pertes' | 'performances' | 'objectifs' | 'realisations';
 
 /**
- * RAPPORTS — Chef Machiniste
+ * RAPPORTS, Chef Machiniste
  *
  * ⚠️ Limite backend : `RapportProductionController` (endpoints /rapports/*)
  * n'autorise QUE CHEF_PRODUCTION / RESPONSABLE_SALLE / DIRECTEUR_GENERAL / ADMIN
- * (vérifié dans les @PreAuthorize du contrôleur) — le rôle CHEF_MACHINISTE n'y a
+ * (vérifié dans les @PreAuthorize du contrôleur), le rôle CHEF_MACHINISTE n'y a
  * pas accès. Les rapports ci-dessous sont donc générés côté client (CSV / impression)
  * à partir des données réellement autorisées pour ce rôle (`/broyage/*`), et non
  * via un export PDF/Excel serveur qui renverrait une erreur 403.
@@ -111,10 +111,10 @@ export class CmRapportsComponent implements OnInit {
     const lignesSessions = sessions.map(s => `<tr><td>${s.date}</td><td>${s.referencePPH}</td><td>${s.typePoudreLibelle}</td><td>${s.objectifJournalierKg}</td><td>${s.quantiteNetteBroyeeKg ?? 0}</td><td>${s.pertesKg ?? 0}</td><td>${s.statut}</td></tr>`).join('');
     const lignesClassement = classement ? classement.classements.map(c => `<tr><td>#${c.rang}</td><td>${c.nomMachiniste}</td><td>${c.productiviteKg}</td><td>${c.tauxRealisationMoyen}%</td></tr>`).join('') : '';
     w.document.write(`
-      <html><head><title>${type} — ${debut} au ${fin}</title>
+      <html><head><title>${type}, ${debut} au ${fin}</title>
       <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px} table{width:100%;border-collapse:collapse;margin-top:12px} th,td{border:1px solid #ccc;padding:6px;font-size:12px;text-align:left}</style>
       </head><body>
-      <h1>Rapport ${type} — Chef Machiniste</h1>
+      <h1>Rapport ${type}, Chef Machiniste</h1>
       <p>Période : ${debut} au ${fin}</p>
       ${sessions.length ? `<table><thead><tr><th>Date</th><th>PPH</th><th>Type</th><th>Objectif</th><th>Nette broyée</th><th>Pertes</th><th>Statut</th></tr></thead><tbody>${lignesSessions}</tbody></table>` : ''}
       ${classement ? `<table><thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Taux</th></tr></thead><tbody>${lignesClassement}</tbody></table>` : ''}

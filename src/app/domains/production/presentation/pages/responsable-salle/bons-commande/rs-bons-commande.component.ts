@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { StockService, BonCommandeBE } from '../../../../../stock/infrastructure/stock.service';
 
 /**
- * CONSULTATION DES BONS DE COMMANDE — Responsable de Salle
+ * CONSULTATION DES BONS DE COMMANDE, Responsable de Salle
  * Liste les BC avec statut VALIDE. Lecture seule.
  */
 @Component({

@@ -11,7 +11,7 @@
       <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
       <div>
         <h1 class="ph-title">Inventaire des Stocks</h1>
-        <p class="ph-sub">Vue consolidée — Central · Tampon · Mobile</p>
+        <p class="ph-sub">Vue consolidée, Central · Tampon · Mobile</p>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -206,7 +206,7 @@
                     </span>
                   </td>
                   <td>
-                    <span style="font-size:11px;font-weight:600;color:var(--n600)">{{ item.productLineName || '—' }}</span>
+                    <span style="font-size:11px;font-weight:600;color:var(--n600)">{{ item.productLineName || '-' }}</span>
                     @if (item.brandName) {
                       <span style="font-size:10px;color:var(--n400);display:block">{{ item.brandName }}</span>
                     }
@@ -342,8 +342,8 @@
                   ['Prix unitaire', fCFA(item.unitPrice)],
                   ['Valeur stock', fCFA(item.stockValue)],
                   ['Catégorie', getMaterialLabel(item.materialType)],
-                  ['Gamme', item.productLineName || '—'],
-                  ['Marque', item.brandName || '—'],
+                  ['Gamme', item.productLineName || '-'],
+                  ['Marque', item.brandName || '-'],
                   ['Emplacement', getTypeLabel(item.locationType)]
                 ]; track $index) {
                   <div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--n150)">

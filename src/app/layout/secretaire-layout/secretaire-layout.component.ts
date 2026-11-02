@@ -36,9 +36,9 @@ export class SecretaireLayoutComponent implements OnInit {
   mobileOpen = signal(false);
   currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord');
-  /** Alertes rouges sur les versements du jour — comptées en direct. */
+  /** Alertes rouges sur les versements du jour, comptées en direct. */
   alertCount = signal(0);
-  /** Décaissements VALIDEE_DG — prêts à exécuter, badge topbar. */
+  /** Décaissements VALIDEE_DG, prêts à exécuter, badge topbar. */
   validationBadge = signal(0);
 
   currentUser = computed(() => this.authService.getCurrentUser());
@@ -74,7 +74,7 @@ export class SecretaireLayoutComponent implements OnInit {
     { label: 'Session du Jour', icon: 'fa-calendar-check', route: '/secretaire/session' },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 

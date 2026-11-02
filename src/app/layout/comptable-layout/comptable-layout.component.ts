@@ -80,7 +80,7 @@ export class ComptableLayoutComponent implements OnInit {
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/comptable/commandes-clients' },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 

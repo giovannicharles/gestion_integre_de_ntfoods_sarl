@@ -1,4 +1,4 @@
-/* Styles spécifiques au dashboard Chef Machiniste — le reste vient des classes globales (kpi-card, card, etc.) */
+/* Styles spécifiques au dashboard Chef Machiniste, le reste vient des classes globales (kpi-card, card, etc.) */
 .alert { padding: var(--sp-3, 0.75rem); border-radius: 8px; margin-bottom: var(--sp-3, 0.75rem); }
 .alert-error { background: var(--danger-bg, var(--r-gh)); color: var(--danger-text, var(--r)); border: 1px solid var(--danger-border, var(--r-gh)); }
 

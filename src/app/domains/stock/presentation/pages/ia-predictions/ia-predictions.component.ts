@@ -188,7 +188,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
       }
 
       return {
-        sku: sl.productSku || '—',
+        sku: sl.productSku || '-',
         currentQty: sl.quantity,
         avgDailyConsumption: Math.round(avgDailyConsumption * 10) / 10,
         daysOfStockLeft,
@@ -482,7 +482,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
       role: 'ai',
       content: 'Bonjour ! Je suis TantyAI, votre assistant IA pour l\'analyse de stock. ' +
         'Posez-moi des questions sur vos données, ou demandez une analyse. ' +
-        (this.iaConfigured() ? '' : '(Mode hors-ligne — configurez OPENAI_API_KEY pour l\'IA complète)'),
+        (this.iaConfigured() ? '' : '(Mode hors-ligne, configurez OPENAI_API_KEY pour l\'IA complète)'),
       time: this.nowStr()
     }]);
   }

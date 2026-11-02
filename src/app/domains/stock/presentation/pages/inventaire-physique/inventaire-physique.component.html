@@ -29,7 +29,7 @@
       <div class="freeze-banner">
         <i class="fa-solid fa-snowflake"></i>
         <div>
-          <strong>Stock gelé</strong> — Un inventaire physique est en cours sur {{ activeInventoryLocation() }}.
+          <strong>Stock gelé</strong>, Un inventaire physique est en cours sur {{ activeInventoryLocation() }}.
           Les mouvements de stock sur cet emplacement sont temporairement bloqués.
         </div>
       </div>
@@ -85,7 +85,7 @@
         <button class="btn btn-ghost btn-sm" (click)="closeDetail()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
         <div>
           <h1 class="ph-title" style="font-size:18px">{{ selectedInventory()?.reference }}</h1>
-          <p class="ph-sub">{{ selectedInventory()?.locationName }} — {{ getStatusLabel(selectedInventory()?.status || '') }}</p>
+          <p class="ph-sub">{{ selectedInventory()?.locationName }}, {{ getStatusLabel(selectedInventory()?.status || '') }}</p>
         </div>
       </div>
       <div style="display:flex;gap:8px">
@@ -106,7 +106,7 @@
     @if (selectedInventory()?.status === 'IN_PROGRESS') {
       <div class="freeze-banner" style="margin-bottom:16px">
         <i class="fa-solid fa-snowflake"></i>
-        <div><strong>Stock gelé</strong> — Les mouvements de stock sur cet emplacement sont bloqués jusqu'à la validation de l'inventaire.</div>
+        <div><strong>Stock gelé</strong>, Les mouvements de stock sur cet emplacement sont bloqués jusqu'à la validation de l'inventaire.</div>
       </div>
     }
 
@@ -172,7 +172,7 @@
               <td style="text-align:right">
                 @if (item.countedQuantity !== null && item.countedQuantity !== undefined) {
                   {{ item.countedQuantity | number:'1.0-2' }}
-                } @else { — }
+                } @else {, }
               </td>
               <td style="text-align:right;font-weight:600" [class]="getDiscrepancyClass(item.discrepancy)">
                 @if (item.discrepancy !== null && item.discrepancy !== undefined && item.discrepancy !== 0) {
@@ -228,7 +228,7 @@
     <div class="modal-overlay" (click)="closeCounting()">
       <div class="modal" style="max-width:480px" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2><i class="fa-solid fa-pen-to-square"></i> Comptage — {{ ci.productSku }}</h2>
+          <h2><i class="fa-solid fa-pen-to-square"></i> Comptage, {{ ci.productSku }}</h2>
           <button class="modal-close" (click)="closeCounting()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">

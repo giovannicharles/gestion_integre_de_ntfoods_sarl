@@ -11,12 +11,12 @@ interface EvenementUI {
 }
 
 /**
- * HISTORIQUE ET AUDIT — Chef de Production
+ * HISTORIQUE ET AUDIT, Chef de Production
  *
  * ⚠️ Il n'existe pas de journal d'audit générique côté backend (pas de table
  * "old value / new value" par action). Cette vue reconstitue une timeline
  * d'activité à partir des seuls horodatages et auteurs déjà stockés sur les
- * entités (PPH, Lot, Expression de besoin) — c'est un historique de résultats,
+ * entités (PPH, Lot, Expression de besoin), c'est un historique de résultats,
  * pas un audit trail complet des modifications intermédiaires.
  */
 @Component({
@@ -43,12 +43,12 @@ export class CpHistoriqueComponent implements OnInit {
       if (p.dateSoumission) liste.push({ type: 'PPH', libelle: `PPH ${p.referencePPH} soumis`, auteur: p.matriculeChefProduction, date: p.dateSoumission, detail: `Semaine ${p.semaine}` });
     }
     for (const l of this.lots()) {
-      liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} déclaré`, auteur: l.matriculeChefProduction, date: l.dateProduction, detail: `${l.declaredQuantityKg} kg — ${l.productSku}` });
-      if (l.matriculeGestionnaireValidation) liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} — décision stock`, auteur: l.matriculeGestionnaireValidation, date: l.dateProduction, detail: l.statut === 'REJETE' ? `Rejeté : ${l.motifRejet}` : 'Validé' });
+      liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot} déclaré`, auteur: l.matriculeChefProduction, date: l.dateProduction, detail: `${l.declaredQuantityKg} kg, ${l.productSku}` });
+      if (l.matriculeGestionnaireValidation) liste.push({ type: 'Lot', libelle: `Lot ${l.numeroLot}, décision stock`, auteur: l.matriculeGestionnaireValidation, date: l.dateProduction, detail: l.statut === 'REJETE' ? `Rejeté : ${l.motifRejet}` : 'Validé' });
     }
     for (const b of this.besoins()) {
-      liste.push({ type: 'Besoin', libelle: `Besoin ${b.numero} signalé`, auteur: b.matriculeDemandeur, date: b.dateCreation, detail: `${b.designationProduit} — ${b.quantiteDemandee} ${b.unite}` });
-      if (b.matriculeValidateur) liste.push({ type: 'Besoin', libelle: `Besoin ${b.numero} — décision`, auteur: b.matriculeValidateur, date: b.dateModification, detail: b.statut === 'REJETE' ? `Rejeté : ${b.motifRejet}` : 'Validé' });
+      liste.push({ type: 'Besoin', libelle: `Besoin ${b.numero} signalé`, auteur: b.matriculeDemandeur, date: b.dateCreation, detail: `${b.designationProduit}, ${b.quantiteDemandee} ${b.unite}` });
+      if (b.matriculeValidateur) liste.push({ type: 'Besoin', libelle: `Besoin ${b.numero}, décision`, auteur: b.matriculeValidateur, date: b.dateModification, detail: b.statut === 'REJETE' ? `Rejeté : ${b.motifRejet}` : 'Validé' });
     }
     return liste.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
   });

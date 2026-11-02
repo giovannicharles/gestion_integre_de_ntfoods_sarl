@@ -11,7 +11,7 @@
     <div class="ph-right">
       <!-- Création d'un magasin retirée (2026-10-01, demande du porteur) : ce n'est pas une tâche
            du Gestionnaire de Stock. L'initialisation des emplacements par défaut (Stock Central,
-           Tampon) reste disponible — bootstrap borné, pas une création libre. -->
+           Tampon) reste disponible, bootstrap borné, pas une création libre. -->
       <button class="btn btn-ghost" (click)="initializeDefaults()" [disabled]="saving()">
         <i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser par défaut
       </button>
@@ -129,7 +129,7 @@
                   {{ magasin.active ? 'Désactiver' : 'Supprimer' }}
                 </button>
               } @else {
-                <span style="color: var(--n400); font-size: 0.8rem; font-style: italic">Emplacement système — non modifiable</span>
+                <span style="color: var(--n400); font-size: 0.8rem; font-style: italic">Emplacement système, non modifiable</span>
               }
             </div>
           </div>

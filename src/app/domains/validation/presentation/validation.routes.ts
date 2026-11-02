@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { roleGuard } from '../../../core/auth/role.guard';
 
 /**
- * Routes du moteur de validation (2026-09-30) — cross-module : accessible à quiconque valide quelque chose
+ * Routes du moteur de validation (2026-09-30), cross-module : accessible à quiconque valide quelque chose
  * ("Mes validations") ; "Pouvoirs & délégations" réservé DG/Admin (même restriction que les endpoints backend).
  */
 export const VALIDATION_ROUTES: Routes = [

@@ -6,7 +6,7 @@ import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/
 type FiltrePeriode = 'aujourdhui' | 'semaine' | 'mois' | 'personnalise';
 
 /**
- * SUIVI DES RÉALISATIONS — Chef Machiniste
+ * SUIVI DES RÉALISATIONS, Chef Machiniste
  * Consultation filtrée (aujourd'hui / semaine / mois / période personnalisée) :
  * objectif, réalisé, taux de réalisation, validation de journée.
  */

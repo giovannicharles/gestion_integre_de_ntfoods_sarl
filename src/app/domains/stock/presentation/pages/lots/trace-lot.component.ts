@@ -41,10 +41,10 @@ const LIBELLES_RELATION: Record<string, string> = {
 };
 
 /**
- * Parcours d'un lot (2026-09-30) — nouvel écran : le backend `GET /api/stock/lots/{numeroLot}/trace` (amont =
+ * Parcours d'un lot (2026-09-30), nouvel écran : le backend `GET /api/stock/lots/{numeroLot}/trace` (amont =
  * matières consommées, aval = transferts/lots fils) n'avait aucune interface. Volontairement séparé de l'écran
  * « Lots » existant (`/stock/lots`) : celui-ci lit `stock/batches` (l'ancien modèle anglais `StockBatch`), un
- * grand livre différent de `LotStock` (`stock/lots`, français) que cette trace parcourt réellement — les mêler
+ * grand livre différent de `LotStock` (`stock/lots`, français) que cette trace parcourt réellement, les mêler
  * aurait affiché « lot introuvable » pour la plupart des numéros du premier écran.
  */
 @Component({

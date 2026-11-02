@@ -34,7 +34,7 @@ export class ControleDashboardComponent implements OnInit {
   decaissementsEnCours = signal<DecaissementBE[]>([]);
   /**
    * Correction 2026-10-25 : `ControleDashboardResponse.valoStock` est câblé à `0` en dur côté
-   * serveur (ControleDashboardService.java:97) — jamais corrigé depuis. Le vrai calcul existe
+   * serveur (ControleDashboardService.java:97), jamais corrigé depuis. Le vrai calcul existe
    * déjà et tourne sur `/controle/valorisation` (StockService.getEtatStock(), somme de
    * `valeurStock`) : repris ici tel quel plutôt que de dupliquer la logique côté serveur.
    */

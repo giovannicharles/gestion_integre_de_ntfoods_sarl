@@ -53,7 +53,7 @@
 @if (message()) { <div class="alert alert-info">{{ message() }}</div> }
 @if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
 
-<!-- ÉTAPE 1 — MA SESSION -->
+<!-- ÉTAPE 1, MA SESSION -->
 @if (etape() === 1) {
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-play"></i> Démarrer ma session</h2></div>
@@ -71,9 +71,9 @@
         <p class="wiz-help">Sélectionnez le plan de production du jour (PPH) pour ouvrir une nouvelle session.</p>
         <label class="wiz-label">Plan de production (PPH)
           <select class="input input-xl" [(ngModel)]="referencePPH" [disabled]="!pphs().length">
-            <option value="">— Choisir mon plan —</option>
+            <option value="">Choisir mon plan,</option>
             @for (p of pphs(); track p.id) {
-              <option [value]="p.referencePPH">{{ p.referencePPH }} @if (p.referenceBC) { — BC {{ p.referenceBC }} }</option>
+              <option [value]="p.referencePPH">{{ p.referencePPH }} @if (p.referenceBC) {, BC {{ p.referenceBC }} }</option>
             }
           </select>
         </label>
@@ -89,7 +89,7 @@
   </div>
 }
 
-<!-- ÉTAPE 2 — DOSAGE -->
+<!-- ÉTAPE 2, DOSAGE -->
 @if (etape() === 2) {
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calculator"></i> Dosage automatique</h2></div>
@@ -127,7 +127,7 @@
   </div>
 }
 
-<!-- ÉTAPE 3 — FÛTS -->
+<!-- ÉTAPE 3, FÛTS -->
 @if (etape() === 3) {
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bottle-droplet"></i> Fûts produits / sortis</h2></div>
@@ -159,7 +159,7 @@
   </div>
 }
 
-<!-- ÉTAPE 4 — MACHINES -->
+<!-- ÉTAPE 4, MACHINES -->
 @if (etape() === 4) {
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Machines mobilisées</h2></div>
@@ -189,7 +189,7 @@
   </div>
 }
 
-<!-- ÉTAPE 5 — TERMINER -->
+<!-- ÉTAPE 5, TERMINER -->
 @if (etape() === 5) {
   @if (terminee()) {
     <div class="card">

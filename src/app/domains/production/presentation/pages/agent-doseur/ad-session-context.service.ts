@@ -60,7 +60,7 @@ export class AdSessionContextService {
   /**
    * Charge les sessions ouvertes (non clôturées, non validées) du jour.
    * Restaure automatiquement la sélection précédente, et sélectionne
-   * d'office l'unique session s'il n'y en a qu'une — un clic de moins
+   * d'office l'unique session s'il n'y en a qu'une, un clic de moins
    * pour l'agent.
    *
    * @param forcer  recharge même si la liste est déjà en mémoire.

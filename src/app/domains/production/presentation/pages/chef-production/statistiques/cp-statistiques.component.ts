@@ -5,9 +5,9 @@ import { ProductionService, RapportHebdomadaireProductionBE } from '../../../../
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
 /**
- * STATISTIQUES — Chef de Production
+ * STATISTIQUES, Chef de Production
  * Comparaisons Semaine N/N-1, Mois N/N-1, évolutions (objectifs, rendement,
- * pertes, ressources, performances) — 8 dernières semaines, données réelles
+ * pertes, ressources, performances), 8 dernières semaines, données réelles
  * via GET /rapports/hebdomadaire.
  */
 @Component({

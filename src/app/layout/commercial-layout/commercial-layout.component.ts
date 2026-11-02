@@ -47,7 +47,7 @@ export class CommercialLayoutComponent implements OnInit {
   });
 
   // Prospects retiré : hors périmètre depuis le 16/08. Dotations retiré : la
-  // route n'existe pas dans commercial.routes.ts — l'entrée menait nulle part.
+  // route n'existe pas dans commercial.routes.ts, l'entrée menait nulle part.
   navItems: NavItem[] = [
     { label: 'Précommandes J+1', icon: 'fa-cart-plus', route: '/commercial/precommandes' },
     { label: 'Ventes', icon: 'fa-cash-register', route: '/commercial/ventes' },
@@ -58,7 +58,7 @@ export class CommercialLayoutComponent implements OnInit {
     { label: 'Fiche Synthèse', icon: 'fa-file-lines', route: '/commercial/fiche-synthese' },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 

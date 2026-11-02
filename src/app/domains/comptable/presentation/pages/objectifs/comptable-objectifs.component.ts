@@ -39,7 +39,7 @@ export class ComptableObjectifsComponent implements OnInit {
   /** Gammes effectivement couvertes par l'objectif, telles que fixées côté siège. */
   gammesDe(o: ObjectifCommercialBE): string {
     const gammes = Object.keys(o.objectifsParGammeFCFA ?? {});
-    return gammes.length ? gammes.join(', ') : '—';
+    return gammes.length ? gammes.join(', ') : '-';
   }
 
   /**
@@ -52,7 +52,7 @@ export class ComptableObjectifsComponent implements OnInit {
     const sens = derniere.abaissement ? 'abaissé' : 'relevé';
     return `Objectif ${sens} de ${fCFA(derniere.objectifGlobalAvantFCFA)} à `
       + `${fCFA(derniere.objectifGlobalApresFCFA)} par ${derniere.matriculeAuteur}`
-      + (derniere.motif ? ` — ${derniere.motif}` : '')
+      + (derniere.motif ? `, ${derniere.motif}` : '')
       + ` (initial : ${fCFA(o.objectifGlobalInitialFCFA)})`;
   }
 
@@ -69,11 +69,11 @@ export class ComptableObjectifsComponent implements OnInit {
 
   ngOnInit(): void {
     const today = new Date();
-    // (getDay()+6)%7 : lundi=0 ... dimanche=6 — gère correctement le dimanche
+    // (getDay()+6)%7 : lundi=0 ... dimanche=6, gère correctement le dimanche
     // (getDay()=0 → recule de 6 jours, pas d'avance d'un jour comme `getDay()-1`).
     const lundi = new Date(today);
     lundi.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et
+    // Composition manuelle en heure locale, `toISOString()` convertit en UTC et
     // décale la date avant 01:00 (WAT).
     const semaineDebut = `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
 

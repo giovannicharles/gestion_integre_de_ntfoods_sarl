@@ -26,7 +26,7 @@ export class CommercialClassementComponent implements OnInit {
   commerciaux = signal<ClassementCommercialBE[]>([]);
   /**
    * Matricule de l'utilisateur connecté, qui sert à mettre en évidence sa
-   * propre ligne. Il était figé à `COM004` — un matricule qui n'existe pas :
+   * propre ligne. Il était figé à `COM004`, un matricule qui n'existe pas :
    * la ligne surlignée n'était donc jamais la bonne, et pour tout le monde la
    * même. Il vient maintenant de la session.
    */
@@ -43,7 +43,7 @@ export class CommercialClassementComponent implements OnInit {
   }
 
   /**
-   * Numéro de semaine ISO-8601 réel, calculé côté client — remplace le libellé
+   * Numéro de semaine ISO-8601 réel, calculé côté client, remplace le libellé
    * fixe « S26-2026 » qui restait affiché quelle que soit la semaine réelle
    * (trouvé en vérifiant l'écran en direct, pas en lisant le code seul).
    */

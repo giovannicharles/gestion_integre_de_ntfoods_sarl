@@ -9,7 +9,7 @@ interface MelangeUI {
 }
 
 /**
- * GESTION DU MÉLANGE — Agent Doseur
+ * GESTION DU MÉLANGE, Agent Doseur
  *
  * ⚠️ Il n'existe pas d'entité "Mélange" indépendante côté backend : chaque
  * session de dosage EST un mélange (ses matières premières enregistrées).

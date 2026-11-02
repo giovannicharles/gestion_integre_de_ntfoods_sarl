@@ -61,7 +61,7 @@ export class AdminParametresComponent implements OnInit {
    *
    * Le montant de prime et le seuil de stock sont retransmis inchangés : l'API
    * historique attend les trois valeurs ensemble, mais elles ne gouvernent plus
-   * aucun calcul — les agrégats de configuration datés font désormais autorité.
+   * aucun calcul, les agrégats de configuration datés font désormais autorité.
    */
   sauvegarder(): void {
     this.svc.modifierParametres(

@@ -540,8 +540,8 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
 
   getOStatusLabel(s: string): string {
     const m: Record<string, string> = {
-      DRAFT: 'Brouillon — Att. approbation',
-      APPROVED: 'Approuvé — En production',
+      DRAFT: 'Brouillon, Att. approbation',
+      APPROVED: 'Approuvé, En production',
       PARTIALLY_DELIVERED: 'Partiellement livré',
       DELIVERED: 'Livré complet',
       CANCELLED: 'Annulé'

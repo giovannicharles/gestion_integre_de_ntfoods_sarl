@@ -5,9 +5,9 @@ import { ProductionService, RapportHebdoAffectationBE } from '../../../../infras
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
 /**
- * STATISTIQUES — Responsable de Salle
+ * STATISTIQUES, Responsable de Salle
  * Production journalière/hebdo/mensuelle, comparaisons N/N-1, évolution des
- * postes/employés/objectifs — GET /affectations/rapport-hebdomadaire (réel),
+ * postes/employés/objectifs, GET /affectations/rapport-hebdomadaire (réel),
  * 8 dernières semaines.
  */
 @Component({

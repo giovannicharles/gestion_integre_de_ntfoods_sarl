@@ -1,5 +1,5 @@
 // ═══ FICHIER : src/app/domains/stock/application/use-cases/dashboard/get-alertes.use-case.ts ═══
-// REMPLACE : le fichier existant — StockMockRepository → StockApiRepository
+// REMPLACE : le fichier existant, StockMockRepository → StockApiRepository
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';

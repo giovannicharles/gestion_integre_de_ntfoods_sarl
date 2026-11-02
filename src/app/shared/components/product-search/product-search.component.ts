@@ -8,7 +8,7 @@ import { Product } from '../../../domains/stock/domain/models/stock.models';
  *
  * Généralisé depuis la logique déjà écrite et éprouvée dans
  * `domains/stock/presentation/pages/commande-production/commande-production.component.ts`
- * (recherche par SKU exact/normalisé puis par désignation/type d'emballage) — reprise ici
+ * (recherche par SKU exact/normalisé puis par désignation/type d'emballage), reprise ici
  * à l'identique plutôt que réécrite une deuxième fois (P3, 2026-10-15). L'écran Stock
  * d'origine n'a pas été retouché pour rester sur un diff minimal ; il peut adopter ce
  * composant partagé dans une tranche séparée s'il faut unifier complètement les deux.

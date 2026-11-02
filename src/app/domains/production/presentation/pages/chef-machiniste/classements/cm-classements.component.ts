@@ -6,7 +6,7 @@ import { ProductionService, ClassementMachinisteBE } from '../../../../infrastru
 type Critere = 'productivite' | 'efficacite' | 'taux';
 
 /**
- * CLASSEMENTS — Chef Machiniste
+ * CLASSEMENTS, Chef Machiniste
  * Classement hebdomadaire et mensuel, selon productivité / efficacité / taux
  * de réalisation. Top machinistes avec médaille, badge, pourcentage, progression.
  */

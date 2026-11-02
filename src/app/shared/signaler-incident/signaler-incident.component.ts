@@ -19,13 +19,13 @@ interface MonIncident {
  * Bouton + modal « Signaler un incident », autonome et réutilisable dans n'importe quel layout.
  *
  * 2026-10-25 (demande explicite du porteur) : la gestion des incidents (prise en charge,
- * résolution, clôture) est réservée à ADMIN ; tous les autres rôles — DG compris — ne font que
+ * résolution, clôture) est réservée à ADMIN ; tous les autres rôles, DG compris, ne font que
  * signaler, exactement comme `POST /incidents` l'autorise déjà côté serveur (`isAuthenticated()`,
  * IncidentController.java). Avant ce composant, seul l'écran de gestion admin/DG exposait ce
  * formulaire ; aucun autre rôle n'avait d'endroit où signaler un problème.
  *
  * Complété le 2026-10-25 (audit) : `GET /incidents/mes-incidents` existait déjà côté serveur,
- * jamais appelé — un rôle qui signale un incident n'avait ensuite aucun moyen de suivre son
+ * jamais appelé, un rôle qui signale un incident n'avait ensuite aucun moyen de suivre son
  * statut. Vue "Mes signalements" ajoutée, en lecture seule (le fil de discussion complet reste
  * sur l'écran de gestion ADMIN, qui a déjà la UI pour ça).
  */

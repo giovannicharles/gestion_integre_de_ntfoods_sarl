@@ -6,7 +6,7 @@
     <div class="ph-icon"><i class="fa-solid fa-stamp"></i></div>
     <div>
       <h1 class="ph-title">Validation des Bons de Commande</h1>
-      <p class="ph-sub">Bons en attente de validation — génère automatiquement un plan de production (PPH)</p>
+      <p class="ph-sub">Bons en attente de validation, génère automatiquement un plan de production (PPH)</p>
     </div>
   </div>
 </div>
@@ -69,7 +69,7 @@
                     </span>
                   }
                 } @else {
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">-</span>
                 }
               </td>
               <td>{{ bc.lignes.length }} ligne(s)</td>
@@ -77,7 +77,7 @@
                 @if (montantTotal(bc) > 0) {
                   {{ montantTotal(bc) | number:'1.0-0' }} FCFA
                 } @else {
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">-</span>
                 }
               </td>
               <td><span class="zone-chip">{{ bc.matriculeCreateur }}</span></td>
@@ -149,7 +149,7 @@
             @if (montantTotal(bc) > 0) {
               {{ montantTotal(bc) | number:'1.0-0' }} FCFA
             } @else {
-              —
+            ,
             }
           </span>
         </div>
@@ -183,7 +183,7 @@
                   @if (l.prixUnitaireHT != null) {
                     {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA
                   } @else {
-                    —
+                  ,
                   }
                 </td>
               </tr>

@@ -61,9 +61,9 @@
             <td>{{ s.dateDebut | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ s.statut }}</td>
             <td>{{ s.typeDeclenchement }}</td>
-            <td>{{ s.matriculeDeclencheur ?? '—' }}</td>
-            <td>{{ s.tailleOctets ? (s.tailleOctets / 1024 / 1024).toFixed(1) + ' Mo' : '—' }}</td>
-            <td>{{ s.messageErreur ?? '—' }}</td>
+            <td>{{ s.matriculeDeclencheur ?? '-' }}</td>
+            <td>{{ s.tailleOctets ? (s.tailleOctets / 1024 / 1024).toFixed(1) + ' Mo' : '-' }}</td>
+            <td>{{ s.messageErreur ?? '-' }}</td>
           </tr>
         } @empty {
           <tr><td colspan="6">Aucune sauvegarde enregistrée.</td></tr>

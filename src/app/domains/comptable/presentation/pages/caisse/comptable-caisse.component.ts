@@ -33,7 +33,7 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
 
-  /** Composition manuelle en heure locale — `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  /** Composition manuelle en heure locale, `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
   private dateLocaleIso(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }

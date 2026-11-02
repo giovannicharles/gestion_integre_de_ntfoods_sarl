@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AdminSystemeService, JournalAuditBE, ActiviteSuspecteBE } from '../../../infrastructure/admin-systeme.service';
 
 /**
- * Suivi de la plateforme (échecs récents, comportements suspects) — journal
+ * Suivi de la plateforme (échecs récents, comportements suspects), journal
  * d'audit transversal déjà construit (`/api/audit`, tous modules confondus),
  * simplement exposé ici côté administrateur système. La gestion des incidents
  * a déjà son propre écran (/admin/incidents) : pas de duplication, simple lien.
@@ -33,7 +33,7 @@ export class AdminSystemeSuiviComponent implements OnInit {
   }
 
   /**
-   * Vue d'ensemble "santé plateforme" ajoutée le 2026-10-16 — l'écran ne montrait jusqu'ici que
+   * Vue d'ensemble "santé plateforme" ajoutée le 2026-10-16, l'écran ne montrait jusqu'ici que
    * deux tableaux bruts (échecs, comportements suspects), aucun repère visuel pour juger en un
    * coup d'œil si la plateforme va bien. Les 3 KPI supplémentaires (paramètres, corbeille,
    * dernière sauvegarde) réutilisent des méthodes déjà existantes du service, jamais appelées

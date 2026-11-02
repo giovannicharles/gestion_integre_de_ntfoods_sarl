@@ -61,7 +61,7 @@ export class SecretaireVersementsComponent implements OnInit {
       typeVersement: type,
     }).subscribe({
       next: v => {
-        // Remplace par la vraie réponse serveur (statut réel), pas une valeur optimiste inventée —
+        // Remplace par la vraie réponse serveur (statut réel), pas une valeur optimiste inventée,
         // corrigé le 2026-10-15 (P5) : 'EN_ATTENTE_VALIDATION' n'existe pas dans StatutVersement.
         this.versements.update(list => list.map(ver => ver.id === id ? this.mapV(v) : ver));
       },

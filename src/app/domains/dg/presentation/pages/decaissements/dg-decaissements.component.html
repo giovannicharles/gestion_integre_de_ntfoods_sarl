@@ -4,7 +4,7 @@
     <div class="ph-left">
       <div class="ph-icon ph-icon-red"><i class="fa-solid fa-money-bill-transfer"></i></div>
       <div>
-        <h1 class="ph-title">Décaissements — Validation DG</h1>
+        <h1 class="ph-title">Décaissements · Validation DG</h1>
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Double validation DG + Contrôleur de Gestion requise</p>
       </div>
     </div>
@@ -49,9 +49,9 @@
   <!-- FILTRES -->
   <div class="filter-bar">
     <button class="filter-btn" [class.active]="filterStatut()==='all'" (click)="filterStatut.set('all')">Toutes</button>
-    <button class="filter-btn filter-red" [class.active]="filterStatut()==='PROPOSE'" (click)="filterStatut.set('PROPOSE')">Proposé — Att. DG (1)</button>
-    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='VALIDEE_CG'" (click)="filterStatut.set('VALIDEE_CG')">DG (1) ✓ — Att. DG (2)</button>
-    <button class="filter-btn filter-green" [class.active]="filterStatut()==='VALIDEE_DG'" (click)="filterStatut.set('VALIDEE_DG')">DG (2) ✓ — Att. Secrétaire</button>
+    <button class="filter-btn filter-red" [class.active]="filterStatut()==='PROPOSE'" (click)="filterStatut.set('PROPOSE')">Proposé, Att. DG (1)</button>
+    <button class="filter-btn filter-orange" [class.active]="filterStatut()==='VALIDEE_CG'" (click)="filterStatut.set('VALIDEE_CG')">DG (1) ✓, Att. DG (2)</button>
+    <button class="filter-btn filter-green" [class.active]="filterStatut()==='VALIDEE_DG'" (click)="filterStatut.set('VALIDEE_DG')">DG (2) ✓, Att. Secrétaire</button>
     <button class="filter-btn filter-green" [class.active]="filterStatut()==='EXECUTE'" (click)="filterStatut.set('EXECUTE')">Exécutés</button>
   </div>
 
@@ -85,7 +85,7 @@
         <div class="v-step" [class.v-done]="dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE'">
           <div class="v-dot" [class.v-dot-done]="dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE'"><i class="fa-solid fa-check"></i></div>
           <div class="v-info">
-            <span class="v-lbl">Validation DG — étape 1</span>
+            <span class="v-lbl">Validation DG, étape 1</span>
             @if (dec.statut !== 'PROPOSE' && dec.statut !== 'ANNULE') { <span class="v-date">Approuvé</span> }
             @else { <span class="v-pending">En attente</span> }
           </div>
@@ -94,7 +94,7 @@
         <div class="v-step" [class.v-done]="dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE'">
           <div class="v-dot" [class.v-dot-done]="dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE'"><i class="fa-solid fa-check"></i></div>
           <div class="v-info">
-            <span class="v-lbl">Approbation DG — étape 2</span>
+            <span class="v-lbl">Approbation DG, étape 2</span>
             @if (dec.statut === 'VALIDEE_DG' || dec.statut === 'EXECUTE') { <span class="v-date">Approuvé</span> }
             @else { <span class="v-pending">En attente</span> }
           </div>
@@ -105,7 +105,7 @@
       <div class="dec-actions" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
         <button class="btn btn-danger btn-sm" (click)="refuserDG(dec.numeroDecaissement)"><i class="fa-solid fa-xmark"></i> Refuser</button>
         <button class="btn btn-success btn-sm" (click)="approuverDG(dec)">
-          <i class="fa-solid fa-signature"></i> {{ dec.statut === 'PROPOSE' ? 'Valider (étape 1)' : 'Approuver (étape 2) — transmettre à la Secrétaire' }}
+          <i class="fa-solid fa-signature"></i> {{ dec.statut === 'PROPOSE' ? 'Valider (étape 1)' : 'Approuver (étape 2), transmettre à la Secrétaire' }}
         </button>
       </div>
       }

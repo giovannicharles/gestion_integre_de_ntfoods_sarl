@@ -18,10 +18,10 @@ export const DG_ROUTES: Routes = [
       { path: 'securite', loadComponent: () => import('./pages/securite/dg-securite.component').then(m => m.DgSecuriteComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
-      // Journal d'audit — écran DG propre (2026-11-01), GET /dg/audit (filtres matricule/module/
+      // Journal d'audit, écran DG propre (2026-11-01), GET /dg/audit (filtres matricule/module/
       // typeAction/période déjà supportés côté backend). Remplace l'alias direct vers
       // admin-audit.component retiré le même jour en même temps que les 5 autres écrans
-      // d'administration système : contrairement à ceux-là, celui-ci N'EST PAS un doublon admin —
+      // d'administration système : contrairement à ceux-là, celui-ci N'EST PAS un doublon admin,
       // le DG a son propre point d'entrée backend (« le DG voit TOUTES les actions tracées »,
       // commentaire du contrôleur), juste jamais eu son propre écran avant aujourd'hui.
       { path: 'audit', loadComponent: () => import('./pages/audit/dg-audit.component').then(m => m.DgAuditComponent) },
@@ -37,11 +37,11 @@ export const DG_ROUTES: Routes = [
       // propre tableau de bord vers une page nue. Même composant, monté ici sous /dg/*.
       { path: 'validations', loadComponent: () => import('../../../shared/validation-pending/validation-pending.component').then(m => m.ValidationPendingComponent) },
       { path: 'pouvoirs', loadComponent: () => import('../../validation/presentation/pages/pouvoirs-delegations/pouvoirs-delegations.component').then(m => m.PouvoirsDelegationsComponent) },
-      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01, demande explicite du
+      // Mon Profil, libre-service, commun à tous les layouts (2026-11-01, demande explicite du
       // porteur). Les 6 écrans d'administration système (utilisateurs, audit, paramètres, codes
       // d'observation, postes production, règles métier) qui vivaient ici sous /dg/* ont été
       // retirés le même jour (même demande) : ce sont des écrans ADMIN (gestion du système),
-      // pas des écrans DG — ils restent accessibles sous /admin/* pour qui a ce rôle.
+      // pas des écrans DG, ils restent accessibles sous /admin/* pour qui a ce rôle.
       { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
       // Administration commerciale. Les promotions déterminent les remises que le
       // serveur accepte sur les ventes terrain, la grille les prix opposables.

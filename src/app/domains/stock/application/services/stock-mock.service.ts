@@ -69,7 +69,7 @@ export class StockMockService {
       dateReception: new Date('2026-05-05T10:15:00'),
       magasin: 'MP',
       lignes: [
-        { id: 'L005', produitId: 'P002', produit: this.produits[1], quantiteCommandee: 300, quantiteRecue: 305, ecart: 5, motifEcart: 'Surplus non facturé — à vérifier avec fournisseur', prixUnitaire: 600, montantTotal: 183000, lotNumero: 'SOJA-CI-0505' },
+        { id: 'L005', produitId: 'P002', produit: this.produits[1], quantiteCommandee: 300, quantiteRecue: 305, ecart: 5, motifEcart: 'Surplus non facturé, à vérifier avec fournisseur', prixUnitaire: 600, montantTotal: 183000, lotNumero: 'SOJA-CI-0505' },
       ],
       statut: 'VALIDE_CHEF_PROD',
       validePar: 'Mvondo Jean-Baptiste', dateValidationGestionnaire: new Date('2026-05-05T11:00:00'),

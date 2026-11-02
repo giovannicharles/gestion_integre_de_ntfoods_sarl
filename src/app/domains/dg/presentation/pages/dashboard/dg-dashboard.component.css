@@ -64,7 +64,7 @@
 .validations-card.validations-urgent { background: var(--r-gh); }
 .validations-list { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .85rem; }
 /* 2026-11-01 (motif « Recent Activity » des références 21st.dev, prompt/) : puce d'icône
-   colorée + corps (titre/sous-titre) + badge, transition douce au survol — même composition
+   colorée + corps (titre/sous-titre) + badge, transition douce au survol, même composition
    que la liste d'activité des références, couleurs TANTY (.ig/.iy/.ir/.ib déjà globales). */
 .validation-row { display: flex; align-items: center; gap: .75rem; padding: .5rem .7rem; border-radius: 8px; background: transparent; flex-wrap: wrap; transition: background .15s; }
 .validation-row:hover { background: var(--n50); }
@@ -73,7 +73,7 @@
 .validation-desc { font-size: .84rem; font-weight: 600; color: var(--n800); }
 .validation-meta { font-size: .72rem; color: var(--n500); white-space: nowrap; }
 
-/* Onglets du bas de page — affichage par CSS (display:none), jamais @if, pour ne pas
+/* Onglets du bas de page, affichage par CSS (display:none), jamais @if, pour ne pas
    détruire/recréer les <canvas> Chart.js en changeant d'onglet. */
 .dash-tabs { margin-bottom: var(--sp-4); }
 .tab-hidden { display: none; }

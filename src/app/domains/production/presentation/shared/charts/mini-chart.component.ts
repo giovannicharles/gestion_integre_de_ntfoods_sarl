@@ -8,7 +8,7 @@ export interface ChartSeries {
 }
 
 /**
- * Graphique barres/lignes en SVG pur — aucune dépendance externe (pas de recharts/chart.js
+ * Graphique barres/lignes en SVG pur, aucune dépendance externe (pas de recharts/chart.js
  * à installer côté projet). Supporte une ou plusieurs séries (ex: Prévu vs Réalisé,
  * Semaine N vs Semaine N-1). Couleurs pilotées par les variables CSS existantes.
  */
@@ -33,7 +33,7 @@ export interface ChartSeries {
                 [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.w" [attr.height]="bar.h"
                 [attr.fill]="bar.color" rx="3"
               >
-                <title>{{ bar.seriesName }} — {{ labels()[grp.index] }} : {{ bar.value }}</title>
+                <title>{{ bar.seriesName }}, {{ labels()[grp.index] }} : {{ bar.value }}</title>
               </rect>
             }
             <text [attr.x]="grp.centerX" [attr.y]="height() - padBottom + 16" class="mc-axis-label" text-anchor="middle">{{ labels()[grp.index] }}</text>
@@ -45,7 +45,7 @@ export interface ChartSeries {
             <polyline [attr.points]="s.points" fill="none" [attr.stroke]="s.color" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
             @for (pt of s.dots; track pt.x) {
               <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="3.5" [attr.fill]="s.color">
-                <title>{{ s.name }} — {{ pt.label }} : {{ pt.value }}</title>
+                <title>{{ s.name }}, {{ pt.label }} : {{ pt.value }}</title>
               </circle>
             }
           }

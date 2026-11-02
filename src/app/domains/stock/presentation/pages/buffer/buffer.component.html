@@ -178,21 +178,21 @@
                   @if (item.recommendedQty > 0) {
                     <span style="font-size:13px;font-weight:700;color:var(--o)">{{ item.recommendedQty | number }}</span>
                   } @else {
-                    <span style="font-size:11px;color:var(--n400)">—</span>
+                    <span style="font-size:11px;color:var(--n400)">-</span>
                   }
                 </td>
                 <td class="text-right">
                   @if (item.unitPrice > 0) {
                     <span style="font-size:12px;font-weight:600;color:var(--n600)">{{ fCFA(item.unitPrice) }}</span>
                   } @else {
-                    <span style="font-size:11px;color:var(--n400)">—</span>
+                    <span style="font-size:11px;color:var(--n400)">-</span>
                   }
                 </td>
                 <td class="text-right">
                   @if (item.itemValue > 0) {
                     <span style="font-size:13px;font-weight:800;color:var(--b)">{{ fCFA(item.itemValue) }}</span>
                   } @else {
-                    <span style="font-size:11px;color:var(--n400)">—</span>
+                    <span style="font-size:11px;color:var(--n400)">-</span>
                   }
                 </td>
                 <td>
@@ -251,12 +251,12 @@
                 <td>{{ (m.requestedAt || m.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td>
                   <div style="display:flex;flex-direction:column;gap:1px">
-                    <span style="font-size:12px;font-weight:600;color:var(--n800)">{{ m.product?.designation || m.productSku || '—' }}</span>
-                    <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace">{{ m.productSku || m.product?.sku || '—' }}</span>
+                    <span style="font-size:12px;font-weight:600;color:var(--n800)">{{ m.product?.designation || m.productSku || '-' }}</span>
+                    <span style="font-size:10px;font-weight:700;color:var(--n500);font-family:monospace">{{ m.productSku || m.product?.sku || '-' }}</span>
                   </div>
                 </td>
                 <td><span style="font-weight:800;color:var(--g)">{{ m.quantity | number }}</span></td>
-                <td><span style="font-family:var(--font-d)">{{ m.referenceNumber || m.reference || '—' }}</span></td>
+                <td><span style="font-family:var(--font-d)">{{ m.referenceNumber || m.reference || '-' }}</span></td>
               </tr>
             } @empty {
               <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--n400)">Aucun transfert récent</td></tr>

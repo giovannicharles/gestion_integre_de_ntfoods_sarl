@@ -14,7 +14,7 @@ export const ADMIN_ROUTES: Routes = [
         pathMatch: 'full'
       },
       {
-        // 2026-11-01 : ajouté en remplacement du redirect direct vers "utilisateurs" — l'espace
+        // 2026-11-01 : ajouté en remplacement du redirect direct vers "utilisateurs", l'espace
         // Admin n'avait jusqu'ici aucune vue d'ensemble (GitHub Org Settings, Okta, Auth0,
         // Vercel Team Settings ouvrent tous sur une synthèse, jamais directement sur le détail).
         path: 'dashboard',
@@ -27,7 +27,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         // Écran déjà écrit, fonctionnel, jamais routé jusqu'ici (2026-10-16) : aucun fichier de
         // routes ne l'importait. Corrigé en même temps que ses deux bugs réels (chemin API
-        // doublé /api/api/v1/..., import d'un ApiService inexistant) — voir code-validation.service.ts.
+        // doublé /api/api/v1/..., import d'un ApiService inexistant), voir code-validation.service.ts.
         path: 'codes-validation',
         loadComponent: () => import('./pages/code-validation/admin-code-validation.component').then(m => m.AdminCodeValidationComponent)
       },
@@ -41,7 +41,7 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         // 2026-09-30 : jamais routé jusqu'ici (aucune entrée de menu ne pointait vers ce composant) et appelait un
-        // chemin API inexistant (/api/v1/incidents) — corrigé, voir incidents.component.ts.
+        // chemin API inexistant (/api/v1/incidents), corrigé, voir incidents.component.ts.
         path: 'incidents',
         loadComponent: () => import('./pages/incidents/incidents.component').then(m => m.IncidentsComponent)
       },
@@ -51,7 +51,7 @@ export const ADMIN_ROUTES: Routes = [
         path: 'permissions',
         loadComponent: () => import('./pages/permissions/admin-permissions.component').then(m => m.AdminPermissionsComponent)
       },
-      // Mon Profil — libre-service, commun à tous les layouts (2026-11-01).
+      // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       {
         path: 'profil',
         loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent)

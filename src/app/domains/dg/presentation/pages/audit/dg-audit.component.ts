@@ -10,9 +10,9 @@ const TYPES_ACTION = [
 ];
 
 /**
- * Journal d'audit — écran DG propre (2026-11-01), remplace l'alias direct vers admin-audit
+ * Journal d'audit, écran DG propre (2026-11-01), remplace l'alias direct vers admin-audit
  * retiré le même jour. Lecture seule : le DG voit tout (GET /dg/audit, « le DG voit TOUTES les
- * actions tracées » — commentaire du contrôleur), la GESTION de l'audit (export avancé,
+ * actions tracées », commentaire du contrôleur), la GESTION de l'audit (export avancé,
  * corbeille...) reste côté Admin si elle existe.
  */
 @Component({

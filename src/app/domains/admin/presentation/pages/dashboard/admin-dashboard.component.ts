@@ -22,7 +22,7 @@ interface RaccourciAdmin {
  * ouvrent toujours sur une vue d'ensemble avant le détail.
  *
  * Purement une vue de synthèse : aucune nouvelle donnée calculée, chaque chiffre vient d'un
- * endpoint déjà existant et déjà utilisé ailleurs (utilisateurs, incidents, audit) — pas de
+ * endpoint déjà existant et déjà utilisé ailleurs (utilisateurs, incidents, audit), pas de
  * duplication de logique métier.
  */
 @Component({

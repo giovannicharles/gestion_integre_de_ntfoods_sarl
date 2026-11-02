@@ -3,9 +3,9 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { ProductionService, OFBE, PPHBE } from '../../../../infrastructure/production.service';
 
 /**
- * SUIVI GLOBAL DE LA PRODUCTION — Chef de Production
+ * SUIVI GLOBAL DE LA PRODUCTION, Chef de Production
  * Production en cours / terminée / restante, taux d'avancement, objectifs
- * atteints, retards et dépassements — à partir des OF et PPH réels.
+ * atteints, retards et dépassements, à partir des OF et PPH réels.
  */
 @Component({
   selector: 'app-cp-suivi-global',

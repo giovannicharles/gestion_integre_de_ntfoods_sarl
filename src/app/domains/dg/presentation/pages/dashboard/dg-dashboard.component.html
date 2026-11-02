@@ -5,7 +5,7 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-chart-line"></i></div>
       <div>
-        <h1 class="ph-title">Tableau de Bord — Direction Générale</h1>
+        <h1 class="ph-title">Tableau de Bord · Direction Générale</h1>
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Yaoundé</p>
       </div>
     </div>
@@ -27,7 +27,7 @@
 
   @if (liveError()) {
   <div class="alert-banner" style="flex-wrap:wrap; justify-content:space-between">
-    <span><i class="fa-solid fa-triangle-exclamation"></i> Dernier rafraîchissement automatique échoué — affichage précédent conservé.</span>
+    <span><i class="fa-solid fa-triangle-exclamation"></i> Dernier rafraîchissement automatique échoué, affichage précédent conservé.</span>
     <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
   </div>
   }
@@ -158,7 +158,7 @@
   </div>
 
   <!--
-    VALIDATIONS EN ATTENTE — vue unifiée (précommandes, dotations, BC, réceptions, versements,
+    VALIDATIONS EN ATTENTE, vue unifiée (précommandes, dotations, BC, réceptions, versements,
     carburant) déjà exposée par le backend (GET /api/dg/validations) mais jamais montrée depuis
     ce tableau de bord : il fallait déjà savoir que /dg/arbitrage existait. Un DG qui ouvre son
     tableau de bord doit voir en premier ce qui attend sa décision.
@@ -191,7 +191,7 @@
     }
   </div>
 
-  <!-- ONGLETS — casse les 12+ cartes empilées en 4 sections ; affichage par CSS, les <canvas>
+  <!-- ONGLETS, casse les 12+ cartes empilées en 4 sections ; affichage par CSS, les <canvas>
        Chart.js (onglet "Vue d'ensemble") ne sont jamais détruits en changeant d'onglet. -->
   <div class="period-selector dash-tabs">
     <button class="period-btn" [class.active]="activeTab()==='apercu'" (click)="setTab('apercu')"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</button>
@@ -206,7 +206,7 @@
   <div class="charts-row">
     <div class="card chart-card chart-big">
       <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-chart-column"></i> CA par Zone — Réalisé vs Objectif</span>
+        <span class="card-title"><i class="fa-solid fa-chart-column"></i> CA par Zone, Réalisé vs Objectif</span>
       </div>
       <div class="chart-wrap"><canvas #caZoneCanvas></canvas></div>
     </div>
@@ -297,7 +297,7 @@
   <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
   <div class="card fiche-card">
     <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse — {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
+      <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse, {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
       <a routerLink="/stock/commercial" class="btn btn-ghost btn-sm"><i class="fa-solid fa-external-link-alt"></i> Stock</a>
     </div>
     <div class="fiche-kpis">

@@ -3,7 +3,7 @@
     <i class="fa-solid fa-pen-to-square ph-ico"></i>
     <div>
       <h1 class="ph-title">Saisie Journalière</h1>
-      <p class="ph-sub">Registres broyage et dosage — {{ today | date:'dd MMMM yyyy' }}</p>
+      <p class="ph-sub">Registres broyage et dosage, {{ today | date:'dd MMMM yyyy' }}</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -54,7 +54,7 @@
   @if (showFormBroyage()) {
     <div class="form-placeholder">
       <i class="fa-solid fa-file-pen"></i>
-      Formulaire de saisie broyage — à brancher sur le service de production.
+      Formulaire de saisie broyage, à brancher sur le service de production.
       <button class="btn btn-ghost btn-sm" (click)="showFormBroyage.set(false)">Fermer</button>
     </div>
   }
@@ -80,7 +80,7 @@
             <td>{{ r.typePoudreLibelle }}</td>
             <td>{{ r.objectifJournalierKg }}</td>
             <td class="txt-success"><strong>{{ r.quantiteNetteBroyeeKg ?? 0 }}</strong></td>
-            <td>{{ r.pctPertes != null ? (r.pctPertes | number:'1.1-1') + '%' : '—' }}</td>
+            <td>{{ r.pctPertes != null ? (r.pctPertes | number:'1.1-1') + '%' : '-' }}</td>
             <td>
               <span [class]="r.statut === 'CLOTUREE' ? 'badge bg-success' : 'badge bg-orange'">{{ r.statut }}</span>
             </td>
@@ -185,7 +185,7 @@
   @if (showFormDosage()) {
     <div class="form-placeholder">
       <i class="fa-solid fa-file-pen"></i>
-      Formulaire de saisie dosage — à brancher sur le service de production.
+      Formulaire de saisie dosage, à brancher sur le service de production.
       <button class="btn btn-ghost btn-sm" (click)="showFormDosage.set(false)">Fermer</button>
     </div>
   }
@@ -210,7 +210,7 @@
             <td><strong>{{ r.matriculeAgentDoseur }}</strong></td>
             <td class="txt-success"><strong>{{ r.nbFutsProduits }}</strong></td>
             <td>{{ r.nbFutsNets }}</td>
-            <td>{{ r.machinesMobilisees.join(', ') || '—' }}</td>
+            <td>{{ r.machinesMobilisees.join(', ') || '-' }}</td>
             <td>
               <span [class]="r.cloturee ? 'badge bg-success' : 'badge bg-orange'">{{ r.cloturee ? 'Clôturée' : 'Ouverte' }}</span>
             </td>

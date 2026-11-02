@@ -5,9 +5,9 @@ import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/
 import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-chart.component';
 
 /**
- * STATISTIQUES — Chef Machiniste
+ * STATISTIQUES, Chef Machiniste
  * Comparaisons Semaine N/N-1, Mois N/N-1, et évolutions (production, pertes,
- * objectifs, performances, quantités broyées) — 8 dernières semaines, données réelles.
+ * objectifs, performances, quantités broyées), 8 dernières semaines, données réelles.
  */
 @Component({
   selector: 'app-cm-statistiques',

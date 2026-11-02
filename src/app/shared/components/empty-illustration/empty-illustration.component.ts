@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 
 /**
  * Illustration SVG dessinée à la main pour les listes vides (rapports, documents,
- * historiques...) — remplace le texte brut "Aucune donnée" par une image accueillante
+ * historiques...), remplace le texte brut "Aucune donnée" par une image accueillante
  * plutôt qu'alarmante, cohérente avec la charte TANTY (tokens gris/jaune du design system).
  */
 @Component({

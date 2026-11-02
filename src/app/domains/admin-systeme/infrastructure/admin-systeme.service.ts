@@ -6,7 +6,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 
 /**
  * Configuration technique de la plateforme (module `admin` backend,
- * `/api/v1/admin/parametres`) — distinct de la gestion des comptes/paramètres
+ * `/api/v1/admin/parametres`), distinct de la gestion des comptes/paramètres
  * métier du module `administration` (voir AdminService, domains/admin/).
  * Ne jamais fusionner les deux : décision actée, docs/PROGRESS.md 2026-09-23.
  */

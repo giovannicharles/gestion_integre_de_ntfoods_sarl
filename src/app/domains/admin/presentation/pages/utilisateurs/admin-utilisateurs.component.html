@@ -238,7 +238,7 @@
         <div class="nu-field">
           <label class="nu-label">Rôle <span class="nu-req">*</span></label>
           <select class="input" [(ngModel)]="form.role">
-            <option value="">— Sélectionner un rôle —</option>
+            <option value="">Sélectionner un rôle,</option>
             @for (r of rolesCreation; track r) {
               <option [value]="r">{{ getRoleLabel(r) }}</option>
             }
@@ -259,7 +259,7 @@
           <div class="nu-field">
             <label class="nu-label">Sexe</label>
             <select class="input" [(ngModel)]="form.sexe">
-              <option value="">— Choisir —</option>
+              <option value="">Choisir,</option>
               <option value="M">Masculin</option>
               <option value="F">Féminin</option>
             </select>
@@ -340,14 +340,14 @@
 
           <div class="nu-section-title"><i class="fa-solid fa-id-card"></i> Informations</div>
           <div class="du-grid">
-            <div><span class="du-lbl">Email</span><span class="du-val">{{ u.email || '—' }}</span></div>
-            <div><span class="du-lbl">Téléphone</span><span class="du-val">{{ u.telephone || '—' }}</span></div>
-            <div><span class="du-lbl">Résidence</span><span class="du-val">{{ u.residence || '—' }}</span></div>
-            <div><span class="du-lbl">CNI</span><span class="du-val">{{ u.cni || '—' }}</span></div>
-            <div><span class="du-lbl">Sexe</span><span class="du-val">{{ u.sexe || '—' }}</span></div>
-            <div><span class="du-lbl">Date de naissance</span><span class="du-val">{{ u.dateNaissance || '—' }}</span></div>
-            <div><span class="du-lbl">Lieu de naissance</span><span class="du-val">{{ u.lieuNaissance || '—' }}</span></div>
-            <div><span class="du-lbl">Date d'embauche</span><span class="du-val">{{ u.dateEmbauche || '—' }}</span></div>
+            <div><span class="du-lbl">Email</span><span class="du-val">{{ u.email || '-' }}</span></div>
+            <div><span class="du-lbl">Téléphone</span><span class="du-val">{{ u.telephone || '-' }}</span></div>
+            <div><span class="du-lbl">Résidence</span><span class="du-val">{{ u.residence || '-' }}</span></div>
+            <div><span class="du-lbl">CNI</span><span class="du-val">{{ u.cni || '-' }}</span></div>
+            <div><span class="du-lbl">Sexe</span><span class="du-val">{{ u.sexe || '-' }}</span></div>
+            <div><span class="du-lbl">Date de naissance</span><span class="du-val">{{ u.dateNaissance || '-' }}</span></div>
+            <div><span class="du-lbl">Lieu de naissance</span><span class="du-val">{{ u.lieuNaissance || '-' }}</span></div>
+            <div><span class="du-lbl">Date d'embauche</span><span class="du-val">{{ u.dateEmbauche || '-' }}</span></div>
             <div><span class="du-lbl">Créé le</span><span class="du-val">{{ u.dateCreation | date:'dd/MM/yyyy' }}</span></div>
             <div><span class="du-lbl">Session active</span><span class="du-val">{{ u.sessionActive ? 'Oui' : 'Non' }}</span></div>
             @if (u.compteBloque) {

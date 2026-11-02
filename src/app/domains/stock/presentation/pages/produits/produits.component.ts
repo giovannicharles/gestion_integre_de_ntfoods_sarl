@@ -572,11 +572,11 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ──
-  getBrandName(id: number): string { return this.brandMap.get(id) || '—'; }
-  getLineName(id: number): string { return this.lineMap.get(id) || '—'; }
+  getBrandName(id: number): string { return this.brandMap.get(id) || '-'; }
+  getLineName(id: number): string { return this.lineMap.get(id) || '-'; }
   getBrandNameForVariant(productLineId: number): string {
     const line = this.lines().find(l => l.id === productLineId);
-    return line ? this.getBrandName(line.brandId) : '—';
+    return line ? this.getBrandName(line.brandId) : '-';
   }
   lineCountForBrand(brandId: number): number { return this.lines().filter(l => l.brandId === brandId).length; }
   variantCountForLine(lineId: number): number { return this.variants().filter(v => v.productLineId === lineId).length; }

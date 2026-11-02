@@ -157,9 +157,9 @@
           <div class="form-group">
             <label>Qui reprend mes validations ? *</label>
             <select [(ngModel)]="nouvelleDelegataireId">
-              <option [ngValue]="null">— Choisir une personne —</option>
+              <option [ngValue]="null">Choisir une personne,</option>
               @for (u of utilisateurs(); track u.id) {
-                <option [ngValue]="u.id">{{ u.nomComplet }} ({{ u.matricule }}) — {{ u.role }}</option>
+                <option [ngValue]="u.id">{{ u.nomComplet }} ({{ u.matricule }}), {{ u.role }}</option>
               }
             </select>
           </div>
@@ -220,7 +220,7 @@
             <div class="form-group">
               <label>Rôle *</label>
               <select [(ngModel)]="nouveauPouvoirRole">
-                <option value="">— Choisir —</option>
+                <option value="">Choisir,</option>
                 @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
               </select>
             </div>
@@ -228,7 +228,7 @@
             <div class="form-group">
               <label>Utilisateur *</label>
               <select [(ngModel)]="nouveauPouvoirUtilisateurId">
-                <option [ngValue]="null">— Choisir —</option>
+                <option [ngValue]="null">Choisir,</option>
                 @for (u of utilisateurs(); track u.id) {
                   <option [ngValue]="u.id">{{ u.nomComplet }} ({{ u.matricule }})</option>
                 }

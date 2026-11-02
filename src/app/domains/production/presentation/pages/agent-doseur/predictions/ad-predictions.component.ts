@@ -5,7 +5,7 @@ import { ProductionService, PredictionProduitFiniBE } from '../../../../infrastr
 import { AdSessionContextService } from '../ad-session-context.service';
 
 /**
- * PRÉDICTIONS DES PRODUITS FINIS — Agent Doseur
+ * PRÉDICTIONS DES PRODUITS FINIS, Agent Doseur
  * Vue informative : dès qu'une session de dosage est sélectionnée, la prédiction
  * est calculée automatiquement à partir de ses fûts nets. Sélection déléguée
  * à AdSessionContextService.

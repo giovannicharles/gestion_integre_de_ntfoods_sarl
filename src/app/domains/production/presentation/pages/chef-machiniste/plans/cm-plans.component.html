@@ -32,7 +32,7 @@
           @for (p of pphsFiltres(); track p.id) {
             <tr>
               <td><strong>{{ p.referencePPH }}</strong></td>
-              <td class="mono">{{ p.referenceBC ?? '—' }}</td>
+              <td class="mono">{{ p.referenceBC ?? '-' }}</td>
               <td>{{ p.semaine }}</td>
               <td>{{ p.dateDebut }} → {{ p.dateFin }}</td>
               <td><span [class]="statutClass(p.statut)">{{ p.statut }}</span></td>
@@ -51,9 +51,9 @@
 @if (pphSelectionne(); as p) {
 <div class="modal-overlay" (click)="fermerDetail()">
   <div class="modal-card" (click)="$event.stopPropagation()" style="max-width:720px">
-    <div class="modal-hd"><h3><i class="fa-solid fa-calendar-week"></i> {{ p.referencePPH }} — {{ p.semaine }}</h3></div>
+    <div class="modal-hd"><h3><i class="fa-solid fa-calendar-week"></i> {{ p.referencePPH }}, {{ p.semaine }}</h3></div>
     <div class="modal-body">
-      <p><strong>BC associé :</strong> {{ p.referenceBC ?? '—' }} — <strong>Statut :</strong> <span [class]="statutClass(p.statut)">{{ p.statut }}</span></p>
+      <p><strong>BC associé :</strong> {{ p.referenceBC ?? '-' }}, <strong>Statut :</strong> <span [class]="statutClass(p.statut)">{{ p.statut }}</span></p>
       <p><strong>Période :</strong> {{ p.dateDebut }} → {{ p.dateFin }}</p>
 
       <h4 style="margin-top:12px">Quantités prévues par produit</h4>
@@ -92,7 +92,7 @@
                 <td>{{ s.date | date:'dd/MM/yyyy' }}</td>
                 <td>{{ s.typePoudreLibelle }}</td>
                 <td>{{ s.objectifJournalierKg }}</td>
-                <td>{{ s.depassementAutoriseKg > 0 ? (s.depassementAutoriseKg | number:'1.1-1') : '—' }}</td>
+                <td>{{ s.depassementAutoriseKg > 0 ? (s.depassementAutoriseKg | number:'1.1-1') : '-' }}</td>
                 <td><span [class]="s.journeeValidee ? 'badge bg-success' : 'badge bg-orange'">{{ s.statut }}</span></td>
               </tr>
             } @empty {

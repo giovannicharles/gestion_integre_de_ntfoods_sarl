@@ -11,11 +11,11 @@ import {
 } from '../../domains/validation/infrastructure/validation.service';
 
 /**
- * Page "Mes validations" — corrigée le 2026-09-30 : appelait `/en-attente`
+ * Page "Mes validations", corrigée le 2026-09-30 : appelait `/en-attente`
  * (le vrai chemin est `/en-attente-pour-moi`), affichait des champs qui
  * n'existent pas côté backend (`workflowNom`, `demandeurNom`,
  * `minValidations`) et n'exposait ni le poids accumulé/seuil, ni qui a déjà
- * validé, ni qui peut encore valider (délégations comprises) — aucune de ces
+ * validé, ni qui peut encore valider (délégations comprises), aucune de ces
  * données n'était renvoyée par l'ancien contrat (entité JPA brute, en plus
  * à risque de planter dès qu'une demande portait une validation).
  */

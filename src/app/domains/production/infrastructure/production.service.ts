@@ -63,10 +63,10 @@ export const STATUTS_OF = ['PLANIFIE', 'EN_COURS', 'HONORE', 'ANNULE'] as const;
 export const STATUTS_PPH = ['BROUILLON', 'VALIDE', 'EN_COURS', 'CLOTURE'] as const;
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Lots
+// Modèles, Lots
 // ═══════════════════════════════════════════════════════════════════════
 
-/** Lot de produit fini — noms identiques à la réponse backend (LotResponse). */
+/** Lot de produit fini, noms identiques à la réponse backend (LotResponse). */
 export interface LotBE {
   id: number; numeroLot: string; referencePPH: string | null;
   productSku: string; productName: string; productUnit: string | null;
@@ -88,7 +88,7 @@ export interface DeclarerLotBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Ordres de fabrication
+// Modèles, Ordres de fabrication
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface OFBE {
@@ -97,7 +97,7 @@ export interface OFBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — PPH
+// Modèles, PPH
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface PPHBE {
@@ -116,10 +116,10 @@ export interface PPHLigneBE {
   quantiteAttendueKg: number; quantiteAttendueUnites: number;
 }
 
-/** Besoin en une matière première (kg) — nom libre, issu de la formule de production du produit. */
+/** Besoin en une matière première (kg), nom libre, issu de la formule de production du produit. */
 export interface BesoinMatiereBE { matierePremiere: string; quantiteKg: number; }
 
-/** Besoin en un composant d'emballage — type issu de la composition du conditionnement (SACHET, COUVERCLE, SEAU...). */
+/** Besoin en un composant d'emballage, type issu de la composition du conditionnement (SACHET, COUVERCLE, SEAU...). */
 export interface BesoinEmballageBE { type: string; quantite: number; }
 
 export interface PPHLigneDetailBE {
@@ -127,10 +127,10 @@ export interface PPHLigneDetailBE {
   quantiteCartons: number; nombreUnites: number; poidsUnitaireGrammes: number;
   dateJour: string; quantiteJour: number;
   besoinsMatieresPremiere: BesoinMatiereBE[];
-  /** true : le produit n'a pas de formule — aucun besoin en matière calculé (état signalé, pas un zéro). */
+  /** true : le produit n'a pas de formule, aucun besoin en matière calculé (état signalé, pas un zéro). */
   formuleManquante: boolean;
   besoinsEmballage: BesoinEmballageBE[];
-  /** true : le conditionnement n'a pas de type/composition d'emballage — aucun besoin calculé. */
+  /** true : le conditionnement n'a pas de type/composition d'emballage, aucun besoin calculé. */
   compositionEmballageManquante: boolean;
   totalMatieresPremieresKg: number;
   futsPrevus: number;
@@ -154,7 +154,7 @@ export interface RecalculerPPHBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Formules de production et composition d'emballage
+// Modèles, Formules de production et composition d'emballage
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface FormuleLigneBE { matierePremiere: string; proportionKg: number; }
@@ -182,7 +182,7 @@ export const TYPES_EMBALLAGE = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Broyage
+// Modèles, Broyage
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface SessionBroyageBE {
@@ -248,7 +248,7 @@ export interface ClassementMachinisteBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Dosage
+// Modèles, Dosage
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface SessionDosageBE {
@@ -320,7 +320,7 @@ export interface PredictionProduitFiniBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Fiches
+// Modèles, Fiches
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface FicheProductionBE {
@@ -338,7 +338,7 @@ export interface FicheProductionBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Affectations
+// Modèles, Affectations
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface AffectationBE {
@@ -438,7 +438,7 @@ export interface RapportHebdoAffectationBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Registres
+// Modèles, Registres
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface LigneRegistreBE {
@@ -456,7 +456,7 @@ export interface RegistreProductionBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Dashboards
+// Modèles, Dashboards
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface DashboardChefBE {
@@ -492,7 +492,7 @@ export interface DashboardAgentBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Rapports (module /production/rapports, generation automatique)
+// Modèles, Rapports (module /production/rapports, generation automatique)
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface RapportHebdomadaireProductionBE {
@@ -524,7 +524,7 @@ export interface RapportComparatifBCBE {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Modèles — Expressions de besoin
+// Modèles, Expressions de besoin
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface ExpressionBesoinBE {
@@ -822,7 +822,7 @@ export class ProductionService {
     ).pipe(map(r => r.donnees!));
   }
 
-  /** Les quantités viennent de la formule du produit du BC de la session — plus de « type de mélange » à choisir. */
+  /** Les quantités viennent de la formule du produit du BC de la session, plus de « type de mélange » à choisir. */
   mettreAJourDosageAutomatique(id: number, nbFuts: number): Observable<SessionDosageBE> {
     return this.api.post<ApiResponse<SessionDosageBE>>(
       `production/dosage/${id}/dosage-auto?nbFuts=${nbFuts}`, {}
@@ -1104,7 +1104,7 @@ export class ProductionService {
       .pipe(map(r => r.donnees!));
   }
 
-  /** Corrige un registre — refusé par le serveur si sa date n'est plus la journée en cours. */
+  /** Corrige un registre, refusé par le serveur si sa date n'est plus la journée en cours. */
   modifierRegistre(referencePPH: string, date: string, req: {
     lignes: { matriculeEmploye: string; nomEmploye: string; poste: string; present: boolean; motifAbsence?: string; heureArrivee?: string; qteRealisee?: number; unite?: string }[];
   }): Observable<RegistreProductionBE> {

@@ -10,7 +10,7 @@ import { MiniChartComponent, ChartSeries } from '../../../shared/charts/mini-cha
 import { ToastService } from '../../../../../../core/services/toast.service';
 
 /**
- * DASHBOARD — Responsable de Salle
+ * DASHBOARD, Responsable de Salle
  * Centre de pilotage quotidien de l'atelier.
  */
 @Component({

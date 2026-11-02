@@ -3,7 +3,7 @@
     <div class="ph-icon"><i class="fa-solid fa-shield-halved"></i></div>
     <div>
       <div class="ph-title">Paramètres système</div>
-      <div class="ph-sub">Seuils de sécurité, de session et d'alerte — modification réservée au Directeur Général</div>
+      <div class="ph-sub">Seuils de sécurité, de session et d'alerte, modification réservée au Directeur Général</div>
     </div>
   </div>
   <div class="ph-actions">
@@ -35,7 +35,7 @@
         @for (p of parametres(); track p.cle) {
           <tr [class.row-winner]="valeursEditees()[p.cle] !== undefined">
             <td class="mono" style="font-size:12px">{{ p.cle }}</td>
-            <td>{{ p.description || '—' }}</td>
+            <td>{{ p.description || '-' }}</td>
             <td>
               @if (peutModifier()) {
                 <input type="number" class="form-input" style="max-width:140px"
@@ -44,8 +44,8 @@
                 <span class="mono fw-bold">{{ p.valeurNumerique }}</span>
               }
             </td>
-            <td class="text-muted mono">{{ p.modifiePar || '—' }}</td>
-            <td class="text-muted">{{ p.horodatage ? (p.horodatage | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td class="text-muted mono">{{ p.modifiePar || '-' }}</td>
+            <td class="text-muted">{{ p.horodatage ? (p.horodatage | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
           </tr>
         } @empty {
           <tr><td colspan="5" class="empty-state">Aucun paramètre système trouvé.</td></tr>

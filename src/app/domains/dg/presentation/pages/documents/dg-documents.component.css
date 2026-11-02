@@ -1,5 +1,5 @@
 /* 2026-11-01 : ce fichier redéfinissait localement .card/.btn/.badge/.toast/.form-input/.tbl
-   (avec un rayon --r-sm plus serré que le --r-md global) — alors que le template utilise déjà
+   (avec un rayon --r-sm plus serré que le --r-md global), alors que le template utilise déjà
    les bonnes classes globales (.card, .btn-primary, .data-table...). Les redéfinitions
    rendaient boutons/badges de cette page subtilement différents du reste du module DG.
    Il ne reste ici que ce qui est propre à cette page. */

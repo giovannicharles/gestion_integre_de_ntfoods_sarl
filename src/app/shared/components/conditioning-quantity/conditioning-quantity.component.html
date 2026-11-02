@@ -4,7 +4,7 @@
   } @else if (niveaux().length === 0) {
   <div class="cq-fallback">
     <input type="number" class="input" min="0" step="1" [(ngModel)]="quantitePrincipale" (ngModelChange)="surChangementQuantite()" placeholder="Quantité">
-    <span class="cq-hint"><i class="fa-solid fa-circle-info"></i> Aucun conditionnement défini pour ce produit — quantité brute.</span>
+    <span class="cq-hint"><i class="fa-solid fa-circle-info"></i> Aucun conditionnement défini pour ce produit, quantité brute.</span>
   </div>
   } @else if (niveaux().length === 1) {
   <div class="cq-single">

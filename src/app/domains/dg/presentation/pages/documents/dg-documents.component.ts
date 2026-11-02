@@ -7,11 +7,11 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
 
 /**
- * Archivage documentaire — réécrit le 2026-10-16. L'écran précédent perdait sa liste à
+ * Archivage documentaire, réécrit le 2026-10-16. L'écran précédent perdait sa liste à
  * chaque rechargement (aucun endpoint de liste n'existait côté serveur), son
  * téléchargement n'a jamais fonctionné (il envoyait typeDocument+reference, le serveur
  * n'attendait qu'une clé), et la moitié des types proposés (Avoir, Contrat, Autre)
- * étaient refusés par le serveur (hors de la liste blanche réelle) — tout est corrigé.
+ * étaient refusés par le serveur (hors de la liste blanche réelle), tout est corrigé.
  */
 @Component({
   selector: 'app-dg-documents',

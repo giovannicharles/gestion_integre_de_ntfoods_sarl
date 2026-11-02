@@ -4,7 +4,7 @@
     <div class="ph-icon ph-icon-g"><i class="fa-solid fa-file-invoice"></i></div>
     <div>
       <h1 class="ph-title">Bons de Commande</h1>
-      <p class="ph-sub">BC validés — consultation uniquement</p>
+      <p class="ph-sub">BC validés, consultation uniquement</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -51,7 +51,7 @@
                 @if (bc.dateLivraisonPrevue) {
                   {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }}
                 } @else {
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">-</span>
                 }
               </td>
               <td>{{ bc.lignes.length }}</td>
@@ -59,7 +59,7 @@
                 @if (montantTotal(bc) > 0) {
                   {{ montantTotal(bc) | number:'1.0-0' }} FCFA
                 } @else {
-                  <span class="text-muted">—</span>
+                  <span class="text-muted">-</span>
                 }
               </td>
               <td>
@@ -106,7 +106,7 @@
         <div class="rs-modal-ico"><i class="fa-solid fa-file-invoice"></i></div>
         <div>
           <div class="rs-modal-ref">{{ bc.numero }}</div>
-          <div class="rs-modal-sub">Bon de Commande — Validé</div>
+          <div class="rs-modal-sub">Bon de Commande, Validé</div>
         </div>
       </div>
       <button class="rs-modal-close" (click)="fermerDetail()">
@@ -124,13 +124,13 @@
         <div class="rs-recap-item">
           <span class="rs-recap-lbl"><i class="fa-solid fa-truck"></i> Livraison prévue</span>
           <span class="rs-recap-val">
-            @if (bc.dateLivraisonPrevue) { {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }} } @else { — }
+            @if (bc.dateLivraisonPrevue) { {{ bc.dateLivraisonPrevue | date:'dd/MM/yyyy' }} } @else {, }
           </span>
         </div>
         <div class="rs-recap-item">
           <span class="rs-recap-lbl"><i class="fa-solid fa-coins"></i> Montant HT</span>
           <span class="rs-recap-val">
-            @if (montantTotal(bc) > 0) { {{ montantTotal(bc) | number:'1.0-0' }} FCFA } @else { — }
+            @if (montantTotal(bc) > 0) { {{ montantTotal(bc) | number:'1.0-0' }} FCFA } @else {, }
           </span>
         </div>
         <div class="rs-recap-item">
@@ -163,7 +163,7 @@
             @for (l of bc.lignes; track l.id) {
               <tr>
                 <td><strong class="mono" style="color:var(--g,#14532D)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '—' }}</td>
+                <td>{{ l.designation ?? '-' }}</td>
                 <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
                 <td class="text-right mono">{{ l.quantiteProduite }}</td>
                 <td class="text-right mono">
@@ -178,7 +178,7 @@
                   </div>
                 </td>
                 <td class="text-right mono">
-                  @if (l.prixUnitaireHT != null) { {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA } @else { — }
+                  @if (l.prixUnitaireHT != null) { {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA } @else {, }
                 </td>
               </tr>
             } @empty {

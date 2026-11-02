@@ -18,7 +18,7 @@ interface LigneCommercial {
 }
 
 /**
- * Gestion des primes hebdomadaires — calcul, validation, versement.
+ * Gestion des primes hebdomadaires, calcul, validation, versement.
  *
  * Le calcul de l'éligibilité (règle 80/75) est entièrement fait par le serveur à partir du
  * barème en vigueur : cet écran transmet la réalisation de la semaine (CA global + détail par
@@ -26,10 +26,10 @@ interface LigneCommercial {
  *
  * Correction 2026-10-25 (signalé par audit) : cette réalisation était jusqu'ici **toujours**
  * saisie à la main, alors qu'un calcul automatique existe déjà et tourne sur les vraies ventes
- * (`CalculerPrimesHebdoUseCase`, exposé par `GET /api/commercial/rapports/primes`) — jamais
+ * (`CalculerPrimesHebdoUseCase`, exposé par `GET /api/commercial/rapports/primes`), jamais
  * appelé depuis cet écran. Le formulaire se pré-remplit maintenant avec ce calcul quand une
  * ligne existe pour ce commercial sur la semaine ; le Comptable reste libre de corriger avant de
- * confirmer (les champs restent des saisies, pas un simple affichage) — aucune donnée n'est
+ * confirmer (les champs restent des saisies, pas un simple affichage), aucune donnée n'est
  * jamais envoyée sans qu'il l'ait vue.
  */
 @Component({
@@ -76,11 +76,11 @@ export class ComptablePrimesComponent implements OnInit {
 
   private lundiCourant(): string {
     const today = new Date();
-    // (getDay()+6)%7 : lundi=0 ... dimanche=6 — gère correctement le dimanche
+    // (getDay()+6)%7 : lundi=0 ... dimanche=6, gère correctement le dimanche
     // (getDay()=0 → recule de 6 jours, pas d'avance d'un jour comme `getDay()-1`).
     const lundi = new Date(today);
     lundi.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-    // Composition manuelle en heure locale — `toISOString()` convertit en UTC et
+    // Composition manuelle en heure locale, `toISOString()` convertit en UTC et
     // décale la date avant 01:00 (WAT).
     return `${lundi.getFullYear()}-${String(lundi.getMonth() + 1).padStart(2, '0')}-${String(lundi.getDate()).padStart(2, '0')}`;
   }
@@ -118,7 +118,7 @@ export class ComptablePrimesComponent implements OnInit {
   ouvrirCalcul(ligne: LigneCommercial): void {
     const objectif = ligne.objectif;
     if (!objectif) {
-      this.toast.error('Aucun objectif fixé pour ce commercial cette semaine — impossible de calculer une prime sans cible.');
+      this.toast.error('Aucun objectif fixé pour ce commercial cette semaine, impossible de calculer une prime sans cible.');
       return;
     }
     this.calculPour.set(objectif);
@@ -129,7 +129,7 @@ export class ComptablePrimesComponent implements OnInit {
     this.preRempliAutomatiquement.set(false);
     this.showCalculForm.set(true);
 
-    // Pré-remplissage depuis les vraies ventes (2026-10-25) — le Comptable garde la main pour
+    // Pré-remplissage depuis les vraies ventes (2026-10-25), le Comptable garde la main pour
     // corriger avant de confirmer ; en l'absence de résultat (pas de ventes cette semaine pour
     // ce commercial), les champs restent à 0, jamais une valeur inventée.
     this.chargementAuto.set(true);

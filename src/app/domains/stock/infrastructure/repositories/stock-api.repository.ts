@@ -143,7 +143,7 @@ export class StockApiRepository {
   }
   /**
    * Backend : ProductClassificationController./brands renvoie une liste de noms de marque
-   * (String), pas des objets {id,name,code,active} — corrigé le 2026-10-15 (P5). La ressource
+   * (String), pas des objets {id,name,code,active}, corrigé le 2026-10-15 (P5). La ressource
    * Brand{id,name,code,active} existe à une URL différente : /api/products/brands
    * (ProductManagementController), pas sous ce contrôleur-ci.
    */
@@ -160,7 +160,7 @@ export class StockApiRepository {
     return this.api.get<ProductVariant[]>('products/product-variants', productLineId ? { productLineId: String(productLineId) } : undefined)
       .pipe(catchError(() => of([] as ProductVariant[])));
   }
-  /** @deprecated forme `Warehouse` fausse (id numérique, isBuffer inexistants côté serveur) — utiliser {@link getLocations} (StockLocationDto, déjà correct). Conservé pour compatibilité, aucun appelant réel aujourd'hui. */
+  /** @deprecated forme `Warehouse` fausse (id numérique, isBuffer inexistants côté serveur), utiliser {@link getLocations} (StockLocationDto, déjà correct). Conservé pour compatibilité, aucun appelant réel aujourd'hui. */
   getWarehouses(): Observable<Warehouse[]> {
     return this.getLocations().pipe(
       map(locs => locs.map(l => ({ id: 0, name: l.name, type: l.type as unknown as Warehouse['type'], isBuffer: l.type === 'STOCK_BUFFER' })))
@@ -194,7 +194,7 @@ export class StockApiRepository {
   /**
    * Corrigé le 2026-10-15 (P5) : l'ancienne URL v1/stock/dashboard/stock-levels/warehouse/{id}
    * n'existe pas (404) ; le vrai endpoint par entrepôt est NiveauStockController, enveloppé
-   * ApiResponse, avec une forme différente (NiveauStockDetailResponse) — reconverti ici vers
+   * ApiResponse, avec une forme différente (NiveauStockDetailResponse), reconverti ici vers
    * `StockLevel` pour ne pas changer la signature publique de cette méthode.
    */
   getStockLevelsByWarehouse(id: number): Observable<StockLevel[]> {
@@ -224,7 +224,7 @@ export class StockApiRepository {
 
   /**
    * Corrigé le 2026-10-15 (P5) : le vrai endpoint (StockItemController./adjust) renvoie une
-   * ValidationRequest (ajustement = action approuvable), pas un StockLevel — aucun appelant
+   * ValidationRequest (ajustement = action approuvable), pas un StockLevel, aucun appelant
    * actuel ne lit de champ sur le résultat, mais le type ne doit pas mentir sur la forme réelle.
    */
   adjustStock(stockLevelId: number, newQuantity: number, reason: string, requestedBy?: string): Observable<unknown> {
@@ -311,11 +311,11 @@ export class StockApiRepository {
   // ── PRODUCTION BATCHES ───────────────────────────────────
   // Lecture seule depuis le 2026-09-22 (docs/PROGRESS.md) : la déclaration/
   // validation/rejet d'un lot passe désormais uniquement par le module
-  // Production (/production/lots) — le backend a retiré les 3 endpoints
+  // Production (/production/lots), le backend a retiré les 3 endpoints
   // d'écriture correspondants. Ne reste que la lecture, pour l'historique
   // déjà en base.
   // ProductionBatchController est monté sur /api/stock/production/batches (pas de préfixe /v1/,
-  // contrairement à ReceiptController) — "v1/" ici donnait un 404 sur les 4 appels.
+  // contrairement à ReceiptController), "v1/" ici donnait un 404 sur les 4 appels.
   getBatches(): Observable<ProductionBatch[]> {
     return this.api.get<ProductionBatch[]>('stock/production/batches').pipe(catchError(() => of([])));
   }
@@ -373,12 +373,12 @@ export class StockApiRepository {
   /**
    * Source réelle : /api/stock/stock-mobile/suivi/... (StockMobileController), pas
    * /api/stock/info-produits (bouchon qui renvoyait un statut DRAFT figé et aucune
-   * décomposition pris/vendu/restant — cause du crash ".reduce is not a function",
+   * décomposition pris/vendu/restant, cause du crash ".reduce is not a function",
    * l'appelant recevait l'enveloppe ApiResponse entière au lieu du tableau).
    *
    * Le mapping ligne par ligne garde ce qui est réellement mesuré par StockMobile :
    * quantiteInitiale → pris, quantiteVendue → vendu. `returnedQty` est approché par
-   * quantiteDisponible (ce qui reste chez le commercial) — une approximation, pas
+   * quantiteDisponible (ce qui reste chez le commercial), une approximation, pas
    * un retour physique au dépôt (règle métier : les invendus ne retournent pas).
    * `status`/validations caissier-comptable n'existent pas dans cette source : fixé
    * à 'DRAFT', pas de double validation tant que ce workflow n'est pas branché ici.

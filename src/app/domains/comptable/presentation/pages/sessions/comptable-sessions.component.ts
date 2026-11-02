@@ -11,7 +11,7 @@ import { CanDirective } from '../../../../../shared/directives/can.directive';
  * Validation comptable des fins de tournée.
  *
  * Dernière étape du cycle : les tournées déjà rapprochées par la secrétaire sont
- * contrôlées puis clôturées définitivement. Cet écran n'existait pas — la méthode
+ * contrôlées puis clôturées définitivement. Cet écran n'existait pas, la méthode
  * de validation était présente dans le service mais n'était appelée nulle part,
  * si bien qu'aucune session ne pouvait atteindre son terme.
  */

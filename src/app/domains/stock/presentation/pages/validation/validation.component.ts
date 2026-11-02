@@ -1,7 +1,7 @@
 // ═══ FICHIER : validation.component.ts ═══
 // Réécrit : l'ancienne version appelait uc.getPending() (inexistant), passait r.id
 // (number) aux méthodes de validation qui attendent désormais le receiptNumber, et
-// affichait des montants FCFA — une violation du principe d'isolation financière du
+// affichait des montants FCFA, une violation du principe d'isolation financière du
 // module Stock (seules les quantités physiques doivent y apparaître).
 import { Component, OnInit, signal, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';

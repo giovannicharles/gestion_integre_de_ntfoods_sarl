@@ -16,13 +16,13 @@ interface LigneClassement extends ClassementCommercialBE {
 }
 
 /**
- * Réécrit le 2026-10-16 — l'écran mélangeait deux notions différentes sous un seul
+ * Réécrit le 2026-10-16, l'écran mélangeait deux notions différentes sous un seul
  * calcul client : le classement (qui a le plus vendu CETTE semaine, relatif aux
  * pairs) et l'éligibilité à la prime (règle 80/75 appliquée à l'objectif INDIVIDUEL
- * de chaque commercial, calculée et tracée par le serveur — PrimeSemaineBE). Le
+ * de chaque commercial, calculée et tracée par le serveur, PrimeSemaineBE). Le
  * code précédent déclarait éligible le premier du classement par volume, affichait
  * un montant de prime forfaitaire (12 000, codé en dur) identique pour tous, et la
- * colonne « Objectif » affichait toujours « — » faute de donnée réelle chargée — le
+ * colonne « Objectif » affichait toujours «, » faute de donnée réelle chargée, le
  * total équipe divisait même le CA par le NOMBRE de commerciaux et l'affichait
  * comme si c'était un montant en FCFA. Toutes les données viennent maintenant du
  * même calcul serveur que l'écran Objectifs (ComptableService.getPrimesParSemaine).

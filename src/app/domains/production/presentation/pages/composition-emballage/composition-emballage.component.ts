@@ -22,7 +22,7 @@ export function normaliser(texte: string): string {
 }
 
 /**
- * COMPOSITION D'EMBALLAGE — Chef de Production / Responsable de Salle.
+ * COMPOSITION D'EMBALLAGE, Chef de Production / Responsable de Salle.
  *
  * Pour chaque conditionnement : son type (sachet, seau, carton...) et ses
  * composants, avec un ratio « X composant(s) pour Y unités produites ». Les

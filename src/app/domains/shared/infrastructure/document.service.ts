@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { ApiService } from '../../../core/http/api.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 
-/** Types réellement acceptés par le serveur (DocumentArchiveService.TYPES_AUTORISES, backend) — rien d'autre. */
+/** Types réellement acceptés par le serveur (DocumentArchiveService.TYPES_AUTORISES, backend), rien d'autre. */
 export const TYPES_DOCUMENT = [
   { value: 'BON_COMMANDE', label: 'Bon de commande' },
   { value: 'BON_RECEPTION', label: 'Bon de réception' },

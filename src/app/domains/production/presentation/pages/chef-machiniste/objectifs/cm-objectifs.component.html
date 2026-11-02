@@ -13,7 +13,7 @@
   <div>
     <strong>Limite backend actuelle :</strong> les objectifs ne peuvent être créés que <em>groupés</em>, à l'ouverture
     d'une session de broyage. Le backend n'expose pas encore de modification ou de suppression d'un objectif isolé
-    après création — une fois la session ouverte, ses objectifs sont consultables ci-dessous mais non modifiables
+    après création, une fois la session ouverte, ses objectifs sont consultables ci-dessous mais non modifiables
     depuis cette vue tant que l'endpoint correspondant n'existe pas côté serveur.
   </div>
 </div>
@@ -53,7 +53,7 @@
     <div class="form-grid">
       <label>PPH
         <select class="input" [(ngModel)]="nouvelleSession.referencePPH">
-          <option value="">— Choisir —</option>
+          <option value="">Choisir,</option>
           @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
         </select>
       </label>
@@ -70,7 +70,7 @@
     <div class="form-grid">
       <label>Machiniste
         <select class="input" [ngModel]="nouvelObjectif.machinisteMatricule" (ngModelChange)="selectionnerMachiniste($event)">
-          <option value="">— Choisir —</option>
+          <option value="">Choisir,</option>
           @for (m of machinistes(); track m.matricule) { <option [value]="m.matricule">{{ m.nomComplet }}</option> }
         </select>
       </label>

@@ -1,4 +1,4 @@
-/* ═══ DASHBOARD TANTY — v2 puissance ═══ */
+/* ═══ DASHBOARD TANTY, v2 puissance ═══ */
 .dash {
   display: flex;
   flex-direction: column;
@@ -118,7 +118,7 @@
 .sk-charts-sm { display: flex; flex-direction: column; gap: 16px; }
 .sk-chart-sm { height: 180px; border-radius: var(--r-lg); min-width: 0; }
 
-/* ── KPI Grid — 6 colonnes ── */
+/* ── KPI Grid, 6 colonnes ── */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));

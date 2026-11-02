@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, PPHBE, ComparaisonFutsProductionBE } from '../../../../infrastructure/production.service';
 
 /**
- * SUIVI DE PRODUCTION — Agent Doseur
+ * SUIVI DE PRODUCTION, Agent Doseur
  * Quantité produite/restante, taux d'avancement, progression PPH et fûts,
  * alertes de dépassement et objectifs atteints.
  */

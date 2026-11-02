@@ -173,7 +173,7 @@ export class DotationFormComponent implements OnInit, OnDestroy {
     const levels = this.stockLevels().filter(sl => this.isBufferLevel(sl) && sl.productSku?.toLowerCase() === s);
     const map = new Map<string, number>();
     for (const sl of levels) {
-      const pkg = (sl.packagingType || '—').toUpperCase();
+      const pkg = (sl.packagingType || '-').toUpperCase();
       map.set(pkg, (map.get(pkg) || 0) + (sl.availableQty ?? sl.quantity ?? 0));
     }
     if (map.size === 0 && this.bufferItems().some(bi => bi.productSku?.toLowerCase().trim() === s)) {

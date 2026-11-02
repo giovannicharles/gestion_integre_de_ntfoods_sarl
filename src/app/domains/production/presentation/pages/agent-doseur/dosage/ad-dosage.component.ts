@@ -6,10 +6,10 @@ import { AdSessionContextService } from '../ad-session-context.service';
 import { extractApiError } from '../../../../../../core/http/api-error-parser';
 
 /**
- * DOSAGE DES MATIÈRES PREMIÈRES — Agent Doseur
+ * DOSAGE DES MATIÈRES PREMIÈRES, Agent Doseur
  *
  * La composition (quelles matières, quelles quantités) est désormais calculée côté serveur depuis la
- * formulation réelle du produit bouillie du plan en cours — fini le choix manuel entre deux ratios figés,
+ * formulation réelle du produit bouillie du plan en cours, fini le choix manuel entre deux ratios figés,
  * qui pouvait se tromper de recette. Si aucune formulation n'est identifiable sans ambiguïté, le serveur le
  * signale explicitement ; la saisie manuelle ci-dessous reste alors disponible.
  *
@@ -47,7 +47,7 @@ export class AdDosageComponent implements OnInit, OnDestroy {
     this.annulerAutoSave();
   }
 
-  /** Sélection depuis le `<select>` — délègue au contexte partagé. */
+  /** Sélection depuis le `<select>`, délègue au contexte partagé. */
   selectionnerSessionDepuisSelect(value: string): void {
     this.contexte.selectionnerParId(value);
   }

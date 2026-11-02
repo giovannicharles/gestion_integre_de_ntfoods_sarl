@@ -40,7 +40,7 @@
                 <span class="gravite-badge">{{ i.priorite }}</span>
               </div>
               <p class="titre">{{ i.titre }}</p>
-              <p class="meta">{{ i.moduleConcerne }} — {{ i.signaleurNom }}</p>
+              <p class="meta">{{ i.moduleConcerne }}, {{ i.signaleurNom }}</p>
               <div class="card-actions" (click)="$event.stopPropagation()">
                 <button class="btn btn-xs btn-primary" (click)="prendreEnCharge(i)" [disabled]="actionEnCours">Prendre en charge</button>
                 <button class="btn btn-xs btn-danger" (click)="ouvrirRejet(i)" [disabled]="actionEnCours">Rejeter</button>
@@ -60,7 +60,7 @@
                 <span class="gravite-badge">{{ i.priorite }}</span>
               </div>
               <p class="titre">{{ i.titre }}</p>
-              <p class="meta">{{ i.moduleConcerne }} — assigné : {{ i.assigneANom || '—' }}</p>
+              <p class="meta">{{ i.moduleConcerne }}, assigné : {{ i.assigneANom || '-' }}</p>
               <div class="card-actions" (click)="$event.stopPropagation()">
                 <button class="btn btn-xs btn-primary" (click)="ouvrirResolution(i)" [disabled]="actionEnCours">Résoudre</button>
                 <button class="btn btn-xs btn-danger" (click)="ouvrirRejet(i)" [disabled]="actionEnCours">Rejeter</button>
@@ -80,7 +80,7 @@
                 <span class="gravite-badge">{{ i.priorite }}</span>
               </div>
               <p class="titre">{{ i.titre }}</p>
-              <p class="meta">Résolu par {{ i.assigneANom || '—' }}</p>
+              <p class="meta">Résolu par {{ i.assigneANom || '-' }}</p>
               <div class="card-actions" (click)="$event.stopPropagation()">
                 <button class="btn btn-xs btn-primary" *appCan="['ADMIN']" (click)="cloturerIncident(i)" [disabled]="actionEnCours">Clôturer</button>
               </div>
@@ -176,13 +176,13 @@
     <div class="modal-overlay" (click)="fermerDetailsModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>{{ selectedIncident.reference }} — {{ selectedIncident.titre }}</h3>
+          <h3>{{ selectedIncident.reference }}, {{ selectedIncident.titre }}</h3>
           <button class="modal-close" (click)="fermerDetailsModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <p><strong>Type :</strong> {{ selectedIncident.type }}</p>
           <p><strong>Gravité :</strong> <span [class]="classeGravite(selectedIncident.priorite)" class="gravite-badge">{{ selectedIncident.priorite }}</span></p>
-          <p><strong>Module :</strong> {{ selectedIncident.moduleConcerne || '—' }}</p>
+          <p><strong>Module :</strong> {{ selectedIncident.moduleConcerne || '-' }}</p>
           @if (selectedIncident.description) {
             <p><strong>Description :</strong></p>
             <p class="description-block">{{ selectedIncident.description }}</p>

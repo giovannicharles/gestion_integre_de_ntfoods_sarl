@@ -36,7 +36,7 @@ export class RpLayoutComponent implements OnInit {
   mobileOpen = signal(false);
   currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord RP');
-  /** Relances grands comptes dues — comptées en direct, pas une valeur figée. */
+  /** Relances grands comptes dues, comptées en direct, pas une valeur figée. */
   alertCount = signal(0);
 
   currentUser = computed(() => this.authService.getCurrentUser());
@@ -74,7 +74,7 @@ export class RpLayoutComponent implements OnInit {
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
   ];
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 

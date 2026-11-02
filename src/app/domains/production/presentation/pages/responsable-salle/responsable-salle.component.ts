@@ -76,7 +76,7 @@ export class ResponsableSalleComponent implements OnInit {
     return this.classement.map(c => c.nomEmploye);
   }
 
-  /** Écart prévu (fûts dosés) vs réalisé (production réelle) par jour — comparaison directe du document. */
+  /** Écart prévu (fûts dosés) vs réalisé (production réelle) par jour, comparaison directe du document. */
   serieEcartJournalier(): ChartSeries[] {
     const jours = this.rapport?.comparaisonsJournalieres ?? [];
     return [{ name: 'Écart (%)', color: 'var(--danger, #d32f2f)', values: jours.map(j => Math.round(j.ecartPourcentage * 10) / 10) }];

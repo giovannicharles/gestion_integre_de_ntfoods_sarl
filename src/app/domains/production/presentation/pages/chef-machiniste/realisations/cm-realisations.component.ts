@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE, EmployeBE } from '../../../../infrastructure/production.service';
 
 /**
- * GESTION DES RÉALISATIONS JOURNALIÈRES — Chef Machiniste
+ * GESTION DES RÉALISATIONS JOURNALIÈRES, Chef Machiniste
  * Saisie : machiniste, poste, type de poudre, quantité réalisée, date.
  * Affiche automatiquement objectif / réalisé / différence / % de réalisation.
  */

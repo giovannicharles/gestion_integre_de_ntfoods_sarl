@@ -21,7 +21,7 @@
 
   @if (anomalies().length > 0) {
   <div class="alert-banner-red">
-    <i class="fa-solid fa-triangle-exclamation"></i> {{ anomalies().length }} anomalie(s) détectée(s) — voir le détail ci-dessous.
+    <i class="fa-solid fa-triangle-exclamation"></i> {{ anomalies().length }} anomalie(s) détectée(s), voir le détail ci-dessous.
   </div>
   }
 
@@ -37,12 +37,12 @@
   </div>
   }
 
-  <!-- 2026-11-01 : tendance du solde de caisse, pas la "trésorerie" composite ci-dessus —
+  <!-- 2026-11-01 : tendance du solde de caisse, pas la "trésorerie" composite ci-dessus,
        voir HistoriqueTresorerieService (backend) pour la distinction délibérée. -->
   @if (historiqueTresorerie().length > 0) {
   <div class="card chart-card" style="margin-bottom:var(--sp-4)">
     <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Solde de caisse — 12 derniers mois</span>
+      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Solde de caisse, 12 derniers mois</span>
     </div>
     <div class="chart-wrap"><canvas #tresorerieCanvas></canvas></div>
   </div>
@@ -120,7 +120,7 @@
             <td><span class="badge bg-red">{{ libelleCategorie(a.categorie) }}</span></td>
             <td class="mono">{{ a.reference }}</td>
             <td>{{ a.description }}</td>
-            <td>{{ a.matriculeConcerne || '—' }}</td>
+            <td>{{ a.matriculeConcerne || '-' }}</td>
           </tr>
           } @empty {
           <tr><td colspan="4" class="empty-state"><i class="fa-solid fa-circle-check"></i> Aucune anomalie détectée</td></tr>

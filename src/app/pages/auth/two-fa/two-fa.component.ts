@@ -7,8 +7,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 const CODE_LENGTH = 6;
 
 /**
- * Vérification OTP — parcours « mot de passe oublié par téléphone » (2026-10-25 : identifié par
- * téléphone, pas par matricule — le matricule n'est jamais connu côté client). `verifyOtp` ouvre
+ * Vérification OTP, parcours « mot de passe oublié par téléphone » (2026-10-25 : identifié par
+ * téléphone, pas par matricule, le matricule n'est jamais connu côté client). `verifyOtp` ouvre
  * une vraie session JWT au même titre qu'une connexion normale ; l'étape suivante
  * (reset-password) s'appuie sur cette session.
  */
@@ -33,7 +33,7 @@ export class TwoFaComponent implements OnInit, OnDestroy {
   error = signal('');
   countdown = signal(60);
   canResend = signal(false);
-  /** Référence opaque de l'OTP en cours (jamais le matricule — voir auth.service.ts). */
+  /** Référence opaque de l'OTP en cours (jamais le matricule, voir auth.service.ts). */
   otpRef = 0;
   /** Numéro de téléphone saisi à l'étape précédente, nécessaire pour un renvoi de code. */
   telephone = '';

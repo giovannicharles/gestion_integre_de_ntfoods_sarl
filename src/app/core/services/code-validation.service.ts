@@ -31,7 +31,7 @@ export interface AttributionCodeResponse {
 export class CodeValidationService {
   /**
    * Corrigé le 2026-10-16 : l'ancien préfixe '/api/v1/...' doublait le préfixe déjà ajouté par
-   * ApiService.buildUrl (http://host/api/<url>), produisant /api/api/v1/validation/codes/... —
+   * ApiService.buildUrl (http://host/api/<url>), produisant /api/api/v1/validation/codes/...,
    * 404 systématique. Jamais détecté avant : ce service n'a jamais été câblé à aucune route
    * (AdminCodeValidationComponent existait mais n'apparaissait dans aucun fichier de routes).
    */

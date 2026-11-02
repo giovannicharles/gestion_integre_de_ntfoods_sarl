@@ -27,9 +27,9 @@ const COULEUR_PRIORITE: Record<string, string> = {
 };
 
 /**
- * Centre de notifications (2026-09-30) — cloche + compteur + panneau, alimenté en temps réel par le WebSocket
+ * Centre de notifications (2026-09-30), cloche + compteur + panneau, alimenté en temps réel par le WebSocket
  * backend déjà câblé (`NotificationWebSocketService`/`/topic/notifications`) : aucun client Angular ne s'y
- * abonnait avant ce composant (vérifié — voir compte rendu). Historique et « marquer lu » via
+ * abonnait avant ce composant (vérifié, voir compte rendu). Historique et « marquer lu » via
  * `HistoriqueNotificationController` (`/api/stock/notifications/historique`), le seul endpoint réel de lecture
  * de notifications trouvé dans le backend.
  */

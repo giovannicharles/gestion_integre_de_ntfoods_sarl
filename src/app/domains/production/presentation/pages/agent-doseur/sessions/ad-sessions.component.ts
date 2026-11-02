@@ -6,7 +6,7 @@ import { AdSessionContextService } from '../ad-session-context.service';
 import { AuthService } from '../../../../../../core/auth/auth.service';
 
 /**
- * GESTION DES SESSIONS — Agent Doseur
+ * GESTION DES SESSIONS, Agent Doseur
  * Ouvrir / consulter / clôturer une session de dosage. Une seule session
  * active à la fois (garde-fou client ; l'application stricte de la règle
  * reste de la responsabilité du backend).
@@ -65,7 +65,7 @@ export class AdSessionsComponent implements OnInit {
 
   ouvrir(): void {
     if (this.sessionOuverteActive()) {
-      this.message.set('Une session est déjà ouverte — une seule session active est autorisée à la fois.');
+      this.message.set('Une session est déjà ouverte, une seule session active est autorisée à la fois.');
       return;
     }
     if (!this.nouvelleSession.referencePPH || !this.nouvelleSession.matriculeAgentDoseur) {
@@ -76,7 +76,7 @@ export class AdSessionsComponent implements OnInit {
       next: s => {
         this.sessionsSession.update(list => [s, ...list]);
         this.contexte.definir(s.id, s.referencePPH, s.date);
-        this.message.set(`Session #${s.id} ouverte — sélectionnée comme session active pour les autres vues`);
+        this.message.set(`Session #${s.id} ouverte, sélectionnée comme session active pour les autres vues`);
       },
       error: () => this.message.set('Erreur lors de l\'ouverture de la session')
     });
@@ -95,7 +95,7 @@ export class AdSessionsComponent implements OnInit {
 
   selectionner(s: SessionDosageBE): void {
     if (s.cloturee || s.validee) {
-      this.message.set(`La session #${s.id} n'est pas ouverte — impossible de la sélectionner`);
+      this.message.set(`La session #${s.id} n'est pas ouverte, impossible de la sélectionner`);
       return;
     }
     this.contexte.definir(s.id, s.referencePPH, s.date);
@@ -103,7 +103,7 @@ export class AdSessionsComponent implements OnInit {
   }
 
   duree(s: SessionDosageBE): string {
-    if (!s.cloturee) return '—';
+    if (!s.cloturee) return '-';
     const debut = new Date(s.dateCreation).getTime();
     const fin = new Date(s.dateModification).getTime();
     const minutes = Math.round((fin - debut) / 60000);

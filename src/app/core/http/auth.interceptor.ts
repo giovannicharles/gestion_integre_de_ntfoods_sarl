@@ -68,7 +68,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         // lettres sur la page de refus.
         //
         // Un 403 sur une lecture, en revanche, vient presque toujours d'un
-        // chargement de fond — une carte du tableau de bord, un compteur, une
+        // chargement de fond, une carte du tableau de bord, un compteur, une
         // liste secondaire. Y répondre par une navigation éjectait l'utilisateur
         // d'un écran auquel il avait pleinement droit, à cause d'un widget qui
         // ne le concernait pas. L'erreur est donc rendue à l'appelant, qui

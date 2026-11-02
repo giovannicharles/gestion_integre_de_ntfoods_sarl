@@ -5,13 +5,13 @@ import { ProductionService, RegistreProductionBE, LigneRegistreBE, PPHBE, CodePo
 import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 /**
- * REGISTRE JOURNALIER DES EMPLOYÉS — Responsable de Salle
- * GET /registres (réel, autorisé) — recherche, filtres, téléchargement.
- * Correction du registre d'aujourd'hui uniquement (PATCH) — au-delà, le registre
+ * REGISTRE JOURNALIER DES EMPLOYÉS, Responsable de Salle
+ * GET /registres (réel, autorisé), recherche, filtres, téléchargement.
+ * Correction du registre d'aujourd'hui uniquement (PATCH), au-delà, le registre
  * est définitif (preuve d'audit), le serveur refuse en 409.
  *
  * ⚠️ Le téléchargement PDF/Excel n'a pas d'endpoint dédié pour le registre
- * (contrairement au registre de dosage) — génération CSV côté client à
+ * (contrairement au registre de dosage), génération CSV côté client à
  * partir des données réelles.
  */
 @Component({

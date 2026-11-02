@@ -14,7 +14,7 @@ export interface ProduitCatalogue {
 }
 
 export const CATALOGUE_PRODUITS: ProduitCatalogue[] = [
-  // TANTY BOUILLIE DE SOJA — SACHETS
+  // TANTY BOUILLIE DE SOJA, SACHETS
   { code: 'TBS-SAC-001', designation: 'REINE BOUILLIE SOJA ARACHIDES',        sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
   { code: 'TBS-SAC-002', designation: 'REINE BOUILLIE SOJA CLASSIC',           sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
   { code: 'TBS-SAC-003', designation: 'REINE BOUILLIE SOJA LACTEE CROISSANCE', sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
@@ -25,7 +25,7 @@ export const CATALOGUE_PRODUITS: ProduitCatalogue[] = [
   { code: 'TBS-SAC-008', designation: 'TANTY BOUILLIE SOJA NATURE',            sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
   { code: 'TBS-SAC-009', designation: 'TANTY BOUILLIE SOJA PARFUME',           sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
   { code: 'TBS-SAC-010', designation: 'TANTY BOUILLIE SOJA POISSON',           sku: null,    categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Sachets' },
-  // TANTY BOUILLIE DE SOJA — ÉTUIS
+  // TANTY BOUILLIE DE SOJA, ÉTUIS
   { code: 'TBS-ETU-001', designation: 'PRESTIGE REINE BOUILLIE ARACHIDES',         sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
   { code: 'TBS-ETU-002', designation: 'PRESTIGE REINE BOUILLIE CLASSIC',           sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
   { code: 'TBS-ETU-003', designation: 'PRESTIGE REINE BOUILLIE LACTEE CROISSANCE', sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
@@ -36,17 +36,17 @@ export const CATALOGUE_PRODUITS: ProduitCatalogue[] = [
   { code: 'TBS-ETU-008', designation: 'PRESTIGE TANTY BOUILLIE NATURE',            sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
   { code: 'TBS-ETU-009', designation: 'PRESTIGE TANTY BOUILLIE PARFUME',           sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
   { code: 'TBS-ETU-010', designation: 'PRESTIGE TANTY BOUILLIE POISSON',           sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Étuis' },
-  // REINE COSTARD POWDER — 1L
+  // REINE COSTARD POWDER, 1L
   { code: 'RCP-1L-001', designation: 'REINE COSTARD POWDER 1L BANANE',        sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 1L' },
   { code: 'RCP-1L-002', designation: 'REINE COSTARD POWDER 1L FRAISE',        sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 1L' },
   { code: 'RCP-1L-003', designation: 'REINE COSTARD POWDER 1L FRUITS ET OEUFS',  sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 1L' },
   { code: 'RCP-1L-004', designation: 'REINE COSTARD POWDER 1L LACTEE BISCUITE',  sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 1L' },
-  // REINE COSTARD POWDER — 2L
+  // REINE COSTARD POWDER, 2L
   { code: 'RCP-2L-001', designation: 'REINE COSTARD POWDER 2L BANANE',         sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 2L' },
   { code: 'RCP-2L-002', designation: 'REINE COSTARD POWDER 2L FRAISE',         sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 2L' },
   { code: 'RCP-2L-003', designation: 'REINE COSTARD POWDER 2L FRUITS ET OEUFS', sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 2L' },
   { code: 'RCP-2L-004', designation: 'REINE COSTARD POWDER 2L LACTEE BISCUITE', sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 2L' },
-  // REINE COSTARD POWDER — 5L
+  // REINE COSTARD POWDER, 5L
   { code: 'RCP-5L-001', designation: 'REINE COSTARD POWDER 5L FRUITS ET OEUFS', sku: null, categorie: 'TANTY BOUILLIE DE SOJA', gamme: 'Seaux Costard 5L' },
   // BABYVITA
   { code: 'BVT-001', designation: 'BABYVITA 1L', sku: '12 seaux x 390g', categorie: 'null', gamme: 'Babyvita' },
@@ -57,18 +57,18 @@ export const CATALOGUE_PRODUITS: ProduitCatalogue[] = [
   { code: 'TCH-003', designation: 'TANTY CHOCOLAT 10L', sku: 'seau de 9,2kg',   categorie: 'null', gamme: 'Seaux' },
   // INGRÉDIENTS
   { code: 'ING-CHP-001', designation: 'TANTY CHAPELURE', sku: '12 etuis x 200g', categorie: 'null', gamme: 'Étuis' },
-  // TANTY A GRIGNOTER — MINIS
+  // TANTY A GRIGNOTER, MINIS
   { code: 'TAG-MIN-001', designation: 'MIN A GRIGNOTER ARACHIDES ENROBEES',   sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Minis' },
   { code: 'TAG-MIN-002', designation: 'MIN A GRIGNOTER CARAMELS',             sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Minis' },
   { code: 'TAG-MIN-003', designation: 'MIN A GRIGNOTER CROQUETTES',           sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Minis' },
   { code: 'TAG-MIN-004', designation: 'MINI A GRIGNOTER CHIPS DE PLANTAINS',  sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Minis' },
   { code: 'TAG-MIN-005', designation: 'TANTY BEIGNETS SOUFFLES',              sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Minis' },
-  // TANTY A GRIGNOTER — MOYENS
+  // TANTY A GRIGNOTER, MOYENS
   { code: 'TAG-MOY-001', designation: 'MOYEN A GRIGNOTER ARACHIDES ENROBEES',  sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Moyens' },
   { code: 'TAG-MOY-002', designation: 'MOYEN A GRIGNOTER CARAMELS',            sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Moyens' },
   { code: 'TAG-MOY-003', designation: 'MOYEN A GRIGNOTER CROQUETTES',          sku: null,  categorie: 'TANTY A GRIGNOTER', gamme: 'Moyens' },
   { code: 'TAG-MOY-004', designation: 'MOYEN A GRIGNOTER CHIPS DE PLANTAINS',  sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Moyens' },
-  // TANTY A GRIGNOTER — GRANDS
+  // TANTY A GRIGNOTER, GRANDS
   { code: 'TAG-GRD-001', designation: 'GRAND A GRIGNOTER ARACHIDES ENROBEES', sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Grands' },
   { code: 'TAG-GRD-002', designation: 'GRAND A GRIGNOTER CARAMELS',           sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Grands' },
   { code: 'TAG-GRD-003', designation: 'GRAND A GRIGNOTER CROQUETTES',         sku: null, categorie: 'TANTY A GRIGNOTER', gamme: 'Grands' },
@@ -80,7 +80,7 @@ export interface GroupeProduits { label: string; produits: ProduitCatalogue[]; }
 function grouper(produits: ProduitCatalogue[]): GroupeProduits[] {
   const map = new Map<string, ProduitCatalogue[]>();
   for (const p of produits) {
-    const key = `${p.categorie} — ${p.gamme}`;
+    const key = `${p.categorie}, ${p.gamme}`;
     if (!map.has(key)) map.set(key, []);
     map.get(key)!.push(p);
   }
@@ -99,7 +99,7 @@ interface LigneForm {
 }
 
 /**
- * GESTION DES BONS DE COMMANDE — Chef de Production
+ * GESTION DES BONS DE COMMANDE, Chef de Production
  */
 @Component({
   selector: 'app-cp-bons-commande',
@@ -144,7 +144,7 @@ export class CpBonsCommandeComponent implements OnInit {
   showForm        = signal(false);
   formDateCommande = new Date().toISOString().split('T')[0];
   formDateLivraison = '';
-  // Période réelle de production (optionnelle) — sans elle, le plan généré retombe sur la semaine ouvrée
+  // Période réelle de production (optionnelle), sans elle, le plan généré retombe sur la semaine ouvrée
   // de la date de commande, comme avant (2026-10-18).
   formDateDebutProduction = '';
   formDateFinProduction = '';
@@ -180,7 +180,7 @@ export class CpBonsCommandeComponent implements OnInit {
     return { produitCode: '', codeProduit: '', designation: '', sku: null, quantiteCommandee: null, prixUnitaireHT: null };
   }
 
-  /** Appelé quand l'utilisateur choisit un produit dans le select — pré-remplit code, désignation, sku. */
+  /** Appelé quand l'utilisateur choisit un produit dans le select, pré-remplit code, désignation, sku. */
   selectionnerProduit(code: string, index: number): void {
     const produit = CATALOGUE_PRODUITS.find(p => p.code === code);
     const ligne   = this.lignesForm[index];

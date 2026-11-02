@@ -14,7 +14,7 @@ import { HeaderSearchComponent } from '../../shared/header-search/header-search.
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
-// locale 'fr' — la page plantait (NG0701) à chaque rafraîchissement du relogue
+// locale 'fr', la page plantait (NG0701) à chaque rafraîchissement du relogue
 // (`date:'...':'':'fr'` ci-dessous), pas seulement au premier rendu.
 registerLocaleData(localeFr);
 
@@ -24,14 +24,14 @@ interface NavItem { label: string; icon: string; route: string; }
  * Coquille unique de l'espace Admin (demande explicite du porteur, 2026-10-15) :
  * "Administration" n'est pas une troisième persona, c'est un nom de package pour
  * "gestion des comptes et de l'organisation". Un seul espace visuel, avec deux
- * sections de sidebar — configuration technique (/admin-systeme/*) et comptes/
- * organisation (/admin/*) — pas deux espaces distincts. Les préfixes d'URL restent
+ * sections de sidebar, configuration technique (/admin-systeme/*) et comptes/
+ * organisation (/admin/*), pas deux espaces distincts. Les préfixes d'URL restent
  * séparés (rien à renommer côté routes/backend), seule la coquille devient commune :
  * les deux arbres de routes (ADMIN_ROUTES, ADMIN_SYSTEME_ROUTES) se montent chacun
  * sous ce même composant (voir app.routes.ts).
  *
  * Styles réutilisés depuis stock-layout (mêmes classes .layout-root/.sidebar/.sb-item
- * que tous les autres layouts du projet) — aucune nouvelle feuille de style.
+ * que tous les autres layouts du projet), aucune nouvelle feuille de style.
  */
 @Component({
   selector: 'app-admin-layout',
@@ -75,14 +75,14 @@ export class AdminLayoutComponent implements OnInit {
   });
 
   /**
-   * Section « Comptes & Organisation » — module backend `administration`.
+   * Section « Comptes & Organisation », module backend `administration`.
    *
-   * « Paramètres métier » (TVA, primes, seuils — ParametresAdminController) et « Postes
+   * « Paramètres métier » (TVA, primes, seuils, ParametresAdminController) et « Postes
    * production » retirés d'ici le 2026-10-25 (demande explicite du porteur) : ce ne sont pas
    * des réglages du SYSTÈME (config technique, droits d'accès, comptes) mais des paramètres
-   * d'exploitation du DG — déjà disponibles sous /dg/parametres et /dg/postes-production, sans
+   * d'exploitation du DG, déjà disponibles sous /dg/parametres et /dg/postes-production, sans
    * doublon de code (même composant). L'Admin garde ici : comptes, droits d'accès, incidents,
-   * audit — strictement « gestion du système » (CLAUDE.md, décision actée n°9).
+   * audit, strictement « gestion du système » (CLAUDE.md, décision actée n°9).
    */
   comptesNavItems: NavItem[] = [
     { label: 'Tableau de bord', icon: 'fa-gauge-high', route: '/admin/dashboard' },
@@ -94,7 +94,7 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Permissions & RBAC', icon: 'fa-user-shield', route: '/admin/permissions' },
   ];
 
-  /** Section « Configuration technique » — module backend `admin` (ParametreSysteme). */
+  /** Section « Configuration technique », module backend `admin` (ParametreSysteme). */
   systemeNavItems: NavItem[] = [
     { label: 'Paramètres système', icon: 'fa-gears', route: '/admin-systeme/parametres' },
     { label: 'Suivi', icon: 'fa-chart-line', route: '/admin-systeme/suivi' },
@@ -111,7 +111,7 @@ export class AdminLayoutComponent implements OnInit {
     ...this.systemeNavItems.map(i => ({ ...i, groupe: 'Configuration technique' })),
   ]);
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
+  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   comptesNavItemsFiltres = computed(() => filtrerNavItems(this.comptesNavItems, this.sidebarFiltre()));
   systemeNavItemsFiltres = computed(() => filtrerNavItems(this.systemeNavItems, this.sidebarFiltre()));

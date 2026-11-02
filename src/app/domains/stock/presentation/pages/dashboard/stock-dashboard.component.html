@@ -5,7 +5,7 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
       <div>
-        <h1 class="ph-title">Tableau de Bord — Stock</h1>
+        <h1 class="ph-title">Tableau de Bord · Stock</h1>
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Douala</p>
       </div>
     </div>
@@ -45,7 +45,7 @@
       <div class="ia-insight-head">
         <div class="ia-insight-title">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Analyse IA du stock — TantyAI</span>
+          <span>Analyse IA du stock, TantyAI</span>
           @if (iaConfigured()) {
             <span class="badge badge-success" style="font-size:10px">GPT-OSS 120B</span>
           } @else {
@@ -78,7 +78,7 @@
                   <span class="badge" [class]="getIaPriorityClass(rec.priority)">{{ rec.priority }}</span>
                   <div>
                     <strong>{{ rec.action }}</strong>
-                    @if (rec.product) { <span class="ia-insight-rec-product"> — {{ rec.product }}</span> }
+                    @if (rec.product) { <span class="ia-insight-rec-product">, {{ rec.product }}</span> }
                     <p>{{ rec.detail }}</p>
                   </div>
                 </div>
@@ -156,7 +156,7 @@
 
   @if (!loading() && stats()) {
 
-  <!-- KPI CARDS — 6 KPIs puissants -->
+  <!-- KPI CARDS, 6 KPIs puissants -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
@@ -335,7 +335,7 @@
                     <span class="badge badge-secondary"><i class="fa-solid fa-box"></i> {{ r.sourceLabel || 'Fournisseur' }}</span>
                     }
                   </td>
-                  <td><span class="badge badge-neutral">{{ r.destinationLocationName || '—' }}</span></td>
+                  <td><span class="badge badge-neutral">{{ r.destinationLocationName || '-' }}</span></td>
                   <td><span style="font-size:13px;font-weight:800;color:var(--n800)">{{ r.items.length }}</span></td>
                   <td><span style="font-size:11px;color:var(--n500)">{{ r.receiptDate | date:'dd/MM HH:mm' }}</span></td>
                   <td><span class="badge {{ getRStatutClass(r.status) }}">{{ getRStatutLabel(r.status) }}</span></td>
@@ -396,7 +396,7 @@
               </div>
               <div class="mov-meta">
                 <span>{{ (m.requestedAt || m.createdAt) | date:'dd/MM HH:mm' }}</span>
-                <span style="font-size:10px;color:var(--n300)">{{ m.reference || '—' }}</span>
+                <span style="font-size:10px;color:var(--n300)">{{ m.reference || '-' }}</span>
               </div>
             </div>
             }
@@ -818,11 +818,11 @@
                   </div>
                   <div class="inv-prod-info">
                     <span class="inv-prod-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</span>
-                    <span class="inv-prod-cat">{{ item.productCategory || '—' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || 'unité' }}</span>
+                    <span class="inv-prod-cat">{{ item.productCategory || '-' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || 'unité' }}</span>
                   </div>
                 </div>
               </td>
-              <td><span class="inv-sku">{{ item.productSku || '—' }}</span></td>
+              <td><span class="inv-sku">{{ item.productSku || '-' }}</span></td>
               <td><span class="badge {{ getWBadge(item.warehouseName) }}">{{ getWShort(item.warehouseName) }}</span></td>
               <td class="inv-qty-cell">
                 <span class="inv-qty-val">{{ item.quantity | number }}</span>
@@ -865,7 +865,7 @@
             <span class="badge {{ getNAlertClass(item.alertLevel || 'NORMAL') }}">{{ item.alertLevel || 'NORMAL' }}</span>
           </div>
           <div class="inv-grid-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</div>
-          <div class="inv-grid-sku">{{ item.productSku || '—' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</div>
+          <div class="inv-grid-sku">{{ item.productSku || '-' }} · {{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</div>
           <div class="inv-grid-qty">{{ item.quantity | number }} <span>{{ getPackagingLabel(item.packagingType) || item.productUnit || '' }}</span></div>
           <div class="inv-grid-val">{{ formatCFA(item.stockValue || 0) }}</div>
           <div class="inv-bar-wrap">
@@ -888,7 +888,7 @@
             </div>
             <div class="inv-card-info">
               <span class="inv-prod-name">{{ item.productName || item.productSku || 'Produit #' + item.productId }}</span>
-              <span class="inv-prod-cat">{{ item.productSku || '—' }} · {{ item.warehouseName || '—' }}</span>
+              <span class="inv-prod-cat">{{ item.productSku || '-' }} · {{ item.warehouseName || '-' }}</span>
             </div>
             <span class="badge {{ getNAlertClass(item.alertLevel || 'NORMAL') }}">{{ item.alertLevel || 'NORMAL' }}</span>
           </div>

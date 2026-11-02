@@ -3,7 +3,7 @@
   <!-- ══ SIDEBAR (fond vert) ══ -->
   <aside class="sidebar">
     <div class="sidebar-inner">
-      <!-- BRAND — fond jaune -->
+      <!-- BRAND, fond jaune -->
       <div class="sidebar-brand">
         <div class="brand-content">
           <img src="/logo_tanty.jpg" alt="TANTY" class="brand-logo-image" />
@@ -19,7 +19,7 @@
         </button>
       </div>
 
-      <!-- USER — cliquable vers Mon Profil -->
+      <!-- USER, cliquable vers Mon Profil -->
       <a class="sb-user" routerLink="/dg/profil" [title]="!sidebarOpen() ? 'Mon Profil' : ''">
         <div class="sb-av">{{ userInitials() }}<span class="sb-dot"></span></div>
         <div class="sb-user-info">
@@ -77,7 +77,7 @@
           <span class="sb-ico"><i class="fa-solid fa-right-from-bracket"></i></span>
           <span class="sb-lbl">Déconnexion</span>
         </button>
-        <div class="sb-version"><span>v3.0 — Sprint 3</span></div>
+        <div class="sb-version"><span>v3.0, Sprint 3</span></div>
       </div>
     </div>
   </aside>
@@ -106,7 +106,7 @@
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
 
-        <!-- Centre de notifications temps réel (2026-09-30) — distinct de la cloche d'alertes stock ci-dessous -->
+        <!-- Centre de notifications temps réel (2026-09-30), distinct de la cloche d'alertes stock ci-dessous -->
         <app-notification-center></app-notification-center>
 
         <!-- NOTIFICATION BELL -->
@@ -132,7 +132,7 @@
                     <div class="notif-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <div class="notif-content">
                       <span class="notif-title">{{ alertCount() }} alerte(s) stock</span>
-                      <span class="notif-desc">Produits sous seuil critique — action requise</span>
+                      <span class="notif-desc">Produits sous seuil critique, action requise</span>
                     </div>
                   </a>
                   @if (criticalCount() > 0) {

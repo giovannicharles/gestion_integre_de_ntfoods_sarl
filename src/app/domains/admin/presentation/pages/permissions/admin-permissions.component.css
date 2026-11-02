@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════════════
-   PERMISSIONS & RBAC — groupement par module + vue inverse
+   PERMISSIONS & RBAC, groupement par module + vue inverse
    2026-10-25 : écran déjà fonctionnel (matrice, dérogations), lisibilité améliorée.
-   Tokens globaux uniquement (--g/--y/--r/--n*, styles.css) — pas de nouveau système.
+   Tokens globaux uniquement (--g/--y/--r/--n*, styles.css), pas de nouveau système.
 ══════════════════════════════════════════════════════════ */
 
 .module-group {

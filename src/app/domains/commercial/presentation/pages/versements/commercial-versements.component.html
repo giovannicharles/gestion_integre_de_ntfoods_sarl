@@ -28,7 +28,7 @@
       <div class="status-sub">Montant versé : <strong>{{ fCFA(monVersement()?.cashVerse ?? 0) }}</strong> · Type : {{ monVersement()?.typeVersement }}</div>
       }
       @if (monVersement()?.ecart !== 0) {
-      <div class="status-ecart text-danger">Écart : {{ fCFA(monVersement()?.ecart ?? 0) }} — {{ monVersement()?.motifEcart }}</div>
+      <div class="status-ecart text-danger">Écart : {{ fCFA(monVersement()?.ecart ?? 0) }}, {{ monVersement()?.motifEcart }}</div>
       }
     </div>
     <div class="status-badge">
@@ -87,9 +87,9 @@
           <tr>
             <td>{{ today | date:'dd/MM/yyyy':'':"fr" }}</td>
             <td class="mono">{{ fCFA(v.montantAttendu) }}</td>
-            <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '—' }}</td>
-            <td>{{ v.typeVersement ?? '—' }}</td>
-            <td>{{ v.heureVersement ?? '—' }}</td>
+            <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '-' }}</td>
+            <td>{{ v.typeVersement ?? '-' }}</td>
+            <td>{{ v.heureVersement ?? '-' }}</td>
             <td>
               @if (v.statut === 'VALIDE') { <span class="badge bg-success">Validé</span> }
               @else if (v.statut === 'EN_ATTENTE') { <span class="badge bg-neutral">En attente</span> }

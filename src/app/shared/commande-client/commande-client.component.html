@@ -5,7 +5,7 @@
       <div class="ph-icon"><i class="fa-solid fa-cart-shopping"></i></div>
       <div>
         <h1 class="ph-title">Commandes clients</h1>
-        <p class="ph-sub">Téléphone · WhatsApp · SMS · Email — {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
+        <p class="ph-sub">Téléphone · WhatsApp · SMS · Email, {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
       </div>
     </div>
     <div class="ph-actions">
@@ -124,7 +124,7 @@
         <div class="form-group">
           <label>Client *</label>
           <select class="form-control" [ngModel]="form().codeClient" (ngModelChange)="majChamp('codeClient', $event)">
-            <option value="">— Choisir —</option>
+            <option value="">Choisir,</option>
             @for (c of clients(); track c.codeClient) { <option [value]="c.codeClient">{{ c.nom }} ({{ c.localite }})</option> }
           </select>
         </div>
@@ -158,7 +158,7 @@
           </div>
           }
           @if (lignesForm().length === 0) {
-          <div class="empty-state" style="padding:12px 0">Aucune ligne — cliquez sur « Ajouter une ligne ».</div>
+          <div class="empty-state" style="padding:12px 0">Aucune ligne, cliquez sur « Ajouter une ligne ».</div>
           }
         </div>
 

@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, RegistreProductionBE } from '../../../../infrastructure/production.service';
 
 /**
- * REGISTRES DE PRODUCTION — Agent de Production
- * GET /production/registres (AGENT_PRODUCTION) — présences,
+ * REGISTRES DE PRODUCTION, Agent de Production
+ * GET /production/registres (AGENT_PRODUCTION), présences,
  * postes et rendements par PPH et par jour. Consultation seule : la saisie
  * du registre est de la responsabilité du Chef de Production / Responsable
  * de Salle.

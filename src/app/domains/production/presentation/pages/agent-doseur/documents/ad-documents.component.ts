@@ -5,11 +5,11 @@ import { ProductionService, SessionDosageBE } from '../../../../infrastructure/p
 import { AdSessionContextService } from '../ad-session-context.service';
 
 /**
- * TÉLÉCHARGEMENT DES DOCUMENTS — Agent Doseur
+ * TÉLÉCHARGEMENT DES DOCUMENTS, Agent Doseur
  *
  * ⚠️ Seuls le registre de dosage et le zip documents par session (DosageController)
  * sont accessibles à ce rôle. Cette vue liste TOUTES les sessions du jour
- * (ouvertes ET clôturées) pour permettre un téléchargement a posteriori — elle
+ * (ouvertes ET clôturées) pour permettre un téléchargement a posteriori, elle
  * ne se limite donc pas aux sessions ouvertes du contexte, mais s'aligne
  * automatiquement sur la session active si elle existe.
  */

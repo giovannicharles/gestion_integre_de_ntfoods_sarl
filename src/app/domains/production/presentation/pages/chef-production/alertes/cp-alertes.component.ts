@@ -11,12 +11,12 @@ interface AlerteUI {
 }
 
 /**
- * GESTION DES ALERTES — Chef de Production
+ * GESTION DES ALERTES, Chef de Production
  *
  * ⚠️ Aucun moteur d'alertes persistées côté backend : pas d'entité "Alerte",
  * pas d'endpoint pour la "traiter" ou la "clôturer". Cette vue calcule des
  * alertes en LECTURE SEULE à partir de seuils appliqués à des données réelles
- * (OF, sessions broyage, sessions dosage) — rien n'est stocké, rien ne peut
+ * (OF, sessions broyage, sessions dosage), rien n'est stocké, rien ne peut
  * être marqué "traité" de façon persistante.
  */
 @Component({
@@ -42,23 +42,23 @@ export class CpAlertesComponent implements OnInit {
 
     for (const o of this.ofs()) {
       if (o.statut !== 'HONORE' && o.statut !== 'ANNULE' && o.dateButoir && o.dateButoir < aujourdHui) {
-        liste.push({ type: 'retard', gravite: 'danger', titre: `Retard — OF ${o.idOF}`, detail: `Échéance dépassée (${o.dateButoir}), ${o.qteRealisee}/${o.qteDemandee} réalisé`, date: o.dateButoir });
+        liste.push({ type: 'retard', gravite: 'danger', titre: `Retard, OF ${o.idOF}`, detail: `Échéance dépassée (${o.dateButoir}), ${o.qteRealisee}/${o.qteDemandee} réalisé`, date: o.dateButoir });
       }
       if (o.qteRealisee > o.qteDemandee) {
-        liste.push({ type: 'depassement', gravite: 'warning', titre: `Dépassement — OF ${o.idOF}`, detail: `${o.qteRealisee} produit pour ${o.qteDemandee} demandé`, date: aujourdHui });
+        liste.push({ type: 'depassement', gravite: 'warning', titre: `Dépassement, OF ${o.idOF}`, detail: `${o.qteRealisee} produit pour ${o.qteDemandee} demandé`, date: aujourdHui });
       }
     }
     for (const s of this.sessionsBroyage()) {
       if ((s.pctPertes ?? 0) > 15) {
-        liste.push({ type: 'pertes', gravite: 'danger', titre: `Pertes importantes — session broyage #${s.id}`, detail: `${s.pctPertes}% de pertes (${s.referencePPH}, ${s.typePoudreLibelle})`, date: s.date });
+        liste.push({ type: 'pertes', gravite: 'danger', titre: `Pertes importantes, session broyage #${s.id}`, detail: `${s.pctPertes}% de pertes (${s.referencePPH}, ${s.typePoudreLibelle})`, date: s.date });
       }
       if (!s.journeeValidee && s.statut === 'CLOTUREE') {
-        liste.push({ type: 'objectif', gravite: 'warning', titre: `Objectif non atteint — session #${s.id}`, detail: `${s.referencePPH} — ${s.totalRealiseKg}/${s.objectifJournalierKg} kg`, date: s.date });
+        liste.push({ type: 'objectif', gravite: 'warning', titre: `Objectif non atteint, session #${s.id}`, detail: `${s.referencePPH}, ${s.totalRealiseKg}/${s.objectifJournalierKg} kg`, date: s.date });
       }
     }
     for (const s of this.sessionsDosage()) {
       if (s.justificationEcart) {
-        liste.push({ type: 'ecart', gravite: 'warning', titre: `Écart justifié — session dosage #${s.id}`, detail: s.justificationEcart, date: s.date });
+        liste.push({ type: 'ecart', gravite: 'warning', titre: `Écart justifié, session dosage #${s.id}`, detail: s.justificationEcart, date: s.date });
       }
     }
     return liste.sort((a, b) => b.date.localeCompare(a.date));

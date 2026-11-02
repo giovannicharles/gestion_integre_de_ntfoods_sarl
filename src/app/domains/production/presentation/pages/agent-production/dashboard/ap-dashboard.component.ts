@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ProductionService, DashboardAgentBE } from '../../../../infrastructure/production.service';
 
 /**
- * TABLEAU DE BORD — Agent de Production
+ * TABLEAU DE BORD, Agent de Production
  *
  * AGENT_PRODUCTION ne détient que deux permissions côté backend
  * (AGENT_PRODUCTION, PRODUCTION_OF_CONSULTER) : cet espace est

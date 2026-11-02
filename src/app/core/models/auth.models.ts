@@ -73,14 +73,14 @@ export interface RegisterRequest {
  * Corps pour POST /api/auth/otp/demander.
  *
  * Mot de passe oublié par téléphone (2026-10-25, demande explicite du porteur) : identifié par
- * téléphone, pas par matricule — le serveur ne renvoie jamais le matricule (voir OtpResponse).
+ * téléphone, pas par matricule, le serveur ne renvoie jamais le matricule (voir OtpResponse).
  */
 export interface OtpRequest {
   telephone: string;
   raison: string;
 }
 
-/** Réponse de POST /api/auth/otp/demander — `otpRef` est une référence opaque à reporter telle quelle. */
+/** Réponse de POST /api/auth/otp/demander, `otpRef` est une référence opaque à reporter telle quelle. */
 export interface OtpResponse {
   otpRef: number;
   otpEnvoye: boolean;
@@ -88,14 +88,14 @@ export interface OtpResponse {
   dureeValiditeMinutes: number;
 }
 
-/** Corps pour POST /api/auth/otp/verifier — `otpRef` vient de OtpResponse, jamais un matricule. */
+/** Corps pour POST /api/auth/otp/verifier, `otpRef` vient de OtpResponse, jamais un matricule. */
 export interface OtpVerifyRequest {
   otpRef: number;
   codeOtp: string;
 }
 
 /**
- * Réponse de GET /api/auth/me (aligné sur ProfilResponse backend) — même forme pour
+ * Réponse de GET /api/auth/me (aligné sur ProfilResponse backend), même forme pour
  * n'importe quel rôle, utilisée par l'écran « Mon Profil » commun à tous les layouts.
  */
 export interface ProfilBE {

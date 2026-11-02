@@ -161,7 +161,7 @@ export class AppShellComponent {
     ];
   });
 
-  // Configuration technique de la plateforme (module `admin` backend) — distinct
+  // Configuration technique de la plateforme (module `admin` backend), distinct
   // d'ADMINISTRATION ci-dessus, ne pas fusionner (docs/PROGRESS.md 2026-09-23).
   readonly adminSystemeItems = computed<NavItem[]>(() => {
     const role = this.user()?.role;

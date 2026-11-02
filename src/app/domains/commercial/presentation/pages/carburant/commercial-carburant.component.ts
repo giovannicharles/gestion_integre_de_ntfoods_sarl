@@ -60,7 +60,7 @@ export class CommercialCarburantComponent implements OnInit {
 
   /**
    * Obligatoire côté API (CarburantController) : une demande doit référencer une feuille de
-   * route réelle du jour, sinon RegleMetierException systématique — cause du 400 constaté
+   * route réelle du jour, sinon RegleMetierException systématique, cause du 400 constaté
    * avant cette correction (P5, 2026-10-15).
    */
   peutSoumettre(): boolean {

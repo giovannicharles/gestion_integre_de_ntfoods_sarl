@@ -13,7 +13,7 @@
 <div class="card">
   <div class="toolbar-row">
     <select class="input" (ngModelChange)="selectionnerPph($event)" [ngModel]="pphSelectionne()">
-      <option [ngValue]="null">— Choisir un PPH —</option>
+      <option [ngValue]="null">Choisir un PPH,</option>
       @for (p of pphs(); track p.id) { <option [ngValue]="p">{{ p.referencePPH }} ({{ p.statut }})</option> }
     </select>
   </div>

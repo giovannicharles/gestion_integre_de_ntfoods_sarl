@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   _shared.css — Styles communs des vues Production (Chef Machiniste & co.)
-   Convention : var(--token, fallback) — les tokens du thème priment,
+   _shared.css, Styles communs des vues Production (Chef Machiniste & co.)
+   Convention : var(--token, fallback), les tokens du thème priment,
    les fallbacks garantissent un rendu correct sans thème.
    ═══════════════════════════════════════════════════════════════════════ */
 

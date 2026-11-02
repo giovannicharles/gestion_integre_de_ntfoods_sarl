@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductionService, SessionBroyageBE } from '../../../../infrastructure/production.service';
 
 /**
- * SAISIE DES INDICATEURS JOURNALIERS — Chef Machiniste
+ * SAISIE DES INDICATEURS JOURNALIERS, Chef Machiniste
  * Quantité nette broyée + pertes (kg) → % de pertes recalculé automatiquement.
  * Répartition Maïs / Soja / Arachide affichée automatiquement à partir des
  * sessions du jour (déjà scindées par type de poudre côté backend).
@@ -87,7 +87,7 @@ export class CmIndicateursComponent implements OnInit {
     this.svc.cloturerSessionBroyage(this.cloture).subscribe({
       next: s => {
         this.sessionsJour.update(list => list.map(x => x.id === s.id ? s : x));
-        this.message.set(`Indicateurs enregistrés — session #${s.id} clôturée (${s.pctPertes ?? 0}% de pertes)`);
+        this.message.set(`Indicateurs enregistrés, session #${s.id} clôturée (${s.pctPertes ?? 0}% de pertes)`);
         this.cloture = { sessionId: 0, quantiteNetteBroyeeKg: 0, pertesKg: 0 };
       },
       error: () => this.message.set('Erreur lors de la clôture de la session')

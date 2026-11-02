@@ -44,7 +44,7 @@ export interface CaisseBE {
 }
 
 /**
- * Forme réelle de DecaissementResponse (backend, DecaissementController) — corrigée le
+ * Forme réelle de DecaissementResponse (backend, DecaissementController), corrigée le
  * 2026-10-15 (P5) : `numero`/`matriculeDG` n'existaient pas (vrais noms : numeroDecaissement/
  * matriculeValidateurDG), et `dateValidationDG`/`dateApprobationDG`/`dateExecution` n'existent
  * nulle part côté backend (seul `dateCreation` est exposé).
@@ -284,7 +284,7 @@ export class ComptableService {
    * Journal de caisse d'une journée, ou `null` si la caisse n'a pas encore été
    * ouverte ce jour-là.
    *
-   * Le serveur répond 404 tant qu'aucun journal n'existe pour la date — ce qui
+   * Le serveur répond 404 tant qu'aucun journal n'existe pour la date, ce qui
    * est le cas normal de chaque matin avant l'ouverture, pas une panne. Seul
    * ce 404 est traduit en absence ; **toute autre erreur remonte**, pour qu'un
    * serveur injoignable ou un refus d'accès ne se présente jamais comme une
@@ -412,7 +412,7 @@ export class ComptableService {
 
   /**
    * Calcule la prime hebdomadaire d'un commercial. Le montant est dérivé par le
-   * serveur (règle 80/75, barème en vigueur la semaine concernée) — jamais fourni
+   * serveur (règle 80/75, barème en vigueur la semaine concernée), jamais fourni
    * ici. Refusé si une prime existe déjà pour ce commercial cette semaine-là.
    */
   calculerPrime(req: CalculerPrimeRequest): Observable<PrimeSemaineBE> {
@@ -435,7 +435,7 @@ export class ComptableService {
    *
    * Redéfinir une semaine déjà pourvue est une révision : le `motif` devient
    * obligatoire côté serveur et la valeur remplacée est inscrite au journal.
-   * `semaineFin` est requise — son absence faisait échouer la validation.
+   * `semaineFin` est requise, son absence faisait échouer la validation.
    */
   definirObjectif(req: {
     matriculeCommercial: string;
