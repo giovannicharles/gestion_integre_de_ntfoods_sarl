@@ -130,6 +130,16 @@ interface PageResponse<T> {
   totalElements?: number;
 }
 
+/** Forme de shared.application.dto.PageResponse (Java), enveloppée dans ApiResponse.donnees. */
+export interface AuditLogPage {
+  contenu: StockAuditLog[];
+  totalElements: number;
+  totalPages: number;
+  pageCourante: number;
+  taillePage: number;
+  dernierePage: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StockApiRepository {
   private readonly api = inject(ApiService);
@@ -665,8 +675,16 @@ export class StockApiRepository {
   }
 
   // ── AUDIT LOGS (/api/stock/audit-logs/...) ────────────────
-  getAuditLogs(): Observable<StockAuditLog[]> {
-    return this.api.get<StockAuditLog[]>('stock/audit-logs').pipe(catchError(() => of([])));
+  /**
+   * Paginé côté serveur depuis le 2026-11-02 (table d'audit append-only, non bornée dans
+   * le temps) : retourne maintenant {@link AuditLogPage}, pas un tableau brut.
+   */
+  getAuditLogs(page = 0, size = 20): Observable<AuditLogPage> {
+    const empty: AuditLogPage = { contenu: [], totalElements: 0, totalPages: 0, pageCourante: page, taillePage: size, dernierePage: true };
+    return this.api.get<{ donnees?: AuditLogPage }>('stock/audit-logs', { page: String(page), size: String(size) }).pipe(
+      map(r => r.donnees ?? empty),
+      catchError(() => of(empty))
+    );
   }
 
   getAuditLogsForEntity(entityType: string, entityId: string): Observable<StockAuditLog[]> {

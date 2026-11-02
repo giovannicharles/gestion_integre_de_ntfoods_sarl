@@ -69,6 +69,15 @@
         </tbody>
       </table>
       </div>
+      @if (!filtered() && totalPages() > 1) {
+        <div class="pagination-bar">
+          <span class="pg-info">{{ totalElements() }} entrée(s) · page {{ page() + 1 }}/{{ totalPages() }}</span>
+          <div class="pg-controls">
+            <button class="pg-btn" [disabled]="page()===0" (click)="prevPage()" aria-label="Page précédente"><i class="fa-solid fa-angle-left"></i></button>
+            <button class="pg-btn" [disabled]="page()>=totalPages()-1" (click)="nextPage()" aria-label="Page suivante"><i class="fa-solid fa-angle-right"></i></button>
+          </div>
+        </div>
+      }
     </div>
   }
 </div>
