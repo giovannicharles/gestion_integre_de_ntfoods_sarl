@@ -130,7 +130,7 @@
             <i class="fa-solid fa-{{ action()==='rej'?'xmark-circle':'clipboard-check' }}"></i>
             {{ action()==='rej'?'Rejeter la réception':action()==='v1'?'Confirmer la 1ère validation':'Confirmer la validation finale' }}
           </div>
-          <button class="modal-close" (click)="closeAction()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeAction()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px">

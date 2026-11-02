@@ -82,7 +82,7 @@
     <!-- DETAIL VIEW -->
     <div class="ph">
       <div class="ph-left">
-        <button class="btn btn-ghost btn-sm" (click)="closeDetail()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+        <button class="btn btn-ghost btn-sm" (click)="closeDetail()"aria-label="Fermer"><i class="fa-solid fa-arrow-left"></i> Retour</button>
         <div>
           <h1 class="ph-title" style="font-size:18px">{{ selectedInventory()?.reference }}</h1>
           <p class="ph-sub">{{ selectedInventory()?.locationName }}, {{ getStatusLabel(selectedInventory()?.status || '') }}</p>
@@ -201,7 +201,7 @@
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2><i class="fa-solid fa-plus-circle"></i> Nouvel Inventaire Physique</h2>
-          <button class="modal-close" (click)="closeCreateForm()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeCreateForm()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <label class="form-label">Emplacement à inventorier</label>
@@ -229,7 +229,7 @@
       <div class="modal" style="max-width:480px" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2><i class="fa-solid fa-pen-to-square"></i> Comptage, {{ ci.productSku }}</h2>
-          <button class="modal-close" (click)="closeCounting()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeCounting()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:16px">
@@ -274,7 +274,7 @@
       <div class="modal" style="max-width:480px" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h2><i class="fa-solid fa-shield-check"></i> Validation de l'inventaire</h2>
-          <button class="modal-close" (click)="closeValidateModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeValidateModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <p style="margin-bottom:16px">Confirmez la validation de <b>{{ selectedInventory()?.reference }}</b>.</p>

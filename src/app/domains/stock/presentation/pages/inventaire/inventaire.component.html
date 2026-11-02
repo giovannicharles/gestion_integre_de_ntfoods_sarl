@@ -16,8 +16,8 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="vt">
-        <button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"><i class="fa-solid fa-table-list"></i></button>
-        <button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"><i class="fa-solid fa-grip"></i></button>
+        <button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"aria-label="Vue tableau"><i class="fa-solid fa-table-list"></i></button>
+        <button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"aria-label="Vue cartes"><i class="fa-solid fa-grip"></i></button>
       </div>
       <button class="btn btn-ghost btn-sm" (click)="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
       <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Réception</a>
@@ -254,9 +254,9 @@
           <div class="pagination-bar">
             <span class="pg-info">{{ (cp()-1)*ps+1 }}–{{ mathMin(cp()*ps,filtered().length) }} sur {{ filtered().length }}</span>
             <div class="pg-controls">
-              <button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"><i class="fa-solid fa-angle-left"></i></button>
+              <button class="pg-btn" [disabled]="cp()===1" (click)="goTo(cp()-1)"aria-label="Page précédente"><i class="fa-solid fa-angle-left"></i></button>
               @for (p of pages; track p) { <button class="pg-btn" [class.pg-active]="p===cp()" (click)="goTo(p)">{{ p }}</button> }
-              <button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"><i class="fa-solid fa-angle-right"></i></button>
+              <button class="pg-btn" [disabled]="cp()===totalPages()" (click)="goTo(cp()+1)"aria-label="Page suivante"><i class="fa-solid fa-angle-right"></i></button>
             </div>
           </div>
         }
@@ -318,7 +318,7 @@
             <h2 style="font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--n900)">{{ item.productName }}</h2>
             <span style="font-size:11px;color:var(--n400);font-family:monospace">{{ item.productSku }}</span>
           </div>
-          <button class="modal-close" (click)="selectedItem.set(null)"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="selectedItem.set(null)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -373,7 +373,7 @@
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header" style="background:var(--g-gh)">
           <div class="modal-title" style="color:var(--g)"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div>
-          <button class="modal-close" (click)="closeAjust()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeAjust()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="banner banner-warning">
@@ -428,7 +428,7 @@
       <div class="modal-box animate-fadeInUp" style="max-width:460px" (click)="$event.stopPropagation()">
         <div class="modal-header" style="background:var(--b-gh)">
           <div class="modal-title" style="color:var(--b)"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfert Central → Tampon</div>
-          <button class="modal-close" (click)="closeTransfer()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeTransfer()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div style="background:var(--n50);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px">

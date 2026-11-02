@@ -180,7 +180,7 @@
       <div class="modal-box animate-fadeInUp modal-box-md" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-warning">
           <div class="modal-title"><i class="fa-solid fa-sliders"></i> Modifier les seuils</div>
-          <button class="modal-close" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (editingItem(); as item) {
@@ -237,7 +237,7 @@
       <div class="modal-box animate-fadeInUp modal-box-md" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-warning">
           <div class="modal-title"><i class="fa-solid fa-plus-circle"></i> Nouveau seuil</div>
-          <button class="modal-close" (click)="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeCreateModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="form-group form-group-mb">
@@ -299,7 +299,7 @@
       <div class="modal-box animate-fadeInUp modal-box-sm" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-danger">
           <div class="modal-title"><i class="fa-solid fa-trash"></i> Confirmer la suppression</div>
-          <button class="modal-close" (click)="closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (deleteTarget(); as item) {
@@ -325,7 +325,7 @@
       <div class="modal-box animate-fadeInUp modal-box-sm" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-warning">
           <div class="modal-title"><i class="fa-solid fa-layer-group"></i> Seuils par défaut</div>
-          <button class="modal-close" (click)="closeBatchModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeBatchModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="banner banner-warning banner-mb">

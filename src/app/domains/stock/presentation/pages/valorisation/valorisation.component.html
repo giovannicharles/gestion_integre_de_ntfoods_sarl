@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()">
+      <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()"aria-label="Fermer">
         <i class="fa-solid fa-tag"></i> Prix unitaires
       </button>
       <button class="btn btn-primary btn-sm" (click)="calculateTotal()" [disabled]="calculating()">
@@ -120,14 +120,14 @@
       <div class="card price-panel">
         <div class="card-hd">
           <span class="card-title"><i class="fa-solid fa-tags"></i> Prix unitaires par SKU</span>
-          <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()"aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="price-rows">
           @for (row of unitPricesArray; track $index) {
             <div class="price-row">
               <input type="text" [(ngModel)]="row.sku" placeholder="SKU produit" class="form-control">
               <input type="number" [(ngModel)]="row.price" placeholder="Prix unitaire (FCFA)" class="form-control">
-              <button class="btn btn-danger btn-sm" (click)="removePriceRow($index)"><i class="fa-solid fa-trash"></i></button>
+              <button class="btn btn-danger btn-sm" (click)="removePriceRow($index)"aria-label="Supprimer la ligne"><i class="fa-solid fa-trash"></i></button>
             </div>
           }
         </div>

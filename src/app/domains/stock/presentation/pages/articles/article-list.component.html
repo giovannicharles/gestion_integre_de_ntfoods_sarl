@@ -328,7 +328,7 @@
             <i class="fa-solid" [class.fa-circle-plus]="adjustMode()==='add'" [class.fa-circle-minus]="adjustMode()==='subtract'"></i>
             {{ adjustMode() === 'add' ? 'Ajouter' : 'Retirer' }} une quantité
           </div>
-          <button class="modal-close" (click)="closeAdjustModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeAdjustModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (adjustItem(); as item) {
@@ -384,7 +384,7 @@
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-primary">
           <div class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Modifier l'article</div>
-          <button class="modal-close" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (editItem(); as item) {
@@ -437,7 +437,7 @@
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-info">
           <div class="modal-title"><i class="fa-solid fa-circle-info"></i> Détails de l'article</div>
-          <button class="modal-close" (click)="closeDetailModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeDetailModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (detailItem(); as item) {

@@ -45,7 +45,7 @@
         <input type="text" placeholder="Rechercher référence, commercial…"
                [(ngModel)]="search" (ngModelChange)="applyFilters()">
         @if (search) {
-          <button class="x-btn" (click)="search=''; applyFilters()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="x-btn" (click)="search=''; applyFilters()"aria-label="Effacer la recherche"><i class="fa-solid fa-xmark"></i></button>
         }
       </div>
       <select class="f-sel" [(ngModel)]="filterStatut" (ngModelChange)="applyFilters()">
@@ -189,7 +189,7 @@
           <i class="fa-solid fa-hand-holding"></i>
           {{ d.referenceNumber }}
         </div>
-        <button class="modal-close" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" aria-label="Fermer" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         @if (actionMode() === null) {

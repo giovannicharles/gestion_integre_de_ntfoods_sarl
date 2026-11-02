@@ -74,7 +74,7 @@
                 <div class="ms-card-head">
                   <span class="ms-avatar">{{ s.commercialMatricule.slice(0,2).toUpperCase() }}</span>
                   <div><div class="ms-title">{{ s.commercialMatricule }}</div><div class="ms-sub">{{ s.totalItems }} article(s)</div></div>
-                  <button class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); openDetail(s)"><i class="fa-solid fa-eye"></i></button>
+                  <button class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); openDetail(s)"aria-label="Voir les détails"><i class="fa-solid fa-eye"></i></button>
                 </div>
                 <div class="ms-card-body">
                   <div class="ms-row"><span>Valeur stock</span><strong>{{ fCFA(s.totalValue) }}</strong></div>
@@ -144,7 +144,7 @@
             <span class="ms-avatar" style="width:48px;height:48px;font-size:16px">{{ sel.commercialMatricule.slice(0,2).toUpperCase() }}</span>
             <div><h3 style="margin:0;font-size:18px">{{ sel.commercialMatricule }}</h3><p style="margin:0;font-size:12px;color:var(--n500)">{{ sel.totalItems }} article(s) · {{ sel.locationId }}</p></div>
           </div>
-          <button class="btn btn-ghost btn-sm" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="btn btn-ghost btn-sm" (click)="closeDetail()"aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="tabs" style="margin:0 16px">

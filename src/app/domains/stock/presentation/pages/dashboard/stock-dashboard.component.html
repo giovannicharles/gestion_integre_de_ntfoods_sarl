@@ -52,7 +52,7 @@
             <span class="badge badge-neutral" style="font-size:10px">Mode hors-ligne</span>
           }
         </div>
-        <button class="btn btn-ghost btn-sm" (click)="closeIaInsight()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn btn-ghost btn-sm" (click)="closeIaInsight()"aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="ia-insight-body">
         @if (iaInsightLoading()) {
@@ -918,8 +918,8 @@
       <!-- Pagination -->
       @if (invTotalPages() > 1) {
       <div class="pagination">
-        <button class="page-btn" (click)="setInvPage(1)" [disabled]="invPage() === 1"><i class="fa-solid fa-angles-left"></i></button>
-        <button class="page-btn" (click)="setInvPage(invPage() - 1)" [disabled]="invPage() === 1"><i class="fa-solid fa-angle-left"></i></button>
+        <button class="page-btn" (click)="setInvPage(1)" [disabled]="invPage() === 1"aria-label="Première page"><i class="fa-solid fa-angles-left"></i></button>
+        <button class="page-btn" (click)="setInvPage(invPage() - 1)" [disabled]="invPage() === 1"aria-label="Page précédente"><i class="fa-solid fa-angle-left"></i></button>
         @for (p of invPageRange(); track p) {
           @if (p <= 5 || p >= invTotalPages() - 1 || absDiff(p, invPage()) <= 1) {
             <button class="page-btn" [class.active]="invPage() === p" (click)="setInvPage(p)">{{ p }}</button>
@@ -927,8 +927,8 @@
             <span class="page-ellipsis">…</span>
           }
         }
-        <button class="page-btn" (click)="setInvPage(invPage() + 1)" [disabled]="invPage() === invTotalPages()"><i class="fa-solid fa-angle-right"></i></button>
-        <button class="page-btn" (click)="setInvPage(invTotalPages())" [disabled]="invPage() === invTotalPages()"><i class="fa-solid fa-angles-right"></i></button>
+        <button class="page-btn" (click)="setInvPage(invPage() + 1)" [disabled]="invPage() === invTotalPages()"aria-label="Page suivante"><i class="fa-solid fa-angle-right"></i></button>
+        <button class="page-btn" (click)="setInvPage(invTotalPages())" [disabled]="invPage() === invTotalPages()"aria-label="Dernière page"><i class="fa-solid fa-angles-right"></i></button>
       </div>
       }
       @if (filteredProducts().length < stockLevels().length) {

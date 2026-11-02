@@ -2,9 +2,9 @@
   <div class="ph">
     <div class="ph-left"><div class="ph-icon"><i class="fa-solid fa-calendar-check"></i></div><div><h1 class="ph-title">Session du Jour</h1><p class="ph-sub">InfoProduits · Dotations · Clôture</p></div></div>
     <div class="date-nav">
-      <button class="btn btn-ghost btn-sm" (click)="shiftDate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="btn btn-ghost btn-sm" (click)="shiftDate(-1)"aria-label="Jour précédent"><i class="fa-solid fa-chevron-left"></i></button>
       <input type="date" class="form-control" [ngModel]="selectedDate()" (ngModelChange)="setDate($event)">
-      <button class="btn btn-ghost btn-sm" (click)="shiftDate(1)"><i class="fa-solid fa-chevron-right"></i></button>
+      <button class="btn btn-ghost btn-sm" (click)="shiftDate(1)"aria-label="Jour suivant"><i class="fa-solid fa-chevron-right"></i></button>
       <a routerLink="/stock/commercial" class="btn btn-primary btn-sm"><i class="fa-solid fa-users"></i> Module Commercial</a>
     </div>
   </div>

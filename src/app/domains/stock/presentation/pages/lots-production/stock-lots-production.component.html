@@ -120,7 +120,7 @@
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-danger">
           <h3><i class="fa-solid fa-triangle-exclamation"></i> Rejeter le lot {{ lot.numeroLot }}</h3>
-          <button class="modal-close" (click)="fermerRejeter()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="fermerRejeter()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="form-group">

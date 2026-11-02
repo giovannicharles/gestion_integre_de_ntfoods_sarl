@@ -40,7 +40,7 @@
         <input type="text" placeholder="Rechercher par nom ou code…"
                [(ngModel)]="search" (ngModelChange)="applyFilters()">
         @if (search) {
-          <button class="x-btn" (click)="clearFilters()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="x-btn" (click)="clearFilters()"aria-label="Effacer les filtres"><i class="fa-solid fa-xmark"></i></button>
         }
       </div>
       <select class="form-control" style="width:auto" [(ngModel)]="filterActive" (ngModelChange)="applyFilters()">
@@ -200,7 +200,7 @@
       <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-danger">
           <div class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Confirmer la suppression</div>
-          <button class="modal-close" (click)="closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="modal-close" aria-label="Fermer" (click)="closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (deleteTarget(); as item) {

@@ -366,7 +366,7 @@
               <p>{{ doc.description }}</p>
               @if (doc.needsPeriod) { <span class="rpt-doc-tag"><i class="fa-solid fa-calendar-day"></i> Période</span> }
             </div>
-            <button class="rpt-doc-btn"><i class="fa-solid fa-download"></i></button>
+            <button class="rpt-doc-btn"aria-label="Télécharger le document"><i class="fa-solid fa-download"></i></button>
           </div>
         }
       </div>
@@ -507,7 +507,7 @@
     <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:520px">
       <div class="modal-header">
         <div class="modal-title"><i class="fa-solid {{ getReportIcon(sr.type) }}"></i> {{ sr.title || getReportTypeLabel(sr.type) }}</div>
-        <button class="modal-close" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" aria-label="Fermer" (click)="closeDetail()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <div class="rpt-detail-grid">
@@ -531,7 +531,7 @@
     <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:560px">
       <div class="modal-header">
         <div class="modal-title"><i class="fa-solid fa-clipboard-list"></i> Fiche NTFoods, Infos Produits TANTY</div>
-        <button class="modal-close" (click)="showNtFoodsForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" aria-label="Fermer" (click)="showNtFoodsForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <p style="font-size:12px;color:var(--n500);margin:0 0 16px">Modèle vierge avec cases de quantités. Seul le motif change selon le type d'opération.</p>
@@ -566,7 +566,7 @@
     <div class="modal-box rpt-meeting-modal" (click)="$event.stopPropagation()">
       <div class="modal-header rpt-meeting-header">
         <div class="modal-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Compte-rendu de réunion IA</div>
-        <button class="modal-close" (click)="toggleMeetingForm()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" aria-label="Fermer" (click)="toggleMeetingForm()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body rpt-meeting-body">
 

@@ -12,7 +12,7 @@
 
   <div class="ph">
     <div style="display:flex;align-items:center;gap:12px">
-      <button class="back-btn" (click)="router.navigate(['/stock/reception'])"><i class="fa-solid fa-arrow-left"></i></button>
+      <button class="back-btn" (click)="router.navigate(['/stock/reception'])"aria-label="Retour"><i class="fa-solid fa-arrow-left"></i></button>
       <div class="ph-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
       <div>
         <h1 class="ph-title">{{ readOnlyMode() ? 'Détail de la réception' : 'Nouvelle Réception' }}</h1>
@@ -146,7 +146,7 @@
                 <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--n50);border-bottom:1px solid var(--n150)">
                   <span style="font-size:11px;font-weight:800;color:var(--n500);text-transform:uppercase;flex:1">Ligne {{ i+1 }}</span>
                   @if (lignes.length>1) {
-                    <button style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:26px;height:26px" (click)="removeLine(i)"><i class="fa-solid fa-trash-can"></i></button>
+                    <button style="background:none;border:none;cursor:pointer;color:var(--n400);font-size:13px;width:26px;height:26px" (click)="removeLine(i)"aria-label="Supprimer la ligne"><i class="fa-solid fa-trash-can"></i></button>
                   }
                 </div>
                 <div style="padding:14px 16px">
