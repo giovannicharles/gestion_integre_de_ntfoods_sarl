@@ -594,6 +594,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   deleteReport(id: number, event: Event): void {
     event.stopPropagation();
+    if (!confirm('Supprimer ce rapport ?')) return;
     this.uc.delete(id).pipe(takeUntil(this.d$)).subscribe({
       next: () => {
         this.showToast('Rapport supprimé', 'success');

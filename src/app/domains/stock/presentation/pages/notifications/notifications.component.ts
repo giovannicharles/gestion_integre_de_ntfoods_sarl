@@ -188,6 +188,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   deleteNotification(id: number): void {
+    if (!confirm('Supprimer cette notification ?')) return;
     this.api.delete(`stock/notifications/${id}`).pipe(takeUntil(this.d$)).subscribe({
       next: () => {
         this.notifications.update(list => list.filter(n => n.id !== id));
