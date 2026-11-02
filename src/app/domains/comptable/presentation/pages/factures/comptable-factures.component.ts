@@ -109,6 +109,7 @@ export class ComptableFacturesComponent implements OnInit {
   }
 
   annuler(numero: string): void {
+    if (!confirm(`Annuler la facture ${numero} ? Cette action est définitive.`)) return;
     this.svc.annulerFacture(numero).subscribe({
       next: f => this.factures.update(list =>
         list.map(fac => fac.numero === numero ? this.mapF(f) : fac)

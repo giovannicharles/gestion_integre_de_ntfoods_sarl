@@ -63,6 +63,7 @@ export class DgDecaissementsComponent implements OnInit {
     });
   }
   refuserDG(numero: string) {
+    if (!confirm(`Refuser le décaissement ${numero} ? Cette action est définitive.`)) return;
     this.cptSvc.annulerDecaissement(numero, 'Refusé par DG', '').subscribe({
       next: updated => {
         this.decaissements.update(list => list.map(d => d.numeroDecaissement === numero ? updated : d));
