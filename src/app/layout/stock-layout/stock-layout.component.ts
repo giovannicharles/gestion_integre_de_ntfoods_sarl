@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, HostListener, computed, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, inject, HostListener, computed, OnDestroy, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -15,6 +15,7 @@ import { Subject, takeUntil, timer } from 'rxjs';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { correspond, filtrerNavItems } from '../../shared/utils/nav-filter.util';
 
 registerLocaleData(localeFr);
@@ -36,7 +37,7 @@ interface NotifItem {
 @Component({
   selector: 'app-stock-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent],
   templateUrl: './stock-layout.component.html',
   styleUrls: ['./stock-layout.component.css']
 })
@@ -196,6 +197,12 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   filteredNav = computed(() => {
     return this.filteredNavSections().flatMap(s => s.items);
   });
+
+  /** Palette de commandes Ctrl+K (2026-11-02, même composant que les autres layouts). */
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() =>
+    this.filteredNavSections().flatMap(s => s.items.map(i => ({ ...i, groupe: s.title })))
+  );
 
   /**
    * Recherche + sections dépliables (2026-10-25, demande explicite du porteur) : ~25 items
