@@ -11,6 +11,7 @@ interface UserUI {
   id: string; matricule: string; nom: string; prenom: string | null;
   email: string; role: string; actif: boolean; compteBloque: boolean; dateCreation: Date;
   terminalImei: string | null; derniereConnexion: Date | null;
+  sessionActive: boolean;
 }
 
 interface NouvelUtilisateurForm {
@@ -97,6 +98,7 @@ export class AdminUtilisateursComponent implements OnInit {
   nbActifs   = computed(() => this.users().filter(u => u.actif).length);
   nbInactifs = computed(() => this.users().filter(u => !u.actif).length);
   nbBloques  = computed(() => this.users().filter(u => u.compteBloque).length);
+  nbSessionsActives = computed(() => this.users().filter(u => u.sessionActive).length);
 
   ngOnInit(): void {
     this.charger();
@@ -164,6 +166,7 @@ export class AdminUtilisateursComponent implements OnInit {
   toggleActif(matricule: string): void {
     const user = this.users().find(u => u.matricule === matricule);
     if (!user) return;
+    if (user.actif && !confirm(`Suspendre le compte ${matricule} ? L'accès sera immédiatement coupé.`)) return;
     const action$ = user.actif ? this.svc.desactiver(matricule) : this.svc.activer(matricule);
     action$.subscribe({
       next: u => this.users.update(list =>
@@ -204,6 +207,18 @@ export class AdminUtilisateursComponent implements OnInit {
     this.svc.debloquer(u.matricule).subscribe({
       next: res => { this.actionDetailEnCours.set(false); this.rafraichirApresAction(res); this.toast.success('Compte débloqué.'); },
       error: (err) => { this.actionDetailEnCours.set(false); this.toast.error(extractApiError(err), 'Déblocage impossible'); },
+    });
+  }
+
+  /** 2026-11-01 : invalide la session active — oblige l'utilisateur à se reconnecter immédiatement. */
+  forcerDeconnexion(): void {
+    const u = this.utilisateurDetail();
+    if (!u || this.actionDetailEnCours()) return;
+    if (!confirm(`Forcer la déconnexion de ${u.matricule} ? La session active sera immédiatement invalidée.`)) return;
+    this.actionDetailEnCours.set(true);
+    this.svc.forcerDeconnexion(u.matricule).subscribe({
+      next: res => { this.actionDetailEnCours.set(false); this.rafraichirApresAction(res); this.toast.success('Session invalidée.'); },
+      error: (err) => { this.actionDetailEnCours.set(false); this.toast.error(extractApiError(err), 'Déconnexion forcée impossible'); },
     });
   }
 
@@ -264,7 +279,7 @@ export class AdminUtilisateursComponent implements OnInit {
       id: u.matricule, matricule: u.matricule, nom: u.nomComplet,
       prenom: null, email: u.email, role: u.role,
       actif: u.actif, compteBloque: u.compteBloque ?? false, dateCreation: new Date(u.dateCreation),
-      terminalImei: null, derniereConnexion: null,
+      terminalImei: null, derniereConnexion: null, sessionActive: u.sessionActive ?? false,
     };
   }
 }

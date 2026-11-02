@@ -10,8 +10,15 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'utilisateurs',
+        redirectTo: 'dashboard',
         pathMatch: 'full'
+      },
+      {
+        // 2026-11-01 : ajouté en remplacement du redirect direct vers "utilisateurs" — l'espace
+        // Admin n'avait jusqu'ici aucune vue d'ensemble (GitHub Org Settings, Okta, Auth0,
+        // Vercel Team Settings ouvrent tous sur une synthèse, jamais directement sur le détail).
+        path: 'dashboard',
+        loadComponent: () => import('./pages/dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
       },
       {
         path: 'utilisateurs',

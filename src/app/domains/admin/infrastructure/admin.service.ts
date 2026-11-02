@@ -82,6 +82,13 @@ export class AdminService {
     ).pipe(map(r => r.donnees!));
   }
 
+  /** 2026-11-01 : invalide la session active d'un utilisateur (déconnexion forcée). */
+  forcerDeconnexion(matricule: string): Observable<UtilisateurBE> {
+    return this.api.patch<ApiResponse<UtilisateurBE>>(
+      `administration/utilisateurs/${encodeURIComponent(matricule)}/deconnecter`, {}
+    ).pipe(map(r => r.donnees!));
+  }
+
   consulterUtilisateur(matricule: string): Observable<UtilisateurBE> {
     return this.api.get<ApiResponse<UtilisateurBE>>(
       `administration/utilisateurs/${encodeURIComponent(matricule)}`

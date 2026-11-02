@@ -110,3 +110,9 @@ tbody tr:last-child td { border-bottom: none; }
 tr.courant { background: #f0fdfa; }
 tr.courant td:first-child { font-weight: 700; }
 .vide { color: #9ca3af; text-align: center; padding: 1.25rem; }
+
+@media (max-width: 640px) {
+  .page { padding: 1rem; }
+  .ph-title { font-size: 1.2rem; }
+  .formulaire, .valeurs { padding: .85rem; }
+}

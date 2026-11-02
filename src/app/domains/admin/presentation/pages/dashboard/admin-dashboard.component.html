@@ -1,0 +1,132 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-gauge-high"></i></div>
+      <div>
+        <h1 class="ph-title">Tableau de Bord Administration</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Comptes · Sécurité · Système</p>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="sk-kpi-grid">
+    @for (i of [1,2,3,4]; track i) {
+    <div class="card sk-kpi-card"><div class="sk-shimmer sk-ico"></div><div class="sk-lines"><div class="sk-shimmer sk-s"></div><div class="sk-shimmer sk-l"></div></div></div>
+    }
+  </div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- KPI GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Utilisateurs</span>
+        <span class="kpi-val">{{ totalUtilisateurs() }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-user-check"></i> {{ nbActifs() }} actif(s)</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-signal"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Sessions actives</span>
+        <span class="kpi-val">{{ nbSessionsActives() }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-clock"></i> connectés en ce moment</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-ico ir"><i class="fa-solid fa-lock"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Comptes bloqués</span>
+        <span class="kpi-val" [style.color]="nbBloques()>0?'var(--r)':''">{{ nbBloques() }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-percent"></i> {{ tauxBlocage() }}% des comptes</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-clipboard-list"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Événements d'audit (24h)</span>
+        <span class="kpi-val">{{ nbEvenements24h() }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-rotate"></i> dernières 24 heures</div>
+      </div>
+    </div>
+  </div>
+
+  @if (incidentsResume(); as inc) {
+  <div class="section-titre"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</div>
+  <div class="kpi-grid kpi-grid-3">
+    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-body"><span class="kpi-lbl">Incidents actifs</span><span class="kpi-val">{{ inc.actifs }}</span><span class="kpi-meta">{{ inc.enCours }} en cours de traitement</span></div></div>
+    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-fire"></i></div><div class="kpi-body"><span class="kpi-lbl">Critiques actifs</span><span class="kpi-val" [style.color]="inc.critiquesActifs>0?'var(--r)':''">{{ inc.critiquesActifs }}</span><span class="kpi-meta">alerte temps réel déjà envoyée</span></div></div>
+    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-body"><span class="kpi-lbl">Résolus</span><span class="kpi-val">{{ inc.resolus }}</span><span class="kpi-meta">historique complet</span></div></div>
+  </div>
+  } @else if (incidentsError()) {
+  <div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i> Résumé des incidents indisponible : {{ incidentsError() }}</div>
+  }
+
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Activité récente (24h)</span>
+        <a routerLink="/admin/audit" class="btn btn-ghost btn-sm">Voir tout</a>
+      </div>
+      @if (activiteError()) {
+        <div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i> Activité indisponible : {{ activiteError() }}</div>
+      } @else if (activiteRecente().length === 0) {
+        <p class="text-muted">Aucun événement d'audit sur les dernières 24 heures.</p>
+      } @else {
+        <div class="activity-feed">
+          @for (a of activiteRecente(); track a.id) {
+          <div class="activity-row">
+            <div class="activity-ico" [class.activity-ico-err]="!a.succes"><i class="fa-solid {{ iconeAction(a.typeAction) }}"></i></div>
+            <div class="activity-body">
+              <span class="activity-title">{{ a.matricule }} · {{ a.typeAction }} · {{ a.ressource }}</span>
+              <span class="activity-meta">{{ a.module }} · {{ a.horodatage | date:'dd/MM HH:mm' }}</span>
+            </div>
+            @if (!a.succes) { <span class="badge bg-red">Échec</span> }
+          </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="card table-card">
+      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition par rôle</span></div>
+      @if (repartitionRoles().length === 0) {
+        <p class="text-muted">Aucun utilisateur.</p>
+      } @else {
+        <div class="role-breakdown">
+          @for (r of repartitionRoles(); track r.role) {
+          <div class="role-row">
+            <span class="role-label">{{ getRoleLabel(r.role) }}</span>
+            <div class="role-bar-wrap"><div class="role-bar" [style.width.%]="(r.count / totalUtilisateurs()) * 100"></div></div>
+            <span class="role-count">{{ r.count }}</span>
+          </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="section-titre"><i class="fa-solid fa-compass"></i> Accès rapide</div>
+  <div class="card-grid-auto">
+    @for (r of raccourcis; track r.route) {
+    <a [routerLink]="r.route" class="raccourci-card">
+      <div class="raccourci-ico"><i class="fa-solid {{ r.icone }}"></i></div>
+      <div class="raccourci-body">
+        <span class="raccourci-label">{{ r.label }}</span>
+        <span class="raccourci-desc">{{ r.description }}</span>
+      </div>
+      <i class="fa-solid fa-chevron-right raccourci-arrow"></i>
+    </a>
+    }
+  </div>
+
+  }
+</div>

@@ -1,0 +1,49 @@
+.section-titre { font-weight: 700; font-size: 0.95rem; color: var(--n700); display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
+.section-titre i { color: var(--g); }
+
+.error-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--r); gap: 12px; text-align: center; }
+.error-state i { font-size: 2rem; }
+
+/* Échec non bloquant d'un widget secondaire (incidents/activité) : signalé sans casser la page. */
+.widget-error { display: flex; align-items: center; gap: .5rem; padding: .7rem .9rem; border-radius: var(--r-md); background: var(--r-gh); color: var(--r); font-size: .82rem; }
+
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); gap: .5rem; }
+.card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
+.card-title i { color: var(--g); }
+.text-muted { color: var(--n500); font-size: .85rem; }
+
+/* Fil d'activité récente */
+.activity-feed { display: flex; flex-direction: column; gap: .3rem; }
+.activity-row { display: flex; align-items: center; gap: .75rem; padding: .5rem .3rem; border-radius: 8px; transition: background .15s; }
+.activity-row:hover { background: var(--n50); }
+.activity-ico { width: 32px; height: 32px; border-radius: 50%; background: var(--g-gh); color: var(--g); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.activity-ico-err { background: var(--r-gh); color: var(--r); }
+.activity-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.activity-title { font-size: .82rem; font-weight: 600; color: var(--n800); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-meta { font-size: .72rem; color: var(--n500); }
+
+/* Répartition par rôle */
+.role-breakdown { display: flex; flex-direction: column; gap: .6rem; }
+.role-row { display: flex; align-items: center; gap: .6rem; }
+.role-label { flex: 0 0 150px; font-size: .78rem; color: var(--n700); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.role-bar-wrap { flex: 1; height: 7px; background: var(--n100); border-radius: 99px; overflow: hidden; }
+.role-bar { height: 100%; background: var(--g); border-radius: 99px; }
+.role-count { flex: 0 0 24px; text-align: right; font-size: .78rem; font-weight: 700; color: var(--n700); }
+
+/* Raccourcis */
+.raccourci-card { display: flex; align-items: center; gap: .8rem; padding: 1rem; background: var(--w, #fff); border: 1px solid var(--n200); border-radius: var(--r-lg); text-decoration: none; transition: transform .15s, box-shadow .15s, border-color .15s; }
+.raccourci-card:hover { transform: translateY(-2px); box-shadow: var(--sh-md); border-color: var(--g-pale); }
+.raccourci-ico { width: 42px; height: 42px; border-radius: var(--r-md); background: var(--g-gh); color: var(--g); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.raccourci-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.raccourci-label { font-size: .88rem; font-weight: 700; color: var(--n800); }
+.raccourci-desc { font-size: .74rem; color: var(--n500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.raccourci-arrow { color: var(--n300); font-size: 12px; flex-shrink: 0; }
+
+@media (max-width: 860px) {
+  .section-row { grid-template-columns: 1fr; }
+  .role-label { flex-basis: 110px; }
+}
+@media (max-width: 480px) {
+  .raccourci-card { padding: .75rem; }
+  .raccourci-desc { white-space: normal; }
+}

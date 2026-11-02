@@ -48,6 +48,14 @@
       <div class="kpi-meta">après 3 tentatives échouées</div>
     </div>
   </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-signal"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Sessions actives</div>
+      <div class="kpi-val">{{ nbSessionsActives() }}</div>
+      <div class="kpi-meta">connectés en ce moment</div>
+    </div>
+  </div>
 </div>
 
 <!-- TABLE -->
@@ -109,6 +117,9 @@
                   <span class="badge bg-success">Actif</span>
                 } @else {
                   <span class="badge bg-neutral">Inactif</span>
+                }
+                @if (u.sessionActive) {
+                  <span class="session-dot" title="Session active"></span>
                 }
               </td>
               <td class="text-muted">{{ u.dateCreation | date:'dd/MM/yyyy' }}</td>
@@ -351,6 +362,11 @@
             @if (u.compteBloque) {
               <button class="btn btn-sm btn-danger" [disabled]="actionDetailEnCours()" (click)="debloquerCompte()">
                 <i class="fa-solid fa-lock-open"></i> Débloquer le compte
+              </button>
+            }
+            @if (u.sessionActive) {
+              <button class="btn btn-sm btn-danger" [disabled]="actionDetailEnCours()" (click)="forcerDeconnexion()">
+                <i class="fa-solid fa-right-from-bracket"></i> Forcer la déconnexion
               </button>
             }
             <button class="btn btn-sm btn-outline" [disabled]="actionDetailEnCours()" (click)="ouvrirResetPwd()">

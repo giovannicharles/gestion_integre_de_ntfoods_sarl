@@ -228,6 +228,7 @@ export class PouvoirsDelegationsComponent implements OnInit {
   }
 
   revoquerDelegation(d: DelegationDto) {
+    if (!confirm(`Révoquer cette délégation à ${this.nomUtilisateur(d.delegataireId)} ? Elle ne pourra plus valider à votre place dès maintenant.`)) return;
     const motif = 'Révoquée depuis l\'écran de gestion';
     this.validationService.revoquerDelegation(d.id, motif).subscribe({
       next: () => {
@@ -277,6 +278,7 @@ export class PouvoirsDelegationsComponent implements OnInit {
   }
 
   revoquerPouvoir(p: PouvoirValidationDto) {
+    if (!confirm(`Révoquer ce pouvoir de validation (${this.cible(p)}) ? Il ne comptera plus dans le quorum dès maintenant.`)) return;
     const motif = 'Révoqué depuis l\'écran de gestion';
     this.validationService.revoquerPouvoir(p.id, motif).subscribe({
       next: () => {

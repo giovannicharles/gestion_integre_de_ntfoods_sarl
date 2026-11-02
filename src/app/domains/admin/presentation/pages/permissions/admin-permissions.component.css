@@ -63,3 +63,8 @@
 
 .perm-code-link { cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--n300, #d1d5db); }
 .perm-code-link:hover { color: var(--g); }
+
+@media (max-width: 640px) {
+  .perm-row { flex-wrap: wrap; }
+  .perm-code { min-width: 0; flex-basis: 100%; }
+}

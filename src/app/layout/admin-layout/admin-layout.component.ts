@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, HostListener, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, HostListener, computed, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe, registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
@@ -11,6 +11,7 @@ import { NotificationCenterComponent } from '../../shared/notification-center/no
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
 // locale 'fr' — la page plantait (NG0701) à chaque rafraîchissement du relogue
@@ -35,7 +36,7 @@ interface NavItem { label: string; icon: string; route: string; }
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -84,6 +85,7 @@ export class AdminLayoutComponent implements OnInit {
    * audit — strictement « gestion du système » (CLAUDE.md, décision actée n°9).
    */
   comptesNavItems: NavItem[] = [
+    { label: 'Tableau de bord', icon: 'fa-gauge-high', route: '/admin/dashboard' },
     { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/admin/utilisateurs' },
     { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/admin/codes-observation' },
     { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
@@ -101,6 +103,13 @@ export class AdminLayoutComponent implements OnInit {
   ];
 
   private allNavItems(): NavItem[] { return [...this.comptesNavItems, ...this.systemeNavItems]; }
+
+  /** Palette de commandes Ctrl+K (2026-11-01, même composant que le module DG). */
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() => [
+    ...this.comptesNavItems.map(i => ({ ...i, groupe: 'Comptes & Organisation' })),
+    ...this.systemeNavItems.map(i => ({ ...i, groupe: 'Configuration technique' })),
+  ]);
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur) — filtre inline léger. */
   sidebarFiltre = signal('');

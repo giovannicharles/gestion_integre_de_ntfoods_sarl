@@ -114,3 +114,9 @@
 .actions {
   white-space: nowrap;
 }
+
+@media (max-width: 640px) {
+  .page { padding: 1rem; }
+  .page-header h1 { font-size: 1.15rem; }
+  .form-row label { flex-basis: 100%; }
+}

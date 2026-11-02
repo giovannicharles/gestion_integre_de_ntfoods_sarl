@@ -146,6 +146,21 @@
 .row-inactive { opacity: .55; }
 .row-inactive:hover { opacity: .8; }
 
+/* 2026-11-01 : pastille "session active" a cote du badge de statut. */
+.session-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--s, #16a34a); margin-left: 6px; vertical-align: middle;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.18);
+  animation: session-pulse 2s ease-in-out infinite;
+}
+@keyframes session-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-dot { animation: none; }
+}
+
 .table-footer {
   font-size: .8rem; color: var(--text-muted, #6b7280);
   padding-top: var(--sp-2, 8px); text-align: right;
