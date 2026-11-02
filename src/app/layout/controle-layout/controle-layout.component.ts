@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, HostListener, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, HostListener, computed, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -7,11 +7,14 @@ import localeFr from '@angular/common/locales/fr';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { ClockService } from '../../core/services/clock.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
+import { ControleService } from '../../domains/controle/infrastructure/controle.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -19,7 +22,7 @@ interface NavItem { label: string; icon: string; route: string; badge?: number; 
 @Component({
   selector: 'app-controle-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent],
   templateUrl: './controle-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -28,9 +31,11 @@ export class ControleLayoutComponent implements OnInit {
   alertBadge = inject(AlertBadgeService);
   authService = inject(AuthService);
   readonly theme = inject(ThemeService);
+  private readonly clock = inject(ClockService);
+  private readonly controleSvc = inject(ControleService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
-  currentTime = signal(new Date());
+  currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord Contrôle');
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
@@ -61,11 +66,11 @@ export class ControleLayoutComponent implements OnInit {
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/controle/validations' },
-    { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements', badge: 2, badgeClass: 'bd-red' },
+    { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements' },
     { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
     { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
     { label: 'Valorisation Stock', icon: 'fa-boxes-stacked', route: '/controle/valorisation' },
-    { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget', badge: 2, badgeClass: 'bd-orange' },
+    { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget' },
     { label: 'Variances Coûts', icon: 'fa-scale-unbalanced', route: '/controle/variances' },
     { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
     { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
@@ -75,8 +80,11 @@ export class ControleLayoutComponent implements OnInit {
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
 
+  /** Palette de commandes Ctrl+K (2026-11-02, même composant que les autres layouts). */
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() => this.navItems);
+
   ngOnInit() {
-    setInterval(() => this.currentTime.set(new Date()), 30000);
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
@@ -84,6 +92,22 @@ export class ControleLayoutComponent implements OnInit {
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);
     });
+
+    // 2026-11-02 : les badges "Décaissements"/"Budget & Achats" étaient des littéraux fixes
+    // (toujours "2"), jamais recalculés — même défaut que dg-layout (décaissements) corrigé le
+    // 2026-11-01. ControleDashboardService expose déjà decaissementsAttente/budgetDepasse.
+    this.controleSvc.getDashboard().subscribe({
+      next: d => {
+        this.setBadge('/controle/decaissements', d.decaissementsAttente, 'bd-red');
+        this.setBadge('/controle/budget', d.budgetDepasse, 'bd-orange');
+      },
+      error: () => {},
+    });
+  }
+
+  private setBadge(route: string, count: number, badgeClass: string): void {
+    const item = this.navItems.find(n => n.route === route);
+    if (item && count > 0) { item.badge = count; item.badgeClass = badgeClass; }
   }
 
   @HostListener('window:resize', ['$event'])
