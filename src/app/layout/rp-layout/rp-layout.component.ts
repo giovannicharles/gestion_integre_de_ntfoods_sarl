@@ -110,4 +110,10 @@ export class RpLayoutComponent implements OnInit {
     else this.sidebarOpen.update(v => !v);
   }
   closeMobile() { this.mobileOpen.set(false); }
+
+  logout(): void {
+    if (!confirm('Se déconnecter ?')) return;
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
 }

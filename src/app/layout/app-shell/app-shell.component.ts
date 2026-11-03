@@ -210,6 +210,7 @@ export class AppShellComponent {
   }
 
   logout(): void {
+    if (!confirm('Se déconnecter ?')) return;
     this.auth.logout();
     this.router.navigate(['/auth/login']);
   }

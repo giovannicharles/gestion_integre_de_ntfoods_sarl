@@ -202,4 +202,10 @@ export class DgLayoutComponent implements OnInit {
   toggleGroup(label: string) { this.expandedGroup.update(v => v === label ? null : label); }
   toggleNotifPanel() { this.showNotifPanel.update(v => !v); }
   closeNotifPanel() { this.showNotifPanel.set(false); }
+
+  logout(): void {
+    if (!confirm('Se déconnecter ?')) return;
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
 }

@@ -422,6 +422,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   closeMobile() { this.mobileOpen.set(false); }
 
   logout() {
+    if (!confirm('Se déconnecter ?')) return;
     this.authSvc.logout();
     this.router.navigate(['/auth/login']);
   }

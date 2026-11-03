@@ -82,6 +82,7 @@ export class CommercialLayoutComponent implements OnInit {
   closeMobile() { this.mobileOpen.set(false); }
 
   logout() {
+    if (!confirm('Se déconnecter ?')) return;
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }

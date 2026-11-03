@@ -101,6 +101,7 @@ export class ProductionLayoutComponent implements OnInit {
   closeMobile() { this.mobileOpen.set(false); }
 
   deconnexion(): void {
+    if (!confirm('Se déconnecter ?')) return;
     this.authSvc.logout();
     this.router.navigate(['/auth/login']);
   }
