@@ -23,7 +23,7 @@ export class MouvementsComponent implements OnInit, OnDestroy {
   Math=Math;
   toastMsg=signal(''); toastType=signal<'success'|'error'>('success');
   get pages(){return Array.from({length:this.totalPages()},(_,i)=>i+1);}
-  ngOnInit(){forkJoin({m:this.uc.getMovements(),l:this.uc.getAll(),p:this.api.get<StockMovement[]>('stock/movements/pending').pipe(catchError(()=>of([])))}).pipe(takeUntil(this.d$)).subscribe({next:({m,l,p})=>{this.all.set(m);this.levels.set(l);this.pendingCount.set(p?.length||0);this.applyFilters();this.loading.set(false);},error:()=>this.loading.set(false)});}
+  ngOnInit(){forkJoin({m:this.uc.getMovements(),l:this.uc.getAll(),p:this.api.get<StockMovement[]>('stock/movements/pending').pipe(catchError(()=>of([])))}).pipe(takeUntil(this.d$)).subscribe({next:({m,l,p})=>{this.all.set(m);this.levels.set(l);this.pendingCount.set(p?.length||0);this.applyFilters();this.loading.set(false);},error:()=>{this.loading.set(false);this.showToast('Erreur lors du chargement des mouvements','error');}});}
   applyFilters(){let r=this.all();if(this.search){const q=this.search.toLowerCase();r=r.filter(m=>(m.product?.designation||m.product?.sku||'').toLowerCase().includes(q)||(m.reference||m.referenceNumber||'').toLowerCase().includes(q));}if(this.filterType)r=r.filter(m=>m.type===this.filterType);if(this.filterProd)r=r.filter(m=>m.productId===+this.filterProd);if(this.filterStatus)r=r.filter(m=>(m.status||'VALIDATED')===this.filterStatus);this.filtered.set(r);const t=Math.ceil(r.length/this.ps)||1;this.totalPages.set(t);this.goTo(1);}
   goTo(p:number){const n=Math.max(1,Math.min(p,this.totalPages()));this.cp.set(n);const s=(n-1)*this.ps;this.paginated.set(this.filtered().slice(s,s+this.ps));}
   count(t:string){return this.all().filter(m=>m.type===t).length;}
@@ -35,7 +35,7 @@ export class MouvementsComponent implements OnInit, OnDestroy {
   getAjustSL(){return this.levels().find(sl=>sl.id===this.ajustId);}
   getTransfertSL(){return this.levels().filter(sl=>sl.warehouseId===1).find(sl=>sl.id===this.transfertId)||this.levels().filter(sl=>sl.warehouseId===1)[0];}
   getMPLevels(){return this.levels().filter(sl=>sl.warehouseId===1);}
-  sauverAjust(){if(!this.ajustId||!this.ajustMotif||this.ajustSaving())return;this.ajustSaving.set(true);this.uc.adjust(this.ajustId,this.ajustQty,this.ajustMotif).pipe(takeUntil(this.d$)).subscribe({next:()=>{this.ajustSaving.set(false);this.showAjust.set(false);this.showToast('Ajustement enregistré.','success');forkJoin({m:this.uc.getMovements(),l:this.uc.getAll()}).pipe(takeUntil(this.d$)).subscribe(({m,l})=>{this.all.set(m);this.levels.set(l);this.applyFilters();});},error:()=>this.ajustSaving.set(false)});}
+  sauverAjust(){if(!this.ajustId||!this.ajustMotif||this.ajustSaving())return;this.ajustSaving.set(true);this.uc.adjust(this.ajustId,this.ajustQty,this.ajustMotif).pipe(takeUntil(this.d$)).subscribe({next:()=>{this.ajustSaving.set(false);this.showAjust.set(false);this.showToast('Ajustement enregistré.','success');forkJoin({m:this.uc.getMovements(),l:this.uc.getAll()}).pipe(takeUntil(this.d$)).subscribe(({m,l})=>{this.all.set(m);this.levels.set(l);this.applyFilters();});},error:(err:any)=>{this.ajustSaving.set(false);const msg=err?.error?.message||'Erreur lors de l\'ajustement';this.showToast(msg,'error');}});}
   sauverTransfert(){
     if(!this.transfertId||this.transfertQty<=0||this.transfertSaving())return;
     this.transfertSaving.set(true);
