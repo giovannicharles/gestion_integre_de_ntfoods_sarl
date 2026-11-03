@@ -125,6 +125,7 @@
 
         @if (error()) {
           <div class="error-message" role="alert" aria-live="assertive">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
             <span>{{ error() }}</span>
           </div>
         }
@@ -138,15 +139,19 @@
               class="form-input"
               formControlName="matricule"
               placeholder="Ex: ADM-2025-0001"
+              autocomplete="username"
               [attr.aria-invalid]="loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid"
             />
             @if (loginForm.get('matricule')?.touched && loginForm.get('matricule')?.invalid) {
-              <div class="field-error">Le matricule est obligatoire</div>
+              <div class="field-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>Le matricule est obligatoire</div>
             }
           </div>
 
           <div class="form-group">
-            <label for="password" class="form-label">Mot de passe</label>
+            <div class="label-row">
+              <label for="password" class="form-label">Mot de passe</label>
+              <button type="button" class="forgot-password" (click)="goToForgotPassword()">Oublié ?</button>
+            </div>
             <div class="password-input">
               <input
                 id="password"
@@ -154,13 +159,14 @@
                 class="form-input"
                 formControlName="password"
                 placeholder="••••••••"
+                autocomplete="current-password"
                 [attr.aria-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
               />
               <button
                 type="button"
                 class="toggle-password"
                 (click)="togglePassword()"
-                [attr.aria-label]="showPassword ? 'Masquer' : 'Afficher'"
+                [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
               >
                 @if (showPassword) {
                   <i class="fa-solid fa-eye-slash"></i>
@@ -170,7 +176,7 @@
               </button>
             </div>
             @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-              <div class="field-error">Le mot de passe doit contenir au moins 6 caractères</div>
+              <div class="field-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>Le mot de passe doit contenir au moins 6 caractères</div>
             }
           </div>
 
@@ -178,19 +184,16 @@
             type="submit"
             class="submit-button"
             [disabled]="loginForm.invalid || loading()"
+            [attr.aria-busy]="loading()"
           >
             @if (!loading()) {
               <span>Se connecter</span>
+              <i class="fa-solid fa-arrow-right submit-arrow" aria-hidden="true"></i>
             } @else {
-              <span>Connexion en cours...</span>
+              <span class="spinner-ring" aria-hidden="true"></span>
+              <span>Connexion…</span>
             }
           </button>
-
-          <div class="form-footer">
-            <button type="button" class="forgot-password" (click)="goToForgotPassword()">
-              Mot de passe oublié ?
-            </button>
-          </div>
         </form>
       </div>
     </div>
