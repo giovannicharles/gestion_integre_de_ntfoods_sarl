@@ -96,39 +96,6 @@
   }
   }
 
-  @if (showForm()) {
-  <div class="modal-overlay" (click)="fermerFormulaire()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-gauge-high"></i> Définir un seuil</h3>
-        <button class="modal-close" (click)="fermerFormulaire()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Code produit</label>
-          <input type="text" class="form-control" [ngModel]="formCodeProduit()" (ngModelChange)="formCodeProduit.set($event)" placeholder="Ex: TBSA">
-        </div>
-        <div class="form-group">
-          <label>Entrepôt</label>
-          <select class="form-control" [ngModel]="formTypeEntrepot()" (ngModelChange)="formTypeEntrepot.set($event)">
-            <option value="CENTRAL">Stock central</option>
-            <option value="TAMPON">Stock tampon</option>
-            <option value="MOBILE">Stock mobile commercial</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Seuil de réapprovisionnement</label>
-          <input type="number" min="0" class="form-control" [ngModel]="formValeur()" (ngModelChange)="formValeur.set($event)">
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-outline" (click)="fermerFormulaire()">Annuler</button>
-        <button class="btn btn-primary" [disabled]="saving()" (click)="enregistrer()">
-          <i class="fa-solid" [class.fa-floppy-disk]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> Enregistrer
-        </button>
-      </div>
-    </div>
-  </div>
-  }
+  <app-seuil-form-modal (saved)="onSeuilEnregistre()" />
 
 </div>

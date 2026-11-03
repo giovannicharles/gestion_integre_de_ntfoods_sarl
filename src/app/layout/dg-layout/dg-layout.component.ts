@@ -107,7 +107,7 @@ export class DgLayoutComponent implements OnInit {
     // nouvelle page à créer.
     {
       label: 'Stock & Production', icon: 'fa-warehouse', children: [
-        { label: 'Synthèse Stock & Production', icon: 'fa-warehouse', route: '/dg/supervision' },
+        { label: 'Synthèse Stock & Production', icon: 'fa-warehouse', route: '/dg/supervision/stock-production' },
         { label: 'Seuils de réapprovisionnement', icon: 'fa-gauge-high', route: '/dg/seuils' },
       ]
     },

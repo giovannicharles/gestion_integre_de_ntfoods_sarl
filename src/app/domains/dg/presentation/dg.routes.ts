@@ -14,6 +14,11 @@ export const DG_ROUTES: Routes = [
       { path: 'objectifs', loadComponent: () => import('./pages/objectifs/dg-objectifs.component').then(m => m.DgObjectifsComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/dg-reporting.component').then(m => m.DgReportingComponent) },
       { path: 'supervision', loadComponent: () => import('./pages/supervision/dg-supervision.component').then(m => m.DgSupervisionComponent) },
+      // Même composant, scope réduit (2026-11-03) : le menu "Synthèse Stock & Production"
+      // pointait vers /dg/supervision sans distinction, donc affichait toujours la vue
+      // complète (financier/incidents/contrôle de gestion compris) au lieu de se limiter
+      // à Production + Stock.
+      { path: 'supervision/stock-production', loadComponent: () => import('./pages/supervision/dg-supervision.component').then(m => m.DgSupervisionComponent), data: { scope: 'stock-production' } },
       { path: 'seuils', loadComponent: () => import('./pages/seuils/dg-seuils.component').then(m => m.DgSeuilsComponent) },
       { path: 'securite', loadComponent: () => import('./pages/securite/dg-securite.component').then(m => m.DgSecuriteComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },

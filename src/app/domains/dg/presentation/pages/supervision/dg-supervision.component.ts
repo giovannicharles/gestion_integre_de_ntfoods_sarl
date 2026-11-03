@@ -1,5 +1,6 @@
 import { Component, signal, inject, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import {
@@ -35,6 +36,17 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('tresorerieCanvas') tresorerieCanvas?: ElementRef<HTMLCanvasElement>;
   private chart: Chart | null = null;
   private readonly dgSvc = inject(DgService);
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * 2026-11-03 (demande explicite du porteur) : le menu « Synthèse Stock & Production »
+   * et « Vue Consolidée » pointaient tous les deux vers cette même page sans distinction,
+   * donc le premier affichait toujours le contenu du second (financier, incidents, contrôle
+   * de gestion compris). Avec data.scope='stock-production' (route dédiée), la page ne
+   * garde que les sections Production et Stock ; sans ce data (ou scope='all'), rien ne
+   * change par rapport à avant.
+   */
+  scope = signal<'all' | 'stock-production'>('all');
 
   fCFA = fCFA;
   libelleCategorie = (c: string) => LIBELLE_CATEGORIE[c] ?? c;
@@ -63,6 +75,8 @@ export class DgSupervisionComponent implements OnInit, AfterViewInit, OnDestroy 
   controleGestion = signal<ControleGestionResumeBE | null>(null);
 
   ngOnInit(): void {
+    const scopeData = this.route.snapshot.data['scope'];
+    this.scope.set(scopeData === 'stock-production' ? 'stock-production' : 'all');
     this.charger();
   }
 

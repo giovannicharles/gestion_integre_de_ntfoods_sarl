@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DgService, SeuilBE, HistoriqueSeuilBE, DefinirSeuilRequestBE } from '../../../infrastructure/dg.service';
-import { ToastService } from '../../../../../core/services/toast.service';
+import { DgService, SeuilBE, HistoriqueSeuilBE } from '../../../infrastructure/dg.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { SeuilFormModalComponent } from './seuil-form-modal/seuil-form-modal.component';
 
 /**
  * Gouvernance des seuils de réapprovisionnement (P2, 2026-10-15) : écran manquant
@@ -16,26 +16,21 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 @Component({
   selector: 'app-dg-seuils',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [CommonModule, DatePipe, FormsModule, SeuilFormModalComponent],
   templateUrl: './dg-seuils.component.html',
   styleUrls: ['./dg-seuils.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DgSeuilsComponent implements OnInit {
   private readonly dgSvc = inject(DgService);
-  private readonly toast = inject(ToastService);
+
+  @ViewChild(SeuilFormModalComponent) modal?: SeuilFormModalComponent;
 
   loading = signal(true);
   loadError = signal<string | null>(null);
   seuils = signal<SeuilBE[]>([]);
   historique = signal<HistoriqueSeuilBE[]>([]);
   activeTab = signal<'seuils' | 'historique'>('seuils');
-
-  showForm = signal(false);
-  saving = signal(false);
-  formCodeProduit = signal('');
-  formTypeEntrepot = signal<'CENTRAL' | 'TAMPON' | 'MOBILE'>('CENTRAL');
-  formValeur = signal<number | null>(null);
 
   seuilsTries = computed(() =>
     [...this.seuils()].sort((a, b) => a.codeProduit.localeCompare(b.codeProduit) || a.typeEntrepot.localeCompare(b.typeEntrepot))
@@ -61,40 +56,10 @@ export class DgSeuilsComponent implements OnInit {
   }
 
   ouvrirFormulaire(seuil?: SeuilBE): void {
-    this.formCodeProduit.set(seuil?.codeProduit ?? '');
-    this.formTypeEntrepot.set(seuil?.typeEntrepot ?? 'CENTRAL');
-    this.formValeur.set(seuil?.seuilReapprovisionnement ?? null);
-    this.showForm.set(true);
+    this.modal?.ouvrir(seuil);
   }
 
-  fermerFormulaire(): void {
-    this.showForm.set(false);
-  }
-
-  enregistrer(): void {
-    const codeProduit = this.formCodeProduit().trim().toUpperCase();
-    const valeur = this.formValeur();
-    if (!codeProduit || valeur === null || valeur < 0) {
-      this.toast.error('Code produit et valeur (≥ 0) obligatoires.', 'Formulaire incomplet');
-      return;
-    }
-    const request: DefinirSeuilRequestBE = {
-      codeProduit,
-      typeEntrepot: this.formTypeEntrepot(),
-      seuilReapprovisionnement: valeur,
-    };
-    this.saving.set(true);
-    this.dgSvc.definirSeuil(request).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.showForm.set(false);
-        this.toast.success(`Seuil ${codeProduit} / ${request.typeEntrepot} enregistré.`);
-        this.charger();
-      },
-      error: e => {
-        this.saving.set(false);
-        this.toast.error(extractApiError(e), 'Échec de l\'enregistrement');
-      },
-    });
+  onSeuilEnregistre(): void {
+    this.charger();
   }
 }
