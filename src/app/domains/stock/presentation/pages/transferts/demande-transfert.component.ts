@@ -79,7 +79,7 @@ export class DemandeTransfertComponent implements OnInit {
         this.historique.set(t);
         this.chargementHistorique.set(false);
       },
-      error: () => this.chargementHistorique.set(false),
+      error: () => { this.chargementHistorique.set(false); this.toast.error('Erreur lors du chargement de l\'historique des transferts.'); },
     });
   }
 

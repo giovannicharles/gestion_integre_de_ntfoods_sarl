@@ -50,7 +50,7 @@ export class StockLotsProductionComponent implements OnInit {
     this.loading.set(true);
     this.svc.getLots().subscribe({
       next: list => { this.lots.set(list); this.loading.set(false); },
-      error: () => this.loading.set(false),
+      error: () => { this.loading.set(false); this.message.set('Erreur lors du chargement des lots'); },
     });
   }
 

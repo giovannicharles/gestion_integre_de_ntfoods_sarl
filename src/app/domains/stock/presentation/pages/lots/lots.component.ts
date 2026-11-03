@@ -42,7 +42,7 @@ export class LotsComponent implements OnInit {
     this.loading.set(true);
     this.repo.getStockBatches().pipe(takeUntil(this.d$)).subscribe({
       next: r => { this.batches.set(r); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      error: () => { this.loading.set(false); this.toast.error('Erreur lors du chargement des lots'); }
     });
   }
 
@@ -50,7 +50,7 @@ export class LotsComponent implements OnInit {
     this.loading.set(true);
     this.repo.getExpiringSoonBatches(30).pipe(takeUntil(this.d$)).subscribe({
       next: r => { this.batches.set(r); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      error: () => { this.loading.set(false); this.toast.error('Erreur lors du chargement des lots proches de la péremption'); }
     });
   }
 
@@ -58,7 +58,7 @@ export class LotsComponent implements OnInit {
     this.loading.set(true);
     this.repo.getExpiredBatches().pipe(takeUntil(this.d$)).subscribe({
       next: r => { this.batches.set(r); this.loading.set(false); },
-      error: () => this.loading.set(false)
+      error: () => { this.loading.set(false); this.toast.error('Erreur lors du chargement des lots périmés'); }
     });
   }
 
