@@ -9,7 +9,7 @@ import { Commercial, InfoProduits, InfoProduitsLine } from '../../../domain/mode
 @Component({ selector:'app-session', standalone:true, imports:[CommonModule,DatePipe,DecimalPipe,RouterLink,FormsModule], templateUrl:'./session.component.html', styleUrls:['./session.component.css'], changeDetection: ChangeDetectionStrategy.OnPush })
 export class SessionComponent implements OnInit, OnDestroy {
   private d$=new Subject<void>(); private uc=inject(CommercialUseCase); private repo=inject(StockApiRepository);
-  loading=signal(true); infos=signal<InfoProduits[]>([]); comms=signal<Commercial[]>([]);
+  loading=signal(true); error=signal(''); infos=signal<InfoProduits[]>([]); comms=signal<Commercial[]>([]);
   today=new Date(); selectedDate=signal<string>(new Date().toISOString().split('T')[0]); activeTab=signal<'info'|'comms'>('info');
   search=signal(''); statusFilter=signal<string>('');
   getPrise(ip:InfoProduits){return ip.lines.reduce((a:number,l:InfoProduitsLine)=>a+l.takenQty,0);}
@@ -24,7 +24,7 @@ export class SessionComponent implements OnInit, OnDestroy {
   getInfoColor(s:string){const m:Record<string,string>={DRAFT:'badge-warning',PENDING_CASH:'badge-primary',PENDING_ACCOUNTANT:'badge-secondary',CLOSED:'badge-success'};return m[s]||'badge-neutral';}
   getInfoLabel(s:string){const m:Record<string,string>={DRAFT:'Préparé',PENDING_CASH:'Att. caissière',PENDING_ACCOUNTANT:'Att. comptable',CLOSED:'Clôturé'};return m[s]||s;}
   fCFA(n:number){return new Intl.NumberFormat('fr-CM').format(Math.round(n))+' FCFA';}
-  load(){this.loading.set(true);forkJoin({i:this.uc.getInfoProduits(this.selectedDate()),c:this.uc.getCommercials()}).pipe(takeUntil(this.d$)).subscribe({next:({i,c})=>{this.infos.set(i);this.comms.set(c);this.loading.set(false);},error:()=>this.loading.set(false)});}
+  load(){this.loading.set(true);this.error.set('');forkJoin({i:this.uc.getInfoProduits(this.selectedDate()),c:this.uc.getCommercials()}).pipe(takeUntil(this.d$)).subscribe({next:({i,c})=>{this.infos.set(i);this.comms.set(c);this.loading.set(false);},error:()=>{this.loading.set(false);this.error.set('Erreur lors du chargement de la session du jour.');}});}
   ngOnInit(){this.load();}
   setDate(v:string){this.selectedDate.set(v);this.load();}
   shiftDate(days:number){const d=new Date(this.selectedDate());d.setDate(d.getDate()+days);this.setDate(d.toISOString().split('T')[0]);}

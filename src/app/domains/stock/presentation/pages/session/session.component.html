@@ -37,6 +37,8 @@
     </div>
   </div>
 
+  @if (error()) { <div class="banner banner-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div> }
+
   @if (loading()) { <div style="padding:60px;text-align:center;color:var(--n400)"><div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…</div> }
 
   @if (!loading() && activeTab()==='info') {
