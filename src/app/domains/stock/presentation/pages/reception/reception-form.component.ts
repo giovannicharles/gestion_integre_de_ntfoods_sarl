@@ -23,6 +23,7 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt.use-case';
 import { StockLocationDto } from '../../../infrastructure/repositories/stock-api.repository';
 import { Product, Receipt, ReceptionType } from '../../../domain/models';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface LineForm {
   uid: string;
@@ -227,7 +228,7 @@ export class ReceptionFormComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.saving.set(false);
-        this.errorMsg.set(err?.error?.message || 'Erreur lors de la création de la réception. Vérifiez les champs et réessayez.');
+        this.errorMsg.set(extractApiError(err));
       }
     });
   }
