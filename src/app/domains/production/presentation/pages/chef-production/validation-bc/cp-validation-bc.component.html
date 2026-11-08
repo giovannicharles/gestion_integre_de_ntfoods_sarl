@@ -104,6 +104,136 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
+     COMMANDES INTERNES STOCK -> PRODUCTION (en attente d'approbation)
+     ═══════════════════════════════════════════════════════ -->
+<div class="card" style="margin-top:1.5rem">
+  <div class="toolbar-row">
+    <div class="ph-left" style="gap:0.6rem">
+      <i class="fa-solid fa-warehouse" style="color:var(--g)"></i>
+      <div>
+        <strong>Commandes internes du Gestionnaire de Stock</strong>
+        <p class="ph-sub" style="margin:0">Demandes de production envoyées depuis le module Stock, en attente de votre approbation</p>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" (click)="chargerCommandesInternes()" title="Actualiser">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </button>
+  </div>
+
+  @if (commandesInternesLoading()) {
+    @for (i of [1,2]; track i) {
+      <div class="sk-shimmer skeleton-row"></div>
+    }
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Commande</th>
+            <th>Date</th>
+            <th>Nb lignes</th>
+            <th>Qté totale demandée</th>
+            <th>Demandeur</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of commandesInternes(); track o.id) {
+            <tr class="table-row-anim">
+              <td><strong>{{ o.orderNumber }}</strong></td>
+              <td>{{ o.orderDate | date:'dd/MM/yyyy' }}</td>
+              <td>{{ o.items.length }} ligne(s)</td>
+              <td class="text-right mono fw-bold">{{ montantInterneTotal(o) | number }}</td>
+              <td><span class="zone-chip">{{ o.requestedByName || o.requestedBy }}</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" (click)="ouvrirApprobationInterne(o)">
+                  <i class="fa-solid fa-check"></i> Approuver
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="fa-solid fa-inbox"></i>
+                  <p>Aucune commande interne en attente d'approbation</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL D'APPROBATION, COMMANDE INTERNE
+     ═══════════════════════════════════════════════════════ -->
+@if (commandeInterneAApprouver(); as o) {
+<div class="modal-overlay" (click)="annulerApprobationInterne()">
+  <div class="modal-box val-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-ico"><i class="fa-solid fa-warehouse"></i></div>
+        Approuver la commande interne
+      </div>
+      <button class="modal-close" (click)="annulerApprobationInterne()" [disabled]="approvingInterne()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body val-body">
+      <div class="confirm-block">
+        <i class="fa-solid fa-circle-info confirm-ico"></i>
+        <div>
+          <p class="confirm-title">Approuver la commande <strong>{{ o.orderNumber }}</strong> ?</p>
+          <p class="confirm-sub">
+            Le Gestionnaire de Stock pourra ensuite enregistrer la livraison au fur et à mesure
+            de la production. {{ o.notes ? 'Note du demandeur : ' + o.notes : '' }}
+          </p>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code produit</th>
+              <th>Désignation</th>
+              <th class="text-right">Qté demandée</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of o.items; track l.id) {
+              <tr>
+                <td><strong class="mono" style="color:var(--g)">{{ l.productSku }}</strong></td>
+                <td>{{ l.productName }}</td>
+                <td class="text-right mono fw-bold">{{ l.requestedQty }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (error()) {
+        <div class="banner banner-warning" style="margin-top:12px">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}
+        </div>
+      }
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="annulerApprobationInterne()" [disabled]="approvingInterne()">Annuler</button>
+      <button class="btn btn-primary" (click)="approuverCommandeInterne()" [disabled]="approvingInterne()">
+        @if (approvingInterne()) {
+          <span class="spinner spinner-sm"></span> Approbation en cours…
+        } @else {
+          <i class="fa-solid fa-check"></i> Approuver
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
      MODAL DE CONFIRMATION
      ═══════════════════════════════════════════════════════ -->
 @if (bcAValider(); as bc) {
@@ -149,7 +279,7 @@
             @if (montantTotal(bc) > 0) {
               {{ montantTotal(bc) | number:'1.0-0' }} FCFA
             } @else {
-            ,
+              <span class="text-muted">-</span>
             }
           </span>
         </div>
@@ -183,7 +313,7 @@
                   @if (l.prixUnitaireHT != null) {
                     {{ l.prixUnitaireHT | number:'1.0-0' }} FCFA
                   } @else {
-                  ,
+                    <span class="text-muted">-</span>
                   }
                 </td>
               </tr>
