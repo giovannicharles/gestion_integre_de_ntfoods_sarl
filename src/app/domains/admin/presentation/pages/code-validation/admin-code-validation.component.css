@@ -1,3 +1,11 @@
 /* Réécrit le 2026-10-16 pour utiliser les classes globales (.dash, .ph, .card, .data-table,
    .modal-overlay, .modal-box, .form-group...) au lieu de 388 lignes de style local dupliqué
    et divergent du reste de l'application. */
+
+/* 2026-11-08 : les 7 derniers styles inline (ponctuels, propres à cet écran) passés en classes. */
+.mb-sp4 { margin-bottom: var(--sp-4); }
+.span-all { grid-column: 1 / -1; }
+.ico-user { margin-right: 6px; color: var(--n400); }
+.echecs-hint { font-size: 11px; color: var(--r); }
+.code-reveal { font-size: 1.3rem; letter-spacing: .08em; background: var(--n50); padding: 10px 14px; border-radius: var(--r-md); text-align: center; }
+.code-warning { margin-top: 12px; color: var(--r); }

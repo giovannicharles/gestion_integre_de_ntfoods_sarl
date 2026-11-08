@@ -101,6 +101,10 @@
 .sb-collapse-btn:hover {
   background: rgba(26, 107, 42, 0.2);
 }
+.sb-collapse-btn:focus-visible {
+  outline: 2px solid var(--y);
+  outline-offset: 2px;
+}
 
 /* ── User Card ── */
 .sb-user {
@@ -119,6 +123,10 @@
 }
 .sb-user:hover {
   background: rgba(0, 0, 0, 0.16);
+}
+.sb-user:focus-visible {
+  outline: 2px solid var(--y);
+  outline-offset: -2px;
 }
 .sb-av {
   width: 38px;
@@ -295,8 +303,12 @@
   background: rgba(255, 255, 255, 0.18);
   color: white;
 }
+/* 2026-11-08 (signalé par le porteur, « bleu sur les liens du sidebar ») : var(--b) est un bleu
+   hors charte (vert/or/rouge/orange TANTY) qui ne devrait jamais apparaître dans ce shell. Seul
+   point d'écriture de --b dans toute la feuille partagée - remplacé par la nuance verte claire
+   déjà utilisée pour les barres de progression positives, pour rester dans la charte. */
 .bd-blue {
-  background: var(--b);
+  background: var(--g-l);
   color: white;
 }
 .sb-item.sb-active .sb-badge {
@@ -561,6 +573,10 @@
 }
 .logo-alert-badge:hover {
   transform: scale(1.1);
+}
+.logo-alert-badge:focus-visible {
+  outline: 2px solid var(--y);
+  outline-offset: 2px;
 }
 .logo-alert-badge .lab-count {
   line-height: 1;

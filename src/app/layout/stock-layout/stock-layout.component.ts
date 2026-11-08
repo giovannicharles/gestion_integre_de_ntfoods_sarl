@@ -151,6 +151,9 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       title: 'Catalogue & Valorisation', icon: 'fa-tags',
       items: [
         { label: 'Gestion Produits', icon: 'fa-boxes-stacked', route: '/stock/produits', roles: ['DIRECTEUR_GENERAL', 'ADMIN'] },
+        // STOCK_CONDITIONNEMENT_GERER (backend) est accordée à GESTIONNAIRE_STOCK et DIRECTEUR_GENERAL
+        // (ConditionnementController) : écran jamais routé jusqu'ici, ajouté le 2026-11-08.
+        { label: 'Marques, Gammes & Conditionnement', icon: 'fa-layer-group', route: '/stock/conditionnement', roles: ['GESTIONNAIRE_STOCK', 'DIRECTEUR_GENERAL', 'ADMIN'] },
         { label: 'Classification ABC', icon: 'fa-tags', route: '/stock/classification' },
         { label: 'Valorisation', icon: 'fa-coins', route: '/stock/valorisation', roles: ['GESTIONNAIRE_STOCK', 'COMPTABLE', 'DIRECTEUR_GENERAL', 'ADMIN'] },
         { label: 'Matériel', icon: 'fa-screwdriver-wrench', route: '/stock/materiels' },

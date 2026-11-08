@@ -92,6 +92,12 @@ export class AdminLayoutComponent implements OnInit {
     { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
     { label: 'Codes de validation', icon: 'fa-key', route: '/admin/codes-validation' },
     { label: 'Permissions & RBAC', icon: 'fa-user-shield', route: '/admin/permissions' },
+    { label: 'Workflows de validation', icon: 'fa-diagram-project', route: '/admin/validation-workflows' },
+    // Distinct de "Paramètres système" (/admin-systeme/parametres, AdminSystemeService, déjà
+    // routé) : celui-ci couvre TVA/prime/seuil d'alerte + référentiels zones/gammes/villes
+    // (AdminService), jamais le même écran malgré le nom proche - vérifié avant d'ajouter.
+    { label: 'Paramètres métier (TVA, zones...)', icon: 'fa-sliders', route: '/admin/parametres' },
+    { label: 'Règles métier datées (primes, caisse...)', icon: 'fa-scale-balanced', route: '/admin/parametrages-metier' },
   ];
 
   /** Section « Configuration technique », module backend `admin` (ParametreSysteme). */

@@ -10,6 +10,7 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink],
   templateUrl: './rp-dashboard.component.html',
+  styleUrls: ['./rp-dashboard.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RpDashboardComponent implements OnInit {

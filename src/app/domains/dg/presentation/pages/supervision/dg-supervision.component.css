@@ -17,3 +17,10 @@
 .card-title i { color: var(--g); }
 .chart-card { padding: var(--sp-4); }
 .chart-wrap { height: 260px; position: relative; }
+
+@media (max-width: 767px) {
+  .chart-card { padding: 14px; }
+  .chart-wrap { height: 200px; }
+  .card-hd { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .incidents-module-breakdown { gap: .4rem; }
+}

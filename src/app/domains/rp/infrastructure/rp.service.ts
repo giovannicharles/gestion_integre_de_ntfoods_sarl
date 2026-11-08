@@ -31,8 +31,9 @@ export interface PerformanceGammeResponse {
   gamme: string;
   ca: number;
   objectif: number;
-  marge: number;
-  stock: string;
+  /** Absents tant qu'aucun rattachement fiable produit → gamme commerciale n'existe (backend). */
+  marge: number | null;
+  stock: string | null;
 }
 
 export interface OccupationMarcheResponse {

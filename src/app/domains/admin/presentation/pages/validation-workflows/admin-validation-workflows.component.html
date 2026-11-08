@@ -4,7 +4,7 @@
       <i class="fa-solid fa-shield-halved"></i>
       Workflows de Validation
     </h1>
-    <p class="subtitle">Configurez les workflows de validation multi-codes pour les opérations sensibles</p>
+    <p class="subtitle">Configurez le moteur d'approbation : quel seuil de poids, quels rôles, pour chaque type d'action sensible</p>
   </div>
 
   <div class="card">
@@ -13,7 +13,7 @@
         <i class="fa-solid fa-list"></i>
         Workflows Configurés
       </h2>
-      <button class="btn btn-primary" (click)="showCreateModal = true">
+      <button class="btn btn-primary" *appCan="['ADMIN','DIRECTEUR_GENERAL']" (click)="showCreateModal = true">
         <i class="fa-solid fa-plus"></i>
         Nouveau Workflow
       </button>
@@ -43,7 +43,7 @@
               <th>Code</th>
               <th>Nom</th>
               <th>Module</th>
-              <th>Min Validations</th>
+              <th>Seuil (poids)</th>
               <th>Max Validations</th>
               <th>Délai Max</th>
               <th>État</th>
@@ -64,7 +64,7 @@
                   <span class="module-badge">{{ workflow.moduleSource }}</span>
                 </td>
                 <td>
-                  <span class="validations-count">{{ workflow.minValidations }}</span>
+                  <span class="validations-count">{{ workflow.seuilPonderation }}</span>
                 </td>
                 <td>
                   @if (workflow.maxValidations) {
@@ -95,11 +95,10 @@
                 </td>
                 <td>
                   <div class="actions">
-                    <button class="btn btn-sm btn-secondary" (click)="editerWorkflow(workflow)" title="Modifier">
-                      <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button class="btn btn-sm [workflow.actif ? 'btn-warning' : 'btn-success']" (click)="activerDesactiver(workflow)" [title]="workflow.actif ? 'Désactiver' : 'Activer'">
-                      <i class="fa-solid [workflow.actif ? 'fa-pause' : 'fa-play']"></i>
+                    <button class="btn btn-sm" *appCan="['ADMIN','DIRECTEUR_GENERAL']"
+                            [class.btn-warning]="workflow.actif" [class.btn-success]="!workflow.actif"
+                            (click)="activerDesactiver(workflow)" [title]="workflow.actif ? 'Désactiver' : 'Activer'">
+                      <i class="fa-solid" [class.fa-pause]="workflow.actif" [class.fa-play]="!workflow.actif"></i>
                     </button>
                   </div>
                 </td>
@@ -157,8 +156,9 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="minValidations">Min Validations *</label>
-                <input type="number" id="minValidations" [(ngModel)]="newWorkflow.minValidations" name="minValidations" min="1" value="2">
+                <label for="seuilPonderation">Seuil de poids requis *</label>
+                <input type="number" id="seuilPonderation" [(ngModel)]="newWorkflow.seuilPonderation" name="seuilPonderation" min="1" value="1">
+                <p class="form-hint">Somme des poids de validation nécessaire (1 = une seule validation suffit).</p>
               </div>
               <div class="form-group">
                 <label for="maxValidations">Max Validations (optionnel)</label>
@@ -172,8 +172,8 @@
                 <input type="number" id="delaiMaxHeures" [(ngModel)]="newWorkflow.delaiMaxHeures" name="delaiMaxHeures" min="1">
               </div>
               <div class="form-group">
-                <label for="rolesAutorises">Rôles Autorisés (JSON)</label>
-                <input type="text" id="rolesAutorises" [(ngModel)]="newWorkflow.rolesAutorises" name="rolesAutorises" placeholder='["GESTIONNAIRE_STOCK", "DIRECTEUR_COMMERCIAL"]'>
+                <label for="rolesAutorises">Rôles Autorisés (vide = tous)</label>
+                <input type="text" id="rolesAutorises" [(ngModel)]="newWorkflow.rolesAutorises" name="rolesAutorises" placeholder="GESTIONNAIRE_STOCK, DIRECTEUR_GENERAL">
               </div>
             </div>
 
@@ -190,12 +190,12 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="closeCreateModal()">
+          <button class="btn btn-secondary" (click)="closeCreateModal()" [disabled]="saving">
             <i class="fa-solid fa-xmark"></i>
             Annuler
           </button>
-          <button class="btn btn-primary" (click)="creerWorkflow()" [disabled]="!newWorkflow.code || !newWorkflow.nom || !newWorkflow.moduleSource">
-            <i class="fa-solid fa-check"></i>
+          <button class="btn btn-primary" (click)="creerWorkflow()" [disabled]="saving || !newWorkflow.code || !newWorkflow.nom || !newWorkflow.moduleSource">
+            @if (saving) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
             Créer
           </button>
         </div>

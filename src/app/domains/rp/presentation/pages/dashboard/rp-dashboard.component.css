@@ -1,0 +1,16 @@
+/* 2026-11-08 : extrait les styles inline du template (jusqu'ici le seul dashboard du dépôt
+   sans fichier CSS dédié) en classes réelles, même convention que DG/Comptable. */
+.kpi-val-sub { font-size: 13px; color: var(--n400); }
+.prog-bar-wrap-top { margin-top: 4px; }
+.gammes-list { padding: 0 var(--sp-4) var(--sp-4); }
+.gamme-row { margin-bottom: 14px; }
+.gamme-row-hd { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.gammes-empty { padding: 8px 0; }
+.occ-cell { display: flex; align-items: center; gap: 10px; }
+.occ-bar { max-width: 120px; }
+.compte-contact { font-size: 11px; color: var(--n400); }
+
+@media (max-width: 767px) {
+  .card { padding: 14px; }
+  .card-hd { flex-direction: column; align-items: flex-start; gap: 8px; }
+}

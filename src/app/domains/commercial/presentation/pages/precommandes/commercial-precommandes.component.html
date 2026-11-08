@@ -102,12 +102,12 @@
 @if (showRefus()) {
 <div class="modal-overlay" (click)="showRefus.set(false)">
   <div class="modal-box" (click)="$event.stopPropagation()">
-    <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Refuser la précommande {{ refusNumero }}</h3>
+    <h3 class="modal-title">Refuser la précommande {{ refusNumero }}</h3>
     <div class="form-group">
       <label>Motif de refus</label>
       <input type="text" class="form-input" [(ngModel)]="refusMotif" placeholder="Motif obligatoire">
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+    <div class="modal-actions">
       <button class="btn btn-ghost" (click)="showRefus.set(false)">Fermer</button>
       <button class="btn btn-danger" (click)="confirmerRefus()" [disabled]="refusSaving() || !refusMotif">
         @if (refusSaving()) { Refus… } @else { Confirmer le refus }

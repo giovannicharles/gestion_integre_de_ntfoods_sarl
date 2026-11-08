@@ -61,6 +61,9 @@ export const STOCK_ROUTES: Routes = [
       { path: 'classification', loadComponent: () => import('./pages/classification/classification-list.component').then(m => m.ClassificationListComponent) },
       { path: 'materiels', loadComponent: () => import('./pages/materiels/materiel-list.component').then(m => m.MaterielListComponent) },
       { path: 'produits', loadComponent: () => import('./pages/produits/produits.component').then(m => m.ProduitsComponent) },
+      // Référentiel marques/gammes/variétés/emballages (2026-11-08) : écran existant, jamais routé
+      // nulle part - inaccessible depuis l'interface malgré un CRUD backend complet.
+      { path: 'conditionnement', loadComponent: () => import('../../conditionnement/presentation/pages/conditionnement/conditionnement.component').then(m => m.ConditionnementComponent) },
       { path: 'valorisation', loadComponent: () => import('./pages/valorisation/valorisation.component').then(m => m.ValorisationComponent) },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },
       { path: 'notifications', loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent) },

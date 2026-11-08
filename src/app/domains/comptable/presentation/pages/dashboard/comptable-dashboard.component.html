@@ -40,7 +40,7 @@
       <div class="kpi-ico iy"><i class="fa-solid fa-clipboard-check"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Commandes à Valider</span>
-        <span class="kpi-val" [style.color]="commandesEnAttente()>0?'var(--o)':''">{{ commandesEnAttente() }}</span>
+        <span class="kpi-val" [class.text-warning]="commandesEnAttente()>0">{{ commandesEnAttente() }}</span>
         <div class="kpi-meta">Précommandes J+1, délai 17h00</div>
       </div>
     </div>
@@ -58,7 +58,7 @@
       <div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Créances en Cours</span>
-        <span class="kpi-val" [style.color]="totalDettes()>0?'var(--r)':''">{{ fCFA(totalDettes()) }}</span>
+        <span class="kpi-val" [class.text-danger]="totalDettes()>0">{{ fCFA(totalDettes()) }}</span>
         <div class="kpi-meta">{{ dossierActifs() }} dossiers actifs</div>
       </div>
     </div>
@@ -160,10 +160,10 @@
   <div class="section-row">
     <div class="card table-card">
       <div class="card-hd"><span class="card-title"><i class="fa-solid fa-receipt"></i> Engagement budgétaire par poste</span></div>
-      <div style="padding:0 var(--sp-4) var(--sp-4)">
+      <div class="budget-list">
         @for (b of budget; track b.id) {
-        <div style="margin-bottom:13px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <div class="budget-row">
+          <div class="budget-row-hd">
             <span class="fw-bold">{{ b.poste }}</span>
             <span class="mono">{{ fCFA(b.engage) }} · {{ budgetPart(b) }}%</span>
           </div>
@@ -183,7 +183,7 @@
           <tbody>
             @for (v of variance; track v.poste) {
             <tr>
-              <td style="font-size:12px">{{ v.poste }}</td>
+              <td class="variance-poste">{{ v.poste }}</td>
               <td class="mono">{{ v.standard }}</td>
               <td class="mono">{{ v.reel }}</td>
               <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>

@@ -51,6 +51,25 @@ export const ADMIN_ROUTES: Routes = [
         path: 'permissions',
         loadComponent: () => import('./pages/permissions/admin-permissions.component').then(m => m.AdminPermissionsComponent)
       },
+      {
+        // 2026-11-08 : même motif récurrent que codes-validation/incidents ci-dessus - écran déjà
+        // écrit, jamais routé, et appelait un endpoint qui n'a jamais existé côté backend
+        // (ValidationWorkflowController ajouté dans la même tranche).
+        path: 'validation-workflows',
+        loadComponent: () => import('./pages/validation-workflows/admin-validation-workflows.component').then(m => m.AdminValidationWorkflowsComponent)
+      },
+      {
+        // 2026-11-08 : même motif - écran déjà écrit et fonctionnel (AdminService.getParametres/
+        // modifierParametres/ajouterReferentiel/supprimerReferentiel, tous réels), jamais routé.
+        path: 'parametres',
+        loadComponent: () => import('./pages/parametres/admin-parametres.component').then(m => m.AdminParametresComponent)
+      },
+      {
+        // 2026-11-08 : même motif - paramétrage des règles métier datées (barème primes, caisse,
+        // objectifs, règles d'avarie), 4 endpoints réels (ParametrageMetierService), jamais routé.
+        path: 'parametrages-metier',
+        loadComponent: () => import('./pages/parametres/parametrages-metier.component').then(m => m.ParametragesMetierComponent)
+      },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       {
         path: 'profil',

@@ -1,7 +1,7 @@
 import { Component, inject, signal, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../core/services/api.service';
+import { ApiService } from '../../core/http/api.service';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -63,19 +63,29 @@ export class ChatbotComponent {
     this.error.set(null);
 
     const context = this.context();
-    this.apiService.post('/api/v1/ia/chat', {
+    const contexteTexte = [
+      context.entityReference ? `Référence concernée : ${context.entityReference}` : null,
+      context.entityId ? `Identifiant : ${context.entityId}` : null,
+      context.additionalData ? JSON.stringify(context.additionalData) : null,
+    ].filter(Boolean).join('\n') || undefined;
+
+    // 2026-11-08 : appelait /api/v1/ia/chat (IaController réel = /api/ia/chat, sans "v1", en
+    // plus du double préfixe /api déjà ajouté par ApiService) avec un corps qui ne correspondait
+    // à aucun champ de ChatRequest (module/entityId/entityReference/additionalData n'existent
+    // pas côté backend, seuls message/context/domain/conversationHistory sont lus) et lisait
+    // response.response/response.message, alors que ChatResponse ne porte que `reply` - même en
+    // corrigeant l'URL, la réponse de l'IA n'aurait jamais été affichée.
+    this.apiService.post<{ reply: string; model: string; usingFallback: boolean }>('ia/chat', {
       message,
-      module: context.module,
-      entityId: context.entityId,
-      entityReference: context.entityReference,
-      additionalData: context.additionalData
+      domain: context.module,
+      context: contexteTexte
     }).subscribe({
-      next: (response: any) => {
-        this.addAssistantMessage(response.response || response.message || 'Réponse reçue');
+      next: response => {
+        this.addAssistantMessage(response.reply || 'Réponse reçue');
         this.loading.set(false);
         this.messageSent.emit(message);
       },
-      error: (err) => {
+      error: () => {
         this.error.set('Erreur lors de la communication avec l\'assistant');
         this.loading.set(false);
         this.addAssistantMessage('Désolé, je n\'ai pas pu traiter votre demande. Veuillez réessayer.');

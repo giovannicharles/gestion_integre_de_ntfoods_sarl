@@ -67,10 +67,10 @@
           <tbody>
             @for (l of filtered(); track l.id) {
               <tr>
-                <td class="mono" style="font-size:11px">{{ l.idempotencyKey }}</td>
+                <td class="mono cell-mono-sm">{{ l.idempotencyKey }}</td>
                 <td>{{ l.matriculeCommercial }}</td>
                 <td><span class="badge badge-neutral">{{ l.entityType }}</span></td>
-                <td class="mono" style="font-size:11px">{{ l.entityRef }}</td>
+                <td class="mono cell-mono-sm">{{ l.entityRef }}</td>
                 <td><span [class]="resultClass(l.result)">{{ l.result }}</span></td>
                 <td>{{ l.dateTraitement | date:'dd/MM/yyyy HH:mm' }}</td>
               </tr>

@@ -9,6 +9,17 @@
    :root.dark-mode, cassé en mode sombre. Remplacés ci-dessous par les tokens globaux,
    dégradés/ombres/micro-interactions conservés à l'identique. */
 
+/* 2026-11-08 : les 4 placeholders de chargement référençaient une classe `.skeleton` qui
+   n'existe NULLE PART dans ce fichier ni globalement (vérifié) - ils s'affichaient donc sans
+   aucun fond ni animation, juste une boîte vide à la bonne hauteur. Remplacés par le vrai
+   `.sk-shimmer` global (styles.css), déjà utilisé ailleurs dans l'app (ex. DG), avec ses
+   variantes de taille ici en classes plutôt qu'en style inline. */
+.sk-row { height: 18px; }
+.sk-card { height: 120px; border-radius: 12px; }
+.sk-line { height: 18px; }
+.sk-line-mb { margin-bottom: 8px; }
+.sk-line-70 { width: 70%; }
+
 /* ══════════════════════════════════════════════════════════
    EN-TÊTE
 ══════════════════════════════════════════════════════════ */
@@ -324,6 +335,23 @@
   border-left-color: var(--r);
   color: var(--r);
 }
+
+/* 2026-11-08 : remplace --warning-bg/--warning-text/--warning-border, jamais définis nulle part
+   (toujours retombés sur leurs hex de secours #fff3e0/#e65100/#ffcc80, jamais reliés au thème
+   et cassés en mode sombre) par les vrais tokens --o/--o-gh déjà utilisés partout pour l'avertissement. */
+.nu-toast-warn {
+  background: var(--o-gh);
+  color: var(--o);
+  border-left-color: var(--o);
+  padding: 10px;
+  margin-bottom: 12px;
+  font-size: .82rem;
+}
+
+/* Variante compacte du modal, pour les confirmations courtes (mot de passe, changement de rôle) */
+.nu-modal-sm { max-width: 420px; }
+
+.search-input { min-width: 200px; }
 
 /* Section titles */
 .nu-section-title {

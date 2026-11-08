@@ -78,6 +78,19 @@
 .dash-tabs { margin-bottom: var(--sp-4); }
 .tab-hidden { display: none; }
 
+/* 2026-11-08 : remplace les derniers blocs style="..." inline du template (incohérents avec le
+   reste de la page, déjà 100% classes) par ces mêmes règles posées en CSS. */
+.occ-cell { display: flex; align-items: center; gap: 10px; }
+.occ-bar { max-width: 110px; }
+.anomalies-list { padding: 0 var(--sp-4) var(--sp-4); display: flex; flex-direction: column; gap: 10px; }
+.anomalie-row { padding: 11px 12px; background: var(--n50); border-radius: var(--r-md); }
+.anomalie-row-hd { display: flex; justify-content: space-between; gap: 8px; }
+.anomalie-cat { font-size: 12px; }
+.anomalie-desc { font-size: 11px; color: var(--n500); margin-top: 3px; }
+.arbitrage-promo { padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.arbitrage-promo-left { display: flex; align-items: center; gap: 14px; }
+.arbitrage-promo-desc { font-size: 12px; color: var(--n500); }
+
 @media (max-width: 900px) { .charts-row, .section-row { grid-template-columns: 1fr; } }
 
 @media (max-width:767px) {
@@ -92,4 +105,6 @@
   .validation-row { flex-direction:column; align-items:flex-start; }
   .maj-ts { display:block; margin-left:0; }
   .dash-tabs { flex-wrap:wrap; }
+  .arbitrage-promo { flex-direction:column; align-items:flex-start; }
+  .arbitrage-promo > .btn { width:100%; justify-content:center; }
 }

@@ -64,7 +64,24 @@
 .perm-code-link { cursor: pointer; text-decoration: underline dotted; text-decoration-color: var(--n300, #d1d5db); }
 .perm-code-link:hover { color: var(--g); }
 
+/* 2026-11-08 : les 16 styles inline du template (padding/marges/listes défilantes ponctuelles,
+   propres à cet écran) passés en classes, même convention que les autres écrans déjà nettoyés. */
+.panel-body { padding: 0 var(--sp-4) var(--sp-4); }
+.mb-10 { margin-bottom: 10px; }
+.mb-12 { margin-bottom: 12px; }
+.wrap { flex-wrap: wrap; }
+.scroll-420 { max-height: 420px; overflow-y: auto; }
+.scroll-320 { max-height: 320px; overflow-y: auto; }
+.search-row { display: flex; gap: 8px; }
+.user-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-btn { cursor: pointer; border: none; }
+.fk-val-sm { font-size: 14px; }
+.card-hd-tight { padding: 0 0 8px 0; }
+.card-title-sm { font-size: 13px; }
+.perm-code-sm { font-size: 11px; }
+
 @media (max-width: 640px) {
   .perm-row { flex-wrap: wrap; }
   .perm-code { min-width: 0; flex-basis: 100%; }
+  .search-row { flex-direction: column; }
 }

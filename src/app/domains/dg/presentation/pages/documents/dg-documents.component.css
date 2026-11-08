@@ -10,3 +10,12 @@
   color: var(--n600);
   margin-bottom: 5px;
 }
+
+/* 2026-11-08 : filtre de recherche, styles inline du template extraits en classes. */
+.panel-body { padding: 0 var(--sp-4) var(--sp-4); }
+.doc-filter-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.doc-filter-field { flex: 1; min-width: 200px; }
+
+@media (max-width: 480px) {
+  .doc-filter-field { min-width: 100%; }
+}

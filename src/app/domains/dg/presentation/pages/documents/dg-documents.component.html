@@ -15,15 +15,15 @@
     <div class="card-hd">
       <span class="card-title"><i class="fa-solid fa-upload"></i> Importer un document</span>
     </div>
-    <div style="padding:0 var(--sp-4) var(--sp-4)">
-      <div class="form-row" style="display:flex;gap:12px;flex-wrap:wrap">
-        <div class="form-group" style="flex:1;min-width:200px">
+    <div class="panel-body">
+      <div class="form-row doc-filter-row">
+        <div class="form-group doc-filter-field">
           <label>Type de document</label>
           <select class="form-control" [(ngModel)]="typeDocument">
             @for (t of docTypes; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
           </select>
         </div>
-        <div class="form-group" style="flex:1;min-width:200px">
+        <div class="form-group doc-filter-field">
           <label>Référence</label>
           <input type="text" class="form-control" [(ngModel)]="reference" placeholder="ex : FAC-2026-001">
         </div>

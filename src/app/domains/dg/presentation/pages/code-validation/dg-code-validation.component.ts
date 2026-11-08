@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CodeValidationService, CodeValidation, AttributionCodeResponse } from '../../../../core/services/code-validation.service';
-import { ApiService } from '../../../../core/services/api.service';
+import { AdminService } from '../../../../admin/infrastructure/admin.service';
 
 @Component({
   selector: 'app-dg-code-validation',
@@ -13,7 +13,7 @@ import { ApiService } from '../../../../core/services/api.service';
 })
 export class DgCodeValidationComponent implements OnInit {
   private codeValidationService = inject(CodeValidationService);
-  private apiService = inject(ApiService);
+  private adminService = inject(AdminService);
 
   codes = this.codeValidationService.codesActifs;
   loading = this.codeValidationService.loading;
@@ -37,10 +37,11 @@ export class DgCodeValidationComponent implements OnInit {
   }
 
   chargerUtilisateurs() {
-    this.apiService.get('/api/auth/utilisateurs').subscribe({
-      next: (data: any) => {
-        this.utilisateurs = data;
-      },
+    // 2026-11-08 : appelait /api/auth/utilisateurs via ApiService (déjà préfixé /api), produisant
+    // /api/api/auth/utilisateurs - 404 permanent. Réutilise AdminService.getUtilisateurs, déjà
+    // correct et déjà utilisé par l'écran Admin équivalent, plutôt qu'un second appel direct.
+    this.adminService.getUtilisateurs().subscribe({
+      next: data => { this.utilisateurs = data; },
       error: (err) => {
         console.error('Erreur lors du chargement des utilisateurs', err);
       }

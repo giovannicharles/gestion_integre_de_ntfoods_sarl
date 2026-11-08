@@ -27,16 +27,16 @@
         <span class="card-title"><i class="fa-solid fa-sitemap"></i> Matrice par rôle</span>
         <span class="badge badge-secondary badge-sm">{{ tousPermissions().length }} permissions au total</span>
       </div>
-      <div style="padding:0 var(--sp-4) var(--sp-4)">
-        <div class="filter-bar" style="margin-bottom:10px;flex-wrap:wrap">
+      <div class="panel-body">
+        <div class="filter-bar mb-10 wrap">
           @for (r of roles(); track r) {
           <button class="filter-btn" [class.active]="roleSelectionne()===r" (click)="roleSelectionne.set(r)">{{ r }}</button>
           }
         </div>
-        <input type="text" class="form-control" placeholder="Filtrer les permissions (ex : STOCK, COMMANDE...)"
-               [ngModel]="filtrePermission()" (ngModelChange)="filtrePermission.set($event)" style="margin-bottom:10px">
+        <input type="text" class="form-control mb-10" placeholder="Filtrer les permissions (ex : STOCK, COMMANDE...)"
+               [ngModel]="filtrePermission()" (ngModelChange)="filtrePermission.set($event)">
 
-        <div class="module-list" style="max-height:420px;overflow-y:auto">
+        <div class="module-list scroll-420">
           @for (g of groupesRole(); track g.module) {
             <div class="module-group">
               <button type="button" class="module-hd" (click)="toggleModule(g.module)">
@@ -74,15 +74,15 @@
       <div class="card-hd">
         <span class="card-title"><i class="fa-solid fa-user-gear"></i> Permissions d'un utilisateur</span>
       </div>
-      <div style="padding:0 var(--sp-4) var(--sp-4)">
+      <div class="panel-body">
         @if (permissionSelectionnee(); as pSel) {
-          <div class="perm-reverse" style="margin-bottom:12px">
+          <div class="perm-reverse mb-12">
             <i class="fa-solid fa-circle-info"></i> <span class="mono">{{ pSel }}</span>, rôles l'ayant par défaut :
             <strong>{{ rolesAvecPermission().join(', ') || '-' }}</strong>
             <button type="button" class="perm-reverse-close" (click)="ouvrirRolesPour(pSel)"><i class="fa-solid fa-xmark"></i></button>
           </div>
         }
-        <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div class="search-row mb-12">
           <input type="text" class="form-control" placeholder="Matricule (ex : GS-001)"
                  [(ngModel)]="matriculeRecherche" (keyup.enter)="rechercherUtilisateur()">
           <button class="btn btn-primary btn-sm" [disabled]="chargementUtilisateur()" (click)="rechercherUtilisateur()">
@@ -90,9 +90,9 @@
           </button>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        <div class="user-chip-row mb-12">
           @for (u of utilisateurs().slice(0, 12); track u.matricule) {
-          <button class="zone-chip" style="cursor:pointer;border:none" (click)="selectionnerUtilisateur(u.matricule)">{{ u.matricule }}</button>
+          <button class="zone-chip chip-btn" (click)="selectionnerUtilisateur(u.matricule)">{{ u.matricule }}</button>
           }
         </div>
 
@@ -101,24 +101,24 @@
         }
 
         @if (utilisateurCourant(); as u) {
-        <div class="fiche-kpi" style="margin-bottom:12px">
+        <div class="fiche-kpi mb-12">
           <span class="fk-lbl">{{ nomUtilisateur(u.matricule) }}</span>
-          <span class="fk-val" style="font-size:14px">{{ u.matricule }} · {{ u.role }}</span>
+          <span class="fk-val fk-val-sm">{{ u.matricule }} · {{ u.role }}</span>
         </div>
 
-        <div class="card-hd" style="padding:0 0 8px 0">
-          <span class="card-title" style="font-size:13px"><i class="fa-solid fa-key"></i> Permissions effectives ({{ u.permissionsEffectives.length }})</span>
+        <div class="card-hd card-hd-tight">
+          <span class="card-title card-title-sm"><i class="fa-solid fa-key"></i> Permissions effectives ({{ u.permissionsEffectives.length }})</span>
           @if (peutGerer()) {
           <button class="btn btn-ghost btn-sm" (click)="ouvrirOverride()"><i class="fa-solid fa-plus"></i> Dérogation</button>
           }
         </div>
-        <div class="tbl-wrap" style="max-height:320px;overflow-y:auto">
+        <div class="tbl-wrap scroll-320">
           <table class="data-table">
             <thead><tr><th>Permission</th><th>Origine</th><th></th></tr></thead>
             <tbody>
               @for (p of u.permissionsEffectives; track p) {
               <tr [class.row-alert]="estSurchargee(p)==='REFUSER'" [class.row-winner]="estSurchargee(p)==='ACCORDER'">
-                <td class="mono perm-code-link" style="font-size:11px" (click)="ouvrirRolesPour(p)" title="Voir les rôles qui ont cette permission par défaut">{{ p }}</td>
+                <td class="mono perm-code-link perm-code-sm" (click)="ouvrirRolesPour(p)" title="Voir les rôles qui ont cette permission par défaut">{{ p }}</td>
                 <td>
                   @if (estSurchargee(p)==='ACCORDER') { <span class="badge bg-success badge-sm">Accordée (override)</span> }
                   @else { <span class="badge bg-neutral badge-sm">Rôle {{ u.role }}</span> }
@@ -133,7 +133,7 @@
               @for (base of u.permissionsBaseRole; track base) {
                 @if (estSurchargee(base)==='REFUSER') {
                 <tr class="row-alert">
-                  <td class="mono" style="font-size:11px">{{ base }}</td>
+                  <td class="mono perm-code-sm">{{ base }}</td>
                   <td><span class="badge bg-red badge-sm">Retirée (override)</span></td>
                   <td>
                     @if (peutGerer()) {

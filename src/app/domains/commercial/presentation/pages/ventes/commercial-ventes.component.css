@@ -26,9 +26,37 @@
 .toast-error{background:var(--r);color:white}
 .card{background:var(--w);border:1px solid var(--n150);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh-sm)}
 
+/* 2026-11-08 : styles inline du template (27 occurrences) extraits en classes, même convention
+   que les autres dashboards déjà nettoyés cette session. */
+.loading-box { padding: 60px; text-align: center; color: var(--n400); }
+.loading-spinner { margin: 0 auto 12px; }
+.card-section { margin-bottom: 22px; }
+.section-title { font-family: var(--font-d); font-size: 16px; font-weight: 700; color: var(--n800); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--n150); }
+.empty-msg { text-align: center; color: var(--n400); padding: 24px; }
+.tbl-scroll { overflow-x: auto; }
+.cell-mono { font-family: monospace; font-size: 12px; font-weight: 600; }
+.cell-amount { font-weight: 700; }
+.cell-amount-r { color: var(--r); }
+.row-actions { display: flex; gap: 6px; }
+.ico-r { color: var(--r); }
+.ico-o { color: var(--o); }
+.modal-title { font-family: var(--font-d); font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-box-wide { max-width: 520px; }
+/* Base desktop du grid 2 colonnes (son repli à 1 colonne sous 767px vient déjà de
+   styles.css:.rgrid-2 global) - manquait ici, portée seulement par l'ancien style inline. */
+.rgrid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.hint-r { color: var(--r); }
+.hint-n { color: var(--n400); }
+.photo-status { font-size: 11px; }
+.photo-status-n { color: var(--n400); }
+.photo-status-s { color: var(--s); }
+
 @media (max-width:767px) {
   .tbl { min-width:600px; }
   .modal-box { width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0; }
   .modal-overlay { align-items:flex-end;padding:0; }
   .card { padding:14px; }
+  .modal-actions { flex-wrap: wrap; }
+  .modal-actions > .btn { flex: 1; justify-content: center; }
 }

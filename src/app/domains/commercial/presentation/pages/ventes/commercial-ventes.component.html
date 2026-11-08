@@ -19,18 +19,18 @@
   }
 
   @if (loading()) {
-    <div style="padding:60px;text-align:center;color:var(--n400)">
-      <div class="spinner spinner-lg" style="margin:0 auto 12px"></div>Chargement…
+    <div class="loading-box">
+      <div class="spinner spinner-lg loading-spinner"></div>Chargement…
     </div>
   } @else {
-    <div class="card" style="margin-bottom:22px">
-      <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+    <div class="card card-section">
+      <h3 class="section-title">
         <i class="fa-solid fa-list"></i> Ventes du mois
       </h3>
       @if (!ventes().length) {
-        <p style="text-align:center;color:var(--n400);padding:24px">Aucune vente sur la période.</p>
+        <p class="empty-msg">Aucune vente sur la période.</p>
       } @else {
-        <div style="overflow-x:auto">
+        <div class="tbl-scroll">
           <div class="tbl-wrap">
           <table class="tbl">
             <thead>
@@ -39,25 +39,25 @@
             <tbody>
               @for (v of ventes(); track v.id) {
                 <tr>
-                  <td style="font-family:monospace;font-size:12px;font-weight:600">{{ v.numeroVente }}</td>
+                  <td class="cell-mono">{{ v.numeroVente }}</td>
                   <td>{{ v.date | date:'dd/MM/yyyy' }}</td>
                   <td>{{ v.codeClient }}</td>
                   <td><span class="badge bg-neutral">{{ v.typeVente }}</span></td>
-                  <td style="font-weight:700">{{ fCFA(v.montantTotal) }}</td>
+                  <td class="cell-amount">{{ fCFA(v.montantTotal) }}</td>
                   <td><span [class]="statutClass(v.statut)">{{ v.statut }}</span></td>
                   <td>
-                    <div style="display:flex;gap:6px">
+                    <div class="row-actions">
                       @if (v.statut === 'EN_COURS') {
                         <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_VENTE_FINALISER'" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
                           <i class="fa-solid fa-check"></i>
                         </button>
                         <button class="btn btn-ghost btn-sm" *appHasPermission="'COMMERCIAL_VENTE_CREER'" (click)="openAnnuler(v.numeroVente)" title="Annuler">
-                          <i class="fa-solid fa-ban" style="color:var(--r)"></i>
+                          <i class="fa-solid fa-ban ico-r"></i>
                         </button>
                       }
                       @if (v.statut === 'FINALISEE') {
                         <button class="btn btn-ghost btn-sm" (click)="openAvoir(v.numeroVente)" title="Émettre avoir">
-                          <i class="fa-solid fa-file-invoice" style="color:var(--o)"></i>
+                          <i class="fa-solid fa-file-invoice ico-o"></i>
                         </button>
                       }
                     </div>
@@ -73,10 +73,10 @@
 
     @if (avoirs().length > 0) {
       <div class="card">
-        <h3 style="font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--n800);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n150)">
+        <h3 class="section-title">
           <i class="fa-solid fa-file-invoice"></i> Avoirs émis
         </h3>
-        <div style="overflow-x:auto">
+        <div class="tbl-scroll">
           <div class="tbl-wrap">
           <table class="tbl">
             <thead>
@@ -85,10 +85,10 @@
             <tbody>
               @for (a of avoirs(); track a.id) {
                 <tr>
-                  <td style="font-family:monospace;font-size:12px;font-weight:600">{{ a.numeroAvoir }}</td>
+                  <td class="cell-mono">{{ a.numeroAvoir }}</td>
                   <td>{{ a.numeroVenteOriginale }}</td>
                   <td>{{ a.codeClient }}</td>
-                  <td style="font-weight:700;color:var(--r)">{{ fCFA(a.montantTTC) }}</td>
+                  <td class="cell-amount cell-amount-r">{{ fCFA(a.montantTTC) }}</td>
                   <td>{{ a.motif }}</td>
                   <td><span class="badge" [class.bg-orange]="a.statut==='EMIS'" [class.bg-success]="a.statut==='VALIDE'">{{ a.statut }}</span></td>
                   <td>
@@ -112,12 +112,12 @@
 @if (showAnnuler()) {
   <div class="modal-overlay" (click)="showAnnuler.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Annuler la vente {{ selectedNumero }}</h3>
+      <h3 class="modal-title">Annuler la vente {{ selectedNumero }}</h3>
       <div class="form-group">
         <label>Motif d'annulation</label>
         <input type="text" class="form-input" [(ngModel)]="annulerMotif" placeholder="Motif obligatoire">
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showAnnuler.set(false)">Fermer</button>
         <button class="btn btn-danger" (click)="confirmerAnnuler()" [disabled]="saving() || !annulerMotif">
           @if (saving()) { Annulation… } @else { Confirmer l'annulation }
@@ -129,9 +129,9 @@
 
 @if (showNonMarchand()) {
   <div class="modal-overlay" (click)="showNonMarchand.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:520px">
-      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Transaction non marchande</h3>
-      <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="modal-box modal-box-wide" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Transaction non marchande</h3>
+      <div class="rgrid-2">
         <div class="form-group">
           <label>Type</label>
           <select class="form-input" [(ngModel)]="nmTypeVente">
@@ -173,15 +173,15 @@
       <div class="form-group">
         <label>
           Photo justificative
-          @if (photoRequise()) { <span style="color:var(--r)">obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
-          @else if (seuilPhotoAvarie() !== null) { <span style="color:var(--n400)">(facultative en dessous de {{ seuilPhotoAvarie() }} unité(s))</span> }
+          @if (photoRequise()) { <span class="hint-r">obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
+          @else if (seuilPhotoAvarie() !== null) { <span class="hint-n">(facultative en dessous de {{ seuilPhotoAvarie() }} unité(s))</span> }
         </label>
         <input type="file" class="form-input" accept=".jpg,.jpeg,.png,.pdf" (change)="onPhotoSelected($event)">
-        @if (uploadingPhoto()) { <span style="font-size:11px;color:var(--n400)"><i class="fa-solid fa-spinner fa-spin"></i> Import en cours…</span> }
-        @else if (nmPhotoDocId) { <span style="font-size:11px;color:var(--s)"><i class="fa-solid fa-check"></i> Photo archivée.</span> }
+        @if (uploadingPhoto()) { <span class="photo-status photo-status-n"><i class="fa-solid fa-spinner fa-spin"></i> Import en cours…</span> }
+        @else if (nmPhotoDocId) { <span class="photo-status photo-status-s"><i class="fa-solid fa-check"></i> Photo archivée.</span> }
       </div>
       }
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showNonMarchand.set(false)">Annuler</button>
         <button class="btn btn-primary" (click)="confirmerNonMarchand()" [disabled]="saving() || !nmCodeClient || !nmCodeProduit || uploadingPhoto()">
           @if (saving()) { Enregistrement… } @else { Enregistrer }
@@ -194,12 +194,12 @@
 @if (showAvoir()) {
   <div class="modal-overlay" (click)="showAvoir.set(false)">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:16px">Émettre un avoir, {{ selectedNumero }}</h3>
+      <h3 class="modal-title">Émettre un avoir, {{ selectedNumero }}</h3>
       <div class="form-group">
         <label>Motif de l'avoir</label>
         <input type="text" class="form-input" [(ngModel)]="avoirMotif" placeholder="Motif obligatoire">
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+      <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showAvoir.set(false)">Fermer</button>
         <button class="btn btn-primary" (click)="confirmerAvoir()" [disabled]="saving() || !avoirMotif">
           @if (saving()) { Émission… } @else { Émettre l'avoir }

@@ -47,9 +47,9 @@
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span>Analyse IA du stock, TantyAI</span>
           @if (iaConfigured()) {
-            <span class="badge badge-success" style="font-size:10px">GPT-OSS 120B</span>
+            <span class="badge badge-success badge-sm">Gemini</span>
           } @else {
-            <span class="badge badge-neutral" style="font-size:10px">Mode hors-ligne</span>
+            <span class="badge badge-neutral badge-sm">Mode hors-ligne</span>
           }
         </div>
         <button class="btn btn-ghost btn-sm" (click)="closeIaInsight()"aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>

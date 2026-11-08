@@ -33,7 +33,7 @@
           @for (p of suggestions(); track p.id) {
           <button type="button" class="sfm-suggestion" (mousedown)="$event.preventDefault()" (click)="choisirProduit(p)">
             <span class="sfm-sugg-code">{{ p.sku }}</span>
-            <span class="sfm-sugg-name">{{ p.designation || '—' }}</span>
+            <span class="sfm-sugg-name">{{ p.designation || '-' }}</span>
           </button>
           }
         </div>

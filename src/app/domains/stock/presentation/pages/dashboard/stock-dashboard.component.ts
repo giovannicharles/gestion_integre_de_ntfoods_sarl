@@ -122,7 +122,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.invPage.set(page);
   }
 
-  // 8. Insights IA (TantyAI, GPT-OSS via OpenRouter)
+  // 8. Insights IA (TantyAI, Gemini)
   iaConfigured = signal(false);
   iaInsight = signal<AnalysisResponse | null>(null);
   iaInsightLoading = signal(false);

@@ -34,11 +34,11 @@
       <tbody>
         @for (p of parametres(); track p.cle) {
           <tr [class.row-winner]="valeursEditees()[p.cle] !== undefined">
-            <td class="mono" style="font-size:12px">{{ p.cle }}</td>
+            <td class="mono param-cle">{{ p.cle }}</td>
             <td>{{ p.description || '-' }}</td>
             <td>
               @if (peutModifier()) {
-                <input type="number" class="form-input" style="max-width:140px"
+                <input type="number" class="form-input param-input"
                        [ngModel]="valeurAffichee(p)" (ngModelChange)="surSaisie(p, $event)">
               } @else {
                 <span class="mono fw-bold">{{ p.valeurNumerique }}</span>
@@ -54,7 +54,7 @@
     </table>
   </div>
   @if (aDesModifications()) {
-    <div class="table-footer" style="display:flex;justify-content:flex-end;gap:10px">
+    <div class="table-footer param-footer">
       <button class="btn btn-ghost btn-sm" [disabled]="saving()" (click)="annulerModifications()">Annuler</button>
       <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
         @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }

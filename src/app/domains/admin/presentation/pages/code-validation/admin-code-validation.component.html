@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <div class="card" style="margin-bottom:var(--sp-4)">
+  <div class="card mb-sp4">
     <div class="card-hd"><span class="card-title"><i class="fa-solid fa-plus-circle"></i> Attribuer un code</span></div>
     <form (ngSubmit)="attribuerCode()" class="form-grid">
       <div class="form-group">
@@ -30,11 +30,11 @@
         <label>Max utilisations (optionnel)</label>
         <input type="number" class="form-control" [(ngModel)]="maxUtilisations" name="maxUtilisations" min="1">
       </div>
-      <div class="form-group" style="grid-column:1/-1">
+      <div class="form-group span-all">
         <label>Commentaire (optionnel)</label>
         <textarea class="form-control" [(ngModel)]="commentaire" name="commentaire" rows="2"></textarea>
       </div>
-      <div class="form-actions" style="grid-column:1/-1">
+      <div class="form-actions span-all">
         <button type="submit" class="btn btn-primary" [disabled]="!utilisateurSelectionne">
           <i class="fa-solid fa-key"></i> Attribuer le code
         </button>
@@ -65,7 +65,7 @@
       <tbody>
         @for (code of codes(); track code.id) {
         <tr [class.row-alert]="code.bloque">
-          <td class="fw-bold"><i class="fa-solid fa-user" style="margin-right:6px;color:var(--n400)"></i>{{ code.utilisateurNom }}</td>
+          <td class="fw-bold"><i class="fa-solid fa-user ico-user"></i>{{ code.utilisateurNom }}</td>
           <td>{{ code.dateAttribution | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>
             @if (code.dateExpiration) { {{ code.dateExpiration | date:'dd/MM/yyyy HH:mm' }} }
@@ -74,7 +74,7 @@
           <td class="mono">
             {{ code.nombreUtilisations }}@if (code.maxUtilisations) { / {{ code.maxUtilisations }} }
             @if (code.tentativesEchouees > 0) {
-            <div style="font-size:11px;color:var(--r)"><i class="fa-solid fa-circle-xmark"></i> {{ code.tentativesEchouees }} échec(s)</div>
+            <div class="echecs-hint"><i class="fa-solid fa-circle-xmark"></i> {{ code.tentativesEchouees }} échec(s)</div>
             }
           </td>
           <td>
@@ -110,9 +110,9 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Code de validation</label>
-          <div class="mono fw-bold" style="font-size:1.3rem;letter-spacing:.08em;background:var(--n50);padding:10px 14px;border-radius:var(--r-md);text-align:center">{{ nouveauCode }}</div>
+          <div class="mono fw-bold code-reveal">{{ nouveauCode }}</div>
         </div>
-        <div class="info-banner" style="margin-top:12px;color:var(--r)">
+        <div class="info-banner code-warning">
           <i class="fa-solid fa-triangle-exclamation"></i> Conservez ce code confidentiellement. Ne le partagez jamais.
         </div>
       </div>

@@ -45,8 +45,12 @@
 .btn-danger { background: var(--r); color: white; }
 .btn-ghost { background: transparent; color: var(--n500); border: 1.5px solid var(--n200); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+.modal-title { font-family: var(--font-d); font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
 @media (max-width:767px) {
+  .modal-actions { flex-wrap: wrap; }
+  .modal-actions > .btn { flex: 1; justify-content: center; }
   .pcm-ligne { flex-wrap:wrap;gap:.4rem; }
   .pcm-code { min-width:auto; }
   .pcm-qty { min-width:auto; }
