@@ -36,7 +36,6 @@ export class DgIaAnalyseComponent implements OnDestroy {
   result = signal<AnalysisResponse | null>(null);
   suggestions = signal<SuggestionResponse | null>(null);
   predictions = signal<PredictiveResponse | null>(null);
-  errorMsg = signal('');
   iaConfigured = signal(false);
   activeTab = signal<'analysis' | 'suggestions' | 'predictions'>('analysis');
 
@@ -52,17 +51,14 @@ export class DgIaAnalyseComponent implements OnDestroy {
     this.result.set(null);
     this.suggestions.set(null);
     this.predictions.set(null);
-    this.errorMsg.set('');
   }
 
   selectTab(tab: 'analysis' | 'suggestions' | 'predictions'): void {
     this.activeTab.set(tab);
-    this.errorMsg.set('');
   }
 
   runAnalysis(): void {
     this.loading.set(true);
-    this.errorMsg.set('');
     this.result.set(null);
 
     const domain = this.selectedDomain();
@@ -91,7 +87,6 @@ export class DgIaAnalyseComponent implements OnDestroy {
 
   runSuggestions(): void {
     this.loading.set(true);
-    this.errorMsg.set('');
     this.suggestions.set(null);
 
     const domain = this.selectedDomain();
@@ -114,7 +109,6 @@ export class DgIaAnalyseComponent implements OnDestroy {
 
   runPredictions(): void {
     this.loading.set(true);
-    this.errorMsg.set('');
     this.predictions.set(null);
 
     this.iaService.autoPredict({
