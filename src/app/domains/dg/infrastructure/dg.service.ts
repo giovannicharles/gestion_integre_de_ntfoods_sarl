@@ -43,6 +43,20 @@ export interface MoisCaBE {
   nbVentes: number;
 }
 
+/**
+ * Répartition par gamme commerciale, semaine en cours (2026-11-08). Vient de
+ * RpDashboardResponse.gammes (GET /rp/dashboard, déjà ouvert au DG) : pas de second calcul, le DG
+ * lit la même donnée réelle que l'écran RP. marge/stock restent absents côté backend (aucun
+ * rattachement fiable produit → gamme n'existe encore) : non affichés plutôt qu'inventés.
+ */
+export interface PerformanceGammeBE {
+  gamme: string;
+  ca: number;
+  objectif: number;
+  marge: number | null;
+  stock: string | null;
+}
+
 export interface RapportComparatifBE {
   periode: string;
   actuelle: TrancheComparatifBE;
@@ -320,6 +334,12 @@ export class DgService {
   getHistoriqueCaMensuel(mois: number = 12): Observable<MoisCaBE[]> {
     return this.api.get<ApiResponse<MoisCaBE[]>>('dg/historique-ca-mensuel', { mois: String(mois) })
       .pipe(map(r => r.donnees ?? []));
+  }
+
+  /** Réutilise GET /rp/dashboard (déjà ouvert au DG) pour sa seule section gammes, pas de doublon. */
+  getPerformanceGammes(): Observable<PerformanceGammeBE[]> {
+    return this.api.get<ApiResponse<{ gammes: PerformanceGammeBE[] }>>('rp/dashboard')
+      .pipe(map(r => r.donnees?.gammes ?? []));
   }
 
   getIncidentsResume(): Observable<IncidentResumeBE> {

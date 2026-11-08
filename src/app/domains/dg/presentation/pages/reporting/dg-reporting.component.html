@@ -93,10 +93,15 @@
     </div>
   </div>
 
-  <!-- HISTORIQUE 12 MOIS -->
-  <div class="card chart-card" style="margin-bottom:var(--sp-4)">
+  <!-- HISTORIQUE, PORTÉE RÉGLABLE -->
+  <div class="card chart-card card-mb">
     <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution du CA, 12 derniers mois</span>
+      <span class="card-title"><i class="fa-solid fa-chart-column"></i> Évolution du CA, {{ historiqueMois() }} derniers mois</span>
+      <div class="period-selector">
+        <button class="period-btn" [class.active]="historiqueMois()===6" (click)="changerHistoriqueMois(6)">6 mois</button>
+        <button class="period-btn" [class.active]="historiqueMois()===12" (click)="changerHistoriqueMois(12)">12 mois</button>
+        <button class="period-btn" [class.active]="historiqueMois()===24" (click)="changerHistoriqueMois(24)">24 mois</button>
+      </div>
     </div>
     <div class="chart-wrap"><canvas #historiqueCanvas></canvas></div>
   </div>
@@ -116,6 +121,42 @@
       <div class="chart-wrap"><canvas #radarCanvas></canvas></div>
     </div>
   </div>
+
+  <!-- RÉPARTITION PAR GAMME -->
+  @if (performanceGammes().length > 0) {
+  <div class="charts-row-2 card-mb">
+    <div class="card chart-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition du CA par gamme, semaine en cours</span>
+      </div>
+      <div class="chart-wrap"><canvas #gammesCanvas></canvas></div>
+    </div>
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-table-list"></i> Détail par gamme</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Gamme</th><th class="text-right">CA</th><th class="text-right">Objectif</th><th>Atteinte</th></tr></thead>
+          <tbody>
+            @for (g of performanceGammes(); track g.gamme) {
+            <tr>
+              <td class="fw-bold">{{ g.gamme }}</td>
+              <td class="mono text-right">{{ fCFA(g.ca) }}</td>
+              <td class="mono text-right">{{ fCFA(g.objectif) }}</td>
+              <td>
+                <span class="taux-chip" [class.taux-ok]="tauxAtteinteGamme(g)>=100" [class.taux-mid]="tauxAtteinteGamme(g)>=75 && tauxAtteinteGamme(g)<100" [class.taux-warn]="tauxAtteinteGamme(g)<75">
+                  {{ tauxAtteinteGamme(g) }}%
+                </span>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  }
 
   <!-- TOP CLIENTS & RISQUE DE CONCENTRATION -->
   @if (concentrationClients(); as cc) {
@@ -147,8 +188,8 @@
             <td class="mono text-right">{{ fCFA(c.caFCFA) }}</td>
             <td class="mono">{{ c.nbVentes }}</td>
             <td>
-              <div style="display:flex;align-items:center;gap:10px">
-                <div class="prog-bar-wrap" style="max-width:110px"><div class="prog-bar" [class.prog-ok]="c.pourcentDuTotal<20" [style.width.%]="c.pourcentDuTotal"></div></div>
+              <div class="occ-cell">
+                <div class="prog-bar-wrap occ-bar"><div class="prog-bar" [class.prog-ok]="c.pourcentDuTotal<20" [style.width.%]="c.pourcentDuTotal"></div></div>
                 <span class="mono fw-bold">{{ Math.round(c.pourcentDuTotal) }}%</span>
               </div>
             </td>

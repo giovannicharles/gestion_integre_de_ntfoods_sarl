@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
-import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE, MoisCaBE, ConcentrationClientsBE } from '../../../infrastructure/dg.service';
+import { DgService, ZonePerformanceBE, ClassementCommercialBE, RapportComparatifBE, MoisCaBE, ConcentrationClientsBE, PerformanceGammeBE } from '../../../infrastructure/dg.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 import { ToastService } from '../../../../../core/services/toast.service';
 
@@ -18,13 +18,16 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('radarCanvas') radarCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('historiqueCanvas') historiqueCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('gammesCanvas') gammesCanvas?: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
   private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(true);
-  selectedYear = signal(2026);
+  /** Portée du graphique d'historique CA (6/12/24 mois), remplace un ancien selectedYear jamais
+   * câblé à rien (2026-11-08). */
+  historiqueMois = signal<6 | 12 | 24>(12);
 
   zones = signal<ZonePerformanceBE[]>([]);
   commerciaux = signal<ClassementCommercialBE[]>([]);
@@ -36,6 +39,8 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
   /** 2026-11-01 (demande explicite du porteur), motif « Top clients + risque de concentration »,
    * validé par la pratique courante des tableaux de bord de direction. */
   concentrationClients = signal<ConcentrationClientsBE | null>(null);
+  /** 2026-11-08 (demande explicite : reporting DG « plus détaillé »), réutilise /rp/dashboard. */
+  performanceGammes = signal<PerformanceGammeBE[]>([]);
 
   fCFA = fCFA;
   Math = Math;
@@ -62,15 +67,29 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
       next: r => this.comparatifAnnee.set(r),
       error: () => this.toast.error("Impossible de charger le comparatif de l'année"),
     });
-    this.dgSvc.getHistoriqueCaMensuel(12).subscribe({
-      next: h => { this.historiqueCa.set(h); this.buildCharts(); },
-      error: () => this.toast.error("Impossible de charger l'historique du CA"),
-    });
+    this.chargerHistorique();
     this.dgSvc.getConcentrationClients(10).subscribe({
       next: c => this.concentrationClients.set(c),
       error: () => this.toast.error('Impossible de charger la concentration clients'),
     });
+    this.dgSvc.getPerformanceGammes().subscribe({
+      next: g => { this.performanceGammes.set(g); this.buildCharts(); },
+      error: () => this.toast.error('Impossible de charger la répartition par gamme'),
+    });
     setTimeout(() => { this.loading.set(false); this.buildCharts(); }, 500);
+  }
+
+  chargerHistorique() {
+    this.dgSvc.getHistoriqueCaMensuel(this.historiqueMois()).subscribe({
+      next: h => { this.historiqueCa.set(h); this.buildCharts(); },
+      error: () => this.toast.error("Impossible de charger l'historique du CA"),
+    });
+  }
+
+  changerHistoriqueMois(mois: 6 | 12 | 24) {
+    if (this.historiqueMois() === mois) return;
+    this.historiqueMois.set(mois);
+    this.chargerHistorique();
   }
 
   ngAfterViewInit() { setTimeout(() => this.buildCharts(), 600); }
@@ -110,6 +129,22 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { ticks: { callback: (v: any) => (v / 1000000).toFixed(1) + 'M' } } } }
       }));
     }
+    const gammes = this.performanceGammes();
+    if (this.gammesCanvas?.nativeElement && gammes.length > 0) {
+      const palette = ['#1A6B2A', '#F6B60B', '#2563EB', '#C22B2B', '#8B5CF6', '#0EA5E9'];
+      this.charts.push(new Chart(this.gammesCanvas.nativeElement.getContext('2d')!, {
+        type: 'doughnut',
+        data: {
+          labels: gammes.map(g => g.gamme),
+          datasets: [{ data: gammes.map(g => g.ca), backgroundColor: gammes.map((_, i) => palette[i % palette.length]) }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+        }
+      }));
+    }
+
     const commerciaux = this.commerciaux();
     if (this.radarCanvas?.nativeElement && commerciaux.length > 0) {
       this.charts.push(new Chart(this.radarCanvas.nativeElement.getContext('2d')!, {
@@ -176,6 +211,11 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => { this.exportingComparatif.set(false); this.toast.error('Export du comparatif impossible'); },
     });
+  }
+
+  tauxAtteinteGamme(g: PerformanceGammeBE): number {
+    if (!g.objectif || g.objectif <= 0) return 0;
+    return Math.round((g.ca / g.objectif) * 100);
   }
 
   private downloadFile(blob: Blob, filename: string): void {

@@ -63,10 +63,15 @@
       <span class="card-title"><i class="fa-solid fa-list"></i> Documents archivés</span>
       <span class="badge badge-secondary badge-sm">{{ documents().length }} au total</span>
     </div>
+    <div class="doc-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" class="form-control" placeholder="Rechercher par référence ou nom de fichier…"
+             [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)">
+    </div>
     <div class="filter-bar">
-      <button class="filter-btn" [class.active]="filtreType()==='TOUS'" (click)="filtreType.set('TOUS')">Tous</button>
+      <button class="filter-btn" [class.active]="filtreType()==='TOUS'" (click)="filtreType.set('TOUS')">Tous ({{ documents().length }})</button>
       @for (t of docTypes; track t.value) {
-      <button class="filter-btn" [class.active]="filtreType()===t.value" (click)="filtreType.set(t.value)">{{ t.label }}</button>
+      <button class="filter-btn" [class.active]="filtreType()===t.value" (click)="filtreType.set(t.value)">{{ t.label }} ({{ compteParType(t.value) }})</button>
       }
     </div>
     <div class="tbl-wrap">
@@ -77,7 +82,7 @@
           <tr>
             <td><span class="badge bg-neutral badge-sm">{{ libelleType(d.typeDocument) }}</span></td>
             <td class="fw-bold">{{ d.reference }}</td>
-            <td>{{ d.nomFichierOriginal }}</td>
+            <td><i class="fa-solid doc-file-ico" [class]="iconeFichier(d.nomFichierOriginal)"></i> {{ d.nomFichierOriginal }}</td>
             <td class="text-right mono">{{ tailleLisible(d.tailleOctets) }}</td>
             <td>{{ d.matriculeUploader }}</td>
             <td>{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -87,8 +92,13 @@
           </tr>
           } @empty {
           <tr><td colspan="7">
-            <app-empty-illustration title="Aucun document archivé dans ce filtre"
-              sub="Importez une facture, un bon de commande ou un certificat avec le formulaire ci-dessus." />
+            @if (rechercheTexte().trim() || filtreType() !== 'TOUS') {
+              <app-empty-illustration title="Aucun document ne correspond"
+                sub="Essayez un autre terme de recherche ou réinitialisez le filtre par type." />
+            } @else {
+              <app-empty-illustration title="Aucun document archivé"
+                sub="Importez une facture, un bon de commande ou un certificat avec le formulaire ci-dessus." />
+            }
           </td></tr>
           }
         </tbody>

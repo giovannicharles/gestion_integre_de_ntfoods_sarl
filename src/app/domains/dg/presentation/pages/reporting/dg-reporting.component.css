@@ -29,6 +29,10 @@
 .prog-bar-wrap { height: 8px; background: var(--n200); border-radius: 99px; overflow: hidden; }
 .prog-bar { height: 100%; background: var(--r); border-radius: 99px; transition: width .5s ease; }
 .prog-ok { background: var(--g); }
+/* 2026-11-08 : styles inline du template extraits en classes, nouvelle section répartition par gamme. */
+.card-mb { margin-bottom: var(--sp-4); }
+.occ-cell { display: flex; align-items: center; gap: 10px; }
+.occ-bar { max-width: 110px; }
 @media (max-width: 900px) { .charts-row-2 { grid-template-columns: 1fr; } }
 
 @media (max-width:767px) {

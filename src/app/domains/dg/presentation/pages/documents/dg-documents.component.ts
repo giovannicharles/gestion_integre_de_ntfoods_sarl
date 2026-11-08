@@ -34,6 +34,9 @@ export class DgDocumentsComponent implements OnInit {
   loadError = signal<string | null>(null);
   documents = signal<DocumentArchiveBE[]>([]);
   filtreType = signal<string>('TOUS');
+  /** 2026-11-08 (demande explicite : archivage DG « plus détaillé »), recherche texte sur
+   * référence et nom de fichier, en plus du filtre par type déjà là. */
+  rechercheTexte = signal<string>('');
 
   ngOnInit(): void {
     this.charger();
@@ -50,11 +53,30 @@ export class DgDocumentsComponent implements OnInit {
 
   listeFiltree(): DocumentArchiveBE[] {
     const f = this.filtreType();
-    return f === 'TOUS' ? this.documents() : this.documents().filter(d => d.typeDocument === f);
+    let liste = f === 'TOUS' ? this.documents() : this.documents().filter(d => d.typeDocument === f);
+    const q = this.rechercheTexte().trim().toLowerCase();
+    if (q) {
+      liste = liste.filter(d => d.reference.toLowerCase().includes(q) || d.nomFichierOriginal.toLowerCase().includes(q));
+    }
+    return liste;
+  }
+
+  /** Compte par type, pour l'en-tête des filtres (motif tableau de bord documentaire courant). */
+  compteParType(code: string): number {
+    return this.documents().filter(d => d.typeDocument === code).length;
   }
 
   libelleType(code: string): string {
     return this.docTypes.find(t => t.value === code)?.label ?? code;
+  }
+
+  iconeFichier(nomFichier: string): string {
+    const ext = nomFichier.split('.').pop()?.toLowerCase() ?? '';
+    if (ext === 'pdf') return 'fa-file-pdf';
+    if (['xlsx', 'xls', 'csv'].includes(ext)) return 'fa-file-excel';
+    if (['jpg', 'jpeg', 'png'].includes(ext)) return 'fa-file-image';
+    if (ext === 'xml') return 'fa-file-code';
+    return 'fa-file';
   }
 
   onFileSelected(event: Event): void {

@@ -19,3 +19,10 @@
 @media (max-width: 480px) {
   .doc-filter-field { min-width: 100%; }
 }
+
+/* 2026-11-08 : recherche texte (référence/nom de fichier) + icônes par type de fichier. */
+.doc-search { position: relative; margin-bottom: var(--sp-3); }
+.doc-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--n400); font-size: 13px; }
+.doc-search input { padding-left: 38px; }
+.doc-file-ico { color: var(--n400); margin-right: 4px; }
+
