@@ -35,3 +35,4 @@
   .modal-overlay { align-items:flex-end;padding:0; }
   .modal-box { width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0; }
 }
+.form-select-auto { width: auto; }

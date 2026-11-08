@@ -1,2 +1,4 @@
 /* Mise en page assurée par les classes globales (.dash, .ph, .card, .data-table,
    .filter-bar, .modal-overlay, .form-group...), pas de style local nécessaire. */
+
+.mb-16 { margin-bottom: 16px; }

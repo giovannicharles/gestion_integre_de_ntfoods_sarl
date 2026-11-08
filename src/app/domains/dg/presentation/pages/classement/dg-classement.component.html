@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="ph-actions">
-      <select class="form-select" [ngModel]="selectedSemaine()" (ngModelChange)="changerSemaine($event)" style="width:auto">
+      <select class="form-select form-select-auto" [ngModel]="selectedSemaine()" (ngModelChange)="changerSemaine($event)">
         @for (s of semaines; track s) { <option [value]="s">Semaine du {{ s | date:'dd/MM/yyyy' }}</option> }
       </select>
     </div>
