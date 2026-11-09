@@ -1,0 +1,14 @@
+.ia-form-card { margin-bottom:18px; }
+.ia-form-sub { font-size:13px; color:var(--n500); margin:4px 0 18px; }
+.ia-form-actions { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+
+.ia-result-summary { font-size:14px; color:var(--n700); line-height:1.6; margin:4px 0 16px; }
+.ia-result-section-title { font-size:12.5px; font-weight:700; color:var(--n600); text-transform:uppercase; letter-spacing:.4px; margin:16px 0 8px; display:flex; align-items:center; gap:7px; }
+.ia-result-section-title i { color:var(--g); }
+.ia-result-list { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px; }
+.ia-result-list li { font-size:13.5px; color:var(--n700); line-height:1.5; }
+
+@media (max-width:767px) {
+  .ia-form-actions { flex-direction:column; }
+  .ia-form-actions .btn { width:100%; justify-content:center; }
+}

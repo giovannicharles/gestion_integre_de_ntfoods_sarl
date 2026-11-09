@@ -1,0 +1,26 @@
+.ia-hub { display:flex; flex-direction:column; min-height:100vh; background:var(--n100); }
+
+.ia-hub-topbar {
+  display:flex; align-items:center; gap:14px; padding:16px 24px;
+  background:linear-gradient(135deg,var(--g) 0%,var(--g-d) 100%); color:var(--w);
+  box-shadow:var(--sh-md);
+}
+.ia-hub-back {
+  width:38px; height:38px; border-radius:var(--r-md); border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.12); color:var(--w); cursor:pointer; display:flex;
+  align-items:center; justify-content:center; font-size:14px; transition:background .15s;
+}
+.ia-hub-back:hover { background:rgba(255,255,255,.22); }
+.ia-hub-brand { display:flex; align-items:center; gap:10px; font-family:var(--font-d); font-size:18px; font-weight:800; }
+.ia-hub-brand i { color:var(--y); font-size:20px; }
+
+.ia-hub-tabs { margin:18px 24px 0; max-width:fit-content; }
+.ia-hub-tab { text-decoration:none; }
+
+.ia-hub-content { flex:1; padding:24px; max-width:1400px; margin:0 auto; width:100%; }
+
+@media (max-width:640px) {
+  .ia-hub-topbar { padding:14px 16px; }
+  .ia-hub-tabs { margin:14px 16px 0; max-width:100%; overflow-x:auto; flex-wrap:nowrap; }
+  .ia-hub-content { padding:16px; }
+}

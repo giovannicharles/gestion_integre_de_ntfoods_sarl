@@ -1,0 +1,109 @@
+<div class="card ia-form-card">
+  <div class="card-title"><i class="fa-solid fa-file-lines"></i> Rapports IA</div>
+  <p class="ia-form-sub">Génère un compte rendu de réunion structuré, ou un rapport intelligent ciblé sur un axe du pilotage.</p>
+
+  <nav class="period-selector ia-reports-tabs">
+    <button class="period-btn" [class.active]="ongletActif() === 'reunion'" (click)="ongletActif.set('reunion')">
+      <i class="fa-solid fa-people-group"></i> Réunion
+    </button>
+    <button class="period-btn" [class.active]="ongletActif() === 'intelligent'" (click)="ongletActif.set('intelligent')">
+      <i class="fa-solid fa-brain"></i> Intelligent
+    </button>
+  </nav>
+
+  @if (ongletActif() === 'reunion') {
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>Titre de la réunion *</label>
+        <input type="text" class="form-control" placeholder="Ex: Point hebdomadaire Stock" [ngModel]="titre()" (ngModelChange)="titre.set($event)" />
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" class="form-control" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Participants (séparés par une virgule)</label>
+      <input type="text" class="form-control" placeholder="Ex: GS-001, CG-001, DG-001" [ngModel]="participantsTexte()" (ngModelChange)="participantsTexte.set($event)" />
+    </div>
+    <div class="form-group">
+      <label>Points clés abordés (un par ligne)</label>
+      <textarea class="form-control" rows="4" placeholder="Un point par ligne" [ngModel]="pointsTexte()" (ngModelChange)="pointsTexte.set($event)"></textarea>
+    </div>
+    <div class="ia-form-actions">
+      <button class="btn btn-primary" [disabled]="loading() || !titre().trim()" (click)="genererRapportReunion()">
+        @if (loading()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-wand-magic-sparkles"></i> }
+        Générer le rapport
+      </button>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+    }
+
+    @if (resultatReunion()) {
+      <div class="ia-result-block">
+        <h4><i class="fa-solid fa-file-lines"></i> Compte rendu</h4>
+        <p class="ia-report-text">{{ resultatReunion()!.report }}</p>
+
+        @if (resultatReunion()!.decisions?.length) {
+          <h4><i class="fa-solid fa-gavel"></i> Décisions</h4>
+          <ul class="ia-list">
+            @for (d of resultatReunion()!.decisions; track $index) { <li>{{ d }}</li> }
+          </ul>
+        }
+        @if (resultatReunion()!.actionItems?.length) {
+          <h4><i class="fa-solid fa-list-check"></i> Actions à mener</h4>
+          <ul class="ia-list">
+            @for (a of resultatReunion()!.actionItems; track $index) { <li>{{ a }}</li> }
+          </ul>
+        }
+      </div>
+    }
+  }
+
+  @if (ongletActif() === 'intelligent') {
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type de rapport</label>
+        <select class="form-control" [ngModel]="reportType()" (ngModelChange)="reportType.set($event)">
+          @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+        </select>
+      </div>
+      <div class="form-group" style="flex:2">
+        <label>Axes à approfondir (optionnel, séparés par une virgule)</label>
+        <input type="text" class="form-control" placeholder="Ex: Stock tampon, Dotations" [ngModel]="focusAreasTexte()" (ngModelChange)="focusAreasTexte.set($event)" />
+      </div>
+    </div>
+    <div class="ia-form-actions">
+      <button class="btn btn-primary" [disabled]="loading()" (click)="genererRapportIntelligent()">
+        @if (loading()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-wand-magic-sparkles"></i> }
+        Générer le rapport
+      </button>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+    }
+
+    @if (resultatIntelligent()) {
+      <div class="ia-result-block">
+        <h4><i class="fa-solid fa-file-lines"></i> Rapport</h4>
+        <p class="ia-report-text">{{ resultatIntelligent()!.report }}</p>
+
+        @if (resultatIntelligent()!.keyFindings?.length) {
+          <h4><i class="fa-solid fa-magnifying-glass-chart"></i> Constats clés</h4>
+          <ul class="ia-list">
+            @for (k of resultatIntelligent()!.keyFindings; track $index) { <li>{{ k }}</li> }
+          </ul>
+        }
+        @if (resultatIntelligent()!.actionPlan?.length) {
+          <h4><i class="fa-solid fa-list-check"></i> Plan d'action</h4>
+          <ul class="ia-list">
+            @for (a of resultatIntelligent()!.actionPlan; track $index) { <li>{{ a }}</li> }
+          </ul>
+        }
+      </div>
+    }
+  }
+</div>

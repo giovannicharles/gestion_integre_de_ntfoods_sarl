@@ -1,0 +1,23 @@
+<div class="ia-hub">
+  <div class="ia-hub-topbar">
+    <button class="ia-hub-back" (click)="goBack()" title="Retour">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <div class="ia-hub-brand">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Assistant IA TantyAI</span>
+    </div>
+  </div>
+
+  <nav class="period-selector ia-hub-tabs">
+    @for (tab of tabs; track tab.route) {
+      <a class="period-btn ia-hub-tab" [routerLink]="tab.route" routerLinkActive="active">
+        <i class="fa-solid {{ tab.icon }}"></i> {{ tab.label }}
+      </a>
+    }
+  </nav>
+
+  <div class="ia-hub-content">
+    <router-outlet />
+  </div>
+</div>

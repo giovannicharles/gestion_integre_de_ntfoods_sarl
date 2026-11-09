@@ -1,0 +1,64 @@
+<div class="card ia-form-card">
+  <div class="card-title"><i class="fa-solid fa-chart-line"></i> Prévisions IA</div>
+  <p class="ia-form-sub">Demande à TantyAI une projection sur un horizon donné, avec niveau de risque par élément.</p>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Type de prévision</label>
+      <select class="form-control" [ngModel]="predictionType()" (ngModelChange)="predictionType.set($event)">
+        @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Horizon (jours)</label>
+      <input type="number" class="form-control" min="1" [ngModel]="horizonDays()" (ngModelChange)="horizonDays.set($event)" />
+    </div>
+    <div class="form-group">
+      <label>Domaine (optionnel)</label>
+      <input type="text" class="form-control" placeholder="Ex: Stock Tampon" [ngModel]="domain()" (ngModelChange)="domain.set($event)" />
+    </div>
+  </div>
+
+  <div class="ia-form-actions">
+    <button class="btn btn-primary" [disabled]="loading()" (click)="lancerPrediction(false)">
+      @if (loading()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-chart-line"></i> }
+      Lancer la prévision
+    </button>
+    <button class="btn btn-outline" [disabled]="loading()" (click)="lancerPrediction(true)">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Prévision automatique
+    </button>
+  </div>
+
+  @if (errorMsg()) {
+    <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  }
+</div>
+
+@if (resultat()) {
+  <div class="card ia-result-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Résultat</span>
+      <span class="badge badge-secondary">Confiance {{ resultat()!.confidence }}%</span>
+    </div>
+    @if (resultat()!.predictions?.length) {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Élément</th><th>Risque</th><th>Probabilité</th><th>Échéance</th><th>Recommandation</th></tr></thead>
+          <tbody>
+            @for (p of resultat()!.predictions; track $index) {
+              <tr>
+                <td class="fw-bold">{{ p.item }}</td>
+                <td><span [class]="risqueClass(p.risk)">{{ p.risk }}</span></td>
+                <td class="mono">{{ p.probability }}%</td>
+                <td>{{ p.timeframe }}</td>
+                <td class="text-muted">{{ p.recommendation }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="empty-state">Aucune prévision à risque sur cet horizon.</p>
+    }
+  </div>
+}

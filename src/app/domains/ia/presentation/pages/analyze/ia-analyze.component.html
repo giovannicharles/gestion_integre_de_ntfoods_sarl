@@ -1,0 +1,59 @@
+<div class="card ia-form-card">
+  <div class="card-title"><i class="fa-solid fa-magnifying-glass-chart"></i> Analyse IA</div>
+  <p class="ia-form-sub">Demande à TantyAI une analyse synthétique d'un domaine de l'activité, avec recommandations.</p>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Type d'analyse</label>
+      <select class="form-control" [ngModel]="analysisType()" (ngModelChange)="analysisType.set($event)">
+        @for (t of types; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Domaine (optionnel)</label>
+      <input type="text" class="form-control" placeholder="Ex: Stock Central" [ngModel]="domain()" (ngModelChange)="domain.set($event)" />
+    </div>
+    <div class="form-group">
+      <label>Période (optionnel)</label>
+      <input type="text" class="form-control" placeholder="Ex: Ce mois" [ngModel]="period()" (ngModelChange)="period.set($event)" />
+    </div>
+  </div>
+
+  <div class="ia-form-actions">
+    <button class="btn btn-primary" [disabled]="loading()" (click)="lancerAnalyse(false)">
+      @if (loading()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-magnifying-glass-chart"></i> }
+      Lancer l'analyse
+    </button>
+    <button class="btn btn-outline" [disabled]="loading()" (click)="lancerAnalyse(true)">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Analyse automatique
+    </button>
+  </div>
+
+  @if (errorMsg()) {
+    <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ errorMsg() }}</span></div>
+  }
+</div>
+
+@if (resultat()) {
+  <div class="card ia-result-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-file-lines"></i> Résultat</span>
+      <span [class]="risqueClass(resultat()!.riskLevel)">{{ resultat()!.riskLevel }}</span>
+    </div>
+    <p class="ia-result-summary">{{ resultat()!.summary }}</p>
+
+    @if (resultat()!.insights?.length) {
+      <h4 class="ia-result-section-title"><i class="fa-solid fa-lightbulb"></i> Constats</h4>
+      <ul class="ia-result-list">
+        @for (i of resultat()!.insights; track $index) { <li>{{ i }}</li> }
+      </ul>
+    }
+
+    @if (resultat()!.recommendations?.length) {
+      <h4 class="ia-result-section-title"><i class="fa-solid fa-circle-check"></i> Recommandations</h4>
+      <ul class="ia-result-list">
+        @for (r of resultat()!.recommendations; track $index) { <li>{{ r }}</li> }
+      </ul>
+    }
+  </div>
+}

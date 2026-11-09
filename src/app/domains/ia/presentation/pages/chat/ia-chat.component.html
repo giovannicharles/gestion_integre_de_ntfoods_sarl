@@ -1,0 +1,26 @@
+<div class="card ia-chat-card">
+  <div class="ia-chat-messages">
+    @for (m of messages(); track $index) {
+      <div class="ia-msg" [class.ia-msg-user]="m.role === 'user'">
+        <div class="ia-msg-avatar">
+          <i class="fa-solid" [class.fa-user]="m.role === 'user'" [class.fa-wand-magic-sparkles]="m.role === 'assistant'"></i>
+        </div>
+        <div class="ia-msg-bubble">{{ m.content }}</div>
+      </div>
+    }
+    @if (loading()) {
+      <div class="ia-msg">
+        <div class="ia-msg-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div class="ia-msg-bubble ia-msg-loading"><i class="fa-solid fa-spinner fa-spin"></i> TantyAI réfléchit…</div>
+      </div>
+    }
+    <div #scrollAnchor></div>
+  </div>
+  <div class="ia-chat-input-row">
+    <textarea class="ia-chat-input" rows="1" placeholder="Posez votre question…"
+      [ngModel]="saisie()" (ngModelChange)="saisie.set($event)" (keydown)="onKeydown($event)"></textarea>
+    <button class="btn btn-primary" [disabled]="!saisie().trim() || loading()" (click)="envoyer()">
+      <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
