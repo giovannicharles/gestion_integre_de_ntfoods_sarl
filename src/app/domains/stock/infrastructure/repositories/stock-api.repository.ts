@@ -366,6 +366,13 @@ export class StockApiRepository {
   }
 
   // ── COMMERCIALS ───────────────────────────────────────────
+  /**
+   * Source : stock/mobile-tracking/all, qui ne liste que les commerciaux ayant déjà un
+   * emplacement de stock mobile provisionné (au moins une dotation reçue). Convient aux écrans
+   * qui montrent un RÉSUMÉ de stock existant (Module Commercial, Session du Jour), jamais à un
+   * sélecteur "à qui attribuer" - un commercial qui n'a encore jamais rien reçu n'apparaîtrait
+   * jamais (voir getCommerciauxActifs ci-dessous, 2026-11-09, signalé par le porteur).
+   */
   getCommercials(): Observable<Commercial[]> {
     return this.api.get<MobileStockSummary[]>('stock/mobile-tracking/all').pipe(
       catchError(() => of([] as MobileStockSummary[])),
@@ -377,6 +384,27 @@ export class StockApiRepository {
         vehicle: s.vehicle || '',
         active: true
       })))
+    );
+  }
+
+  /**
+   * Source : stock/commercials (CommercialStockController), tous les commerciaux ACTIFS, qu'ils
+   * aient déjà ou non un stock mobile. 2026-11-09 (signalé par le porteur) : à utiliser pour tout
+   * sélecteur "choisir un commercial" (ex. Nouvelle Dotation) - "Aucun commercial avec stock
+   * mobile trouvé" bloquait toute première dotation, puisque getCommercials() ci-dessus ne peut
+   * par construction jamais lister un commercial qui n'a encore rien reçu.
+   */
+  getCommerciauxActifs(): Observable<Commercial[]> {
+    return this.api.get<{ donnees?: Array<{ id: number; matricule: string; name: string; phone: string; active: boolean }> }>('stock/commercials').pipe(
+      map(r => (r.donnees ?? []).map(c => ({
+        id: c.id,
+        matricule: c.matricule,
+        name: c.name,
+        phone: c.phone || '',
+        vehicle: '',
+        active: c.active
+      }))),
+      catchError(() => of([] as Commercial[]))
     );
   }
 

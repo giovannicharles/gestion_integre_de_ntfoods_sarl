@@ -78,6 +78,12 @@ export class DotationUseCase {
     return this.repo.getCommercials();
   }
 
+  /** Tous les commerciaux actifs, y compris ceux sans stock mobile encore provisionné (2026-11-09,
+   * signalé par le porteur) : à utiliser pour choisir à qui attribuer une nouvelle dotation. */
+  getCommerciauxActifs(): Observable<Commercial[]> {
+    return this.repo.getCommerciauxActifs();
+  }
+
   getProducts(): Observable<Product[]> {
     return this.repo.getProducts();
   }

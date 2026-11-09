@@ -57,7 +57,12 @@ export class DotationFormComponent implements OnInit, OnDestroy {
   ngOnInit() {
     forkJoin({
       products: this.uc.getProducts(),
-      commercials: this.uc.getCommercials(),
+      // 2026-11-09 (signalé par le porteur) : getCommercials() (stock/mobile-tracking/all) ne
+      // liste que les commerciaux ayant déjà un stock mobile provisionné - un nouveau commercial
+      // n'apparaissait jamais, bloquant toute première dotation ("Aucun commercial avec stock
+      // mobile trouvé"). getCommerciauxActifs() (stock/commercials) liste tous les commerciaux
+      // actifs, premier venu compris.
+      commercials: this.uc.getCommerciauxActifs(),
       stockLevels: this.uc.getStockLevels(),
       bufferItems: this.uc.getBufferStockItems()
     }).pipe(takeUntil(this.d$)).subscribe({
