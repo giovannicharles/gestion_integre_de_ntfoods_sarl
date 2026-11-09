@@ -1,6 +1,6 @@
 @if (isOpen()) {
   <div class="confirm-backdrop" (click)="onCancel()">
-    <div class="confirm-container {{ variantClass() }}" (click)="$event.stopPropagation()">
+    <div class="confirm-container {{ variantClass }}" (click)="$event.stopPropagation()">
       <div class="confirm-header">
         <div class="confirm-icon">
           @if (variant() === 'danger') {
@@ -18,7 +18,7 @@
       </div>
       <div class="confirm-footer">
         <button class="btn btn-secondary" (click)="onCancel()">{{ cancelText() }}</button>
-        <button class="btn btn-primary {{ variantClass() }}" (click)="onConfirm()">{{ confirmText() }}</button>
+        <button class="btn btn-primary {{ variantClass }}" (click)="onConfirm()">{{ confirmText() }}</button>
       </div>
     </div>
   </div>

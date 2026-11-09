@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
 
 interface NavItem {
@@ -25,7 +26,7 @@ interface NavGroup {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent],
   templateUrl: './app-shell.component.html',
   styleUrls: ['./app-shell.component.css']
 })
@@ -209,8 +210,12 @@ export class AppShellComponent {
     this._showNotifPanel.set(false);
   }
 
-  logout(): void {
-    if (!confirm('Se déconnecter ?')) return;
+  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
+   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
+  showLogoutConfirm = signal(false);
+  logout(): void { this.showLogoutConfirm.set(true); }
+  confirmerLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.auth.logout();
     this.router.navigate(['/auth/login']);
   }

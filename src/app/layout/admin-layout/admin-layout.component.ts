@@ -13,6 +13,7 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
 // locale 'fr', la page plantait (NG0701) à chaque rafraîchissement du relogue
 // (`date:'...':'':'fr'` ci-dessous), pas seulement au premier rendu.
@@ -37,7 +38,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent, ConfirmDialogComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -171,8 +172,12 @@ export class AdminLayoutComponent implements OnInit {
   }
   closeMobile() { this.mobileOpen.set(false); }
 
-  logout() {
-    if (!confirm('Se déconnecter ?')) return;
+  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
+   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
+  showLogoutConfirm = signal(false);
+  logout() { this.showLogoutConfirm.set(true); }
+  confirmerLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }

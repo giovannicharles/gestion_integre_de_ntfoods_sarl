@@ -146,4 +146,8 @@
       <router-outlet />
     </main>
   </div>
+
+  <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
+    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
+    cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
 </div>

@@ -15,6 +15,7 @@ import { HeaderSearchComponent } from '../../shared/header-search/header-search.
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
@@ -22,7 +23,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-rp-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
   templateUrl: './rp-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -136,8 +137,12 @@ export class RpLayoutComponent implements OnInit {
   }
   closeMobile() { this.mobileOpen.set(false); }
 
-  logout(): void {
-    if (!confirm('Se déconnecter ?')) return;
+  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
+   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
+  showLogoutConfirm = signal(false);
+  logout(): void { this.showLogoutConfirm.set(true); }
+  confirmerLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.authService.logout();
     this.router.navigate(['/auth/login']);
   }

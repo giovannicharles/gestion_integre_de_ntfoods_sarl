@@ -18,6 +18,7 @@ import { HeaderSearchComponent } from '../../shared/header-search/header-search.
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { correspond, filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 registerLocaleData(localeFr);
 
@@ -38,7 +39,7 @@ interface NotifItem {
 @Component({
   selector: 'app-stock-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, TantybotComponent, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
   templateUrl: './stock-layout.component.html',
   styleUrls: ['./stock-layout.component.css']
 })
@@ -424,8 +425,12 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
 
   closeMobile() { this.mobileOpen.set(false); }
 
-  logout() {
-    if (!confirm('Se déconnecter ?')) return;
+  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
+   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
+  showLogoutConfirm = signal(false);
+  logout() { this.showLogoutConfirm.set(true); }
+  confirmerLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.authSvc.logout();
     this.router.navigate(['/auth/login']);
   }
