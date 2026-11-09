@@ -1,2 +1,3 @@
 /* Réécrit le 2026-10-16 pour utiliser les classes globales (.dash, .ph, .kpi-grid, .card,
    .data-table...) au lieu de styles locaux en hexadécimal figé. */
+.kpi-val-sm { font-size: 1rem; }

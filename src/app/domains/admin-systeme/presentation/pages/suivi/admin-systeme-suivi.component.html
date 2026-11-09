@@ -55,7 +55,7 @@
       <div class="kpi-ico" [class.ig]="derniereSauvegarde()?.statut === 'REUSSIE'" [class.ir]="derniereSauvegarde()?.statut === 'ECHEC'" [class.iy]="!derniereSauvegarde()"><i class="fa-solid fa-database"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Dernière sauvegarde</span>
-        <span class="kpi-val" style="font-size:1rem">
+        <span class="kpi-val kpi-val-sm">
           @if (derniereSauvegarde()) { {{ derniereSauvegarde()!.date | date:'dd/MM HH:mm' }} }
           @else { Aucune }
         </span>
