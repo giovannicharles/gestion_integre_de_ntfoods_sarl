@@ -3,6 +3,7 @@
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
 .filter-row { display: flex; gap: var(--sp-2); align-items: center; }
 .form-select-sm { padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
+.input-qty { width: 90px; }
 
 .workflow-banner { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4); }
 .wf-step { display: flex; align-items: center; gap: var(--sp-2); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }

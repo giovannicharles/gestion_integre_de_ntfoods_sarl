@@ -113,7 +113,7 @@
                 <td>{{ ligne.quantite }}</td>
                 <td>
                   @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
-                    <input type="number" min="0" class="form-control form-control-sm" style="width:90px"
+                    <input type="number" min="0" class="form-control form-control-sm input-qty"
                            [(ngModel)]="ligne.quantiteValidee" />
                   } @else {
                     {{ ligne.quantiteValidee }}

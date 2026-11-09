@@ -10,7 +10,7 @@
   </div>
 
   @if (contextError()) {
-    <div class="alert-banner" style="flex-wrap:wrap; justify-content:space-between">
+    <div class="alert-banner alert-banner-wrap">
       <span><i class="fa-solid fa-triangle-exclamation"></i> Le contexte entreprise n'a pas pu être chargé, l'assistant répondra sans les données en temps réel.</span>
       <button class="btn btn-ghost btn-sm" (click)="chargerContexte()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
     </div>
