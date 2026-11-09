@@ -99,7 +99,7 @@
         @if (chargementAuto()) {
           <p class="info-text"><i class="fa-solid fa-spinner fa-spin"></i> Calcul depuis les ventes réelles…</p>
         } @else if (preRempliAutomatiquement()) {
-          <div class="info-text" style="background:var(--g-gh);border-left:3px solid var(--g);padding:8px 12px;border-radius:6px">
+          <div class="notice-success">
             <i class="fa-solid fa-check-circle"></i> Pré-rempli automatiquement depuis les ventes réelles de la semaine, vérifiez puis corrigez si besoin avant de confirmer.
           </div>
         } @else {

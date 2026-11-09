@@ -159,7 +159,7 @@
             <td><strong>{{ fCFA(f.montantTTC) }}</strong></td>
             <td><span [class]="statutClass(f.statut)">{{ f.statut }}</span></td>
             <td>
-              <div style="display:flex;gap:6px">
+              <div class="row-actions-flex">
                 @if (f.statut === 'EMISE') {
                   <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Marquer payée">
                     <i class="fa-solid fa-check"></i>
@@ -167,7 +167,7 @@
                 }
                 @if (f.statut !== 'ANNULEE' && f.statut !== 'PAYEE') {
                   <button class="btn btn-ghost btn-sm" (click)="annuler(f.numero)" title="Annuler">
-                    <i class="fa-solid fa-ban" style="color:var(--r)"></i>
+                    <i class="fa-solid fa-ban ico-r"></i>
                   </button>
                 }
               </div>

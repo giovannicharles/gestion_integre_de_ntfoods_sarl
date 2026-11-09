@@ -40,7 +40,7 @@
       <div class="doc-pick-ico"><i class="fa-solid {{ r.icone }}"></i></div>
       <div class="doc-pick-title">{{ r.titre }}</div>
       <div class="doc-pick-desc">{{ r.description }}</div>
-      <button class="btn btn-primary btn-sm" style="width:100%" [disabled]="!!enCours()" (click)="telecharger(r.type)">
+      <button class="btn btn-primary btn-sm btn-full" [disabled]="!!enCours()" (click)="telecharger(r.type)">
         <i class="fa-solid" [class.fa-download]="enCours()!==r.type" [class.fa-spinner]="enCours()===r.type" [class.fa-spin]="enCours()===r.type"></i>
         Télécharger
       </button>
