@@ -320,6 +320,13 @@ button { font-family:var(--font-b); }
 
 /* FORMS */
 .form-group   { display:flex;flex-direction:column;gap:6px; }
+/* 2026-11-08 : la moitié des usages de .form-row dans le projet portaient leur display:flex en
+   style inline, l'autre moitié n'avait jamais rien (rangées de champs empilées sans mise en
+   page). Règle de base partagée, les .form-row locaux (spécificité attribut de composant)
+   continuent de l'emporter là où ils existent déjà. */
+.form-row     { display:flex;gap:12px;flex-wrap:wrap; }
+.form-row > .form-group { flex:1;min-width:160px; }
+.form-row-end { align-items:flex-end; }
 .form-label   { font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.5px; }
 .form-control { padding:10px 14px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-family:var(--font-b);font-size:13px;color:var(--n800);background:white;outline:none;width:100%;transition:border-color .15s,box-shadow .15s; }
 .form-control:focus  { border-color:var(--g);box-shadow:0 0 0 3px rgba(26,107,42,.09); }

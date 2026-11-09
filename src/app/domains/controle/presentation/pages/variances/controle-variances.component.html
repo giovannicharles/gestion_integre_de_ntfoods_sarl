@@ -66,7 +66,7 @@
           <label>Poste *</label>
           <input type="text" [ngModel]="form().poste" (ngModelChange)="actualiserChamp('poste', $event)" [disabled]="!!editingId()" placeholder="Ex : Maïs (kg/lot)" />
         </div>
-        <div class="form-row" style="display:flex;gap:12px">
+        <div class="form-row">
           <div class="form-group">
             <label>Standard</label>
             <input type="number" min="0" [ngModel]="form().standard" (ngModelChange)="actualiserChamp('standard', $event)" />

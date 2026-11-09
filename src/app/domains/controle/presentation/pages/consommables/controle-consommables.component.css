@@ -1,0 +1,11 @@
+.dash-tabs { margin-bottom: var(--sp-4); flex-wrap: wrap; }
+.row-actions { display: flex; gap: 6px; }
+.text-warning { color: var(--o) !important; }
+.text-danger { color: var(--r) !important; }
+
+@media (max-width: 767px) {
+  .card, .table-card { padding: 14px; }
+  .card-hd { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .data-table { min-width: 620px; }
+  .dash-tabs { gap: 6px; }
+}

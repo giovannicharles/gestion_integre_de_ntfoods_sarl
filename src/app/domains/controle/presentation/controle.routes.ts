@@ -18,6 +18,12 @@ export const CONTROLE_ROUTES: Routes = [
       { path: 'budget', loadComponent: () => import('./pages/budget/controle-budget.component').then(m => m.ControleBudgetComponent) },
       { path: 'variances', loadComponent: () => import('./pages/variances/controle-variances.component').then(m => m.ControleVariancesComponent) },
       { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },
+      // 2026-11-08 : le Contrôleur Général fait déjà la 2e validation des réceptions de
+      // consommables/matériel (STOCK_RECEPTION_VALIDER_ETAPE2) et a déjà tous les droits de
+      // lecture stock (STOCK_PRODUIT/NIVEAU/MOUVEMENT_CONSULTER, STOCK_ALERTE_GERER), sans
+      // aucun écran pour les exercer. Écran propre (confidentialité des modules), réutilise les
+      // mêmes use-cases/services que Stock, jamais ses repositories.
+      { path: 'consommables', loadComponent: () => import('./pages/consommables/controle-consommables.component').then(m => m.ControleConsommablesComponent) },
       // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email), écran
       // partagé (voir shared/commande-client).
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },

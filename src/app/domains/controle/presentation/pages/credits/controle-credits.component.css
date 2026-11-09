@@ -1,0 +1,10 @@
+.cell-sm { font-size: 12px; }
+.panel-body { padding: 0 var(--sp-4) var(--sp-4); }
+.cred-row { margin-bottom: 14px; }
+.cred-row-hd { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.cred-row-sub { font-size: 11px; color: var(--n400); margin-top: 2px; }
+.empty-pad { padding: 8px 0; }
+
+@media (max-width: 767px) {
+  .data-table { min-width: 560px; }
+}

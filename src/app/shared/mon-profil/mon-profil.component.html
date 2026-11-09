@@ -43,6 +43,9 @@
       <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'securite'" (click)="ongletActif.set('securite')">
         <i class="fa-solid fa-lock"></i> Sécurité
       </button>
+      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'preferences'" (click)="ongletActif.set('preferences')">
+        <i class="fa-solid fa-sliders"></i> Préférences
+      </button>
     </div>
 
     @if (ongletActif() === 'infos') {
@@ -121,6 +124,26 @@
           <button class="btn btn-primary" (click)="enregistrerMotDePasse()" [disabled]="savingPwd() || !nouveauMotDePasse">
             @if (savingPwd()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-shield-halved"></i> }
             Changer le mot de passe
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (ongletActif() === 'preferences') {
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-sliders"></i> Préférences d'affichage</span>
+        </div>
+        <div class="mp-pref-row">
+          <div class="mp-pref-label">
+            <i class="fa-solid" [class.fa-moon]="theme.isDark()" [class.fa-sun]="!theme.isDark()"></i>
+            <div>
+              <div class="fw-bold">Mode sombre</div>
+              <div class="text-muted mp-pref-sub">S'applique immédiatement, mémorisé sur cet appareil.</div>
+            </div>
+          </div>
+          <button class="mp-switch" [class.mp-switch-on]="theme.isDark()" (click)="theme.toggle()" role="switch" [attr.aria-checked]="theme.isDark()">
+            <span class="mp-switch-knob"></span>
           </button>
         </div>
       </div>

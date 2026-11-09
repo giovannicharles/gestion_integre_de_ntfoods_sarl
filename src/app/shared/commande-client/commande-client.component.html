@@ -128,7 +128,7 @@
             @for (c of clients(); track c.codeClient) { <option [value]="c.codeClient">{{ c.nom }} ({{ c.localite }})</option> }
           </select>
         </div>
-        <div class="form-row" style="display:flex;gap:12px">
+        <div class="form-row">
           <div class="form-group" style="flex:1">
             <label>Canal de réception</label>
             <select class="form-control" [ngModel]="form().canal" (ngModelChange)="majChamp('canal', $event)">

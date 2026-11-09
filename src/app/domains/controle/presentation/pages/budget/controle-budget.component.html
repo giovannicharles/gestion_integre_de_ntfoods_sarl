@@ -57,8 +57,8 @@
             <td class="mono">{{ fCFA(b.engage) }}</td>
             <td class="mono">{{ fCFA(b.realise) }}</td>
             <td>
-              <div style="display:flex;align-items:center;gap:10px">
-                <div class="prog-bar-wrap" style="max-width:130px"><div class="prog-bar" [class.prog-r]="b.engage>b.budget" [class.prog-y]="pct(b.engage,b.budget)>=90 && b.engage<=b.budget" [style.width.%]="Math.min(pct(b.engage,b.budget),100)"></div></div>
+              <div class="occ-cell">
+                <div class="prog-bar-wrap occ-bar"><div class="prog-bar" [class.prog-r]="b.engage>b.budget" [class.prog-y]="pct(b.engage,b.budget)>=90 && b.engage<=b.budget" [style.width.%]="Math.min(pct(b.engage,b.budget),100)"></div></div>
                 <span class="mono fw-bold" [class.text-danger]="b.engage>b.budget">{{ pct(b.engage,b.budget) }}%</span>
               </div>
             </td>
@@ -90,7 +90,7 @@
           <label>Budget alloué (FCFA)</label>
           <input type="number" min="0" [ngModel]="form().budget" (ngModelChange)="actualiserChamp('budget', $event)" />
         </div>
-        <div class="form-row" style="display:flex;gap:12px">
+        <div class="form-row">
           <div class="form-group">
             <label>Engagé (FCFA)</label>
             <input type="number" min="0" [ngModel]="form().engage" (ngModelChange)="actualiserChamp('engage', $event)" />

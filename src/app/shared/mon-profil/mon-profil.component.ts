@@ -6,6 +6,7 @@ import { ProfilBE } from '../../core/models/auth.models';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { ToastService } from '../../core/services/toast.service';
 import { extractApiError } from '../../core/http/api-error-parser';
+import { ThemeService } from '../../core/services/theme.service';
 
 /**
  * « Mon Profil », écran de libre-service commun à tous les layouts (2026-11-01, demande
@@ -25,13 +26,18 @@ import { extractApiError } from '../../core/http/api-error-parser';
 export class MonProfilComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  /** 2026-11-08 (demande explicite : « bonne gestion ... ses préférences »). Le service existait
+   * déjà, complet et fonctionnel (persistance localStorage, écoute du thème système), mais
+   * aucun écran n'exposait jamais `toggle()` : le mode sombre s'appliquait seulement au chargement
+   * initial, sans possibilité pour l'utilisateur de le choisir lui-même. */
+  readonly theme = inject(ThemeService);
 
   loading = signal(true);
   loadError = signal<string | null>(null);
   profil = signal<ProfilBE | null>(null);
   saving = signal(false);
   savingPwd = signal(false);
-  ongletActif = signal<'infos' | 'securite'>('infos');
+  ongletActif = signal<'infos' | 'securite' | 'preferences'>('infos');
 
   roleLabel = computed(() => {
     const p = this.profil();

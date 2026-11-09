@@ -57,7 +57,7 @@
         <button class="modal-close" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
-        <div class="form-row" style="display:flex;gap:12px">
+        <div class="form-row">
           <div class="form-group">
             <label>Code *</label>
             <input type="text" [ngModel]="form().code" (ngModelChange)="actualiserChamp('code', $event)" [disabled]="!!editingId()" placeholder="Ex : PF-001" />
@@ -67,7 +67,7 @@
             <input type="text" [ngModel]="form().designation" (ngModelChange)="actualiserChamp('designation', $event)" placeholder="Ex : Bouillie Soja 500g" />
           </div>
         </div>
-        <div class="form-row" style="display:flex;gap:12px">
+        <div class="form-row">
           <div class="form-group">
             <label>Prix de vente (FCFA)</label>
             <input type="number" min="0" [ngModel]="form().prixVente" (ngModelChange)="actualiserChamp('prixVente', $event)" />

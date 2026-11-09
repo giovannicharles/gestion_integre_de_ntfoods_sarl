@@ -10,6 +10,8 @@ import { ThemeService } from '../../core/services/theme.service';
 import { ClockService } from '../../core/services/clock.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { ControleService } from '../../domains/controle/infrastructure/controle.service';
+import { ReceiptUseCase } from '../../domains/stock/application/use-cases/reception/receipt.use-case';
+import { forkJoin } from 'rxjs';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
@@ -33,6 +35,7 @@ export class ControleLayoutComponent implements OnInit {
   readonly theme = inject(ThemeService);
   private readonly clock = inject(ClockService);
   private readonly controleSvc = inject(ControleService);
+  private readonly receiptUc = inject(ReceiptUseCase);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = this.clock.now;
@@ -66,6 +69,7 @@ export class ControleLayoutComponent implements OnInit {
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/controle/validations' },
+    { label: 'Suivi Consommables', icon: 'fa-boxes-packing', route: '/controle/consommables' },
     { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements' },
     { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
     { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
@@ -101,6 +105,16 @@ export class ControleLayoutComponent implements OnInit {
         this.setBadge('/controle/decaissements', d.decaissementsAttente, 'bd-red');
         this.setBadge('/controle/budget', d.budgetDepasse, 'bd-orange');
       },
+      error: () => {},
+    });
+
+    // 2026-11-08 : nouvel écran Consommables, badge sur le nombre de réceptions en attente de
+    // la 2e validation (consommables + matériel), même motif que les badges ci-dessus.
+    forkJoin({
+      consommable: this.receiptUc.getPendingSecondValidation('CONSOMMABLE'),
+      materiel: this.receiptUc.getPendingSecondValidation('MATERIEL'),
+    }).subscribe({
+      next: r => this.setBadge('/controle/consommables', r.consommable.length + r.materiel.length, 'bd-orange'),
       error: () => {},
     });
   }

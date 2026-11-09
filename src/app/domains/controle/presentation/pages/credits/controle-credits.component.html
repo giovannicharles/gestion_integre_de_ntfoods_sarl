@@ -20,7 +20,7 @@
             <tr [class.row-alert]="r.montantRestant > 300000">
               <td class="fw-bold">{{ r.nomClient }}</td>
               <td><span class="zone-chip">{{ r.statut }}</span></td>
-              <td style="font-size:12px">{{ commercialNom(r.matriculeCommercial) }}</td>
+              <td class="cell-sm">{{ commercialNom(r.matriculeCommercial) }}</td>
               <td class="mono fw-bold text-danger">{{ fCFA(r.montantRestant) }}</td>
             </tr>
             } @empty {
@@ -34,20 +34,20 @@
 
     <div class="card ranking-card">
       <div class="card-hd"><span class="card-title"><i class="fa-solid fa-user-tie"></i> Crédit par commercial</span></div>
-      <div style="padding:0 var(--sp-4) var(--sp-4)">
+      <div class="panel-body">
         @for (p of parCommercial(); track p.nom) {
-        <div style="margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-            <span class="fw-bold">{{ p.nom }} <span style="color:var(--n400)">· {{ p.zone }}</span></span>
+        <div class="cred-row">
+          <div class="cred-row-hd">
+            <span class="fw-bold">{{ p.nom }} <span class="text-muted">· {{ p.zone }}</span></span>
             <span class="mono">{{ fCFA(p.total) }}</span>
           </div>
           <div class="prog-track-wide">
             <div class="prog-bar" [class.prog-r]="p.total>300000" [style.width.%]="totalCredit() ? (p.total/totalCredit())*100 : 0"></div>
           </div>
-          <div style="font-size:11px;color:var(--n400);margin-top:2px">{{ p.nbClients }} client(s) débiteur(s)</div>
+          <div class="cred-row-sub">{{ p.nbClients }} client(s) débiteur(s)</div>
         </div>
         } @empty {
-        <p class="txt-muted" style="padding:8px 0">Aucun commercial avec un encours crédit.</p>
+        <p class="txt-muted empty-pad">Aucun commercial avec un encours crédit.</p>
         }
       </div>
     </div>

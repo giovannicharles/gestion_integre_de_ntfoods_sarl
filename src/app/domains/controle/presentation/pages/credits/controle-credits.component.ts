@@ -9,6 +9,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './controle-credits.component.html',
+  styleUrls: ['./controle-credits.component.css'],
 })
 export class ControleCreditsComponent implements OnInit {
   fCFA = fCFA;
