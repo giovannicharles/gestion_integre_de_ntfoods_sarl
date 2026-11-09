@@ -16,6 +16,7 @@
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }
 .chart-card { padding: var(--sp-4); }
+.chart-card-mb { margin-bottom: var(--sp-4); }
 .chart-wrap { height: 260px; position: relative; }
 
 @media (max-width: 767px) {

@@ -2,6 +2,8 @@
 .fw-bold { font-weight: 700; }
 .mono { font-variant-numeric: tabular-nums; }
 .row-alert { background: var(--r-gh); }
+.cell-ts { font-size: 12px; }
+.cell-ip { font-size: 11px; }
 
 @media (max-width: 767px) {
   .card { padding: 14px; }

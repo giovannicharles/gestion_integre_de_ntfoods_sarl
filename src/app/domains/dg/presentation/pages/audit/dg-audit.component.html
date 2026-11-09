@@ -65,7 +65,7 @@
           <tbody>
             @for (e of entrees(); track e.id) {
             <tr [class.row-alert]="!e.succes">
-              <td class="mono" style="font-size:12px">{{ e.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+              <td class="mono cell-ts">{{ e.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}</td>
               <td class="fw-bold">{{ e.matricule }}</td>
               <td class="text-muted">{{ e.role }}</td>
               <td><span class="badge badge-neutral badge-sm">{{ e.typeAction }}</span></td>
@@ -75,7 +75,7 @@
                 @if (e.succes) { <span class="badge badge-success badge-sm">OK</span> }
                 @else { <span class="badge badge-danger badge-sm" [title]="e.messageErreur || ''">Échec</span> }
               </td>
-              <td class="mono text-muted" style="font-size:11px">{{ e.adresseIp }}</td>
+              <td class="mono text-muted cell-ip">{{ e.adresseIp }}</td>
             </tr>
             } @empty {
             <tr><td colspan="8" class="empty-state">Aucune entrée pour ces filtres.</td></tr>
