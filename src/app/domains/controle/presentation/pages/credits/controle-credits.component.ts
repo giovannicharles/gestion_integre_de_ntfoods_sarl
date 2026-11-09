@@ -37,6 +37,21 @@ export class ControleCreditsComponent implements OnInit {
     return this.commerciaux().find(c => c.matricule === mat)?.nomComplet ?? mat;
   }
 
+  /** Oversight crédit (2026-11-09, proposé et implémenté suite à la demande du porteur) : le
+   * Contrôleur Général évalue le risque crédit, pas seulement le montant dû - une dette récente
+   * n'est pas le même risque qu'une dette ancienne du même montant. dateEcheance existe déjà sur
+   * RecouvrementBE, jamais exploité pour calculer un retard. */
+  joursRetard(r: RecouvrementBE): number {
+    if (!r.dateEcheance) return 0;
+    const ms = new Date().getTime() - new Date(r.dateEcheance).getTime();
+    return Math.max(0, Math.floor(ms / 86400000));
+  }
+
+  niveauRisque(r: RecouvrementBE): 'critique' | 'alerte' | 'normal' {
+    const j = this.joursRetard(r);
+    return j > 30 ? 'critique' : j > 15 ? 'alerte' : 'normal';
+  }
+
   ngOnInit(): void {
     this.comSvc.getRecouvrements().subscribe({
       next: r => this.recouvrements.set(r),

@@ -14,20 +14,25 @@
       <div class="card-hd"><span class="card-title"><i class="fa-solid fa-users"></i> Encours par client</span></div>
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Client</th><th>Type</th><th>Commercial</th><th>Solde dette</th></tr></thead>
+          <thead><tr><th>Client</th><th>Type</th><th>Commercial</th><th>Retard</th><th>Solde dette</th></tr></thead>
           <tbody>
             @for (r of debiteurs(); track r.id) {
             <tr [class.row-alert]="r.montantRestant > 300000">
               <td class="fw-bold">{{ r.nomClient }}</td>
               <td><span class="zone-chip">{{ r.statut }}</span></td>
               <td class="cell-sm">{{ commercialNom(r.matriculeCommercial) }}</td>
+              <td>
+                <span class="badge" [class.bg-red]="niveauRisque(r)==='critique'" [class.bg-orange]="niveauRisque(r)==='alerte'" [class.bg-neutral]="niveauRisque(r)==='normal'">
+                  {{ joursRetard(r) }} j
+                </span>
+              </td>
               <td class="mono fw-bold text-danger">{{ fCFA(r.montantRestant) }}</td>
             </tr>
             } @empty {
-            <tr><td colspan="4" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun client débiteur</td></tr>
+            <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun client débiteur</td></tr>
             }
           </tbody>
-          <tfoot><tr class="tfoot-total"><td colspan="3" class="fw-bold">Total encours crédit</td><td class="mono fw-bold">{{ fCFA(totalCredit()) }}</td></tr></tfoot>
+          <tfoot><tr class="tfoot-total"><td colspan="4" class="fw-bold">Total encours crédit</td><td class="mono fw-bold">{{ fCFA(totalCredit()) }}</td></tr></tfoot>
         </table>
       </div>
     </div>
