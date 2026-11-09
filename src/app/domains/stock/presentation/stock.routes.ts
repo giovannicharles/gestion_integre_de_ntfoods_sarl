@@ -41,6 +41,10 @@ export const STOCK_ROUTES: Routes = [
       { path: 'commercial', loadComponent: () => import('./pages/commercial/commercial.component').then(m => m.CommercialComponent) },
       { path: 'mobile-stock', loadComponent: () => import('./pages/mobile-stock/mobile-stock.component').then(m => m.MobileStockComponent) },
       { path: 'alertes', loadComponent: () => import('./pages/alertes/alertes.component').then(m => m.AlertesComponent) },
+      // Comptage des invendus de fin de tournée (2026-11-09) : RetourController existait déjà
+      // côté serveur, jamais routé. Le lien du sidebar ("Comptage Invendus") pointait déjà vers
+      // cette route, qui n'existait pas encore.
+      { path: 'invendus', loadComponent: () => import('./pages/retours/retour-list.component').then(m => m.RetourListComponent) },
       { path: 'lots', loadComponent: () => import('./pages/lots/lots.component').then(m => m.LotsComponent) },
       // Parcours d'un lot (2026-09-30) : distinct de 'lots' ci-dessus, celui-ci lit LotStock (le grand livre de
       // traçabilité réellement alimenté par les réceptions/entrées de production), pas StockBatch (stock/batches).

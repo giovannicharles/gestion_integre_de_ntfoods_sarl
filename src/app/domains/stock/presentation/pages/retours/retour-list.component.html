@@ -1,0 +1,130 @@
+<div class="page animate-fadeInUp">
+  <div class="page-header">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+      <div>
+        <h1 class="ph-title">Comptage Invendus</h1>
+        <p class="ph-sub">Constats de fin de tournée : le commercial déclare, vous comptez. Aucun mouvement de stock n'est produit ici.</p>
+      </div>
+    </div>
+  </div>
+
+  @if (!loading()) {
+    <div class="stat-chips">
+      <div class="s-chip sc-total"><i class="fa-solid fa-list"></i>{{ retours().length }} total</div>
+      <div class="s-chip sc-warn"><i class="fa-solid fa-hourglass-half"></i>{{ countStatus('DECLARE') }} à compter</div>
+      <div class="s-chip sc-ok"><i class="fa-solid fa-check-circle"></i>{{ countStatus('COMPTE') }} comptés</div>
+    </div>
+  }
+
+  <div class="card" style="overflow:hidden">
+    <div class="card-body filters-row">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Rechercher numéro, matricule commercial…" [(ngModel)]="search">
+        @if (search) {
+          <button class="x-btn" (click)="search=''" aria-label="Effacer la recherche"><i class="fa-solid fa-xmark"></i></button>
+        }
+      </div>
+      <select class="f-sel" [(ngModel)]="filterStatut">
+        <option value="">Tous statuts</option>
+        <option value="DECLARE">Déclaré, à compter</option>
+        <option value="COMPTE">Compté</option>
+      </select>
+      @if (search || filterStatut) {
+        <button class="btn btn-ghost btn-sm" (click)="search=''; filterStatut=''"><i class="fa-solid fa-filter-slash"></i> Effacer</button>
+      }
+      <span class="badge badge-neutral" style="margin-left:auto">{{ filtered().length }} résultat(s)</span>
+    </div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+    @if (loading()) {
+      <div class="card-body"><p class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</p></div>
+    } @else if (filtered().length === 0) {
+      <div class="card-body"><p class="empty-state"><i class="fa-solid fa-clipboard-list"></i> Aucun constat d'invendus.</p></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Commercial</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th>Écart total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of filtered(); track r.id) {
+              <tr>
+                <td class="fw-bold mono">{{ r.numero }}</td>
+                <td>{{ r.matriculeCommercial }}</td>
+                <td>{{ r.dateRetour | date:'dd/MM/yyyy' }}</td>
+                <td><span [class]="statutBadgeClass(r.statut)">{{ statutLabel(r.statut) }}</span></td>
+                <td class="mono">{{ r.ecartTotal ?? '—' }}</td>
+                <td>
+                  @if (r.statut === 'DECLARE') {
+                    <button class="btn btn-primary btn-sm" (click)="ouvrirComptage(r)">
+                      <i class="fa-solid fa-clipboard-check"></i> Compter
+                    </button>
+                  } @else {
+                    <button class="btn btn-ghost btn-sm" (click)="ouvrirComptage(r)">
+                      <i class="fa-solid fa-eye"></i> Détail
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showComptageModal() && retourCourant) {
+  <div class="modal-overlay" (click)="fermerComptage()">
+    <div class="modal-box retour-modal" (click)="$event.stopPropagation()">
+      <h3><i class="fa-solid fa-clipboard-check"></i> Comptage — {{ retourCourant.numero }}</h3>
+      <p class="modal-sub">Commercial {{ retourCourant.matriculeCommercial }} — la quantité déclarée est conservée, seul l'écart avec votre comptage est enregistré.</p>
+
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Déclarée</th>
+              <th>Comptée</th>
+              <th>Écart</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of comptageLignes; track l.codeProduit) {
+              <tr>
+                <td class="fw-bold">{{ l.codeProduit }}</td>
+                <td class="mono">{{ l.declaree }}</td>
+                <td>
+                  <input type="number" class="form-control" min="0" [(ngModel)]="l.comptee"
+                         [disabled]="retourCourant.statut === 'COMPTE'" />
+                </td>
+                <td class="mono" [class.text-danger]="ecartLigne(l) !== 0">{{ ecartLigne(l) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" (click)="fermerComptage()">Fermer</button>
+        @if (retourCourant.statut === 'DECLARE') {
+          <button class="btn btn-primary" [disabled]="savingComptage()" (click)="confirmerComptage()">
+            @if (savingComptage()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Valider le comptage
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,12 @@
+.retour-modal { max-width: 640px; }
+.retour-modal h3 { display:flex; align-items:center; gap:8px; margin:0 0 6px; }
+.modal-sub { font-size:13px; color:var(--n500); margin:0 0 16px; }
+
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+.text-danger { color:var(--r); font-weight:600; }
+
+@media (max-width:767px) {
+  .modal-actions { flex-direction:column-reverse; }
+  .modal-actions .btn { width:100%; justify-content:center; }
+}

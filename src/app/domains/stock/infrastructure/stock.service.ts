@@ -162,6 +162,28 @@ export interface SessionCommercialBE {
   dateCreation?: string;
 }
 
+export interface LigneRetourBE {
+  id: string;
+  codeProduit: string;
+  sku: string | null;
+  quantiteDeclaree: number;
+  quantiteComptee: number | null;
+  ecart: number | null;
+  motif: string | null;
+}
+
+export interface RetourBE {
+  id: number;
+  numero: string;
+  matriculeCommercial: string;
+  matriculeGestionnaire: string | null;
+  dateRetour: string;
+  statut: string;
+  dateComptage: string | null;
+  ecartTotal: number | null;
+  lignes: LigneRetourBE[];
+}
+
 export interface LigneBonCommandeBE {
   id?: number;
   codeProduit: string;
@@ -499,6 +521,25 @@ export class StockService {
   }): Observable<BonCommandeBE> {
     return this.api.post<ApiResponse<BonCommandeBE>>('stock/bons-commande', req)
       .pipe(map(r => r.donnees!));
+  }
+
+  // ── Invendus / constats de retour ───────────────────────────────────────
+  // Déclaré par le commercial (terminal mobile, hors périmètre web), compté ici par le
+  // gestionnaire : aucun mouvement de stock, l'écart déclaré/compté est conservé tel quel.
+
+  getRetours(params: { commercial?: string; statut?: string } = {}): Observable<RetourBE[]> {
+    const query = new URLSearchParams();
+    if (params.commercial) query.set('commercial', params.commercial);
+    if (params.statut) query.set('statut', params.statut);
+    const qs = query.toString();
+    return this.api.get<ApiResponse<RetourBE[]>>(`stock/retours${qs ? '?' + qs : ''}`)
+      .pipe(map(r => r.donnees!));
+  }
+
+  compterInvendus(numero: string, lignes: { codeProduit: string; quantiteComptee: number }[]): Observable<RetourBE> {
+    return this.api.post<ApiResponse<RetourBE>>(
+      `stock/retours/${encodeURIComponent(numero)}/comptage`, { lignes }
+    ).pipe(map(r => r.donnees!));
   }
 }
 
