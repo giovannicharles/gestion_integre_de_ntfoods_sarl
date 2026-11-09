@@ -8,3 +8,8 @@
 }
 <app-update-banner></app-update-banner>
 <router-outlet></router-outlet>
+@if (auth.isAuthenticated() && chatbotContext().module !== 'DG') {
+  <!-- DG a déjà son propre écran IA dédié (/dg/chat, bulle flottante "fab-ai") - éviter les deux
+       à la fois serait une duplication, pas un service rendu. -->
+  <app-chatbot [context]="chatbotContext()" title="Assistant IA TantyAI"></app-chatbot>
+}
