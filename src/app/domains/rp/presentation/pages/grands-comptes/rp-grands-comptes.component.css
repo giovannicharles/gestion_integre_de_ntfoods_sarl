@@ -1,3 +1,19 @@
 .loading-state, .error-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 20px; color: var(--n400); gap: 12px; grid-column: 1/-1; }
 .error-state { color: var(--r); }
 .error-state i { font-size: 2rem; }
+
+.gc-card { padding: 18px; }
+.gc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.gc-head-info { flex: 1; }
+.gc-head-meta { font-size: 11px; color: var(--n400); }
+.gc-kpis { grid-template-columns: 1fr 1fr; }
+.gc-fk-val-sm { font-size: 13px; }
+.gc-actions { display: flex; gap: 8px; margin-top: 12px; }
+.gc-btn-flex { flex: 1; }
+.gc-empty { grid-column: 1/-1; }
+
+@media (max-width:480px) {
+  .gc-kpis { grid-template-columns: 1fr; }
+  .gc-actions { flex-direction: column; }
+  .gc-btn-flex { width: 100%; }
+}

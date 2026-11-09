@@ -1,0 +1,11 @@
+.occ-cell { display: flex; align-items: center; gap: 10px; }
+.occ-bar { max-width: 120px; }
+
+.reco-card { padding: var(--sp-4); }
+.reco-title { margin-bottom: 12px; }
+.reco-item { margin-bottom: 8px; }
+.reco-empty { padding: 16px; }
+
+@media (max-width:767px) {
+  .occ-bar { max-width: 80px; }
+}
