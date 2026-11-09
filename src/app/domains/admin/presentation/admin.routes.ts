@@ -70,6 +70,17 @@ export const ADMIN_ROUTES: Routes = [
         path: 'parametrages-metier',
         loadComponent: () => import('./pages/parametres/parametrages-metier.component').then(m => m.ParametragesMetierComponent)
       },
+      {
+        // 2026-11-09 : écran déjà écrit et fonctionnel (ProductionService.getPostesProductionAdmin/
+        // creerPosteProduction/modifierPosteProduction/supprimerPosteProduction, endpoints réels),
+        // retiré de /dg/* le 2026-11-01 sous l'hypothèse qu'il resterait disponible sous /admin/* -
+        // jamais effectivement ajouté ici, donc totalement inaccessible depuis cette date (régression,
+        // pas une décision délibérée). Référentiel de configuration (postes de travail), pas une
+        // action métier de Production : reste dans sa portée actuelle (admin.layout commentaire
+        // corrigé en même temps).
+        path: 'postes-production',
+        loadComponent: () => import('./pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent)
+      },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       {
         path: 'profil',

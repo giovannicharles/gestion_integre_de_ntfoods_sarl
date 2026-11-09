@@ -78,11 +78,12 @@ export class AdminLayoutComponent implements OnInit {
    * Section « Comptes & Organisation », module backend `administration`.
    *
    * « Paramètres métier » (TVA, primes, seuils, ParametresAdminController) et « Postes
-   * production » retirés d'ici le 2026-10-25 (demande explicite du porteur) : ce ne sont pas
-   * des réglages du SYSTÈME (config technique, droits d'accès, comptes) mais des paramètres
-   * d'exploitation du DG, déjà disponibles sous /dg/parametres et /dg/postes-production, sans
-   * doublon de code (même composant). L'Admin garde ici : comptes, droits d'accès, incidents,
-   * audit, strictement « gestion du système » (CLAUDE.md, décision actée n°9).
+   * production » retirés d'ici le 2026-10-25, puis retirés aussi de /dg/* le 2026-11-01 sous
+   * l'hypothèse qu'ils resteraient disponibles ici - jamais effectivement ré-ajoutés (régression
+   * corrigée le 2026-11-09, voir admin.routes.ts). Ce ne sont pas des réglages du SYSTÈME (config
+   * technique, droits d'accès, comptes) mais des référentiels d'exploitation ; l'Admin garde ici :
+   * comptes, droits d'accès, incidents, audit, strictement « gestion du système » (CLAUDE.md,
+   * décision actée n°9), plus ces deux référentiels faute d'un autre point d'entrée routé.
    */
   comptesNavItems: NavItem[] = [
     { label: 'Tableau de bord', icon: 'fa-gauge-high', route: '/admin/dashboard' },
@@ -98,6 +99,7 @@ export class AdminLayoutComponent implements OnInit {
     // (AdminService), jamais le même écran malgré le nom proche - vérifié avant d'ajouter.
     { label: 'Paramètres métier (TVA, zones...)', icon: 'fa-sliders', route: '/admin/parametres' },
     { label: 'Règles métier datées (primes, caisse...)', icon: 'fa-scale-balanced', route: '/admin/parametrages-metier' },
+    { label: 'Postes de production', icon: 'fa-industry', route: '/admin/postes-production' },
   ];
 
   /** Section « Configuration technique », module backend `admin` (ParametreSysteme). */
