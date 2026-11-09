@@ -417,7 +417,7 @@ select.form-control    { cursor:pointer; }
 /* 2026-11-09 : `both` -> `backwards`, même bug de containing block que `.animate-fadeInUp`
    ci-dessus (commentaire détaillé) - `.page-container` est lui aussi une racine de page qui
    héberge des modaux en position:fixed. */
-.page-container { padding:24px; animation:fadeInUp .35s ease backwards; }
+.page-container { padding:24px; max-width:1800px; margin:0 auto; animation:fadeInUp .35s ease backwards; }
 .page-header {
   display:flex; align-items:center; justify-content:space-between; gap:16px;
   margin-bottom:22px; flex-wrap:wrap;
@@ -508,7 +508,9 @@ select.form-control    { cursor:pointer; }
 /* 2026-11-09 : `both` -> `backwards`, même bug de containing block que `.animate-fadeInUp`
    ci-dessus - `.dash` est la racine de page la plus utilisée du projet (DG, Comptable, Contrôle,
    Admin, RP, Secrétaire...) et héberge quasi tous les modaux (position:fixed) de ces modules. */
-.dash { display:flex; flex-direction:column; gap:22px; padding:24px; animation:fadeInUp .35s ease backwards; }
+/* max-width + margin:auto (2026-11-09) : sans plafond, le contenu s'étire bord à bord sur un
+   grand écran, ce qui lit comme "pas centré" même quand chaque élément interne l'est. */
+.dash { display:flex; flex-direction:column; gap:22px; padding:24px; max-width:1800px; margin:0 auto; animation:fadeInUp .35s ease backwards; }
 
 /* Page Header */
 .ph { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }

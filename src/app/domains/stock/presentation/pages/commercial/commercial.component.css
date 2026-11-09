@@ -1,4 +1,4 @@
-.page{display:flex;flex-direction:column;gap:22px}
+.page{max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
 .ph{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .ph-left{display:flex;align-items:center;gap:13px}
 .ph-icon{width:46px;height:46px;background:var(--g-gh);color:var(--g);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:19px}

@@ -1,4 +1,4 @@
-.page { padding: 1.5rem; }
+.page {max-width:1800px;margin:0 auto; padding: 1.5rem; }
 
 .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
 .ph-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .35rem; }

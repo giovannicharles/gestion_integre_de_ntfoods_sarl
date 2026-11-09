@@ -1,4 +1,4 @@
-.page { padding: 1.5rem; }
+.page {max-width:1800px;margin:0 auto; padding: 1.5rem; }
 
 .ph { margin-bottom: 1.25rem; }
 .ph-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .35rem; }

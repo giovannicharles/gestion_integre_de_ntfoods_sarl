@@ -1,4 +1,4 @@
-.page{display:flex;flex-direction:column;gap:22px;animation:recFormFadeIn .35s ease-out}
+.page{max-width:1800px;margin:0 auto;display:flex;flex-direction:column;gap:22px;animation:recFormFadeIn .35s ease-out}
 @keyframes recFormFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .ph{display:flex;align-items:center;gap:14px}
 .back-btn{width:36px;height:36px;border-radius:var(--r-md);background:var(--n100);border:1.5px solid var(--n200);color:var(--n600);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
