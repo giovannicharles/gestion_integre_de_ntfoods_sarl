@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { CommercialService, RecouvrementBE } from '../../../../commercial/infrastructure/commercial.service';
+import { CommercialService, RecouvrementBE, ClassementCommercialBE } from '../../../../commercial/infrastructure/commercial.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 interface RecouvrementUI {
@@ -25,6 +25,10 @@ export class ComptableRecouvrementComponent implements OnInit {
   loading = signal(false);
 
   recouvrement = signal<RecouvrementUI[]>([]);
+  /** 2026-11-09 (signalé par le porteur) : résolution des noms, getCommercialNom() renvoyait le
+   * matricule brut (COM-003) au lieu du nom complet. Même source que rp-zones.component.ts
+   * (classement commercial, déjà chargé ailleurs pour la même raison). */
+  private commerciaux = signal<ClassementCommercialBE[]>([]);
 
   totalCreances = computed(() => this.recouvrement().reduce((s, r) => s + r.montantDette, 0));
   totalEncaisse = computed(() => this.recouvrement().reduce((s, r) => s + r.montantEncaisse, 0));
@@ -37,6 +41,10 @@ export class ComptableRecouvrementComponent implements OnInit {
       next: list => { this.recouvrement.set(list.map(this.mapR)); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+    this.svc.getClassementCommerciaux().subscribe({
+      next: c => this.commerciaux.set(c),
+      error: () => {},
+    });
   }
 
   rembourser(id: string, montant: number): void {
@@ -48,7 +56,9 @@ export class ComptableRecouvrementComponent implements OnInit {
     });
   }
 
-  getCommercialNom(id: string): string { return id; }
+  getCommercialNom(matricule: string): string {
+    return this.commerciaux().find(c => c.matricule === matricule)?.nomComplet ?? matricule;
+  }
 
   tauxRecouvrement(): number {
     const total = this.totalCreances();

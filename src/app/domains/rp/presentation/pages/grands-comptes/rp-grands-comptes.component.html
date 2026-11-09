@@ -42,9 +42,17 @@
       </div>
       <div class="fiche-kpis rgrid-2 gc-kpis">
         <div class="fiche-kpi"><span class="fk-lbl">CA mensuel</span><span class="fk-val gc-fk-val-sm">{{ fCFA(c.caMensuel) }}</span></div>
-        <div class="fiche-kpi"><span class="fk-lbl">Prochaine relance</span><span class="fk-val gc-fk-val-sm">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '-' }}</span></div>
+        <div class="fiche-kpi">
+          <span class="fk-lbl">Prochaine relance</span>
+          <span class="fk-val gc-fk-val-sm" [class.text-danger]="estRelanceDue(c)">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '-' }}</span>
+        </div>
       </div>
       <div class="gc-actions">
+        @if (estRelanceDue(c)) {
+        <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm gc-btn-flex" (click)="marquerRelance(c)" title="Enregistrer la relance et planifier la suivante">
+          <i class="fa-solid fa-phone"></i> Relancé
+        </button>
+        }
         <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-outline btn-sm gc-btn-flex" (click)="ouvrirEdition(c)"><i class="fa-solid fa-pen"></i> Modifier</button>
         <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-danger btn-sm" (click)="archiver(c)" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
       </div>

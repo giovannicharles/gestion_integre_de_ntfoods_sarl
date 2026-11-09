@@ -70,6 +70,29 @@ export class RpGrandsComptesComponent implements OnInit {
     this.showForm.set(true);
   }
 
+  /** Relance rapide (2026-11-09, proposé et implémenté suite à la demande du porteur) : pré-remplit
+   * la prochaine relance à J+30 (cadence standard déjà utilisée implicitement ailleurs dans ce
+   * module) et ouvre le formulaire d'édition existant pour confirmation avant envoi - aucune
+   * écriture silencieuse, le RP garde la main pour ajuster la date avant de valider. */
+  marquerRelance(c: GrandCompteResponse): void {
+    this.editingId.set(c.id);
+    const dans30Jours = new Date();
+    dans30Jours.setDate(dans30Jours.getDate() + 30);
+    // derniereCommande n'est volontairement pas modifié ici : une relance n'est pas une commande.
+    this.form.set({
+      nom: c.nom, type: c.type, contact: c.contact, telephone: c.telephone,
+      caMensuel: c.caMensuel,
+      derniereCommande: c.derniereCommande ? c.derniereCommande.substring(0, 10) : '',
+      prochaineRelance: dans30Jours.toISOString().substring(0, 10),
+      statut: c.statut,
+    });
+    this.showForm.set(true);
+  }
+
+  estRelanceDue(c: GrandCompteResponse): boolean {
+    return !!c.prochaineRelance && new Date(c.prochaineRelance) <= new Date();
+  }
+
   ouvrirEdition(c: GrandCompteResponse): void {
     this.editingId.set(c.id);
     this.form.set({

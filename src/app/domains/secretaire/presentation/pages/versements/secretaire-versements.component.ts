@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE } from '../../../../../domains/comptable/infrastructure/comptable.service';
+import { CommercialService, ClassementCommercialBE } from '../../../../../domains/commercial/infrastructure/commercial.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
@@ -25,6 +26,7 @@ interface VersementUI {
 export class SecretaireVersementsComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(ComptableService);
+  private readonly commercialSvc = inject(CommercialService);
   private readonly toast = inject(ToastService);
 
   today = new Date();
@@ -41,12 +43,18 @@ export class SecretaireVersementsComponent implements OnInit {
   totalVerse = computed(() => this.versements().reduce((s, v) => s + v.cashVerse, 0));
   nbValides = computed(() => this.versements().filter(v => v.statut === 'VALIDE').length);
 
+  private commerciaux = signal<ClassementCommercialBE[]>([]);
+
   ngOnInit(): void {
     const today = this.fmtDate(new Date());
     this.loading.set(true);
     this.svc.getVersements({ date: today }).subscribe({
       next: list => { this.versements.set(list.map(this.mapV)); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+    this.commercialSvc.getClassementCommerciaux().subscribe({
+      next: c => this.commerciaux.set(c),
+      error: () => {},
     });
   }
 
@@ -69,7 +77,9 @@ export class SecretaireVersementsComponent implements OnInit {
     });
   }
 
-  getCommercialNom(id: string): string { return id; }
+  getCommercialNom(matricule: string): string {
+    return this.commerciaux().find(c => c.matricule === matricule)?.nomComplet ?? matricule;
+  }
 
   ecartCalc(attendu: number, verse: number): number { return verse - attendu; }
 

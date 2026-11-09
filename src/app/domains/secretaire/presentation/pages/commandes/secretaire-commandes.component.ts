@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { CommercialService, PreCommandeBE } from '../../../../../domains/commercial/infrastructure/commercial.service';
+import { CommercialService, PreCommandeBE, ClassementCommercialBE } from '../../../../../domains/commercial/infrastructure/commercial.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
@@ -33,11 +33,17 @@ export class SecretaireCommandesComponent implements OnInit {
   commandesSoumises = computed(() => this.commandes().filter(c => c.statut === 'SOUMISE'));
   nbValidees = computed(() => this.commandes().filter(c => c.statut !== 'SOUMISE').length);
 
+  private commerciaux = signal<ClassementCommercialBE[]>([]);
+
   ngOnInit(): void {
     this.loading.set(true);
     this.svc.getPrecommandesAValider().subscribe({
       next: page => { this.commandes.set(page.contenu.map(this.mapPC)); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+    this.svc.getClassementCommerciaux().subscribe({
+      next: c => this.commerciaux.set(c),
+      error: () => {},
     });
   }
 
@@ -53,7 +59,9 @@ export class SecretaireCommandesComponent implements OnInit {
     });
   }
 
-  getCommercialNom(id: string): string { return id; }
+  getCommercialNom(matricule: string): string {
+    return this.commerciaux().find(c => c.matricule === matricule)?.nomComplet ?? matricule;
+  }
 
   getProduitDesignation(code: string): string { return code; }
 
