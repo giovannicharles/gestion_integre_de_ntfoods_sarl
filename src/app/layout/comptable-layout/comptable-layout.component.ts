@@ -15,9 +15,10 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
-import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
+interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
 @Component({
   selector: 'app-comptable-layout',
@@ -67,38 +68,67 @@ export class ComptableLayoutComponent implements OnInit {
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/comptable/dashboard' },
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/comptable/validations' },
-    { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes' },
-    { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
-    { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
-    { label: 'Fins de Tournée', icon: 'fa-route', route: '/comptable/sessions' },
-    { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement' },
-    { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
-    { label: 'Objectifs', icon: 'fa-bullseye', route: '/comptable/objectifs' },
-    { label: 'Primes', icon: 'fa-money-bill-trend-up', route: '/comptable/primes' },
-    { label: 'Rapports', icon: 'fa-file-export', route: '/comptable/rapports' },
-    { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
-    { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/comptable/commandes-clients' },
+  ];
+
+  /** Regroupement par thème (2026-11-09, même motif que DG) : la liste plate de 13 items est
+   * remplacée par 4 groupes dépliables, plus lisible qu'une longue colonne sans hiérarchie. */
+  navGroups: NavGroup[] = [
+    {
+      label: 'Validations & Facturation', icon: 'fa-file-invoice', children: [
+        { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes' },
+        { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
+      ]
+    },
+    {
+      label: 'Caisse & Tournées', icon: 'fa-cash-register', children: [
+        { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
+        { label: 'Fins de Tournée', icon: 'fa-route', route: '/comptable/sessions' },
+        { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement' },
+      ]
+    },
+    {
+      label: 'Pilotage Commercial', icon: 'fa-bullseye', children: [
+        { label: 'Objectifs', icon: 'fa-bullseye', route: '/comptable/objectifs' },
+        { label: 'Primes', icon: 'fa-money-bill-trend-up', route: '/comptable/primes' },
+        { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
+        { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/comptable/commandes-clients' },
+      ]
+    },
+    {
+      label: 'Rapports', icon: 'fa-file-export', children: [
+        { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
+        { label: 'Rapports', icon: 'fa-file-export', route: '/comptable/rapports' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  expandedGroup = signal<string | null>('Validations & Facturation');
+  toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
   /** Palette de commandes Ctrl+K (2026-11-02, même composant que DG/Admin). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
-  commandItems = computed(() => this.navItems);
+  commandItems = computed(() => [
+    ...this.navItems,
+    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+  ]);
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const cur = this.navItems.find(n => this.router.url.startsWith(n.route));
+      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);
     });
     this.commercialService.getPrecommandesAValiderComptable().subscribe({
       next: page => {
         const n = page.contenu.filter(p => p.statut === 'VALIDEE_SECRETAIRE').length;
-        const item = this.navItems.find(x => x.route === '/comptable/commandes');
+        const item = this.navGroups.flatMap(g => g.children).find(x => x.route === '/comptable/commandes');
         if (item) { item.badge = n; item.badgeClass = 'bd-orange'; }
       },
       error: () => {},

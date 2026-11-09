@@ -1,3 +1,4 @@
+.alert-banner-wrap { flex-wrap: wrap; justify-content: space-between; }
 .charts-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
 .chart-card { padding: var(--sp-4); }
 .chart-big { grid-column: 1; }

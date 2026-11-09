@@ -16,17 +16,18 @@
         <button class="period-btn" [class.active]="selectedPeriod()==='month'" (click)="setPeriod('month')">Ce mois</button>
         <button class="period-btn" [class.active]="selectedPeriod()==='quarter'" (click)="setPeriod('quarter')">Ce trimestre</button>
       </div>
+      <!-- 2026-11-09 : "Reporting" et "Classement" retirés d'ici - déjà dans la sidebar (groupes
+           Financier et Commercial), les dupliquer ici n'ajoutait que de l'encombrement visuel,
+           signalé explicitement par le porteur ("header trop chargé"). -->
       <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()" title="Rafraîchir maintenant">
         <i class="fa-solid fa-rotate"></i>
         @if (derniereMiseAJour()) { <span class="maj-ts">{{ derniereMiseAJour() | date:'HH:mm:ss' }}</span> }
       </button>
-      <a routerLink="/dg/reporting" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-column"></i> Reporting</a>
-      <a routerLink="/dg/classement" class="btn btn-primary"><i class="fa-solid fa-ranking-star"></i> Classement</a>
     </div>
   </div>
 
   @if (liveError()) {
-  <div class="alert-banner" style="flex-wrap:wrap; justify-content:space-between">
+  <div class="alert-banner alert-banner-wrap">
     <span><i class="fa-solid fa-triangle-exclamation"></i> Dernier rafraîchissement automatique échoué, affichage précédent conservé.</span>
     <button class="btn btn-ghost btn-sm" (click)="rafraichirMaintenant()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
   </div>

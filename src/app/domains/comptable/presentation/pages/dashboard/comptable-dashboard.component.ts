@@ -57,6 +57,8 @@ export class ComptableDashboardComponent implements OnInit {
   primeMontant = 0;
 
   commandesEnAttente = signal(0);
+  activeTab = signal<'apercu' | 'validations' | 'pilotage'>('apercu');
+  setTab(t: 'apercu' | 'validations' | 'pilotage'): void { this.activeTab.set(t); }
 
   totalVersements(): number { return this.versements.reduce((s, v) => s + v.cashVerse, 0); }
   versementsValides(): number { return this.versements.filter(v => v.statut === 'VALIDE').length; }

@@ -14,9 +14,10 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
-import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
+interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
 @Component({
   selector: 'app-rp-layout',
@@ -64,35 +65,59 @@ export class RpLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/rp/dashboard' },
-    { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/rp/classement' },
-    { label: 'Zones & Marchés', icon: 'fa-map-location-dot', route: '/rp/zones' },
-    { label: 'Administration Zones', icon: 'fa-draw-polygon', route: '/rp/zones-admin' },
-    { label: 'Objectifs', icon: 'fa-bullseye', route: '/rp/objectifs' },
-    { label: 'Promotions', icon: 'fa-tags', route: '/rp/promotions' },
-    { label: 'Tarification', icon: 'fa-money-check-dollar', route: '/rp/tarification' },
-    { label: 'Grands Comptes', icon: 'fa-handshake', route: '/rp/grands-comptes' },
-    { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
+  ];
+
+  /** Regroupement par thème (2026-11-09, même motif que DG/Comptable). */
+  navGroups: NavGroup[] = [
+    {
+      label: 'Commercial', icon: 'fa-ranking-star', children: [
+        { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/rp/classement' },
+        { label: 'Objectifs', icon: 'fa-bullseye', route: '/rp/objectifs' },
+        { label: 'Promotions', icon: 'fa-tags', route: '/rp/promotions' },
+        { label: 'Tarification', icon: 'fa-money-check-dollar', route: '/rp/tarification' },
+      ]
+    },
+    {
+      label: 'Zones & Territoire', icon: 'fa-map-location-dot', children: [
+        { label: 'Zones & Marchés', icon: 'fa-map-location-dot', route: '/rp/zones' },
+        { label: 'Administration Zones', icon: 'fa-draw-polygon', route: '/rp/zones-admin' },
+      ]
+    },
+    {
+      label: 'Grands Comptes', icon: 'fa-handshake', children: [
+        { label: 'Grands Comptes', icon: 'fa-handshake', route: '/rp/grands-comptes' },
+        { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  expandedGroup = signal<string | null>('Commercial');
+  toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
   /** Palette de commandes Ctrl+K (2026-11-02, même composant que DG/Admin/Comptable). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
-  commandItems = computed(() => this.navItems);
+  commandItems = computed(() => [
+    ...this.navItems,
+    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+  ]);
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const cur = this.navItems.find(n => this.router.url.startsWith(n.route));
+      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);
     });
     this.rpService.getDashboard().subscribe({
       next: d => {
         this.alertCount.set(d.relancesDues);
-        const gc = this.navItems.find(n => n.route === '/rp/grands-comptes');
+        const gc = this.navGroups.flatMap(g => g.children).find(n => n.route === '/rp/grands-comptes');
         if (gc) { gc.badge = d.relancesDues; gc.badgeClass = 'bd-orange'; }
       },
       error: () => {},

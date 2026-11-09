@@ -280,7 +280,17 @@ button { font-family:var(--font-b); }
   }
 }
 
-.animate-fadeInUp { animation:fadeInUp .35s cubic-bezier(.4,0,.2,1) both; }
+/* 2026-11-09 (bug réel, signalé par le porteur : "obligé de défiler pour voir le formulaire",
+   capture d'écran à l'appui) : `both` = `forwards backwards`. Le `forwards` laissait
+   `transform:translateY(0)` appliqué indéfiniment après la fin de l'animation - un transform
+   non-`none`, même visuellement neutre, crée un nouveau "containing block" CSS pour tout
+   descendant en `position:fixed`. Comme `.animate-fadeInUp` est la classe racine de
+   pratiquement CHAQUE page (`.dash animate-fadeInUp`), tout modal (`position:fixed`) monté à
+   l'intérieur de cette page - donc la quasi-totalité des formulaires de l'application - n'était
+   plus fixé à la fenêtre mais à cette racine de page, qui défile avec le contenu : d'où "pas au
+   centre" et "obligé de défiler". `backwards` seul garde l'état de départ avant que l'animation
+   ne démarre (pas de flash) sans laisser de transform résiduel une fois terminée. */
+.animate-fadeInUp { animation:fadeInUp .35s cubic-bezier(.4,0,.2,1) backwards; }
 .animate-fadeIn   { animation:fadeIn   .25s ease both; }
 
 /* BADGES */
@@ -404,7 +414,10 @@ select.form-control    { cursor:pointer; }
 .chart-container-lg { position:relative;width:100%;height:360px; }
 
 /* ── PAGES STOCK (charte TANTY) ── */
-.page-container { padding:24px; animation:fadeInUp .35s ease both; }
+/* 2026-11-09 : `both` -> `backwards`, même bug de containing block que `.animate-fadeInUp`
+   ci-dessus (commentaire détaillé) - `.page-container` est lui aussi une racine de page qui
+   héberge des modaux en position:fixed. */
+.page-container { padding:24px; animation:fadeInUp .35s ease backwards; }
 .page-header {
   display:flex; align-items:center; justify-content:space-between; gap:16px;
   margin-bottom:22px; flex-wrap:wrap;
@@ -492,7 +505,10 @@ select.form-control    { cursor:pointer; }
 .status-badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:var(--r-full); font-size:12px; font-weight:600; }
 
 /* ═══ SHARED DASHBOARD CLASSES (used by DG, Comptable, Controle, Admin) ═══ */
-.dash { display:flex; flex-direction:column; gap:22px; padding:24px; animation:fadeInUp .35s ease both; }
+/* 2026-11-09 : `both` -> `backwards`, même bug de containing block que `.animate-fadeInUp`
+   ci-dessus - `.dash` est la racine de page la plus utilisée du projet (DG, Comptable, Contrôle,
+   Admin, RP, Secrétaire...) et héberge quasi tous les modaux (position:fixed) de ces modules. */
+.dash { display:flex; flex-direction:column; gap:22px; padding:24px; animation:fadeInUp .35s ease backwards; }
 
 /* Page Header */
 .ph { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
