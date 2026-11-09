@@ -107,9 +107,9 @@
                 </td>
                 <td>
                   <div class="mini-progress">
-                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 0" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#0277D5"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 0" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#C49200"></div>
                     <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 1" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#D97706"></div>
-                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 2" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#7C3AED"></div>
+                    <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 2" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#5B5648"></div>
                     <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 3" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#14532D"></div>
                     <div class="mp-dot" [class.mp-done]="getWorkflowStep(d.status) >= 4" [class.mp-rejected]="d.status === 'REJECTED'" style="--c:#15803D"></div>
                     <span class="mp-pct">{{ getProgressPct(d.status) }}%</span>

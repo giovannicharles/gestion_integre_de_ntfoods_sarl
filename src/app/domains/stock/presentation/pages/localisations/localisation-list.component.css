@@ -48,7 +48,7 @@
 .badge-central { background:rgba(26,107,42,.12);color:var(--g); }
 .badge-buffer { background:rgba(230,81,0,.12);color:var(--o); }
 .badge-mobile { background:rgba(255,143,0,.12);color:#FF8F00; }
-.badge-magasin { background:rgba(33,150,243,.12);color:#2196F3; }
+.badge-magasin { background:rgba(196,146,0,.12);color:var(--y-d); }
 .badge-neutral { background:var(--n100);color:var(--n600); }
 
 /* ── ASSIGN INPUT ── */

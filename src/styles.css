@@ -34,9 +34,11 @@
   --color-warning: #D84315;
   --color-warning-ghost: #FBE9E7;
 
-  /* Couleurs info (bleu) */
-  --color-info: #0277BD;
-  --color-info-ghost: #E1F5FE;
+  /* Couleurs info (2026-11-09 : bleu retiré, signalé par le porteur à plusieurs reprises - plus
+     aucun bleu nulle part dans l'app. Réutilise la famille or déjà utilisée pour .notif-info,
+     même mapping que ce correctif précédent, pour rester cohérent). */
+  --color-info: #C49200;
+  --color-info-ghost: #FFF8E1;
 
   /* Couleurs succès (vert medium) */
   --color-success: #1E7A42;
@@ -213,7 +215,7 @@
   --y:       #F6B60B;  --y-d:  #C49200;  --y-m:  #FFC845;  --y-l:  #FFD97A;  --y-gh: #2A2410;
   --r:       #E04545;  --r-l:  #FF6B6B;  --r-gh: #2A1515;
   --o:       #FF7043;  --o-gh: #2A1810;
-  --b:       #4FC3F7;  --b-gh: #0D1B2A;
+  --b:       #C49200;  --b-gh: #2A2410;
   --s:       #2A9D5F;  --s-gh: #1B2E22;
   --n900: #F0F2F5; --n800: #E0E0E0; --n700: #C0C0C0; --n600: #A0A0A0;
   --n500: #808080; --n400: #606060; --n300: #404040; --n200: #2A2A2A;

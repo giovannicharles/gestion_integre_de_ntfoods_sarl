@@ -54,6 +54,8 @@
   font-size: 18px;
   flex-shrink: 0;
 }
+.stat-icon-success { background: var(--g-gh); color: var(--g); }
+.stat-icon-gold { background: var(--y-gh); color: var(--y-d); }
 .stat-val {
   font-size: 20px;
   font-weight: 700;
@@ -140,7 +142,7 @@
 }
 .freeze-banner i {
   font-size: 20px;
-  color: #2563EB;
+  color: var(--y-d);
 }
 
 @media (max-width: 768px) {

@@ -61,8 +61,8 @@
     @if (activeTab() === 'predictions') {
       <div class="kpi-grid">
         <div class="kpi-card kp-ai">
-          <div class="kpi-decor" style="background:linear-gradient(135deg,#7C3AED,#2563EB)"></div>
-          <div class="kpi-ico" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="kpi-decor" style="background:linear-gradient(135deg,var(--g),var(--g-d))"></div>
+          <div class="kpi-ico" style="background:var(--g-gh);color:var(--g)"><i class="fa-solid fa-chart-line"></i></div>
           <div class="kpi-body"><span class="kpi-lbl">Produits analysés</span><span class="kpi-val">{{ stats().total }}</span></div>
         </div>
         <div class="kpi-card kp-crit">
@@ -84,18 +84,18 @@
 
       <div class="charts-row">
         <div class="card chart-card-lg">
-          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-line" style="color:#7C3AED"></i> Tendance &amp; Prévisions par produit</span></div>
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-line" style="color:var(--g)"></i> Tendance &amp; Prévisions par produit</span></div>
           <div class="chart-wrap-lg"><canvas #trendCanvas></canvas></div>
         </div>
         <div class="card chart-card-sm">
-          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-circle-half-stroke" style="color:#7C3AED"></i> Répartition urgence</span></div>
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-circle-half-stroke" style="color:var(--g)"></i> Répartition urgence</span></div>
           <div class="chart-wrap-sm"><canvas #urgencyCanvas></canvas></div>
         </div>
       </div>
 
       <div class="charts-row">
         <div class="card chart-card-md">
-          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-column" style="color:#2563EB"></i> Prévisions comparées (actuel vs 30j vs 90j)</span></div>
+          <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-column" style="color:var(--y-d)"></i> Prévisions comparées (actuel vs 30j vs 90j)</span></div>
           <div class="chart-wrap-md"><canvas #forecastCanvas></canvas></div>
         </div>
         <div class="card chart-card-md">
@@ -106,7 +106,7 @@
 
       <div class="card">
         <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-table" style="color:#7C3AED"></i> Prédictions détaillées par produit</span>
+          <span class="card-title"><i class="fa-solid fa-table" style="color:var(--g)"></i> Prédictions détaillées par produit</span>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             @for (f of ['ALL','CRITICAL','HIGH','MEDIUM','LOW']; track f) {
               <button class="filter-chip" [class.active]="filterUrgency()===f" (click)="setFilterUrgency(f)">
@@ -160,7 +160,7 @@
     @if (activeTab() === 'ia-analysis') {
       <div class="card">
         <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-brain" style="color:#7C3AED"></i> Analyse IA avancée</span>
+          <span class="card-title"><i class="fa-solid fa-brain" style="color:var(--g)"></i> Analyse IA avancée</span>
           <button class="btn btn-primary btn-sm" (click)="runIaAnalysis()" [disabled]="iaAnalyzing()">
             <i class="fa-solid fa-brain" [class.fa-spin]="iaAnalyzing()"></i>
             {{ iaAnalyzing() ? 'Analyse en cours…' : 'Lancer l\'analyse' }}
@@ -234,7 +234,7 @@
     @if (activeTab() === 'ia-chat') {
       <div class="card ia-chat-card">
         <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-comments" style="color:#7C3AED"></i> Assistant IA, TantyAI</span>
+          <span class="card-title"><i class="fa-solid fa-comments" style="color:var(--g)"></i> Assistant IA, TantyAI</span>
           <span class="ia-status-badge" [class.ia-online]="iaConfigured()" [class.ia-offline]="!iaConfigured()">
             {{ iaConfigured() ? 'IA Active' : 'Mode hors-ligne' }}
           </span>

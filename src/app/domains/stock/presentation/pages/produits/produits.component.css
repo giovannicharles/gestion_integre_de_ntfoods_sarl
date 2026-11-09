@@ -159,7 +159,7 @@
 
 /* ═══ Insights IA (TantyAI) ═══ */
 .btn-ia-prod {
-  background: linear-gradient(135deg,#7C3AED,#2563EB); color:var(--w); border:none;
+  background: linear-gradient(135deg,var(--g),var(--g-d)); color:var(--w); border:none;
   padding:8px 16px; border-radius:var(--r-md); font-size:13px; font-weight:600;
   cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:opacity .15s;
   font-family:'Inter',sans-serif;
@@ -175,7 +175,7 @@
   display:flex; align-items:center; justify-content:space-between;
   padding:14px 18px; border-bottom:1px solid rgba(124,58,237,.12);
 }
-.ia-insight-title { display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px; color:#7C3AED; }
+.ia-insight-title { display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px; color:var(--g); }
 .ia-insight-body { padding:16px 18px; }
 
 .ia-insight-loading { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--n500); padding:8px 0; }

@@ -135,7 +135,7 @@
 .ok-lbl{font-size:11px;color:var(--n400);font-weight:600}
 .ok-warn{color:var(--o)}
 .ok-info{color:var(--s)}
-.ok-blue{color:#3b82f6}
+.ok-blue{color:var(--y-d)}
 .ok-ok{color:var(--g)}
 .ok-danger{color:var(--r)}
 

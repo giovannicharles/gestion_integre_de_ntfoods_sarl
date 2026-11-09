@@ -41,7 +41,7 @@
 .loc-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--n100);color:var(--n600)}
 .loc-central{background:rgba(26,107,42,.12);color:var(--g)}
 .loc-buffer{background:rgba(230,81,0,.12);color:var(--o)}
-.loc-mobile{background:rgba(25,118,210,.12);color:#1976D2}
+.loc-mobile{background:rgba(196,146,0,.12);color:var(--y-d)}
 
 /* MATERIAL TYPE BADGES */
 .mat-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}
@@ -52,7 +52,7 @@
 /* ICON BUTTONS */
 .icon-btn{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
 .icon-btn-g{background:var(--g-gh);color:var(--g)}.icon-btn-g:hover{background:var(--g);color:var(--w)}
-.icon-btn-blue{background:rgba(25,118,210,.12);color:#1976D2}.icon-btn-blue:hover{background:#1976D2;color:var(--w)}
+.icon-btn-blue{background:rgba(196,146,0,.12);color:var(--y-d)}.icon-btn-blue:hover{background:var(--y-d);color:var(--w)}
 
 /* INVENTORY CARDS */
 .inv-card{background:var(--w);border:1.5px solid var(--n200);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:box-shadow .2s,border-color .2s;animation:cardIn .3s ease both}
