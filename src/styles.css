@@ -525,38 +525,20 @@ select.form-control    { cursor:pointer; }
 .ph-sub { font-size:12px; color:var(--n400); margin-top:3px; }
 .ph-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
-/* KPI Grid */
-.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.kpi-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-/* 2026-11-01 (demande explicite du porteur, copier le langage visuel exact des deux
-   références 21st.dev de prompt/, charte TANTY seule conservée) : la carte KPI empilait trois
-   couches décoratives (liseré ::before + cercle flou .kpi-decor + puce d'icône), les deux
-   références n'en ont qu'une (la puce d'icône). Liseré et cercle flou neutralisés ci-dessous
-   SANS toucher au HTML des dizaines d'écrans qui posent encore ces classes : les règles
-   deviennent inertes plutôt que d'aller les retirer un par un (risque de régression bien plus
-   élevé que le gain). kp-g/kp-y/kp-r/kp-b/kp-o et kd-y/kd-r/kd-b restent donc posables sans effet. */
-.kpi-card { background:white; border-radius:var(--r-lg); padding:20px; display:flex; align-items:flex-start; gap:14px; position:relative; overflow:hidden; border:1px solid var(--n200); box-shadow:var(--sh-sm); transition:transform .2s, box-shadow .2s; animation:cardIn .4s cubic-bezier(.4,0,.2,1) both; }
-.kpi-card:hover { transform:translateY(-3px); box-shadow:var(--sh-md); }
-/* Entrée en cascade des cartes KPI (motif 21st.dev, prompt/) : cardIn existait déjà dans ce
-   fichier sans jamais être appliqué à rien. */
+/* KPI Grid : voir la définition unique et complète de .kpi-card plus bas (section
+   « ── KPI GRID ── »), qui fait foi (2026-11-09 : deux définitions concurrentes de .kpi-card
+   coexistaient dans ce fichier - un même sélecteur redéfini à deux endroits ne provoque pas de
+   bug visible immédiatement grâce à la cascade CSS propriété par propriété, mais c'est fragile et
+   source de régressions. Fusionnées en une seule, au format exact des références 21st.dev de
+   prompt/ : disposition en colonne, puce d'icône seule comme élément décoratif, pastille de
+   tendance en haut à droite). L'entrée en cascade décalée des cartes (motif 21st.dev) est
+   conservée ci-dessous, seule partie propre à cet endroit du fichier. */
 .kpi-grid > .kpi-card:nth-child(1) { animation-delay: 0ms; }
 .kpi-grid > .kpi-card:nth-child(2) { animation-delay: 60ms; }
 .kpi-grid > .kpi-card:nth-child(3) { animation-delay: 120ms; }
 .kpi-grid > .kpi-card:nth-child(4) { animation-delay: 180ms; }
 .kpi-grid > .kpi-card:nth-child(5) { animation-delay: 240ms; }
 .kpi-grid > .kpi-card:nth-child(n+6) { animation-delay: 300ms; }
-.kpi-decor { display:none; }
-.kpi-ico { width:48px; height:48px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-.ig { background:var(--g-gh); color:var(--g); }
-.iy { background:var(--y-gh); color:var(--y-d); }
-.ir { background:var(--r-gh); color:var(--r); }
-.ib { background:var(--b-gh); color:var(--b); }
-.kpi-body { flex:1; display:flex; flex-direction:column; gap:2px; }
-.kpi-lbl { font-size:.72rem; color:var(--n500); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
-.kpi-val { font-size:1.5rem; font-weight:800; font-family:var(--font-d); color:var(--n900); font-variant-numeric:tabular-nums; line-height:1.2; }
-.kpi-meta { font-size:.72rem; color:var(--n400); margin-top:2px; }
-.kpi-trend { position:absolute; top:14px; right:16px; font-size:.7rem; font-weight:700; padding:3px 8px; border-radius:var(--r-full); }
-.kpt-up { background:var(--g-gh); color:var(--g); }
 
 /* Fil d'activité, items avec puce d'icône colorée (réutilise .ig/.iy/.ir/.ib des KPI). */
 .activity-feed { display:flex; flex-direction:column; gap:4px; }
@@ -739,9 +721,9 @@ select.form-control    { cursor:pointer; }
 .kpi-grid-2 { grid-template-columns:repeat(2,1fr); }
 .kpi-card { background:white;border-radius:var(--r-lg);padding:20px;border:1px solid var(--n200);box-shadow:var(--sh-sm);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;transition:transform .2s,box-shadow .2s;animation:cardIn .4s cubic-bezier(.4,0,.2,1) both; }
 .kpi-card:hover { transform:translateY(-3px);box-shadow:var(--sh-md); }
-.kpi-card::before { content:"";position:absolute;top:0;left:0;right:0;height:3px; }
-.kp-y::before { background:linear-gradient(90deg,var(--y-d),var(--y)); }
-.kp-b::before { background:var(--b); }
+/* Pas de liseré décoratif ici (2026-11-09) : fidélité aux références 21st.dev de prompt/, qui
+   n'ont qu'une seule couche décorative par carte (la puce d'icône ci-dessous). kp-y/kp-b restent
+   posables sans effet visuel (classes encore présentes sur des dizaines d'écrans). */
 .kpi-decor { position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;opacity:.04;background:var(--g); }
 .kd-y { background:var(--y)!important; }
 .kd-r { background:var(--r)!important; }
