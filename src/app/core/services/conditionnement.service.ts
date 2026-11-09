@@ -64,6 +64,29 @@ export interface ConfigurationRequestBE {
   instructionsStockage?: string; estDefault?: boolean;
 }
 
+/** Forme réelle de ControleCoherenceConditionnementService.LigneCoherence (backend, module stock). */
+export interface LigneCoherenceBE {
+  sku: string;
+  codeProduit: string | null;
+  libelle: string | null;
+  facteurCatalogue: number | null;
+  codeConfiguration: string | null;
+  facteurModule: number | null;
+  statut: 'COHERENT' | 'ECART_FACTEUR' | 'NON_LIE' | 'HIERARCHIE_INCOHERENTE' | 'ORPHELIN';
+  detail: string | null;
+}
+
+/** Forme réelle de ControleCoherenceConditionnementService.Synthese (backend, module stock). */
+export interface SyntheseCoherenceBE {
+  conditionnementsCatalogue: number;
+  coherents: number;
+  ecarts: number;
+  nonLies: number;
+  orphelins: number;
+  pretPourBascule: boolean;
+  lignes: LigneCoherenceBE[];
+}
+
 /**
  * Point d'entrée unique pour la saisie de quantité consciente du conditionnement (P4, 2026-10-15).
  * Un seul appel : code produit/SKU → hiérarchie complète de SA variété (GET /api/conditionnement/
@@ -156,5 +179,15 @@ export class ConditionnementService {
   }
   modifierConfiguration(id: number, req: ConfigurationRequestBE): Observable<ConfigurationNiveauBE> {
     return this.api.put<ApiResponse<ConfigurationNiveauBE>>(`conditionnement/configurations/${id}`, req).pipe(map(r => r.donnees!));
+  }
+
+  // ── Cohérence catalogue Stock ↔ module conditionnement (2026-11-09) ──
+  // Sert ControleCoherenceConditionnementService (module stock), jamais appelé jusqu'ici : ce
+  // contrôle dit précisément où les deux modèles divergent encore, condition pour faire du
+  // module conditionnement la source unique (voir mémoire de session "MP en kg, conditionnement
+  // unique"). Lecture seule, aucune écriture.
+  getCoherence(): Observable<SyntheseCoherenceBE> {
+    return this.api.get<ApiResponse<SyntheseCoherenceBE>>('stock/conditionnement/coherence')
+      .pipe(map(r => r.donnees!));
   }
 }

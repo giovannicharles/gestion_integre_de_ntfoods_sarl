@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   ConditionnementService, MarqueBE, GammeBE, VarieteBE, TypeEmballageBE, ConfigurationNiveauBE,
-  MarqueRequestBE, GammeRequestBE, VarieteRequestBE, TypeEmballageRequestBE, ConfigurationRequestBE
+  MarqueRequestBE, GammeRequestBE, VarieteRequestBE, TypeEmballageRequestBE, ConfigurationRequestBE,
+  SyntheseCoherenceBE
 } from '../../../../../core/services/conditionnement.service';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
-type Tab = 'marques' | 'gammes' | 'varietes' | 'emballages' | 'configurations';
+type Tab = 'marques' | 'gammes' | 'varietes' | 'emballages' | 'configurations' | 'coherence';
 
 /**
  * Réécrit le 2026-11-08 : l'ancienne version appelait `/api/v1/conditionnement/...` (préfixe
@@ -38,6 +39,10 @@ export class ConditionnementComponent implements OnInit {
 
   /** Les configurations se consultent par variété côté backend, pas de liste globale. */
   varieteSelectionneeId = signal<number | null>(null);
+
+  coherence = signal<SyntheseCoherenceBE | null>(null);
+  coherenceChargee = signal(false);
+  loadingCoherence = signal(false);
 
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
@@ -108,6 +113,30 @@ export class ConditionnementComponent implements OnInit {
 
   switchTab(tab: Tab) {
     this.activeTab.set(tab);
+    if (tab === 'coherence' && !this.coherenceChargee()) {
+      this.chargerCoherence();
+    }
+  }
+
+  chargerCoherence() {
+    this.loadingCoherence.set(true);
+    this.svc.getCoherence().subscribe({
+      next: data => { this.coherence.set(data); this.coherenceChargee.set(true); this.loadingCoherence.set(false); },
+      error: () => { this.error.set('Impossible de charger le contrôle de cohérence.'); this.loadingCoherence.set(false); }
+    });
+  }
+
+  statutCoherenceLabel(statut: string): string {
+    return {
+      COHERENT: 'Cohérent', ECART_FACTEUR: 'Écart de facteur', NON_LIE: 'Non lié',
+      HIERARCHIE_INCOHERENTE: 'Hiérarchie incohérente', ORPHELIN: 'Orphelin',
+    }[statut] ?? statut;
+  }
+
+  statutCoherenceBadge(statut: string): string {
+    if (statut === 'COHERENT') return 'badge badge-success';
+    if (statut === 'ORPHELIN' || statut === 'HIERARCHIE_INCOHERENTE') return 'badge badge-danger';
+    return 'badge badge-warning';
   }
 
   ouvrirCreation(tab: Tab) {
@@ -192,7 +221,7 @@ export class ConditionnementComponent implements OnInit {
   }
 
   desactiver(item: any, tab: Tab) {
-    const libelles: Record<Tab, string> = { marques: 'cette marque', gammes: 'cette gamme', varietes: 'cette variété', emballages: "ce type d'emballage", configurations: 'cette configuration' };
+    const libelles: Record<Tab, string> = { marques: 'cette marque', gammes: 'cette gamme', varietes: 'cette variété', emballages: "ce type d'emballage", configurations: 'cette configuration', coherence: 'cet élément' };
     if (!confirm(`Désactiver ${libelles[tab]} (${item.nom ?? item.codeConfiguration}) ? Elle restera visible dans l'historique mais ne sera plus proposée.`)) return;
     switch (tab) {
       case 'marques': this.svc.desactiverMarque(item.id).subscribe({ next: () => this.chargerMarques(), error: e => this.error.set(this.messageErreur(e)) }); break;

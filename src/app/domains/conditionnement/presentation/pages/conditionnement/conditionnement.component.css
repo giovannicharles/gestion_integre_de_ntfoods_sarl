@@ -34,6 +34,16 @@
 .alert-banner-red { justify-content: space-between; margin-bottom: 1rem; }
 .alert-banner-red button { margin-left: auto; }
 
+/* 2026-11-09 : onglet Cohérence catalogue Stock ↔ conditionnement. */
+.alert-banner-green { display:flex; align-items:center; gap:10px; padding:12px 18px; background:var(--s-gh); color:var(--s); border-radius:var(--r-md); font-weight:600; font-size:13px; border-left:4px solid var(--s); }
+.coherence-stats { display:flex; gap:8px; flex-wrap:wrap; padding:0 1.25rem 1rem; }
+.coherence-stats .s-chip { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--r-full); font-size:12px; font-weight:600; border:1.5px solid transparent; }
+.coherence-stats .s-chip i { font-size:12px; }
+.coherence-stats .sc-total { background:var(--n100); color:var(--n600); border-color:var(--n200); }
+.coherence-stats .sc-warn { background:var(--o-gh); color:var(--o); border-color:rgba(216,67,21,.2); }
+.coherence-stats .sc-ok { background:var(--s-gh); color:var(--s); border-color:rgba(30,122,66,.2); }
+.coherence-stats .sc-danger { background:var(--r-gh); color:var(--r); border-color:rgba(194,43,43,.2); }
+
 .tabs {
   display: flex;
   gap: 0.5rem;

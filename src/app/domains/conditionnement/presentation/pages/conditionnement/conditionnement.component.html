@@ -30,6 +30,9 @@
     <button class="tab" [class.active]="activeTab() === 'configurations'" (click)="switchTab('configurations')">
       <i class="fa-solid fa-cogs"></i> Configurations
     </button>
+    <button class="tab" *appHasPermission="'STOCK_CONDITIONNEMENT_GERER'" [class.active]="activeTab() === 'coherence'" (click)="switchTab('coherence')">
+      <i class="fa-solid fa-code-compare"></i> Cohérence
+    </button>
   </div>
 
   <div class="tab-content">
@@ -242,6 +245,72 @@
           </table>
           </div>
         </div>
+        }
+      </div>
+    }
+
+    <!-- Cohérence catalogue Stock ↔ module conditionnement -->
+    @if (activeTab() === 'coherence') {
+      <div class="card">
+        <div class="card-header">
+          <h2>Cohérence catalogue Stock ↔ module conditionnement</h2>
+          <button class="btn btn-secondary btn-sm" [disabled]="loadingCoherence()" (click)="chargerCoherence()">
+            <i class="fa-solid fa-rotate" [class.fa-spin]="loadingCoherence()"></i> Recontrôler
+          </button>
+        </div>
+        <p class="subtitle">
+          Compare, SKU par SKU, le catalogue Stock (qui fait l'arithmétique du stock) et le référentiel
+          conditionnement (hiérarchie sachet → gaine → carton). Lecture seule : rien n'est corrigé ici.
+        </p>
+
+        @if (loadingCoherence() && !coherenceChargee()) {
+          <p class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Contrôle en cours...</p>
+        } @else if (coherence()) {
+          <div class="coherence-stats">
+            <div class="s-chip sc-total"><i class="fa-solid fa-list"></i>{{ coherence()!.conditionnementsCatalogue }} au catalogue</div>
+            <div class="s-chip sc-ok"><i class="fa-solid fa-check-circle"></i>{{ coherence()!.coherents }} cohérent(s)</div>
+            <div class="s-chip sc-warn"><i class="fa-solid fa-triangle-exclamation"></i>{{ coherence()!.ecarts }} écart(s)</div>
+            <div class="s-chip sc-danger"><i class="fa-solid fa-link-slash"></i>{{ coherence()!.nonLies }} non lié(s)</div>
+            <div class="s-chip sc-danger"><i class="fa-solid fa-ghost"></i>{{ coherence()!.orphelins }} orphelin(s)</div>
+          </div>
+
+          <div class="alert-banner-red" *ngIf="!coherence()!.pretPourBascule" style="margin:16px 0">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Pas encore prêt pour basculer le module conditionnement en source unique : il reste des écarts
+            ou des éléments non liés ci-dessous.
+          </div>
+          <div class="alert-banner-green" *ngIf="coherence()!.pretPourBascule" style="margin:16px 0">
+            <i class="fa-solid fa-circle-check"></i>
+            Tout le catalogue est lié et cohérent : la bascule du module conditionnement en source unique est possible.
+          </div>
+
+          <div class="table-container">
+            <div class="tbl-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th><th>Produit</th><th>Facteur catalogue</th><th>Configuration</th>
+                    <th>Facteur module</th><th>Statut</th><th>Détail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (l of coherence()!.lignes; track l.sku + (l.codeConfiguration ?? '')) {
+                    <tr>
+                      <td><code>{{ l.sku }}</code></td>
+                      <td>{{ l.libelle ?? l.codeProduit ?? '-' }}</td>
+                      <td>{{ l.facteurCatalogue ?? '-' }}</td>
+                      <td>{{ l.codeConfiguration ?? '-' }}</td>
+                      <td>{{ l.facteurModule ?? '-' }}</td>
+                      <td><span [class]="statutCoherenceBadge(l.statut)">{{ statutCoherenceLabel(l.statut) }}</span></td>
+                      <td class="text-muted">{{ l.detail ?? '-' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="empty-state">Aucune donnée à contrôler.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
         }
       </div>
     }
