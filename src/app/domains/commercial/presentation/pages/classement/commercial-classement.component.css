@@ -1,4 +1,5 @@
 .card { padding: var(--sp-4); }
+.empty-pad { padding: 16px; }
 .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .card-title { font-weight: 700; color: var(--n700); font-size: .92rem; display: flex; align-items: center; gap: .5rem; }
 .card-title i { color: var(--g); }

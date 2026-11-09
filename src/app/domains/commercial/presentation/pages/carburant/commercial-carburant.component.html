@@ -42,7 +42,7 @@
       <div class="form-group">
         <label class="form-label">Feuille de route du jour (trajet réel, obligatoire)</label>
         @if (feuillesRoute().length === 0) {
-        <p class="form-hint" style="color:var(--r)">Aucune feuille de route trouvée pour aujourd'hui, un ravitaillement ne peut être enregistré sans trajet réel.</p>
+        <p class="form-hint form-hint-danger">Aucune feuille de route trouvée pour aujourd'hui, un ravitaillement ne peut être enregistré sans trajet réel.</p>
         } @else if (feuillesRoute().length === 1) {
         <input type="text" class="form-input" [value]="feuillesRoute()[0].numeroFeuillRoute" disabled />
         } @else {
