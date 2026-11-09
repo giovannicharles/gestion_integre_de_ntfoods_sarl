@@ -29,6 +29,30 @@
           <span class="sb-lbl">{{ item.label }}</span>
         </a>
         }
+
+        @for (group of comptesNavGroupsFiltres(); track group.label) {
+        <div class="sb-group">
+          <button class="sb-item sb-group-header" (click)="toggleGroup(group.label)"
+            [class.sb-group-open]="expandedGroup() === group.label || rechercheActive()"
+            [title]="!sidebarOpen() ? group.label : ''">
+            <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
+            <span class="sb-lbl">{{ group.label }}</span>
+            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
+          </button>
+          @if (expandedGroup() === group.label || rechercheActive()) {
+            <div class="sb-group-children">
+              @for (child of group.children; track child.route) {
+              <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
+                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
+                <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
+                <span class="sb-lbl">{{ child.label }}</span>
+              </a>
+              }
+            </div>
+          }
+        </div>
+        }
+
         <span class="sb-section-lbl">CONFIGURATION TECHNIQUE</span>
         @for (item of systemeNavItemsFiltres(); track item.route) {
         <a class="sb-item" [routerLink]="item.route" routerLinkActive="sb-active"

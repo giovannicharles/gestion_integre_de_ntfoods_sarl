@@ -871,7 +871,11 @@
 }
 .notif-danger .notif-ico { background: #fee; color: var(--r); }
 .notif-warning .notif-ico { background: #fff8e1; color: #e65100; }
-.notif-info .notif-ico { background: #e3f2fd; color: #1976d2; }
+/* 2026-11-09 (signalé par le porteur, « je ne veux plus le bleu là ») : #e3f2fd/#1976d2 était un
+   bleu Material hors charte (vert/or/rouge/orange TANTY), même défaut déjà corrigé une fois pour
+   .bd-blue (2026-11-08, commentaire ci-dessous dans ce même fichier). Remplacé par la teinte or
+   de la marque. */
+.notif-info .notif-ico { background: var(--y-gh); color: var(--y-d); }
 .notif-success .notif-ico { background: #e8f5e9; color: var(--s); }
 .notif-content {
   flex: 1;

@@ -12,13 +12,14 @@ import { SignalerIncidentComponent } from '../../shared/signaler-incident/signal
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
-import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
 // locale 'fr', la page plantait (NG0701) à chaque rafraîchissement du relogue
 // (`date:'...':'':'fr'` ci-dessous), pas seulement au premier rendu.
 registerLocaleData(localeFr);
 
-interface NavItem { label: string; icon: string; route: string; }
+interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
+interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
 /**
  * Coquille unique de l'espace Admin (demande explicite du porteur, 2026-10-15) :
@@ -87,19 +88,36 @@ export class AdminLayoutComponent implements OnInit {
    */
   comptesNavItems: NavItem[] = [
     { label: 'Tableau de bord', icon: 'fa-gauge-high', route: '/admin/dashboard' },
-    { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/admin/utilisateurs' },
-    { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/admin/codes-observation' },
-    { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
-    { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
-    { label: 'Codes de validation', icon: 'fa-key', route: '/admin/codes-validation' },
-    { label: 'Permissions & RBAC', icon: 'fa-user-shield', route: '/admin/permissions' },
-    { label: 'Workflows de validation', icon: 'fa-diagram-project', route: '/admin/validation-workflows' },
-    // Distinct de "Paramètres système" (/admin-systeme/parametres, AdminSystemeService, déjà
-    // routé) : celui-ci couvre TVA/prime/seuil d'alerte + référentiels zones/gammes/villes
-    // (AdminService), jamais le même écran malgré le nom proche - vérifié avant d'ajouter.
-    { label: 'Paramètres métier (TVA, zones...)', icon: 'fa-sliders', route: '/admin/parametres' },
-    { label: 'Règles métier datées (primes, caisse...)', icon: 'fa-scale-balanced', route: '/admin/parametrages-metier' },
-    { label: 'Postes de production', icon: 'fa-industry', route: '/admin/postes-production' },
+  ];
+
+  /** Regroupement par thème (2026-11-09, même motif que les autres layouts) : les 10 items de
+   * « Comptes & Organisation » passent de liste plate à 3 groupes dépliables. */
+  comptesNavGroups: NavGroup[] = [
+    {
+      label: 'Comptes & Sécurité', icon: 'fa-users-gear', children: [
+        { label: 'Utilisateurs', icon: 'fa-users-gear', route: '/admin/utilisateurs' },
+        { label: 'Permissions & RBAC', icon: 'fa-user-shield', route: '/admin/permissions' },
+        { label: 'Codes de validation', icon: 'fa-key', route: '/admin/codes-validation' },
+      ]
+    },
+    {
+      label: 'Conformité & Suivi', icon: 'fa-clipboard-list', children: [
+        { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/admin/codes-observation' },
+        { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
+        { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
+        { label: 'Workflows de validation', icon: 'fa-diagram-project', route: '/admin/validation-workflows' },
+      ]
+    },
+    {
+      // Distinct de "Paramètres système" (/admin-systeme/parametres, AdminSystemeService, déjà
+      // routé) : celui-ci couvre TVA/prime/seuil d'alerte + référentiels zones/gammes/villes
+      // (AdminService), jamais le même écran malgré le nom proche - vérifié avant d'ajouter.
+      label: 'Référentiels', icon: 'fa-sliders', children: [
+        { label: 'Paramètres métier (TVA, zones...)', icon: 'fa-sliders', route: '/admin/parametres' },
+        { label: 'Règles métier datées (primes, caisse...)', icon: 'fa-scale-balanced', route: '/admin/parametrages-metier' },
+        { label: 'Postes de production', icon: 'fa-industry', route: '/admin/postes-production' },
+      ]
+    },
   ];
 
   /** Section « Configuration technique », module backend `admin` (ParametreSysteme). */
@@ -110,19 +128,26 @@ export class AdminLayoutComponent implements OnInit {
     { label: 'Sauvegardes', icon: 'fa-database', route: '/admin-systeme/sauvegardes' },
   ];
 
-  private allNavItems(): NavItem[] { return [...this.comptesNavItems, ...this.systemeNavItems]; }
+  private allNavItems(): NavItem[] {
+    return [...this.comptesNavItems, ...this.comptesNavGroups.flatMap(g => g.children), ...this.systemeNavItems];
+  }
 
   /** Palette de commandes Ctrl+K (2026-11-01, même composant que le module DG). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
   commandItems = computed(() => [
     ...this.comptesNavItems.map(i => ({ ...i, groupe: 'Comptes & Organisation' })),
+    ...this.comptesNavGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
     ...this.systemeNavItems.map(i => ({ ...i, groupe: 'Configuration technique' })),
   ]);
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   comptesNavItemsFiltres = computed(() => filtrerNavItems(this.comptesNavItems, this.sidebarFiltre()));
+  comptesNavGroupsFiltres = computed(() => filtrerNavGroupes(this.comptesNavGroups, this.sidebarFiltre()));
   systemeNavItemsFiltres = computed(() => filtrerNavItems(this.systemeNavItems, this.sidebarFiltre()));
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  expandedGroup = signal<string | null>('Comptes & Sécurité');
+  toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
   tousLesItems = computed(() => this.allNavItems());
 
   ngOnInit() {

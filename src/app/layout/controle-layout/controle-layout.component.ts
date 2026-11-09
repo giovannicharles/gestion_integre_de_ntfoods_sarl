@@ -17,9 +17,10 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
-import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
+interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
 @Component({
   selector: 'app-controle-layout',
@@ -69,30 +70,58 @@ export class ControleLayoutComponent implements OnInit {
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-magnifying-glass-chart', route: '/controle/dashboard' },
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/controle/validations' },
-    { label: 'Suivi Consommables', icon: 'fa-boxes-packing', route: '/controle/consommables' },
-    { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements' },
-    { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
-    { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
-    { label: 'Valorisation Stock', icon: 'fa-boxes-stacked', route: '/controle/valorisation' },
-    { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget' },
-    { label: 'Variances Coûts', icon: 'fa-scale-unbalanced', route: '/controle/variances' },
-    { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
-    { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
+  ];
+
+  /** Regroupement par thème (2026-11-09, même motif que DG/Comptable/RP/Secrétaire/Commercial). */
+  navGroups: NavGroup[] = [
+    {
+      label: 'Stock & Réceptions', icon: 'fa-boxes-packing', children: [
+        { label: 'Suivi Consommables', icon: 'fa-boxes-packing', route: '/controle/consommables' },
+        { label: 'Valorisation Stock', icon: 'fa-boxes-stacked', route: '/controle/valorisation' },
+      ]
+    },
+    {
+      label: 'Finance', icon: 'fa-money-check-dollar', children: [
+        { label: 'Décaissements', icon: 'fa-money-check-dollar', route: '/controle/decaissements' },
+        { label: 'Ventes à Crédit', icon: 'fa-hand-holding-dollar', route: '/controle/credits' },
+        { label: 'Budget & Achats', icon: 'fa-file-invoice-dollar', route: '/controle/budget' },
+      ]
+    },
+    {
+      label: 'Coûts & Marges', icon: 'fa-chart-line', children: [
+        { label: 'Marges & Coûts', icon: 'fa-chart-line', route: '/controle/marges' },
+        { label: 'Variances Coûts', icon: 'fa-scale-unbalanced', route: '/controle/variances' },
+      ]
+    },
+    {
+      label: 'Audit & Commandes', icon: 'fa-fingerprint', children: [
+        { label: 'Piste d\'Audit', icon: 'fa-fingerprint', route: '/controle/audit' },
+        { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  expandedGroup = signal<string | null>('Stock & Réceptions');
+  toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
   /** Palette de commandes Ctrl+K (2026-11-02, même composant que les autres layouts). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
-  commandItems = computed(() => this.navItems);
+  commandItems = computed(() => [
+    ...this.navItems,
+    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+  ]);
 
   ngOnInit() {
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const cur = this.navItems.find(n => this.router.url.startsWith(n.route));
+      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);
     });
@@ -120,7 +149,7 @@ export class ControleLayoutComponent implements OnInit {
   }
 
   private setBadge(route: string, count: number, badgeClass: string): void {
-    const item = this.navItems.find(n => n.route === route);
+    const item = this.navGroups.flatMap(g => g.children).find(n => n.route === route);
     if (item && count > 0) { item.badge = count; item.badgeClass = badgeClass; }
   }
 

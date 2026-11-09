@@ -7,14 +7,16 @@ import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { ClockService } from '../../core/services/clock.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
-import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
+interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
 @Component({
   selector: 'app-commercial-layout',
@@ -28,9 +30,10 @@ export class CommercialLayoutComponent implements OnInit {
   authService = inject(AuthService);
   alertBadge = inject(AlertBadgeService);
   readonly theme = inject(ThemeService);
+  private readonly clock = inject(ClockService);
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
-  currentTime = signal(new Date());
+  currentTime = this.clock.now;
   currentPageTitle = signal('Précommandes');
   alertCount = this.alertBadge.totalCount;
 
@@ -50,24 +53,40 @@ export class CommercialLayoutComponent implements OnInit {
   // route n'existe pas dans commercial.routes.ts, l'entrée menait nulle part.
   navItems: NavItem[] = [
     { label: 'Précommandes J+1', icon: 'fa-cart-plus', route: '/commercial/precommandes' },
-    { label: 'Ventes', icon: 'fa-cash-register', route: '/commercial/ventes' },
-    { label: 'Carburant', icon: 'fa-gas-pump', route: '/commercial/carburant' },
-    { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/commercial/recouvrement' },
-    { label: 'Versements', icon: 'fa-money-bill-wave', route: '/commercial/versements' },
-    { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/commercial/classement' },
-    { label: 'Fiche Synthèse', icon: 'fa-file-lines', route: '/commercial/fiche-synthese' },
+  ];
+
+  /** Regroupement par thème (2026-11-09, même motif que DG/Comptable/RP/Secrétaire). */
+  navGroups: NavGroup[] = [
+    {
+      label: 'Terrain', icon: 'fa-cash-register', children: [
+        { label: 'Ventes', icon: 'fa-cash-register', route: '/commercial/ventes' },
+        { label: 'Carburant', icon: 'fa-gas-pump', route: '/commercial/carburant' },
+      ]
+    },
+    {
+      label: 'Finance Commerciale', icon: 'fa-hand-holding-dollar', children: [
+        { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/commercial/recouvrement' },
+        { label: 'Versements', icon: 'fa-money-bill-wave', route: '/commercial/versements' },
+        { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/commercial/classement' },
+        { label: 'Fiche Synthèse', icon: 'fa-file-lines', route: '/commercial/fiche-synthese' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
+  expandedGroup = signal<string | null>('Terrain');
+  toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
   ngOnInit() {
-    setInterval(() => this.currentTime.set(new Date()), 30000);
     if (window.innerWidth < 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const cur = this.navItems.find(n => this.router.url.startsWith(n.route));
+      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth < 768) this.mobileOpen.set(false);
     });
