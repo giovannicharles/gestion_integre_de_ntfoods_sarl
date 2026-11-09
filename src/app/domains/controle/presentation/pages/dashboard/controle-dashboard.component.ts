@@ -13,6 +13,7 @@ import { fCFA } from '../../../../../shared/utils/format.utils';
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink],
   templateUrl: './controle-dashboard.component.html',
+  styleUrl: './controle-dashboard.component.css',
 })
 export class ControleDashboardComponent implements OnInit {
   today = new Date();

@@ -62,7 +62,7 @@
             <label>Code *</label>
             <input type="text" [ngModel]="form().code" (ngModelChange)="actualiserChamp('code', $event)" [disabled]="!!editingId()" placeholder="Ex : PF-001" />
           </div>
-          <div class="form-group" style="flex:2">
+          <div class="form-group form-group-wide">
             <label>Désignation *</label>
             <input type="text" [ngModel]="form().designation" (ngModelChange)="actualiserChamp('designation', $event)" placeholder="Ex : Bouillie Soja 500g" />
           </div>
