@@ -3,8 +3,8 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Subject, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../../stock/application/use-cases/reception/receipt.use-case';
-import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
-import { Receipt, Product, StockLevel, StockMovement } from '../../../../stock/domain/models/stock.models';
+import { StockService, NiveauStockBE, MouvementBE } from '../../../../stock/infrastructure/stock.service';
+import { Receipt } from '../../../../stock/domain/models/stock.models';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
@@ -16,13 +16,18 @@ type ActionType = 'v2' | 'rej';
  * « le contrôle doit pouvoir suivre tout ce qui concerne les consommables puisque c'est lui qui
  * valide les réceptions pour la deuxième fois »).
  *
- * Capacité déjà réelle côté serveur (RolePermissionMatrix : STOCK_PRODUIT_CONSULTER,
- * STOCK_NIVEAU_CONSULTER, STOCK_MOUVEMENT_CONSULTER, STOCK_ALERTE_GERER,
- * STOCK_RECEPTION_VALIDER_ETAPE2 sont déjà accordées à CONTROLEUR_GENERAL) : jamais surfacée
- * par aucun écran Contrôle jusqu'ici - la navigation de ce rôle (budget/crédits/marges/
- * valorisation/variances/décaissements) ne comportait aucune page stock. Écran propre à ce
- * module (confidentialité des modules, CLAUDE.md invariant 5) qui réutilise les mêmes
- * services/use-cases que Stock plutôt que ses repositories, filtré sur les consommables.
+ * Réaligné le 2026-11-10 (demande explicite du porteur, même correctif que l'écran Comptable
+ * matières premières) : cet écran lisait jusqu'ici le grand livre anglais historique (StockItem,
+ * via DashboardController/v1/stock/dashboard et StockMovementController/stock/movements) pour ses
+ * onglets Niveaux/Mouvements/Alertes - un grand livre déconnecté du stock réel depuis la
+ * centralisation NiveauStock (Lot P0/2026-09-29), donc jamais mis à jour par les vraies
+ * validations de réception. Lit désormais exclusivement NiveauStockController (/api/stock/levels,
+ * /alerts) et MouvementController (/api/stock/mouvements), le grand livre réellement consulté par
+ * les dashboards, les seuils et les transferts.
+ *
+ * L'onglet Validation réutilise ReceiptUseCase (ReceiptController, /api/v1/stock/receptions),
+ * déjà le bon circuit - c'est la seconde validation des réceptions CONSOMMABLE/MATERIEL que le
+ * Contrôleur Général exerce (RolePermissionMatrix : STOCK_RECEPTION_VALIDER_ETAPE2).
  */
 @Component({
   selector: 'app-controle-consommables',
@@ -35,36 +40,35 @@ type ActionType = 'v2' | 'rej';
 export class ControleConsommablesComponent implements OnInit, OnDestroy {
   private readonly d$ = new Subject<void>();
   private readonly uc = inject(ReceiptUseCase);
-  private readonly repo = inject(StockApiRepository);
+  private readonly stockSvc = inject(StockService);
   private readonly toast = inject(ToastService);
 
   fCFA = fCFA;
   loading = signal(true);
   loadError = signal<string | null>(null);
 
-  produits = signal<Product[]>([]);
-  niveaux = signal<StockLevel[]>([]);
-  mouvements = signal<StockMovement[]>([]);
-  alertes = signal<StockLevel[]>([]);
+  niveaux = signal<NiveauStockBE[]>([]);
+  alertes = signal<NiveauStockBE[]>([]);
+  mouvements = signal<MouvementBE[]>([]);
   enAttenteValidation = signal<Receipt[]>([]);
 
   activeTab = signal<'validation' | 'niveaux' | 'mouvements' | 'alertes'>('validation');
 
-  /** Receptions attendent la 2nde validation du Contrôle : CONSOMMABLE et MATERIEL (même rôle
-   * validateur, ReceptionType.CONSOMMABLE/MATERIEL -> CONTROLEUR_GENERAL). */
-  private skusConsommables = computed(() => new Set(this.produits().map(p => p.sku)));
-
-  niveauxConsommables = computed(() => this.niveaux().filter(n => n.materialType === 'CONSOMMABLE'));
+  /** Le Contrôle couvre les deux catégories qu'il valide en 2e étape : CONSOMMABLE et MATERIEL. */
+  private estConsommableOuMateriel = (categorie: string | null) => categorie === 'CONSOMMABLE' || categorie === 'MATERIEL';
+  niveauxConsommables = computed(() => this.niveaux().filter(n => this.estConsommableOuMateriel(n.categorie)));
+  alertesConsommables = computed(() => this.alertes().filter(n => this.estConsommableOuMateriel(n.categorie)));
+  /** Codes catalogue des consommables/matériel, déduits des niveaux (pas d'appel séparé au référentiel). */
+  private codesConsommables = computed(() => new Set(this.niveauxConsommables().map(n => n.codeProduit)));
   mouvementsConsommables = computed(() => {
-    const skus = this.skusConsommables();
-    return this.mouvements().filter(m => m.productSku && skus.has(m.productSku)).slice(0, 30);
+    const codes = this.codesConsommables();
+    return this.mouvements().filter(m => codes.has(m.codeProduit)).slice(0, 30);
   });
-  alertesConsommables = computed(() => this.alertes().filter(n => n.materialType === 'CONSOMMABLE'));
 
-  valeurTotaleStock = computed(() => this.niveauxConsommables().reduce((s, n) => s + (n.stockValue ?? 0), 0));
-  nbAlertesCritiques = computed(() => this.alertesConsommables().filter(n => n.alertLevel === 'CRITIQUE').length);
+  valeurTotaleStock = computed(() => this.niveauxConsommables().reduce((s, n) => s + (n.valeurStock ?? 0), 0));
+  nbAlertesCritiques = computed(() => this.alertesConsommables().filter(n => n.niveauAlerte === 'CRITIQUE').length);
   nbEnAttente = computed(() => this.enAttenteValidation().length);
-  nbReferences = computed(() => this.produits().length);
+  nbReferences = computed(() => this.niveauxConsommables().length);
 
   // Modal de validation / rejet
   selected = signal<Receipt | null>(null);
@@ -82,19 +86,16 @@ export class ControleConsommablesComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.loadError.set(null);
     forkJoin({
-      produitsConsommables: this.uc.getProducts('CONSOMMABLE'),
-      produitsMateriel: this.uc.getProducts('MATERIEL'),
-      niveaux: this.repo.getStockLevels(),
-      mouvements: this.repo.getMovements(),
-      alertes: this.repo.getAlerts(),
+      niveaux: this.stockSvc.getEtatStock(),
+      alertes: this.stockSvc.getStockLevelAlertes(),
+      mouvements: this.stockSvc.getMouvements({}, { page: 0, size: 100, sort: 'horodatage,desc' }),
       enAttenteConsommable: this.uc.getPendingSecondValidation('CONSOMMABLE'),
       enAttenteMateriel: this.uc.getPendingSecondValidation('MATERIEL'),
     }).pipe(takeUntil(this.d$)).subscribe({
       next: (r) => {
-        this.produits.set([...r.produitsConsommables, ...r.produitsMateriel]);
         this.niveaux.set(r.niveaux);
-        this.mouvements.set(r.mouvements);
         this.alertes.set(r.alertes);
+        this.mouvements.set(r.mouvements.contenu ?? []);
         this.enAttenteValidation.set([...r.enAttenteConsommable, ...r.enAttenteMateriel]);
         this.loading.set(false);
       },

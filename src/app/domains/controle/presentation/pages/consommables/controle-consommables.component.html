@@ -120,15 +120,15 @@
         <thead><tr><th>Produit</th><th>Entrepôt</th><th class="text-right">Quantité</th><th class="text-right">Seuil</th><th class="text-right">Valeur</th><th>État</th></tr></thead>
         <tbody>
           @for (n of niveauxConsommables(); track n.id) {
-          <tr [class.row-alert]="n.alertLevel==='CRITIQUE'">
-            <td class="fw-bold">{{ n.productName || n.productSku }}</td>
-            <td>{{ n.warehouseName || '-' }}</td>
-            <td class="mono text-right">{{ n.quantity | number }}</td>
-            <td class="mono text-right">{{ n.reorderPoint | number }}</td>
-            <td class="mono text-right">{{ fCFA(n.stockValue ?? 0) }}</td>
+          <tr [class.row-alert]="n.niveauAlerte==='CRITIQUE'">
+            <td class="fw-bold">{{ n.designation || n.codeProduit }}</td>
+            <td>{{ n.libelleEntrepot || '-' }}</td>
+            <td class="mono text-right">{{ n.quantite | number }}</td>
+            <td class="mono text-right">{{ n.seuilReapprovisionnement | number }}</td>
+            <td class="mono text-right">{{ fCFA(n.valeurStock ?? 0) }}</td>
             <td>
-              @if (n.alertLevel==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
-              @else if (n.alertLevel==='FAIBLE') { <span class="badge bg-orange badge-sm">Faible</span> }
+              @if (n.niveauAlerte==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
+              @else if (n.niveauAlerte==='FAIBLE') { <span class="badge bg-orange badge-sm">Faible</span> }
               @else { <span class="badge bg-success badge-sm">OK</span> }
             </td>
           </tr>
@@ -149,20 +149,16 @@
     </div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Date</th><th>Type</th><th>Produit</th><th class="text-right">Quantité</th><th>Référence</th><th>Statut</th></tr></thead>
+        <thead><tr><th>Date</th><th>Type</th><th>Produit</th><th class="text-right">Quantité</th><th>Référence</th><th>Acteur</th></tr></thead>
         <tbody>
           @for (m of mouvementsConsommables(); track m.id) {
           <tr>
-            <td class="text-muted">{{ (m.validatedAt || m.requestedAt || m.createdAt) | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td><span class="badge bg-neutral badge-sm">{{ m.type }}</span></td>
-            <td class="mono">{{ m.productSku }}</td>
-            <td class="mono text-right">{{ m.quantity | number }}</td>
-            <td class="text-muted">{{ m.referenceNumber || m.reference || '-' }}</td>
-            <td>
-              @if (m.status==='VALIDATED') { <span class="badge bg-success badge-sm">Validé</span> }
-              @else if (m.status==='CANCELLED') { <span class="badge bg-red badge-sm">Annulé</span> }
-              @else { <span class="badge bg-orange badge-sm">En attente</span> }
-            </td>
+            <td class="text-muted">{{ m.horodatage | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td><span class="badge bg-neutral badge-sm">{{ m.typeLibelle || m.type }}</span></td>
+            <td class="mono">{{ m.codeProduit }}</td>
+            <td class="mono text-right">{{ m.quantiteEnBase | number }}</td>
+            <td class="text-muted">{{ m.referenceDocument || m.reference || '-' }}</td>
+            <td class="text-muted">{{ m.matriculeActeur || '-' }}</td>
           </tr>
           } @empty {
           <tr><td colspan="6" class="empty-state">Aucun mouvement récent sur les consommables.</td></tr>
@@ -185,12 +181,12 @@
         <tbody>
           @for (n of alertesConsommables(); track n.id) {
           <tr class="row-alert">
-            <td class="fw-bold">{{ n.productName || n.productSku }}</td>
-            <td>{{ n.warehouseName || '-' }}</td>
-            <td class="mono text-right">{{ n.quantity | number }}</td>
-            <td class="mono text-right">{{ n.reorderPoint | number }}</td>
+            <td class="fw-bold">{{ n.designation || n.codeProduit }}</td>
+            <td>{{ n.libelleEntrepot || '-' }}</td>
+            <td class="mono text-right">{{ n.quantite | number }}</td>
+            <td class="mono text-right">{{ n.seuilReapprovisionnement | number }}</td>
             <td>
-              @if (n.alertLevel==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
+              @if (n.niveauAlerte==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
               @else { <span class="badge bg-orange badge-sm">Faible</span> }
             </td>
           </tr>
