@@ -69,17 +69,26 @@ export interface TransfertBE {
   lignes: { id: string; codeProduit: string; sku: string | null; quantite: number }[];
 }
 
+/**
+ * Miroir de MouvementResponse (backend, MouvementController) - corrigé le 2026-11-10 : cette
+ * interface ne correspondait à aucun champ réel de la réponse (date/entrepot/designation/unite/
+ * matriculeOperateur n'existent pas côté serveur), jamais détecté faute d'appelant jusqu'ici.
+ */
 export interface MouvementBE {
   id: number;
-  date: string;
+  reference: string;
   type: string;
-  entrepot: string;
+  typeLibelle: string;
+  sens: string;
   codeProduit: string;
-  designation: string;
-  quantite: number;
-  unite: string;
-  referenceDocument: string;
-  matriculeOperateur: string;
+  sku: string;
+  quantiteEnBase: number;
+  codeEntrepotSource: string | null;
+  codeEntrepotCible: string | null;
+  matriculeActeur: string;
+  referenceDocument: string | null;
+  motif: string | null;
+  horodatage: string;
 }
 
 export interface LigneInventaireBE {

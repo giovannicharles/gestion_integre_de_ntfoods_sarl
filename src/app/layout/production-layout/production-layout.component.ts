@@ -13,12 +13,13 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
 
 @Component({
   selector: 'app-production-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, ConfirmDialogComponent],
   templateUrl: './production-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -100,8 +101,11 @@ export class ProductionLayoutComponent implements OnInit {
   toggleSidebar() { if (window.innerWidth < 768) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
-  deconnexion(): void {
-    if (!confirm('Se déconnecter ?')) return;
+  /** Remplace le confirm() natif par ConfirmDialogComponent, cohérent avec les 9 autres layouts (2026-11-10). */
+  showLogoutConfirm = signal(false);
+  deconnexion(): void { this.showLogoutConfirm.set(true); }
+  confirmerLogout(): void {
+    this.showLogoutConfirm.set(false);
     this.authSvc.logout();
     this.router.navigate(['/auth/login']);
   }

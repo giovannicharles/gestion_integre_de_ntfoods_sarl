@@ -11,6 +11,9 @@ export const COMPTABLE_ROUTES: Routes = [
       { path: 'commandes', loadComponent: () => import('./pages/commandes/comptable-commandes.component').then(m => m.ComptableCommandesComponent) },
       { path: 'factures', loadComponent: () => import('./pages/factures/comptable-factures.component').then(m => m.ComptableFacturesComponent) },
       { path: 'caisse', loadComponent: () => import('./pages/caisse/comptable-caisse.component').then(m => m.ComptableCaisseComponent) },
+      // Suivi des matières premières (2026-11-10, demande explicite du porteur), symétrique à
+      // l'écran consommables du Contrôleur Général.
+      { path: 'matieres-premieres', loadComponent: () => import('./pages/matieres-premieres/comptable-mp.component').then(m => m.ComptableMpComponent) },
       { path: 'recouvrement', loadComponent: () => import('./pages/recouvrement/comptable-recouvrement.component').then(m => m.ComptableRecouvrementComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/comptable-reporting.component').then(m => m.ComptableReportingComponent) },
       { path: 'objectifs', loadComponent: () => import('./pages/objectifs/comptable-objectifs.component').then(m => m.ComptableObjectifsComponent) },

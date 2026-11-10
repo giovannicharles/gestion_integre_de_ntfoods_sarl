@@ -1,0 +1,246 @@
+<div class="dash animate-fadeInUp">
+
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-wheat-awn"></i></div>
+      <div>
+        <h1 class="ph-title">Suivi des Matières Premières</h1>
+        <p class="ph-sub">Niveaux, mouvements, alertes et validations finales des réceptions de matières premières</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="sk-kpi-grid">
+    @for (i of [1,2,3,4]; track i) { <div class="card sk-kpi-card"><div class="sk-shimmer sk-ico"></div><div class="sk-lines"><div class="sk-shimmer sk-s"></div><div class="sk-shimmer sk-l"></div></div></div> }
+  </div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-y">
+      <div class="kpi-decor kd-y"></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-stamp"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">En attente de validation</span>
+        <span class="kpi-val" [class.text-warning]="nbEnAttente()>0">{{ nbEnAttente() }}</span>
+        <span class="kpi-meta">2e validation, matières premières</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-coins"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Valeur stock MP</span>
+        <span class="kpi-val">{{ fCFA(valeurTotaleStock()) }}</span>
+        <span class="kpi-meta">{{ niveauxMP().length }} ligne(s) de stock</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-decor kd-r"></div>
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Alertes critiques</span>
+        <span class="kpi-val" [class.text-danger]="nbAlertesCritiques()>0">{{ nbAlertesCritiques() }}</span>
+        <span class="kpi-meta">{{ alertesMP().length }} alerte(s) au total</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-decor kd-b"></div>
+      <div class="kpi-ico ib"><i class="fa-solid fa-list-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Références suivies</span>
+        <span class="kpi-val">{{ nbReferences() }}</span>
+        <span class="kpi-meta">Matières premières, catalogue actif</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLETS -->
+  <div class="period-selector dash-tabs">
+    <button class="period-btn" [class.active]="activeTab()==='validation'" (click)="activeTab.set('validation')">
+      <i class="fa-solid fa-stamp"></i> À valider @if (nbEnAttente()>0) { ({{ nbEnAttente() }}) }
+    </button>
+    <button class="period-btn" [class.active]="activeTab()==='niveaux'" (click)="activeTab.set('niveaux')"><i class="fa-solid fa-warehouse"></i> Niveaux de stock</button>
+    <button class="period-btn" [class.active]="activeTab()==='mouvements'" (click)="activeTab.set('mouvements')"><i class="fa-solid fa-right-left"></i> Mouvements récents</button>
+    <button class="period-btn" [class.active]="activeTab()==='alertes'" (click)="activeTab.set('alertes')"><i class="fa-solid fa-bell"></i> Alertes @if (alertesMP().length>0) { ({{ alertesMP().length }}) }</button>
+  </div>
+
+  <!-- À VALIDER -->
+  @if (activeTab()==='validation') {
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-stamp"></i> Réceptions en attente de ma validation (2e étape)</span>
+    </div>
+    @if (enAttenteValidation().length === 0) {
+    <p class="empty-state">Rien n'attend votre validation pour le moment.</p>
+    } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Réception</th><th>Type</th><th>Source</th><th>Date</th><th>Articles</th><th>1ère validation</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (r of enAttenteValidation(); track r.receiptNumber) {
+          <tr [class.row-alert]="hasDeviations(r)">
+            <td class="fw-bold mono">{{ r.receiptNumber }}</td>
+            <td><span class="badge bg-neutral badge-sm">{{ r.receptionTypeLabel || r.receptionType }}</span></td>
+            <td>{{ r.sourceLabel }}</td>
+            <td>{{ r.receiptDate | date:'dd/MM/yyyy' }}</td>
+            <td class="mono">{{ r.items.length }}</td>
+            <td class="text-muted">{{ r.firstValidator || '-' }}</td>
+            <td class="row-actions">
+              <button class="btn btn-success btn-sm" (click)="ouvrirAction(r, 'v2')" title="Valider définitivement"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-danger btn-sm" (click)="ouvrirAction(r, 'rej')" title="Rejeter"><i class="fa-solid fa-xmark"></i></button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- NIVEAUX DE STOCK -->
+  @if (activeTab()==='niveaux') {
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-warehouse"></i> Niveaux de stock, matières premières</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Entrepôt</th><th class="text-right">Quantité</th><th class="text-right">Seuil</th><th class="text-right">Valeur</th><th>État</th></tr></thead>
+        <tbody>
+          @for (n of niveauxMP(); track n.id) {
+          <tr [class.row-alert]="n.niveauAlerte==='CRITIQUE'">
+            <td class="fw-bold">{{ n.designation || n.codeProduit }}</td>
+            <td>{{ n.libelleEntrepot || '-' }}</td>
+            <td class="mono text-right">{{ n.quantite | number }}</td>
+            <td class="mono text-right">{{ n.seuilReapprovisionnement | number }}</td>
+            <td class="mono text-right">{{ fCFA(n.valeurStock ?? 0) }}</td>
+            <td>
+              @if (n.niveauAlerte==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
+              @else if (n.niveauAlerte==='FAIBLE') { <span class="badge bg-orange badge-sm">Faible</span> }
+              @else { <span class="badge bg-success badge-sm">OK</span> }
+            </td>
+          </tr>
+          } @empty {
+          <tr><td colspan="6" class="empty-state">Aucune ligne de stock de matière première.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- MOUVEMENTS -->
+  @if (activeTab()==='mouvements') {
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-right-left"></i> Mouvements récents, matières premières</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Type</th><th>Produit</th><th class="text-right">Quantité</th><th>Référence</th><th>Acteur</th></tr></thead>
+        <tbody>
+          @for (m of mouvementsMP(); track m.id) {
+          <tr>
+            <td class="text-muted">{{ m.horodatage | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td><span class="badge bg-neutral badge-sm">{{ m.typeLibelle || m.type }}</span></td>
+            <td class="mono">{{ m.codeProduit }}</td>
+            <td class="mono text-right">{{ m.quantiteEnBase | number }}</td>
+            <td class="text-muted">{{ m.referenceDocument || m.reference || '-' }}</td>
+            <td class="text-muted">{{ m.matriculeActeur || '-' }}</td>
+          </tr>
+          } @empty {
+          <tr><td colspan="6" class="empty-state">Aucun mouvement récent sur les matières premières.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- ALERTES -->
+  @if (activeTab()==='alertes') {
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-bell"></i> Alertes actives, matières premières</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr><th>Produit</th><th>Entrepôt</th><th class="text-right">Quantité</th><th class="text-right">Seuil</th><th>Niveau</th></tr></thead>
+        <tbody>
+          @for (n of alertesMP(); track n.id) {
+          <tr class="row-alert">
+            <td class="fw-bold">{{ n.designation || n.codeProduit }}</td>
+            <td>{{ n.libelleEntrepot || '-' }}</td>
+            <td class="mono text-right">{{ n.quantite | number }}</td>
+            <td class="mono text-right">{{ n.seuilReapprovisionnement | number }}</td>
+            <td>
+              @if (n.niveauAlerte==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
+              @else { <span class="badge bg-orange badge-sm">Faible</span> }
+            </td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucune alerte active sur les matières premières.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  }
+
+  <!-- MODAL VALIDATION / REJET -->
+  @if (selected(); as r) {
+  <div class="modal-overlay" (click)="fermerAction()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>
+          @if (action()==='v2') { <i class="fa-solid fa-check"></i> Valider définitivement } @else { <i class="fa-solid fa-xmark"></i> Rejeter }
+          {{ r.receiptNumber }}
+        </h3>
+        <button class="modal-close" (click)="fermerAction()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        @if (action()==='v2') {
+        <div class="form-group">
+          <label>Notes (optionnel)</label>
+          <textarea class="form-control" [(ngModel)]="notes" rows="2"></textarea>
+        </div>
+        @if (r.requiresAuthCode) {
+        <div class="form-group">
+          <label>Code de validation <span class="req">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="authCode" placeholder="Code à usage unique">
+        </div>
+        }
+        } @else {
+        <div class="form-group">
+          <label>Motif du rejet <span class="req">*</span></label>
+          <textarea class="form-control" [(ngModel)]="rejectReason" rows="3" placeholder="Motif obligatoire"></textarea>
+        </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="fermerAction()" [disabled]="processing()">Annuler</button>
+        <button class="btn" [class.btn-success]="action()==='v2'" [class.btn-danger]="action()==='rej'"
+                [disabled]="processing() || (action()==='rej' && !rejectReason.trim())" (click)="confirmerAction()">
+          @if (processing()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+          Confirmer
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

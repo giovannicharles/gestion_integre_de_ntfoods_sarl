@@ -78,6 +78,9 @@ export class ComptableLayoutComponent implements OnInit {
       label: 'Validations & Facturation', icon: 'fa-file-invoice', children: [
         { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes' },
         { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
+        // 2026-11-10 (demande explicite du porteur) : suivi des matières premières, symétrique
+        // à l'écran consommables du Contrôleur Général.
+        { label: 'Matières Premières', icon: 'fa-wheat-awn', route: '/comptable/matieres-premieres' },
       ]
     },
     {
