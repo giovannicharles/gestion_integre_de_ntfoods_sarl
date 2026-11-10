@@ -8,6 +8,7 @@ import { Product } from '../../../../stock/domain/models/stock.models';
 import { ProductSearchComponent } from '../../../../../shared/components/product-search/product-search.component';
 import { ConditioningQuantityComponent, LigneConditionnement } from '../../../../../shared/components/conditioning-quantity/conditioning-quantity.component';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface LotFormLigne {
   referencePPH: string;
@@ -50,6 +51,7 @@ export class ProductionLotsComponent implements OnInit {
   showRejeter = signal<LotBE | null>(null);
   motifRejet = '';
   message = signal('');
+  erreurAction = signal<string | null>(null);
   erreurDeclaration = signal<string | null>(null);
 
   dateProduction = this.formatDate(new Date());
@@ -173,13 +175,14 @@ export class ProductionLotsComponent implements OnInit {
   /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
   validerLot(lot: LotBE): void {
     if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
+    this.erreurAction.set(null);
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.message.set('Lot validé, fiche de production verrouillée');
       },
-      error: () => this.message.set('Erreur lors de la validation du lot')
+      error: (err) => this.erreurAction.set(extractApiError(err))
     });
   }
 
@@ -191,6 +194,7 @@ export class ProductionLotsComponent implements OnInit {
   confirmerRejet(): void {
     const lot = this.showRejeter();
     if (!lot || !this.motifRejet.trim()) return;
+    this.erreurAction.set(null);
     this.svc.rejeterLot(lot.numeroLot, this.motifRejet.trim()).subscribe({
       next: l => {
         this.remplacerLot(l);
@@ -198,7 +202,7 @@ export class ProductionLotsComponent implements OnInit {
         this.showRejeter.set(null);
         this.message.set('Lot rejeté');
       },
-      error: () => this.message.set('Erreur lors du rejet du lot')
+      error: (err) => this.erreurAction.set(extractApiError(err))
     });
   }
 

@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductionService, LotBE } from '../../../../production/infrastructure/production.service';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 /**
  * Écran Stock, « Lots de Production » (2026-10-01, demande explicite du porteur).
@@ -35,6 +36,7 @@ export class StockLotsProductionComponent implements OnInit {
   showRejeter = signal<LotBE | null>(null);
   motifRejet = '';
   message = signal('');
+  erreurAction = signal<string | null>(null);
 
   nbAValider = computed(() => this.lotsAValider().length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
@@ -64,13 +66,14 @@ export class StockLotsProductionComponent implements OnInit {
   /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
   validerLot(lot: LotBE): void {
     if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
+    this.erreurAction.set(null);
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.message.set('Lot validé, fiche de production verrouillée');
       },
-      error: () => this.message.set('Erreur lors de la validation du lot'),
+      error: (err) => this.erreurAction.set(extractApiError(err)),
     });
   }
 
@@ -82,6 +85,7 @@ export class StockLotsProductionComponent implements OnInit {
   confirmerRejet(): void {
     const lot = this.showRejeter();
     if (!lot || !this.motifRejet.trim()) return;
+    this.erreurAction.set(null);
     this.svc.rejeterLot(lot.numeroLot, this.motifRejet.trim()).subscribe({
       next: l => {
         this.remplacerLot(l);
@@ -89,7 +93,7 @@ export class StockLotsProductionComponent implements OnInit {
         this.showRejeter.set(null);
         this.message.set('Lot rejeté');
       },
-      error: () => this.message.set('Erreur lors du rejet du lot'),
+      error: (err) => this.erreurAction.set(extractApiError(err)),
     });
   }
 

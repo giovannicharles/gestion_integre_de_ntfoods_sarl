@@ -16,6 +16,9 @@
 @if (message()) {
   <div class="alert alert-info">{{ message() }}</div>
 }
+@if (erreurAction()) {
+  <div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurAction() }}</div>
+}
 
 <div class="kpi-grid">
   <div class="kpi-card kp-y">

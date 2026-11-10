@@ -48,6 +48,9 @@
   @if (message()) {
     <div class="card" style="padding:12px 16px;margin-bottom:16px">{{ message() }}</div>
   }
+  @if (erreurAction()) {
+    <div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurAction() }}</div>
+  }
 
   <div class="card table-card">
     <div class="card-hd">
