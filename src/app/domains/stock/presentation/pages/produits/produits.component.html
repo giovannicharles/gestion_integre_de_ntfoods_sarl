@@ -14,7 +14,7 @@
       <button class="btn-ia-prod" (click)="runIaInsight()" [disabled]="iaInsightLoading()">
         <i class="fa-solid fa-wand-magic-sparkles"></i> Analyse IA
       </button>
-      <button class="btn btn-primary" (click)="openCreate(activeTab() === 'lines' ? 'line' : activeTab() === 'variants' ? 'variant' : 'product')">
+      <button class="btn btn-primary" *appHasPermission="'STOCK_PRODUIT_CREER'" (click)="openCreate(activeTab() === 'lines' ? 'line' : activeTab() === 'variants' ? 'variant' : 'product')">
         <i class="fa-solid fa-plus"></i> Ajouter
       </button>
     </div>
@@ -270,8 +270,8 @@
               </td>
               <td class="actions-cell">
                 <button class="btn-icon" title="Prix" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i></button>
-                <button class="btn-icon" title="Modifier" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-icon btn-danger" title="Supprimer" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn-icon" title="Modifier" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-icon btn-danger" title="Supprimer" *appHasPermission="'STOCK_PRODUIT_DESACTIVER'" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
               </td>
             </tr>
           } @empty {
@@ -323,8 +323,8 @@
           <div class="prod-grid-price">{{ formatCFA(p.unitPriceAmount || 0) }}</div>
           <div class="prod-grid-actions">
             <button class="btn-icon" title="Prix" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i></button>
-            <button class="btn-icon" title="Modifier" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn-icon btn-danger" title="Supprimer" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn-icon" title="Modifier" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-icon btn-danger" title="Supprimer" *appHasPermission="'STOCK_PRODUIT_DESACTIVER'" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
       } @empty {
@@ -358,8 +358,8 @@
             </div>
             <div class="prod-card-actions">
               <button class="btn-icon" title="Prix" (click)="openPrices(p)"><i class="fa-solid fa-coins"></i></button>
-              <button class="btn-icon" title="Modifier" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn-icon btn-danger" title="Supprimer" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
+              <button class="btn-icon" title="Modifier" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="openEdit('product', p)"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-icon btn-danger" title="Supprimer" *appHasPermission="'STOCK_PRODUIT_DESACTIVER'" (click)="deleteItem('product', p.id)"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>
           <div class="prod-card-name">{{ p.designation || '-' }}</div>
@@ -402,8 +402,8 @@
             <span class="entity-meta">{{ variantCountForLine(l.id) }} variante(s)</span>
           </div>
           <div class="entity-card-footer">
-            <button class="btn btn-ghost btn-sm" (click)="openEdit('line', l)"><i class="fa-solid fa-pen"></i> Modifier</button>
-            <button class="btn btn-ghost btn-sm btn-danger" (click)="deleteItem('line', l.id)"aria-label="Supprimer la gamme"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn btn-ghost btn-sm" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="openEdit('line', l)"><i class="fa-solid fa-pen"></i> Modifier</button>
+            <button class="btn btn-ghost btn-sm btn-danger" *appHasPermission="'STOCK_PRODUIT_DESACTIVER'" (click)="deleteItem('line', l.id)"aria-label="Supprimer la gamme"><i class="fa-solid fa-trash"></i></button>
           </div>
         </div>
       } @empty {
@@ -436,8 +436,8 @@
               <td>{{ getLineName(v.productLineId) }}</td>
               <td>{{ productCountForVariant(v.id) }}</td>
               <td class="actions-cell">
-                <button class="btn-icon" (click)="openEdit('variant', v)"aria-label="Modifier la variante"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-icon btn-danger" (click)="deleteItem('variant', v.id)"aria-label="Supprimer la variante"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn-icon" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="openEdit('variant', v)"aria-label="Modifier la variante"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-icon btn-danger" *appHasPermission="'STOCK_PRODUIT_DESACTIVER'" (click)="deleteItem('variant', v.id)"aria-label="Supprimer la variante"><i class="fa-solid fa-trash"></i></button>
               </td>
             </tr>
           } @empty {
@@ -649,7 +649,7 @@
                   </td>
                   <td class="actions-cell">
                     <button class="btn-icon" (click)="editPrice(pr)"aria-label="Modifier le prix"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon btn-danger" (click)="deletePrice(pr.id)"aria-label="Supprimer le prix"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-icon btn-danger" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="deletePrice(pr.id)"aria-label="Supprimer le prix"><i class="fa-solid fa-trash"></i></button>
                   </td>
                 </tr>
               } @empty {
@@ -690,7 +690,7 @@
           <div class="form-group">
             <label class="form-checkbox"><input type="checkbox" [(ngModel)]="priceActive"> Actif</label>
           </div>
-          <div style="display:flex;gap:8px;margin-top:12px">
+          <div style="display:flex;gap:8px;margin-top:12px" *appHasPermission="'STOCK_PRODUIT_MODIFIER'">
             @if (priceEditingId) {
               <button class="btn btn-primary btn-sm" (click)="savePrice()"><i class="fa-solid fa-check"></i> Modifier</button>
               <button class="btn btn-ghost btn-sm" (click)="cancelEditPrice()">Annuler</button>

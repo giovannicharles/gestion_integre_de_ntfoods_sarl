@@ -6,6 +6,7 @@ import { Chart, registerables } from 'chart.js';
 import { ProductService } from '../../../application/services/product.service';
 import { PriceType } from '../../../domain/models/product.models';
 import { IaService, AnalysisResponse } from '../../../../../core/services/ia.service';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 
 Chart.register(...registerables);
 
@@ -13,7 +14,7 @@ Chart.register(...registerables);
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-produits',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, HasPermissionDirective],
   templateUrl: './produits.component.html',
   styleUrls: ['./produits.component.css']
 })
