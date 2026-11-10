@@ -55,7 +55,7 @@
   min-width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
   background: var(--surface); cursor: pointer;
 }
-.pagination-btns button.active { background: var(--primary, #1976d2); color: #fff; border-color: var(--primary, #1976d2); }
+.pagination-btns button.active { background: var(--g); color: #fff; border-color: var(--g); }
 .pagination-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Classement, médailles */

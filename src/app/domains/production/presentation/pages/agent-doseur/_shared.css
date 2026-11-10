@@ -42,7 +42,7 @@
 
 .alert { padding: var(--sp-3, 12px) var(--sp-4, 16px); border-radius: var(--r-md, 12px); margin-bottom: var(--sp-3, 12px); font-size: 13px; font-weight: 600; }
 .alert-error { background: var(--r-gh); color: var(--r); border: 1px solid #f5c2c0; }
-.alert-info  { background: var(--b-gh); color: var(--b); border: 1px solid #b3e5fc; }
+.alert-info  { background: var(--b-gh); color: var(--b); border: 1px solid var(--b); }
 
 /* ── Modales (famille module : .modal-card, distincte de la .modal-box du thème) ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
