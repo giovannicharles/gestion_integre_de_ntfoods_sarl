@@ -397,7 +397,7 @@
 .topbar {
   height: 64px;
   min-height: 64px;
-  background: white;
+  background: var(--w);
   border-bottom: 1px solid var(--n200);
   display: flex;
   align-items: center;
@@ -794,7 +794,7 @@
   right: 0;
   width: 360px;
   max-width: calc(100vw - 20px);
-  background: #fff;
+  background: var(--w);
   border-radius: 12px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   border: 1px solid var(--n150);
@@ -869,14 +869,14 @@
   font-size: 14px;
   flex-shrink: 0;
 }
-.notif-danger .notif-ico { background: #fee; color: var(--r); }
-.notif-warning .notif-ico { background: #fff8e1; color: #e65100; }
+.notif-danger .notif-ico { background: var(--r-gh); color: var(--r); }
+.notif-warning .notif-ico { background: var(--o-gh); color: var(--o); }
 /* 2026-11-09 (signalé par le porteur, « je ne veux plus le bleu là ») : #e3f2fd/#1976d2 était un
    bleu Material hors charte (vert/or/rouge/orange TANTY), même défaut déjà corrigé une fois pour
    .bd-blue (2026-11-08, commentaire ci-dessous dans ce même fichier). Remplacé par la teinte or
    de la marque. */
 .notif-info .notif-ico { background: var(--y-gh); color: var(--y-d); }
-.notif-success .notif-ico { background: #e8f5e9; color: var(--s); }
+.notif-success .notif-ico { background: var(--s-gh); color: var(--s); }
 .notif-content {
   flex: 1;
   min-width: 0;

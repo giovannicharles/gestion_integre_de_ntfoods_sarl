@@ -1,0 +1,12 @@
+.lot-lbl {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--n600);
+  margin-bottom: 4px;
+}
+
+@media (max-width: 767px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .modal-box { width: 100%; max-width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+}

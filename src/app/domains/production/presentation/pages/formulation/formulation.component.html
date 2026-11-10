@@ -1,0 +1,308 @@
+<div class="ph">
+  <div class="ph-left">
+    <i class="fa-solid fa-flask ph-ico"></i>
+    <div>
+      <h1 class="ph-title">Formulations</h1>
+      <p class="ph-sub">Nomenclature de production : matières premières nécessaires par produit fini</p>
+    </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-primary" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="ouvrirCreer()">
+      <i class="fa-solid fa-plus"></i> Nouvelle formulation
+    </button>
+  </div>
+</div>
+
+@if (message()) {
+  <div class="alert alert-info">{{ message() }}</div>
+}
+
+<div class="kpi-grid">
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-pen"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Brouillons</div>
+      <div class="kpi-val">{{ nbBrouillons() }}</div>
+      <div class="kpi-meta">en cours de rédaction</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Validées</div>
+      <div class="kpi-val">{{ nbValidees() }}</div>
+      <div class="kpi-meta">utilisées en production</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-box-archive"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Obsolètes</div>
+      <div class="kpi-val">{{ nbObsoletes() }}</div>
+      <div class="kpi-meta">remplacées par une version plus récente</div>
+    </div>
+  </div>
+</div>
+
+<div class="card table-card">
+  <div class="card-hd">
+    <span class="card-title"><i class="fa-solid fa-list"></i> Toutes les formulations</span>
+    <div class="period-selector">
+      <button class="period-btn" [class.active]="filtreStatut()===''" (click)="changerFiltre('')">Toutes</button>
+      <button class="period-btn" [class.active]="filtreStatut()==='BROUILLON'" (click)="changerFiltre('BROUILLON')">Brouillons</button>
+      <button class="period-btn" [class.active]="filtreStatut()==='VALIDEE'" (click)="changerFiltre('VALIDEE')">Validées</button>
+      <button class="period-btn" [class.active]="filtreStatut()==='OBSOLETE'" (click)="changerFiltre('OBSOLETE')">Obsolètes</button>
+    </div>
+  </div>
+  @if (loading()) {
+    <div class="sk-kpi-grid"><div class="sk-shimmer sk-l" style="height:120px"></div></div>
+  } @else {
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Code</th><th>Produit</th><th>Version</th><th class="text-right">Lignes MP</th><th>Statut</th><th>Créée par</th><th></th></tr>
+        </thead>
+        <tbody>
+          @for (f of formulations(); track f.codeFormulation) {
+            <tr>
+              <td class="mono fw-bold">{{ f.codeFormulation }}</td>
+              <td>{{ f.designation || f.codeProduit }}</td>
+              <td class="mono">{{ f.version }}</td>
+              <td class="text-right mono">{{ f.lignes.length }}</td>
+              <td><span [class]="statutClass(f.statut)">{{ f.statut }}</span></td>
+              <td class="text-muted">{{ f.creePar }}</td>
+              <td class="text-right">
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetail(f)"><i class="fa-solid fa-eye"></i> Détails</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="empty-state">Aucune formulation.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- MODAL DÉTAIL -->
+@if (selectionnee(); as f) {
+<div class="modal-overlay" (click)="fermerDetail()">
+  <div class="modal-box" style="max-width:860px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-flask" style="color:var(--g)"></i>
+        {{ f.codeFormulation }} — {{ f.designation || f.codeProduit }}
+        <span [class]="statutClass(f.statut)" style="margin-left:8px;">{{ f.statut }}</span>
+      </div>
+      <button class="modal-close" (click)="fermerDetail()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      @if (erreur()) {
+        <div class="alert alert-danger" style="margin-bottom:var(--sp-3)">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
+        </div>
+      }
+
+      <div class="pph-recap-grid">
+        <div class="pph-recap-item"><span class="pph-recap-lbl">Version</span><span class="pph-recap-val mono">{{ f.version }}</span></div>
+        <div class="pph-recap-item"><span class="pph-recap-lbl">Conditionnement réf.</span><span class="pph-recap-val mono">{{ f.codeConditionnement || '-' }}</span></div>
+        <div class="pph-recap-item"><span class="pph-recap-lbl">Créée par</span><span class="pph-recap-val">{{ f.creePar }}</span></div>
+        <div class="pph-recap-item"><span class="pph-recap-lbl">Validée par</span><span class="pph-recap-val">{{ f.validePar || '-' }}</span></div>
+      </div>
+
+      <!-- LIGNES MP -->
+      <div class="card-hd" style="padding:0;margin-top:var(--sp-4);margin-bottom:var(--sp-2);border-bottom:none;">
+        <span class="card-title" style="font-size:13px;"><i class="fa-solid fa-seedling"></i> Matières premières</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Code</th><th>Nom</th><th class="text-right">Qté/unité (kg)</th><th class="text-right">Perte (%)</th><th>Motif</th><th class="text-right">Besoin net (kg)</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (l of f.lignes; track l.codeMP) {
+              @if (ligneEnEdition() === l.codeMP) {
+                <tr>
+                  <td class="mono">{{ l.codeMP }}</td>
+                  <td>{{ l.nomMP }}</td>
+                  <td class="text-right"><input type="number" class="input" [(ngModel)]="editionQuantite" min="0.001" step="0.001" style="width:100px;text-align:right;"></td>
+                  <td class="text-right"><input type="number" class="input" [(ngModel)]="editionPerte" min="0" max="100" step="0.1" style="width:90px;text-align:right;"></td>
+                  <td><input class="input" [(ngModel)]="editionRaison" placeholder="Broyage, séchage…"></td>
+                  <td class="text-right mono text-muted">—</td>
+                  <td class="text-right">
+                    <button class="btn-icon" title="Enregistrer" (click)="enregistrerLigne()"><i class="fa-solid fa-check" style="color:var(--g)"></i></button>
+                    <button class="btn-icon" title="Annuler" (click)="annulerEditionLigne()"><i class="fa-solid fa-xmark"></i></button>
+                  </td>
+                </tr>
+              } @else {
+                <tr>
+                  <td class="mono">{{ l.codeMP }}</td>
+                  <td>{{ l.nomMP }}</td>
+                  <td class="text-right mono">{{ l.quantiteUnite | number:'1.2-3' }}</td>
+                  <td class="text-right mono">{{ l.pertePct | number:'1.0-1' }}</td>
+                  <td class="text-muted">{{ l.raisonPerte || '-' }}</td>
+                  <td class="text-right mono fw-bold">{{ l.quantiteAvecPerte | number:'1.2-4' }}</td>
+                  <td class="text-right" *appHasPermission="'STOCK_PRODUIT_MODIFIER'">
+                    @if (estModifiable(f)) {
+                      <button class="btn-icon" title="Modifier" (click)="ouvrirEditionLigne(l)"><i class="fa-solid fa-pen"></i></button>
+                      <button class="btn-icon btn-danger" title="Retirer" (click)="supprimerLigne(l.codeMP)"><i class="fa-solid fa-trash"></i></button>
+                    }
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="7" class="empty-state">Aucune matière première.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (estModifiable(f)) {
+      <div class="card" style="margin-top:var(--sp-3);background:var(--n50);box-shadow:none;">
+        <div class="card-hd" style="padding:var(--sp-2) var(--sp-3);">
+          <span class="card-title" style="font-size:12px;"><i class="fa-solid fa-plus"></i> Ajouter une matière première</span>
+        </div>
+        <div class="tbl-wrap" style="padding:0 var(--sp-3) var(--sp-3);">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+            <label style="flex:1;min-width:100px;"><span class="lot-lbl">Code</span><input class="input" [(ngModel)]="nouvelleLigne.codeMP" placeholder="MP-SOJA"></label>
+            <label style="flex:2;min-width:160px;"><span class="lot-lbl">Nom</span><input class="input" [(ngModel)]="nouvelleLigne.nomMP" placeholder="Soja"></label>
+            <label style="min-width:100px;"><span class="lot-lbl">Qté/unité (kg)</span><input type="number" class="input" [(ngModel)]="nouvelleLigne.quantiteUnite" min="0.001" step="0.001"></label>
+            <label style="min-width:90px;"><span class="lot-lbl">Perte (%)</span><input type="number" class="input" [(ngModel)]="nouvelleLigne.pertePct" min="0" max="100" step="0.1"></label>
+            <label style="flex:2;min-width:140px;"><span class="lot-lbl">Motif perte</span><input class="input" [(ngModel)]="nouvelleLigne.raisonPerte" placeholder="Broyage…"></label>
+            <button class="btn btn-sm btn-primary" (click)="ajouterLigneADetail()"><i class="fa-solid fa-plus"></i> Ajouter</button>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- SIMULATION -->
+      <div class="card-hd" style="padding:0;margin-top:var(--sp-4);margin-bottom:var(--sp-2);border-bottom:none;">
+        <span class="card-title" style="font-size:13px;"><i class="fa-solid fa-calculator"></i> Simuler besoin / capacité</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+        <label style="min-width:160px;"><span class="lot-lbl">Niveau de conditionnement</span><input class="input" [(ngModel)]="niveauSimulation" placeholder="(réf. de la formulation si vide)"></label>
+        <label style="min-width:120px;"><span class="lot-lbl">Nombre d'unités</span><input type="number" class="input" [(ngModel)]="nombreUnitesSimulation" min="1"></label>
+        <button class="btn btn-sm btn-ghost" (click)="simulerBesoin()"><i class="fa-solid fa-calculator"></i> Besoins MP</button>
+        <button class="btn btn-sm btn-ghost" (click)="simulerCapacite()"><i class="fa-solid fa-gauge"></i> Capacité possible</button>
+      </div>
+
+      @if (besoinsSimules(); as besoins) {
+        <div class="tbl-wrap" style="margin-top:var(--sp-2);">
+          <table class="data-table">
+            <thead><tr><th>MP</th><th class="text-right">Besoin total (kg)</th><th class="text-right">Dont perte (%)</th></tr></thead>
+            <tbody>
+              @for (b of besoins; track b.codeMP) {
+                <tr><td>{{ b.nomMP }}</td><td class="text-right mono">{{ b.quantiteTotale | number:'1.2-3' }}</td><td class="text-right mono">{{ b.pertePct | number:'1.0-1' }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (capaciteSimulee(); as cap) {
+        <div class="alert" [class.alert-success]="cap.capaciteUnites > 0" [class.alert-danger]="cap.capaciteUnites === 0" style="margin-top:var(--sp-2);">
+          <i class="fa-solid fa-gauge"></i>
+          Capacité possible : <strong>{{ cap.capaciteUnites }}</strong> unité(s)
+          @if (cap.facteurLimitant) {
+            — limitée par {{ cap.facteurLimitant.nomMP }} ({{ cap.facteurLimitant.quantiteDisponible | number:'1.0-2' }} kg disponibles)
+          }
+        </div>
+      }
+    </div>
+    <div class="modal-footer">
+      @if (f.statut === 'BROUILLON' && f.lignes.length > 0) {
+        <button class="btn btn-success" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="demanderValidation(f)">
+          <i class="fa-solid fa-check"></i> Soumettre à validation
+        </button>
+      }
+      @if (f.statut !== 'BROUILLON') {
+        <button class="btn btn-ghost" *appHasPermission="'STOCK_PRODUIT_MODIFIER'" (click)="ouvrirNouvelleVersion(f)">
+          <i class="fa-solid fa-code-branch"></i> Nouvelle version
+        </button>
+      }
+      <button class="btn btn-ghost" (click)="fermerDetail()">Fermer</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- MODAL NOUVELLE VERSION -->
+@if (showNouvelleVersion()) {
+<div class="modal-overlay" (click)="showNouvelleVersion.set(false)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-code-branch" style="color:var(--g)"></i> Nouvelle version</div>
+      <button class="modal-close" (click)="showNouvelleVersion.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      @if (erreur()) {
+        <div class="alert alert-danger" style="margin-bottom:var(--sp-3)"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div>
+      }
+      <p class="text-muted" style="margin-top:0;">Copie toutes les lignes de la formulation source dans un nouveau brouillon, modifiable avant validation. La formulation source reste valide jusqu'à ce que cette nouvelle version soit elle-même validée.</p>
+      <label><span class="lot-lbl">Nouveau code formulation <span class="req">*</span></span><input class="input" [(ngModel)]="nouvelleVersionCode"></label>
+      <label><span class="lot-lbl">Libellé de version <span class="req">*</span></span><input class="input" [(ngModel)]="nouvelleVersionLibelle" placeholder="v2.0"></label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="showNouvelleVersion.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="confirmerNouvelleVersion()"><i class="fa-solid fa-check"></i> Créer</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- MODAL CRÉATION -->
+@if (showCreer()) {
+<div class="modal-overlay" (click)="showCreer.set(false)">
+  <div class="modal-box" style="max-width:780px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa-solid fa-flask" style="color:var(--g)"></i> Nouvelle formulation</div>
+      <button class="modal-close" (click)="showCreer.set(false)"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      @if (erreur()) {
+        <div class="alert alert-danger" style="margin-bottom:var(--sp-3)"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div>
+      }
+      <div class="form-grid">
+        <label>Code formulation <span class="req">*</span><input class="input" [(ngModel)]="nouvelleFormulation.codeFormulation" placeholder="FORM-TBSA-01"></label>
+        <label>Code produit <span class="req">*</span><input class="input" [(ngModel)]="nouvelleFormulation.codeProduit" placeholder="TBSA"></label>
+        <label>SKU (optionnel)<input class="input" [(ngModel)]="nouvelleFormulation.sku"></label>
+        <label>Désignation<input class="input" [(ngModel)]="nouvelleFormulation.designation"></label>
+        <label>Conditionnement de référence (optionnel)<input class="input" [(ngModel)]="nouvelleFormulation.codeConditionnement"></label>
+        <label>Niveau (optionnel)<input class="input" [(ngModel)]="nouvelleFormulation.niveauConditionnement" placeholder="CARTON"></label>
+        <label>Quantité unitaire <span class="req">*</span><input type="number" class="input" [(ngModel)]="nouvelleFormulation.quantiteUnite" min="0.001" step="0.001"></label>
+        <label>Version<input class="input" [(ngModel)]="nouvelleFormulation.version"></label>
+      </div>
+
+      <div class="card-hd" style="padding:0;margin-top:var(--sp-4);margin-bottom:var(--sp-2);border-bottom:none;">
+        <span class="card-title" style="font-size:13px;"><i class="fa-solid fa-seedling"></i> Matières premières</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Code</th><th>Nom</th><th class="text-right">Qté/unité (kg)</th><th class="text-right">Perte (%)</th><th>Motif</th><th></th></tr></thead>
+          <tbody>
+            @for (l of lignesCreation; track $index; let i = $index) {
+              <tr>
+                <td><input class="input" [(ngModel)]="l.codeMP" placeholder="MP-SOJA"></td>
+                <td><input class="input" [(ngModel)]="l.nomMP" placeholder="Soja"></td>
+                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.quantiteUnite" min="0.001" step="0.001" style="width:100px;text-align:right;"></td>
+                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.pertePct" min="0" max="100" step="0.1" style="width:90px;text-align:right;"></td>
+                <td><input class="input" [(ngModel)]="l.raisonPerte" placeholder="Broyage…"></td>
+                <td class="text-right">
+                  <button class="btn-icon btn-danger" title="Retirer cette ligne" [disabled]="lignesCreation.length===1" (click)="retirerLigneCreation(i)"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:var(--sp-2)" (click)="ajouterLigneCreation()">
+        <i class="fa-solid fa-plus"></i> Ajouter une ligne
+      </button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="showCreer.set(false)">Annuler</button>
+      <button class="btn btn-primary" (click)="creer()"><i class="fa-solid fa-check"></i> Créer en brouillon</button>
+    </div>
+  </div>
+</div>
+}
