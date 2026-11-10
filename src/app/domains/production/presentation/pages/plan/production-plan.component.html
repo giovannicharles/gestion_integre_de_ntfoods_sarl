@@ -17,7 +17,7 @@
       }
     </select>
     <span [class]="statutPlanClass(pph()?.statut ?? '')">{{ pph()?.statut ?? '-' }}</span>
-    <button class="btn btn-primary" (click)="showCreerPPH.set(true)"><i class="fa-solid fa-plus"></i> PPH</button>
+    <button class="btn btn-primary" (click)="ouvrirCreerPPH()"><i class="fa-solid fa-plus"></i> PPH</button>
     <button class="btn btn-ghost" (click)="ouvrirModifierLignes()" [disabled]="!pph()">Modifier lignes</button>
     @if (pph()?.statut === 'BROUILLON') { <button class="btn btn-primary" *appHasPermission="'PRODUCTION_PPH_GERER'" (click)="validerPPH()">Valider</button> }
     @if (pph()?.statut === 'VALIDE') { <button class="btn btn-primary" *appHasPermission="'PRODUCTION_PPH_GERER'" (click)="demarrerPPH()">Démarrer</button> }
@@ -239,27 +239,55 @@
 </div>
 
 @if (showCreerPPH()) {
-<div class="modal-overlay" (click)="showCreerPPH.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-plus"></i> Nouveau PPH</h3></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <label>Référence PPH<input class="input" [(ngModel)]="nouveauPPH.referencePPH" placeholder="PPH-..."></label>
-        <label>Référence BC (optionnel)<input class="input" [(ngModel)]="nouveauPPH.referenceBC" placeholder="BC-..."></label>
-        <label>Semaine<input class="input" [(ngModel)]="nouveauPPH.semaine" placeholder="2026-W27"></label>
-        <label>Date début<input type="date" class="input" [(ngModel)]="nouveauPPH.dateDebut"></label>
-        <label>Date fin<input type="date" class="input" [(ngModel)]="nouveauPPH.dateFin"></label>
+<div class="modal-overlay" (click)="fermerCreerPPH()">
+  <div class="modal-box" style="max-width:720px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa-solid fa-calendar-plus" style="color:var(--g)"></i>
+        Nouveau plan de production hebdomadaire
       </div>
-      <div class="tbl-wrap" style="margin-top:var(--sp-3)">
+      <button class="modal-close" (click)="fermerCreerPPH()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      @if (erreurCreerPPH()) {
+        <div class="alert alert-danger" style="margin-bottom:var(--sp-3)">
+          <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurCreerPPH() }}
+        </div>
+      }
+      <div class="form-grid">
+        <label>Référence PPH <span class="req">*</span><input class="input" [(ngModel)]="nouveauPPH.referencePPH" placeholder="PPH-2026-W27"></label>
+        <label>Référence BC <span class="text-muted" style="font-weight:400;">(optionnel)</span><input class="input" [(ngModel)]="nouveauPPH.referenceBC" placeholder="BC-..."></label>
+        <label>Semaine <span class="req">*</span><input class="input" [(ngModel)]="nouveauPPH.semaine" placeholder="2026-W27"></label>
+        <label>Date début <span class="req">*</span><input type="date" class="input" [(ngModel)]="nouveauPPH.dateDebut"></label>
+        <label>Date fin <span class="req">*</span><input type="date" class="input" [(ngModel)]="nouveauPPH.dateFin"></label>
+      </div>
+
+      <div class="card-hd" style="padding:0;margin-top:var(--sp-4);margin-bottom:var(--sp-2);border-bottom:none;">
+        <span class="card-title" style="font-size:13px;"><i class="fa-solid fa-boxes-stacked"></i> Lignes de production</span>
+      </div>
+      <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Code produit</th><th>Nom produit</th><th>Objectif semaine</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <th>Code produit</th>
+              <th>Nom produit</th>
+              <th class="text-right">Objectif semaine</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
             @for (l of nouvellesLignesPPH; track $index; let i = $index) {
               <tr>
-                <td><input class="input" [(ngModel)]="l.codeProduit"></td>
-                <td><input class="input" [(ngModel)]="l.nomProduit"></td>
-                <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:100px"></td>
-                <td><button class="btn btn-sm btn-danger" (click)="retirerLignePPH(i)">×</button></td>
+                <td><input class="input" [(ngModel)]="l.codeProduit" placeholder="Code catalogue"></td>
+                <td><input class="input" [(ngModel)]="l.nomProduit" placeholder="Désignation"></td>
+                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.objectifSemaine" min="0" style="width:110px;text-align:right;"></td>
+                <td class="text-right">
+                  <button class="btn-icon btn-danger" title="Retirer cette ligne" [disabled]="nouvellesLignesPPH.length === 1" (click)="retirerLignePPH(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
@@ -269,9 +297,12 @@
         <i class="fa-solid fa-plus"></i> Ajouter une ligne
       </button>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showCreerPPH.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="creerPPH()">Créer</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" [disabled]="creationEnCours()" (click)="fermerCreerPPH()">Annuler</button>
+      <button class="btn btn-primary" [disabled]="creationEnCours()" (click)="creerPPH()">
+        @if (creationEnCours()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+        Créer le PPH
+      </button>
     </div>
   </div>
 </div>

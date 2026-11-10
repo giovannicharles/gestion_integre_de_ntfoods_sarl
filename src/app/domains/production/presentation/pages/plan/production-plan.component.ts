@@ -28,6 +28,8 @@ export class ProductionPlanComponent implements OnInit {
 
   showCreerPPH = signal(false);
   showModifierLignes = signal(false);
+  erreurCreerPPH = signal<string | null>(null);
+  creationEnCours = signal(false);
   nouveauPPH = { referencePPH: '', referenceBC: '', semaine: '', dateDebut: '', dateFin: '' };
   nouvellesLignesPPH: { codeProduit: string; nomProduit: string; objectifSemaine: number }[] = [{ codeProduit: '', nomProduit: '', objectifSemaine: 0 }];
   lignesModifiees: { codeProduit: string; nomProduit: string; objectifSemaine: number }[] = [];
@@ -184,22 +186,38 @@ export class ProductionPlanComponent implements OnInit {
     this.nouvellesLignesPPH.splice(index, 1);
   }
 
+  ouvrirCreerPPH(): void {
+    this.erreurCreerPPH.set(null);
+    this.nouveauPPH = { referencePPH: '', referenceBC: '', semaine: '', dateDebut: '', dateFin: '' };
+    this.nouvellesLignesPPH = [{ codeProduit: '', nomProduit: '', objectifSemaine: 0 }];
+    this.showCreerPPH.set(true);
+  }
+
+  fermerCreerPPH(): void {
+    this.showCreerPPH.set(false);
+  }
+
   creerPPH(): void {
+    this.erreurCreerPPH.set(null);
     const lignes = this.nouvellesLignesPPH.filter(l => l.codeProduit.trim() && l.objectifSemaine > 0);
     if (!this.nouveauPPH.referencePPH || !this.nouveauPPH.semaine || !this.nouveauPPH.dateDebut ||
         !this.nouveauPPH.dateFin || lignes.length === 0) {
-      this.message.set('Référence PPH, semaine, dates et au moins une ligne sont obligatoires');
+      this.erreurCreerPPH.set('Référence PPH, semaine, dates et au moins une ligne (code produit + objectif) sont obligatoires.');
       return;
     }
+    this.creationEnCours.set(true);
     this.prodSvc.creerPPH({ ...this.nouveauPPH, lignes }).subscribe({
       next: p => {
         this.pphs.update(list => [...list, p]);
         this.pph.set(p);
         this.showCreerPPH.set(false);
-        this.nouveauPPH = { referencePPH: '', referenceBC: '', semaine: '', dateDebut: '', dateFin: '' };
-        this.nouvellesLignesPPH = [{ codeProduit: '', nomProduit: '', objectifSemaine: 0 }];
+        this.creationEnCours.set(false);
+        this.message.set(`PPH ${p.referencePPH} créé`);
       },
-      error: () => this.message.set('Erreur lors de la création du PPH')
+      error: (err) => {
+        this.creationEnCours.set(false);
+        this.erreurCreerPPH.set(err?.error?.erreur || err?.error?.message || 'Erreur lors de la création du PPH');
+      }
     });
   }
 
