@@ -169,50 +169,53 @@
         <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurDeclaration() }}
       </div>
       }
-      <div class="tbl-wrap" style="margin-top:12px;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>PPH</th>
-              <th style="min-width:260px">Produit (sélection obligatoire)</th>
-              <th class="text-right">Quantité (kg)</th>
-              <th class="text-right">Conditionnement</th>
-              <th>DLC</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (l of lignesLot; track $index; let i = $index) {
-              <tr>
-                <td>
+      <div style="margin-top:12px;">
+        @for (l of lignesLot; track $index; let i = $index) {
+          <div class="lc-card">
+            <div class="lc-header">
+              <span class="lc-badge">{{ i + 1 }}</span>
+              <span class="lc-title">Ligne {{ i + 1 }}</span>
+              <button class="lc-del" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+            <div class="lc-body">
+              <div class="form-group">
+                <label class="form-label">Produit <span class="req">*</span></label>
+                <app-product-search
+                  [products]="produits()"
+                  [initialLabel]="l.productLabel"
+                  placeholder="Tapez le code ou le nom du produit fini…"
+                  (productSelected)="surSelectionProduit(l, $event)"
+                  (cleared)="surEffacementProduit(l)">
+                </app-product-search>
+              </div>
+              <div class="lc-row">
+                <div class="form-group">
+                  <label class="form-label">PPH <span class="req">*</span></label>
                   <select class="input" [(ngModel)]="l.referencePPH">
                     <option value="">Choisir,</option>
                     @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
                   </select>
-                </td>
-                <td>
-                  <app-product-search
-                    [products]="produits()"
-                    [initialLabel]="l.productLabel"
-                    placeholder="Code ou nom du produit fini…"
-                    (productSelected)="surSelectionProduit(l, $event)"
-                    (cleared)="surEffacementProduit(l)">
-                  </app-product-search>
-                </td>
-                <td class="text-right"><input type="number" class="input" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1" style="text-align:right;"></td>
-                <td class="text-right">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Quantité déclarée (kg) <span class="req">*</span></label>
+                  <input type="number" class="input" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1">
+                </div>
+              </div>
+              <div class="lc-row">
+                <div class="form-group">
+                  <label class="form-label">Conditionnement <span class="req">*</span></label>
                   <app-conditioning-quantity [codeProduit]="l.product?.sku ?? null" (lignesChange)="surLignesConditionnement(l, $event)" />
-                </td>
-                <td><input type="date" class="input" [(ngModel)]="l.dlc"></td>
-                <td class="text-right">
-                  <button class="btn btn-sm btn-danger" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">DLC <span class="req">*</span></label>
+                  <input type="date" class="input" [(ngModel)]="l.dlc">
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       </div>
       <button class="btn btn-ghost" (click)="ajouterLigne()">
         <i class="fa-solid fa-plus"></i> Ajouter une ligne

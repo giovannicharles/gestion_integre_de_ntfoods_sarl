@@ -1,7 +1,7 @@
 .card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
 .card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
 .card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
-.row-pending { background: var(--w)beb; }
+.row-pending { background: var(--o-gh); }
 
 .alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
 .alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
@@ -10,9 +10,21 @@
 .lot-lbl { display: block; font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; }
 .lot-date-chip { display: inline-flex; align-items: center; background: var(--g-bg, var(--s-gh)); color: var(--g, var(--g)); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
 
-.modal-body .data-table { width: 100%; min-width: 700px; }
-.modal-body .data-table td { padding: 8px; vertical-align: middle; }
-.modal-body .data-table .input { width: 100%; min-width: 100px; padding: 8px 10px; }
+/* Refonte du 2026-11-10 (demandée par le porteur : "comme pour réception", zone produit plus
+   aérée) : la saisie produit était crammée dans une cellule de 260px au milieu d'une ligne de
+   tableau à 6 colonnes. Remplacée par une carte par ligne, le champ produit sur toute la largeur
+   avec son propre label, comme le fait déjà l'écran de réception. */
+.lc-card { border: 1.5px solid var(--n200); border-radius: var(--r-md); margin-bottom: 12px; transition: border-color .2s, box-shadow .2s; }
+.lc-card:last-child { margin-bottom: 0; }
+.lc-card:hover { border-color: var(--n300); box-shadow: var(--sh-sm); }
+.lc-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--n50); border-bottom: 1px solid var(--n150); border-radius: var(--r-md) var(--r-md) 0 0; }
+.lc-badge { width: 22px; height: 22px; border-radius: 50%; background: var(--g); color: var(--w); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lc-title { font-size: 11px; font-weight: 800; color: var(--n500); text-transform: uppercase; letter-spacing: .5px; }
+.lc-del { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--n400); font-size: 13px; width: 28px; height: 28px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.lc-del:hover { background: var(--r-gh); color: var(--r); }
+.lc-body { padding: 14px; }
+.lc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+@media (max-width: 600px) { .lc-row { grid-template-columns: 1fr; } }
 
 @media (max-width:767px) {
   .card { padding:14px; }

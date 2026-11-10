@@ -42,9 +42,14 @@
 .sp-cartons{font-size:10px;color:var(--n400);background:var(--n100);padding:1px 6px;border-radius:4px}
 
 /* LINE CARD */
-.lc-card{border:1.5px solid var(--n200);border-radius:var(--r-md);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.lc-card{border:1.5px solid var(--n200);border-radius:var(--r-md);transition:border-color .2s,box-shadow .2s}
 .lc-card:hover{border-color:var(--n300);box-shadow:var(--sh-sm)}
-.lc-header{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--n50);border-bottom:1px solid var(--n150)}
+/* Corrigé le 2026-11-10 (signalé par le porteur : la liste des produits qui s'affiche en tapant le
+   code n'est pas bien lisible) : .lc-card avait overflow:hidden pour que .lc-header garde les coins
+   arrondis, mais ça découpait aussi .combobox-dropdown (position:absolute, dépasse sous le champ) -
+   la liste de résultats était tronquée dès qu'elle dépassait la hauteur de la carte. Overflow retiré
+   du conteneur, le rayon est maintenant porté directement par le header. */
+.lc-header{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--n50);border-bottom:1px solid var(--n150);border-radius:var(--r-md) var(--r-md) 0 0}
 .lc-badge{width:22px;height:22px;border-radius:50%;background:var(--g);color:var(--w);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .lc-title{font-size:11px;font-weight:800;color:var(--n500);text-transform:uppercase;letter-spacing:.5px}
 .lc-sku-tag{font-family:var(--font-d);font-size:11px;font-weight:700;color:var(--g);background:var(--g-gh);padding:2px 8px;border-radius:4px}
