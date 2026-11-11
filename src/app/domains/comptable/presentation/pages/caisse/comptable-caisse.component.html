@@ -79,7 +79,7 @@
       <h3 class="section-title">
         <i class="fa-solid fa-list"></i> Mouvements du jour
       </h3>
-      @if (!caisse()!.lignes?.length) {
+      @if (!caisse()!.lignes.length) {
         <p class="empty-msg">Aucun mouvement enregistré.</p>
       } @else {
         <div class="tbl-scroll">

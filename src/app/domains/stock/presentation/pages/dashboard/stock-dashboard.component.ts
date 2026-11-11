@@ -320,7 +320,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         const critLevels = levels.filter(sl => sl.alertLevel === 'CRITIQUE');
         const lowLevels = levels.filter(sl => sl.alertLevel === 'FAIBLE');
         const surplusLevels = levels.filter(sl => sl.alertLevel === 'SURPLUS');
-        const calculatedVal = levels.reduce((sum, sl) => sum + (sl.stockValue || ((sl.quantity || 0) * (sl.unitPriceAmount || 0))), 0);
+        const calculatedVal = levels.reduce((sum, sl) => sum + (sl.stockValue || ((sl.quantity || 0) * (sl.unitPrice || sl.product?.unitPriceAmount || 0))), 0);
 
         const safeStats: DashboardStatsResponse = stats || {
           totalStockValue: calculatedVal,

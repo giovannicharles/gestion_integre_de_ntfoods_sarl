@@ -397,7 +397,7 @@
               <tr>
                 <td class="text-center" style="color:var(--n400);font-size:11px">{{ idx + 1 }}</td>
                 <td><strong class="mono" style="color:var(--g)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '-' }}</td>
+                <td>{{ l.designation || '-' }}</td>
                 <td><span class="zone-chip">{{ l.sku ?? '-' }}</span></td>
                 <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
                 <td class="text-right mono">{{ l.quantiteRecue }}</td>

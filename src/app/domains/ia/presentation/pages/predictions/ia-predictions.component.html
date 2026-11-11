@@ -40,7 +40,7 @@
       <span class="card-title"><i class="fa-solid fa-chart-line"></i> Résultat</span>
       <span class="badge badge-secondary">Confiance {{ resultat()!.confidence }}%</span>
     </div>
-    @if (resultat()!.predictions?.length) {
+    @if (resultat()!.predictions.length) {
       <div class="tbl-wrap">
         <table class="data-table">
           <thead><tr><th>Élément</th><th>Risque</th><th>Probabilité</th><th>Échéance</th><th>Recommandation</th></tr></thead>

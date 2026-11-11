@@ -125,7 +125,7 @@
             <td>{{ n.libelleEntrepot || '-' }}</td>
             <td class="mono text-right">{{ n.quantite | number }}</td>
             <td class="mono text-right">{{ n.seuilReapprovisionnement | number }}</td>
-            <td class="mono text-right">{{ fCFA(n.valeurStock ?? 0) }}</td>
+            <td class="mono text-right">{{ fCFA(n.valeurStock) }}</td>
             <td>
               @if (n.niveauAlerte==='CRITIQUE') { <span class="badge bg-red badge-sm">Critique</span> }
               @else if (n.niveauAlerte==='FAIBLE') { <span class="badge bg-orange badge-sm">Faible</span> }

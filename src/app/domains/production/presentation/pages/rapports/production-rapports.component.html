@@ -73,8 +73,8 @@
             <tr>
               <td>{{ k }}</td>
               <td>{{ r.quantiteBroyeeParTypePoudre[k] | number:'1.2-2' }}</td>
-              <td>{{ r.pertesParTypePoudre[k] ?? 0 | number:'1.2-2' }}</td>
-              <td>{{ r.pctPertesParTypePoudre[k] ?? 0 | number:'1.1-1' }}%</td>
+              <td>{{ r.pertesParTypePoudre[k] | number:'1.2-2' }}</td>
+              <td>{{ r.pctPertesParTypePoudre[k] | number:'1.1-1' }}%</td>
             </tr>
           } @empty {
             <tr><td colspan="4" class="empty-state">Aucune donnée</td></tr>

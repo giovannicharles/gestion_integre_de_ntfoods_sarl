@@ -44,7 +44,7 @@
       <thead><tr><th>Type</th><th>Pertes (kg)</th><th>% pertes</th></tr></thead>
       <tbody>
         @for (k of objectKeys(r.pertesParTypePoudre); track k) {
-          <tr><td>{{ k }}</td><td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td><td>{{ r.pctPertesParTypePoudre[k] ?? 0 | number:'1.1-1' }}%</td></tr>
+          <tr><td>{{ k }}</td><td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td><td>{{ r.pctPertesParTypePoudre[k] | number:'1.1-1' }}%</td></tr>
         }
       </tbody>
     </table>

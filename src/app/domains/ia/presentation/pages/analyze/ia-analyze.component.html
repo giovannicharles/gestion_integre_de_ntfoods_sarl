@@ -42,14 +42,14 @@
     </div>
     <p class="ia-result-summary">{{ resultat()!.summary }}</p>
 
-    @if (resultat()!.insights?.length) {
+    @if (resultat()!.insights.length) {
       <h4 class="ia-result-section-title"><i class="fa-solid fa-lightbulb"></i> Constats</h4>
       <ul class="ia-result-list">
         @for (i of resultat()!.insights; track $index) { <li>{{ i }}</li> }
       </ul>
     }
 
-    @if (resultat()!.recommendations?.length) {
+    @if (resultat()!.recommendations.length) {
       <h4 class="ia-result-section-title"><i class="fa-solid fa-circle-check"></i> Recommandations</h4>
       <ul class="ia-result-list">
         @for (r of resultat()!.recommendations; track $index) { <li>{{ r }}</li> }

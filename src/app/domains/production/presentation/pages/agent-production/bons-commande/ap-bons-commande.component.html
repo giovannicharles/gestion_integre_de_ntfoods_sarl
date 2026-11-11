@@ -41,7 +41,7 @@
               <td>{{ montantTotal(bc) | number:'1.0-0' }}</td>
               <td>
                 <div style="display:flex;align-items:center;gap:8px">
-                  <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="(bc.tauxRealisation ?? 0) >= 100" [class.prog-y]="(bc.tauxRealisation ?? 0) < 100" [style.width.%]="bc.tauxRealisation ?? 0"></div></div>
+                  <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="bc.tauxRealisation >= 100" [class.prog-y]="bc.tauxRealisation < 100" [style.width.%]="bc.tauxRealisation"></div></div>
                   <span>{{ bc.tauxRealisation === null ? '-' : bc.tauxRealisation + ' %' }}</span>
                 </div>
               </td>
@@ -80,7 +80,7 @@
               <tr>
                 <td>{{ l.designation }} <span class="text-muted">({{ l.codeProduit }})</span></td>
                 <td>{{ l.quantiteCommandee }} {{ l.unite }}</td>
-                <td>{{ l.quantiteProduite === null ? '-' : l.quantiteProduite + ' ' + (l.unite ?? '') }}</td>
+                <td>{{ l.quantiteProduite === null ? '-' : l.quantiteProduite + ' ' + l.unite }}</td>
                 <td>{{ l.quantiteRecue ?? '-' }}</td>
                 <td>{{ l.tauxRealisation === null ? '-' : l.tauxRealisation + ' %' }}</td>
               </tr>

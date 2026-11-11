@@ -15,26 +15,26 @@
   </div>
 
   <!-- STATUT VERSEMENT DU JOUR -->
-  <div class="card status-card" [class.status-ok]="monVersement()?.statut==='VALIDE'" [class.status-alert]="monVersement()?.alerteRouge">
+  <div class="card status-card" [class.status-ok]="monVersement().statut==='VALIDE'" [class.status-alert]="monVersement().alerteRouge">
     <div class="status-icon">
-      @if (monVersement()?.statut === 'VALIDE') { <i class="fa-solid fa-check-circle text-success"></i> }
-      @else if (monVersement()?.alerteRouge) { <i class="fa-solid fa-triangle-exclamation text-danger"></i> }
+      @if (monVersement().statut === 'VALIDE') { <i class="fa-solid fa-check-circle text-success"></i> }
+      @else if (monVersement().alerteRouge) { <i class="fa-solid fa-triangle-exclamation text-danger"></i> }
       @else { <i class="fa-solid fa-hourglass-half text-warning"></i> }
     </div>
     <div class="status-info">
       <div class="status-title">Versement du {{ today | date:'dd/MM/yyyy':'':"fr" }}</div>
-      <div class="status-sub">Montant attendu : <strong>{{ fCFA(monVersement()?.montantAttendu ?? 0) }}</strong></div>
-      @if (monVersement()?.cashVerse) {
-      <div class="status-sub">Montant versé : <strong>{{ fCFA(monVersement()?.cashVerse ?? 0) }}</strong> · Type : {{ monVersement()?.typeVersement }}</div>
+      <div class="status-sub">Montant attendu : <strong>{{ fCFA(monVersement().montantAttendu) }}</strong></div>
+      @if (monVersement().cashVerse) {
+      <div class="status-sub">Montant versé : <strong>{{ fCFA(monVersement().cashVerse) }}</strong> · Type : {{ monVersement().typeVersement }}</div>
       }
-      @if (monVersement()?.ecart !== 0) {
-      <div class="status-ecart text-danger">Écart : {{ fCFA(monVersement()?.ecart ?? 0) }}, {{ monVersement()?.motifEcart }}</div>
+      @if (monVersement().ecart !== 0) {
+      <div class="status-ecart text-danger">Écart : {{ fCFA(monVersement().ecart) }}, {{ monVersement().motifEcart }}</div>
       }
     </div>
     <div class="status-badge">
-      @if (monVersement()?.statut === 'VALIDE') { <span class="badge bg-success">Validé ✓</span> }
-      @else if (monVersement()?.statut === 'EN_ATTENTE_VALIDATION') { <span class="badge bg-orange">À valider</span> }
-      @else if (monVersement()?.alerteRouge) { <span class="badge bg-red">Alerte Rouge</span> }
+      @if (monVersement().statut === 'VALIDE') { <span class="badge bg-success">Validé ✓</span> }
+      @else if (monVersement().statut === 'EN_ATTENTE_VALIDATION') { <span class="badge bg-orange">À valider</span> }
+      @else if (monVersement().alerteRouge) { <span class="badge bg-red">Alerte Rouge</span> }
       @else { <span class="badge bg-neutral">En attente</span> }
     </div>
   </div>

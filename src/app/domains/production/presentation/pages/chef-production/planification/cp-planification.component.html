@@ -62,7 +62,7 @@
               <tr>
                 <td>{{ l.codeProduit }}</td>
                 <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:120px"></td>
-                <td>{{ p.lignes[i]?.productionRealisee ?? 0 }}</td>
+                <td>{{ p.lignes[i].productionRealisee }}</td>
               </tr>
             }
           </tbody>

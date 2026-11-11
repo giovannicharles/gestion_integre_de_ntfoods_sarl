@@ -41,7 +41,7 @@
     <div class="card-hd">
       <span class="card-title"><i class="fa-solid fa-lightbulb"></i> Suggestions</span>
     </div>
-    @if (resultat()!.suggestions?.length) {
+    @if (resultat()!.suggestions.length) {
       <div class="ia-suggestion-grid">
         @for (s of resultat()!.suggestions; track $index) {
           <div class="ia-suggestion-card">

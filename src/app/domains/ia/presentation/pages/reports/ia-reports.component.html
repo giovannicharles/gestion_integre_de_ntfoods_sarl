@@ -46,13 +46,13 @@
         <h4><i class="fa-solid fa-file-lines"></i> Compte rendu</h4>
         <p class="ia-report-text">{{ resultatReunion()!.report }}</p>
 
-        @if (resultatReunion()!.decisions?.length) {
+        @if (resultatReunion()!.decisions.length) {
           <h4><i class="fa-solid fa-gavel"></i> Décisions</h4>
           <ul class="ia-list">
             @for (d of resultatReunion()!.decisions; track $index) { <li>{{ d }}</li> }
           </ul>
         }
-        @if (resultatReunion()!.actionItems?.length) {
+        @if (resultatReunion()!.actionItems.length) {
           <h4><i class="fa-solid fa-list-check"></i> Actions à mener</h4>
           <ul class="ia-list">
             @for (a of resultatReunion()!.actionItems; track $index) { <li>{{ a }}</li> }
@@ -91,13 +91,13 @@
         <h4><i class="fa-solid fa-file-lines"></i> Rapport</h4>
         <p class="ia-report-text">{{ resultatIntelligent()!.report }}</p>
 
-        @if (resultatIntelligent()!.keyFindings?.length) {
+        @if (resultatIntelligent()!.keyFindings.length) {
           <h4><i class="fa-solid fa-magnifying-glass-chart"></i> Constats clés</h4>
           <ul class="ia-list">
             @for (k of resultatIntelligent()!.keyFindings; track $index) { <li>{{ k }}</li> }
           </ul>
         }
-        @if (resultatIntelligent()!.actionPlan?.length) {
+        @if (resultatIntelligent()!.actionPlan.length) {
           <h4><i class="fa-solid fa-list-check"></i> Plan d'action</h4>
           <ul class="ia-list">
             @for (a of resultatIntelligent()!.actionPlan; track $index) { <li>{{ a }}</li> }

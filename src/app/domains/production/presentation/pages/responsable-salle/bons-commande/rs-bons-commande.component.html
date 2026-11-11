@@ -163,7 +163,7 @@
             @for (l of bc.lignes; track l.id) {
               <tr>
                 <td><strong class="mono" style="color:var(--g,#14532D)">{{ l.codeProduit }}</strong></td>
-                <td>{{ l.designation ?? '-' }}</td>
+                <td>{{ l.designation || '-' }}</td>
                 <td class="text-right mono fw-bold">{{ l.quantiteCommandee }}</td>
                 <td class="text-right mono">{{ l.quantiteProduite }}</td>
                 <td class="text-right mono">

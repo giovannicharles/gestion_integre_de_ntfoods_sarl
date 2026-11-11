@@ -42,8 +42,8 @@
       <div class="kpi-ico iy"><i class="fa-solid fa-trophy"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Meilleure Performance</span>
-        <span class="kpi-val">{{ lignes()[0]?.nomComplet ?? '-' }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-trophy"></i> {{ lignes()[0]?.nbVentes ?? 0 }} ventes</div>
+        <span class="kpi-val">{{ lignes().length ? lignes()[0].nomComplet : '-' }}</span>
+        <div class="kpi-meta"><i class="fa-solid fa-trophy"></i> {{ lignes().length ? lignes()[0].nbVentes : 0 }} ventes</div>
       </div>
     </div>
     <div class="kpi-card kp-b">
