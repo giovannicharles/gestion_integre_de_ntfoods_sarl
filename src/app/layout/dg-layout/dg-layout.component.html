@@ -106,66 +106,8 @@
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
 
-        <!-- Centre de notifications temps réel (2026-09-30), distinct de la cloche d'alertes stock ci-dessous -->
+        <!-- Centre de notifications unifié TANTY (Actions requises + Système + Session) -->
         <app-notification-center></app-notification-center>
-
-        <!-- NOTIFICATION BELL -->
-        <div class="tb-notif-wrap">
-          <button class="tb-icon-btn" (click)="toggleNotifPanel()" [class.tb-alert-pulse]="alertCount() > 0" title="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
-          </button>
-          @if (showNotifPanel()) {
-            <div class="notif-panel animate-fadeInUp" (click)="$event.stopPropagation()">
-              <div class="notif-panel-header">
-                <span class="notif-panel-title"><i class="fa-solid fa-bell"></i> Notifications</span>
-                <span class="notif-panel-count">{{ alertCount() }} active(s)</span>
-              </div>
-              <div class="notif-panel-body">
-                @if (alertCount() === 0) {
-                  <div class="notif-empty">
-                    <i class="fa-solid fa-check-circle"></i>
-                    <span>Aucune notification active</span>
-                  </div>
-                } @else {
-                  <a class="notif-item notif-danger" routerLink="/dg/supervision" (click)="closeNotifPanel()">
-                    <div class="notif-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div class="notif-content">
-                      <span class="notif-title">{{ alertCount() }} alerte(s) stock</span>
-                      <span class="notif-desc">Produits sous seuil critique, action requise</span>
-                    </div>
-                  </a>
-                  @if (criticalCount() > 0) {
-                    <a class="notif-item notif-danger" routerLink="/dg/supervision" (click)="closeNotifPanel()">
-                      <div class="notif-ico"><i class="fa-solid fa-fire"></i></div>
-                      <div class="notif-content">
-                        <span class="notif-title">{{ criticalCount() }} alerte(s) critique(s)</span>
-                        <span class="notif-desc">Ruptures de stock imminentes</span>
-                      </div>
-                    </a>
-                  }
-                  <a class="notif-item notif-warning" routerLink="/dg/arbitrage" (click)="closeNotifPanel()">
-                    <div class="notif-ico"><i class="fa-solid fa-scale-balanced"></i></div>
-                    <div class="notif-content">
-                      <span class="notif-title">3 arbitrages en attente</span>
-                      <span class="notif-desc">Demandes de prix exceptionnels à valider</span>
-                    </div>
-                  </a>
-                  <a class="notif-item notif-warning" routerLink="/dg/decaissements" (click)="closeNotifPanel()">
-                    <div class="notif-ico"><i class="fa-solid fa-money-bill-transfer"></i></div>
-                    <div class="notif-content">
-                      <span class="notif-title">2 décaissements en attente</span>
-                      <span class="notif-desc">Demandes de paiement à approuver</span>
-                    </div>
-                  </a>
-                }
-              </div>
-              <div class="notif-panel-footer">
-                <a routerLink="/dg/supervision" (click)="closeNotifPanel()" class="notif-view-all">Voir toutes les alertes</a>
-              </div>
-            </div>
-          }
-        </div>
 
         <button class="tb-icon-btn" routerLink="/dg/arbitrage" title="Arbitrages en attente" [class.tb-alert-pulse]="criticalCount() > 0">
           <i class="fa-solid fa-scale-balanced"></i>

@@ -1,45 +1,166 @@
 <div class="notif-center" (click)="$event.stopPropagation()">
-  <button class="bell-btn" (click)="toggle($event)" [class.has-unread]="nonLues() > 0" title="Notifications">
+  <button
+    class="bell-btn"
+    (click)="toggle($event)"
+    [class.has-unread]="totalBadge() > 0"
+    title="Centre de notifications & actions requises"
+  >
     <i class="fa-solid fa-bell"></i>
-    @if (nonLues() > 0) {
-      <span class="bell-badge">{{ nonLues() > 99 ? '99+' : nonLues() }}</span>
+    @if (totalBadge() > 0) {
+      <span class="bell-badge">{{ totalBadge() > 99 ? '99+' : totalBadge() }}</span>
     }
   </button>
 
   @if (ouvert()) {
     <div class="notif-panel">
       <div class="notif-panel-header">
-        <h4>Notifications</h4>
-        @if (nonLues() > 0) {
-          <button class="link-btn" (click)="toutMarquerLu()">Tout marquer lu</button>
+        <div class="nph-left">
+          <span class="nph-ico"><i class="fa-solid fa-bell"></i></span>
+          <div>
+            <h4>Centre de Notifications</h4>
+            <span class="nph-sub">Actions requises & flux temps réel</span>
+          </div>
+        </div>
+        @if (ongletActif() === 'systeme' && nonLues() > 0) {
+          <button class="link-btn" (click)="toutMarquerLu()">
+            <i class="fa-solid fa-check-double"></i> Tout lu
+          </button>
+        } @else if (ongletActif() === 'activite' && toast.history().length > 0) {
+          <button class="link-btn" (click)="toast.clearHistory()">
+            <i class="fa-solid fa-broom"></i> Vider
+          </button>
         }
       </div>
 
-      @if (chargement()) {
-        <div class="notif-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
-      } @else if (erreur()) {
-        <div class="notif-error">
-          <i class="fa-solid fa-exclamation-triangle"></i> {{ erreur() }}
-        </div>
-      } @else if (notifications().length === 0) {
-        <div class="notif-empty">
-          <i class="fa-regular fa-bell-slash"></i>
-          <p>Aucune notification</p>
-        </div>
-      } @else {
-        <div class="notif-list">
-          @for (n of notifications(); track n.id) {
-            <div class="notif-item" [class.non-lu]="!n.lu" (click)="marquerLu(n, $event)">
-              <span class="prio-dot" [class]="classePriorite(n.priorite)"></span>
-              <div class="notif-content">
-                <p class="notif-titre">{{ n.titre }}</p>
-                <p class="notif-message">{{ n.message }}</p>
-                <p class="notif-date">{{ formatDate(n.dateCreation) }}</p>
-              </div>
-              @if (!n.lu) { <span class="unread-dot"></span> }
-            </div>
+      <!-- Onglets -->
+      <div class="notif-tabs">
+        <button
+          type="button"
+          class="ntab"
+          [class.ntab-active]="ongletActif() === 'actions'"
+          (click)="changerOnglet('actions', $event)"
+        >
+          <i class="fa-solid fa-bolt"></i>
+          <span>À traiter</span>
+          @if (actionsRequises().length > 0) {
+            <span class="ntab-count ntab-count-urgent">{{ actionsRequises().length }}</span>
           }
-        </div>
+        </button>
+        <button
+          type="button"
+          class="ntab"
+          [class.ntab-active]="ongletActif() === 'systeme'"
+          (click)="changerOnglet('systeme', $event)"
+        >
+          <i class="fa-solid fa-satellite-dish"></i>
+          <span>Système</span>
+          @if (nonLues() > 0) {
+            <span class="ntab-count">{{ nonLues() }}</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="ntab"
+          [class.ntab-active]="ongletActif() === 'activite'"
+          (click)="changerOnglet('activite', $event)"
+        >
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Session</span>
+          @if (toast.history().length > 0) {
+            <span class="ntab-count ntab-count-neutral">{{ toast.history().length }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- ONGLET 1 : ACTIONS REQUISES -->
+      @if (ongletActif() === 'actions') {
+        @if (chargementActions() && actionsRequises().length === 0) {
+          <div class="notif-loading"><i class="fa-solid fa-spinner fa-spin"></i> Vérification des actions...</div>
+        } @else if (actionsRequises().length === 0) {
+          <div class="notif-empty">
+            <i class="fa-solid fa-circle-check empty-ok"></i>
+            <p class="empty-title">Aucune action en attente</p>
+            <span class="empty-sub">Toutes vos validations et opérations prioritaires sont à jour.</span>
+          </div>
+        } @else {
+          <div class="notif-list">
+            @for (act of actionsRequises(); track act.id) {
+              <div class="action-item" [class]="'act-' + act.priorite" (click)="allerVersAction(act, $event)">
+                <div class="act-ico">
+                  <i class="fa-solid {{ act.icone }}"></i>
+                </div>
+                <div class="notif-content">
+                  <p class="notif-titre">{{ act.titre }}</p>
+                  <p class="notif-message">{{ act.description }}</p>
+                </div>
+                <span class="act-go">
+                  Traiter <i class="fa-solid fa-arrow-right"></i>
+                </span>
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ONGLET 2 : SYSTÈME & TEMPS RÉEL -->
+      @if (ongletActif() === 'systeme') {
+        @if (chargement()) {
+          <div class="notif-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</div>
+        } @else if (erreur()) {
+          <div class="notif-error">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}
+          </div>
+        } @else if (notifications().length === 0) {
+          <div class="notif-empty">
+            <i class="fa-regular fa-bell-slash"></i>
+            <p class="empty-title">Aucune alerte système</p>
+            <span class="empty-sub">Les alertes temps réel apparaîtront ici automatiquement.</span>
+          </div>
+        } @else {
+          <div class="notif-list">
+            @for (n of notifications(); track n.id) {
+              <div class="notif-item" [class.non-lu]="!n.lu" (click)="marquerLu(n, $event)">
+                <span class="prio-dot" [class]="classePriorite(n.priorite)"></span>
+                <div class="notif-content">
+                  <p class="notif-titre">{{ n.titre }}</p>
+                  <p class="notif-message">{{ n.message }}</p>
+                  <p class="notif-date">{{ formatDate(n.dateCreation) }}</p>
+                </div>
+                @if (!n.lu) { <span class="unread-dot" title="Marquer comme lu"></span> }
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ONGLET 3 : ACTIVITÉ DE LA SESSION -->
+      @if (ongletActif() === 'activite') {
+        @if (toast.history().length === 0) {
+          <div class="notif-empty">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <p class="empty-title">Aucune action récente</p>
+            <span class="empty-sub">Les opérations effectuées durant votre session seront tracées ici.</span>
+          </div>
+        } @else {
+          <div class="notif-list">
+            @for (h of toast.history(); track h.id) {
+              <div class="notif-item activity-item">
+                <span class="act-status-ico" [class]="'asi-' + h.type">
+                  <i class="fa-solid"
+                     [class.fa-check]="h.type === 'success'"
+                     [class.fa-xmark]="h.type === 'error'"
+                     [class.fa-exclamation]="h.type === 'warning'"
+                     [class.fa-info]="h.type === 'info'"></i>
+                </span>
+                <div class="notif-content">
+                  <p class="notif-titre">{{ h.title }}</p>
+                  <p class="notif-message">{{ h.message }}</p>
+                  <p class="notif-date">{{ formatDate(h.timestamp) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        }
       }
     </div>
   }

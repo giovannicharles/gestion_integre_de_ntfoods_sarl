@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, HostListener, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, HostListener, computed, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -12,6 +12,7 @@ import { NotificationCenterComponent } from '../../shared/notification-center/no
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
@@ -22,7 +23,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-commercial-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
   templateUrl: './commercial-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -82,23 +83,29 @@ export class CommercialLayoutComponent implements OnInit {
   expandedGroup = signal<string | null>('Terrain');
   toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
+  commandItems = computed(() => [
+    ...this.navItems,
+    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+  ]);
+
   ngOnInit() {
-    if (window.innerWidth < 1024) this.sidebarOpen.set(false);
+    if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth < 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(e: Event) {
     const w = (e.target as Window).innerWidth;
-    if (w < 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
+    if (w <= 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
   }
-  toggleSidebar() { if (window.innerWidth < 768) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
+  toggleSidebar() { if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
   /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace

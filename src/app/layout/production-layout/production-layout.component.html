@@ -50,7 +50,12 @@
       </div>
       <div class="tb-right">
         <app-header-search [items]="navItems()"></app-header-search>
+        <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
+          <i class="fa-solid fa-bolt"></i>
+          <kbd>Ctrl</kbd><kbd>K</kbd>
+        </button>
         <app-signaler-incident></app-signaler-incident>
+        <app-command-palette #commandPalette [items]="navItems()"></app-command-palette>
         <div class="tb-date">
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
@@ -61,6 +66,7 @@
           <span class="tb-badge tb-badge-orange">{{ besoinsEnAttente() }}</span>
         </button>
         }
+        <app-notification-center></app-notification-center>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>

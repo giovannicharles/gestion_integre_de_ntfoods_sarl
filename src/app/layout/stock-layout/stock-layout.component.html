@@ -97,60 +97,8 @@
           <i class="fa-solid fa-triangle-exclamation"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
         </button>
-        <!-- Centre de notifications temps réel (2026-09-30), distinct de la cloche d'alertes stock ci-dessus -->
+        <!-- Centre de notifications unifié TANTY (Actions requises + Système + Session) -->
         <app-notification-center></app-notification-center>
-        <div class="tb-notif-wrap">
-          <button class="tb-icon-btn" (click)="toggleNotifPanel()" [class.tb-alert-pulse]="notifCount() > 0" title="Notifications">
-            <i class="fa-regular fa-bell"></i>
-            @if (notifCount() > 0) { <span class="tb-badge tb-badge-red">{{ notifCount() }}</span> }
-          </button>
-          @if (showNotifPanel()) {
-            <div class="notif-panel animate-fadeInUp" (click)="$event.stopPropagation()">
-              <div class="notif-panel-header">
-                <span class="notif-panel-title"><i class="fa-solid fa-bell"></i> Notifications</span>
-                <span class="notif-panel-count">{{ notifCount() }} non lue{{ notifCount() > 1 ? 's' : '' }}</span>
-              </div>
-              <div class="notif-panel-body">
-                @if (recentNotifs().length === 0) {
-                  <div class="notif-empty">
-                    <i class="fa-solid fa-bell-slash"></i>
-                    <p>Aucune notification</p>
-                  </div>
-                } @else {
-                  @for (n of recentNotifs(); track n.id) {
-                    <div class="notif-item" [class.notif-unread]="!n.read">
-                      <div class="notif-item-icon">
-                        <i class="fa-solid {{ n.icon }}"></i>
-                      </div>
-                      <div class="notif-item-content">
-                        <div class="notif-item-header">
-                          <span class="notif-item-title">{{ n.title }}</span>
-                          <span class="notif-item-time">{{ n.time }}</span>
-                        </div>
-                        <p class="notif-item-msg">{{ n.message }}</p>
-                      </div>
-                      @if (!n.read) {
-                        <button class="notif-item-read" (click)="markNotifAsRead(n)" title="Marquer comme lu">
-                          <i class="fa-solid fa-check"></i>
-                        </button>
-                      }
-                    </div>
-                  }
-                }
-              </div>
-              <div class="notif-panel-footer">
-                @if (notifCount() > 0) {
-                  <button class="notif-mark-all" (click)="markAllNotifsAsRead()">
-                    <i class="fa-solid fa-check-double"></i> Tout marquer comme lu
-                  </button>
-                }
-                <a routerLink="/stock/notifications" class="notif-view-all" (click)="closeNotifPanel()">
-                  Voir tout <i class="fa-solid fa-arrow-right"></i>
-                </a>
-              </div>
-            </div>
-          }
-        </div>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>

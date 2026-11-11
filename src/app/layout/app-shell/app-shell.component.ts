@@ -1,11 +1,13 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
+import { CommonModule, DatePipe, registerLocaleData } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { NetworkService } from '../../core/services/network.service';
 import { AlertBadgeService } from '../../core/services/alert-badge.service';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
+import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
 
@@ -26,9 +28,9 @@ interface NavGroup {
 @Component({
   selector: 'app-app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent],
+  imports: [CommonModule, DatePipe, RouterOutlet, RouterLink, RouterLinkActive, NotificationCenterComponent, SignalerIncidentComponent, ConfirmDialogComponent],
   templateUrl: './app-shell.component.html',
-  styleUrls: ['./app-shell.component.css']
+  styleUrls: ['../stock-layout/stock-layout.component.css']
 })
 export class AppShellComponent {
   private readonly auth = inject(AuthService);
@@ -190,8 +192,15 @@ export class AppShellComponent {
     });
   }
 
+  @HostListener('window:resize', ['$event'])
+  onResize(e: Event) {
+    const w = (e.target as Window).innerWidth;
+    if (w <= 1024) { this._sidebarOpen.set(false); } else { this._mobileOpen.set(false); }
+  }
+
   toggleSidebar(): void {
-    this._sidebarOpen.update(v => !v);
+    if (window.innerWidth <= 1024) this._mobileOpen.update(v => !v);
+    else this._sidebarOpen.update(v => !v);
   }
 
   toggleMobile(): void {

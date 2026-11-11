@@ -35,11 +35,11 @@ interface MonIncident {
   imports: [CommonModule, DatePipe, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button class="tb-icon-btn" (click)="ouvrirMesSignalements()" title="Mes signalements">
+    <button class="tb-icon-btn si-btn-list" (click)="ouvrirMesSignalements()" title="Mes signalements">
       <i class="fa-solid fa-list-check"></i>
     </button>
-    <button class="tb-icon-btn" (click)="ouvrir()" title="Signaler un incident">
-      <i class="fa-solid fa-triangle-exclamation"></i>
+    <button class="tb-icon-btn si-btn-report" (click)="ouvrir()" title="Signaler un incident">
+      <i class="fa-solid fa-headset"></i>
     </button>
 
     @if (showModal()) {
@@ -47,7 +47,12 @@ interface MonIncident {
         <div class="si-modal" (click)="$event.stopPropagation()">
           <div class="si-header">
             <h3><i class="fa-solid fa-triangle-exclamation"></i> Signaler un incident</h3>
-            <button class="si-close" (click)="fermer()"><i class="fa-solid fa-xmark"></i></button>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="fermer(); ouvrirMesSignalements()">
+                <i class="fa-solid fa-list-check"></i> Mes signalements
+              </button>
+              <button class="si-close" (click)="fermer()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
           </div>
           <div class="si-body">
             <div class="si-row">
@@ -122,13 +127,45 @@ interface MonIncident {
     }
   `,
   styles: [`
-    .si-overlay { position: fixed; inset: 0; background: rgba(15,23,32,.55); display:flex; align-items:center; justify-content:center; z-index: 1000; padding: 16px; }
-    .si-modal { background: var(--surface, #fff); border-radius: 14px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-    .si-header { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--n150, #e5e7eb); }
-    .si-header h3 { margin:0; font-size: 16px; display:flex; align-items:center; gap:8px; }
+    :host { display: inline-flex; align-items: center; gap: 6px; }
+    .tb-icon-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--n50, #F3F8F5);
+      border: 1px solid var(--n200, #D5E4DC);
+      color: var(--n700, #334155);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+    .tb-icon-btn:hover {
+      background: var(--g-sf, #E6F4EC);
+      color: var(--g, #14532D);
+      border-color: var(--g-pale, #B7DFC6);
+      transform: translateY(-1px);
+    }
+    :host-context(:root.dark-mode) .tb-icon-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #CBD5E1;
+    }
+    @media (max-width: 768px) {
+      .si-btn-list { display: none; }
+      .tb-icon-btn { width: 32px; height: 32px; font-size: 13px; }
+    }
+    .si-overlay { position: fixed; inset: 0; background: rgba(13,58,30,.6); backdrop-filter: blur(3px); display:flex; align-items:center; justify-content:center; z-index: 2200; padding: 16px; }
+    .si-modal { background: var(--surface, #fff); border-radius: 14px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); border: 1px solid var(--g-pale, #B7DFC6); }
+    .si-header { display:flex; align-items:center; justify-content:space-between; padding: 16px 20px; border-bottom: 1px solid var(--g-pale, #B7DFC6); background: linear-gradient(135deg, #FFFFFF 0%, #F1F8F3 100%); }
+    .si-header h3 { margin:0; font-size: 15px; font-weight: 800; color: var(--g-d, #0D3A1E); display:flex; align-items:center; gap:8px; }
+    .si-header h3 i { color: var(--y-d, #C49200); }
     .si-close { background:none; border:none; cursor:pointer; font-size:16px; color: var(--n500, #6b7280); }
     .si-body { padding: 16px 20px; display:flex; flex-direction:column; gap:14px; }
-    .si-row { display:flex; gap:12px; }
+    .si-row { display:flex; gap:12px; flex-wrap: wrap; }
     .si-field { flex:1; display:flex; flex-direction:column; gap:6px; }
     .si-field label { font-size:12px; font-weight:600; color: var(--n600, #4b5563); }
     .si-field input, .si-field select, .si-field textarea {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -9,9 +9,11 @@ import { ProductionRoleService } from '../../domains/production/infrastructure/p
 import { PRODUCTION_ROLE_CONFIG, PRODUCTION_NAV_PAR_DEFAUT, ProductionNavItem } from '../../domains/production/infrastructure/production-role-config';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { SignalerIncidentComponent } from '../../shared/signaler-incident/signaler-incident.component';
+import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
@@ -19,7 +21,7 @@ registerLocaleData(localeFr);
 @Component({
   selector: 'app-production-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
   templateUrl: './production-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -64,14 +66,15 @@ export class ProductionLayoutComponent implements OnInit {
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems(), this.sidebarFiltre()));
+  @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
 
   ngOnInit() {
     setInterval(() => this.currentTime.set(new Date()), 30000);
-    if (window.innerWidth < 1024) this.sidebarOpen.set(false);
+    if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const cur = this.navItems().find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth < 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
     this.chargerBadges();
   }
@@ -96,9 +99,9 @@ export class ProductionLayoutComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   onResize(e: Event) {
     const w = (e.target as Window).innerWidth;
-    if (w < 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
+    if (w <= 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
   }
-  toggleSidebar() { if (window.innerWidth < 768) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
+  toggleSidebar() { if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
   /** Remplace le confirm() natif par ConfirmDialogComponent, cohérent avec les 9 autres layouts (2026-11-10). */

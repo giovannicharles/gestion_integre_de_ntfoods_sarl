@@ -102,24 +102,8 @@
             <span class="tb-badge tb-badge-red">{{ alertCount() }}</span>
           </button>
         }
-        <div class="tb-notif-wrap">
-          <button class="tb-icon-btn" (click)="toggleNotifPanel()" title="Notifications">
-            <i class="fa-regular fa-bell"></i>
-          </button>
-          @if (showNotifPanel()) {
-            <div class="notif-panel animate-fadeInUp" (click)="$event.stopPropagation()">
-              <div class="notif-panel-header">
-                <span class="notif-panel-title"><i class="fa-solid fa-bell"></i> Notifications</span>
-              </div>
-              <div class="notif-panel-body">
-                <div class="notif-empty">
-                  <i class="fa-solid fa-bell-slash"></i>
-                  <p>Aucune notification</p>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
+        <app-signaler-incident></app-signaler-incident>
+        <app-notification-center></app-notification-center>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>

@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 
 export interface ToastMessage {
   id: string;
@@ -12,19 +12,49 @@ export interface ToastMessage {
   };
 }
 
+export interface ActionHistoryItem {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+}
+
+const SESSION_HISTORY_KEY = 'tanty_action_history_v1';
+
 /**
- * Service de notification toast, affiche des messages flottants non bloquants.
- *
- * Les messages sont gérés par un signal réactif ; un composant d'affichage
- * s'abonne à `toasts` pour les présenter dans l'interface.
+ * Service de notification toast, affiche des messages flottants non bloquants
+ * et conserve l'historique des actions exécutées dans la session pour le Centre de Notifications.
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private readonly _toasts = signal<ToastMessage[]>([]);
   readonly toasts = this._toasts.asReadonly();
 
+  private readonly _history = signal<ActionHistoryItem[]>(this.loadHistory());
+  readonly history = this._history.asReadonly();
+  readonly unreadHistoryCount = computed(() => this._history().filter((h) => !h.read).length);
+
   private generateId(): string {
-    return `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private loadHistory(): ActionHistoryItem[] {
+    try {
+      const raw = sessionStorage.getItem(SESSION_HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveHistory(items: ActionHistoryItem[]): void {
+    try {
+      sessionStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(items.slice(0, 40)));
+    } catch {
+      // ignore storage quota errors
+    }
   }
 
   /**
@@ -32,7 +62,7 @@ export class ToastService {
    * Durée par défaut: 4000ms.
    */
   success(message: string, title?: string, duration = 4000): void {
-    this.add({ type: 'success', message, title, duration });
+    this.add({ type: 'success', message, title: title || 'Action effectuée', duration });
   }
 
   /**
@@ -40,7 +70,7 @@ export class ToastService {
    * Durée par défaut: 6000ms (plus long pour permettre la lecture).
    */
   error(message: string, title?: string, duration = 6000): void {
-    this.add({ type: 'error', message, title, duration });
+    this.add({ type: 'error', message, title: title || 'Erreur opération', duration });
   }
 
   /**
@@ -48,15 +78,15 @@ export class ToastService {
    * Durée par défaut: 5000ms.
    */
   warning(message: string, title?: string, duration = 5000): void {
-    this.add({ type: 'warning', message, title, duration });
+    this.add({ type: 'warning', message, title: title || 'Attention requise', duration });
   }
 
   /**
-   * Ajoute un toast d'information (bleu).
+   * Ajoute un toast d'information (bleu/vert).
    * Durée par défaut: 4000ms.
    */
   info(message: string, title?: string, duration = 4000): void {
-    this.add({ type: 'info', message, title, duration });
+    this.add({ type: 'info', message, title: title || 'Information', duration });
   }
 
   /**
@@ -73,8 +103,8 @@ export class ToastService {
     this.add({
       type,
       message,
-      title,
-      duration: undefined, // Pas d'auto-dismiss avec action
+      title: title || 'Action requise',
+      duration: undefined,
       action: { label: actionLabel, handler: actionHandler }
     });
   }
@@ -87,17 +117,52 @@ export class ToastService {
   }
 
   /**
-   * Supprime tous les toasts.
+   * Supprime tous les toasts flottants.
    */
   clear(): void {
     this._toasts.set([]);
+  }
+
+  markHistoryRead(id: string): void {
+    this._history.update((list) => {
+      const updated = list.map((item) => (item.id === id ? { ...item, read: true } : item));
+      this.saveHistory(updated);
+      return updated;
+    });
+  }
+
+  markAllHistoryRead(): void {
+    this._history.update((list) => {
+      const updated = list.map((item) => ({ ...item, read: true }));
+      this.saveHistory(updated);
+      return updated;
+    });
+  }
+
+  clearHistory(): void {
+    this._history.set([]);
+    this.saveHistory([]);
   }
 
   private add(toast: Omit<ToastMessage, 'id'>): void {
     const id = this.generateId();
     this._toasts.update((toasts) => [...toasts, { ...toast, id }]);
 
-    // Auto-dismiss si durée définie
+    // Enregistrer dans le journal d'activité de session
+    const historyItem: ActionHistoryItem = {
+      id,
+      type: toast.type,
+      title: toast.title || 'Notification',
+      message: toast.message,
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    this._history.update((prev) => {
+      const next = [historyItem, ...prev].slice(0, 40);
+      this.saveHistory(next);
+      return next;
+    });
+
     if (toast.duration && toast.duration > 0) {
       setTimeout(() => this.remove(id), toast.duration);
     }

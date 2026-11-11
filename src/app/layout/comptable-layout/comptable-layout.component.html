@@ -82,7 +82,7 @@
         </div>
       </div>
       <div class="tb-right">
-        <app-header-search [items]="navItems"></app-header-search>
+        <app-header-search [items]="commandItems()"></app-header-search>
         <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
           <i class="fa-solid fa-bolt"></i>
           <kbd>Ctrl</kbd><kbd>K</kbd>

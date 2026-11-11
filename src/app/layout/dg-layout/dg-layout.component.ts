@@ -167,7 +167,7 @@ export class DgLayoutComponent implements OnInit {
       const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth < 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
     this.dgService.getValidationsEnAttente().subscribe({
@@ -196,7 +196,7 @@ export class DgLayoutComponent implements OnInit {
   }
 
   toggleSidebar() {
-    if (window.innerWidth < 768) this.mobileOpen.update(v => !v);
+    if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v);
     else this.sidebarOpen.update(v => !v);
   }
   closeMobile() { this.mobileOpen.set(false); }

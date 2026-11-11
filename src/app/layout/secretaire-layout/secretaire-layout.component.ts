@@ -6,6 +6,7 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import { AuthService } from '../../core/auth/auth.service';
 import { ClockService } from '../../core/services/clock.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { ComptableService } from '../../domains/comptable/infrastructure/comptable.service';
 import { CommercialService } from '../../domains/commercial/infrastructure/commercial.service';
@@ -29,6 +30,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 })
 export class SecretaireLayoutComponent implements OnInit {
   router = inject(Router);
+  readonly theme = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly cptSvc = inject(ComptableService);
   private readonly comSvc = inject(CommercialService);
@@ -109,7 +111,7 @@ export class SecretaireLayoutComponent implements OnInit {
       const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth < 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
     this.cptSvc.getVersements().subscribe({
@@ -147,7 +149,7 @@ export class SecretaireLayoutComponent implements OnInit {
     const w = (e.target as Window).innerWidth;
     if (w < 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
   }
-  toggleSidebar() { if (window.innerWidth < 768) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
+  toggleSidebar() { if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
   /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
