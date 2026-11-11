@@ -121,7 +121,7 @@ export class CmDashboardComponent implements OnInit {
     const jours = this.joursGlissants(7);
     const h = this.historique30j();
     return [{
-      name: 'Pertes (kg)', color: 'var(--danger, #d32f2f)',
+      name: 'Pertes (kg)', color: 'var(--r, #C22B2B)',
       values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + (x.pertesKg ?? 0), 0)),
     }];
   });
@@ -130,13 +130,13 @@ export class CmDashboardComponent implements OnInit {
     const jours = this.joursGlissants(7);
     const h = this.historique30j();
     return [
-      { name: 'Objectif (kg)', color: 'var(--info, #C49200)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + x.objectifJournalierKg, 0)) },
-      { name: 'Réalisé (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + this.qteSession(x), 0)) },
+      { name: 'Objectif (kg)', color: 'var(--y-d, #C49200)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + x.objectifJournalierKg, 0)) },
+      { name: 'Réalisé (kg)', color: 'var(--g, #14532D)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + this.qteSession(x), 0)) },
     ];
   });
 
   donutRepartitionTypes = computed<DonutSlice[]>(() => {
-    const couleurs: Record<string, string> = { MAIS: '#f9a825', SOJA: '#558b2f', ARACHIDE: '#6d4c41' };
+    const couleurs: Record<string, string> = { MAIS: '#F6B60B', SOJA: '#1E7A42', ARACHIDE: '#C49200' };
     const h = this.historique30j();
     // Agrégation par CODE de poudre pour garantir la bonne couleur ; libellé conservé pour l'affichage.
     const agg = new Map<string, { libelle: string; value: number }>();
@@ -150,13 +150,13 @@ export class CmDashboardComponent implements OnInit {
       .map(([code, v]) => ({
         label: v.libelle,
         value: Math.round(v.value * 10) / 10,
-        color: couleurs[code] ?? '#90a4ae',
+        color: couleurs[code] ?? '#9CA3AF',
       }));
   });
 
   serieProductiviteHebdo = computed<ChartSeries[]>(() => {
     const c = this.classementHebdo()?.classements ?? [];
-    return [{ name: 'Productivité (kg)', color: 'var(--success, #2e7d32)', values: c.map(x => x.productiviteKg) }];
+    return [{ name: 'Productivité (kg)', color: 'var(--g, #14532D)', values: c.map(x => x.productiviteKg) }];
   });
   labelsMachinistesHebdo = computed(() => (this.classementHebdo()?.classements ?? []).map(c => c.nomMachiniste));
 

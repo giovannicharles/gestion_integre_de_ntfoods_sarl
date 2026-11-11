@@ -8,10 +8,13 @@
       </div>
     </div>
     <div class="ph-actions">
-      <a routerLink="/comptable/commandes" class="btn btn-primary">
+      <a routerLink="/comptable/caisse" class="btn btn-ghost btn-sm"><i class="fa-solid fa-vault"></i> Caisse</a>
+      <a routerLink="/comptable/matieres-premieres" class="btn btn-ghost btn-sm"><i class="fa-solid fa-wheat-awn"></i> Réceptions MP</a>
+      <a routerLink="/comptable/commandes" class="btn btn-primary btn-sm">
         <i class="fa-solid fa-clipboard-check"></i> Valider commandes
         @if (commandesEnAttente() > 0) { <span class="btn-badge">{{ commandesEnAttente() }}</span> }
       </a>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
     </div>
   </div>
 
@@ -135,6 +138,8 @@
                   @else { <span class="badge bg-orange">À valider</span> }
                 </td>
               </tr>
+              } @empty {
+              <tr><td colspan="4" class="empty-state">Aucun versement enregistré aujourd'hui.</td></tr>
               }
             </tbody>
           </table>

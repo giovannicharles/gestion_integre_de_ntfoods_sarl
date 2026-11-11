@@ -8,7 +8,7 @@ interface Notification { texte: string; type: 'ok' | 'erreur'; }
 type FiltreFormule = 'TOUS' | 'AVEC' | 'SANS';
 type Tri = 'code' | 'designation' | 'sans-formule-d-abord';
 
-const PALETTE = ['#14532D', '#F6B60B', '#2A9D5F', '#C49200', '#1565C0', '#8E24AA', '#E65100', '#00897B'];
+const PALETTE = ['#14532D', '#F6B60B', '#2A9D5F', '#C49200', '#1E7A42', '#6D4C41', '#C22B2B', '#0D3A1E'];
 
 /** Minuscules, sans accents : « Maïs » et « mais » se comparent comme égaux. */
 export function normaliser(texte: string): string {

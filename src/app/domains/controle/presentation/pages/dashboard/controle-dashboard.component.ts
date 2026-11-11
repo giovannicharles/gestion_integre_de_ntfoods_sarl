@@ -33,12 +33,7 @@ export class ControleDashboardComponent implements OnInit {
   variances = signal<VarianceItem[]>([]);
   anomalies = signal<AnomalieItem[]>([]);
   decaissementsEnCours = signal<DecaissementBE[]>([]);
-  /**
-   * Correction 2026-10-25 : `ControleDashboardResponse.valoStock` est câblé à `0` en dur côté
-   * serveur (ControleDashboardService.java:97), jamais corrigé depuis. Le vrai calcul existe
-   * déjà et tourne sur `/controle/valorisation` (StockService.getEtatStock(), somme de
-   * `valeurStock`) : repris ici tel quel plutôt que de dupliquer la logique côté serveur.
-   */
+
   valoStock = signal(0);
   tresorerie = computed(() => this.data()?.tresorerie ?? 0);
   ecartsRouges = computed(() => this.data()?.ecartsRouges ?? 0);
@@ -49,6 +44,10 @@ export class ControleDashboardComponent implements OnInit {
   budgetDepasse = computed(() => this.data()?.budgetDepasse ?? 0);
   decaissementsAttente = computed(() => this.data()?.decaissementsAttente ?? 0);
   anomaliesElevees = computed(() => this.data()?.anomaliesElevees ?? 0);
+  tauxConsommationBudget = computed(() => {
+    const tot = this.budgetTotal();
+    return tot > 0 ? Math.round((this.budgetEngage() / tot) * 100) : 0;
+  });
 
   ngOnInit(): void {
     this.charger();
@@ -82,9 +81,11 @@ export class ControleDashboardComponent implements OnInit {
   }
 
   budgetPct(b: { engage: number; budget: number }): number {
+    if (!b.budget || b.budget <= 0) return 0;
     return Math.round((b.engage / b.budget) * 100);
   }
   variancePct(v: { standard: number; reel: number }): number {
+    if (!v.standard || v.standard <= 0) return 0;
     return Math.round(((v.reel - v.standard) / v.standard) * 100);
   }
 }

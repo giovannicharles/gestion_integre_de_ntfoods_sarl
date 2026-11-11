@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { extractApiError } from '../../../core/http/api-error-parser';
 
 const CODE_LENGTH = 6;
 
@@ -102,7 +103,11 @@ export class TwoFaComponent implements OnInit, OnDestroy {
   }
 
   private syncForm(): void {
-    this.otpForm.get('otp')?.setValue(this.digits().join(''));
+    const code = this.digits().join('');
+    this.otpForm.get('otp')?.setValue(code);
+    if (code.length === CODE_LENGTH && this.otpForm.valid && !this.loading()) {
+      this.onSubmit();
+    }
   }
 
   onSubmit() {
@@ -117,7 +122,7 @@ export class TwoFaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.erreur || err?.message || 'Code OTP invalide ou expiré.');
+        this.error.set(extractApiError(err, 'Code OTP invalide ou expiré.'));
         this.digits.set(Array(CODE_LENGTH).fill(''));
         this.otpForm.get('otp')?.setValue('');
         this.digitInputs.get(0)?.nativeElement.focus();
@@ -154,7 +159,7 @@ export class TwoFaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.resending.set(false);
-        this.error.set(err?.error?.erreur || err?.message || 'Échec du renvoi du code.');
+        this.error.set(extractApiError(err, 'Échec du renvoi du code.'));
       }
     });
   }

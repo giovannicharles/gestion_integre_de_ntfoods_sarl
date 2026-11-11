@@ -39,6 +39,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly dgSvc = inject(DgService);
 
   today = new Date();
+  Math = Math;
   loading = signal(true);
   loadError = signal<string | null>(null);
   /** Échecs non bloquants des widgets secondaires (incidents/activité) : signalés, page utilisable quand même. */

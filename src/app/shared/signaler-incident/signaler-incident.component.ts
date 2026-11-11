@@ -143,11 +143,11 @@ interface MonIncident {
     .si-incident-resolution { font-size: 12px; color: var(--n600, #4b5563); margin-top: 4px; background: var(--n50, #f9fafb); padding: 6px 8px; border-radius: 6px; }
     .si-incident-date { font-size: 11px; color: var(--n500, #6b7280); margin-top: 4px; }
     .si-statut-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
-    .si-ouvert { background: #fef3c7; color: #92400e; }
-    .si-en_cours { background: #dbeafe; color: #1e40af; }
-    .si-resolu { background: #d1fae5; color: #065f46; }
-    .si-cloture { background: #e5e7eb; color: #374151; }
-    .si-rejete { background: #fee2e2; color: #991b1b; }
+    .si-ouvert { background: var(--y-gh, #FFF8E1); color: var(--y-d, #C49200); }
+    .si-en_cours { background: var(--g-gh, #E6F2EC); color: var(--g, #14532D); }
+    .si-resolu { background: var(--s-gh, #E6F2EC); color: var(--s, #1E7A42); }
+    .si-cloture { background: var(--n150, #F0F2F5); color: var(--n700, #374151); }
+    .si-rejete { background: var(--r-gh, #FCE8E8); color: var(--r, #C22B2B); }
   `],
 })
 export class SignalerIncidentComponent {

@@ -58,7 +58,7 @@ export function parseApiErrorDetail(err: any): ParsedApiError {
  * @param err L'erreur reçue dans le callback `error` d'un subscribe.
  * @returns Le message d'erreur précis du backend, ou un fallback contextualisé.
  */
-export function extractApiError(err: any): string {
+export function extractApiError(err: any, fallbackMessage?: string): string {
   const body = err?.error;
   const explicitMsg =
     (typeof body === 'object' && body !== null ? (body.erreur || body.message || body.detail) : null) ||
@@ -84,27 +84,27 @@ export function extractApiError(err: any): string {
 
   // 401 UNAUTHORIZED
   if (err?.status === 401) {
-    return explicitMsg || 'Identifiants incorrects ou session expirée. Veuillez vous reconnecter.';
+    return explicitMsg || fallbackMessage || 'Identifiants incorrects ou session expirée. Veuillez vous reconnecter.';
   }
 
   // 403 FORBIDDEN
   if (err?.status === 403) {
-    return explicitMsg || 'Accès refusé : vos permissions actuelles ne permettent pas cette opération.';
+    return explicitMsg || fallbackMessage || 'Accès refusé : vos permissions actuelles ne permettent pas cette opération.';
   }
 
   // 404 NOT FOUND
   if (err?.status === 404) {
-    return explicitMsg || 'La ressource demandée est introuvable ou a été archivée.';
+    return explicitMsg || fallbackMessage || 'La ressource demandée est introuvable ou a été archivée.';
   }
 
   // 409 CONFLICT
   if (err?.status === 409) {
-    return explicitMsg || 'Conflit métier : cette opération entre en contradiction avec l\'état actuel des données.';
+    return explicitMsg || fallbackMessage || 'Conflit métier : cette opération entre en contradiction avec l\'état actuel des données.';
   }
 
   // 422 UNPROCESSABLE ENTITY / 400 BAD REQUEST
   if (err?.status === 400 || err?.status === 422) {
-    return explicitMsg || 'Données invalides ou incomplètes. Vérifiez les champs saisis.';
+    return explicitMsg || fallbackMessage || 'Données invalides ou incomplètes. Vérifiez les champs saisis.';
   }
 
   // 502 / 503 / 504 GATEWAY / SERVICE UNAVAILABLE
@@ -114,7 +114,7 @@ export function extractApiError(err: any): string {
 
   // 500 INTERNAL SERVER ERROR
   if (err?.status === 500) {
-    return explicitMsg || 'Erreur interne du serveur. L\'incident a été journalisé, veuillez réessayer.';
+    return explicitMsg || fallbackMessage || 'Erreur interne du serveur. L\'incident a été journalisé, veuillez réessayer.';
   }
 
   // Network error (no status)
@@ -123,5 +123,5 @@ export function extractApiError(err: any): string {
   }
 
   // Generic fallback
-  return explicitMsg || err?.message || 'Une erreur inattendue est survenue. Veuillez réessayer.';
+  return explicitMsg || fallbackMessage || err?.message || 'Une erreur inattendue est survenue. Veuillez réessayer.';
 }

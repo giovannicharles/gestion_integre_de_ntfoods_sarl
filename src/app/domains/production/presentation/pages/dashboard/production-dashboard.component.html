@@ -1,25 +1,30 @@
+<div class="dash animate-fadeInUp">
+
 <div class="ph">
   <div class="ph-left">
-    <i class="fa-solid fa-industry ph-ico"></i>
+    <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
     <div>
-      <h1 class="ph-title">Tableau de Bord Production</h1>
-      <p class="ph-sub">{{ plan().semaine }}, {{ plan().dateDebut }} au {{ plan().dateFin }}</p>
+      <div class="ph-title">Tableau de Bord Production</div>
+      <div class="ph-sub">{{ plan().semaine }}, {{ plan().dateDebut }} au {{ plan().dateFin }}</div>
     </div>
   </div>
   <div class="ph-actions">
-    <a routerLink="/production/saisie" class="btn btn-primary">
+    <button class="btn btn-ghost btn-sm" (click)="chargerDonnees()" [disabled]="loading()">
+      <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <a routerLink="/production/saisie" class="btn btn-primary btn-sm">
       <i class="fa-solid fa-pen-to-square"></i> Saisie Journalière
     </a>
-    <button class="btn btn-primary" (click)="showCreerOF.set(true)">
+    <button class="btn btn-primary btn-sm" (click)="showCreerOF.set(true)">
       <i class="fa-solid fa-plus"></i> Nouvel OF
     </button>
-    <a routerLink="/production/lots" class="btn btn-ghost">
+    <a routerLink="/production/lots" class="btn btn-ghost btn-sm">
       <i class="fa-solid fa-box"></i> Déclarer lot
     </a>
-    <a routerLink="/production/rapports" class="btn btn-ghost">
+    <a routerLink="/production/rapports" class="btn btn-ghost btn-sm">
       <i class="fa-solid fa-file-lines"></i> Rapports
     </a>
-    <a routerLink="/production/besoins" class="btn btn-ghost">
+    <a routerLink="/production/besoins" class="btn btn-ghost btn-sm">
       <i class="fa-solid fa-triangle-exclamation"></i> Besoins
     </a>
   </div>
@@ -71,6 +76,7 @@
     <div class="kpi-body">
       <div class="kpi-lbl">Avancement PPH</div>
       <div class="kpi-val">{{ tauxAvancementPPH() }}%</div>
+      <div class="prog-bar-wrap" style="margin-top:6px"><div class="prog-bar" [class.prog-g]="tauxAvancementPPH()>=80" [class.prog-y]="tauxAvancementPPH()>=50 && tauxAvancementPPH()<80" [class.prog-r]="tauxAvancementPPH()<50" [style.width.%]="tauxAvancementPPH() > 100 ? 100 : tauxAvancementPPH()"></div></div>
       <div class="kpi-meta">{{ pphEnCoursReference() ?? '-' }}</div>
     </div>
   </div>
@@ -203,10 +209,10 @@
 <!-- ═══════════ STATISTIQUES & GRAPHIQUES (Section 2 du cahier des charges) ═══════════ -->
 <div class="ph" style="margin-top: var(--sp-5)">
   <div class="ph-left">
-    <i class="fa-solid fa-chart-line ph-ico"></i>
+    <div class="ph-icon"><i class="fa-solid fa-chart-line"></i></div>
     <div>
-      <h1 class="ph-title" style="font-size:1.1rem">Statistiques & Tendances</h1>
-      <p class="ph-sub">4 dernières semaines, données calculées automatiquement</p>
+      <div class="ph-title" style="font-size:1.1rem">Statistiques & Tendances</div>
+      <div class="ph-sub">4 dernières semaines, données calculées automatiquement</div>
     </div>
   </div>
 </div>
@@ -405,3 +411,4 @@
   </div>
 </div>
 }
+</div>

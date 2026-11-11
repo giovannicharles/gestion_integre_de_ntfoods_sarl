@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { extractApiError } from '../../../core/http/api-error-parser';
 
 @Component({
   selector: 'app-forgot-password',
@@ -46,7 +47,7 @@ export class ForgotPasswordComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.erreur || err?.message || 'Numéro de téléphone invalide.');
+        this.error.set(extractApiError(err, 'Numéro de téléphone introuvable ou invalide.'));
       }
     });
   }

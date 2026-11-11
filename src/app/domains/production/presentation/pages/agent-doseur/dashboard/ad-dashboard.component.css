@@ -1,1 +1,18 @@
-/* styles spécifiques minimes, le reste vient des classes globales */
+.dash-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--n500);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: var(--sp-3, 0.75rem) 0 var(--sp-2, 0.5rem);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-section-title:first-of-type { margin-top: 0; }
+.dash-section-title i { color: var(--g, #14532D); }
+
+.kpi-card.featured {
+  background: linear-gradient(135deg, var(--w) 0%, var(--n50) 100%);
+  border-width: 1px;
+}

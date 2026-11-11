@@ -1,27 +1,64 @@
+<div class="dash animate-fadeInUp">
+
 <div class="ph">
   <div class="ph-left">
-    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div class="ph-icon"><i class="fa-solid fa-helmet-safety"></i></div>
     <div>
-      <h1 class="ph-title">Tableau de Bord · Agent de Production</h1>
-      <p class="ph-sub">Ordres de fabrication et fiches du jour</p>
+      <div class="ph-title">Tableau de Bord · Agent de Production</div>
+      <div class="ph-sub">Ordres de fabrication et fiches du jour</div>
     </div>
+  </div>
+  <div class="ph-actions">
+    <button class="btn btn-ghost btn-sm" (click)="charger()" [disabled]="loading()">
+      <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <a routerLink="/production/agent-production/ordres-fabrication" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-list-check"></i> Ordres de fabrication
+    </a>
   </div>
 </div>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (erreur()) { <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div> }
 
 @if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  @for (i of [1,2,3,4]; track i) {
+    <div class="skeleton skeleton-row"></div>
+  }
 } @else if (dashboard()) { @let d = dashboard()!;
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">OF en cours</div><div class="kpi-val">{{ d.ofsEnCours }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">OF planifiés</div><div class="kpi-val">{{ d.ofsPlanifies }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Fiches cette semaine</div><div class="kpi-val">{{ d.fichesSemaine }}</div></div></div>
+<div class="kpi-grid kpi-grid-4">
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-gears"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">OF en cours</div>
+      <div class="kpi-val">{{ d.ofsEnCours }}</div>
+      <div class="kpi-meta">Actifs sur les lignes</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-calendar-Plus"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">OF planifiés</div>
+      <div class="kpi-val">{{ d.ofsPlanifies }}</div>
+      <div class="kpi-meta">En attente de lancement</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-clipboard-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fiches cette semaine</div>
+      <div class="kpi-val">{{ d.fichesSemaine }}</div>
+      <div class="kpi-meta">Enregistrées sur le PPH</div>
+    </div>
+  </div>
   <div class="kpi-card" [class.kp-g]="d.ficheJourExistante" [class.kp-r]="!d.ficheJourExistante">
+    <div class="kpi-ico" [class.ig]="d.ficheJourExistante" [class.ir]="!d.ficheJourExistante">
+      <i class="fa-solid" [class.fa-circle-check]="d.ficheJourExistante" [class.fa-circle-exclamation]="!d.ficheJourExistante"></i>
+    </div>
     <div class="kpi-body">
       <div class="kpi-lbl">Fiche du jour</div>
       <div class="kpi-val">{{ d.ficheJourExistante ? 'Déclarée' : 'Non déclarée' }}</div>
+      <div class="kpi-meta">{{ d.ficheJourExistante ? 'Journée à jour' : 'Saisie attendue' }}</div>
     </div>
   </div>
 </div>
@@ -37,14 +74,14 @@
       <tbody>
         @for (o of d.ofs; track o.idOF) {
           <tr>
-            <td class="mono">{{ o.idOF }}</td>
+            <td class="mono fw-bold">{{ o.idOF }}</td>
             <td>{{ o.designationProduit }} <span class="text-muted">({{ o.codeProduit }})</span></td>
-            <td>{{ o.qteDemandee }}</td>
-            <td>{{ o.qteRealisee }}</td>
+            <td class="mono">{{ o.qteDemandee }}</td>
+            <td class="mono">{{ o.qteRealisee }}</td>
             <td>
               <div style="display:flex;align-items:center;gap:8px">
-                <div class="prog-bar-wrap" style="max-width:100px"><div class="prog-bar" [class.prog-g]="progression(o.qteDemandee, o.qteRealisee)>=100" [class.prog-y]="progression(o.qteDemandee, o.qteRealisee)<100" [style.width.%]="progression(o.qteDemandee, o.qteRealisee)"></div></div>
-                <span>{{ o.tauxAvancement }}%</span>
+                <div class="prog-bar-wrap" style="max-width:110px"><div class="prog-bar" [class.prog-g]="progression(o.qteDemandee, o.qteRealisee)>=100" [class.prog-y]="progression(o.qteDemandee, o.qteRealisee)<100" [style.width.%]="progression(o.qteDemandee, o.qteRealisee)"></div></div>
+                <span class="mono">{{ o.tauxAvancement }}%</span>
               </div>
             </td>
           </tr>
@@ -57,14 +94,23 @@
 </div>
 
 <div class="two-col">
-  <a routerLink="/production/agent-production/registres" class="card" style="padding: var(--sp-4); text-decoration:none; display:flex; align-items:center; gap:12px;">
-    <i class="fa-solid fa-book" style="font-size:1.5rem; color: var(--g);"></i>
-    <div><strong>Registres de production</strong><div class="text-muted" style="font-size:12px">Présences et rendements par PPH</div></div>
+  <a routerLink="/production/agent-production/registres" class="card ap-quick-card">
+    <div class="kpi-ico ig"><i class="fa-solid fa-book"></i></div>
+    <div style="flex:1">
+      <div class="fw-bold" style="color:var(--n900)">Registres de production</div>
+      <div class="text-muted" style="font-size:12px">Présences et rendements par PPH</div>
+    </div>
+    <i class="fa-solid fa-chevron-right" style="color:var(--n400)"></i>
   </a>
-  <a routerLink="/production/agent-production/fiches" class="card" style="padding: var(--sp-4); text-decoration:none; display:flex; align-items:center; gap:12px;">
-    <i class="fa-solid fa-file-lines" style="font-size:1.5rem; color: var(--b);"></i>
-    <div><strong>Fiches produit journalières</strong><div class="text-muted" style="font-size:12px">Quantités réelles vs prédictions</div></div>
+  <a routerLink="/production/agent-production/fiches" class="card ap-quick-card">
+    <div class="kpi-ico iy"><i class="fa-solid fa-file-lines"></i></div>
+    <div style="flex:1">
+      <div class="fw-bold" style="color:var(--n900)">Fiches produit journalières</div>
+      <div class="text-muted" style="font-size:12px">Quantités réelles vs prédictions</div>
+    </div>
+    <i class="fa-solid fa-chevron-right" style="color:var(--n400)"></i>
   </a>
 </div>
 
 }
+</div>

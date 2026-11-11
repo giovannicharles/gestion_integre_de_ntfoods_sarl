@@ -155,7 +155,7 @@ export class ProductionDashboardComponent implements OnInit {
     this.chargerDonnees();
   }
 
-  private chargerDonnees(): void {
+  chargerDonnees(): void {
     this.loading.set(true);
     forkJoin({
       lots: this.svc.getLots(),

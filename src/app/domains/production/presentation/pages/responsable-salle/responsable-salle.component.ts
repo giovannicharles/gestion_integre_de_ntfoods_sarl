@@ -96,7 +96,7 @@ export class ResponsableSalleComponent implements OnInit {
 
   /** Répartition de la production du jour par poste (classement de l'affectation en cours). */
   donutPostesJour(): DonutSlice[] {
-    const palette = ['#14532D', '#2e7d32', '#f57c00', '#7b1fa2', '#c2185b', '#00838f', '#5d4037', '#455a64'];
+    const palette = ['#14532D', '#1E7A42', '#F6B60B', '#C49200', '#2A9D5F', '#6D4C41', '#C22B2B', '#0D3A1E'];
     return (this.affectation?.classement ?? []).map((c, i) => ({
       label: c.libellePoste, value: c.quantiteRealisee, color: palette[i % palette.length],
     }));

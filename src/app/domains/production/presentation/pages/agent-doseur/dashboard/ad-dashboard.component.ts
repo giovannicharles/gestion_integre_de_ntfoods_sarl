@@ -85,22 +85,22 @@ export class AdDashboardComponent implements OnInit {
 
   serieEvolutionFuts = computed<ChartSeries[]>(() => {
     const jours = this.joursGlissants(7); const h = this.historique30j();
-    return [{ name: 'Fûts nets', color: 'var(--success, #2e7d32)', values: jours.map(j => h.filter(s => s.date === j).reduce((s, x) => s + x.nbFutsNets, 0)) }];
+    return [{ name: 'Fûts nets', color: 'var(--g, #14532D)', values: jours.map(j => h.filter(s => s.date === j).reduce((s, x) => s + x.nbFutsNets, 0)) }];
   });
 
   donutMatieres = computed<DonutSlice[]>(() => {
-    const couleurs: Record<string, string> = { MAIS: '#f9a825', SOJA: '#558b2f', ARACHIDE: '#6d4c41' };
+    const couleurs: Record<string, string> = { MAIS: '#F6B60B', SOJA: '#1E7A42', ARACHIDE: '#C49200' };
     const h = this.historique30j();
     const parType = new Map<string, number>();
     for (const s of h) for (const m of s.matieresUtilisees) parType.set(m.typeMatiere, (parType.get(m.typeMatiere) ?? 0) + m.quantiteKg);
-    return Array.from(parType.entries()).map(([label, value]) => ({ label, value: Math.round(value * 10) / 10, color: couleurs[label] ?? '#999' }));
+    return Array.from(parType.entries()).map(([label, value]) => ({ label, value: Math.round(value * 10) / 10, color: couleurs[label] ?? '#9CA3AF' }));
   });
 
   serieMelangeTypes = computed<ChartSeries[]>(() => {
     const jours = this.joursGlissants(7); const h = this.historique30j();
     return [
       { name: 'Bouillie', color: '#14532D', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'BOUILLIE').length) },
-      { name: 'Mélange Arachide', color: '#7b1fa2', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'ARACHIDE').length) },
+      { name: 'Mélange Arachide', color: '#F6B60B', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'ARACHIDE').length) },
     ];
   });
 

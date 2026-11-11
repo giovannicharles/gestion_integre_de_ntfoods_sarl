@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { extractApiError } from '../../../core/http/api-error-parser';
 
 /**
  * Dernière étape du parcours « mot de passe oublié » : nécessite la session JWT ouverte par
@@ -24,6 +25,7 @@ export class ResetPasswordComponent implements OnInit {
   loading = signal(false);
   showPassword = false;
   showConfirmPassword = false;
+  capsLockOn = signal(false);
   error = signal('');
 
   constructor(private fb: FormBuilder) {
@@ -41,6 +43,50 @@ export class ResetPasswordComponent implements OnInit {
     const hasLetter = /[a-zA-Z]/.test(value);
     const hasDigit = /[0-9]/.test(value);
     return hasLetter && hasDigit ? null : { complexity: true };
+  }
+
+  get currentPassword(): string {
+    return (this.resetForm.get('password')?.value as string) || '';
+  }
+
+  get hasMinLength(): boolean {
+    return this.currentPassword.length >= 8;
+  }
+
+  get hasLetter(): boolean {
+    return /[a-zA-Z]/.test(this.currentPassword);
+  }
+
+  get hasDigit(): boolean {
+    return /[0-9]/.test(this.currentPassword);
+  }
+
+  get hasSpecialOrUpper(): boolean {
+    return /[A-Z]/.test(this.currentPassword) && /[^a-zA-Z0-9]/.test(this.currentPassword);
+  }
+
+  get strengthScore(): number {
+    if (!this.currentPassword) return 0;
+    let score = 0;
+    if (this.hasMinLength) score++;
+    if (this.hasLetter) score++;
+    if (this.hasDigit) score++;
+    if (this.hasSpecialOrUpper || this.currentPassword.length >= 12) score++;
+    return score;
+  }
+
+  get strengthLabel(): string {
+    const s = this.strengthScore;
+    if (s <= 1) return 'Faible';
+    if (s === 2) return 'Moyen';
+    if (s === 3) return 'Bon';
+    return 'Robuste';
+  }
+
+  onKeyEvent(event: KeyboardEvent): void {
+    if (typeof event.getModifierState === 'function') {
+      this.capsLockOn.set(event.getModifierState('CapsLock'));
+    }
   }
 
   ngOnInit(): void {
@@ -72,7 +118,7 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.erreur || err?.message || 'Échec du changement de mot de passe.');
+        this.error.set(extractApiError(err, 'Échec du changement de mot de passe.'));
       }
     });
   }

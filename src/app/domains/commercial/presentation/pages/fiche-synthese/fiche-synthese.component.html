@@ -9,13 +9,62 @@
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-print"></i> Imprimer</button>
+      <a routerLink="/commercial/ventes" class="btn btn-ghost btn-sm"><i class="fa-solid fa-cart-shopping"></i> Ventes</a>
+      <a routerLink="/commercial/versements" class="btn btn-ghost btn-sm"><i class="fa-solid fa-money-bill-wave"></i> Versements</a>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i></button>
+      <button class="btn btn-primary btn-sm" (click)="imprimer()"><i class="fa-solid fa-print"></i> Imprimer</button>
     </div>
   </div>
 
-  <!-- RÉSUMÉ FINANCIER -->
+  @if (loading()) {
+  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement de la fiche de synthèse…</div>
+  } @else if (loadError()) {
+  <div class="error-state">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <p>{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- KPI HERO (Charte TANTY : Vert / Or / Rouge) -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Réalisé du Jour</span>
+        <span class="kpi-val">{{ fCFA(fiche()?.ca ?? 0) }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-coins"></i> Comptant : {{ fCFA(fiche()?.vteCpt ?? 0) }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Recouvrement & Crédit</span>
+        <span class="kpi-val">{{ fCFA(fiche()?.recouvrements ?? 0) }}</span>
+        <span class="kpi-meta">Solde VAC : {{ fCFA(fiche()?.soldeVAC ?? 0) }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-vault"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Solde Caisse Final</span>
+        <span class="kpi-val">{{ fCFA(fiche()?.sCaisse ?? 0) }}</span>
+        <span class="kpi-meta">Vst. Banques : {{ fCFA(fiche()?.vstBanques ?? 0) }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-ico ir"><i class="fa-solid fa-receipt"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Dépenses & Avaries</span>
+        <span class="kpi-val">{{ fCFA((fiche()?.depensesJustifiees ?? 0) + (fiche()?.depensesNonJust ?? 0)) }}</span>
+        <span class="kpi-meta">Avaries + Promos : {{ fCFA((fiche()?.montantAvaries ?? 0) + (fiche()?.montantDotPromo ?? 0)) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RÉSUMÉ FINANCIER DÉTAILLÉ -->
   <div class="card fs-summary">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-calculator"></i> Résumé Financier</span></div>
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-calculator"></i> Détail Financier de la Tournée</span></div>
     <div class="fs-grid">
       <div class="fs-item"><span class="fs-lbl">VAC Init</span><span class="fs-val">{{ fCFA(fiche()?.vacInit ?? 0) }}</span></div>
       <div class="fs-item"><span class="fs-lbl">CA Réalisé</span><span class="fs-val text-success">{{ fCFA(fiche()?.ca ?? 0) }}</span></div>
@@ -69,11 +118,12 @@
             <td class="center mono fw-bold text-success">{{ ligne.qteFacturee }}</td>
           </tr>
           } @empty {
-          <tr><td colspan="9" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune ligne pour cette fiche</td></tr>
+          <tr><td colspan="9" class="empty-state"><i class="fa-solid fa-inbox"></i> Aucune ligne pour cette fiche</td></tr>
           }
         </tbody>
       </table>
     </div>
   </div>
+  }
 
 </div>

@@ -31,11 +31,11 @@
 
 .badge-success { background: var(--g-gh); color: var(--g); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
 .badge-danger { background: var(--r-gh, #fee2e2); color: var(--r, #b91c1c); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
-.badge-primary { background: var(--b-gh, #E6F2EC); color: var(--b, #1d4ed8); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
+.badge-primary { background: var(--g-gh, #E6F2EC); color: var(--g, #14532D); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
 .badge-secondary { background: var(--n150); color: var(--n700); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
 .badge-warning { background: var(--y-gh); color: var(--y-d); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
 .badge-neutral { background: var(--n100); color: var(--n500); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
-.badge-info { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
+.badge-info { background: var(--y-gh, #FFF8E1); color: var(--y-d, #C49200); padding: 2px 8px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; }
 
 /* CHARTS */
 .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 22px; }

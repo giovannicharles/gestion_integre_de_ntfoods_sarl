@@ -86,8 +86,8 @@ export class RsDashboardComponent implements OnInit {
   serieFutsVsProduction = computed<ChartSeries[]>(() => {
     const jours = this.rapportHebdo()?.comparaisonsJournalieres ?? [];
     return [
-      { name: 'Fûts nets', color: 'var(--info, #C49200)', values: jours.map(j => j.nbFutsNets) },
-      { name: 'Production (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => j.productionReelleKg) },
+      { name: 'Fûts nets', color: 'var(--y-d, #C49200)', values: jours.map(j => j.nbFutsNets) },
+      { name: 'Production (kg)', color: 'var(--g, #14532D)', values: jours.map(j => j.productionReelleKg) },
     ];
   });
 

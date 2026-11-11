@@ -36,6 +36,10 @@ export class RpDashboardComponent implements OnInit {
   grandsComptesActifs = computed(() => this.data()?.grandsComptesActifs ?? 0);
   relancesDues = computed(() => this.data()?.relancesDues ?? 0);
   caGrandsComptes = computed(() => this.data()?.caGrandsComptes ?? 0);
+  tauxGrandsComptes = computed(() => {
+    const total = this.grandsComptes().length;
+    return total > 0 ? Math.round((this.grandsComptesActifs() / total) * 100) : 0;
+  });
 
   ngOnInit(): void {
     this.charger();
@@ -60,7 +64,16 @@ export class RpDashboardComponent implements OnInit {
     });
   }
 
+  initiales(nom: string): string {
+    if (!nom) return 'RP';
+    const parts = nom.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'RP';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   tauxOccupation(o: { livrees: number; repertoriees: number }): number {
+    if (!o.repertoriees || o.repertoriees <= 0) return 0;
     return Math.round((o.livrees / o.repertoriees) * 100);
   }
   occupationClass(o: { livrees: number; repertoriees: number }): string {

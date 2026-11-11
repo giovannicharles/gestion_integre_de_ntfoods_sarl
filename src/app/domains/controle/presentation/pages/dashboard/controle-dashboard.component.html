@@ -1,4 +1,4 @@
-<div class="dash">
+<div class="dash animate-fadeInUp">
   <!-- HEADER -->
   <div class="ph ph-wm-controle">
     <div class="ph-left">
@@ -9,8 +9,10 @@
       </div>
     </div>
     <div class="ph-actions">
+      <a routerLink="/controle/consommables" class="btn btn-ghost btn-sm"><i class="fa-solid fa-boxes-packing"></i> Consommables</a>
       <a routerLink="/controle/audit" class="btn btn-outline btn-sm"><i class="fa-solid fa-fingerprint"></i> Piste d'audit</a>
       <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
     </div>
   </div>
 
@@ -26,13 +28,13 @@
 
   <!-- ALERTE ÉCARTS ROUGES -->
   @if (ecartsRouges() > 0) {
-  <div class="alert-banner-red">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    {{ ecartsRouges() }} alerte(s) rouge(s), écart entre CA déclaré et cash versé à justifier.
+  <div class="alert-banner-red ctrl-alert-between">
+    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ ecartsRouges() }} alerte(s) rouge(s) · écart entre CA déclaré et cash versé à justifier.</span>
+    <a routerLink="/controle/ecarts" class="btn btn-danger btn-sm">Examiner les écarts</a>
   </div>
   }
 
-  <!-- KPI -->
+  <!-- KPI (Charte TANTY : Vert / Or / Rouge) -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-decor"></div>
@@ -58,6 +60,9 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Marge nette moyenne</span>
         <span class="kpi-val">{{ margeMoyenne() }}%</span>
+        <div class="prog-bar-wrap ctrl-mini-prog">
+          <div class="prog-bar" [class.prog-g]="margeMoyenne()>=35" [class.prog-y]="margeMoyenne()>=25 && margeMoyenne()<35" [class.prog-r]="margeMoyenne()<25" [style.width.%]="Math.min(margeMoyenne(), 100)"></div>
+        </div>
         <span class="kpi-meta">Sur coûts de revient réels</span>
       </div>
     </div>
@@ -72,32 +77,68 @@
     </div>
   </div>
 
-  <!-- DÉCAISSEMENTS EN COURS -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements en cours</span>
-      <span class="badge bg-red badge-sm">{{ decaissementsAttente() }}</span>
-      <a routerLink="/controle/decaissements" class="btn btn-ghost btn-sm">Voir tout</a>
+  <!-- SYNTHÈSE BUDGÉTAIRE + DÉCAISSEMENTS EN COURS -->
+  <div class="section-row">
+    <div class="card table-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements en cours</span>
+        <div class="ctrl-hd-actions">
+          <span class="badge bg-red badge-sm">{{ decaissementsAttente() }} en attente</span>
+          <a routerLink="/controle/decaissements" class="btn btn-ghost btn-sm">Voir tout</a>
+        </div>
+      </div>
+      @if (decaissementsEnCours().length > 0) {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>N°</th><th>Bénéficiaire</th><th class="text-right">Montant</th><th>Statut</th></tr></thead>
+          <tbody>
+            @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
+            <tr>
+              <td class="fw-bold mono">{{ d.numeroDecaissement }}</td>
+              <td>{{ d.beneficiaire }}</td>
+              <td class="text-right mono fw-bold">{{ fCFA(d.montantFCFA) }}</td>
+              <td>
+                @if (d.statut === 'PROPOSE') {
+                <span class="badge bg-orange badge-sm">Proposé · att. DG (1)</span>
+                } @else {
+                <span class="badge bg-success badge-sm">DG (1) ✓ · att. DG (2)</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      } @else {
+      <div class="empty-state">Aucun décaissement en attente de visa.</div>
+      }
     </div>
-    @if (decaissementsEnCours().length > 0) {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>N°</th><th>Bénéficiaire</th><th class="text-right">Montant</th><th>Statut</th></tr></thead>
-        <tbody>
-          @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
-          <tr>
-            <td class="fw-bold">{{ d.numeroDecaissement }}</td>
-            <td>{{ d.beneficiaire }}</td>
-            <td class="text-right mono">{{ fCFA(d.montantFCFA) }}</td>
-            <td>{{ d.statut === 'PROPOSE' ? 'Proposé, att. DG (1)' : 'DG (1) ✓, att. DG (2)' }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+
+    <div class="card ranking-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-wallet"></i> Synthèse d'exécution budgétaire</span>
+        @if (budgetDepasse() > 0) {
+        <span class="badge bg-red badge-sm">{{ budgetDepasse() }} dépassement(s)</span>
+        } @else {
+        <span class="badge bg-success badge-sm">Sous contrôle</span>
+        }
+      </div>
+      <div class="ctrl-qs-body">
+        <div class="ctrl-qs-row">
+          <div class="ctrl-qs-hd">
+            <span class="ctrl-qs-lbl">Budget global engagé</span>
+            <span class="ctrl-qs-val mono">{{ fCFA(budgetEngage()) }} / {{ fCFA(budgetTotal()) }}</span>
+          </div>
+          <div class="prog-track-wide">
+            <div class="prog-bar" [class.prog-g]="tauxConsommationBudget() < 80" [class.prog-y]="tauxConsommationBudget() >= 80 && tauxConsommationBudget() < 100" [class.prog-r]="tauxConsommationBudget() >= 100" [style.width.%]="Math.min(tauxConsommationBudget(), 100)"></div>
+          </div>
+          <div class="ctrl-qs-foot">
+            <span>Taux d'engagement : <strong>{{ tauxConsommationBudget() }}%</strong></span>
+            <span>Anomalies critiques : <strong [class.text-danger]="anomaliesElevees() > 0">{{ anomaliesElevees() }}</strong></span>
+          </div>
+        </div>
+      </div>
     </div>
-    } @else {
-    <div class="empty-state">Aucun décaissement en cours.</div>
-    }
   </div>
 
   <!-- MARGES PAR PRODUIT -->
@@ -120,6 +161,8 @@
               <span class="taux-chip" [class.taux-ok]="m.margePct>=38" [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct }}%</span>
             </td>
           </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucune donnée de marge disponible.</td></tr>
           }
         </tbody>
       </table>
@@ -136,11 +179,16 @@
           <tbody>
             @for (b of budget(); track b.id) {
             <tr [class.row-alert]="b.engage > b.budget">
-              <td>{{ b.poste }}</td>
+              <td class="fw-bold">{{ b.poste }}</td>
               <td class="text-right mono">{{ fCFA(b.budget) }}</td>
               <td class="text-right mono">{{ fCFA(b.engage) }}</td>
               <td>
-                <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100" [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{ budgetPct(b) }}%</span>
+                <div class="ctrl-prog-cell">
+                  <div class="prog-bar-wrap ctrl-prog-bar">
+                    <div class="prog-bar" [class.prog-r]="budgetPct(b)>=100" [class.prog-y]="budgetPct(b)>=80 && budgetPct(b)<100" [class.prog-g]="budgetPct(b)<80" [style.width.%]="Math.min(budgetPct(b), 100)"></div>
+                  </div>
+                  <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100" [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{ budgetPct(b) }}%</span>
+                </div>
               </td>
             </tr>
             } @empty {
@@ -158,11 +206,13 @@
           <tbody>
             @for (v of variances(); track v.poste) {
             <tr>
-              <td>{{ v.poste }}</td>
+              <td class="fw-bold">{{ v.poste }}</td>
               <td class="mono">{{ v.standard }}</td>
               <td class="mono">{{ v.reel }}</td>
               <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
             </tr>
+            } @empty {
+            <tr><td colspan="4" class="empty-state">Aucune donnée de variance enregistrée.</td></tr>
             }
           </tbody>
         </table>

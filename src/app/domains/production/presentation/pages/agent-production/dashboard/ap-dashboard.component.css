@@ -1,2 +1,15 @@
 /* Styles propres au dashboard Agent de Production, le thème global et
    _shared.css couvrent déjà cartes, KPI, tables et badges. */
+.ap-quick-card {
+  padding: var(--sp-4);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ap-quick-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--g, #14532D);
+  box-shadow: var(--sh-md);
+}

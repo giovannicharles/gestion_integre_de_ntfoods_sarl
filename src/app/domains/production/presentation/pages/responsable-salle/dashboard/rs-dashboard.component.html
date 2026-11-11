@@ -1,41 +1,114 @@
+<div class="dash animate-fadeInUp">
+
 <div class="ph">
   <div class="ph-left">
-    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div class="ph-icon"><i class="fa-solid fa-people-roof"></i></div>
     <div>
-      <h1 class="ph-title">Tableau de Bord · Responsable de Salle</h1>
-      <p class="ph-sub">Centre de pilotage quotidien de l'atelier</p>
+      <div class="ph-title">Tableau de Bord · Responsable de Salle</div>
+      <div class="ph-sub">Centre de pilotage quotidien de l'atelier · {{ today | date:'dd/MM/yyyy' }}</div>
     </div>
   </div>
   <div class="ph-actions">
-    <a routerLink="/production/responsable-salle-v2/realisations-poste" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Saisir les réalisations</a>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" [disabled]="loading()">
+      <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <a routerLink="/production/responsable-salle-v2/affectations" class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-users-gear"></i> Affectations
+    </a>
+    <a routerLink="/production/responsable-salle-v2/realisations-poste" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-pen-to-square"></i> Saisir les réalisations
+    </a>
   </div>
 </div>
 
 @if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  @for (i of [1,2,3,4]; track i) {
+    <div class="skeleton skeleton-row"></div>
+  }
 } @else {
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">BC en cours</div><div class="kpi-val">{{ bcEnCours() }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">PPH actifs</div><div class="kpi-val">{{ pphActifs() }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Employés affectés (jour)</div><div class="kpi-val">{{ employesAffectesJour() }}</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Postes actifs</div><div class="kpi-val">{{ postesActifs() }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Postes ayant atteint l'objectif</div><div class="kpi-val">{{ postesObjectifAtteint() }}</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Quantité produite (jour)</div><div class="kpi-val">{{ quantiteProduiteJour() | number:'1.1-1' }}</div></div></div>
-  <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Fûts reçus du Doseur</div><div class="kpi-val">{{ dashboardAgent()?.ofsEnCours ?? 0 }}</div></div></div>
-  <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Taux global d'atteinte</div><div class="kpi-val">{{ tauxGlobalObjectifs() }}%</div></div></div>
-  <div class="kpi-card kp-r"><div class="kpi-body"><div class="kpi-lbl">Écarts détectés</div><div class="kpi-val">{{ ecartsDetectes() }}</div></div></div>
-  <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Fiches Info Produit générées</div><div class="kpi-val">{{ fichesGenerees() }}</div></div></div>
+<h2 class="dash-section-title"><i class="fa-solid fa-industry"></i> Pilotage Atelier & Objectifs du Jour</h2>
+<div class="kpi-grid kpi-grid-4">
+  <div class="kpi-card kp-g featured">
+    <div class="kpi-ico ig"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Quantité produite (jour)</div>
+      <div class="kpi-val">{{ quantiteProduiteJour() | number:'1.1-1' }}</div>
+      <div class="kpi-meta">{{ fichesGenerees() }} fiche(s) générée(s)</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g featured">
+    <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Taux global d'atteinte</div>
+      <div class="kpi-val">{{ tauxGlobalObjectifs() }}%</div>
+      <div class="prog-bar-wrap" style="margin-top:6px"><div class="prog-bar" [class.prog-g]="tauxGlobalObjectifs()>=80" [class.prog-y]="tauxGlobalObjectifs()>=50 && tauxGlobalObjectifs()<80" [class.prog-r]="tauxGlobalObjectifs()<50" [style.width.%]="tauxGlobalObjectifs() > 100 ? 100 : tauxGlobalObjectifs()"></div></div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y featured">
+    <div class="kpi-ico iy"><i class="fa-solid fa-users"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Employés affectés (jour)</div>
+      <div class="kpi-val">{{ employesAffectesJour() }}</div>
+      <div class="kpi-meta">{{ postesActifs() }} postes actifs</div>
+    </div>
+  </div>
+  <div class="kpi-card" [class.kp-r]="ecartsDetectes() > 0" [class.kp-g]="ecartsDetectes() === 0">
+    <div class="kpi-ico" [class.ir]="ecartsDetectes() > 0" [class.ig]="ecartsDetectes() === 0">
+      <i class="fa-solid" [class.fa-triangle-exclamation]="ecartsDetectes() > 0" [class.fa-circle-check]="ecartsDetectes() === 0"></i>
+    </div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Écarts détectés</div>
+      <div class="kpi-val">{{ ecartsDetectes() }}</div>
+      <div class="kpi-meta">{{ postesObjectifAtteint() }} / {{ postesActifs() }} postes à 100%</div>
+    </div>
+  </div>
+</div>
+
+<h2 class="dash-section-title"><i class="fa-solid fa-clipboard-list"></i> Planning & Flux Amont</h2>
+<div class="kpi-grid kpi-grid-4">
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-file-contract"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">BC en cours</div>
+      <div class="kpi-val">{{ bcEnCours() }}</div>
+      <div class="kpi-meta">Bons de commande actifs</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-ico ig"><i class="fa-solid fa-calendar-week"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">PPH actifs</div>
+      <div class="kpi-val">{{ pphActifs() }}</div>
+      <div class="kpi-meta">{{ pphEnCours()?.referencePPH ?? 'Aucun PPH' }}</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-ico iy"><i class="fa-solid fa-bottle-droplet"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">OFs / Flux en cours</div>
+      <div class="kpi-val">{{ dashboardAgent()?.ofsEnCours ?? 0 }}</div>
+      <div class="kpi-meta">Suivi atelier</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-b">
+    <div class="kpi-ico ib"><i class="fa-solid fa-file-lines"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fiches Info Produit</div>
+      <div class="kpi-val">{{ fichesGenerees() }}</div>
+      <div class="kpi-meta">Journée en cours</div>
+    </div>
+  </div>
 </div>
 
 <div class="two-col">
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Fûts reçus vs Production réalisée (semaine)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsJours()" [series]="serieFutsVsProduction()" [height]="200" /></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsJours()" [series]="serieFutsVsProduction()" [height]="220" /></div>
   </div>
   <div class="card">
     <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-column"></i> Performance des postes (jour)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsClassementPostes()" [series]="serieClassementPostes()" [height]="200" /></div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-mini-chart type="bar" [labels]="labelsClassementPostes()" [series]="serieClassementPostes()" [height]="220" /></div>
   </div>
 </div>
 
@@ -44,3 +117,4 @@
 }
 
 }
+</div>

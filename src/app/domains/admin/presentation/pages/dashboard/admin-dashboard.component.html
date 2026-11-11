@@ -1,12 +1,17 @@
 <div class="dash animate-fadeInUp">
 
-  <div class="ph">
+  <div class="ph ph-wm-admin">
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-gauge-high"></i></div>
       <div>
         <h1 class="ph-title">Tableau de Bord Administration</h1>
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Comptes · Sécurité · Système</p>
       </div>
+    </div>
+    <div class="ph-actions">
+      <a routerLink="/admin/permissions" class="btn btn-ghost btn-sm"><i class="fa-solid fa-user-shield"></i> RBAC</a>
+      <a routerLink="/admin/utilisateurs" class="btn btn-primary btn-sm"><i class="fa-solid fa-users-gear"></i> Utilisateurs</a>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
     </div>
   </div>
 
@@ -31,6 +36,7 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Utilisateurs</span>
         <span class="kpi-val">{{ totalUtilisateurs() }}</span>
+        <div class="prog-bar-wrap" style="height:5px;margin:4px 0 2px"><div class="prog-bar prog-g" [style.width.%]="totalUtilisateurs() > 0 ? Math.round((nbActifs() / totalUtilisateurs()) * 100) : 0"></div></div>
         <div class="kpi-meta"><i class="fa-solid fa-user-check"></i> {{ nbActifs() }} actif(s)</div>
       </div>
     </div>
@@ -47,6 +53,7 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Comptes bloqués</span>
         <span class="kpi-val" [style.color]="nbBloques()>0?'var(--r)':''">{{ nbBloques() }}</span>
+        <div class="prog-bar-wrap" style="height:5px;margin:4px 0 2px"><div class="prog-bar prog-r" [style.width.%]="tauxBlocage()"></div></div>
         <div class="kpi-meta"><i class="fa-solid fa-percent"></i> {{ tauxBlocage() }}% des comptes</div>
       </div>
     </div>

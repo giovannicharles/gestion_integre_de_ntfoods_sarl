@@ -126,34 +126,37 @@
       <div class="kpi-body">
         <span class="kpi-lbl">Marge Globale</span>
         <span class="kpi-val">{{ margeGlobale() }}%</span>
+        <div class="prog-bar-wrap kpi-mini-prog"><div class="prog-bar prog-g" [style.width.%]="Math.min(margeGlobale(), 100)"></div></div>
         <div class="kpi-meta"><i class="fa-solid fa-coins"></i> Rentabilité réelle des opérations</div>
       </div>
     </div>
-    <div class="kpi-card kp-b">
+    <div class="kpi-card kp-b kpi-card-link" routerLink="/stock/valorisation" title="Voir la valorisation détaillée">
       <div class="kpi-decor kd-b"></div>
       <div class="kpi-ico ib"><i class="fa-solid fa-warehouse"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Valorisation Stock (3 magasins)</span>
         <span class="kpi-val">{{ fCFA(valoStock()) }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i> MP · Consommables · Produits finis</div>
+        <div class="kpi-meta"><i class="fa-solid fa-boxes-stacked"></i> MP {{ fCFA(kpis()?.stockMatieresPremieres ?? 0) }} · PF {{ fCFA(kpis()?.stockProduitsFinis ?? 0) }}</div>
       </div>
     </div>
-    <div class="kpi-card kp-y">
+    <div class="kpi-card kp-y kpi-card-link" routerLink="/dg/objectifs" title="Gérer les objectifs">
       <div class="kpi-decor kd-y"></div>
       <div class="kpi-ico iy"><i class="fa-solid fa-industry"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Taux Réalisation Objectif</span>
         <span class="kpi-val">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span>
-        <div class="kpi-meta"><i class="fa-solid fa-gauge-high"></i> Objectif global de vente</div>
+        <div class="prog-bar-wrap kpi-mini-prog"><div class="prog-bar prog-y" [style.width.%]="kpis() ? Math.min(Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100), 100) : 0"></div></div>
+        <div class="kpi-meta"><i class="fa-solid fa-gauge-high"></i> Cible : {{ fCFA(kpis()?.objectifCible ?? 0) }}</div>
       </div>
     </div>
-    <div class="kpi-card kp-r">
+    <div class="kpi-card kp-r kpi-card-link" (click)="setTab('marches')" title="Voir le détail par zone">
       <div class="kpi-decor kd-r"></div>
       <div class="kpi-ico ir"><i class="fa-solid fa-map-location-dot"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Occupation Marchés</span>
         <span class="kpi-val">{{ occupationMoyenne() }}%</span>
-        <div class="kpi-meta"><i class="fa-solid fa-store"></i> Boutiques livrées / répertoriées</div>
+        <div class="prog-bar-wrap kpi-mini-prog"><div class="prog-bar" [class.prog-g]="occupationMoyenne()>=70" [class.prog-y]="occupationMoyenne()>=45 && occupationMoyenne()<70" [class.prog-r]="occupationMoyenne()<45" [style.width.%]="Math.min(occupationMoyenne(), 100)"></div></div>
+        <div class="kpi-meta"><i class="fa-solid fa-store"></i> {{ occupation().length }} secteurs suivis</div>
       </div>
     </div>
   </div>
@@ -287,6 +290,8 @@
           </div>
           @if (tauxRealisationCom(com) >= 100) { <span class="badge bg-success badge-sm">Prime ✓</span> }
         </div>
+        } @empty {
+        <p class="empty-state">Aucun classement commercial disponible cette semaine.</p>
         }
       </div>
     </div>
@@ -294,22 +299,60 @@
   </div><!-- /section-row -->
   </div><!-- /tab-panel commercial -->
 
-  <!-- FICHE SYNTHÈSE CONDENSÉE -->
+  <!-- FICHE SYNTHÈSE CONDENSÉE + QUICK STATS STOCK (21st.dev) -->
   <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
-  <div class="card fiche-card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse, {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
-      <a routerLink="/stock/commercial" class="btn btn-ghost btn-sm"><i class="fa-solid fa-external-link-alt"></i> Stock</a>
+  <div class="section-row">
+    <div class="card fiche-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-file-lines"></i> Fiche de Synthèse · {{ today | date:'dd/MM/yyyy':'':"fr" }}</span>
+        <a routerLink="/dg/reporting" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-pie"></i> Reporting</a>
+      </div>
+      <div class="fiche-kpis">
+        <div class="fiche-kpi"><span class="fk-lbl">CA Total</span><span class="fk-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">CA Mois N-1</span><span class="fk-val text-success">{{ fCFA(kpis()?.caMoisN1 ?? 0) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Trésorerie</span><span class="fk-val text-warning">{{ fCFA(kpis()?.tresorerie ?? 0) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Valeur Stock</span><span class="fk-val text-primary">{{ fCFA(valoStock()) }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Ventes Mois</span><span class="fk-val">{{ kpis()?.ventesCount ?? 0 }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Marge Globale</span><span class="fk-val text-primary">{{ margeGlobale() }}%</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Commerciaux</span><span class="fk-val">{{ kpis()?.commerciauxActifs ?? 0 }}</span></div>
+        <div class="fiche-kpi"><span class="fk-lbl">Tx Réalisation</span><span class="fk-val text-success">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span></div>
+      </div>
     </div>
-    <div class="fiche-kpis">
-      <div class="fiche-kpi"><span class="fk-lbl">CA Total</span><span class="fk-val">{{ fCFA(kpis()?.caTotal ?? 0) }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">CA Mois N-1</span><span class="fk-val text-success">{{ fCFA(kpis()?.caMoisN1 ?? 0) }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Trésorerie</span><span class="fk-val text-warning">{{ fCFA(kpis()?.tresorerie ?? 0) }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Valeur Stock</span><span class="fk-val text-primary">{{ fCFA(valoStock()) }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Ventes Mois</span><span class="fk-val">{{ kpis()?.ventesCount ?? 0 }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Marge Globale</span><span class="fk-val text-primary">{{ fCFA(kpis()?.margeGlobale ?? 0) }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Commerciaux</span><span class="fk-val">{{ kpis()?.commerciauxActifs ?? 0 }}</span></div>
-      <div class="fiche-kpi"><span class="fk-lbl">Tx Réalisation</span><span class="fk-val text-success">{{ kpis() ? Math.round((kpis()!.objectifRealise / (kpis()!.objectifCible || 1)) * 100) : 0 }}%</span></div>
+
+    <div class="card fiche-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-warehouse"></i> Répartition Valorisation Stock</span>
+        <a routerLink="/stock/commercial" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> Magasins</a>
+      </div>
+      <div class="quick-stats-list">
+        <div class="qs-item">
+          <div class="qs-hd">
+            <span class="qs-lbl">Matières Premières (MP)</span>
+            <span class="qs-val mono">{{ fCFA(kpis()?.stockMatieresPremieres ?? 0) }}</span>
+          </div>
+          <div class="prog-track-wide">
+            <div class="prog-bar prog-g" [style.width.%]="valoStock() > 0 ? Math.round(((kpis()?.stockMatieresPremieres ?? 0) / valoStock()) * 100) : 0"></div>
+          </div>
+        </div>
+        <div class="qs-item">
+          <div class="qs-hd">
+            <span class="qs-lbl">Produits Finis (PF)</span>
+            <span class="qs-val mono">{{ fCFA(kpis()?.stockProduitsFinis ?? 0) }}</span>
+          </div>
+          <div class="prog-track-wide">
+            <div class="prog-bar prog-y" [style.width.%]="valoStock() > 0 ? Math.round(((kpis()?.stockProduitsFinis ?? 0) / valoStock()) * 100) : 0"></div>
+          </div>
+        </div>
+        <div class="qs-item">
+          <div class="qs-hd">
+            <span class="qs-lbl">Consommables & Emballages</span>
+            <span class="qs-val mono">{{ fCFA(kpis()?.stockConsommables ?? 0) }}</span>
+          </div>
+          <div class="prog-track-wide">
+            <div class="prog-bar prog-r" [style.width.%]="valoStock() > 0 ? Math.round(((kpis()?.stockConsommables ?? 0) / valoStock()) * 100) : 0"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   </div><!-- /tab-panel apercu (fiche) -->
@@ -338,6 +381,8 @@
                 </div>
               </td>
             </tr>
+            } @empty {
+            <tr><td colspan="4" class="empty-state">Aucun secteur de marché renseigné.</td></tr>
             }
           </tbody>
         </table>

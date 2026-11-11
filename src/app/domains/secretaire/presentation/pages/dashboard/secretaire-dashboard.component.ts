@@ -4,9 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ComptableService, VersementBE } from '../../../../comptable/infrastructure/comptable.service';
 import { CommercialService, PreCommandeBE } from '../../../../commercial/infrastructure/commercial.service';
-import {
-  fCFA
-} from '../../../../../shared/utils/format.utils';
+import { fCFA } from '../../../../../shared/utils/format.utils';
 import { SecretaireService, PetiteCaisseResponse, MicroStockResponse, DocumentRecuResponse } from '../../../infrastructure/secretaire.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
@@ -28,6 +26,9 @@ export class SecretaireDashboardComponent implements OnInit {
   private readonly comSvc = inject(CommercialService);
   private readonly secSvc = inject(SecretaireService);
   private readonly toast = inject(ToastService);
+
+  loading = signal(false);
+  partialError = signal<string | null>(null);
 
   versements = signal<VersementBE[]>([]);
   commandes = signal<PreCommandeBE[]>([]);
@@ -51,19 +52,22 @@ export class SecretaireDashboardComponent implements OnInit {
     this.versements().reduce((s, v) => s + (v.cashVerse ?? 0), 0)
   );
 
-  versementsRecents = computed(() => this.versements().slice(0, 3));
+  versementsRecents = computed(() => this.versements().slice(0, 5));
 
   totalEntrees = computed(() => this.petiteCaisse().filter(p => p.type === 'ENTREE').reduce((s, p) => s + p.montant, 0));
   totalSorties = computed(() => this.petiteCaisse().filter(p => p.type === 'SORTIE').reduce((s, p) => s + p.montant, 0));
   soldeCaisse = computed(() => this.totalEntrees() - this.totalSorties());
   seuilDepasse = computed(() => this.soldeCaisse() > this.seuilSecurisation);
+  tauxSecurisationCaisse = computed(() =>
+    Math.min(100, Math.round((Math.max(0, this.soldeCaisse()) / this.seuilSecurisation) * 100))
+  );
 
   microStockBas = computed(() => this.microStock().filter(m => m.qte <= m.seuil).length);
   valeurMicroStock = computed(() => this.microStock().reduce((s, m) => s + m.qte * m.prixUnite, 0));
 
   docsIncomplets = computed(() => this.documents().filter(d => !d.feuilleRoute || !d.bonCommande || !d.factures).length);
 
-  // ── Signaler une réception (2026-10-25), endpoint déjà prêt, jamais appelé jusqu'ici. ──
+  // ── Signaler une réception ──
   showReceptionModal = signal(false);
   savingReception = signal(false);
   receptionForm = { matriculeCommercial: '', nom: '', feuilleRoute: false, bonCommande: false, factures: false };
@@ -89,13 +93,20 @@ export class SecretaireDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
+    this.loading.set(true);
+    this.partialError.set(null);
+
     this.cptSvc.getVersements().subscribe({
-      next: v => this.versements.set(v),
-      error: () => {},
+      next: v => { this.versements.set(v); this.loading.set(false); },
+      error: err => { this.partialError.set(extractApiError(err)); this.loading.set(false); },
     });
     this.comSvc.getPrecommandesAValider().subscribe({
       next: c => this.commandes.set(c.contenu),
-      error: () => {},
+      error: err => this.partialError.set(extractApiError(err)),
     });
     this.secSvc.getDashboard().subscribe({
       next: d => {
@@ -103,7 +114,7 @@ export class SecretaireDashboardComponent implements OnInit {
         this.microStock.set(d.microStock);
         this.documents.set(d.documents);
       },
-      error: () => {},
+      error: err => this.partialError.set(extractApiError(err)),
     });
   }
 }

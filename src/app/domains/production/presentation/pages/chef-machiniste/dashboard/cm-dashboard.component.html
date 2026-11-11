@@ -1,17 +1,27 @@
+<div class="dash animate-fadeInUp">
+
 <div class="ph">
   <div class="ph-left">
-    <i class="fa-solid fa-gauge-high ph-ico"></i>
+    <div class="ph-icon"><i class="fa-solid fa-gears"></i></div>
     <div>
-      <h1 class="ph-title">Tableau de Bord · Chef Machiniste</h1>
-      <p class="ph-sub">Pilotage du broyage, maïs, soja, arachide</p>
+      <div class="ph-title">Tableau de Bord · Chef Machiniste</div>
+      <div class="ph-sub">Pilotage du broyage · maïs, soja, arachide · {{ today | date:'dd/MM/yyyy' }}</div>
     </div>
   </div>
   <div class="ph-actions">
-    <a routerLink="/production/chef-machiniste/realisations" class="btn btn-primary"><i class="fa-solid fa-pen-to-square"></i> Saisir une réalisation</a>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" [disabled]="loading()">
+      <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <a routerLink="/production/chef-machiniste/objectifs" class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-bullseye"></i> Objectifs
+    </a>
+    <a routerLink="/production/chef-machiniste/realisations" class="btn btn-primary btn-sm">
+      <i class="fa-solid fa-pen-to-square"></i> Saisir une réalisation
+    </a>
   </div>
 </div>
 
-@if (error()) { <div class="alert alert-error">{{ error() }}</div> }
+@if (error()) { <div class="alert alert-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div> }
 
 @if (loading()) {
   @for (i of [1,2,3,4]; track i) {
@@ -21,15 +31,17 @@
 
 <!-- Vue d'ensemble production -->
 <h2 class="dash-section-title"><i class="fa-solid fa-industry"></i> Production du jour</h2>
-<div class="kpi-grid">
+<div class="kpi-grid kpi-grid-4">
   <div class="kpi-card kp-g featured"><div class="kpi-ico ig"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Poudre broyée (jour)</div><div class="kpi-val">{{ poudreTotaleJour() | number:'1.1-1' }} kg</div></div></div>
+    <div class="kpi-body"><div class="kpi-lbl">Poudre broyée (jour)</div><div class="kpi-val">{{ poudreTotaleJour() | number:'1.1-1' }} kg</div><div class="kpi-meta">Cumul temps réel</div></div></div>
   <div class="kpi-card kp-b featured"><div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Nette confirmée (clôturé)</div><div class="kpi-val">{{ netteBroyeeJour() | number:'1.1-1' }} kg</div></div></div>
+    <div class="kpi-body"><div class="kpi-lbl">Nette confirmée (clôturé)</div><div class="kpi-val">{{ netteBroyeeJour() | number:'1.1-1' }} kg</div><div class="kpi-meta">{{ productionsTerminees() }} session(s) clôturée(s)</div></div></div>
   <div class="kpi-card kp-r featured"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Pertes</div><div class="kpi-val">{{ pertesJour() | number:'1.1-1' }} kg</div></div></div>
+    <div class="kpi-body"><div class="kpi-lbl">Pertes</div><div class="kpi-val">{{ pertesJour() | number:'1.1-1' }} kg</div><div class="kpi-meta">{{ pctPertesJour() }}% du volume</div></div></div>
   <div class="kpi-card kp-y featured"><div class="kpi-ico iy"><i class="fa-solid fa-percent"></i></div>
-    <div class="kpi-body"><div class="kpi-lbl">Taux global de réalisation</div><div class="kpi-val">{{ tauxRealisationGlobal() }}%</div></div></div>
+    <div class="kpi-body"><div class="kpi-lbl">Taux global de réalisation</div><div class="kpi-val">{{ tauxRealisationGlobal() }}%</div>
+      <div class="prog-bar-wrap" style="margin-top:6px"><div class="prog-bar" [class.prog-g]="tauxRealisationGlobal()>=80" [class.prog-y]="tauxRealisationGlobal()>=50 && tauxRealisationGlobal()<80" [class.prog-r]="tauxRealisationGlobal()<50" [style.width.%]="tauxRealisationGlobal() > 100 ? 100 : tauxRealisationGlobal()"></div></div>
+    </div></div>
 </div>
 
 <!-- Répartition par type de poudre -->
@@ -129,3 +141,4 @@
 </div>
 
 }
+</div>
