@@ -307,29 +307,47 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.loading.set(true);
     this.error.set('');
     forkJoin({
-      stats: this.dashUC.getStats(),
-      alerts: this.dashUC.getAlerts(),
-      receipts: this.repo.getReceipts(),
-      movs: this.repo.getMovements(),
-      levels: this.repo.getStockLevels(),
-      batches: this.repo.getBatches(),
-      orders: this.repo.getOrders(),
-      dotations: this.dotationUC.getAll(),
+      stats: this.dashUC.getStats().pipe(catchError(() => of(null as unknown as DashboardStatsResponse))),
+      alerts: this.dashUC.getAlerts().pipe(catchError(() => of([]))),
+      receipts: this.repo.getReceipts().pipe(catchError(() => of([]))),
+      movs: this.repo.getMovements().pipe(catchError(() => of([]))),
+      levels: this.repo.getStockLevels().pipe(catchError(() => of([]))),
+      batches: this.repo.getBatches().pipe(catchError(() => of([]))),
+      orders: this.repo.getOrders().pipe(catchError(() => of([]))),
+      dotations: this.dotationUC.getAll().pipe(catchError(() => of([]))),
     }).pipe(takeUntil(this.destroy$)).subscribe({
       next: ({ stats, alerts, receipts, movs, levels, batches, orders, dotations }) => {
-        this.stats.set(stats);
-        this.alerts.set(alerts);
-        this.receipts.set(receipts.slice(0, 8));
-        this.movements.set(movs.slice(0, 10));
-        this.stockLevels.set(levels);
-        this.batches.set(batches);
-        this.orders.set(orders);
+        const critLevels = levels.filter(sl => sl.alertLevel === 'CRITIQUE');
+        const lowLevels = levels.filter(sl => sl.alertLevel === 'FAIBLE');
+        const surplusLevels = levels.filter(sl => sl.alertLevel === 'SURPLUS');
+        const calculatedVal = levels.reduce((sum, sl) => sum + (sl.stockValue || ((sl.quantity || 0) * (sl.unitPriceAmount || 0))), 0);
 
-        // KPIs calculÃ©s
-        this.totalValue.set(stats.totalStockValue);
-        this.criticalCount.set(levels.filter(sl => sl.alertLevel === 'CRITIQUE').length);
-        this.lowCount.set(levels.filter(sl => sl.alertLevel === 'FAIBLE').length);
-        this.surplusCount.set(levels.filter(sl => sl.alertLevel === 'SURPLUS').length);
+        const safeStats: DashboardStatsResponse = stats || {
+          totalStockValue: calculatedVal,
+          totalStockLevels: levels.length,
+          criticalAlerts: critLevels.length,
+          lowAlerts: lowLevels.length,
+          pendingReceipts: receipts.length,
+          todayReceipts: receipts.length,
+          pendingBatches: batches.length,
+          activeInternalOrders: orders.length,
+          todayMovements: movs.length,
+          todaySales: 0
+        };
+
+        this.stats.set(safeStats);
+        this.alerts.set(alerts || []);
+        this.receipts.set((receipts || []).slice(0, 8));
+        this.movements.set((movs || []).slice(0, 10));
+        this.stockLevels.set(levels || []);
+        this.batches.set(batches || []);
+        this.orders.set(orders || []);
+
+        // KPIs calculés
+        this.totalValue.set(safeStats.totalStockValue);
+        this.criticalCount.set(critLevels.length);
+        this.lowCount.set(lowLevels.length);
+        this.surplusCount.set(surplusLevels.length);
         // Top 5 par valeur, agrégé par SKU pour éviter les doublons
         const topBySku = new Map<string, StockLevel>();
         for (const sl of levels) {
