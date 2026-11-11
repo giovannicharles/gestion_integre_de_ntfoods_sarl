@@ -263,7 +263,8 @@
 }
 
 .error-message,
-.success-message {
+.success-message,
+.warning-message {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
@@ -272,14 +273,53 @@
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1.4;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
   animation: fadeUp 0.3s var(--ease-out) both;
 }
 
-.error-message { background: var(--color-danger-ghost); color: var(--color-danger); }
-.success-message { background: var(--color-success-ghost); color: var(--color-success); }
+.error-message { background: var(--color-danger-ghost); color: var(--color-danger); border: 1px solid rgba(194, 43, 43, 0.2); }
+.success-message { background: var(--color-success-ghost); color: var(--color-success); border: 1px solid rgba(30, 122, 66, 0.2); }
+.warning-message { background: var(--color-accent-ghost); color: var(--color-accent-dark); border: 1px solid rgba(196, 146, 0, 0.28); }
 .error-message i,
-.success-message i { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+.success-message i,
+.warning-message i { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+
+.caps-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-accent-dark);
+  background: var(--color-accent-ghost);
+  padding: 5px 10px;
+  border-radius: 6px;
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -4px;
+}
+
+.remember-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
 
 .login-form {
   display: flex;

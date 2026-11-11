@@ -336,7 +336,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
         labels: dist.map(d => d.label),
         datasets: [{
           data: dist.map(d => d.value),
-          backgroundColor: ['#1A6B2A', '#EA580C', '#2563EB', '#7c3aed'],
+          backgroundColor: ['#1A6B2A', '#EA580C', '#1E7A42', '#C49200'],
           borderWidth: 0
         }]
       },

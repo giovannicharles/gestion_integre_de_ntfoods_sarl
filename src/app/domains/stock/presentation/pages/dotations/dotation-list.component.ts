@@ -274,7 +274,7 @@ export class DotationListComponent implements OnInit, OnDestroy {
         done: current >= 0, current: current === 0 && !isRejected, timestamp: d.requestedAt },
       { label: 'Vérification paiement', actor: d.paymentVerifiedBy || 'Secrétaire', icon: 'fa-money-check-dollar', color: '#D97706',
         done: current >= 1, current: current === 1 && !isRejected, timestamp: d.paymentVerifiedAt },
-      { label: 'Arbitrage quantités', actor: d.quantityValidatedBy || 'Comptable', icon: 'fa-calculator', color: '#7C3AED',
+      { label: 'Arbitrage quantités', actor: d.quantityValidatedBy || 'Comptable', icon: 'fa-calculator', color: '#C49200',
         done: current >= 2, current: current === 2 && !isRejected, timestamp: d.quantityValidatedAt },
       { label: 'Approbation', actor: d.reviewedBy || d.approvedBy || 'Gestionnaire', icon: 'fa-clipboard-check', color: '#14532D',
         done: current >= 3, current: current === 3 && !isRejected, timestamp: d.reviewedAt || d.approvedAt },

@@ -329,8 +329,8 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
     // Age distribution buckets
     const buckets = [
       { label: '0-7 jours', min: 0, max: 7, color: '#16a34a' },
-      { label: '8-15 jours', min: 8, max: 15, color: '#0891b2' },
-      { label: '16-30 jours', min: 16, max: 30, color: '#2563EB' },
+      { label: '8-15 jours', min: 8, max: 15, color: '#2A9D5F' },
+      { label: '16-30 jours', min: 16, max: 30, color: '#1E7A42' },
       { label: '31-60 jours', min: 31, max: 60, color: '#f59e0b' },
       { label: '61-90 jours', min: 61, max: 90, color: '#EA580C' },
       { label: '90+ jours', min: 91, max: Infinity, color: '#dc2626' }
@@ -518,9 +518,9 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.statKPIs.set([
       { label: 'Entrées (année)', value: totalEntries, unit: 'unités', icon: 'fa-arrow-down', color: '#16a34a' },
       { label: 'Sorties (année)', value: totalExits, unit: 'unités', icon: 'fa-arrow-up', color: '#ea580c' },
-      { label: 'Valeur moyenne / produit', value: Math.round(avgValue), unit: 'FCFA', icon: 'fa-coins', color: '#2563eb' },
-      { label: 'Dotations (année)', value: yearDotations.length, unit: 'demandes', icon: 'fa-truck', color: '#7c3aed' },
-      { label: 'Produits suivis', value: stats.totalStockLevels, unit: 'réfs', icon: 'fa-boxes-stacked', color: '#0891b2' },
+      { label: 'Valeur moyenne / produit', value: Math.round(avgValue), unit: 'FCFA', icon: 'fa-coins', color: '#1E7A42' },
+      { label: 'Dotations (année)', value: yearDotations.length, unit: 'demandes', icon: 'fa-truck', color: '#C49200' },
+      { label: 'Produits suivis', value: stats.totalStockLevels, unit: 'réfs', icon: 'fa-boxes-stacked', color: '#2A9D5F' },
       { label: 'Alertes critiques', value: stats.criticalAlerts, unit: 'produits', icon: 'fa-triangle-exclamation', color: '#dc2626' }
     ]);
   }
@@ -580,7 +580,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Stock Distribution by material type ────────────────────
   private computeStockDistribution(levels: StockLevel[]) {
-    const colors = ['#1A6B2A', '#EA580C', '#2563EB', '#7c3aed', '#0891b2', '#dc2626', '#f59e0b'];
+    const colors = ['#1A6B2A', '#EA580C', '#1E7A42', '#C49200', '#2A9D5F', '#dc2626', '#f59e0b'];
     const map = new Map<string, { value: number; qty: number }>();
     levels.forEach(sl => {
       const cat = this.materialTypeLabel(sl.materialType || sl.product?.materialType || 'Autre');
@@ -624,8 +624,8 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Dotation Analysis ──────────────────────────────────────
   private computeDotationAnalysis(dotations: DotationRequest[]) {
     const statusColors: Record<string, string> = {
-      PENDING: '#f59e0b', PAYMENT_VERIFIED: '#2563EB', QUANTITY_VALIDATED: '#0891b2',
-      REVIEWED: '#7c3aed', APPROVED: '#1A6B2A', DELIVERED: '#16a34a',
+      PENDING: '#f59e0b', PAYMENT_VERIFIED: '#1E7A42', QUANTITY_VALIDATED: '#2A9D5F',
+      REVIEWED: '#C49200', APPROVED: '#1A6B2A', DELIVERED: '#16a34a',
       CANCELLED: '#dc2626', REJECTED: '#dc2626'
     };
     const statusMap = new Map<string, number>();
@@ -731,7 +731,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
       data: {
         labels: data.map(d => d.quarter),
         datasets: [
-          { label: 'Entrées', data: data.map(d => d.entries), backgroundColor: '#2563eb99' },
+          { label: 'Entrées', data: data.map(d => d.entries), backgroundColor: '#1E7A4299' },
           { label: 'Sorties', data: data.map(d => d.exits), backgroundColor: '#dc262699' }
         ]
       },
@@ -789,7 +789,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
       CRITIQUE: 'rgba(220,38,38,.85)',
       FAIBLE: 'rgba(234,88,12,.85)',
       NORMAL: 'rgba(26,107,42,.85)',
-      SURPLUS: 'rgba(37,99,235,.85)'
+      SURPLUS: 'rgba(20,83,45,.85)'
     };
     this.charts.push(new Chart(ctx, {
       type: 'bar',
@@ -857,7 +857,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
           },
           {
             label: 'Net cumulé', data: cumData.map(d => d.net),
-            borderColor: '#2563EB', backgroundColor: 'transparent',
+            borderColor: '#1E7A42', backgroundColor: 'transparent',
             borderDash: [5, 5], tension: 0.3, borderWidth: 2, pointRadius: 2
           }
         ]
@@ -964,7 +964,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private computeSectorReceptionStats(receipts: Receipt[]) {
     const statusColors: Record<string, string> = {
-      PENDING: '#f59e0b', FIRST_VALIDATED: '#2563EB', VALIDATED: '#1A6B2A',
+      PENDING: '#f59e0b', FIRST_VALIDATED: '#1E7A42', VALIDATED: '#1A6B2A',
       REJECTED: '#dc2626', CANCELLED: '#6b7280'
     };
     const statusLabels: Record<string, string> = {
@@ -986,7 +986,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
   private computeSectorAlertStats(alerts: StockAlertEntity[]) {
     const typeColors: Record<string, string> = {
       LOW_STOCK: '#f59e0b', CRITICAL_STOCK: '#dc2626', BUFFER_INSUFFICIENT: '#ea580c',
-      EXPIRED: '#7c3aed', NEAR_EXPIRY: '#8b5cf6', SLOW_ROTATION: '#0891b2',
+      EXPIRED: '#C49200', NEAR_EXPIRY: '#6D4C41', SLOW_ROTATION: '#2A9D5F',
       ANOMALY: '#6b7280'
     };
     const typeLabels: Record<string, string> = {
@@ -1030,8 +1030,8 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
   private computeSectorMovementStats(movements: StockMovement[]) {
     const typeColors: Record<string, string> = {
       RECEPTION_MP: '#1A6B2A', RECEPTION_PF: '#16a34a', SALE: '#ea580c',
-      TRANSFER_BUFFER_TO_MOBILE: '#2563EB', TRANSFER_CENTRAL_TO_BUFFER: '#7c3aed',
-      ADJUSTMENT: '#f59e0b', DOTATION: '#0891b2'
+      TRANSFER_BUFFER_TO_MOBILE: '#1E7A42', TRANSFER_CENTRAL_TO_BUFFER: '#C49200',
+      ADJUSTMENT: '#f59e0b', DOTATION: '#2A9D5F'
     };
     const typeLabels: Record<string, string> = {
       RECEPTION_MP: 'Réception MP', RECEPTION_PF: 'Réception PF', SALE: 'Vente',
@@ -1164,7 +1164,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
     const top10 = sorted.slice(0, 10).reduce((s, sl) => s + (sl.stockValue || 0), 0);
     const top20 = sorted.slice(0, 20).reduce((s, sl) => s + (sl.stockValue || 0), 0);
     const rest = totalValue - top20;
-    const colors = ['#1A6B2A', '#16a34a', '#0891b2', '#6b7280'];
+    const colors = ['#1A6B2A', '#16a34a', '#2A9D5F', '#6b7280'];
     this.stockConcentration.set([
       { label: 'Top 5 produits', value: top5, pct: Math.round((top5 / totalValue) * 100), color: colors[0] },
       { label: 'Top 10 produits', value: top10, pct: Math.round((top10 / totalValue) * 100), color: colors[1] },
@@ -1221,7 +1221,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
       { label: 'Stock sain', value: normalValue, max: totalValue || 1, color: '#1A6B2A' },
       { label: 'Stock faible', value: lowValue, max: totalValue || 1, color: '#EA580C' },
       { label: 'Stock critique', value: criticalValue, max: totalValue || 1, color: '#dc2626' },
-      { label: 'Stock surplus', value: surplusValue, max: totalValue || 1, color: '#2563EB' }
+      { label: 'Stock surplus', value: surplusValue, max: totalValue || 1, color: '#1E7A42' }
     ]);
   }
 

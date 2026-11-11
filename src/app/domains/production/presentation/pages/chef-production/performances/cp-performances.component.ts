@@ -30,7 +30,7 @@ export class CpPerformancesComponent implements OnInit {
   labelsMachinistes: () => string[] = () => (this.classementMachinistes()?.classements ?? []).map(c => c.nomMachiniste);
 
   serieExecuteurs: () => ChartSeries[] = () => [{
-    name: 'Taux réalisation (%)', color: 'var(--primary, #1976d2)',
+    name: 'Taux réalisation (%)', color: 'var(--primary, #14532D)',
     values: this.classementExecuteurs().map(c => c.tauxRealisationMoyen),
   }];
   labelsExecuteurs: () => string[] = () => this.classementExecuteurs().map(c => c.nomEmploye);

@@ -26,11 +26,11 @@ export class CpStatistiquesComponent implements OnInit {
 
   labels = computed(() => this.tendance().map(t => t.label));
 
-  serieProduction = computed<ChartSeries[]>(() => [{ name: 'Production (kg)', color: 'var(--primary, #1976d2)', values: this.tendance().map(t => t.rapport.totalQuantiteLots) }]);
+  serieProduction = computed<ChartSeries[]>(() => [{ name: 'Production (kg)', color: 'var(--primary, #14532D)', values: this.tendance().map(t => t.rapport.totalQuantiteLots) }]);
   seriePertes = computed<ChartSeries[]>(() => [{ name: 'Taux pertes (%)', color: 'var(--danger, #d32f2f)', values: this.tendance().map(t => Math.round(t.rapport.tauxPertesGlobal * 10) / 10) }]);
   serieRendement = computed<ChartSeries[]>(() => [{ name: 'Fûts nets', color: 'var(--success, #2e7d32)', values: this.tendance().map(t => t.rapport.totalFutsNets) }]);
   serieObjectifs = computed<ChartSeries[]>(() => [
-    { name: 'Sessions broyage', color: 'var(--info, #0284c7)', values: this.tendance().map(t => t.rapport.nbSessionsBroyage) },
+    { name: 'Sessions broyage', color: 'var(--info, #C49200)', values: this.tendance().map(t => t.rapport.nbSessionsBroyage) },
     { name: 'Sessions dosage', color: 'var(--success, #2e7d32)', values: this.tendance().map(t => t.rapport.nbSessionsDosage) },
   ]);
 

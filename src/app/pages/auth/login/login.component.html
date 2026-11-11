@@ -123,6 +123,13 @@
           </div>
         }
 
+        @if (sessionReasonBanner(); as banner) {
+          <div [class]="banner.tone === 'danger' ? 'error-message' : 'warning-message'" role="status">
+            <i class="fa-solid" [class.fa-lock]="banner.tone === 'danger'" [class.fa-clock-rotate-left]="banner.tone === 'warning'"></i>
+            <span>{{ banner.text }}</span>
+          </div>
+        }
+
         @if (error()) {
           <div class="error-message" role="alert" aria-live="assertive">
             <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
@@ -160,6 +167,8 @@
                 formControlName="password"
                 placeholder="••••••••"
                 autocomplete="current-password"
+                (keydown)="onKeyEvent($event)"
+                (keyup)="onKeyEvent($event)"
                 [attr.aria-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
               />
               <button
@@ -175,9 +184,27 @@
                 }
               </button>
             </div>
+            @if (capsLockOn()) {
+              <div class="caps-warning" role="status">
+                <i class="fa-solid fa-keyboard" aria-hidden="true"></i>
+                <span>Touche Verr. Maj (Caps Lock) activée</span>
+              </div>
+            }
             @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
               <div class="field-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>Le mot de passe doit contenir au moins 6 caractères</div>
             }
+          </div>
+
+          <div class="remember-row">
+            <label class="remember-label">
+              <input
+                type="checkbox"
+                class="remember-checkbox"
+                [checked]="rememberMatricule()"
+                (change)="toggleRememberMatricule($any($event.target).checked)"
+              />
+              <span>Mémoriser mon matricule sur ce poste</span>
+            </label>
           </div>
 
           <button

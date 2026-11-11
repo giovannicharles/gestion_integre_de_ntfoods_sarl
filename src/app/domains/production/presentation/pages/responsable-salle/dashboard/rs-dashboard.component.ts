@@ -86,13 +86,13 @@ export class RsDashboardComponent implements OnInit {
   serieFutsVsProduction = computed<ChartSeries[]>(() => {
     const jours = this.rapportHebdo()?.comparaisonsJournalieres ?? [];
     return [
-      { name: 'Fûts nets', color: 'var(--info, #0284c7)', values: jours.map(j => j.nbFutsNets) },
+      { name: 'Fûts nets', color: 'var(--info, #C49200)', values: jours.map(j => j.nbFutsNets) },
       { name: 'Production (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => j.productionReelleKg) },
     ];
   });
 
   serieClassementPostes = computed<ChartSeries[]>(() => [{
-    name: 'Taux réalisation (%)', color: 'var(--primary, #1976d2)',
+    name: 'Taux réalisation (%)', color: 'var(--primary, #14532D)',
     values: (this.affectationJour()?.classement ?? []).map(c => c.pctRealisation),
   }]);
   labelsClassementPostes = computed(() => (this.affectationJour()?.classement ?? []).map(c => c.libellePoste));

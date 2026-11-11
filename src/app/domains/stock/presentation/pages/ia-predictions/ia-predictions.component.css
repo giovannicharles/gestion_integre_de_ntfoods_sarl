@@ -132,7 +132,7 @@
   border:1px solid rgba(124,58,237,.15);border-radius:var(--r-md);font-size:12px;color:var(--n600);
 }
 
-.ia-summary-card { background:linear-gradient(135deg,rgba(124,58,237,.03),rgba(37,99,235,.03)); }
+.ia-summary-card { background:linear-gradient(135deg,rgba(124,58,237,.03),rgba(20,83,45,.03)); }
 .ia-summary-text { font-size:14px;line-height:1.7;color:var(--n700);margin:0; }
 
 .ia-insights-list { display:flex;flex-direction:column;gap:10px; }
@@ -222,7 +222,7 @@
 
 /* ═══ IA Analysis Result ═══ */
 .ia-analysis-result { display:flex;flex-direction:column;gap:20px; }
-.ia-summary-box { padding:18px;background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(37,99,235,.04));border-radius:12px;border:1px solid rgba(124,58,237,.12); }
+.ia-summary-box { padding:18px;background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(20,83,45,.04));border-radius:12px;border:1px solid rgba(124,58,237,.12); }
 .ia-summary-box h3 { font-size:14px;font-weight:700;color:var(--n800,#1f2937);margin:0 0 8px;display:flex;align-items:center;gap:8px; }
 .ia-summary-box h3 i { color:var(--g); }
 .ia-summary-box p { font-size:14px;line-height:1.7;color:var(--n700,#374151);margin:0; }

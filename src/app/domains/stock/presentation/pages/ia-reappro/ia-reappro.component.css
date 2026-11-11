@@ -225,7 +225,7 @@
 }
 .sev-critical { background: var(--r-gh, #fee2e2); color: var(--r, #dc2626); }
 .sev-high { background: var(--y-gh, #fef3c7); color: var(--y-d, #d97706); }
-.sev-medium { background: var(--b-gh, #dbeafe); color: var(--b, #2563eb); }
+.sev-medium { background: var(--b-gh, #E6F2EC); color: var(--b, #1E7A42); }
 .sev-low { background: var(--s-gh, #d1fae5); color: var(--s, #059669); }
 
 /* ═══ States ═══ */

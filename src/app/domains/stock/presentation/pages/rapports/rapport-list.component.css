@@ -187,7 +187,7 @@
 .btn-ia:disabled { opacity: .5; cursor: not-allowed; }
 
 .rpt-meeting-modal { max-width: 720px; }
-.rpt-meeting-header { background: linear-gradient(135deg, rgba(20,83,45,.06), rgba(2,119,189,.06)); }
+.rpt-meeting-header { background: linear-gradient(135deg, rgba(20,83,45,.06), rgba(42,157,95,.06)); }
 .rpt-meeting-header .modal-title { color: var(--g-m); }
 .rpt-meeting-body { max-height: 60vh; overflow-y: auto; }
 

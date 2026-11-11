@@ -412,7 +412,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.materialChart) { this.materialChart.destroy(); this.materialChart = undefined; }
     if (!this.rptMaterialCanvas?.nativeElement) return;
     const dist = this.materialAnalysis();
-    const colors = ['#14532D', '#F6B60B', '#0277BD', '#1E7A42', '#D84315', '#C22B2B'];
+    const colors = ['#14532D', '#F6B60B', '#2A9D5F', '#1E7A42', '#D84315', '#C22B2B'];
     this.materialChart = new Chart(this.rptMaterialCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {
@@ -477,7 +477,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.movementChart) { this.movementChart.destroy(); this.movementChart = undefined; }
     if (!this.rptMovementCanvas?.nativeElement) return;
     const dist = this.movementTypeDist();
-    const colors = ['#14532D', '#F6B60B', '#0277BD', '#1E7A42', '#D84315', '#C22B2B', '#FFC845', '#2A9D5F'];
+    const colors = ['#14532D', '#F6B60B', '#2A9D5F', '#1E7A42', '#D84315', '#C22B2B', '#FFC845', '#2A9D5F'];
     this.movementChart = new Chart(this.rptMovementCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {
@@ -619,7 +619,7 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!found) return 'var(--n500)';
     if (found.category === 'stock') return 'var(--g)';
     if (found.category === 'commercial') return 'var(--b)';
-    if (found.category === 'finance') return '#7c3aed';
+    if (found.category === 'finance') return '#C49200';
     if (found.category === 'production') return 'var(--o)';
     return 'var(--n500)';
   }

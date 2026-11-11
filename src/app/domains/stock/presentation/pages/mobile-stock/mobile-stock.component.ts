@@ -184,7 +184,7 @@ export class MobileStockComponent implements OnInit, AfterViewInit, OnDestroy {
     const labels = data.map(s => s.commercialMatricule);
     const values = data.map(s => s.totalItems || 0);
     const palette = [
-      'rgba(20,83,45,.85)', 'rgba(2,119,189,.85)', 'rgba(246,182,11,.85)',
+      'rgba(20,83,45,.85)', 'rgba(42,157,95,.85)', 'rgba(246,182,11,.85)',
       'rgba(124,58,237,.8)', 'rgba(194,43,43,.75)', 'rgba(21,128,61,.8)',
       'rgba(30,64,175,.8)', 'rgba(217,119,6,.8)', 'rgba(107,114,128,.7)',
       'rgba(190,24,93,.75)'
@@ -262,7 +262,7 @@ export class MobileStockComponent implements OnInit, AfterViewInit, OnDestroy {
     const labels = sorted.map(([sku]) => sku);
     const values = sorted.map(([, qty]) => qty);
     const colors = values.map((_, i) =>
-      i < 3 ? 'rgba(20,83,45,.85)' : i < 6 ? 'rgba(246,182,11,.85)' : 'rgba(2,119,189,.7)'
+      i < 3 ? 'rgba(20,83,45,.85)' : i < 6 ? 'rgba(246,182,11,.85)' : 'rgba(42,157,95,.7)'
     );
 
     const ctx = this.topProductsCanvas.nativeElement.getContext('2d')!;

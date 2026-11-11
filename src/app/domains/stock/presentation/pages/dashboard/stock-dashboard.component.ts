@@ -444,12 +444,12 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     }));
   }
 
-  /** Donut : Valeur par entrepÃ´t */
+  /** Donut : Valeur par entrepôt */
   private buildDonutChart() {
     const whData = this.avgStockByWarehouse();
     const labels = whData.map(w => w.name);
     const values = whData.map(w => w.value);
-    const palette = ['rgba(20,83,45,.85)', 'rgba(246,182,11,.85)', 'rgba(2,119,189,.85)', 'rgba(107,114,128,.6)', 'rgba(194,43,43,.7)'];
+    const palette = ['rgba(20,83,45,.88)', 'rgba(246,182,11,.88)', 'rgba(42,157,95,.85)', 'rgba(107,114,128,.6)', 'rgba(194,43,43,.75)'];
 
     const ctx = this.donutCanvas.nativeElement.getContext('2d')!;
     this.charts.push(new Chart(ctx, {
@@ -499,7 +499,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         datasets: [{
           label: 'Mouvements',
           data: [entrees, sorties, ajust, transfert, virement],
-          backgroundColor: ['rgba(20,83,45,.85)', 'rgba(194,43,43,.8)', 'rgba(107,114,128,.6)', 'rgba(246,182,11,.85)', 'rgba(2,119,189,.7)'],
+          backgroundColor: ['rgba(20,83,45,.88)', 'rgba(194,43,43,.8)', 'rgba(107,114,128,.6)', 'rgba(246,182,11,.88)', 'rgba(42,157,95,.75)'],
           borderRadius: 8, borderSkipped: false,
         }]
       },
@@ -533,7 +533,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         labels: ['Critiques', 'Faibles', 'Normaux', 'Surplus'],
         datasets: [{
           data: [critique, faible, normal, surplus],
-          backgroundColor: ['rgba(194,43,43,.7)', 'rgba(216,67,21,.7)', 'rgba(20,83,45,.7)', 'rgba(2,119,189,.7)'],
+          backgroundColor: ['rgba(194,43,43,.75)', 'rgba(216,67,21,.75)', 'rgba(20,83,45,.75)', 'rgba(246,182,11,.75)'],
           borderWidth: 2, borderColor: '#fff',
         }]
       },
@@ -682,8 +682,8 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       data: {
         labels: ['Classe A (80% valeur)', 'Classe B (15% valeur)', 'Classe C (5% valeur)'],
         datasets: [
-          { label: 'Nb articles', data: data.map(d => d.count), backgroundColor: ['rgba(20,83,45,.85)', 'rgba(246,182,11,.85)', 'rgba(107,114,128,.6)'], borderRadius: 6, yAxisID: 'y' },
-          { label: '% valeur', data: data.map(d => d.pctValue), type: 'line', borderColor: 'rgba(2,119,189,1)', backgroundColor: 'rgba(2,119,189,.1)', tension: 0.3, yAxisID: 'y1', pointRadius: 5 },
+          { label: 'Nb articles', data: data.map(d => d.count), backgroundColor: ['rgba(20,83,45,.88)', 'rgba(246,182,11,.88)', 'rgba(107,114,128,.6)'], borderRadius: 6, yAxisID: 'y' },
+          { label: '% valeur', data: data.map(d => d.pctValue), type: 'line', borderColor: 'rgba(196,146,0,1)', backgroundColor: 'rgba(246,182,11,.15)', tension: 0.3, yAxisID: 'y1', pointRadius: 5 },
         ]
       },
       options: {
@@ -791,7 +791,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         datasets: [{
           label: 'QuantitÃ© transfÃ©rÃ©e',
           data: flow.map(f => f.value),
-          backgroundColor: ['rgba(2,119,189,.8)', 'rgba(20,83,45,.8)', 'rgba(246,182,11,.8)', 'rgba(194,43,43,.7)'],
+          backgroundColor: ['rgba(42,157,95,.85)', 'rgba(20,83,45,.88)', 'rgba(246,182,11,.85)', 'rgba(194,43,43,.75)'],
           borderRadius: 8, borderSkipped: false,
         }]
       },

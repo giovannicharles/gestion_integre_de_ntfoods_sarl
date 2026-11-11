@@ -99,7 +99,7 @@ export class AdDashboardComponent implements OnInit {
   serieMelangeTypes = computed<ChartSeries[]>(() => {
     const jours = this.joursGlissants(7); const h = this.historique30j();
     return [
-      { name: 'Bouillie', color: '#1976d2', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'BOUILLIE').length) },
+      { name: 'Bouillie', color: '#14532D', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'BOUILLIE').length) },
       { name: 'Mélange Arachide', color: '#7b1fa2', values: jours.map(j => h.filter(s => s.date === j && this.typeMelange(s) === 'ARACHIDE').length) },
     ];
   });

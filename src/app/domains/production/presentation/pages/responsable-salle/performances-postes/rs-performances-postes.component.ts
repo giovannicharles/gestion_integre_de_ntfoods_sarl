@@ -100,7 +100,7 @@ export class RsPerformancesPostesComponent implements OnInit {
   }
 
   serieClassement(): ChartSeries[] {
-    return [{ name: 'Taux réalisation (%)', color: 'var(--primary, #1976d2)', values: (this.affectation()?.classement ?? []).map(c => c.pctRealisation) }];
+    return [{ name: 'Taux réalisation (%)', color: 'var(--primary, #14532D)', values: (this.affectation()?.classement ?? []).map(c => c.pctRealisation) }];
   }
   labelsClassement(): string[] { return (this.affectation()?.classement ?? []).map(c => c.libellePoste); }
 

@@ -112,7 +112,7 @@ export class CmDashboardComponent implements OnInit {
     const jours = this.joursGlissants(7);
     const h = this.historique30j();
     return [{
-      name: 'Poudre broyée (kg)', color: 'var(--primary, #1976d2)',
+      name: 'Poudre broyée (kg)', color: 'var(--primary, #14532D)',
       values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + this.qteSession(x), 0)),
     }];
   });
@@ -130,7 +130,7 @@ export class CmDashboardComponent implements OnInit {
     const jours = this.joursGlissants(7);
     const h = this.historique30j();
     return [
-      { name: 'Objectif (kg)', color: 'var(--info, #0284c7)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + x.objectifJournalierKg, 0)) },
+      { name: 'Objectif (kg)', color: 'var(--info, #C49200)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + x.objectifJournalierKg, 0)) },
       { name: 'Réalisé (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => h.filter(s => s.date === j).reduce((acc, x) => acc + this.qteSession(x), 0)) },
     ];
   });

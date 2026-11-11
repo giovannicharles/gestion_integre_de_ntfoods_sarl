@@ -89,14 +89,14 @@ export class ResponsableSalleComponent implements OnInit {
   serieFutsVsProduction(): ChartSeries[] {
     const jours = this.rapport?.comparaisonsJournalieres ?? [];
     return [
-      { name: 'Fûts nets', color: 'var(--info, #0284c7)', values: jours.map(j => j.nbFutsNets) },
+      { name: 'Fûts nets', color: 'var(--info, #C49200)', values: jours.map(j => j.nbFutsNets) },
       { name: 'Production (kg)', color: 'var(--success, #2e7d32)', values: jours.map(j => j.productionReelleKg) },
     ];
   }
 
   /** Répartition de la production du jour par poste (classement de l'affectation en cours). */
   donutPostesJour(): DonutSlice[] {
-    const palette = ['#1976d2', '#2e7d32', '#f57c00', '#7b1fa2', '#c2185b', '#00838f', '#5d4037', '#455a64'];
+    const palette = ['#14532D', '#2e7d32', '#f57c00', '#7b1fa2', '#c2185b', '#00838f', '#5d4037', '#455a64'];
     return (this.affectation?.classement ?? []).map((c, i) => ({
       label: c.libellePoste, value: c.quantiteRealisee, color: palette[i % palette.length],
     }));

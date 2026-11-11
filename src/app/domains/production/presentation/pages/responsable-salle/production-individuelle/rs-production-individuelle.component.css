@@ -115,7 +115,7 @@
   color: var(--text, var(--n700));
 }
 .pi-info-chip-g { background: rgba(22,163,74,.08); border-color: rgba(22,163,74,.2); color: var(--g-m); }
-.pi-info-chip-b { background: rgba(37,99,235,.08); border-color: rgba(37,99,235,.2); color: var(--b); }
+.pi-info-chip-b { background: rgba(20,83,45,.08); border-color: rgba(20,83,45,.2); color: var(--b); }
 .pi-info-chip-y { background: rgba(246,182,11,.1); border-color: rgba(246,182,11,.3); color: var(--o); }
 .pi-info-chip-err { background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.25); color: var(--r); }
 

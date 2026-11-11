@@ -3,6 +3,7 @@ import { LoginComponent } from './login/login.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { TwoFaComponent } from './two-fa/two-fa.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { UnauthorizedComponent } from '../unauthorized/unauthorized.component';
 
 export const AUTH_ROUTES: Routes = [
   {
@@ -20,5 +21,13 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'reset-password',
     component: ResetPasswordComponent
+  },
+  {
+    path: 'forbidden',
+    component: UnauthorizedComponent
+  },
+  {
+    path: 'unauthorized',
+    component: UnauthorizedComponent
   }
 ];

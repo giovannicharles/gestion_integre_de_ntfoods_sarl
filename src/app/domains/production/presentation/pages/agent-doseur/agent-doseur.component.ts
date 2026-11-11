@@ -62,7 +62,7 @@ export class AgentDoseurComponent implements OnInit {
   });
 
   /** Répartition des matières utilisées sur la semaine (issue de statsHebdo, déjà réelle). */
-  private static readonly PALETTE_MATIERES = ['#f9a825', '#558b2f', '#6d4c41', '#1976d2', '#8e24aa'];
+  private static readonly PALETTE_MATIERES = ['#f9a825', '#558b2f', '#6d4c41', '#14532D', '#8e24aa'];
 
   /** Une tranche par matière présente, liste libre, jamais figée sur maïs/soja/arachide. */
   donutMatieres = computed<DonutSlice[]>(() => {

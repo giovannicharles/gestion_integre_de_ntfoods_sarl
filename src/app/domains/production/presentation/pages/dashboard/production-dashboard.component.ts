@@ -67,28 +67,28 @@ export class ProductionDashboardComponent implements OnInit {
 
   /** Évolution hebdomadaire de la production (kg), 4 dernières semaines. */
   serieEvolutionProductionKg = computed<ChartSeries[]>(() => [{
-    name: 'Production (kg)', color: 'var(--primary, #1976d2)',
+    name: 'Production (kg)', color: 'var(--g, #14532D)',
     values: this.tendance4Semaines().map(t => t.rapport.totalQuantiteLots),
   }]);
   labelsEvolution = computed(() => this.tendance4Semaines().map(t => t.label));
 
   /** Évolution hebdomadaire des pertes (%). */
   serieEvolutionPertes = computed<ChartSeries[]>(() => [{
-    name: 'Pertes (%)', color: 'var(--danger, #d32f2f)',
+    name: 'Pertes (%)', color: 'var(--r, #C22B2B)',
     values: this.tendance4Semaines().map(t => Math.round(t.rapport.tauxPertesGlobal * 10) / 10),
   }]);
 
   /** Comparaison fûts produits / cassés / nets sur les 4 dernières semaines. */
   serieFuts = computed<ChartSeries[]>(() => [
-    { name: 'Fûts produits', color: 'var(--info, #0284c7)', values: this.tendance4Semaines().map(t => t.rapport.totalFutsProduits) },
-    { name: 'Fûts nets', color: 'var(--success, #2e7d32)', values: this.tendance4Semaines().map(t => t.rapport.totalFutsNets) },
+    { name: 'Fûts produits', color: 'var(--y-d, #C49200)', values: this.tendance4Semaines().map(t => t.rapport.totalFutsProduits) },
+    { name: 'Fûts nets', color: 'var(--g-l, #2A9D5F)', values: this.tendance4Semaines().map(t => t.rapport.totalFutsNets) },
   ]);
 
   /** Répartition des produits fabriqués (semaine courante). */
   donutProduits = computed<DonutSlice[]>(() => {
     const r = this.rapportSemaineCourante();
     if (!r) return [];
-    const palette = ['#1976d2', '#2e7d32', '#f57c00', '#7b1fa2', '#c2185b', '#00838f'];
+    const palette = ['#14532D', '#F6B60B', '#2A9D5F', '#C49200', '#C22B2B', '#6D4C41'];
     return Object.entries(r.quantitesParReference).map(([label, value], i) => ({
       label, value, color: palette[i % palette.length]
     }));
@@ -98,17 +98,17 @@ export class ProductionDashboardComponent implements OnInit {
   donutPertes = computed<DonutSlice[]>(() => {
     const r = this.rapportSemaineCourante();
     if (!r) return [];
-    const couleurs: Record<string, string> = { MAIS: '#f9a825', SOJA: '#558b2f', ARACHIDE: '#6d4c41' };
+    const couleurs: Record<string, string> = { MAIS: '#F6B60B', SOJA: '#1E7A42', ARACHIDE: '#6D4C41' };
     return Object.entries(r.pertesParTypePoudre).map(([label, value]) => ({
-      label, value, color: couleurs[label] ?? '#999'
+      label, value, color: couleurs[label] ?? '#9CA3AF'
     }));
   });
 
   /** Taux d'avancement par BC (semaine courante). */
   serieAvancementBC = computed<ChartSeries[]>(() => {
     const r = this.rapportSemaineCourante();
-    if (!r) return [{ name: 'Avancement (%)', color: 'var(--primary, #1976d2)', values: [] }];
-    return [{ name: 'Avancement (%)', color: 'var(--primary, #1976d2)', values: Object.values(r.tauxAvancementParBC) }];
+    if (!r) return [{ name: 'Avancement (%)', color: 'var(--g, #14532D)', values: [] }];
+    return [{ name: 'Avancement (%)', color: 'var(--g, #14532D)', values: Object.values(r.tauxAvancementParBC) }];
   });
   labelsAvancementBC = computed(() => {
     const r = this.rapportSemaineCourante();

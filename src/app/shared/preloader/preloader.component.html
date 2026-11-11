@@ -1,9 +1,11 @@
-<div *ngIf="loading" class="preloader-overlay" role="status" aria-live="polite" aria-busy="true">
+@if (loading) {
+<div class="preloader-overlay" [class.preloader-closing]="closing()" role="status" aria-live="polite" aria-busy="true">
   <div class="preloader-grid-bg" aria-hidden="true"></div>
 
   <div class="preloader-content">
     <div class="preloader-logo">
-      <img src="/logo_tanty.jpg" alt="TANTY Logo" class="logo-image" />
+      <img src="/logo_tanty.jpg" alt="NTFOODS TANTY" class="logo-image" />
+      <span class="preloader-badge">ERP INTÉGRÉ</span>
     </div>
 
     <div class="preloader-loader" aria-hidden="true">
@@ -12,11 +14,23 @@
       }
     </div>
 
+    <div class="preloader-progress-wrap" aria-hidden="true">
+      <div class="preloader-progress-bar" [style.width.%]="progressPct()"></div>
+    </div>
+
     <div class="preloader-slogan">
       <p class="slogan-text">Grâce à vous nous sommes N°1, Merci</p>
     </div>
+
     <div class="preloader-text">
-      <p>Chargement...</p>
+      <p>{{ stepText() }}</p>
     </div>
+
+    @if (slowWakeup()) {
+      <button type="button" class="preloader-skip-btn" (click)="dismissNow()">
+        Accéder directement à l'application <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    }
   </div>
 </div>
+}

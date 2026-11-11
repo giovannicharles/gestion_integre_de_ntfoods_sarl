@@ -228,7 +228,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
         datasets: [
           { label: 'Stock actuel', data: preds.map(p => p.currentQty), borderColor: '#1A6B2A', backgroundColor: 'rgba(26,107,42,.1)', tension: 0.3 },
           { label: 'Prévision 30j', data: preds.map(p => p.predictedStock30d), borderColor: '#EA580C', backgroundColor: 'rgba(234,88,12,.1)', borderDash: [5,5], tension: 0.3 },
-          { label: 'Prévision 60j', data: preds.map(p => p.predictedStock60d), borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,.1)', borderDash: [3,3], tension: 0.3 },
+          { label: 'Prévision 60j', data: preds.map(p => p.predictedStock60d), borderColor: '#C49200', backgroundColor: 'rgba(124,58,237,.1)', borderDash: [3,3], tension: 0.3 },
           { label: 'Prévision 90j', data: preds.map(p => p.predictedStock90d), borderColor: '#DC2626', backgroundColor: 'rgba(220,38,38,.1)', borderDash: [2,2], tension: 0.3 }
         ]
       },
@@ -298,7 +298,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
       type: 'bar',
       data: {
         labels: consumers.map(c => c.sku),
-        datasets: [{ label: 'Conso. moyenne /jour', data: consumers.map(c => c.avgDailyConsumption), backgroundColor: 'rgba(37,99,235,.7)', borderRadius: 6 }]
+        datasets: [{ label: 'Conso. moyenne /jour', data: consumers.map(c => c.avgDailyConsumption), backgroundColor: 'rgba(20,83,45,.7)', borderRadius: 6 }]
       },
       options: {
         indexAxis: 'y',
@@ -414,7 +414,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
     const analysis = this.iaAnalysis();
     if (!analysis || !analysis.chartData || analysis.chartData.length === 0) return;
 
-    const colors = ['#7C3AED', '#2563EB', '#EA580C', '#1A6B2A', '#DC2626', '#F59E0B', '#0891B2', '#8B5CF6'];
+    const colors = ['#C49200', '#1E7A42', '#EA580C', '#1A6B2A', '#DC2626', '#F59E0B', '#2A9D5F', '#6D4C41'];
     this.iaChart = new Chart(this.iaChartCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {

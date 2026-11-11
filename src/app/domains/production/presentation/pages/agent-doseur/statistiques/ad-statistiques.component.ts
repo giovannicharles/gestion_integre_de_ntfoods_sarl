@@ -58,7 +58,7 @@ export class AdStatistiquesComponent implements OnInit {
     const jours: string[] = [];
     for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); jours.push(d.toISOString().split('T')[0]); }
     const h = this.historique7j();
-    return [{ name: 'Sessions ouvertes', color: 'var(--primary, #1976d2)', values: jours.map(j => h.filter(s => s.date === j).length) }];
+    return [{ name: 'Sessions ouvertes', color: 'var(--primary, #14532D)', values: jours.map(j => h.filter(s => s.date === j).length) }];
   });
 
   ngOnInit(): void {

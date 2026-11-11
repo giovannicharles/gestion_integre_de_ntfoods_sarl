@@ -201,7 +201,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
     return [
       { label: 'Produits Finis', value: counts['PRODUIT_FINI'] || 0, color: '#1A6B2A' },
       { label: 'Matières Premières', value: counts['MATIERE_PREMIERE'] || 0, color: '#EA580C' },
-      { label: 'Consommables', value: counts['CONSOMMABLE'] || 0, color: '#2563EB' }
+      { label: 'Consommables', value: counts['CONSOMMABLE'] || 0, color: '#1E7A42' }
     ].filter(d => d.value > 0);
   });
 
@@ -215,7 +215,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
     return [
       { label: 'Produits Finis', value: sums['PRODUIT_FINI'] || 0, color: '#1A6B2A' },
       { label: 'Matières Premières', value: sums['MATIERE_PREMIERE'] || 0, color: '#EA580C' },
-      { label: 'Consommables', value: sums['CONSOMMABLE'] || 0, color: '#2563EB' }
+      { label: 'Consommables', value: sums['CONSOMMABLE'] || 0, color: '#1E7A42' }
     ].filter(d => d.value > 0);
   });
 
@@ -289,7 +289,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.packagingChart) { this.packagingChart.destroy(); this.packagingChart = undefined; }
     if (!this.invPackagingCanvas?.nativeElement) return;
     const dist = this.packagingDist();
-    const colors = ['#1A6B2A', '#EA580C', '#2563EB', '#7c3aed', '#0891b2', '#dc2626'];
+    const colors = ['#1A6B2A', '#EA580C', '#1E7A42', '#C49200', '#2A9D5F', '#dc2626'];
     this.packagingChart = new Chart(this.invPackagingCanvas.nativeElement.getContext('2d')!, {
       type: 'bar',
       data: {

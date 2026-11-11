@@ -169,7 +169,7 @@
 
 .ia-insight-card {
   margin-bottom:20px; border:1.5px solid rgba(124,58,237,.2); border-radius:var(--r-lg);
-  background:linear-gradient(135deg,rgba(124,58,237,.02),rgba(37,99,235,.02));
+  background:linear-gradient(135deg,rgba(124,58,237,.02),rgba(20,83,45,.02));
 }
 .ia-insight-head {
   display:flex; align-items:center; justify-content:space-between;

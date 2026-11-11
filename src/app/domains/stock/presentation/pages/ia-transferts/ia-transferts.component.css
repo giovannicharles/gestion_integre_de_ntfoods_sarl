@@ -67,7 +67,7 @@
 .flow-node span { font-size: 13px; font-weight: 600; }
 .flow-central { background: #eef2ff; color: #4f46e5; }
 .flow-buffer { background: var(--y-gh, #fef3c7); color: var(--y-d, #d97706); }
-.flow-mobile { background: var(--b-gh, #dbeafe); color: var(--b, #2563eb); }
+.flow-mobile { background: var(--b-gh, #E6F2EC); color: var(--b, #1E7A42); }
 .flow-arrow {
   display: flex;
   flex-direction: column;
@@ -104,7 +104,7 @@
 .stat-total { background: #e0e7ff; color: #4f46e5; }
 .stat-high { background: var(--r-gh, #fee2e2); color: var(--r, #dc2626); }
 .stat-selected { background: var(--s-gh, #d1fae5); color: var(--s, #059669); }
-.stat-units { background: var(--b-gh, #dbeafe); color: var(--b, #2563eb); }
+.stat-units { background: var(--b-gh, #E6F2EC); color: var(--b, #1E7A42); }
 .stat-value { font-size: 24px; font-weight: 700; display: block; line-height: 1; }
 .stat-label { font-size: 12px; color: var(--n400, #6b7280); }
 
@@ -185,7 +185,7 @@
 }
 .prio-high { background: var(--r-gh, #fee2e2); color: var(--r, #dc2626); }
 .prio-medium { background: var(--y-gh, #fef3c7); color: var(--y-d, #d97706); }
-.prio-low { background: var(--b-gh, #dbeafe); color: var(--b, #2563eb); }
+.prio-low { background: var(--b-gh, #E6F2EC); color: var(--b, #1E7A42); }
 
 /* ═══ States ═══ */
 .loading-state, .error-state, .empty-state {

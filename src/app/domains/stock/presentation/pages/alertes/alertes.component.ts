@@ -484,7 +484,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
   getTypeColor(t: AlertType): string {
     if (t === 'CRITICAL_STOCK' || t === 'EXPIRED') return 'var(--r)';
     if (t === 'LOW_STOCK' || t === 'EXPIRATION_SOON' || t === 'BUFFER_INSUFFICIENT') return 'var(--o)';
-    if (t === 'OVERSTOCK' || t === 'SLOW_ROTATION') return '#7C3AED';
+    if (t === 'OVERSTOCK' || t === 'SLOW_ROTATION') return '#C49200';
     return 'var(--y-d)';
   }
 

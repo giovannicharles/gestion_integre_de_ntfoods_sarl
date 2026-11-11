@@ -1,1 +1,42 @@
-<p>unauthorized works!</p>
+<div class="unauth-root">
+  <div class="unauth-card">
+    <div class="unauth-badge">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+    </div>
+
+    <span class="unauth-code">ERREUR 403 · ACCÈS RESTREINT</span>
+    <h1 class="unauth-title">Opération ou espace non autorisé</h1>
+
+    @if (serverMessage()) {
+      <div class="unauth-reason" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span>{{ serverMessage() }}</span>
+      </div>
+    } @else {
+      <p class="unauth-desc">
+        Votre profil actuel (<strong>{{ roleLabel }}</strong>) ne dispose pas des habilitations
+        nécessaires pour consulter cette page ou exécuter cette action. Votre session reste active.
+      </p>
+    }
+
+    <div class="unauth-meta">
+      <div class="unauth-meta-item">
+        <span class="meta-lbl">Profil actif</span>
+        <span class="meta-val">{{ roleLabel }}</span>
+      </div>
+      <div class="unauth-meta-item">
+        <span class="meta-lbl">Sécurité RBAC</span>
+        <span class="meta-val">Cloisonnement par module NTFOODS</span>
+      </div>
+    </div>
+
+    <div class="unauth-actions">
+      <button type="button" class="btn btn-ghost" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left"></i> Page précédente
+      </button>
+      <button type="button" class="btn btn-primary" (click)="goHome()">
+        <i class="fa-solid fa-house"></i> Retour à mon espace
+      </button>
+    </div>
+  </div>
+</div>

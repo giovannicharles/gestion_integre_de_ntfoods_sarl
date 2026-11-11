@@ -24,7 +24,7 @@
 
 .tags-section { display: flex; flex-direction: column; gap: var(--sp-3); }
 .tags-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.tag-item { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--b-gh, #dbeafe); color: var(--b, #1e40af); border-radius: 20px; font-size: 0.85rem; }
+.tag-item { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--b-gh, #E6F2EC); color: var(--b, #1e40af); border-radius: 20px; font-size: 0.85rem; }
 .tag-gamme { background: var(--s-gh, #d1fae5); color: var(--s, #065f46); }
 .tag-ville { background: var(--y-gh, #fef3c7); color: var(--y-d, #92400e); }
 .tag-remove { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.7; padding: 0; font-size: 0.7rem; }

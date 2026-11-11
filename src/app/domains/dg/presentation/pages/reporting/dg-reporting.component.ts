@@ -131,7 +131,7 @@ export class DgReportingComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const gammes = this.performanceGammes();
     if (this.gammesCanvas?.nativeElement && gammes.length > 0) {
-      const palette = ['#1A6B2A', '#F6B60B', '#2563EB', '#C22B2B', '#8B5CF6', '#0EA5E9'];
+      const palette = ['#14532D', '#F6B60B', '#2A9D5F', '#C22B2B', '#C49200', '#6D4C41'];
       this.charts.push(new Chart(this.gammesCanvas.nativeElement.getContext('2d')!, {
         type: 'doughnut',
         data: {

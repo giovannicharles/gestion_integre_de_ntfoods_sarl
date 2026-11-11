@@ -192,7 +192,7 @@ export class ValorisationComponent implements OnInit, AfterViewInit, OnDestroy {
         labels,
         datasets: [{
           data,
-          backgroundColor: ['#1A6B2A', '#FFD700', '#2196F3'],
+          backgroundColor: ['#1A6B2A', '#FFD700', '#C49200'],
           borderWidth: 0,
         }]
       },

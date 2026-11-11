@@ -85,7 +85,7 @@ export class ChefMachinisteComponent implements OnInit {
     const jours = this.joursDesSeptDerniers();
     const sessions = this.historique7Jours();
     return [{
-      name: 'Poudre broyée (kg)', color: 'var(--primary, #1976d2)',
+      name: 'Poudre broyée (kg)', color: 'var(--primary, #14532D)',
       values: jours.map(j => sessions.filter(s => s.date === j).reduce((sum, s) => sum + (s.quantiteNetteBroyeeKg ?? 0), 0)),
     }];
   });

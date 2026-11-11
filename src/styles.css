@@ -124,6 +124,9 @@
   --z-toast: 9999;
 
   /* Sémantique (compatibilité existante) */
+  --primary: var(--color-primary);
+  --info: var(--color-info);
+  --success: var(--color-success);
   --border: var(--color-gray-200);
   --text-muted: var(--color-gray-400);
   --surface: var(--color-white);

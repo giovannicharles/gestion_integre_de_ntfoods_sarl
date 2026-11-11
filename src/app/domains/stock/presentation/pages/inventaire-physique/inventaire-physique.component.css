@@ -133,8 +133,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
-  background: linear-gradient(90deg, rgba(37,99,235,.08), rgba(37,99,235,.04));
-  border: 1px solid rgba(37,99,235,.2);
+  background: linear-gradient(90deg, rgba(20,83,45,.08), rgba(20,83,45,.04));
+  border: 1px solid rgba(20,83,45,.2);
   border-radius: 10px;
   margin-bottom: 16px;
   font-size: 13px;

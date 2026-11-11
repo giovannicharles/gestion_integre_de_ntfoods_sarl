@@ -25,8 +25,8 @@ export class RsStatistiquesComponent implements OnInit {
   tendance = signal<{ label: string; rapport: RapportHebdoAffectationBE }[]>([]);
 
   labels = computed(() => this.tendance().map(t => t.label));
-  serieProduction = computed<ChartSeries[]>(() => [{ name: 'Production (kg)', color: 'var(--primary, #1976d2)', values: this.tendance().map(t => t.rapport.productionTotaleKg) }]);
-  serieFuts = computed<ChartSeries[]>(() => [{ name: 'Fûts nets', color: 'var(--info, #0284c7)', values: this.tendance().map(t => t.rapport.nbFutsNets) }]);
+  serieProduction = computed<ChartSeries[]>(() => [{ name: 'Production (kg)', color: 'var(--primary, #14532D)', values: this.tendance().map(t => t.rapport.productionTotaleKg) }]);
+  serieFuts = computed<ChartSeries[]>(() => [{ name: 'Fûts nets', color: 'var(--info, #C49200)', values: this.tendance().map(t => t.rapport.nbFutsNets) }]);
   serieObjectifs = computed<ChartSeries[]>(() => [{ name: 'Jours affectés', color: 'var(--success, #2e7d32)', values: this.tendance().map(t => t.rapport.nbJoursAffectes) }]);
 
   comparaisonSemaine = computed(() => {

@@ -27,7 +27,7 @@ export class DgIaAnalyseComponent implements OnDestroy {
     { key: 'global', label: 'Analyse Globale', icon: 'fa-chart-pie', color: '#1A6B2A', description: 'Vue d\'ensemble 360° de l\'entreprise' },
     { key: 'stock', label: 'Stock & Inventaire', icon: 'fa-warehouse', color: '#0277D5', description: 'Niveaux, alertes, valorisation, rotation' },
     { key: 'production', label: 'Production', icon: 'fa-industry', color: '#B8860B', description: 'Lots, rendements, matières premières' },
-    { key: 'commercial', label: 'Commercial', icon: 'fa-handshake', color: '#7C3AED', description: 'Ventes, classement, performance commerciaux' },
+    { key: 'commercial', label: 'Commercial', icon: 'fa-handshake', color: '#C49200', description: 'Ventes, classement, performance commerciaux' },
     { key: 'financier', label: 'Financier', icon: 'fa-coins', color: '#C22B2B', description: 'Trésorerie, factures, marges, recouvrement' },
   ];
 

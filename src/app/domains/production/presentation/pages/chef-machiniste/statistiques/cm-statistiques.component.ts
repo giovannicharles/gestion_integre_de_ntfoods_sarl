@@ -36,7 +36,7 @@ export class CmStatistiquesComponent implements OnInit {
   }
 
   serieEvolutionProduction = computed<ChartSeries[]>(() => [{
-    name: 'Quantité broyée (kg)', color: 'var(--primary, #1976d2)',
+    name: 'Quantité broyée (kg)', color: 'var(--primary, #14532D)',
     values: this.tendance8Semaines().map(t => this.totalBroye(t.sessions)),
   }]);
 
@@ -46,7 +46,7 @@ export class CmStatistiquesComponent implements OnInit {
   }]);
 
   serieEvolutionObjectifs = computed<ChartSeries[]>(() => [
-    { name: 'Objectif (kg)', color: 'var(--info, #0284c7)', values: this.tendance8Semaines().map(t => this.totalObjectif(t.sessions)) },
+    { name: 'Objectif (kg)', color: 'var(--info, #C49200)', values: this.tendance8Semaines().map(t => this.totalObjectif(t.sessions)) },
     { name: 'Réalisé (kg)', color: 'var(--success, #2e7d32)', values: this.tendance8Semaines().map(t => this.totalBroye(t.sessions)) },
   ]);
 
