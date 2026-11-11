@@ -44,28 +44,28 @@
   --color-success: #1E7A42;
   --color-success-ghost: #E6F2EC;
 
-  /* Neutres (gris 50-900) */
-  --color-gray-900: #111827;
-  --color-gray-800: #1F2937;
-  --color-gray-700: #374151;
-  --color-gray-600: #4B5563;
-  --color-gray-500: #6B7280;
-  --color-gray-400: #9CA3AF;
-  --color-gray-300: #D1D5DB;
-  --color-gray-200: #E5E7EB;
-  --color-gray-150: #F0F2F5;
-  --color-gray-100: #F4F6F8;
-  --color-gray-50: #FAFBFC;
+  /* Neutres teintés Charte TANTY (zéro fond blanc plat) */
+  --color-gray-900: #111F16;
+  --color-gray-800: #1B2E22;
+  --color-gray-700: #2E4436;
+  --color-gray-600: #435A4B;
+  --color-gray-500: #5E7466;
+  --color-gray-400: #829689;
+  --color-gray-300: #BDD0C4;
+  --color-gray-200: #D2E1D7;
+  --color-gray-150: #DFECE3;
+  --color-gray-100: #EAF2ED;
+  --color-gray-50: #F3F8F5;
   --color-white: #FFFFFF;
 
   /* Surfaces spécifiques TANTY */
-  --color-paper: #FFFDF7;
+  --color-paper: #EAF2ED;
   --color-cream: #FBF6E9;
-  --color-ink: #1A1A16;
-  --color-grey-100: #F3F1EA;
-  --color-grey-300: #D8D3C4;
-  --color-grey-500: #9C9686;
-  --color-grey-700: #5B5648;
+  --color-ink: #14241B;
+  --color-grey-100: #E4EFE8;
+  --color-grey-300: #C6D8CD;
+  --color-grey-500: #6B7F72;
+  --color-grey-700: #3B4F42;
 
   /* Typographie */
   --font-display: 'Poppins', sans-serif;
@@ -183,6 +183,13 @@
   --n100: var(--color-gray-100);
   --n50: var(--color-gray-50);
   --w: var(--color-white);
+  --paper: var(--color-paper);
+  --cream: var(--color-cream);
+  --ink: var(--color-ink);
+  --grey-100: var(--color-grey-100);
+  --grey-300: var(--color-grey-300);
+  --grey-500: var(--color-grey-500);
+  --grey-700: var(--color-grey-700);
   --tanty-green: var(--color-primary);
   --tanty-yellow: var(--color-accent);
   --tanty-red: var(--color-danger);
