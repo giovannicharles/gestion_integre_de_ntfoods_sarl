@@ -1,12 +1,18 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of } from 'rxjs';
+import { Router } from '@angular/router';
+import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevel, StockMovement } from '../../../domain/models';
 import { IaService } from '../../../../../core/services/ia.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface TransferSuggestion {
+  productId: number;
+  transferKind: 'CENTRAL_TO_BUFFER' | 'BUFFER_TO_MOBILE';
   productSku: string;
   productName: string;
   unit: string;
@@ -32,10 +38,18 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private repo = inject(StockApiRepository);
   private iaService = inject(IaService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
+  private auth = inject(AuthService);
 
   loading = signal(true);
   iaLoading = signal(false);
+  executingKey = signal<string | null>(null);
+  executingBatch = signal(false);
   error = signal('');
+  searchQuery = signal('');
+  readonly transferPageSize = 10;
+  transferPage = signal(1);
   stockLevels = signal<StockLevel[]>([]);
   movements = signal<StockMovement[]>([]);
   suggestions = signal<TransferSuggestion[]>([]);
@@ -57,10 +71,26 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
 
   filteredSuggestions = computed(() => {
     const p = this.filterPriority();
-    const items = this.suggestions();
-    if (p === 'ALL') return items.sort((a, b) => this.priorityOrder(a.priority) - this.priorityOrder(b.priority));
-    return items.filter(i => i.priority === p).sort((a, b) => this.priorityOrder(a.priority) - this.priorityOrder(b.priority));
+    const q = this.searchQuery().toLowerCase().trim();
+    const list = this.suggestions().filter(i => {
+      if (p !== 'ALL' && i.priority !== p) return false;
+      if (q && !i.productName.toLowerCase().includes(q) && !i.productSku.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    return [...list].sort((a, b) => this.priorityOrder(a.priority) - this.priorityOrder(b.priority));
   });
+
+  transferTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredSuggestions().length / this.transferPageSize)));
+  transferPageRange = computed(() => Array.from({ length: this.transferTotalPages() }, (_, i) => i + 1));
+  paginatedSuggestions = computed(() => {
+    const start = (this.transferPage() - 1) * this.transferPageSize;
+    return this.filteredSuggestions().slice(start, start + this.transferPageSize);
+  });
+
+  onSearchChange(q: string): void {
+    this.searchQuery.set(q);
+    this.transferPage.set(1);
+  }
 
   ngOnInit(): void {
     this.checkIaStatus();
@@ -114,6 +144,8 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
           const suggestedQty = Math.min(surplus, Math.max(0, needed));
           if (suggestedQty > 0) {
             suggestions.push({
+              productId: bufItem.productId || 0,
+              transferKind: 'CENTRAL_TO_BUFFER',
               productSku: bufItem.productSku || '',
               productName: bufItem.productName || bufItem.productSku || '',
               unit: bufItem.productUnit || 'unité',
@@ -141,6 +173,8 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
           const suggestedQty = Math.min(surplus, Math.max(0, needed));
           if (suggestedQty > 0) {
             suggestions.push({
+              productId: mobItem.productId || 0,
+              transferKind: 'BUFFER_TO_MOBILE',
               productSku: mobItem.productSku || '',
               productName: mobItem.productName || mobItem.productSku || '',
               unit: mobItem.productUnit || 'unité',
@@ -166,6 +200,8 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
           const surplus = centralItem.quantity - (centralItem.reorderPoint || 0) * 1.5;
           if (surplus > 0) {
             suggestions.push({
+              productId: centralItem.productId || 0,
+              transferKind: 'CENTRAL_TO_BUFFER',
               productSku: centralItem.productSku || '',
               productName: centralItem.productName || centralItem.productSku || '',
               unit: centralItem.productUnit || 'unité',
@@ -192,6 +228,88 @@ export class IaTransfertsComponent implements OnInit, OnDestroy {
 
   setFilter(f: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'): void {
     this.filterPriority.set(f);
+    this.transferPage.set(1);
+  }
+
+  executeTransfer(item: TransferSuggestion): void {
+    if (item.transferKind === 'CENTRAL_TO_BUFFER' && item.productSku) {
+      const key = item.productSku + item.fromWarehouse + item.toWarehouse;
+      this.executingKey.set(key);
+      const userId = this.auth.getCurrentUser()?.matricule || 'system';
+      this.repo.replenishBuffer(item.productSku, item.suggestedQty, userId, `Transfert IA : ${item.reason}`).pipe(takeUntil(this.d$)).subscribe({
+        next: () => {
+          this.executingKey.set(null);
+          this.toast.success(`Transfert exécuté : ${item.suggestedQty} ${item.unit} vers ${item.toWarehouse}`);
+          this.loadData();
+        },
+        error: (err) => {
+          this.executingKey.set(null);
+          this.toast.error(extractApiError(err));
+        }
+      });
+      return;
+    }
+    this.router.navigate(['/stock/dotations/new'], {
+      queryParams: { productId: item.productId, qty: item.suggestedQty }
+    });
+  }
+
+  executeSelectedTransfers(): void {
+    const selected = this.suggestions().filter(s => s.selected && s.suggestedQty > 0);
+    if (!selected.length) {
+      this.toast.warning('Sélectionnez au moins un transfert.');
+      return;
+    }
+    const centralToBuffer = selected.filter(s => s.transferKind === 'CENTRAL_TO_BUFFER' && s.productSku);
+    if (!centralToBuffer.length) {
+      const first = selected[0];
+      this.router.navigate(['/stock/dotations/new'], {
+        queryParams: { productId: first.productId, qty: first.suggestedQty }
+      });
+      return;
+    }
+    this.executingBatch.set(true);
+    const userId = this.auth.getCurrentUser()?.matricule || 'system';
+    forkJoin(
+      centralToBuffer.map(item =>
+        this.repo.replenishBuffer(item.productSku, item.suggestedQty, userId, `Transfert IA groupé : ${item.reason}`).pipe(
+          catchError(() => of(null))
+        )
+      )
+    ).pipe(takeUntil(this.d$)).subscribe(() => {
+      this.executingBatch.set(false);
+      this.toast.success(`${centralToBuffer.length} transfert(s) Central → Tampon exécuté(s).`);
+      this.loadData();
+    });
+  }
+
+  exportTransfersCsv(): void {
+    const list = this.filteredSuggestions();
+    if (!list.length) {
+      this.toast.warning('Aucun transfert à exporter.');
+      return;
+    }
+    const headers = ['SKU', 'Produit', 'Source', 'Destination', 'Stock source', 'Stock dest', 'Qté suggérée', 'Priorité', 'Motif'];
+    const rows = list.map(s => [
+      s.productSku,
+      s.productName.replace(/;/g, ','),
+      s.fromWarehouse.replace(/;/g, ','),
+      s.toWarehouse.replace(/;/g, ','),
+      String(s.fromQty),
+      String(s.toQty),
+      String(s.suggestedQty),
+      s.priority,
+      s.reason.replace(/;/g, ',')
+    ]);
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-ia-transferts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} suggestion(s) exportée(s).`);
   }
 
   toggleSelect(item: TransferSuggestion): void {

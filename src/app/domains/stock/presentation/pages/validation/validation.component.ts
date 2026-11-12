@@ -10,6 +10,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, of, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt.use-case';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 import { Receipt, ReceptionType } from '../../../domain/models/stock.models';
 
 type ValidationAction = 'v1' | 'v2' | 'rej';
@@ -26,6 +27,7 @@ export class ValidationComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private uc = inject(ReceiptUseCase);
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private filterType: ReceptionType | null = null;
 
@@ -103,16 +105,19 @@ export class ValidationComponent implements OnInit, OnDestroy {
     return this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'CHEF_PRODUCTION', 'ADMIN', 'DIRECTEUR_GENERAL']);
   }
   canValidateSecond() {
-    return this.auth.hasAnyRole(['CONTROLEUR_GENERAL', 'COMPTABLE', 'ADMIN', 'DIRECTEUR_GENERAL']);
+    return this.auth.hasAnyRole(['CONTROLEUR_GENERAL', 'COMPTABLE', 'GESTIONNAIRE_STOCK', 'ADMIN', 'DIRECTEUR_GENERAL']);
   }
   canValidateSecondFor(r: Receipt): boolean {
     if (this.auth.hasAnyRole(['ADMIN', 'DIRECTEUR_GENERAL'])) return true;
-    const type = r.receptionType;
+    const type = r.receptionType as string;
     if (type === 'CONSOMMABLE' || type === 'MATERIEL') {
       return this.auth.hasRole('CONTROLEUR_GENERAL');
     }
     if (type === 'MATIERE_PREMIERE') {
       return this.auth.hasRole('COMPTABLE');
+    }
+    if (type === 'PRODUIT_FINI') {
+      return this.auth.hasRole('GESTIONNAIRE_STOCK');
     }
     return false;
   }
@@ -139,6 +144,8 @@ export class ValidationComponent implements OnInit, OnDestroy {
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMsg.set(msg);
     this.toastType.set(type);
+    if (type === 'success') this.toast.success(msg, 'Validation Réception');
+    else this.toast.error(msg, 'Validation Réception');
     setTimeout(() => this.toastMsg.set(''), 4500);
   }
 

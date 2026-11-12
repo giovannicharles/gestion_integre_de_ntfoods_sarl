@@ -1,15 +1,21 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { StockLevel } from '../../../domain/models';
 import { IaService, PredictiveResponse } from '../../../../../core/services/ia.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface ReapproItem {
+  productId: number;
   productSku: string;
   productName: string;
   warehouse: string;
+  warehouseType: string;
   currentQty: number;
   unit: string;
   reorderPoint: number;
@@ -34,9 +40,17 @@ export class IaReapproComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private repo = inject(StockApiRepository);
   private iaService = inject(IaService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
+  private auth = inject(AuthService);
 
   loading = signal(true);
   iaLoading = signal(false);
+  executingKey = signal<string | null>(null);
+  executingBatch = signal(false);
+  readonly reapproPageSize = 10;
+  reapproPage = signal(1);
+  searchSignal = signal('');
   error = signal('');
   stockLevels = signal<StockLevel[]>([]);
   reapproItems = signal<ReapproItem[]>([]);
@@ -61,14 +75,27 @@ export class IaReapproComponent implements OnInit, OnDestroy {
   filteredItems = computed(() => {
     const sev = this.filterSeverity();
     const items = this.reapproItems();
+    const q = this.searchSignal().toLowerCase().trim();
     let r = items;
     if (sev !== 'ALL') r = r.filter(i => i.severity === sev);
-    if (this.search) {
-      const q = this.search.toLowerCase();
+    if (q) {
       r = r.filter(i => i.productName.toLowerCase().includes(q) || i.productSku.toLowerCase().includes(q));
     }
-    return r.sort((a, b) => this.severityOrder(a.severity) - this.severityOrder(b.severity));
+    return [...r].sort((a, b) => this.severityOrder(a.severity) - this.severityOrder(b.severity));
   });
+
+  reapproTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredItems().length / this.reapproPageSize)));
+  reapproPageRange = computed(() => Array.from({ length: this.reapproTotalPages() }, (_, i) => i + 1));
+  paginatedItems = computed(() => {
+    const start = (this.reapproPage() - 1) * this.reapproPageSize;
+    return this.filteredItems().slice(start, start + this.reapproPageSize);
+  });
+
+  onSearchChange(v: string): void {
+    this.search = v;
+    this.searchSignal.set(v);
+    this.reapproPage.set(1);
+  }
 
   ngOnInit(): void {
     this.checkIaStatus();
@@ -116,9 +143,11 @@ export class IaReapproComponent implements OnInit, OnDestroy {
         const severity = this.calcSeverity(sl.alertLevel, currentQty, safetyStock);
         const daysUntilRupture = this.estimateDaysUntilRupture(sl);
         return {
+          productId: sl.productId || 0,
           productSku: sl.productSku || '',
           productName: sl.productName || sl.productSku || '',
           warehouse: sl.warehouseName || '',
+          warehouseType: sl.warehouseType || '',
           currentQty,
           unit: this.resolveUnitLabel(sl.packagingType) || sl.productUnit || 'unités',
           reorderPoint,
@@ -165,6 +194,92 @@ export class IaReapproComponent implements OnInit, OnDestroy {
 
   setFilter(f: 'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'): void {
     this.filterSeverity.set(f);
+    this.reapproPage.set(1);
+  }
+
+  executeReapproItem(item: ReapproItem): void {
+    const qty = Math.max(1, item.suggestedQty || 10);
+    if ((item.warehouseType || '').toUpperCase().includes('BUFFER') && item.productSku) {
+      const key = item.productSku + item.warehouse;
+      this.executingKey.set(key);
+      const userId = this.auth.getCurrentUser()?.matricule || 'system';
+      this.repo.replenishBuffer(item.productSku, qty, userId, `Réappro IA - ${item.productName}`).pipe(takeUntil(this.d$)).subscribe({
+        next: () => {
+          this.executingKey.set(null);
+          this.toast.success(`Tampon réapprovisionné : +${qty} ${item.unit} (${item.productName})`);
+          this.loadData();
+        },
+        error: (err) => {
+          this.executingKey.set(null);
+          this.toast.error(extractApiError(err));
+        }
+      });
+      return;
+    }
+    this.router.navigate(['/stock/commande-production'], {
+      queryParams: { productId: item.productId, qty }
+    });
+  }
+
+  executeSelectedBuffer(): void {
+    const selected = this.reapproItems().filter(i => i.selected && i.suggestedQty > 0);
+    if (!selected.length) {
+      this.toast.warning('Sélectionnez au moins un produit à réapprovisionner.');
+      return;
+    }
+    const bufferItems = selected.filter(i => (i.warehouseType || '').toUpperCase().includes('BUFFER') && i.productSku);
+    const nonBufferItems = selected.filter(i => !(i.warehouseType || '').toUpperCase().includes('BUFFER'));
+    if (bufferItems.length > 0) {
+      this.executingBatch.set(true);
+      const userId = this.auth.getCurrentUser()?.matricule || 'system';
+      const calls = bufferItems.map(i =>
+        this.repo.replenishBuffer(i.productSku, i.suggestedQty, userId, `Réappro IA groupé - ${i.productName}`).pipe(
+          catchError(() => of(null))
+        )
+      );
+      forkJoin(calls).pipe(takeUntil(this.d$)).subscribe(() => {
+        this.executingBatch.set(false);
+        this.toast.success(`${bufferItems.length} transfert(s) vers le tampon exécuté(s).`);
+        this.loadData();
+      });
+      return;
+    }
+    if (nonBufferItems.length > 0) {
+      const first = nonBufferItems[0];
+      this.router.navigate(['/stock/commande-production'], {
+        queryParams: { productId: first.productId, qty: first.suggestedQty }
+      });
+    }
+  }
+
+  exportReapproCsv(): void {
+    const items = this.reapproItems().filter(i => i.selected).length
+      ? this.reapproItems().filter(i => i.selected)
+      : this.filteredItems();
+    if (!items.length) {
+      this.toast.warning('Aucune recommandation à exporter.');
+      return;
+    }
+    const headers = ['SKU', 'Produit', 'Magasin', 'Stock actuel', 'Sécurité', 'Qté suggérée', 'Sévérité', 'Action'];
+    const rows = items.map(i => [
+      i.productSku,
+      i.productName.replace(/;/g, ','),
+      i.warehouse.replace(/;/g, ','),
+      String(i.currentQty),
+      String(i.safetyStock),
+      String(i.suggestedQty),
+      i.severity,
+      i.recommendedAction.replace(/;/g, ',')
+    ]);
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-ia-reappro-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${items.length} recommandation(s) exportée(s).`);
   }
 
   toggleSelect(item: ReapproItem): void {

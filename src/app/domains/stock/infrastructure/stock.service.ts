@@ -307,10 +307,9 @@ export class StockService {
   }
 
   validerInventaire(numero: string, justification?: string): Observable<InventaireBE> {
-    const params: Record<string, string> = {};
-    if (justification) params['justification'] = justification;
+    const query = justification ? `?justification=${encodeURIComponent(justification)}` : '';
     return this.api.post<ApiResponse<InventaireBE>>(
-      `stock/inventaires/${encodeURIComponent(numero)}/valider`, {}, 
+      `stock/inventaires/${encodeURIComponent(numero)}/valider${query}`, {}
     ).pipe(map(r => r.donnees!));
   }
 
@@ -320,44 +319,44 @@ export class StockService {
     const p: Record<string, string> = {};
     if (params.statut) p['statut'] = params.statut;
     if (params.bonCommande) p['bonCommande'] = params.bonCommande;
-    return this.api.get<ApiResponse<ReceptionBE[]>>('stock/receptions', p)
+    return this.api.get<ApiResponse<ReceptionBE[]>>('v1/stock/receptions', p)
       .pipe(map(r => r.donnees ?? []));
   }
 
   getReception(numero: string): Observable<ReceptionBE> {
-    return this.api.get<ApiResponse<ReceptionBE>>(`stock/receptions/${encodeURIComponent(numero)}`)
+    return this.api.get<ApiResponse<ReceptionBE>>(`v1/stock/receptions/${encodeURIComponent(numero)}`)
       .pipe(map(r => r.donnees!));
   }
 
   creerReceptionFournisseur(req: {
     bonCommande: string; lignes: { codeProduit: string; quantite: number; unite: string }[];
   }): Observable<ReceptionBE> {
-    return this.api.post<ApiResponse<ReceptionBE>>('stock/receptions/fournisseur', req)
+    return this.api.post<ApiResponse<ReceptionBE>>('v1/stock/receptions/fournisseur', req)
       .pipe(map(r => r.donnees!));
   }
 
   creerReceptionProduction(req: {
     lotProduction: string; lignes: { codeProduit: string; quantite: number; unite: string }[];
   }): Observable<ReceptionBE> {
-    return this.api.post<ApiResponse<ReceptionBE>>('stock/receptions/production', req)
+    return this.api.post<ApiResponse<ReceptionBE>>('v1/stock/receptions/production', req)
       .pipe(map(r => r.donnees!));
   }
 
   validerReceptionEtape1(numero: string): Observable<ReceptionBE> {
     return this.api.post<ApiResponse<ReceptionBE>>(
-      `stock/receptions/${encodeURIComponent(numero)}/valider-etape1`, {}
+      `v1/stock/receptions/${encodeURIComponent(numero)}/valider-etape1`, {}
     ).pipe(map(r => r.donnees!));
   }
 
   validerReceptionEtape2(numero: string): Observable<ReceptionBE> {
     return this.api.post<ApiResponse<ReceptionBE>>(
-      `stock/receptions/${encodeURIComponent(numero)}/valider-etape2`, {}
+      `v1/stock/receptions/${encodeURIComponent(numero)}/valider-etape2`, {}
     ).pipe(map(r => r.donnees!));
   }
 
   rejeterReception(numero: string, motif: string): Observable<ReceptionBE> {
     return this.api.post<ApiResponse<ReceptionBE>>(
-      `stock/receptions/${encodeURIComponent(numero)}/rejeter?motif=${encodeURIComponent(motif)}`, {}
+      `v1/stock/receptions/${encodeURIComponent(numero)}/rejeter?motif=${encodeURIComponent(motif)}`, {}
     ).pipe(map(r => r.donnees!));
   }
 
@@ -387,7 +386,7 @@ export class StockService {
   }
 
   adjustStock(stockLevelId: number, newQuantity: number, reason: string): Observable<NiveauStockBE> {
-    return this.api.post<ApiResponse<NiveauStockBE>>('stock/levels/adjust', { stockLevelId, newQuantity, reason })
+    return this.api.post<ApiResponse<NiveauStockBE>>('stock/items/adjust', { stockLevelId, newQuantity, reason })
       .pipe(map(r => r.donnees!));
   }
 
@@ -397,7 +396,7 @@ export class StockService {
    * acteur avant que le stock ne bouge (`TransfertController`/`StockNiveauTransfertHandler`).
    */
   transferToBuffer(id: number, quantity: number): Observable<NiveauStockBE> {
-    return this.api.post<ApiResponse<NiveauStockBE>>(`stock/levels/${id}/transfer-to-buffer?quantity=${quantity}`, {})
+    return this.api.post<ApiResponse<NiveauStockBE>>(`stock/items/levels/${id}/transfer-to-buffer?quantity=${quantity}`, {})
       .pipe(map(r => r.donnees!));
   }
 

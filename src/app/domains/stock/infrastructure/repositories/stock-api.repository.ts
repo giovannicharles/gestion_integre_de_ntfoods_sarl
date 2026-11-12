@@ -208,10 +208,12 @@ export class StockApiRepository {
    * `StockLevel` pour ne pas changer la signature publique de cette méthode.
    */
   getStockLevelsByWarehouse(id: number): Observable<StockLevel[]> {
-    return this.api.get<{ donnees?: Array<{
-      id: number; produitId: number; codeProduit: string; sku: string; designation: string;
-      entrepotId: number; quantite: number; seuilReapprovisionnement: number; valeurStock: number;
-    }> }>(`stock/levels/warehouse/${id}`).pipe(
+    return this.api.get<{
+      donnees?: Array<{
+        id: number; produitId: number; codeProduit: string; sku: string; designation: string;
+        entrepotId: number; quantite: number; seuilReapprovisionnement: number; valeurStock: number;
+      }>
+    }>(`stock/levels/warehouse/${id}`).pipe(
       map(r => (r.donnees ?? []).map(n => ({
         id: n.id, productId: n.produitId, productSku: n.sku, productName: n.designation,
         warehouseId: n.entrepotId, quantity: n.quantite, reservedQty: 0,
@@ -242,7 +244,7 @@ export class StockApiRepository {
   }
 
   transferToBuffer(id: number, quantity: number): Observable<void> {
-    return this.api.post(`stock/levels/${id}/transfer-to-buffer?quantity=${quantity}`, {});
+    return this.api.post(`stock/items/levels/${id}/transfer-to-buffer?quantity=${quantity}`, {});
   }
 
   getAllStockItems(): Observable<unknown[]> {

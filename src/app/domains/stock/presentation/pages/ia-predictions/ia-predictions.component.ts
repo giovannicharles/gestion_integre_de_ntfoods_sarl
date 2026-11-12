@@ -11,10 +11,13 @@ import { StockLevel, StockMovement } from '../../../domain/models';
 import {
   IaService, AnalysisResponse, ChatResponse
 } from '../../../../../core/services/ia.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 Chart.register(...registerables);
 
 interface PredictionItem {
+  productId?: number;
+  productName?: string;
   sku: string;
   currentQty: number;
   avgDailyConsumption: number;
@@ -40,6 +43,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
   private d$ = new Subject<void>();
   private repo = inject(StockApiRepository);
   private iaService = inject(IaService);
+  private toast = inject(ToastService);
 
   @ViewChild('trendCanvas') trendCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('forecastCanvas') forecastCanvas!: ElementRef<HTMLCanvasElement>;
@@ -57,6 +61,9 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
   predictions = signal<PredictionItem[]>([]);
   selectedHorizon = signal<30 | 60 | 90>(30);
   filterUrgency = signal<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+  searchQuery = signal('');
+  readonly predPageSize = 10;
+  predPage = signal(1);
 
   // IA Analysis state
   iaConfigured = signal(false);
@@ -89,10 +96,55 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   filteredPredictions = computed(() => {
     const f = this.filterUrgency();
-    const preds = this.predictions();
-    if (f === 'ALL') return preds;
-    return preds.filter(p => p.urgency === f);
+    const q = this.searchQuery().trim().toLowerCase();
+    return this.predictions().filter(p => {
+      if (f !== 'ALL' && p.urgency !== f) return false;
+      if (q && !p.sku.toLowerCase().includes(q) && !(p.productName || '').toLowerCase().includes(q)) return false;
+      return true;
+    });
   });
+
+  predTotalPages = computed(() => Math.max(1, Math.ceil(this.filteredPredictions().length / this.predPageSize)));
+  predPageRange = computed(() => Array.from({ length: this.predTotalPages() }, (_, i) => i + 1));
+  paginatedPredictions = computed(() => {
+    const start = (this.predPage() - 1) * this.predPageSize;
+    return this.filteredPredictions().slice(start, start + this.predPageSize);
+  });
+
+  onSearchChange(q: string): void {
+    this.searchQuery.set(q);
+    this.predPage.set(1);
+  }
+
+  exportPredictionsCsv(): void {
+    const rowsData = this.filteredPredictions();
+    if (!rowsData.length) {
+      this.toast.warning('Aucune prédiction à exporter.');
+      return;
+    }
+    const headers = ['SKU', 'Produit', 'Stock actuel', 'Conso/jour', 'Jours restants', 'Prévision 30j', 'Prévision 90j', 'Confiance (%)', 'Urgence', 'Recommandation'];
+    const rows = rowsData.map(p => [
+      p.sku,
+      (p.productName || '').replace(/;/g, ','),
+      String(p.currentQty),
+      String(p.avgDailyConsumption),
+      p.daysOfStockLeft >= 999 ? 'Infini' : String(p.daysOfStockLeft),
+      String(p.predictedStock30d),
+      String(p.predictedStock90d),
+      String(p.confidence),
+      p.urgency,
+      p.recommendation.replace(/;/g, ',')
+    ]);
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-ia-predictions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${rowsData.length} prédiction(s) exportée(s).`);
+  }
 
   topConsumers = computed(() => {
     return [...this.predictions()].sort((a, b) => b.avgDailyConsumption - a.avgDailyConsumption).slice(0, 10);
@@ -121,8 +173,8 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
   private loadData(): void {
     this.loading.set(true);
     forkJoin({
-      levels: this.repo.getStockLevels(),
-      movements: this.repo.getMovements()
+      levels: this.repo.getStockLevels().pipe(catchError(() => of([] as StockLevel[]))),
+      movements: this.repo.getMovements().pipe(catchError(() => of([] as StockMovement[])))
     }).pipe(takeUntil(this.d$)).subscribe({
       next: ({ levels, movements }) => {
         this.stockLevels.set(levels);
@@ -149,11 +201,11 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
       );
 
       const outQty = productMovements
-        .filter(m => ['TRANSFER', 'ADJUSTMENT', 'TRANSFER_BUFFER_TO_MOBILE'].includes(m.type))
+        .filter(m => ['TRANSFER', 'ADJUSTMENT', 'TRANSFER_BUFFER_TO_MOBILE', 'SALE', 'LOSS', 'EXPIRATION'].includes(m.type))
         .reduce((s, m) => s + m.quantity, 0);
 
       const inQty = productMovements
-        .filter(m => ['RECEIPT', 'TRANSFER_CENTRAL_TO_BUFFER'].includes(m.type))
+        .filter(m => m.type.startsWith('RECEPTION') || m.type === 'TRANSFER_MOBILE_TO_CENTRAL')
         .reduce((s, m) => s + m.quantity, 0);
 
       const avgDailyConsumption = outQty / 30;
@@ -188,6 +240,8 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
       }
 
       return {
+        productId: sl.productId,
+        productName: sl.productName || sl.productSku || '-',
         sku: sl.productSku || '-',
         currentQty: sl.quantity,
         avgDailyConsumption: Math.round(avgDailyConsumption * 10) / 10,
@@ -207,6 +261,7 @@ export class IaPredictionsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   setFilterUrgency(f: string): void {
     this.filterUrgency.set(f as any);
+    this.predPage.set(1);
   }
 
   private buildCharts(): void {

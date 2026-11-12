@@ -1,7 +1,7 @@
 // ═══ FICHIER : src/app/domains/stock/presentation/pages/reception/reception-list.component.ts ═══
 // Réécrit : aligné sur le nouveau contrat backend (receptionType au lieu de source,
 // destinationLocationName au lieu de warehouseName, receiptNumber comme identifiant).
-import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -9,6 +9,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt.use-case';
 import { Receipt } from '../../../domain/models';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +24,7 @@ export class ReceptionListComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private uc = inject(ReceiptUseCase);
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
 
   canCreate = computed(() => this.auth.hasAnyRole(['GESTIONNAIRE_STOCK', 'ADMIN']));
 
@@ -178,7 +181,40 @@ export class ReceptionListComponent implements OnInit, OnDestroy {
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMsg.set(msg);
     this.toastType.set(type);
+    if (type === 'success') {
+      this.toast.success(msg, 'Réceptions');
+    } else {
+      this.toast.error(msg, 'Réceptions');
+    }
     setTimeout(() => this.toastMsg.set(''), 4000);
+  }
+
+  exportReceptionsCsv(): void {
+    const list = this.filtered();
+    if (list.length === 0) {
+      this.toast.warning('Aucune réception à exporter.', 'Export CSV');
+      return;
+    }
+    const headers = ['N° Réception', 'Type', 'Source', 'Destination', 'Date', 'Statut', 'Nb Articles', 'Écart'];
+    const rows = list.map(r => [
+      `"${r.receiptNumber || ''}"`,
+      `"${this.typeLabel(r.receptionType)}"`,
+      `"${r.sourceLabel || ''}"`,
+      `"${r.destinationLocationName || ''}"`,
+      `"${r.receiptDate ? String(r.receiptDate).substring(0, 10) : ''}"`,
+      `"${this.sLabel(r.status)}"`,
+      r.items?.length ?? 0,
+      this.hasEcart(r) ? 'OUI' : 'NON'
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `receptions_stock_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success(`${list.length} réception(s) exportée(s) en CSV.`, 'Export CSV');
   }
 
   ngOnDestroy() {

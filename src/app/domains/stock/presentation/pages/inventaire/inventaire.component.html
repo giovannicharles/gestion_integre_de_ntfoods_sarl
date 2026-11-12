@@ -8,18 +8,24 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="8" width="36" height="32" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M6 18H42M6 28H42M18 18V40M30 18V40" stroke="var(--color-primary, #14532D)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="34" cy="13" r="3" fill="var(--color-accent, #F6B60B)"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Inventaire des Stocks</h1>
-        <p class="ph-sub">Vue consolidée, Central · Tampon · Mobile</p>
+        <p class="ph-sub">Vue consolidée permanente — Stock Central · Stock Tampon · Stocks Mobiles</p>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="vt">
-        <button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')"aria-label="Vue tableau"><i class="fa-solid fa-table-list"></i></button>
-        <button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')"aria-label="Vue cartes"><i class="fa-solid fa-grip"></i></button>
+        <button [class.vt-on]="viewMode()==='table'" (click)="viewMode.set('table')" aria-label="Vue tableau"><i class="fa-solid fa-table-list"></i></button>
+        <button [class.vt-on]="viewMode()==='cards'" (click)="viewMode.set('cards')" aria-label="Vue cartes"><i class="fa-solid fa-grip"></i></button>
       </div>
-      <button class="btn btn-ghost btn-sm" (click)="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+      <button class="btn btn-secondary btn-sm" (click)="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
       <a routerLink="/stock/reception/new" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> Réception</a>
     </div>
   </div>

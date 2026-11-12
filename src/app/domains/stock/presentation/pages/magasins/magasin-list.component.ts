@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../core/http/api.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface Magasin {
   id: string;
@@ -29,6 +31,7 @@ interface Magasin {
 export class MagasinListComponent implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
 
   magasins = signal<Magasin[]>([]);
   loading = signal(true);
@@ -73,10 +76,11 @@ export class MagasinListComponent implements OnInit {
         this.magasins.set(data || []);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set('Erreur lors du chargement des emplacements');
+      error: (err) => {
+        const msg = extractApiError(err) || 'Erreur lors du chargement des emplacements';
+        this.error.set(msg);
         this.loading.set(false);
-        this.showToast('Erreur lors du chargement des emplacements', 'error');
+        this.toast.error(msg, 'Emplacements de stock');
       }
     });
   }

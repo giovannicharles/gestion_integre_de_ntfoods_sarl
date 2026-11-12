@@ -1,17 +1,26 @@
 <div class="page animate-fadeInUp">
   <!-- Header -->
-  <div class="page-header">
+  <div class="page-header ph-banner">
     <div class="ph-left">
-      <div class="ph-icon ph-icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="ph-icon ph-icon-red">
+        <svg viewBox="0 0 36 36" width="26" height="26" fill="none" aria-hidden="true">
+          <path d="M18 4 L31 28 H5 Z" stroke="#F6B60B" stroke-width="2.6" stroke-linejoin="round" fill="rgba(246,182,11,0.16)" class="svg-alert-tri"/>
+          <line x1="18" y1="13" x2="18" y2="20" stroke="#FFF8E1" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="18" cy="24" r="1.6" fill="#FFF8E1"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Alertes &amp; Seuils de Stock</h1>
-        <p class="ph-sub">Surveillance automatique, Acquisition et résolution</p>
+        <p class="ph-sub">Surveillance automatique, acquittement et résolution</p>
       </div>
     </div>
     <div class="hdr-actions">
       @if (lastCheck()) {
         <span class="last-check"><i class="fa-solid fa-clock"></i> Dernière vérif: {{ lastCheck() | date:'HH:mm:ss' }}</span>
       }
+      <button class="btn btn-ghost btn-sm" (click)="exportAlertsCsv()" title="Exporter les alertes en CSV">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
       @if (canManageAlerts()) {
         <button class="btn btn-secondary btn-sm" (click)="triggerCheck()" title="Relancer la vérification des seuils">
           <i class="fa-solid fa-rotate"></i> Vérifier
@@ -20,16 +29,10 @@
     </div>
   </div>
 
-  @if (actionMsg()) {
-    <div class="action-toast">
-      <i class="fa-solid fa-circle-check"></i> {{ actionMsg() }}
-    </div>
-  }
-
   @if (isReadOnly()) {
     <div class="banner banner-primary" style="display:flex;align-items:center;gap:10px">
       <i class="fa-solid fa-eye"></i>
-      <span>Mode consultation, Seul le <strong>Gestionnaire de Stock</strong> peut acquitter, commander ou résoudre les alertes.</span>
+      <span>Mode consultation — Seul le <strong>Gestionnaire de Stock</strong> peut acquitter, commander ou résoudre les alertes.</span>
     </div>
   }
 
@@ -70,22 +73,39 @@
       </button>
     </div>
 
+    <!-- Search & Warehouse Filter Bar -->
+    <div class="alerts-toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" class="form-control" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+               placeholder="Rechercher un produit, SKU ou message…">
+      </div>
+      @if (source() === 'dashboard' && warehouses().length > 0) {
+        <select class="form-control wh-select" [ngModel]="warehouseFilter()" (ngModelChange)="onWarehouseFilterChange($event)">
+          <option value="">Tous les entrepôts</option>
+          @for (w of warehouses(); track w) {
+            <option [value]="w">{{ w }}</option>
+          }
+        </select>
+      }
+    </div>
+
     <!-- DASHBOARD SOURCE: Stock levels under threshold -->
     @if (source() === 'dashboard') {
       <div class="filter-tabs">
-        <button class="ftab" [class.ft-on]="filter()==='TOUS'" (click)="filter.set('TOUS')">
+        <button class="ftab" [class.ft-on]="filter()==='TOUS'" (click)="setFilter('TOUS')">
           Toutes <span class="ftab-count">{{ alerts().length }}</span>
         </button>
-        <button class="ftab ftab-r" [class.ft-on]="filter()==='CRITIQUE'" (click)="filter.set('CRITIQUE')">
+        <button class="ftab ftab-r" [class.ft-on]="filter()==='CRITIQUE'" (click)="setFilter('CRITIQUE')">
           <span class="pulse-sm"></span> Critiques <span class="ftab-count">{{ critiques().length }}</span>
         </button>
-        <button class="ftab ftab-o" [class.ft-on]="filter()==='FAIBLE'" (click)="filter.set('FAIBLE')">
+        <button class="ftab ftab-o" [class.ft-on]="filter()==='FAIBLE'" (click)="setFilter('FAIBLE')">
           Faibles <span class="ftab-count">{{ faibles().length }}</span>
         </button>
       </div>
 
       <div class="alerts-grid">
-        @for (sl of getFilteredDashboard(); track sl.id) {
+        @for (sl of getPaginatedDashboard(); track sl.id) {
           <div class="al-card" [class.al-crit]="sl.alertLevel==='CRITIQUE'" [class.al-faib]="sl.alertLevel==='FAIBLE'">
             <div class="al-top">
               <div class="al-badge-wrap">
@@ -178,31 +198,40 @@
           </div>
         }
       </div>
+      @if (dashTotalPages() > 1) {
+        <div class="pagination-row">
+          <button class="pg-btn" [disabled]="dashPage() === 1" (click)="dashPage.set(dashPage() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+          @for (p of dashPageRange(); track p) {
+            <button class="pg-btn" [class.pg-active]="dashPage() === p" (click)="dashPage.set(p)">{{ p }}</button>
+          }
+          <button class="pg-btn" [disabled]="dashPage() === dashTotalPages()" (click)="dashPage.set(dashPage() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+        </div>
+      }
     }
 
     <!-- BACKEND SOURCE: System alerts with acknowledge/resolve -->
     @if (source() === 'backend') {
       <!-- Type filters -->
       <div class="type-filters">
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='ALL'" (click)="typeFilter.set('ALL')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='ALL'" (click)="setTypeFilter('ALL')">
           <i class="fa-solid fa-layer-group"></i> Tous <span class="tf-count">{{ backendAlerts().length }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='CRITICAL_STOCK'" (click)="typeFilter.set('CRITICAL_STOCK')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='CRITICAL_STOCK'" (click)="setTypeFilter('CRITICAL_STOCK')">
           <i class="fa-solid fa-circle-exclamation"></i> Stock critique <span class="tf-count">{{ countByType('CRITICAL_STOCK') }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='LOW_STOCK'" (click)="typeFilter.set('LOW_STOCK')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='LOW_STOCK'" (click)="setTypeFilter('LOW_STOCK')">
           <i class="fa-solid fa-arrow-down"></i> Stock bas <span class="tf-count">{{ countByType('LOW_STOCK') }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRATION_SOON'" (click)="typeFilter.set('EXPIRATION_SOON')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRATION_SOON'" (click)="setTypeFilter('EXPIRATION_SOON')">
           <i class="fa-solid fa-clock"></i> Péremption <span class="tf-count">{{ countByType('EXPIRATION_SOON') }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRED'" (click)="typeFilter.set('EXPIRED')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='EXPIRED'" (click)="setTypeFilter('EXPIRED')">
           <i class="fa-solid fa-skull-crossbones"></i> Expirés <span class="tf-count">{{ countByType('EXPIRED') }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='SLOW_ROTATION'" (click)="typeFilter.set('SLOW_ROTATION')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='SLOW_ROTATION'" (click)="setTypeFilter('SLOW_ROTATION')">
           <i class="fa-solid fa-rotate"></i> Rotation lente <span class="tf-count">{{ countByType('SLOW_ROTATION') }}</span>
         </button>
-        <button class="tf-btn" [class.tf-on]="typeFilter()==='BUFFER_INSUFFICIENT'" (click)="typeFilter.set('BUFFER_INSUFFICIENT')">
+        <button class="tf-btn" [class.tf-on]="typeFilter()==='BUFFER_INSUFFICIENT'" (click)="setTypeFilter('BUFFER_INSUFFICIENT')">
           <i class="fa-solid fa-layer-group"></i> Tampon insuff. <span class="tf-count">{{ countByType('BUFFER_INSUFFICIENT') }}</span>
         </button>
       </div>
@@ -215,7 +244,7 @@
         </div>
       } @else {
         <div class="alerts-grid">
-          @for (a of getFilteredBackend(); track a.id) {
+          @for (a of getPaginatedBackend(); track a.id) {
             <div class="be-card" [style.border-left-color]="getTypeColor(a.type)">
               <!-- Header -->
               <div class="be-top">
@@ -302,6 +331,15 @@
             </div>
           }
         </div>
+        @if (backendTotalPages() > 1) {
+          <div class="pagination-row">
+            <button class="pg-btn" [disabled]="backendPage() === 1" (click)="backendPage.set(backendPage() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+            @for (p of backendPageRange(); track p) {
+              <button class="pg-btn" [class.pg-active]="backendPage() === p" (click)="backendPage.set(p)">{{ p }}</button>
+            }
+            <button class="pg-btn" [disabled]="backendPage() === backendTotalPages()" (click)="backendPage.set(backendPage() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+          </div>
+        }
       }
     }
   }

@@ -1,13 +1,23 @@
 <div class="dash">
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="40" height="40" fill="none" class="animated-ph-svg">
+          <rect x="6" y="16" width="36" height="26" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 16V10C14 7.79 15.79 6 18 6H30C32.21 6 34 7.79 34 10V16" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="27" r="5" fill="var(--color-accent, #F6B60B)" stroke="var(--color-primary, #14532D)" stroke-width="2"/>
+          <path d="M12 36H36" stroke="var(--color-primary, #14532D)" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3"/>
+        </svg>
+      </div>
       <div>
         <div class="ph-title">Lots de Production</div>
-        <div class="ph-sub">Lots déclarés par la Production, validation ou rejet avant entrée au stock central</div>
+        <div class="ph-sub">Lots déclarés par la Production — contrôle qualité et validation physique d'intégration stock</div>
       </div>
     </div>
     <div class="ph-actions">
+      <button class="btn btn-secondary" (click)="exportLotsCsv()">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
       <button class="btn btn-ghost" (click)="chargerLots(); chargerLotsAValider()">
         <i class="fa-solid fa-rotate"></i> Actualiser
       </button>
@@ -89,8 +99,14 @@
   </div>
 
   <div class="card table-card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des lots</span>
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des lots déclarés</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" class="form-input" style="max-width:240px;padding:6px 12px;font-size:0.85rem"
+               placeholder="Filtrer lot, SKU, OF..."
+               [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); page.set(1)" />
+        <span class="badge bg-neutral">{{ lotsFiltres().length }} lot(s)</span>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table class="data-table">
@@ -101,22 +117,61 @@
           @if (loading()) {
             <tr><td colspan="5" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</td></tr>
           } @else {
-            @for (lot of lots(); track lot.numeroLot) {
+            @for (lot of lotsPaginees(); track lot.numeroLot) {
               <tr>
                 <td class="fw-bold">{{ lot.numeroLot }}</td>
-                <td>{{ lot.productName }}</td>
+                <td>{{ lot.productName || lot.productSku }}</td>
                 <td class="mono">{{ lot.declaredQuantityKg }} kg</td>
                 <td>{{ lot.dateProduction | date:'dd/MM/yyyy' }}</td>
                 <td><span class="{{ statutClass(lot.statut) }}">{{ statutLabel(lot.statut) }}</span></td>
               </tr>
             } @empty {
-              <tr><td colspan="5" class="empty-state">Aucun lot déclaré pour le moment.</td></tr>
+              <tr><td colspan="5" class="empty-state">Aucun lot correspondant.</td></tr>
             }
           }
         </tbody>
       </table>
     </div>
+    @if (totalPages() > 1) {
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--color-border);background:var(--color-bg-subtle)">
+        <span style="font-size:0.85rem;color:var(--color-text-muted)">Page {{ page() }} sur {{ totalPages() }} ({{ lotsFiltres().length }} lots)</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" style="padding:4px 10px" [disabled]="page() <= 1" (click)="pagePrecedente()">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button class="btn btn-ghost" style="padding:4px 10px" [disabled]="page() >= totalPages()" (click)="pageSuivante()">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    }
   </div>
+
+  @if (lotAConfirmer(); as lot) {
+    <div class="modal-overlay" (click)="annulerValidation()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-primary">
+          <h3><i class="fa-solid fa-shield-halved"></i> Confirmer la validation physique du lot</h3>
+          <button class="modal-close" aria-label="Fermer" (click)="annulerValidation()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom:12px">
+            Êtes-vous sûr de vouloir valider le lot <strong>{{ lot.numeroLot }}</strong> ({{ lot.productSku }})
+            pour une quantité de <strong>{{ lot.declaredQuantityKg }} kg</strong> ?
+          </p>
+          <div class="alert alert-info" style="font-size:0.85rem">
+            <i class="fa-solid fa-info-circle"></i> Cette action certifie le contrôle de conformité et intègre immédiatement les quantités au <strong>Stock Central</strong>.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="annulerValidation()">Annuler</button>
+          <button class="btn btn-primary" (click)="confirmerValidationLot()">
+            <i class="fa-solid fa-check"></i> Oui, intégrer au stock central
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   @if (showRejeter(); as lot) {
     <div class="modal-overlay" (click)="fermerRejeter()">

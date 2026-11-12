@@ -56,6 +56,9 @@ export class ValidationPendingComponent implements OnInit {
    */
   filtreModule = signal<string>('TOUS');
   tri = signal<'urgence' | 'ancien'>('urgence');
+  recherche = signal<string>('');
+  page = signal<number>(1);
+  readonly pageSize = 10;
 
   modulesDisponibles = computed(() => {
     const modules = new Set(this.demandesEnAttente().map(d => d.moduleSource));
@@ -64,7 +67,20 @@ export class ValidationPendingComponent implements OnInit {
 
   demandesAffichees = computed(() => {
     const module = this.filtreModule();
-    const liste = this.demandesEnAttente().filter(d => module === 'TOUS' || d.moduleSource === module);
+    const q = this.recherche().trim().toLowerCase();
+    const liste = this.demandesEnAttente().filter(d => {
+      if (module !== 'TOUS' && d.moduleSource !== module) return false;
+      if (q) {
+        const match =
+          (d.entityReference || '').toLowerCase().includes(q) ||
+          (d.entityType || '').toLowerCase().includes(q) ||
+          (d.motif || '').toLowerCase().includes(q) ||
+          (d.moduleSource || '').toLowerCase().includes(q) ||
+          this.libelleActionType(d.actionType).toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
     const tri = this.tri();
     return [...liste].sort((a, b) => {
       if (tri === 'urgence') {
@@ -79,6 +95,22 @@ export class ValidationPendingComponent implements OnInit {
       return new Date(a.dateCreation).getTime() - new Date(b.dateCreation).getTime();
     });
   });
+
+  totalPages = computed(() => Math.max(1, Math.ceil(this.demandesAffichees().length / this.pageSize)));
+  pageRange = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  demandesPaginees = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.demandesAffichees().slice(start, start + this.pageSize);
+  });
+
+  onRechercheChange(val: string) {
+    this.recherche.set(val);
+    this.page.set(1);
+  }
+  onFiltreModuleChange(val: string) {
+    this.filtreModule.set(val);
+    this.page.set(1);
+  }
 
   ngOnInit() {
     this.chargerDemandesEnAttente();

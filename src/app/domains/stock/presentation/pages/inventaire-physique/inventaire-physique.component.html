@@ -8,13 +8,19 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="8" y="6" width="32" height="38" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M16 16H32M16 24H32M16 32H26" stroke="var(--color-primary, #14532D)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M28 32L32 36L40 28" stroke="var(--color-accent, #F6B60B)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Inventaire Physique</h1>
-        <p class="ph-sub">Comptage · Écarts · Validation des corrections</p>
+        <p class="ph-sub">Comptage périodique · Rapprochement théorique/réel · Ajustement des écarts</p>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm" (click)="openCreateForm()"><i class="fa-solid fa-plus"></i> Nouvel inventaire</button>
     </div>
   </div>

@@ -18,11 +18,17 @@
 
   <div class="ph">
     <div style="display:flex;align-items:center;gap:12px">
-      <button class="back-btn" (click)="router.navigate(['/stock/production'])"aria-label="Retour"><i class="fa-solid fa-arrow-left"></i></button>
-      <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
+      <button class="back-btn" (click)="router.navigate(['/stock/lots-production'])" aria-label="Retour"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="8" width="36" height="32" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 18H34M14 26H28" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="33" cy="27" r="4" fill="var(--color-accent, #F6B60B)"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Commande à la Production</h1>
-        <p class="ph-sub">Saisissez le code produit ou sélectionnez dans la liste, Conditionnement par produit</p>
+        <p class="ph-sub">Ordres de fabrication internes — saisie directe, suggestions IA et conditionnement par produit</p>
       </div>
     </div>
   </div>
@@ -538,11 +544,11 @@
                 @if (actionLoading()) { <div class="spinner spinner-sm"></div> } @else { <i class="fa-solid fa-check"></i> }
                 Approuver la commande
               </button>
-              <button class="btn btn-ghost btn-sm" (click)="cancelReason = ''">
+              <button class="btn btn-ghost btn-sm" (click)="showCancelForm.set(true)">
                 <i class="fa-solid fa-xmark"></i> Annuler la commande
               </button>
             </div>
-            @if (cancelReason !== '' || cancelling()) {
+            @if (showCancelForm() || cancelReason !== '' || cancelling()) {
               <div class="form-group" style="margin-top:12px">
                 <label class="form-label">Motif d'annulation <span class="req">*</span></label>
                 <textarea class="form-control" rows="2" placeholder="Raison de l'annulation…" [(ngModel)]="cancelReason"></textarea>
@@ -582,10 +588,10 @@
               </div>
             </div>
 
-            <button class="btn btn-ghost btn-sm" (click)="cancelReason = ''">
+            <button class="btn btn-ghost btn-sm" (click)="showCancelForm.set(true)">
               <i class="fa-solid fa-xmark"></i> Annuler la commande
             </button>
-            @if (cancelReason !== '' || cancelling()) {
+            @if (showCancelForm() || cancelReason !== '' || cancelling()) {
               <div class="form-group" style="margin-top:8px">
                 <label class="form-label">Motif d'annulation <span class="req">*</span></label>
                 <textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="cancelReason"></textarea>

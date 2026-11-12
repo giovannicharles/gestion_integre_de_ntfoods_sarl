@@ -1,11 +1,13 @@
 import { Component, OnInit, signal, inject, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { DotationUseCase } from '../../../application/use-cases/dotation/dotation.use-case';
 import { Product, Commercial, DotationRequest, StockLevel } from '../../../domain/models';
 import { BufferValuationItem } from '../../../infrastructure/repositories/stock-api.repository';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface LineForm {
   uid: string;
@@ -30,7 +32,9 @@ const PACKAGING_TYPES = ['SACHET', 'ETUI', 'SEAU', 'DOYPACK', 'BOUTEILLE', 'CART
 export class DotationFormComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   router = inject(Router);
+  private route = inject(ActivatedRoute);
   private uc = inject(DotationUseCase);
+  private toast = inject(ToastService);
 
   loading = signal(true);
   saving = signal(false);
@@ -72,9 +76,29 @@ export class DotationFormComponent implements OnInit, OnDestroy {
         this.stockLevels.set(stockLevels || []);
         this.bufferItems.set(bufferItems || []);
         this.loading.set(false);
+
+        // Pré-remplissage depuis les queryParams (ex: IA Réappro / Transferts)
+        const qp = this.route.snapshot.queryParams;
+        const prefillProductId = qp['productId'] ? Number(qp['productId']) : null;
+        const prefillQty = qp['qty'] ? Number(qp['qty']) : null;
+        if (prefillProductId && this.lignes.length > 0) {
+          const matchedProd = products.find(p => p.id === prefillProductId);
+          if (matchedProd) {
+            this.lignes[0].productId = matchedProd.id;
+            this.lignes[0].skuInput = matchedProd.sku;
+            this.lignes[0].packagingType = matchedProd.packagingType || 'CARTON';
+            this.lignes[0].quantityPerCarton = matchedProd.quantityPerCarton || 1;
+            if (prefillQty && prefillQty > 0) {
+              this.lignes[0].requestedQty = prefillQty;
+            }
+            this.toast.info(`Produit ${matchedProd.sku} pré-sélectionné pour dotation.`, 'Pré-remplissage IA');
+          }
+        }
       },
-      error: () => {
-        this.errorMsg.set('Impossible de charger les données. Vérifiez la connexion au serveur.');
+      error: (err) => {
+        const msg = extractApiError(err) || 'Impossible de charger les données. Vérifiez la connexion au serveur.';
+        this.errorMsg.set(msg);
+        this.toast.error(msg, 'Erreur de chargement');
         this.loading.set(false);
       }
     });
@@ -414,11 +438,14 @@ export class DotationFormComponent implements OnInit, OnDestroy {
       next: () => {
         this.saving.set(false);
         this.success.set(true);
-        setTimeout(() => this.router.navigate(['/stock/dotations']), 2000);
+        this.toast.success('Demande de dotation enregistrée avec succès !', 'Dotation Commerciale');
+        setTimeout(() => this.router.navigate(['/stock/dotations']), 1500);
       },
       error: (err) => {
         this.saving.set(false);
-        this.errorMsg.set(err?.error?.message || 'Erreur lors de la création de la dotation.');
+        const msg = extractApiError(err) || 'Erreur lors de la création de la dotation.';
+        this.errorMsg.set(msg);
+        this.toast.error(msg, 'Échec création dotation');
       }
     });
   }

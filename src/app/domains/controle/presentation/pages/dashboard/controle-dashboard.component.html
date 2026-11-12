@@ -5,14 +5,19 @@
       <div class="ph-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
       <div>
         <div class="ph-title">Contrôle de Gestion</div>
-        <div class="ph-sub">Audit · Rentabilité réelle · Sécurisation des flux · {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</div>
+        <div class="ph-sub">Audit · Rentabilité réelle · Sécurisation des flux · {{ today | date:'EEEE dd MMMM
+          yyyy':'':'fr' }}</div>
       </div>
     </div>
     <div class="ph-actions">
-      <a routerLink="/controle/consommables" class="btn btn-ghost btn-sm"><i class="fa-solid fa-boxes-packing"></i> Consommables</a>
-      <a routerLink="/controle/audit" class="btn btn-outline btn-sm"><i class="fa-solid fa-fingerprint"></i> Piste d'audit</a>
-      <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
-      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
+      <a routerLink="/controle/consommables" class="btn btn-ghost btn-sm"><i class="fa-solid fa-boxes-packing"></i>
+        Consommables</a>
+      <a routerLink="/controle/audit" class="btn btn-outline btn-sm"><i class="fa-solid fa-fingerprint"></i> Piste
+        d'audit</a>
+      <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i
+          class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i
+          class="fa-solid fa-rotate"></i></button>
     </div>
   </div>
 
@@ -29,7 +34,8 @@
   <!-- ALERTE ÉCARTS ROUGES -->
   @if (ecartsRouges() > 0) {
   <div class="alert-banner-red ctrl-alert-between">
-    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ ecartsRouges() }} alerte(s) rouge(s) · écart entre CA déclaré et cash versé à justifier.</span>
+    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ ecartsRouges() }} alerte(s) rouge(s) · écart entre CA
+      déclaré et cash versé à justifier.</span>
     <a routerLink="/controle/ecarts" class="btn btn-danger btn-sm">Examiner les écarts</a>
   </div>
   }
@@ -61,7 +67,9 @@
         <span class="kpi-lbl">Marge nette moyenne</span>
         <span class="kpi-val">{{ margeMoyenne() }}%</span>
         <div class="prog-bar-wrap ctrl-mini-prog">
-          <div class="prog-bar" [class.prog-g]="margeMoyenne()>=35" [class.prog-y]="margeMoyenne()>=25 && margeMoyenne()<35" [class.prog-r]="margeMoyenne()<25" [style.width.%]="Math.min(margeMoyenne(), 100)"></div>
+          <div class="prog-bar" [class.prog-g]="margeMoyenne()>=35"
+            [class.prog-y]="margeMoyenne()>=25 && margeMoyenne()<35" [class.prog-r]="margeMoyenne()<25"
+            [style.width.%]="Math.min(margeMoyenne(), 100)"></div>
         </div>
         <span class="kpi-meta">Sur coûts de revient réels</span>
       </div>
@@ -90,7 +98,14 @@
       @if (decaissementsEnCours().length > 0) {
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>N°</th><th>Bénéficiaire</th><th class="text-right">Montant</th><th>Statut</th></tr></thead>
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Bénéficiaire</th>
+              <th class="text-right">Montant</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
           <tbody>
             @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
             <tr>
@@ -130,11 +145,15 @@
             <span class="ctrl-qs-val mono">{{ fCFA(budgetEngage()) }} / {{ fCFA(budgetTotal()) }}</span>
           </div>
           <div class="prog-track-wide">
-            <div class="prog-bar" [class.prog-g]="tauxConsommationBudget() < 80" [class.prog-y]="tauxConsommationBudget() >= 80 && tauxConsommationBudget() < 100" [class.prog-r]="tauxConsommationBudget() >= 100" [style.width.%]="Math.min(tauxConsommationBudget(), 100)"></div>
+            <div class="prog-bar" [class.prog-g]="tauxConsommationBudget() < 80"
+              [class.prog-y]="tauxConsommationBudget() >= 80 && tauxConsommationBudget() < 100"
+              [class.prog-r]="tauxConsommationBudget() >= 100"
+              [style.width.%]="Math.min(tauxConsommationBudget(), 100)"></div>
           </div>
           <div class="ctrl-qs-foot">
             <span>Taux d'engagement : <strong>{{ tauxConsommationBudget() }}%</strong></span>
-            <span>Anomalies critiques : <strong [class.text-danger]="anomaliesElevees() > 0">{{ anomaliesElevees() }}</strong></span>
+            <span>Anomalies critiques : <strong [class.text-danger]="anomaliesElevees() > 0">{{ anomaliesElevees()
+                }}</strong></span>
           </div>
         </div>
       </div>
@@ -149,7 +168,15 @@
     </div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Produit</th><th>Prix vente</th><th>Coût revient</th><th>Marge unit.</th><th>Taux marge</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Prix vente</th>
+            <th>Coût revient</th>
+            <th>Marge unit.</th>
+            <th>Taux marge</th>
+          </tr>
+        </thead>
         <tbody>
           @for (m of marges(); track m.code) {
           <tr [class.row-alert]="m.margePct < 30">
@@ -158,11 +185,15 @@
             <td class="mono">{{ fCFA(m.coutRevient) }}</td>
             <td class="mono">{{ fCFA(m.marge) }}</td>
             <td>
-              <span class="taux-chip" [class.taux-ok]="m.margePct>=38" [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct }}%</span>
+              <span class="taux-chip" [class.taux-ok]="m.margePct>=38"
+                [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct
+                }}%</span>
             </td>
           </tr>
           } @empty {
-          <tr><td colspan="5" class="empty-state">Aucune donnée de marge disponible.</td></tr>
+          <tr>
+            <td colspan="5" class="empty-state">Aucune donnée de marge disponible.</td>
+          </tr>
           }
         </tbody>
       </table>
@@ -175,7 +206,14 @@
       <div class="card-title card-title-mb"><i class="fa-solid fa-wallet"></i> Budget par poste</div>
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Poste</th><th class="text-right">Budget</th><th class="text-right">Engagé</th><th>Utilisation</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th class="text-right">Budget</th>
+              <th class="text-right">Engagé</th>
+              <th>Utilisation</th>
+            </tr>
+          </thead>
           <tbody>
             @for (b of budget(); track b.id) {
             <tr [class.row-alert]="b.engage > b.budget">
@@ -185,34 +223,51 @@
               <td>
                 <div class="ctrl-prog-cell">
                   <div class="prog-bar-wrap ctrl-prog-bar">
-                    <div class="prog-bar" [class.prog-r]="budgetPct(b)>=100" [class.prog-y]="budgetPct(b)>=80 && budgetPct(b)<100" [class.prog-g]="budgetPct(b)<80" [style.width.%]="Math.min(budgetPct(b), 100)"></div>
+                    <div class="prog-bar" [class.prog-r]="budgetPct(b)>=100"
+                      [class.prog-y]="budgetPct(b)>=80 && budgetPct(b)<100" [class.prog-g]="budgetPct(b)<80"
+                      [style.width.%]="Math.min(budgetPct(b), 100)"></div>
                   </div>
-                  <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100" [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{ budgetPct(b) }}%</span>
+                  <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100"
+                    [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{
+                    budgetPct(b) }}%</span>
                 </div>
               </td>
             </tr>
             } @empty {
-            <tr><td colspan="4" class="empty-state">Aucun poste budgétaire défini.</td></tr>
+            <tr>
+              <td colspan="4" class="empty-state">Aucun poste budgétaire défini.</td>
+            </tr>
             }
           </tbody>
         </table>
       </div>
     </div>
     <div class="card card-p4">
-      <div class="card-title card-title-mb"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (standard vs réel)</div>
+      <div class="card-title card-title-mb"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (standard
+        vs réel)</div>
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>Poste</th><th>Standard</th><th>Réel</th><th>Écart</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Poste</th>
+              <th>Standard</th>
+              <th>Réel</th>
+              <th>Écart</th>
+            </tr>
+          </thead>
           <tbody>
             @for (v of variances(); track v.poste) {
             <tr>
               <td class="fw-bold">{{ v.poste }}</td>
               <td class="mono">{{ v.standard }}</td>
               <td class="mono">{{ v.reel }}</td>
-              <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
+              <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{
+                  variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
             </tr>
             } @empty {
-            <tr><td colspan="4" class="empty-state">Aucune donnée de variance enregistrée.</td></tr>
+            <tr>
+              <td colspan="4" class="empty-state">Aucune donnée de variance enregistrée.</td>
+            </tr>
             }
           </tbody>
         </table>
@@ -229,7 +284,14 @@
     @if (anomalies().length > 0) {
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Catégorie</th><th>Référence</th><th>Description</th><th>Concerné</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Catégorie</th>
+            <th>Référence</th>
+            <th>Description</th>
+            <th>Concerné</th>
+          </tr>
+        </thead>
         <tbody>
           @for (a of anomalies(); track a.reference) {
           <tr class="row-alert">

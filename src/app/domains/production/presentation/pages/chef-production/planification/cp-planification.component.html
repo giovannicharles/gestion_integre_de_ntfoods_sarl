@@ -19,62 +19,100 @@
 </div>
 
 @if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+<div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
 } @else {
-  @if (pphSelectionne(); as p) {
+@if (pphSelectionne(); as p) {
 
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b"><div class="kpi-body"><div class="kpi-lbl">Avancement global</div><div class="kpi-val">{{ avancementGlobal() }}%</div></div></div>
-    <div class="kpi-card kp-y"><div class="kpi-body"><div class="kpi-lbl">Fûts prévus (semaine)</div><div class="kpi-val">{{ totalRessourcesSemaine().futs }}</div></div></div>
-    <div class="kpi-card kp-g"><div class="kpi-body"><div class="kpi-lbl">Poudre totale prévue</div><div class="kpi-val">{{ totalRessourcesSemaine().poudreTotale | number:'1.1-1' }} kg</div></div></div>
+<div class="kpi-grid">
+  <div class="kpi-card kp-b">
+    <div class="kpi-body">
+      <div class="kpi-lbl">Avancement global</div>
+      <div class="kpi-val">{{ avancementGlobal() }}%</div>
+    </div>
   </div>
+  <div class="kpi-card kp-y">
+    <div class="kpi-body">
+      <div class="kpi-lbl">Fûts prévus (semaine)</div>
+      <div class="kpi-val">{{ totalRessourcesSemaine().futs }}</div>
+    </div>
+  </div>
+  <div class="kpi-card kp-g">
+    <div class="kpi-body">
+      <div class="kpi-lbl">Poudre totale prévue</div>
+      <div class="kpi-val">{{ totalRessourcesSemaine().poudreTotale | number:'1.1-1' }} kg</div>
+    </div>
+  </div>
+</div>
 
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production, {{ p.dateDebut }} → {{ p.dateFin }}</h2></div>
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-calendar"></i> Calendrier de production, {{ p.dateDebut }} → {{
+      p.dateFin }}</h2>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Jour</th>
+          <th>Matières premières</th>
+          <th>Poudre totale (kg)</th>
+          <th>Fûts prévus</th>
+          <th>Emballage</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (j of p.repartitionJours; track j.dateJour) {
+        <tr>
+          <td><strong>{{ j.dateJour }}</strong></td>
+          <td>{{ matieresJour(j) }}</td>
+          <td>{{ j.totalMatieresPremieresKg | number:'1.1-1' }}</td>
+          <td>{{ j.futsPrevus }}</td>
+          <td>{{ emballagesJour(j) }}</td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune répartition journalière
+            définie</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-sliders"></i> Ajustement des objectifs par produit</h2>
+  </div>
+  <div style="padding: var(--sp-4)">
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Jour</th><th>Matières premières</th><th>Poudre totale (kg)</th><th>Fûts prévus</th><th>Emballage</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Objectif semaine (modifiable)</th>
+            <th>Réalisé</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (j of p.repartitionJours; track j.dateJour) {
-            <tr>
-              <td><strong>{{ j.dateJour }}</strong></td>
-              <td>{{ matieresJour(j) }}</td>
-              <td>{{ j.totalMatieresPremieresKg | number:'1.1-1' }}</td>
-              <td>{{ j.futsPrevus }}</td>
-              <td>{{ emballagesJour(j) }}</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="5" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune répartition journalière définie</td></tr>
+          @for (l of lignesEdition; track l.codeProduit; let i = $index) {
+          <tr>
+            <td>{{ l.codeProduit }}</td>
+            <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:120px"></td>
+            <td>{{ p.lignes[i].productionRealisee }}</td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-sliders"></i> Ajustement des objectifs par produit</h2></div>
-    <div style="padding: var(--sp-4)">
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Produit</th><th>Objectif semaine (modifiable)</th><th>Réalisé</th></tr></thead>
-          <tbody>
-            @for (l of lignesEdition; track l.codeProduit; let i = $index) {
-              <tr>
-                <td>{{ l.codeProduit }}</td>
-                <td><input type="number" class="input" [(ngModel)]="l.objectifSemaine" style="width:120px"></td>
-                <td>{{ p.lignes[i].productionRealisee }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" (click)="enregistrerAjustements()"><i class="fa-solid fa-check"></i> Enregistrer les ajustements</button>
-      </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="enregistrerAjustements()"><i class="fa-solid fa-check"></i> Enregistrer
+        les ajustements</button>
     </div>
   </div>
+</div>
 
-  } @else {
-    <div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun PPH en cours à planifier</div>
-  }
+} @else {
+<div class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucun PPH en cours à planifier</div>
+}
 }

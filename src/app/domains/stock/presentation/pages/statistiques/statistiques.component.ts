@@ -9,6 +9,7 @@ import { of } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
+import { ToastService } from '../../../../../core/services/toast.service';
 import {
   DashboardStatsResponse, StockLevel, StockMovement, DotationRequest,
   ProductionBatch, InternalOrder, Receipt, StockAlertEntity, Product
@@ -28,6 +29,7 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private readonly repo = inject(StockApiRepository);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly toastService = inject(ToastService);
 
   @ViewChild('evolutionCanvas') evolutionCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('quarterlyCanvas') quarterlyCanvas!: ElementRef<HTMLCanvasElement>;
@@ -193,17 +195,17 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.error.set('');
 
     forkJoin({
-      stats: this.repo.getDashboard(),
-      levels: this.repo.getStockLevels(),
-      movements: this.repo.getMovements(),
-      dotations: this.repo.getDotations(),
-      batches: this.repo.getBatches(),
-      orders: this.repo.getOrders(),
-      receipts: this.repo.getReceipts(),
-      alerts: this.repo.getBackendAlerts(),
+      stats: this.repo.getDashboard().pipe(catchError(() => of(null as unknown as DashboardStatsResponse))),
+      levels: this.repo.getStockLevels().pipe(catchError(() => of([] as StockLevel[]))),
+      movements: this.repo.getMovements().pipe(catchError(() => of([] as StockMovement[]))),
+      dotations: this.repo.getDotations().pipe(catchError(() => of([] as DotationRequest[]))),
+      batches: this.repo.getBatches().pipe(catchError(() => of([] as ProductionBatch[]))),
+      orders: this.repo.getOrders().pipe(catchError(() => of([] as InternalOrder[]))),
+      receipts: this.repo.getReceipts().pipe(catchError(() => of([] as Receipt[]))),
+      alerts: this.repo.getBackendAlerts().pipe(catchError(() => of([] as StockAlertEntity[]))),
       products: this.repo.getProducts().pipe(catchError(() => of([] as Product[])))
     }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: ({ stats, levels, movements, dotations, batches, orders, receipts, alerts, products }) => {
+      next: ({ stats: rawStats, levels, movements, dotations, batches, orders, receipts, alerts, products }) => {
         const productMap = new Map<number, Product>();
         products.forEach(p => productMap.set(p.id, p));
         const enriched = levels.map(sl => {
@@ -219,6 +221,18 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
             stockValue: sl.stockValue || ((p?.unitPriceAmount || 0) * sl.quantity),
           } as StockLevel;
         });
+        const stats: DashboardStatsResponse = rawStats || {
+          totalStockValue: enriched.reduce((sum, s) => sum + (s.stockValue || 0), 0),
+          totalStockLevels: enriched.length,
+          criticalAlerts: enriched.filter(s => s.alertLevel === 'CRITIQUE').length,
+          lowAlerts: enriched.filter(s => s.alertLevel === 'FAIBLE').length,
+          pendingReceipts: receipts.filter(r => r.status !== 'VALIDATED' && r.status !== 'REJECTED').length,
+          todayReceipts: receipts.length,
+          pendingBatches: batches.filter(b => b.status === 'DECLARED_BY_PRODUCTION').length,
+          activeInternalOrders: orders.length,
+          todayMovements: movements.length,
+          todaySales: 0
+        };
         this.stats.set(stats);
         this.stockLevels.set(enriched);
         this.movements.set(movements);
@@ -1263,10 +1277,40 @@ export class StatistiquesComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Stat Controls ──────────────────────────────────────────
   setStatYear(year: number) {
     this.statYear.set(year);
-    this.computeStatKPIs(this.stats()!, this.movements(), this.stockLevels(), this.dotations());
+    const s = this.stats();
+    if (s) this.computeStatKPIs(s, this.movements(), this.stockLevels(), this.dotations());
     this.computeMonthlyEvolution(this.movements());
     this.computeQuarterlyData(this.movements());
     this.buildCharts();
+  }
+
+  setCurrency(c: 'FCFA' | 'EUR' | 'USD') {
+    this.currency.set(c);
+  }
+
+  exportStatsCsv() {
+    const abc = this.abcAnalysis();
+    if (!abc.length) {
+      this.toastService.warning('Aucune donnée statistique à exporter.');
+      return;
+    }
+    const headers = ['SKU', 'Désignation', 'Valeur (FCFA)', '% cumulé', 'Classe ABC'];
+    const rows = abc.map(item => [
+      item.sku || '',
+      (item.name || '').replace(/;/g, ','),
+      String(Math.round(item.value || 0)),
+      String(item.cumPct ?? 0),
+      item.class
+    ]);
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-statistiques-abc-${this.statYear()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toastService.success('Analyse ABC & statistiques exportées en CSV.');
   }
 
   setPeriod(period: 'monthly' | 'quarterly') {

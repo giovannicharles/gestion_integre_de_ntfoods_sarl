@@ -29,6 +29,8 @@ export class RetourListComponent implements OnInit {
 
   search = '';
   filterStatut = '';
+  page = signal(1);
+  pageSize = 10;
 
   filtered = computed(() => {
     const q = this.search.trim().toLowerCase();
@@ -39,7 +41,51 @@ export class RetourListComponent implements OnInit {
     });
   });
 
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filtered().length / this.pageSize)));
+
+  paginated = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.filtered().slice(start, start + this.pageSize);
+  });
+
   countStatus = (statut: string) => this.retours().filter(r => r.statut === statut).length;
+
+  pagePrecedente(): void {
+    if (this.page() > 1) {
+      this.page.set(this.page() - 1);
+    }
+  }
+
+  pageSuivante(): void {
+    if (this.page() < this.totalPages()) {
+      this.page.set(this.page() + 1);
+    }
+  }
+
+  exportRetoursCsv(): void {
+    const list = this.filtered();
+    if (list.length === 0) {
+      this.toast.warning('Aucun retour à exporter.', 'Export CSV');
+      return;
+    }
+    const headers = ['N° Retour', 'Commercial', 'Date', 'Statut', 'Nb Lignes'];
+    const rows = list.map(r => [
+      `"${r.numero || ''}"`,
+      `"${r.matriculeCommercial || ''}"`,
+      `"${r.dateRetour ? String(r.dateRetour).substring(0, 10) : ''}"`,
+      `"${this.statutLabel(r.statut)}"`,
+      r.lignes?.length ?? 0
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `invendus_retours_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success(`${list.length} retour(s) exporté(s) en CSV.`, 'Export CSV');
+  }
 
   ngOnInit(): void {
     this.charger();

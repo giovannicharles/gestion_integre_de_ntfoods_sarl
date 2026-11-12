@@ -3,7 +3,13 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
+      <div class="ph-icon ph-icon-svg">
+        <svg viewBox="0 0 36 36" width="28" height="28" fill="none" aria-hidden="true">
+          <rect x="4" y="18" width="6" height="13" rx="2" fill="#F6B60B" class="svg-bar-1"/>
+          <rect x="14" y="11" width="6" height="20" rx="2" fill="#FFF8E1" class="svg-bar-2"/>
+          <rect x="24" y="5" width="6" height="26" rx="2" fill="#F6B60B" class="svg-bar-3"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Tableau de Bord · Stock</h1>
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY · Douala</p>
@@ -22,6 +28,9 @@
         <span class="ph-stat-item"><i class="fa-solid fa-box"></i> {{ stats()?.totalStockLevels || 0 }} articles</span>
         <span class="ph-stat-item"><i class="fa-solid fa-warehouse"></i> {{ avgStockByWarehouse().length || 0 }} sites</span>
       </div>
+      <button class="btn btn-ghost btn-sm" (click)="exportDashboardCsv()" [disabled]="loading() || !stockLevels().length" title="Exporter l'inventaire affiché en CSV">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
       <button class="btn btn-ghost btn-sm" [class.active-refresh]="autoRefresh()" (click)="toggleAutoRefresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate-right" [class.fa-spin]="loading()"></i> {{ autoRefresh() ? 'Auto 30s' : 'Actualiser' }}
       </button>
@@ -32,6 +41,37 @@
         <i class="fa-solid fa-plus"></i> Nouvelle Réception
       </a>
     </div>
+  </div>
+
+  <!-- QUICK ACTIONS STRIP -->
+  <div class="quick-actions-strip">
+    <a routerLink="/stock/lots-production" class="qa-pill">
+      <i class="fa-solid fa-industry"></i> Lots à valider
+      @if (getPendingBatches().length > 0) {
+        <span class="qa-badge">{{ getPendingBatches().length }}</span>
+      }
+    </a>
+    <a routerLink="/stock/validation" class="qa-pill">
+      <i class="fa-solid fa-stamp"></i> Valider réceptions
+      @if ((stats()?.pendingReceipts || 0) > 0) {
+        <span class="qa-badge qa-warn">{{ stats()?.pendingReceipts }}</span>
+      }
+    </a>
+    <a routerLink="/stock/dotations/new" class="qa-pill">
+      <i class="fa-solid fa-hand-holding-box"></i> Nouvelle dotation
+    </a>
+    <a routerLink="/stock/tampon" class="qa-pill">
+      <i class="fa-solid fa-layer-group"></i> Stock tampon
+    </a>
+    <a routerLink="/stock/inventaire-physique" class="qa-pill">
+      <i class="fa-solid fa-clipboard-check"></i> Inventaire physique
+    </a>
+    <a routerLink="/stock/alertes" class="qa-pill" [class.qa-danger-pill]="(stats()?.criticalAlerts || 0) > 0">
+      <i class="fa-solid fa-triangle-exclamation"></i> Alertes
+      @if ((stats()?.criticalAlerts || 0) > 0) {
+        <span class="qa-badge qa-crit">{{ stats()?.criticalAlerts }}</span>
+      }
+    </a>
   </div>
 
   <!-- ERROR -->
@@ -201,7 +241,7 @@
         <span class="kpi-val">{{ stats()!.pendingBatches }}</span>
         <div class="kpi-meta"><i class="fa-solid fa-cart-plus"></i>{{ stats()!.activeInternalOrders }} commandes actives</div>
       </div>
-      <a routerLink="/stock/production" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
+      <a routerLink="/stock/lots-production" class="kpi-link">Valider <i class="fa-solid fa-arrow-right"></i></a>
     </div>
 
     <div class="kpi-card kp-b">
@@ -302,7 +342,7 @@
               <i class="fa-solid fa-right-left"></i> Mouvements <span class="tab-count">{{ movements().length }}</span>
             </button>
           </div>
-          <a [routerLink]="activeTab()==='receipts'?'/stock/reception':activeTab()==='batches'?'/stock/production':'/stock/mouvements'"
+          <a [routerLink]="activeTab()==='receipts'?'/stock/reception':activeTab()==='batches'?'/stock/lots-production':'/stock/mouvements'"
             class="btn btn-ghost btn-sm">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div class="no-pad">

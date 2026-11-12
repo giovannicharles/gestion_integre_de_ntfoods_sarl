@@ -9,6 +9,7 @@ import { ProductSearchComponent } from '../../../../../shared/components/product
 import { ConditioningQuantityComponent, LigneConditionnement } from '../../../../../shared/components/conditioning-quantity/conditioning-quantity.component';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface LotFormLigne {
   referencePPH: string;
@@ -32,6 +33,7 @@ interface LotFormLigne {
 export class ProductionLotsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
   private readonly stockRepo = inject(StockApiRepository);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(false);
@@ -123,11 +125,14 @@ export class ProductionLotsComponent implements OnInit {
         this.chargerLotsAValider();
         this.showDeclarerLot.set(false);
         this.lignesLot = [];
-        this.message.set(`${crees.length} lot(s) déclaré(s), en attente de validation stock`);
+        const msg = `${crees.length} lot(s) déclaré(s), en attente de validation stock`;
+        this.message.set(msg);
+        this.toast.success(msg, 'Déclaration de lot');
       },
       error: (err) => {
-        const detail = err?.error?.erreur || err?.error?.message;
+        const detail = err?.error?.erreur || err?.error?.message || extractApiError(err);
         this.erreurDeclaration.set(detail || 'Erreur lors de la déclaration des lots');
+        this.toast.error(detail || 'Erreur lors de la déclaration des lots', 'Échec déclaration');
       }
     });
   }
@@ -181,8 +186,13 @@ export class ProductionLotsComponent implements OnInit {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.message.set('Lot validé, fiche de production verrouillée');
+        this.toast.success(`Lot ${l.numeroLot} validé et intégré au stock central.`, 'Validation Lot');
       },
-      error: (err) => this.erreurAction.set(extractApiError(err))
+      error: (err) => {
+        const msg = extractApiError(err);
+        this.erreurAction.set(msg);
+        this.toast.error(msg, 'Échec validation lot');
+      }
     });
   }
 

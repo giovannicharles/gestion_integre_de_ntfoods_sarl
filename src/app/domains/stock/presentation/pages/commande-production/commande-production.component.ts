@@ -7,6 +7,7 @@ import { InternalOrderUseCase } from '../../../application/use-cases/orders/inte
 import { StockApiRepository } from '../../../infrastructure/repositories/stock-api.repository';
 import { Product, StockLevel, InternalOrder } from '../../../domain/models';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface PackagingInfo {
   packagingType: string;
@@ -53,6 +54,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   private orderUC = inject(InternalOrderUseCase);
   private repo = inject(StockApiRepository);
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
 
   loading = signal(true);
   saving = signal(false);
@@ -111,6 +113,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   deliveryForm = { productId: 0, deliveredQty: 0 };
   delivering = signal(false);
   cancelReason = '';
+  showCancelForm = signal(false);
   cancelling = signal(false);
   actionLoading = signal(false);
 
@@ -583,6 +586,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
     this.showOrderDetail.set(true);
     this.deliveryForm = { productId: 0, deliveredQty: 0 };
     this.cancelReason = '';
+    this.showCancelForm.set(false);
   }
   closeOrderDetail() {
     this.showOrderDetail.set(false);
@@ -598,6 +602,7 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
       next: (updated) => {
         this.actionLoading.set(false);
         this.updateOrderInList(updated);
+        this.selectedOrder.set(updated);
         this.showToast('Commande approuvée par le Chef de Production.', 'success');
       },
       error: () => { this.actionLoading.set(false); this.showToast('Erreur lors de l\'approbation.', 'error'); }
@@ -613,7 +618,9 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.d$)).subscribe({
       next: (updated) => {
         this.cancelling.set(false);
+        this.showCancelForm.set(false);
         this.updateOrderInList(updated);
+        this.selectedOrder.set(updated);
         this.showToast('Commande annulée.', 'error');
       },
       error: () => { this.cancelling.set(false); this.showToast('Erreur lors de l\'annulation.', 'error'); }
@@ -645,6 +652,8 @@ export class CommandeProductionComponent implements OnInit, OnDestroy {
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMsg.set(msg);
     this.toastType.set(type);
+    if (type === 'success') this.toast.success(msg, 'Commande Production');
+    else this.toast.error(msg, 'Commande Production');
     setTimeout(() => this.toastMsg.set(''), 5000);
   }
 

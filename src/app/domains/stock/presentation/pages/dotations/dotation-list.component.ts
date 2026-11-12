@@ -53,7 +53,7 @@ export class DotationListComponent implements OnInit, OnDestroy {
   canVerifyPayment = computed(() => this.userRoles().some(r => ['SECRETAIRE', 'ADMIN'].includes(r)));
   canValidateQuantities = computed(() => this.userRoles().some(r => ['COMPTABLE', 'ADMIN'].includes(r)));
   canManageStock = computed(() => this.userRoles().some(r => ['GESTIONNAIRE_STOCK', 'ADMIN'].includes(r)));
-  canCreateDotation = computed(() => this.userRoles().some(r => ['COMMERCIAL', 'ADMIN'].includes(r)));
+  canCreateDotation = computed(() => this.userRoles().some(r => ['COMMERCIAL', 'GESTIONNAIRE_STOCK', 'ADMIN', 'DIRECTEUR_GENERAL'].includes(r)));
 
   get pages() {
     return Array.from({ length: this.totalPages() }, (_, i) => i + 1);

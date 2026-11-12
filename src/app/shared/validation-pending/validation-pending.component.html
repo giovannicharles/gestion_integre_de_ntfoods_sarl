@@ -1,10 +1,20 @@
-<div class="validation-pending">
-  <div class="page-header">
-    <h1>
-      <i class="fa-solid fa-clipboard-check"></i>
-      Mes validations
-    </h1>
-    <p class="subtitle">Demandes en attente de votre validation</p>
+<div class="validation-pending animate-fadeInUp">
+  <div class="page-header ph-banner">
+    <div class="ph-left">
+      <div class="ph-icon-svg">
+        <svg viewBox="0 0 36 36" width="26" height="26" fill="none" aria-hidden="true">
+          <path d="M18 4L29 8.5V17.5C29 24.4 24.2 30.2 18 32C11.8 30.2 7 24.4 7 17.5V8.5L18 4Z" stroke="#F6B60B" stroke-width="2.4" fill="rgba(246,182,11,0.14)"/>
+          <path d="M13 18.5L16.5 22L23.5 14" stroke="#FFF8E1" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="svg-check-draw"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Mes validations</h1>
+        <p class="subtitle">Demandes en attente de votre validation</p>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" (click)="chargerDemandesEnAttente()" [disabled]="loading()">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
   </div>
 
   <div class="card">
@@ -26,9 +36,13 @@
       </div>
     } @else {
       <div class="demandes-toolbar">
+        <div class="filtre-group filtre-search">
+          <label for="rechercheDemande">Recherche</label>
+          <input id="rechercheDemande" type="text" [ngModel]="recherche()" (ngModelChange)="onRechercheChange($event)" placeholder="Référence, motif, action…">
+        </div>
         <div class="filtre-group">
           <label for="filtreModule">Module</label>
-          <select id="filtreModule" [ngModel]="filtreModule()" (ngModelChange)="filtreModule.set($event)">
+          <select id="filtreModule" [ngModel]="filtreModule()" (ngModelChange)="onFiltreModuleChange($event)">
             <option value="TOUS">Tous</option>
             @for (m of modulesDisponibles(); track m) {
               <option [value]="m">{{ m }}</option>
@@ -45,7 +59,7 @@
         <span class="filtre-count">{{ demandesAffichees().length }} demande(s)</span>
       </div>
       <div class="demandes-list">
-        @for (demande of demandesAffichees(); track demande.id) {
+        @for (demande of demandesPaginees(); track demande.id) {
           <div class="demande-card" [class.expiree]="estExpiree(demande.dateLimite)">
             <div class="demande-header">
               <div class="demande-info">
@@ -125,6 +139,15 @@
           </div>
         }
       </div>
+      @if (totalPages() > 1) {
+        <div class="pagination-row">
+          <button class="pg-btn" [disabled]="page() === 1" (click)="page.set(page() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+          @for (p of pageRange(); track p) {
+            <button class="pg-btn" [class.pg-active]="page() === p" (click)="page.set(p)">{{ p }}</button>
+          }
+          <button class="pg-btn" [disabled]="page() === totalPages()" (click)="page.set(page() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+        </div>
+      }
     }
   </div>
 

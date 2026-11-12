@@ -9,6 +9,8 @@ import { StockApiRepository } from '../../../infrastructure/repositories/stock-a
 import { StockLevel, StockAlertEntity, AlertType } from '../../../domain/models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { AlertBadgeService } from '../../../../../core/services/alert-badge.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { StockRulesDomainService } from '../../../domain/services/stock-rules.domain.service';
 
 @Component({
@@ -26,6 +28,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
   private repo = inject(StockApiRepository);
   private auth = inject(AuthService);
   private alertBadge = inject(AlertBadgeService);
+  private toast = inject(ToastService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -34,6 +37,11 @@ export class AlertesComponent implements OnInit, OnDestroy {
   filter = signal<'TOUS' | 'CRITIQUE' | 'FAIBLE'>('TOUS');
   source = signal<'dashboard' | 'backend'>('dashboard');
   typeFilter = signal<AlertType | 'ALL'>('ALL');
+  searchQuery = signal('');
+  warehouseFilter = signal('');
+  readonly alertPageSize = 9;
+  dashPage = signal(1);
+  backendPage = signal(1);
   lastCheck = signal<Date | null>(null);
   actionMsg = signal<string | null>(null);
   resolvingId = signal<number | null>(null);
@@ -96,8 +104,102 @@ export class AlertesComponent implements OnInit, OnDestroy {
 
   getFilteredBackend(): StockAlertEntity[] {
     const tf = this.typeFilter();
-    if (tf === 'ALL') return this.backendAlerts();
-    return this.backendAlerts().filter(a => a.type === tf);
+    const q = this.searchQuery().trim().toLowerCase();
+    return this.backendAlerts().filter(a => {
+      if (tf !== 'ALL' && a.type !== tf) return false;
+      if (q && !(a.productName || '').toLowerCase().includes(q) && !(a.productSku || '').toLowerCase().includes(q) && !(a.message || '').toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  warehouses(): string[] {
+    const set = new Set<string>();
+    this.alerts().forEach(sl => { if (sl.warehouseName) set.add(sl.warehouseName); });
+    return Array.from(set).sort();
+  }
+
+  onSearchChange(q: string) {
+    this.searchQuery.set(q);
+    this.dashPage.set(1);
+    this.backendPage.set(1);
+  }
+
+  onWarehouseFilterChange(w: string) {
+    this.warehouseFilter.set(w);
+    this.dashPage.set(1);
+  }
+
+  setFilter(f: 'TOUS' | 'CRITIQUE' | 'FAIBLE') {
+    this.filter.set(f);
+    this.dashPage.set(1);
+  }
+
+  setTypeFilter(tf: AlertType | 'ALL') {
+    this.typeFilter.set(tf);
+    this.backendPage.set(1);
+  }
+
+  dashTotalPages(): number {
+    return Math.max(1, Math.ceil(this.getFilteredDashboard().length / this.alertPageSize));
+  }
+  getPaginatedDashboard(): StockLevel[] {
+    const start = (this.dashPage() - 1) * this.alertPageSize;
+    return this.getFilteredDashboard().slice(start, start + this.alertPageSize);
+  }
+  dashPageRange(): number[] {
+    return Array.from({ length: this.dashTotalPages() }, (_, i) => i + 1);
+  }
+
+  backendTotalPages(): number {
+    return Math.max(1, Math.ceil(this.getFilteredBackend().length / this.alertPageSize));
+  }
+  getPaginatedBackend(): StockAlertEntity[] {
+    const start = (this.backendPage() - 1) * this.alertPageSize;
+    return this.getFilteredBackend().slice(start, start + this.alertPageSize);
+  }
+  backendPageRange(): number[] {
+    return Array.from({ length: this.backendTotalPages() }, (_, i) => i + 1);
+  }
+
+  exportAlertsCsv(): void {
+    const isDash = this.source() === 'dashboard';
+    const headers = isDash
+      ? ['SKU', 'Produit', 'Entrepôt', 'Niveau', 'Quantité', 'Seuil réappro', 'Sécurité', 'Valeur (FCFA)']
+      : ['SKU', 'Produit', 'Type', 'Priorité', 'Quantité', 'Seuil', 'Statut', 'Message'];
+    const rows = isDash
+      ? this.getFilteredDashboard().map(sl => [
+          sl.productSku || '',
+          (sl.productName || '').replace(/;/g, ','),
+          (sl.warehouseName || '').replace(/;/g, ','),
+          sl.alertLevel || '',
+          String(sl.quantity ?? 0),
+          String(sl.reorderPoint ?? 0),
+          String(sl.safetyStock ?? 0),
+          String(Math.round(sl.stockValue || 0))
+        ])
+      : this.getFilteredBackend().map(a => [
+          a.productSku || '',
+          (a.productName || '').replace(/;/g, ','),
+          this.getTypeLabel(a.type),
+          a.priority || '',
+          String(a.currentQuantity ?? 0),
+          String(a.threshold ?? 0),
+          a.status || '',
+          (a.message || '').replace(/;/g, ',')
+        ]);
+    if (!rows.length) {
+      this.toast.warning('Aucune alerte à exporter.');
+      return;
+    }
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-alertes-${this.source()}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${rows.length} alerte(s) exportée(s) en CSV.`);
   }
 
   countByType(type: AlertType): number {
@@ -114,14 +216,17 @@ export class AlertesComponent implements OnInit, OnDestroy {
 
   getFilteredDashboard(): StockLevel[] {
     const f = this.filter();
+    const w = this.warehouseFilter();
+    const q = this.searchQuery().trim().toLowerCase();
     const resolved = this.resolvedLevelIds();
     const backendAlerts = this.backendAlerts();
     let list = f === 'TOUS' ? this.alerts() : this.alerts().filter(sl => sl.alertLevel === f);
     return list.filter(sl => {
       if (resolved.has(sl.id)) return false;
-      // Exclure aussi si l'alerte backend correspondante est RESOLVED
       const backend = backendAlerts.find(a => a.productId === sl.productId);
       if (backend && backend.status === 'RESOLVED') return false;
+      if (w && sl.warehouseName !== w) return false;
+      if (q && !(sl.productName || '').toLowerCase().includes(q) && !(sl.productSku || '').toLowerCase().includes(q)) return false;
       return true;
     });
   }
@@ -457,6 +562,11 @@ export class AlertesComponent implements OnInit, OnDestroy {
   }
 
   private flashMsg(msg: string, isError = false) {
+    if (isError) {
+      this.toast.error(msg);
+    } else {
+      this.toast.success(msg);
+    }
     this.actionMsg.set(msg);
     setTimeout(() => this.actionMsg.set(null), 3000);
   }
@@ -602,7 +712,7 @@ export class AlertesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.reapproSaving.set(false);
-          const msg = err?.error?.message || 'Erreur lors du réapprovisionnement';
+          const msg = extractApiError(err) || 'Erreur lors du réapprovisionnement';
           this.flashMsg(msg, true);
         }
       });

@@ -1,13 +1,30 @@
-<div class="stats-page">
+<div class="stats-page animate-fadeInUp">
   <!-- Header -->
-  <div class="stats-header">
-    <div class="header-left">
-      <a routerLink="/stock/dashboard" class="back-btn">
-        <i class="fa-solid fa-arrow-left"></i> Retour au dashboard
-      </a>
-      <h1><i class="fa-solid fa-chart-line"></i> Statistiques & Analyses Avancées</h1>
+  <div class="ph stats-ph">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-svg">
+        <svg viewBox="0 0 36 36" width="28" height="28" fill="none" aria-hidden="true">
+          <path d="M5 26 L13 18 L19 22 L30 9" stroke="#F6B60B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="svg-trend-line"/>
+          <circle cx="30" cy="9" r="3.2" fill="#FFF8E1"/>
+        </svg>
+      </div>
+      <div>
+        <a routerLink="/stock/dashboard" class="back-btn">
+          <i class="fa-solid fa-arrow-left"></i> Retour au dashboard
+        </a>
+        <h1 class="ph-title">Statistiques &amp; Analyses Avancées</h1>
+        <p class="ph-sub">Analyse ABC/Pareto, rotation, prévisions et performance multidimensionnelle · {{ statYear() }}</p>
+      </div>
     </div>
     <div class="header-actions">
+      <div class="currency-switch">
+        <button class="cur-btn" [class.active]="currency() === 'FCFA'" (click)="setCurrency('FCFA')">FCFA</button>
+        <button class="cur-btn" [class.active]="currency() === 'EUR'" (click)="setCurrency('EUR')">EUR</button>
+        <button class="cur-btn" [class.active]="currency() === 'USD'" (click)="setCurrency('USD')">USD</button>
+      </div>
+      <button class="btn-print" (click)="exportStatsCsv()" [disabled]="loading()">
+        <i class="fa-solid fa-file-csv"></i> CSV ABC
+      </button>
       <button class="btn-print" (click)="printPage()" [disabled]="loading()">
         <i class="fa-solid fa-print"></i> Imprimer
       </button>

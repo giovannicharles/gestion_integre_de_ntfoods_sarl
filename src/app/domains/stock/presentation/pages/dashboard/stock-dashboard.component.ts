@@ -17,6 +17,7 @@ import {
   ProductionBatch, InternalOrder, DotationRequest
 } from '../../../domain/models';
 import { IaService, AnalysisResponse, IaSuggestion } from '../../../../../core/services/ia.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 Chart.register(...registerables);
 
@@ -36,6 +37,7 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   private readonly dotationUC = inject(DotationUseCase);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly iaService = inject(IaService);
+  private readonly toast = inject(ToastService);
 
   // Chart references
   @ViewChild('stockBarCanvas') stockBarCanvas!: ElementRef<HTMLCanvasElement>;
@@ -951,6 +953,34 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   getMouvementValue(m: StockMovement): number {
     return (m.quantity || 0) * ((m.product?.unitPriceAmount) || 0);
+  }
+
+  exportDashboardCsv(): void {
+    const items = this.filteredProducts();
+    if (!items.length) {
+      this.toast.warning('Aucune ligne de stock à exporter.');
+      return;
+    }
+    const headers = ['SKU', 'Produit', 'Entrepôt', 'Quantité', 'Conditionnement', 'Seuil réappro', 'Valeur (FCFA)', 'Statut'];
+    const rows = items.map(sl => [
+      sl.productSku || '',
+      (sl.productName || '').replace(/;/g, ','),
+      (sl.warehouseName || '').replace(/;/g, ','),
+      String(sl.quantity ?? 0),
+      this.getPackagingLabel(sl.packagingType) || sl.productUnit || '',
+      String(sl.reorderPoint ?? 0),
+      String(Math.round(sl.stockValue || 0)),
+      sl.alertLevel || 'NORMAL'
+    ]);
+    const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanty-stock-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${items.length} article(s) exporté(s) en CSV.`);
   }
 
   ngOnDestroy() {

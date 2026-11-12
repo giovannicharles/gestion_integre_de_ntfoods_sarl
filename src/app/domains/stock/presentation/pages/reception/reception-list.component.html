@@ -7,17 +7,28 @@
 
   <div class="page-header">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="14" width="36" height="26" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 14V8H34V14" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M24 20V32M24 32L18 26M24 32L30 26" stroke="var(--color-accent, #F6B60B)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Réceptions</h1>
-        <p class="ph-sub">Historique des entrées marchandises, NTFoods TANTY · Douala</p>
+        <p class="ph-sub">Historique des entrées marchandises — NTFoods TANTY Douala</p>
       </div>
     </div>
-    @if (canCreate()) {
-      <a routerLink="/stock/reception/new" class="btn btn-primary">
-        <i class="fa-solid fa-plus"></i> Nouvelle Réception
-      </a>
-    }
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-secondary" (click)="exportReceptionsCsv()">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
+      @if (canCreate()) {
+        <a routerLink="/stock/reception/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Nouvelle Réception
+        </a>
+      }
+    </div>
   </div>
 
   @if (!loading()) {

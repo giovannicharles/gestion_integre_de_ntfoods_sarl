@@ -7,8 +7,13 @@
 
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon ph-o"><i class="fa-solid fa-clipboard-check"></i></div>
-      <div><h1 class="ph-title">Validation des Réceptions</h1><p class="ph-sub">Double validation obligatoire, le rôle requis est appliqué automatiquement par le serveur</p></div>
+      <div class="ph-icon ph-o">
+        <svg viewBox="0 0 48 48" width="40" height="40" fill="none" class="animated-ph-svg">
+          <path d="M24 4L8 10V22C8 31.94 14.82 41.18 24 44C33.18 41.18 40 31.94 40 22V10L24 4Z" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M16 23L22 29L32 17" stroke="var(--color-primary, #14532D)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div><h1 class="ph-title">Validation des Réceptions</h1><p class="ph-sub">Double validation obligatoire — le rôle requis est appliqué automatiquement par le serveur</p></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span class="badge badge-neutral"><i class="fa-solid fa-user-tag"></i> {{ currentRoles() }}</span>
@@ -36,7 +41,7 @@
       <h3 style="font-family:var(--font-d);font-size:15px;margin:18px 0 10px;color:var(--n700)">
         <i class="fa-solid fa-hourglass-half"></i> En attente de 1ère validation ({{ firstPending().length }})
       </h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px;margin-bottom:24px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(500px, 100%),1fr));gap:16px;margin-bottom:24px">
         @for (r of firstPending(); track r.receiptNumber) {
           <div class="rec-card">
             <div class="rc-head">
@@ -80,7 +85,7 @@
       <h3 style="font-family:var(--font-d);font-size:15px;margin:18px 0 10px;color:var(--n700)">
         <i class="fa-solid fa-user-check"></i> En attente de validation finale ({{ secondPending().length }})
       </h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(500px,1fr));gap:16px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(500px, 100%),1fr));gap:16px">
         @for (r of secondPending(); track r.receiptNumber) {
           @if (canValidateSecondFor(r) || canReject(r)) {
           <div class="rec-card">

@@ -1,11 +1,22 @@
-<div class="ia-transferts-page">
+<div class="ia-transferts-page animate-fadeInUp">
   <!-- HEADER -->
-  <div class="page-header">
-    <div class="page-title-zone">
-      <h1><i class="fa-solid fa-shuffle"></i> Optimisation des Transferts IA</h1>
-      <p class="page-subtitle">Analyse intelligente des répartitions entre Stock Central, Tampon et Mobile</p>
+  <div class="page-header ph-banner">
+    <div class="ph-left">
+      <div class="ph-icon-svg">
+        <svg viewBox="0 0 36 36" width="26" height="26" fill="none" aria-hidden="true">
+          <path d="M6 12H27M27 12L22 7M27 12L22 17" stroke="#F6B60B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="svg-arrow-r"/>
+          <path d="M30 24H9M9 24L14 19M9 24L14 29" stroke="#FFF8E1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="svg-arrow-l"/>
+        </svg>
+      </div>
+      <div class="page-title-zone">
+        <h1>Optimisation des Transferts IA</h1>
+        <p class="page-subtitle">Analyse intelligente des répartitions entre Stock Central, Tampon et Mobile</p>
+      </div>
     </div>
     <div class="page-actions">
+      <button class="btn btn-ghost" (click)="exportTransfersCsv()" [disabled]="loading() || !suggestions().length">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
       <button class="btn btn-ghost" (click)="refresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
@@ -121,10 +132,17 @@
           <i class="fa-solid fa-circle-info"></i> Faible
         </button>
       </div>
+      <input type="text" class="search-input" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" placeholder="Rechercher produit / SKU…">
       <div class="bulk-actions">
         <button class="btn btn-sm btn-ghost" (click)="selectAll()">Tout sélectionner</button>
         <button class="btn btn-sm btn-ghost" (click)="selectHigh()">Priorité haute</button>
         <button class="btn btn-sm btn-ghost" (click)="deselectAll()">Tout désélectionner</button>
+        @if (stats().selected > 0) {
+          <button class="btn btn-sm btn-primary" (click)="executeSelectedTransfers()" [disabled]="executingBatch()">
+            <i class="fa-solid" [class.fa-spinner]="executingBatch()" [class.fa-spin]="executingBatch()" [class.fa-paper-plane]="!executingBatch()"></i>
+            Exécuter ({{ stats().selected }})
+          </button>
+        }
       </div>
     </div>
 
@@ -143,10 +161,11 @@
             <th class="col-num">Qté à transférer</th>
             <th>Priorité</th>
             <th>Motif</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          @for (item of filteredSuggestions(); track item.productSku + item.fromWarehouse + item.toWarehouse) {
+          @for (item of paginatedSuggestions(); track item.productSku + item.fromWarehouse + item.toWarehouse) {
             <tr [class.row-high]="item.priority === 'HIGH'">
               <td class="col-check"><input type="checkbox" [checked]="item.selected" (change)="toggleSelect(item)"></td>
               <td>
@@ -167,14 +186,32 @@
                 </span>
               </td>
               <td class="reason-cell">{{ item.reason }}</td>
+              <td>
+                <button class="btn btn-sm btn-primary" (click)="executeTransfer(item)" [disabled]="executingKey() === (item.productSku + item.fromWarehouse + item.toWarehouse)">
+                  @if (item.transferKind === 'CENTRAL_TO_BUFFER') {
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Transférer
+                  } @else {
+                    <i class="fa-solid fa-truck"></i> Dotation
+                  }
+                </button>
+              </td>
             </tr>
           } @empty {
-            <tr><td colspan="9" class="empty-row">Aucun transfert suggéré pour ce filtre</td></tr>
+            <tr><td colspan="10" class="empty-row">Aucun transfert suggéré pour ce filtre</td></tr>
           }
         </tbody>
       </table>
       </div>
     </div>
+    @if (transferTotalPages() > 1) {
+      <div class="pagination-row">
+        <button class="pg-btn" [disabled]="transferPage() === 1" (click)="transferPage.set(transferPage() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+        @for (pg of transferPageRange(); track pg) {
+          <button class="pg-btn" [class.pg-active]="transferPage() === pg" (click)="transferPage.set(pg)">{{ pg }}</button>
+        }
+        <button class="pg-btn" [disabled]="transferPage() === transferTotalPages()" (click)="transferPage.set(transferPage() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+      </div>
+    }
   }
 
   <!-- EMPTY -->

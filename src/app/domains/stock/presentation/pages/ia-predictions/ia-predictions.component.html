@@ -1,9 +1,14 @@
 <div class="dash animate-fadeInUp">
 
   <!-- HEADER -->
-  <div class="ph">
+  <div class="ph ph-banner">
     <div class="ph-left">
-      <div class="ph-icon ai-icon"><i class="fa-solid fa-brain"></i></div>
+      <div class="ph-icon ai-icon">
+        <svg viewBox="0 0 36 36" width="26" height="26" fill="none" aria-hidden="true">
+          <circle cx="18" cy="18" r="12" stroke="#F6B60B" stroke-width="2.2" stroke-dasharray="4 3" class="svg-orbit"/>
+          <circle cx="18" cy="18" r="5" fill="#FFF8E1"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">IA Prédictions &amp; Analyse Prédictive</h1>
         <p class="ph-sub">Prévisions de stock, analyse de tendances et recommandations automatiques</p>
@@ -14,6 +19,9 @@
         <i class="fa-solid {{ iaConfigured() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>
         {{ iaConfigured() ? 'IA Active' : 'Mode hors-ligne' }}
       </span>
+      <button class="btn btn-ghost btn-sm" (click)="exportPredictionsCsv()" [disabled]="loading() || !predictions().length">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
       <button class="btn btn-ghost btn-sm" (click)="refresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
@@ -107,7 +115,8 @@
       <div class="card">
         <div class="card-hd">
           <span class="card-title"><i class="fa-solid fa-table" style="color:var(--g)"></i> Prédictions détaillées par produit</span>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="text" class="pred-search" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" placeholder="Rechercher produit/SKU…">
             @for (f of ['ALL','CRITICAL','HIGH','MEDIUM','LOW']; track f) {
               <button class="filter-chip" [class.active]="filterUrgency()===f" (click)="setFilterUrgency(f)">
                 {{ f === 'ALL' ? 'Tous' : f === 'CRITICAL' ? 'Critique' : f === 'HIGH' ? 'Élevé' : f === 'MEDIUM' ? 'Moyen' : 'Faible' }}
@@ -118,12 +127,15 @@
         <div class="tbl-wrap">
           <table class="pred-table">
             <thead>
-              <tr><th>SKU</th><th>Stock actuel</th><th>Conso./jour</th><th>Jours restants</th><th>Prévision 30j</th><th>Prévision 90j</th><th>Tendance</th><th>Confiance</th><th>Urgence</th><th>Recommandation</th></tr>
+              <tr><th>Produit / SKU</th><th>Stock actuel</th><th>Conso./jour</th><th>Jours restants</th><th>Prévision 30j</th><th>Prévision 90j</th><th>Tendance</th><th>Confiance</th><th>Urgence</th><th>Recommandation</th><th>Action</th></tr>
             </thead>
             <tbody>
-              @for (p of filteredPredictions(); track p.sku) {
+              @for (p of paginatedPredictions(); track p.sku + (p.productName || '')) {
                 <tr>
-                  <td class="mono fw-bold">{{ p.sku }}</td>
+                  <td>
+                    <div style="font-weight:600;color:var(--n800)">{{ p.productName || p.sku }}</div>
+                    <span class="mono" style="font-size:10px;color:var(--n400)">{{ p.sku }}</span>
+                  </td>
                   <td class="mono">{{ p.currentQty | number }}</td>
                   <td class="mono">{{ p.avgDailyConsumption | number:'1.0-1' }}</td>
                   <td class="mono">
@@ -141,13 +153,31 @@
                   </td>
                   <td><span class="urg-badge {{ getUrgencyClass(p.urgency) }}"><i class="fa-solid {{ getUrgencyIcon(p.urgency) }}"></i> {{ p.urgency }}</span></td>
                   <td style="font-size:12px;color:var(--n600)">{{ p.recommendation }}</td>
+                  <td>
+                    @if (p.productId && (p.urgency === 'CRITICAL' || p.urgency === 'HIGH')) {
+                      <a class="btn btn-primary btn-xs" [routerLink]="['/stock/commande-production']" [queryParams]="{ productId: p.productId, qty: Math.max(10, Math.round(p.avgDailyConsumption * 15)) }">
+                        <i class="fa-solid fa-cart-plus"></i> Commander
+                      </a>
+                    } @else {
+                      <span style="font-size:11px;color:var(--n400)">OK</span>
+                    }
+                  </td>
                 </tr>
               } @empty {
-                <tr><td colspan="10" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune prédiction pour ce filtre d'urgence</td></tr>
+                <tr><td colspan="11" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune prédiction pour ce filtre d'urgence</td></tr>
               }
             </tbody>
           </table>
         </div>
+        @if (predTotalPages() > 1) {
+          <div class="pagination-row">
+            <button class="pg-btn" [disabled]="predPage() === 1" (click)="predPage.set(predPage() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+            @for (pg of predPageRange(); track pg) {
+              <button class="pg-btn" [class.pg-active]="predPage() === pg" (click)="predPage.set(pg)">{{ pg }}</button>
+            }
+            <button class="pg-btn" [disabled]="predPage() === predTotalPages()" (click)="predPage.set(predPage() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+          </div>
+        }
       </div>
 
       <div class="ai-info-note">

@@ -10,26 +10,42 @@
 
 <div class="gap-note gap-note-info">
   <i class="fa-solid fa-circle-info"></i>
-  <div>Cette vue affiche la <strong>consommation réelle</strong> de matières premières et l'usage des machines sur les 7 derniers jours. Le suivi des disponibilités et des alertes de rupture relève du module Stock.</div>
+  <div>Cette vue affiche la <strong>consommation réelle</strong> de matières premières et l'usage des machines sur les 7
+    derniers jours. Le suivi des disponibilités et des alertes de rupture relève du module Stock.</div>
 </div>
 
 @if (loading()) {
-  <div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
+<div class="skeleton skeleton-row" *ngFor="let i of [1,2]"></div>
 } @else {
 
 <div class="two-col">
   <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Matières premières consommées</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-donut-chart title="" unit="kg" [data]="donutMatieres()" /></div>
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Matières premières consommées</h2>
+    </div>
+    <div style="padding: 0 var(--sp-4) var(--sp-4)"><app-donut-chart title="" unit="kg" [data]="donutMatieres()" />
+    </div>
   </div>
   <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-gears"></i> Utilisation des machines</h2></div>
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-gears"></i> Utilisation des machines</h2>
+    </div>
     <div class="tbl-wrap">
       <table class="data-table">
-        <thead><tr><th>Machine</th><th>Nombre de sessions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Machine</th>
+            <th>Nombre de sessions</th>
+          </tr>
+        </thead>
         <tbody>
-          @for (m of machinesUtilisees(); track m.machine) { <tr><td>{{ m.machine }}</td><td>{{ m.nbSessions }}</td></tr> }
-          @empty { <tr><td colspan="2" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td></tr> }
+          @for (m of machinesUtilisees(); track m.machine) { <tr>
+            <td>{{ m.machine }}</td>
+            <td>{{ m.nbSessions }}</td>
+          </tr> }
+          @empty { <tr>
+            <td colspan="2" class="empty-state-block"><i class="fa-solid fa-inbox"></i>Aucune donnée</td>
+          </tr> }
         </tbody>
       </table>
     </div>
@@ -38,13 +54,25 @@
 
 @if (rapport(); as r) {
 <div class="card">
-  <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Pertes par type de poudre</h2></div>
+  <div class="card-hd">
+    <h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Pertes par type de poudre</h2>
+  </div>
   <div class="tbl-wrap">
     <table class="data-table">
-      <thead><tr><th>Type</th><th>Pertes (kg)</th><th>% pertes</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Pertes (kg)</th>
+          <th>% pertes</th>
+        </tr>
+      </thead>
       <tbody>
         @for (k of objectKeys(r.pertesParTypePoudre); track k) {
-          <tr><td>{{ k }}</td><td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td><td>{{ r.pctPertesParTypePoudre[k] | number:'1.1-1' }}%</td></tr>
+        <tr>
+          <td>{{ k }}</td>
+          <td>{{ r.pertesParTypePoudre[k] | number:'1.1-1' }}</td>
+          <td>{{ r.pctPertesParTypePoudre[k] | number:'1.1-1' }}%</td>
+        </tr>
         }
       </tbody>
     </table>

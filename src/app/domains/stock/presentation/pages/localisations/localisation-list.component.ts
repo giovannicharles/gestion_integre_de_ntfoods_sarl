@@ -1,7 +1,9 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy} from '@angular/core';
+import { Component, OnInit, signal, inject, ChangeDetectionStrategy, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../../core/http/api.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 interface StockLocation {
   id: string;
@@ -21,6 +23,7 @@ interface StockLocation {
 })
 export class LocalisationListComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly toast = inject(ToastService);
 
   locations = signal<StockLocation[]>([]);
   loading = signal(true);
@@ -28,6 +31,8 @@ export class LocalisationListComponent implements OnInit {
   saving = signal(false);
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
+  searchQuery = signal('');
+  filterType = signal('');
 
   newLocation: any = { type: 'STOCK_CENTRAL', name: '', description: '' };
 
@@ -37,6 +42,18 @@ export class LocalisationListComponent implements OnInit {
     { value: 'STOCK_MOBILE', label: 'Stock Mobile' },
     { value: 'MAGASIN', label: 'Magasin' }
   ];
+
+  filteredLocations = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const type = this.filterType();
+    return this.locations().filter(loc => {
+      if (type && loc.type !== type) return false;
+      if (!q) return true;
+      return (loc.name || '').toLowerCase().includes(q) ||
+             (loc.description || '').toLowerCase().includes(q) ||
+             (loc.id || '').toLowerCase().includes(q);
+    });
+  });
 
   ngOnInit(): void {
     this.loadLocations();
@@ -49,9 +66,10 @@ export class LocalisationListComponent implements OnInit {
         this.locations.set(data || []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.showToast('Erreur chargement localisations', 'error');
+        const msg = extractApiError(err) || 'Erreur lors du chargement des localisations';
+        this.showToast(msg, 'error');
       }
     });
   }
@@ -78,9 +96,9 @@ export class LocalisationListComponent implements OnInit {
         this.loadLocations();
         this.showToast('Localisation créée avec succès', 'success');
       },
-      error: () => {
+      error: (err) => {
         this.saving.set(false);
-        this.showToast('Erreur lors de la création', 'error');
+        this.showToast(extractApiError(err) || 'Erreur lors de la création', 'error');
       }
     });
   }
@@ -91,7 +109,7 @@ export class LocalisationListComponent implements OnInit {
         this.loadLocations();
         this.showToast('Localisations par défaut initialisées', 'success');
       },
-      error: () => this.showToast('Erreur lors de l\'initialisation', 'error')
+      error: (err) => this.showToast(extractApiError(err) || 'Erreur lors de l\'initialisation', 'error')
     });
   }
 
@@ -102,8 +120,33 @@ export class LocalisationListComponent implements OnInit {
         this.loadLocations();
         this.showToast('Commercial assigné avec succès', 'success');
       },
-      error: () => this.showToast('Erreur lors de l\'assignation', 'error')
+      error: (err) => this.showToast(extractApiError(err) || 'Erreur lors de l\'assignation', 'error')
     });
+  }
+
+  exportLocationsCsv(): void {
+    const list = this.filteredLocations();
+    if (list.length === 0) {
+      this.toast.warning('Aucune localisation à exporter.', 'Export CSV');
+      return;
+    }
+    const headers = ['ID', 'Nom', 'Type', 'Description', 'Assigné à'];
+    const rows = list.map(l => [
+      `"${l.id || ''}"`,
+      `"${l.name || ''}"`,
+      `"${this.getTypeLabel(l.type)}"`,
+      `"${(l.description || '').replace(/"/g, '""')}"`,
+      `"${l.assignedUserId || ''}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `localisations_stock_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success(`${list.length} localisation(s) exportée(s) en CSV.`, 'Export CSV');
   }
 
   getTypeLabel(type: string): string {
@@ -129,6 +172,11 @@ export class LocalisationListComponent implements OnInit {
   private showToast(msg: string, type: 'success' | 'error'): void {
     this.toastMsg.set(msg);
     this.toastType.set(type);
+    if (type === 'success') {
+      this.toast.success(msg, 'Localisations');
+    } else {
+      this.toast.error(msg, 'Localisations');
+    }
     setTimeout(() => this.toastMsg.set(''), 4000);
   }
 }

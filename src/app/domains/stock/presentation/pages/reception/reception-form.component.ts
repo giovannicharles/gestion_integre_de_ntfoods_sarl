@@ -24,6 +24,7 @@ import { ReceiptUseCase } from '../../../application/use-cases/reception/receipt
 import { StockLocationDto } from '../../../infrastructure/repositories/stock-api.repository';
 import { Product, Receipt, ReceptionType } from '../../../domain/models';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface LineForm {
   uid: string;
@@ -65,6 +66,7 @@ export class ReceptionFormComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   router = inject(Router);
   private uc = inject(ReceiptUseCase);
+  private toast = inject(ToastService);
 
   loading = signal(true);
   loadingProducts = signal(false);
@@ -224,11 +226,14 @@ export class ReceptionFormComponent implements OnInit, OnDestroy {
       next: () => {
         this.saving.set(false);
         this.success.set(true);
+        this.toast.success('Réception enregistrée et transmise en 1ère validation.', 'Nouvelle Réception');
         setTimeout(() => this.router.navigate(['/stock/reception']), 2000);
       },
       error: (err) => {
         this.saving.set(false);
-        this.errorMsg.set(extractApiError(err));
+        const msg = extractApiError(err);
+        this.errorMsg.set(msg);
+        this.toast.error(msg, 'Échec création réception');
       }
     });
   }

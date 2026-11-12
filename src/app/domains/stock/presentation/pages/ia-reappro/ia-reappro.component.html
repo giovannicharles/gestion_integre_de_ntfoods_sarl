@@ -1,11 +1,23 @@
-<div class="ia-reappro-page">
+<div class="ia-reappro-page animate-fadeInUp">
   <!-- HEADER -->
-  <div class="page-header">
-    <div class="page-title-zone">
-      <h1><i class="fa-solid fa-robot"></i> Réapprovisionnement Automatique IA</h1>
-      <p class="page-subtitle">Recommandations intelligentes de commande basées sur l'analyse des seuils et prédictions IA</p>
+  <div class="page-header ph-banner">
+    <div class="ph-left">
+      <div class="ph-icon-svg">
+        <svg viewBox="0 0 36 36" width="26" height="26" fill="none" aria-hidden="true">
+          <path d="M18 6A12 12 0 1 1 8.5 25.5" stroke="#F6B60B" stroke-width="2.6" stroke-linecap="round" class="svg-spin-arc"/>
+          <path d="M8 21L8.5 26L13.5 25.5" stroke="#FFF8E1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="14" y="14" width="8" height="8" rx="2" fill="#F6B60B"/>
+        </svg>
+      </div>
+      <div class="page-title-zone">
+        <h1>Réapprovisionnement Automatique IA</h1>
+        <p class="page-subtitle">Recommandations intelligentes de commande basées sur l'analyse des seuils et prédictions IA</p>
+      </div>
     </div>
     <div class="page-actions">
+      <button class="btn btn-ghost" (click)="exportReapproCsv()" [disabled]="loading() || !reapproItems().length">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
       <button class="btn btn-ghost" (click)="refresh()" [disabled]="loading()">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
@@ -98,11 +110,17 @@
           <i class="fa-solid fa-circle-info"></i> Moyens
         </button>
       </div>
-      <input type="text" class="search-input" placeholder="Rechercher (SKU, nom)…" [(ngModel)]="search">
+      <input type="text" class="search-input" placeholder="Rechercher (SKU, nom)…" [ngModel]="search" (ngModelChange)="onSearchChange($event)">
       <div class="bulk-actions">
         <button class="btn btn-sm btn-ghost" (click)="selectAll()">Tout sélectionner</button>
         <button class="btn btn-sm btn-ghost" (click)="selectCritical()">Critiques seulement</button>
         <button class="btn btn-sm btn-ghost" (click)="deselectAll()">Tout désélectionner</button>
+        @if (stats().selected > 0) {
+          <button class="btn btn-sm btn-primary" (click)="executeSelectedBuffer()" [disabled]="executingBatch()">
+            <i class="fa-solid" [class.fa-spinner]="executingBatch()" [class.fa-spin]="executingBatch()" [class.fa-bolt]="!executingBatch()"></i>
+            Exécuter sélection ({{ stats().selected }})
+          </button>
+        }
       </div>
     </div>
 
@@ -121,10 +139,11 @@
             <th class="col-num">Jours avant rupture</th>
             <th>Sévérité</th>
             <th>Action recommandée</th>
+            <th>Exécuter</th>
           </tr>
         </thead>
         <tbody>
-          @for (item of filteredItems(); track item.productSku + item.warehouse) {
+          @for (item of paginatedItems(); track item.productSku + item.warehouse) {
             <tr [class.row-critical]="item.severity === 'CRITICAL'" [class.row-high]="item.severity === 'HIGH'">
               <td class="col-check"><input type="checkbox" [checked]="item.selected" (change)="toggleSelect(item)"></td>
               <td>
@@ -151,14 +170,32 @@
                 </span>
               </td>
               <td class="action-cell">{{ item.recommendedAction }}</td>
+              <td>
+                <button class="btn btn-sm btn-primary" (click)="executeReapproItem(item)" [disabled]="executingKey() === (item.productSku + item.warehouse)">
+                  @if ((item.warehouseType || '').toUpperCase().includes('BUFFER')) {
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Transférer
+                  } @else {
+                    <i class="fa-solid fa-cart-plus"></i> Commander
+                  }
+                </button>
+              </td>
             </tr>
           } @empty {
-            <tr><td colspan="9" class="empty-row">Aucun produit à réapprovisionner pour ce filtre</td></tr>
+            <tr><td colspan="10" class="empty-row">Aucun produit à réapprovisionner pour ce filtre</td></tr>
           }
         </tbody>
       </table>
       </div>
     </div>
+    @if (reapproTotalPages() > 1) {
+      <div class="pagination-row">
+        <button class="pg-btn" [disabled]="reapproPage() === 1" (click)="reapproPage.set(reapproPage() - 1)" aria-label="Précédent"><i class="fa-solid fa-angle-left"></i></button>
+        @for (pg of reapproPageRange(); track pg) {
+          <button class="pg-btn" [class.pg-active]="reapproPage() === pg" (click)="reapproPage.set(pg)">{{ pg }}</button>
+        }
+        <button class="pg-btn" [disabled]="reapproPage() === reapproTotalPages()" (click)="reapproPage.set(reapproPage() + 1)" aria-label="Suivant"><i class="fa-solid fa-angle-right"></i></button>
+      </div>
+    }
   }
 
   <!-- EMPTY STATE -->

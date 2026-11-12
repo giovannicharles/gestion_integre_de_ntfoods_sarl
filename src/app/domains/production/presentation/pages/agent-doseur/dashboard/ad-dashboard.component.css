@@ -9,8 +9,14 @@
   align-items: center;
   gap: 8px;
 }
-.dash-section-title:first-of-type { margin-top: 0; }
-.dash-section-title i { color: var(--g, #14532D); }
+
+.dash-section-title:first-of-type {
+  margin-top: 0;
+}
+
+.dash-section-title i {
+  color: var(--g, #14532D);
+}
 
 .kpi-card.featured {
   background: linear-gradient(135deg, var(--w) 0%, var(--n50) 100%);

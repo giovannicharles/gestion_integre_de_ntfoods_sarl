@@ -8,13 +8,22 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-right-left"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <circle cx="24" cy="24" r="20" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 20H32M32 20L26 14M32 20L26 26" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M34 28H16M16 28L22 22M16 28L22 34" stroke="var(--color-accent, #F6B60B)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Mouvements de Stock</h1>
-        <p class="ph-sub">Audit trail immuable · Entrées, Sorties, Ajustements, Transferts</p>
+        <p class="ph-sub">Audit trail immuable — Entrées, Sorties, Ajustements, Transferts tampons et mobiles</p>
       </div>
     </div>
     <div class="ph-actions">
+      <button class="btn btn-secondary btn-sm" (click)="exportMovementsCsv()">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
       <button class="btn btn-ghost btn-sm" (click)="showTransfert.set(true)">
         <i class="fa-solid fa-boxes-stacked"></i> Transfert tampon
       </button>
