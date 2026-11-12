@@ -24,10 +24,10 @@
       <button class="btn btn-secondary btn-sm" (click)="exportMovementsCsv()">
         <i class="fa-solid fa-file-csv"></i> Exporter CSV
       </button>
-      <button class="btn btn-ghost btn-sm" (click)="showTransfert.set(true)">
+      <button class="btn btn-ghost btn-sm" (click)="openTransfertModal()">
         <i class="fa-solid fa-boxes-stacked"></i> Transfert tampon
       </button>
-      <button class="btn btn-outline btn-sm" (click)="showAjust.set(true)">
+      <button class="btn btn-outline btn-sm" (click)="openAjustModal()">
         <i class="fa-solid fa-sliders"></i> Ajustement
       </button>
     </div>
@@ -118,35 +118,149 @@
   <!-- AJUST MODAL -->
   @if (showAjust()) {
     <div class="modal-overlay animate-fadeIn" (click)="showAjust.set(false)">
-      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+      <div class="modal-box animate-fadeInUp" style="max-width:540px" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-warning">
           <div class="modal-title"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div>
           <button class="modal-close" aria-label="Fermer" (click)="showAjust.set(false)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Génère un mouvement ADJUSTMENT dans l'audit trail.</span></div>
-          <div class="form-group"><label class="form-label">Niveau de stock <span class="req">*</span></label><select class="form-control" [(ngModel)]="ajustId">@for (sl of levels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }}, {{ sl.warehouseName }} ({{ sl.quantity | number }})</option> }</select></div>
-          <div class="form-group"><label class="form-label">Nouvelle quantité réelle <span class="req">*</span></label><input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Après inventaire physique"></div>
-          <div class="form-group"><label class="form-label">Motif <span class="req">*</span></label><textarea class="form-control" rows="2" placeholder="Raison…" [(ngModel)]="ajustMotif"></textarea></div>
+          <div class="banner banner-warning" style="margin-bottom:16px">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Génère un mouvement d'audit trail <strong>ADJUSTMENT</strong> pour corriger l'écart physique.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Article / Emplacement <span class="req">*</span></label>
+            <select class="form-control" [(ngModel)]="ajustId" (ngModelChange)="onAjustProductChange()">
+              <option [value]="0" disabled>-- Choisir un produit ou emplacement --</option>
+              @for (sl of levels(); track sl.id) {
+                <option [value]="sl.id">{{ sl.productName || sl.productSku }} · {{ sl.warehouseName }} (Dispo: {{ sl.quantity | number }} {{ sl.productUnit }})</option>
+              }
+            </select>
+          </div>
+
+          @if (selectedAjustSL; as sl) {
+            <div class="product-preview-card" style="margin-bottom:14px">
+              <div class="pp-header">
+                <div>
+                  <div class="pp-title">{{ sl.productName || sl.productSku }}</div>
+                  <div class="pp-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName }}</div>
+                </div>
+                <div class="pp-qty">
+                  <span class="pp-val">{{ sl.quantity | number }}</span>
+                  <span class="pp-unit">{{ sl.productUnit || 'unités' }} actuelles</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Nouvelle quantité réelle constatée <span class="req">*</span></label>
+            <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité issue du comptage">
+            @if (selectedAjustSL; as sl) {
+              <div style="margin-top:6px;font-size:12px;display:flex;align-items:center;gap:6px">
+                <span>Écart calculé :</span>
+                @if (ajustQty === sl.quantity) {
+                  <span class="badge badge-neutral">Aucun écart (0)</span>
+                } @else if (ajustQty > sl.quantity) {
+                  <span class="badge badge-success"><i class="fa-solid fa-plus"></i> +{{ (ajustQty - sl.quantity) | number }} (Surplus)</span>
+                } @else {
+                  <span class="badge badge-danger"><i class="fa-solid fa-minus"></i> -{{ (sl.quantity - ajustQty) | number }} (Manquant)</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group" style="margin-bottom:8px">
+            <label class="form-label">Motif de l'ajustement <span class="req">*</span></label>
+            <textarea class="form-control" rows="2" placeholder="Ex: Inventaire tournant de fin de mois, casse constatée..." [(ngModel)]="ajustMotif"></textarea>
+          </div>
         </div>
-        <div class="modal-footer"><button class="btn btn-ghost" (click)="showAjust.set(false)">Annuler</button><button class="btn btn-primary" [disabled]="!ajustId||!ajustMotif||ajustSaving()" (click)="sauverAjust()">@if(ajustSaving()){<div class="spinner spinner-sm"></div>}@else{<i class="fa-solid fa-check"></i>} Confirmer</button></div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showAjust.set(false)">Annuler</button>
+          <button class="btn btn-primary" [disabled]="!ajustId || !ajustMotif || ajustSaving()" (click)="sauverAjust()">
+            @if (ajustSaving()) { <div class="spinner spinner-sm"></div> }
+            @else { <i class="fa-solid fa-check"></i> }
+            Confirmer l'ajustement
+          </button>
+        </div>
       </div>
     </div>
   }
+
   <!-- TRANSFERT MODAL -->
   @if (showTransfert()) {
     <div class="modal-overlay animate-fadeIn" (click)="showTransfert.set(false)">
-      <div class="modal-box animate-fadeInUp" (click)="$event.stopPropagation()">
+      <div class="modal-box animate-fadeInUp" style="max-width:560px" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-teal">
           <div class="modal-title"><i class="fa-solid fa-boxes-stacked"></i> Transfert vers Magasin Tampon</div>
           <button class="modal-close" aria-label="Fermer" (click)="showTransfert.set(false)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div class="banner banner-primary"><i class="fa-solid fa-circle-info"></i><span>Le tampon ravitaille la production hebdomadairement. Quantité déduite du stock principal.</span></div>
-          <div class="form-group"><label class="form-label">Matière Première <span class="req">*</span></label><select class="form-control" [(ngModel)]="transfertId">@for (sl of getMPLevels(); track sl.id) { <option [value]="sl.id">{{ sl.productName || sl.productSku }}, Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option> }</select></div>
-          <div class="form-group"><label class="form-label">Quantité à transférer <span class="req">*</span></label><input type="number" class="form-control" min="1" [(ngModel)]="transfertQty" placeholder="Quantité tampon hebdo"></div>
+          <div class="banner banner-primary" style="margin-bottom:16px">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Le tampon ravitaille la production. La quantité choisie est immédiatement déduite du stock central.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Sélectionner la matière première / produit <span class="req">*</span></label>
+            <select class="form-control" [(ngModel)]="transfertId">
+              <option [value]="0" disabled>-- Choisir une matière première --</option>
+              @for (sl of getMPLevels(); track sl.id) {
+                <option [value]="sl.id">{{ sl.productName || sl.productSku }} · Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option>
+              }
+            </select>
+          </div>
+
+          @if (selectedTransfertSL; as sl) {
+            <div class="product-preview-card" style="margin-bottom:14px">
+              <div class="pp-header">
+                <div>
+                  <div class="pp-title">{{ sl.productName || sl.productSku }}</div>
+                  <div class="pp-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName || 'Stock Central' }}</div>
+                </div>
+                <div class="pp-qty">
+                  <span class="pp-val">{{ sl.quantity | number }}</span>
+                  <span class="pp-unit">{{ sl.productUnit || 'unités' }} dispo</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="form-group" style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label class="form-label" style="margin:0">Quantité à transférer <span class="req">*</span></label>
+              @if (selectedTransfertSL; as sl) {
+                <div style="display:flex;gap:4px">
+                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(25)">25%</button>
+                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(50)">50%</button>
+                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(100)">Tout (100%)</button>
+                </div>
+              }
+            </div>
+            <input type="number" class="form-control" min="1" [(ngModel)]="transfertQty" placeholder="Quantité à transférer"
+                   [style.border-color]="selectedTransfertSL && transfertQty > selectedTransfertSL.quantity ? 'var(--r)' : ''">
+            @if (selectedTransfertSL; as sl) {
+              @if (transfertQty > sl.quantity) {
+                <div style="font-size:11px;color:var(--r);margin-top:4px">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant : {{ sl.quantity | number }} {{ sl.productUnit }} disponible(s) maximum
+                </div>
+              } @else if (transfertQty > 0) {
+                <div style="font-size:11px;color:var(--g);margin-top:4px">
+                  <i class="fa-solid fa-check"></i> Solde restant en stock central après transfert : <strong>{{ (sl.quantity - transfertQty) | number }} {{ sl.productUnit }}</strong>
+                </div>
+              }
+            }
+          </div>
         </div>
-        <div class="modal-footer"><button class="btn btn-ghost" (click)="showTransfert.set(false)">Annuler</button><button class="btn btn-primary" [disabled]="!transfertId||transfertQty<=0||transfertSaving()" (click)="sauverTransfert()">@if(transfertSaving()){<div class="spinner spinner-sm"></div>}@else{<i class="fa-solid fa-arrow-right"></i>} Effectuer</button></div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showTransfert.set(false)">Annuler</button>
+          <button class="btn btn-primary" [disabled]="!transfertId || transfertQty <= 0 || (selectedTransfertSL && transfertQty > selectedTransfertSL.quantity) || transfertSaving()" (click)="sauverTransfert()">
+            @if (transfertSaving()) { <div class="spinner spinner-sm"></div> }
+            @else { <i class="fa-solid fa-arrow-right-arrow-left"></i> }
+            Effectuer le transfert
+          </button>
+        </div>
       </div>
     </div>
   }

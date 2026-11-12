@@ -1,8 +1,15 @@
 <div class="page animate-fadeInUp">
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-truck-field"></i></div>
-      <div><h1 class="ph-title">Suivi Stock Mobile</h1><p class="ph-sub">Stock détenu par les commerciaux, rotation et stock dormant</p></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="14" width="22" height="20" rx="3" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M28 20H38L42 26V34H28V20Z" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="14" cy="35" r="4" fill="var(--color-accent, #F6B60B)" stroke="var(--color-primary, #14532D)" stroke-width="2"/>
+          <circle cx="34" cy="35" r="4" fill="var(--color-accent, #F6B60B)" stroke="var(--color-primary, #14532D)" stroke-width="2"/>
+        </svg>
+      </div>
+      <div><h1 class="ph-title">Suivi Stock Mobile</h1><p class="ph-sub">Stock véhiculé par les commerciaux — rotation, dotations et détection du stock dormant</p></div>
     </div>
     <button class="btn btn-outline" (click)="load()"><i class="fa-solid fa-rotate"></i> Actualiser</button>
   </div>

@@ -122,4 +122,15 @@
     }
   </div>
   }
+
+  <app-confirm-dialog
+    [isOpen]="showConfirm()"
+    title="Supprimer la notification"
+    message="Voulez-vous vraiment supprimer cette notification ?"
+    confirmText="Supprimer"
+    cancelText="Annuler"
+    variant="danger"
+    (confirm)="confirmerSuppression()"
+    (cancel)="annulerSuppression()"
+  ></app-confirm-dialog>
 </div>

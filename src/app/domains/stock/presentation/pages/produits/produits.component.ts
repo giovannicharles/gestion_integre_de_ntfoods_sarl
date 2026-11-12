@@ -7,6 +7,7 @@ import { ProductService } from '../../../application/services/product.service';
 import { PriceType } from '../../../domain/models/product.models';
 import { IaService, AnalysisResponse } from '../../../../../core/services/ia.service';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
+import { ConfirmDialogComponent } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 Chart.register(...registerables);
 
@@ -14,7 +15,7 @@ Chart.register(...registerables);
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-produits',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, HasPermissionDirective],
+  imports: [CommonModule, FormsModule, DecimalPipe, HasPermissionDirective, ConfirmDialogComponent],
   templateUrl: './produits.component.html',
   styleUrls: ['./produits.component.css']
 })
@@ -34,6 +35,12 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
   displayMode = signal<'table' | 'grid' | 'cards'>('table');
+
+  // Confirmation dialog
+  showConfirmDialog = signal(false);
+  confirmTitle = signal('Confirmer la suppression');
+  confirmMessage = signal('Êtes-vous sûr de vouloir supprimer cet élément ?');
+  confirmAction = signal<() => void>(() => {});
 
   setDisplayMode(mode: 'table' | 'grid' | 'cards') {
     this.displayMode.set(mode);
@@ -499,10 +506,16 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   deleteItem(entity: 'line' | 'variant' | 'product', id: number) {
-    if (!confirm('Confirmer la suppression ?')) return;
-    if (entity === 'line') this.svc.deleteProductLine(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Gamme supprimée', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
-    else if (entity === 'variant') this.svc.deleteProductVariant(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Variante supprimée', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
-    else if (entity === 'product') this.svc.deleteProduct(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Produit supprimé', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
+    const label = entity === 'line' ? 'cette gamme' : entity === 'variant' ? 'cette variante' : 'ce produit';
+    this.confirmTitle.set(`Supprimer ${label}`);
+    this.confirmMessage.set(`Êtes-vous sûr de vouloir supprimer définitivement ${label} ? Cette action est irréversible.`);
+    this.confirmAction.set(() => {
+      this.showConfirmDialog.set(false);
+      if (entity === 'line') this.svc.deleteProductLine(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Gamme supprimée', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
+      else if (entity === 'variant') this.svc.deleteProductVariant(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Variante supprimée', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
+      else if (entity === 'product') this.svc.deleteProduct(id).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.showToast('Produit supprimé', 'success'); this.load(); }, error: (e) => this.showToast(e.error?.message || 'Erreur', 'error') });
+    });
+    this.showConfirmDialog.set(true);
   }
 
   // ── Price modal ──
@@ -565,11 +578,16 @@ export class ProduitsComponent implements OnInit, AfterViewInit, OnDestroy {
   deletePrice(priceId: number) {
     const product = this.priceModalProduct();
     if (!product) return;
-    if (!confirm('Supprimer ce prix ?')) return;
-    this.svc.deleteProductPrice(product.id, priceId).pipe(takeUntil(this.d$)).subscribe({
-      next: () => { this.showToast('Prix supprimé', 'success'); this.loadPrices(product.id); },
-      error: (e) => this.showToast(e.error?.message || 'Erreur', 'error')
+    this.confirmTitle.set('Supprimer ce tarif');
+    this.confirmMessage.set(`Êtes-vous sûr de vouloir supprimer cette ligne de tarif pour le produit ${product.designation || product.sku} ?`);
+    this.confirmAction.set(() => {
+      this.showConfirmDialog.set(false);
+      this.svc.deleteProductPrice(product.id, priceId).pipe(takeUntil(this.d$)).subscribe({
+        next: () => { this.showToast('Prix supprimé', 'success'); this.loadPrices(product.id); },
+        error: (e) => this.showToast(e.error?.message || 'Erreur', 'error')
+      });
     });
+    this.showConfirmDialog.set(true);
   }
 
   // ── Helpers ──

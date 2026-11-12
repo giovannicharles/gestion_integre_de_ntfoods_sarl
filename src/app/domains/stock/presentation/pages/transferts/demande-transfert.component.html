@@ -1,7 +1,17 @@
 <div class="transfert-page">
   <div class="page-header">
-    <h1><i class="fa-solid fa-truck-ramp-box"></i> Demander un transfert vers le tampon</h1>
-    <p class="subtitle">Le stock ne bouge qu'après validation par un second responsable, la demande n'exécute rien seule</p>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <circle cx="24" cy="24" r="20" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M16 24H32M24 16L32 24L24 32" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1 style="margin:0"><i class="fa-solid fa-truck-ramp-box"></i> Demande de Transfert vers le Tampon</h1>
+        <p class="subtitle" style="margin:3px 0 0">Processus sécurisé — le stock ne bouge qu'après validation par un second responsable</p>
+      </div>
+    </div>
   </div>
 
   @if (loading()) {

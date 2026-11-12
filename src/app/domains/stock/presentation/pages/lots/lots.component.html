@@ -2,15 +2,26 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="8" width="36" height="32" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M6 18H42M6 28H42" stroke="var(--color-primary, #14532D)" stroke-width="2"/>
+          <circle cx="16" cy="13" r="3" fill="var(--color-accent, #F6B60B)"/>
+          <circle cx="28" cy="23" r="3" fill="var(--color-primary, #14532D)"/>
+          <circle cx="20" cy="34" r="3" fill="var(--color-accent, #F6B60B)"/>
+        </svg>
+      </div>
       <div>
-        <h1 class="ph-title">Gestion des Lots</h1>
-        <p class="ph-sub">Traçabilité FIFO/FEFO des produits en stock</p>
+        <h1 class="ph-title">Gestion des Lots & Traçabilité</h1>
+        <p class="ph-sub">Suivi FIFO/FEFO des produits en stock, DLC et alertes de péremption</p>
       </div>
     </div>
-    <button class="btn btn-primary" (click)="showForm.set(!showForm())">
-      <i class="fa-solid fa-plus"></i> Nouveau lot
-    </button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" (click)="showForm.set(!showForm())">
+        <i class="fa-solid" [class.fa-plus]="!showForm()" [class.fa-xmark]="showForm()"></i>
+        {{ showForm() ? 'Fermer' : 'Nouveau lot' }}
+      </button>
+    </div>
   </div>
 
   <!-- CREATE FORM -->

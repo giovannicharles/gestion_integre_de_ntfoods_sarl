@@ -1,7 +1,16 @@
 <div class="page animate-fadeInUp">
   @if (toastMsg()) { <div class="toast animate-fadeInUp" [class.toast-success]="toastType()==='success'" [class.toast-error]="toastType()==='error'"><i class="fa-solid fa-circle-check"></i>{{ toastMsg() }}</div> }
   <div class="ph">
-    <div class="ph-left"><div class="ph-icon"><i class="fa-solid fa-users"></i></div><div><h1 class="ph-title">Module Commercial</h1><p class="ph-sub">Dotations · Ventes terrain · Retours · Session du jour</p></div></div>
+    <div class="ph-left">
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <circle cx="24" cy="16" r="7" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M12 38C12 31.37 17.37 26 24 26C30.63 26 36 31.37 36 38" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="36" cy="18" r="5" fill="var(--color-accent-ghost, #FFF8E1)" stroke="var(--color-accent, #F6B60B)" stroke-width="2"/>
+        </svg>
+      </div>
+      <div><h1 class="ph-title">Module Commercial</h1><p class="ph-sub">Dotations · Ventes terrain · Retours · Session du jour</p></div>
+    </div>
     <button class="btn btn-secondary" (click)="openDotation(commercials()[0])" [disabled]="loading()"><i class="fa-solid fa-box-open"></i> Nouvelle Dotation</button>
   </div>
   <div class="tabs">
@@ -36,7 +45,7 @@
   </div>
 
   <!-- COMMERCIAL CARDS -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:16px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(400px,100%),1fr));gap:16px">
     @for (c of filteredCommercials(); track c.matricule) {
       <div class="comm-card" (click)="openDetail(c)">
         <div class="cc-header">

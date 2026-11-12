@@ -9,6 +9,7 @@ import { StockApiRepository, ReportData, GenerateReportRequest, StockLocationDto
 import { StockLevel, StockMovement, DashboardStatsResponse, Product } from '../../../domain/models';
 import { IaService, MeetingReportResponse } from '../../../../../core/services/ia.service';
 import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
+import { ConfirmDialogComponent } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 Chart.register(...registerables);
 
@@ -25,7 +26,7 @@ export interface DocumentTemplate {
 @Component({
   selector: 'app-rapport-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, EmptyIllustrationComponent],
+  imports: [CommonModule, FormsModule, DatePipe, DecimalPipe, EmptyIllustrationComponent, ConfirmDialogComponent],
   templateUrl: './rapport-list.component.html',
   styleUrls: ['./rapport-list.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -592,16 +593,31 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  reportToDeleteId = signal<number | null>(null);
+  showDeleteConfirm = signal(false);
+
   deleteReport(id: number, event: Event): void {
     event.stopPropagation();
-    if (!confirm('Supprimer ce rapport ?')) return;
+    this.reportToDeleteId.set(id);
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDeleteReport(): void {
+    const id = this.reportToDeleteId();
+    if (!id) return;
+    this.showDeleteConfirm.set(false);
     this.uc.delete(id).pipe(takeUntil(this.d$)).subscribe({
       next: () => {
-        this.showToast('Rapport supprimé', 'success');
+        this.showToast('Rapport supprimé avec succès', 'success');
         this.loadReports();
       },
       error: () => this.showToast('Erreur lors de la suppression', 'error')
     });
+  }
+
+  cancelDeleteReport(): void {
+    this.showDeleteConfirm.set(false);
+    this.reportToDeleteId.set(null);
   }
 
   getReportTypeLabel(type: string): string {

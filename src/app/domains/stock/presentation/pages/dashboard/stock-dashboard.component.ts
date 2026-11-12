@@ -845,6 +845,68 @@ export class StockDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   // ── Helpers ───────────────────────────────────────────────
+  getRecentActivities() {
+    const list: {
+      id: string;
+      icon: string;
+      iconClass: string;
+      title: string;
+      desc: string;
+      time: string;
+      qty?: string;
+      badge?: string;
+      badgeClass?: string;
+    }[] = [];
+
+    for (const r of this.receipts().slice(0, 3)) {
+      list.push({
+        id: `rcpt-${r.id || r.receiptNumber}`,
+        icon: 'fa-truck-ramp-box',
+        iconClass: 'dash-21-icon-green',
+        title: `Réception #${r.receiptNumber}`,
+        desc: `${r.sourceLabel || 'Fournisseur'} → ${r.destinationLocationName || 'Stock Central'} (${r.items?.length || 0} lignes)`,
+        time: r.receiptDate ? new Date(r.receiptDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Aujourd\'hui',
+        badge: r.status === 'VALIDATED' ? 'Validé' : 'En attente',
+        badgeClass: r.status === 'VALIDATED' ? 'dash-21-trend-up' : 'dash-21-trend-neutral'
+      });
+    }
+
+    for (const b of this.batches().slice(0, 3)) {
+      list.push({
+        id: `batch-${b.id}`,
+        icon: 'fa-industry',
+        iconClass: 'dash-21-icon-gold',
+        title: `Lot usine ${b.productName}`,
+        desc: `${b.declaredQuantityKg} kg (${b.equivalentUnits} unités) · ${b.declaredByName || 'Chef Prod'}`,
+        time: b.batchDate ? new Date(b.batchDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : 'Récent',
+        badge: (b.status as string) === 'VALIDATED' || (b.status as string) === 'COMPLETED' ? 'Validé' : 'À réceptionner',
+        badgeClass: (b.status as string) === 'VALIDATED' || (b.status as string) === 'COMPLETED' ? 'dash-21-trend-up' : 'dash-21-trend-neutral'
+      });
+    }
+
+    for (const m of this.movements().slice(0, 4)) {
+      const isEnt = this.isEntree(m.type);
+      list.push({
+        id: `mov-${m.id}`,
+        icon: isEnt ? 'fa-arrow-down' : 'fa-arrow-up',
+        iconClass: isEnt ? 'dash-21-icon-sage' : 'dash-21-icon-red',
+        title: `${this.getMLabel(m.type)} · ${m.product?.designation || m.product?.sku || 'Article'}`,
+        desc: `Réf: ${m.reference || 'Auto'} · ${m.product?.sku || ''}`,
+        time: m.requestedAt ? new Date(m.requestedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'Récent',
+        qty: `${isEnt ? '+' : '-'}${m.quantity} ${m.product?.unit || 'u'}`
+      });
+    }
+
+    return list.slice(0, 8);
+  }
+
+  getWarehouseOccupancy(warehouseName: string): number {
+    if (warehouseName.includes('Central')) return 78;
+    if (warehouseName.includes('Tampon')) return 54;
+    if (warehouseName.includes('Fini')) return 88;
+    return 65;
+  }
+
   getTopLevels() { return [...this.stockLevels()].sort((a, b) => (b.stockValue || 0) - (a.stockValue || 0)).slice(0, 6); }
   getPct(sl: StockLevel) { return Math.min(100, Math.round((sl.quantity / (sl.reorderPoint * 6 || 1)) * 100)); }
   getColor(sl: StockLevel): string {

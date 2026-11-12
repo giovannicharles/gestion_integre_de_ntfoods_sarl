@@ -35,9 +35,50 @@ export class MouvementsComponent implements OnInit, OnDestroy {
   getColor(t: string) { const m: Record<string, string> = { RECEPTION_PRODUCTION: 'mc-t', RECEPTION_CONSOMMABLE: 'mc-g', RECEPTION_RAW_MATERIAL: 'mc-g', RECEPTION_MATERIEL: 'mc-g', TRANSFER_CENTRAL_TO_BUFFER: 'mc-t', TRANSFER_BUFFER_TO_MOBILE: 'mc-b', TRANSFER_MOBILE_TO_CENTRAL: 'mc-g', SALE: 'mc-b', ADJUSTMENT: 'mc-n', LOSS: 'mc-r', EXPIRATION: 'mc-r' }; return m[t] || 'mc-n'; }
   getLabel(t: string) { const m: Record<string, string> = { RECEPTION_PRODUCTION: 'Entrée production', RECEPTION_CONSOMMABLE: 'Réception consommable', RECEPTION_RAW_MATERIAL: 'Réception MP', RECEPTION_MATERIEL: 'Réception matériel', TRANSFER_CENTRAL_TO_BUFFER: 'Transfert central→tampon', TRANSFER_BUFFER_TO_MOBILE: 'Dotation (tampon→mobile)', TRANSFER_MOBILE_TO_CENTRAL: 'Retour mobile→central', SALE: 'Vente', ADJUSTMENT: 'Ajustement inventaire', LOSS: 'Perte/Casse', EXPIRATION: 'Expiration' }; return m[t] || t; }
   fCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }
-  getAjustSL() { return this.levels().find(sl => sl.id === this.ajustId); }
-  getTransfertSL() { return this.levels().filter(sl => sl.warehouseId === 1).find(sl => sl.id === this.transfertId) || this.levels().filter(sl => sl.warehouseId === 1)[0]; }
-  getMPLevels() { return this.levels().filter(sl => sl.warehouseId === 1); }
+  getAjustSL() { return this.levels().find(sl => sl.id === +this.ajustId); }
+  getTransfertSL() { return this.levels().find(sl => sl.id === +this.transfertId) || this.getMPLevels()[0]; }
+  getMPLevels() { return this.levels().filter(sl => sl.warehouseId === 1 || sl.warehouseName?.toLowerCase().includes('central') || !sl.warehouseId); }
+
+  get selectedTransfertSL(): StockLevel | undefined {
+    return this.levels().find(sl => sl.id === +this.transfertId);
+  }
+
+  get selectedAjustSL(): StockLevel | undefined {
+    return this.levels().find(sl => sl.id === +this.ajustId);
+  }
+
+  openTransfertModal(): void {
+    const list = this.getMPLevels();
+    if (list.length > 0 && (!this.transfertId || !list.some(x => x.id === +this.transfertId))) {
+      this.transfertId = list[0].id;
+    }
+    this.transfertQty = 1;
+    this.showTransfert.set(true);
+  }
+
+  openAjustModal(): void {
+    const list = this.levels();
+    if (list.length > 0 && (!this.ajustId || !list.some(x => x.id === +this.ajustId))) {
+      this.ajustId = list[0].id;
+      this.ajustQty = list[0].quantity;
+    }
+    this.ajustMotif = '';
+    this.showAjust.set(true);
+  }
+
+  onAjustProductChange(): void {
+    const sl = this.selectedAjustSL;
+    if (sl) {
+      this.ajustQty = sl.quantity;
+    }
+  }
+
+  setTransfertPct(pct: number): void {
+    const sl = this.selectedTransfertSL;
+    if (sl && sl.quantity > 0) {
+      this.transfertQty = Math.max(1, Math.round((sl.quantity * pct) / 100));
+    }
+  }
   sauverAjust() { if (!this.ajustId || !this.ajustMotif || this.ajustSaving()) return; this.ajustSaving.set(true); this.uc.adjust(this.ajustId, this.ajustQty, this.ajustMotif).pipe(takeUntil(this.d$)).subscribe({ next: () => { this.ajustSaving.set(false); this.showAjust.set(false); this.showToast('Ajustement enregistré.', 'success'); forkJoin({ m: this.uc.getMovements(), l: this.uc.getAll() }).pipe(takeUntil(this.d$)).subscribe(({ m, l }) => { this.all.set(m); this.levels.set(l); this.applyFilters(); }); }, error: (err: any) => { this.ajustSaving.set(false); const msg = extractApiError(err) || 'Erreur lors de l\'ajustement'; this.showToast(msg, 'error'); } }); }
   sauverTransfert() {
     if (!this.transfertId || this.transfertQty <= 0 || this.transfertSaving()) return;

@@ -9,13 +9,19 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-warehouse"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <rect x="6" y="10" width="36" height="28" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 24H34M24 14V34" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="34" cy="18" r="3.5" fill="var(--color-accent, #F6B60B)"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Magasin Tampon</h1>
-        <p class="ph-sub">Réapprovisionnement rapide depuis le stock central</p>
+        <p class="ph-sub">Stock de proximité atelier — réapprovisionnement fluide et dotations rapides</p>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       @if (criticalCount() + warningCount() > 0) {
         <button class="btn btn-primary btn-sm" (click)="reapproAll()" [disabled]="reapproSaving()">
           @if (reapproSaving()) { <div class="spinner spinner-sm" style="display:inline-block;vertical-align:middle"></div> }

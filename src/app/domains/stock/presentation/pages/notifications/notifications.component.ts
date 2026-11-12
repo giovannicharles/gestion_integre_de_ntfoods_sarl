@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval } from 'rxjs';
 import { ApiService } from '../../../../../core/http/api.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { ConfirmDialogComponent } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 interface NotificationBE {
   id: number;
@@ -55,7 +56,7 @@ const NOTIF_TYPE_ICONS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmDialogComponent],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css']
 })
@@ -70,6 +71,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
   lastRefresh = signal<Date | null>(null);
+  showConfirm = signal(false);
+  notifToDelete = signal<number | null>(null);
   Math = Math;
 
   unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
@@ -188,7 +191,15 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   deleteNotification(id: number): void {
-    if (!confirm('Supprimer cette notification ?')) return;
+    this.notifToDelete.set(id);
+    this.showConfirm.set(true);
+  }
+
+  confirmerSuppression(): void {
+    const id = this.notifToDelete();
+    if (!id) return;
+    this.showConfirm.set(false);
+    this.notifToDelete.set(null);
     this.api.delete(`stock/notifications/${id}`).pipe(takeUntil(this.d$)).subscribe({
       next: () => {
         this.notifications.update(list => list.filter(n => n.id !== id));
@@ -196,6 +207,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       },
       error: () => this.showToast('Erreur lors de la suppression', 'error')
     });
+  }
+
+  annulerSuppression(): void {
+    this.showConfirm.set(false);
+    this.notifToDelete.set(null);
   }
 
   getFilteredNotifications(): NotificationUI[] {

@@ -647,3 +647,14 @@
     </div>
   </div>
 }
+
+<app-confirm-dialog
+  [isOpen]="showDeleteConfirm()"
+  title="Supprimer le rapport"
+  message="Êtes-vous sûr de vouloir supprimer définitivement ce rapport d'inventaire ? Cette action est irréversible."
+  confirmText="Supprimer"
+  cancelText="Annuler"
+  variant="danger"
+  (confirm)="confirmDeleteReport()"
+  (cancel)="cancelDeleteReport()"
+></app-confirm-dialog>

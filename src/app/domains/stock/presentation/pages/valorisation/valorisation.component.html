@@ -3,14 +3,20 @@
   <!-- HEADER -->
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-coins"></i></div>
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
+          <circle cx="20" cy="28" r="14" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <circle cx="28" cy="20" r="14" fill="var(--color-accent-ghost, #FFF8E1)" stroke="var(--color-accent, #F6B60B)" stroke-width="2.5"/>
+          <path d="M28 14V26M24 17H32M24 23H32" stroke="var(--color-primary, #14532D)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div>
         <h1 class="ph-title">Valorisation Financière du Stock</h1>
-        <p class="ph-sub">Calcul de la valeur patrimoniale du stock par emplacement</p>
+        <p class="ph-sub">Calcul de la valeur patrimoniale du stock par emplacement et réconciliation comptable</p>
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()"aria-label="Fermer">
+      <button class="btn btn-ghost btn-sm" (click)="togglePricePanel()" aria-label="Prix unitaires">
         <i class="fa-solid fa-tag"></i> Prix unitaires
       </button>
       <button class="btn btn-primary btn-sm" (click)="calculateTotal()" [disabled]="calculating()">

@@ -711,3 +711,13 @@
     {{ toastMsg() }}
   </div>
 }
+
+<app-confirm-dialog
+  [isOpen]="showConfirmDialog()"
+  [title]="confirmTitle()"
+  [message]="confirmMessage()"
+  confirmText="Supprimer"
+  cancelText="Annuler"
+  variant="danger"
+  (confirm)="confirmAction()()"
+  (cancel)="showConfirmDialog.set(false)" />

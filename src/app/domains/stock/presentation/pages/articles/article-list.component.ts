@@ -426,6 +426,33 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.adjustItem.set(null);
   }
 
+  exportCSV(): void {
+    const list: StockItem[] = this.filtered();
+    if (!list || list.length === 0) {
+      this.showToast('Aucun article à exporter', 'error');
+      return;
+    }
+    const headers = ['SKU', 'Nom', 'Emplacement', 'Quantité', 'Cartons', 'Unité', 'Catégorie', 'Type'];
+    const rows = list.map((i: StockItem) => [
+      `"${i.productSku || ''}"`,
+      `"${(i.productName || '').replace(/"/g, '""')}"`,
+      `"${i.locationId || ''}"`,
+      i.quantity ?? 0,
+      i.cartons ?? 0,
+      `"${i.productUnit || ''}"`,
+      `"${i.productCategory || ''}"`,
+      `"${i.materialType || ''}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map((e: any[]) => e.join(';'))].join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute('download', `articles_stock_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.showToast(`${list.length} article(s) exporté(s) en CSV`, 'success');
+  }
+
   confirmAdjust(): void {
     const item = this.adjustItem();
     const amount = this.adjustAmount();
