@@ -41,6 +41,38 @@
     </div>
   } @else {
 
+    <!-- ALERTE DE SÉCURITÉ IMMÉDIATE (COMPTES BLOQUÉS / ACTIVITÉS SUSPECTES) -->
+    @if (nbBloques() > 0 || nbActivitesSuspectes() > 0) {
+      <div class="dash-21-card" style="margin-bottom:18px;border-left:4px solid var(--r);background:#fff1f2;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;color:var(--r)"></i>
+          <div>
+            <div style="font-weight:800;color:var(--r);font-size:13.5px">Alertes de Sécurité Nécessitant Intervention Immédiate</div>
+            <div style="font-size:12px;color:#9f1239">
+              @if (nbBloques() > 0) {
+                <span><strong>{{ nbBloques() }} compte(s)</strong> actuellement verrouillé(s) après des échecs d'authentification. </span>
+              }
+              @if (nbActivitesSuspectes() > 0) {
+                <span><strong>{{ nbActivitesSuspectes() }} comportement(s) suspect(s)</strong> repéré(s) par l'Audit Trail.</span>
+              }
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          @if (nbBloques() > 0) {
+            <a routerLink="/admin/utilisateurs" class="dash-21-btn dash-21-btn-primary" style="background:var(--r);border-color:var(--r);padding:6px 12px;font-size:12px">
+              <i class="fa-solid fa-lock-open"></i> Débloquer les comptes
+            </a>
+          }
+          @if (nbActivitesSuspectes() > 0) {
+            <a routerLink="/admin/audit" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:12px">
+              <i class="fa-solid fa-shield-virus"></i> Examiner l'audit
+            </a>
+          }
+        </div>
+      </div>
+    }
+
     <!-- 4-KPI SUITE CARDS -->
     <section class="dash-21-kpi-grid">
       <!-- KPI 1 : Utilisateurs -->

@@ -130,8 +130,16 @@
               </td>
               <td class="text-muted">{{ u.dateCreation | date:'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
-                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetails(u.matricule)">
+                @if (u.compteBloque) {
+                  <button class="btn btn-sm btn-ghost-red" *appCan="['ADMIN', 'DIRECTEUR_GENERAL']" (click)="debloquerDirect(u.matricule)" title="Débloquer immédiatement">
+                    <i class="fa-solid fa-lock-open"></i> Débloquer
+                  </button>
+                }
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirDetails(u.matricule)" title="Voir la fiche détaillée">
                   <i class="fa-solid fa-circle-info"></i> Détails
+                </button>
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirFicheAccreditation(u.matricule)" title="Fiche d'accréditation imprimable">
+                  <i class="fa-solid fa-id-badge"></i> Fiche
                 </button>
                 <button class="btn btn-sm" *appCan="['ADMIN', 'DIRECTEUR_GENERAL']" [class]="u.actif ? 'btn-ghost-red' : 'btn-success'" (click)="toggleActif(u.id)">
                   @if (u.actif) {
@@ -386,6 +394,9 @@
             <button class="btn btn-sm btn-outline" [disabled]="actionDetailEnCours()" (click)="ouvrirChangeRole()">
               <i class="fa-solid fa-user-pen"></i> Changer le rôle
             </button>
+            <button class="btn btn-sm btn-outline" (click)="ouvrirFicheAccreditation(u.matricule)">
+              <i class="fa-solid fa-print"></i> Fiche d'accréditation
+            </button>
           </div>
         }
         }
@@ -462,6 +473,102 @@
         <button class="btn btn-primary" [disabled]="!nouveauRole || actionDetailEnCours()" (click)="confirmerChangeRole()">
           @if (actionDetailEnCours()) { <span class="spinner spinner-sm"></span> } @else { <i class="fa-solid fa-check"></i> }
           Changer le rôle
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══ MODAL FICHE D'ACCRÉDITATION & D'ACCÈS COLLABORATEUR ═══ -->
+@if (showFicheModal()) {
+  <div class="nu-overlay" (click)="fermerFicheAccreditation()">
+    <div class="nu-modal nu-modal-lg" (click)="$event.stopPropagation()" style="max-width:760px">
+      <div class="nu-modal-header" style="background:var(--g-gh);border-bottom:2px solid var(--g)">
+        <div class="nu-modal-ico" style="background:var(--g);color:#fff"><i class="fa-solid fa-id-card"></i></div>
+        <div>
+          <div class="nu-modal-title" style="color:var(--g-d)">Fiche d'Accréditation ERP NTFOODS</div>
+          <div class="nu-modal-sub">Document officiel de remise des accès et engagements de sécurité</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-sm btn-primary" (click)="imprimerFicheAccreditation()">
+            <i class="fa-solid fa-print"></i> Imprimer la fiche
+          </button>
+          <button class="nu-close-btn" (click)="fermerFicheAccreditation()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="nu-modal-body print-area" style="padding:24px;background:#fff">
+        @if (ficheUser(); as fu) {
+          <!-- En-tête officiel entreprise -->
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--g);padding-bottom:14px;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <img src="/logo_tanty.jpg" alt="NTFOODS" style="height:48px;border-radius:6px;border:1px solid var(--n200)" />
+              <div>
+                <div style="font-size:16px;font-weight:900;color:var(--g-d);letter-spacing:0.5px">NTFOODS S.A.R.L</div>
+                <div style="font-size:11px;color:var(--n500);text-transform:uppercase;font-weight:700">Direction des Systèmes d'Information &amp; Ressources Humaines</div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div class="badge bg-neutral mono" style="font-size:12px;padding:4px 10px">{{ fu.matricule }}</div>
+              <div style="font-size:11px;color:var(--n500);margin-top:4px">Édité le {{ today | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-bottom:20px">
+            <h2 style="font-size:18px;font-weight:900;color:var(--g-d);margin:0;text-transform:uppercase;letter-spacing:0.5px">
+              Fiche d'Attribution d'Identité &amp; Droits Système
+            </h2>
+            <span style="font-size:12px;color:var(--n600)">Certificat d'habilitation nominatif pour l'ERP TANTY DIGITAL</span>
+          </div>
+
+          <!-- Grille d'informations d'identité -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--n50);border:1px solid var(--n200);border-radius:10px;padding:16px;margin-bottom:20px">
+            <div>
+              <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Collaborateur / Utilisateur</span>
+              <strong style="font-size:15px;color:var(--g-d)">{{ fu.nomComplet }}</strong>
+              <div style="font-size:12px;color:var(--n600);margin-top:2px">Email : {{ fu.email }}</div>
+              <div style="font-size:12px;color:var(--n600)">Téléphone : {{ fu.telephone || 'Non renseigné' }}</div>
+            </div>
+            <div>
+              <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Profil Métier &amp; Rôle Habilité</span>
+              <div style="display:inline-block;margin-top:2px" class="u-role-badge">{{ getRoleLabel(fu.role) }}</div>
+              <div style="font-size:12px;color:var(--n600);margin-top:4px">Statut : {{ statutDetailLabel(fu) }}</div>
+              <div style="font-size:12px;color:var(--n600)">Date d'attribution : {{ fu.dateCreation | date:'dd MMMM yyyy' }}</div>
+            </div>
+          </div>
+
+          <!-- Règles d'habilitation et sécurité -->
+          <div style="margin-bottom:20px;border-left:3px solid var(--y);padding-left:14px">
+            <div style="font-weight:800;font-size:13px;color:var(--g-d);margin-bottom:4px">
+              <i class="fa-solid fa-shield-halved" style="color:var(--y)"></i> Engagements de Confidentialité &amp; Non-Répudiation
+            </div>
+            <ul style="font-size:11.5px;color:var(--n600);line-height:1.6;margin:0;padding-left:16px">
+              <li>Les identifiants et mots de passe attribués sont strictement personnels et incessibles.</li>
+              <li>Toute opération effectuée avec ce matricule (ventes, validation stock, validation production, comptabilité) est enregistrée de façon immuable dans l'Audit Trail.</li>
+              <li>Le compte sera automatiquement verrouillé après 3 tentatives infructueuses de connexion.</li>
+            </ul>
+          </div>
+
+          <!-- Blocs d'émargement et signatures -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px;padding-top:14px;border-top:1px dashed var(--n300)">
+            <div style="border:1px solid var(--n200);border-radius:8px;padding:12px;min-height:90px">
+              <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:40px">
+                Signature du Collaborateur (précédée de "Lu et approuvé") :
+              </span>
+            </div>
+            <div style="border:1px solid var(--n200);border-radius:8px;padding:12px;min-height:90px">
+              <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:40px">
+                Visa de l'Administrateur / DSI NTFOODS :
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="nu-modal-footer">
+        <button class="btn btn-ghost" (click)="fermerFicheAccreditation()">Fermer</button>
+        <button class="btn btn-primary" (click)="imprimerFicheAccreditation()">
+          <i class="fa-solid fa-print"></i> Imprimer
         </button>
       </div>
     </div>

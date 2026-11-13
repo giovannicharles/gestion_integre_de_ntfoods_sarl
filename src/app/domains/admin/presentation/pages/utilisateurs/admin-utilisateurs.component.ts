@@ -70,6 +70,9 @@ export class AdminUtilisateursComponent implements OnInit {
   showChangeRoleModal = signal(false);
   nouveauRole = '';
 
+  showFicheModal = signal(false);
+  ficheUser = signal<UtilisateurBE | null>(null);
+
   rolesDisponibles = [
     'TOUS', 'DIRECTEUR_GENERAL', 'DIRECTEUR_COMMERCIAL', 'GESTIONNAIRE_STOCK', 'COMMERCIAL',
     'COMPTABLE', 'SECRETAIRE', 'ADMIN', 'CHARGEE_RP',
@@ -267,6 +270,42 @@ export class AdminUtilisateursComponent implements OnInit {
   fermerDetailModal(): void {
     this.showDetailModal.set(false);
     this.utilisateurDetail.set(null);
+  }
+
+  ouvrirFicheAccreditation(matricule: string): void {
+    const detail = this.utilisateurDetail();
+    if (detail && detail.matricule === matricule) {
+      this.ficheUser.set(detail);
+      this.showFicheModal.set(true);
+      return;
+    }
+    this.svc.consulterUtilisateur(matricule).subscribe({
+      next: u => {
+        this.ficheUser.set(u);
+        this.showFicheModal.set(true);
+      },
+      error: err => this.toast.error(extractApiError(err), 'Impossible de charger la fiche')
+    });
+  }
+
+  fermerFicheAccreditation(): void {
+    this.showFicheModal.set(false);
+    this.ficheUser.set(null);
+  }
+
+  imprimerFicheAccreditation(): void {
+    window.print();
+  }
+
+  debloquerDirect(matricule: string): void {
+    if (!confirm(`Débloquer immédiatement le compte ${matricule} ?`)) return;
+    this.svc.debloquer(matricule).subscribe({
+      next: res => {
+        this.rafraichirApresAction(res);
+        this.toast.success(`Compte ${matricule} débloqué avec succès.`);
+      },
+      error: err => this.toast.error(extractApiError(err), 'Déblocage impossible')
+    });
   }
 
   private rafraichirApresAction(u: UtilisateurBE): void {
