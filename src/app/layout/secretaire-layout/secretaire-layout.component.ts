@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -18,6 +18,7 @@ import { CommandPaletteComponent } from '../../shared/command-palette/command-pa
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 registerLocaleData(localeFr);
+
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
 
@@ -28,21 +29,26 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
   templateUrl: './secretaire-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
-export class SecretaireLayoutComponent implements OnInit {
+export class SecretaireLayoutComponent implements OnInit, OnDestroy {
   router = inject(Router);
   readonly theme = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly cptSvc = inject(ComptableService);
   private readonly comSvc = inject(CommercialService);
   private readonly clock = inject(ClockService);
+  private badgeInterval: any = null;
 
   sidebarOpen = signal(true);
   mobileOpen = signal(false);
   currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord');
-  /** Alertes rouges sur les versements du jour, comptées en direct. */
+
+  /** Badges dynamiques réactifs actualisés en direct */
+  pendingVersementsCount = signal(0);
+  pendingDecaissementsCount = signal(0);
+  pendingPrecommandesCount = signal(0);
+  pendingCommandesClientsCount = signal(0);
   alertCount = signal(0);
-  /** Décaissements VALIDEE_DG, prêts à exécuter, badge topbar. */
   validationBadge = signal(0);
 
   currentUser = computed(() => this.authService.getCurrentUser());
@@ -72,76 +78,116 @@ export class SecretaireLayoutComponent implements OnInit {
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/secretaire/dashboard' },
   ];
 
-  /** Regroupement par thème (2026-11-09, même motif que DG/Comptable/RP). */
-  navGroups: NavGroup[] = [
+  /** Regroupement réactif avec badges synchronisés */
+  navGroups = computed<NavGroup[]>(() => [
     {
       label: 'Opérations', icon: 'fa-cash-register', children: [
         { label: 'Petite caisse & micro-stock', icon: 'fa-cookie-bite', route: '/secretaire/caisse' },
-        { label: 'Saisie Versements', icon: 'fa-cash-register', route: '/secretaire/versements' },
-        { label: 'Validation', icon: 'fa-clipboard-check', route: '/secretaire/validation' },
+        {
+          label: 'Saisie Versements',
+          icon: 'fa-cash-register',
+          route: '/secretaire/versements',
+          badge: this.pendingVersementsCount(),
+          badgeClass: 'bd-orange'
+        },
+        {
+          label: 'Validation Décaissements',
+          icon: 'fa-clipboard-check',
+          route: '/secretaire/validation',
+          badge: this.pendingDecaissementsCount(),
+          badgeClass: 'bd-red'
+        },
       ]
     },
     {
       label: 'Commandes', icon: 'fa-cart-shopping', children: [
-        { label: 'Commandes J+1', icon: 'fa-cart-plus', route: '/secretaire/commandes' },
-        { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/secretaire/commandes-clients' },
+        {
+          label: 'Commandes J+1 (Tournées)',
+          icon: 'fa-cart-plus',
+          route: '/secretaire/commandes',
+          badge: this.pendingPrecommandesCount(),
+          badgeClass: 'bd-orange'
+        },
+        {
+          label: 'Commandes Clients & WhatsApp',
+          icon: 'fa-cart-shopping',
+          route: '/secretaire/commandes-clients',
+          badge: this.pendingCommandesClientsCount(),
+          badgeClass: 'bd-gold'
+        },
         { label: 'Session du Jour', icon: 'fa-calendar-check', route: '/secretaire/session' },
       ]
     },
-  ];
+  ]);
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
+  /** Recherche sidebar, filtre inline */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
-  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups(), this.sidebarFiltre()));
   rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
   expandedGroup = signal<string | null>('Opérations');
   toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
-  /** Palette de commandes Ctrl+K (2026-11-02, même composant que les autres layouts). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
   commandItems = computed(() => [
     ...this.navItems,
-    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+    ...this.navGroups().flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
   ]);
 
   ngOnInit() {
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const allItems = [...this.navItems, ...this.navGroups().flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
+    this.rafraichirBadges();
+    this.badgeInterval = setInterval(() => this.rafraichirBadges(), 30000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.badgeInterval) {
+      clearInterval(this.badgeInterval);
+      this.badgeInterval = null;
+    }
+  }
+
+  rafraichirBadges(): void {
     this.cptSvc.getVersements().subscribe({
       next: versements => {
-        this.setBadge('/secretaire/versements', versements.filter(v => v.statut === 'EN_ATTENTE').length, 'bd-orange');
+        const attente = versements.filter(v => v.statut === 'EN_ATTENTE').length;
+        this.pendingVersementsCount.set(attente);
         this.alertCount.set(versements.filter(v => v.alerteRouge).length);
       },
       error: () => {},
     });
+
     this.cptSvc.getDecaissements().subscribe({
       next: d => {
         const n = d.filter(x => x.statut === 'VALIDEE_DG').length;
-        this.setBadge('/secretaire/validation', n, 'bd-red');
+        this.pendingDecaissementsCount.set(n);
         this.validationBadge.set(n);
       },
       error: () => {},
     });
+
     this.comSvc.getPrecommandesAValider().subscribe({
-      next: page => this.setBadge(
-        '/secretaire/commandes',
-        page.contenu.filter(c => c.statut === 'SOUMISE').length,
-        'bd-orange'
-      ),
+      next: page => {
+        const n = (page?.contenu ?? []).filter(c => c.statut === 'SOUMISE').length;
+        this.pendingPrecommandesCount.set(n);
+      },
       error: () => {},
     });
-  }
 
-  private setBadge(route: string, count: number, badgeClass: string): void {
-    const item = this.navGroups.flatMap(g => g.children).find(n => n.route === route);
-    if (item) { item.badge = count; item.badgeClass = badgeClass; }
+    this.comSvc.getCommandesDistance().subscribe({
+      next: list => {
+        const n = (list ?? []).filter(c => c.statut === 'RECUE').length;
+        this.pendingCommandesClientsCount.set(n);
+      },
+      error: () => {},
+    });
   }
 
   @HostListener('window:resize', ['$event'])
@@ -152,8 +198,6 @@ export class SecretaireLayoutComponent implements OnInit {
   toggleSidebar() { if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
-  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
-   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
   showLogoutConfirm = signal(false);
   logout(): void { this.showLogoutConfirm.set(true); }
   confirmerLogout(): void {

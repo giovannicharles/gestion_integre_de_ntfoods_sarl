@@ -6,6 +6,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { ComptableService, VersementBE, CaisseBE } from '../../../../comptable/infrastructure/comptable.service';
 import { StockService, SessionCommercialBE } from '../../../../stock/infrastructure/stock.service';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface VersementUI {
   id: string; commercialId: string; date: Date;
@@ -14,14 +15,6 @@ interface VersementUI {
   justificationEcart: string | null;
 }
 
-/**
- * Rapprochement de fin de tournée.
- *
- * Reçoit les tournées que les commerciaux ont déclarées terminées, rapproche la
- * remise d'espèces du montant attendu, puis valide, ce qui transmet la session
- * au comptable. Le bouton de validation appelait auparavant un simple indicateur
- * local : rien n'était transmis, et la session restait indéfiniment en attente.
- */
 @Component({
   selector: 'app-secretaire-session',
   standalone: true,
@@ -33,6 +26,7 @@ export class SecretaireSessionComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly svc = inject(ComptableService);
   private readonly stockSvc = inject(StockService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
@@ -43,9 +37,10 @@ export class SecretaireSessionComponent implements OnInit {
 
   versements = signal<VersementUI[]>([]);
   caisse = signal<CaisseBE | null>(null);
-
-  /** Tournées déclarées terminées, en attente de rapprochement. */
   sessionsARapprocher = signal<SessionCommercialBE[]>([]);
+
+  // Modal d'impression feuille de rapprochement
+  showImpressionRapprochement = signal(false);
 
   totalVerse = computed(() => this.versements().reduce((s, v) => s + v.cashVerse, 0));
   totalAttendu = computed(() => this.versements().reduce((s, v) => s + v.montantAttendu, 0));
@@ -57,12 +52,10 @@ export class SecretaireSessionComponent implements OnInit {
     this.charger();
   }
 
-  private charger(): void {
+  charger(): void {
     const jour = this.fmtDate(new Date());
     this.loading.set(true);
 
-    // Les sessions à rapprocher ne doivent pas disparaître si la caisse du jour
-    // n'a pas encore été ouverte : chaque source est isolée.
     forkJoin({
       versements: this.svc.getVersements({ date: jour }).pipe(catchError(() => of([] as VersementBE[]))),
       caisse: this.svc.getCaisse(jour).pipe(catchError(() => of(null))),
@@ -71,7 +64,7 @@ export class SecretaireSessionComponent implements OnInit {
       next: ({ versements, caisse, sessions }) => {
         this.versements.set(versements.map(v => this.mapVersement(v)));
         this.caisse.set(caisse);
-        this.sessionsARapprocher.set(sessions);
+        this.sessionsARapprocher.set(sessions || []);
         this.loading.set(false);
       },
       error: () => {
@@ -81,7 +74,6 @@ export class SecretaireSessionComponent implements OnInit {
     });
   }
 
-  /** Versement rattaché à une tournée, pour rapprocher ligne à ligne. */
   versementDe(matricule: string): VersementUI | undefined {
     return this.versements().find(v => v.commercialId === matricule);
   }
@@ -101,6 +93,7 @@ export class SecretaireSessionComponent implements OnInit {
         this.traitementEnCours.set(null);
         this.afficher(
           `Tournée ${session.numeroSession} validée. Transmise au comptable.`, 'succes');
+        this.toast.success(`Tournée ${session.numeroSession} validée et transmise.`);
         this.charger();
       },
       error: (e) => {
@@ -114,6 +107,32 @@ export class SecretaireSessionComponent implements OnInit {
     if (ecart > 0) return 'ecart-pos';
     if (ecart < 0) return 'ecart-neg';
     return 'ecart-ok';
+  }
+
+  ouvrirImpression(): void {
+    this.showImpressionRapprochement.set(true);
+  }
+  fermerImpression(): void {
+    this.showImpressionRapprochement.set(false);
+  }
+  lancerImpression(): void {
+    window.print();
+  }
+
+  exporterCsv(): void {
+    let csv = 'Session;Commercial;Date_Heure;Montant_Attendu;Montant_Remis;Ecart;Statut\n';
+    this.sessionsARapprocher().forEach(s => {
+      const v = this.versementDe(s.matriculeCommercial);
+      csv += `"${s.numeroSession}";"${s.matriculeCommercial}";"${s.heureCloture || ''}";"${v ? v.montantAttendu : 0}";"${v ? v.cashVerse : 0}";"${v ? v.ecart : 0}";"${s.statut}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rapprochement_sessions_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.info('Export CSV du rapprochement téléchargé.');
   }
 
   private mapVersement(v: VersementBE): VersementUI {
@@ -143,7 +162,7 @@ export class SecretaireSessionComponent implements OnInit {
   }
 
   private matricule(): string {
-    return this.auth.user()?.matricule ?? '';
+    return this.auth.user()?.matricule ?? 'SECRETAIRE';
   }
 
   private fmtDate(d: Date): string {
