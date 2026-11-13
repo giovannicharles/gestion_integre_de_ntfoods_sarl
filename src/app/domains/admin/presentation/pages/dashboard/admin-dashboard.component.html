@@ -1,139 +1,265 @@
-<div class="dash animate-fadeInUp">
-
-  <div class="ph ph-wm-admin">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-gauge-high"></i></div>
-      <div>
-        <h1 class="ph-title">Tableau de Bord Administration</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Comptes · Sécurité · Système</p>
+<div class="dash-21-root animate-fadeIn">
+  <!-- 21ST CENTURY TANTY HEADER -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Console d'Administration & Sécurité</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          EN DIRECT · SYSTÈME NTFOODS
+        </span>
       </div>
+      <p class="dash-21-subtitle">
+        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Gestion des identités, habilitations RBAC, supervision des incidents & audit trail
+      </p>
     </div>
-    <div class="ph-actions">
-      <a routerLink="/admin/permissions" class="btn btn-ghost btn-sm"><i class="fa-solid fa-user-shield"></i> RBAC</a>
-      <a routerLink="/admin/utilisateurs" class="btn btn-primary btn-sm"><i class="fa-solid fa-users-gear"></i> Utilisateurs</a>
-      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
+
+    <div class="dash-21-actions">
+      <a routerLink="/admin/permissions" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-user-shield"></i> RBAC
+      </a>
+      <a routerLink="/admin/utilisateurs" class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-users-gear"></i> Utilisateurs
+      </a>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser la console">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
     </div>
-  </div>
+  </header>
 
   @if (loading()) {
-  <div class="sk-kpi-grid">
-    @for (i of [1,2,3,4]; track i) {
-    <div class="card sk-kpi-card"><div class="sk-shimmer sk-ico"></div><div class="sk-lines"><div class="sk-shimmer sk-s"></div><div class="sk-shimmer sk-l"></div></div></div>
-    }
-  </div>
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Interrogation des journaux d'audit & comptes système...</p>
+    </div>
   } @else if (loadError()) {
-  <div class="error-state">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <p>{{ loadError() }}</p>
-    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
-  </div>
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Erreur d'accès aux services d'administration</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+    </div>
   } @else {
 
-  <!-- KPI GRID -->
-  <div class="kpi-grid">
-    <div class="kpi-card kp-b">
-      <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Utilisateurs</span>
-        <span class="kpi-val">{{ totalUtilisateurs() }}</span>
-        <div class="prog-bar-wrap" style="height:5px;margin:4px 0 2px"><div class="prog-bar prog-g" [style.width.%]="totalUtilisateurs() > 0 ? Math.round((nbActifs() / totalUtilisateurs()) * 100) : 0"></div></div>
-        <div class="kpi-meta"><i class="fa-solid fa-user-check"></i> {{ nbActifs() }} actif(s)</div>
+    <!-- 4-KPI SUITE CARDS -->
+    <section class="dash-21-kpi-grid">
+      <!-- KPI 1 : Utilisateurs -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Comptes Utilisateurs</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ totalUtilisateurs() }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            <i class="fa-solid fa-user-check"></i> {{ nbActifs() }} actifs
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>{{ totalUtilisateurs() > 0 ? Math.round((nbActifs() / totalUtilisateurs()) * 100) : 0 }}% d'activation des comptes</span>
+        </div>
       </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-ico iy"><i class="fa-solid fa-signal"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Sessions actives</span>
-        <span class="kpi-val">{{ nbSessionsActives() }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-clock"></i> connectés en ce moment</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-ico ir"><i class="fa-solid fa-lock"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Comptes bloqués</span>
-        <span class="kpi-val" [style.color]="nbBloques()>0?'var(--r)':''">{{ nbBloques() }}</span>
-        <div class="prog-bar-wrap" style="height:5px;margin:4px 0 2px"><div class="prog-bar prog-r" [style.width.%]="tauxBlocage()"></div></div>
-        <div class="kpi-meta"><i class="fa-solid fa-percent"></i> {{ tauxBlocage() }}% des comptes</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-g">
-      <div class="kpi-ico ig"><i class="fa-solid fa-clipboard-list"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Événements d'audit (24h)</span>
-        <span class="kpi-val">{{ nbEvenements24h() }}</span>
-        <div class="kpi-meta"><i class="fa-solid fa-rotate"></i> dernières 24 heures</div>
-      </div>
-    </div>
-  </div>
 
-  @if (incidentsResume(); as inc) {
-  <div class="section-titre"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</div>
-  <div class="kpi-grid kpi-grid-3">
-    <div class="kpi-card kp-r"><div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="kpi-body"><span class="kpi-lbl">Incidents actifs</span><span class="kpi-val">{{ inc.actifs }}</span><span class="kpi-meta">{{ inc.enCours }} en cours de traitement</span></div></div>
-    <div class="kpi-card kp-y"><div class="kpi-ico iy"><i class="fa-solid fa-fire"></i></div><div class="kpi-body"><span class="kpi-lbl">Critiques actifs</span><span class="kpi-val" [style.color]="inc.critiquesActifs>0?'var(--r)':''">{{ inc.critiquesActifs }}</span><span class="kpi-meta">alerte temps réel déjà envoyée</span></div></div>
-    <div class="kpi-card kp-g"><div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-body"><span class="kpi-lbl">Résolus</span><span class="kpi-val">{{ inc.resolus }}</span><span class="kpi-meta">historique complet</span></div></div>
-  </div>
-  } @else if (incidentsError()) {
-  <div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i> Résumé des incidents indisponible : {{ incidentsError() }}</div>
-  }
-
-  <div class="section-row">
-    <div class="card table-card">
-      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Activité récente (24h)</span>
-        <a routerLink="/admin/audit" class="btn btn-ghost btn-sm">Voir tout</a>
+      <!-- KPI 2 : Sessions Actives -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Sessions Connectées</span>
+          <div class="dash-21-kpi-icon-wrap icon-gold">
+            <i class="fa-solid fa-signal"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ nbSessionsActives() }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            Temps Réel
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Utilisateurs actuellement actifs sur le système</span>
+        </div>
       </div>
-      @if (activiteError()) {
-        <div class="widget-error"><i class="fa-solid fa-triangle-exclamation"></i> Activité indisponible : {{ activiteError() }}</div>
-      } @else if (activiteRecente().length === 0) {
-        <p class="text-muted">Aucun événement d'audit sur les dernières 24 heures.</p>
-      } @else {
-        <div class="activity-feed">
-          @for (a of activiteRecente(); track a.id) {
-          <div class="activity-row">
-            <div class="activity-ico" [class.activity-ico-err]="!a.succes"><i class="fa-solid {{ iconeAction(a.typeAction) }}"></i></div>
-            <div class="activity-body">
-              <span class="activity-title">{{ a.matricule }} · {{ a.typeAction }} · {{ a.ressource }}</span>
-              <span class="activity-meta">{{ a.module }} · {{ a.horodatage | date:'dd/MM HH:mm' }}</span>
+
+      <!-- KPI 3 : Comptes Bloqués -->
+      <div class="dash-21-kpi-card" [style.border-color]="nbBloques() > 0 ? 'rgba(194, 43, 43, 0.4)' : ''">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Comptes Verrouillés</span>
+          <div class="dash-21-kpi-icon-wrap icon-red">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value" [style.color]="nbBloques() > 0 ? 'var(--r)' : 'inherit'">{{ nbBloques() }}</span>
+          <span class="dash-21-trend-pill" [class.trend-warn]="nbBloques() > 0" [class.trend-up]="nbBloques() === 0">
+            {{ tauxBlocage() }}%
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>{{ nbBloques() > 0 ? 'Suspension de sécurité active' : 'Aucun compte verrouillé' }}</span>
+        </div>
+      </div>
+
+      <!-- KPI 4 : Piste d'audit (24h) -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Événements d'Audit (24h)</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-clipboard-list"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ nbEvenements24h() }}</span>
+          <span class="dash-21-trend-pill trend-neutral">
+            Tracé ISO
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Opérations horodatées non répudiables enregistrées</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2:1 SPLIT GRID -->
+    <div class="dash-21-grid">
+      <!-- LEFT / MAIN COLUMN (2fr) -->
+      <div class="dash-21-main-col">
+
+        <!-- JOURNAL D'ACTIVITÉ RÉCENTE -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--y)"></i> Activité Récente du Système (24h)</h3>
+              <span class="dash-21-card-hint">Journal des connexions, modifications et validations</span>
             </div>
-            @if (!a.succes) { <span class="badge bg-red">Échec</span> }
+            <a routerLink="/admin/audit" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Journal complet</a>
           </div>
+
+          @if (activiteError()) {
+            <div class="stock-alert-msg alert-danger">{{ activiteError() }}</div>
+          } @else if (activiteRecente().length === 0) {
+            <div style="text-align:center;padding:32px;color:var(--n400)">
+              <i class="fa-solid fa-shield-check" style="font-size:24px;color:var(--g);display:block;margin-bottom:6px"></i>
+              Aucun événement d'audit récent.
+            </div>
+          } @else {
+            <div class="dash-21-activity-list" style="max-height:320px;overflow-y:auto">
+              @for (a of activiteRecente(); track a.id) {
+                <div class="dash-21-activity-item">
+                  <div class="dash-21-activity-icon" [style.background]="a.succes ? 'rgba(20, 83, 45, 0.08)' : 'rgba(194, 43, 43, 0.12)'" [style.color]="a.succes ? 'var(--g)' : 'var(--r)'">
+                    <i class="fa-solid {{ iconeAction(a.typeAction) }}"></i>
+                  </div>
+                  <div class="dash-21-activity-body">
+                    <div class="dash-21-activity-title">
+                      <strong>{{ a.matricule }}</strong> · {{ a.typeAction }} · <span style="color:var(--n600)">{{ a.ressource }}</span>
+                    </div>
+                    <div class="dash-21-activity-meta">
+                      <span class="meta-tag">{{ a.module }}</span> · {{ a.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}
+                    </div>
+                  </div>
+                  @if (!a.succes) {
+                    <span class="badge badge-danger">Échec</span>
+                  }
+                </div>
+              }
+            </div>
           }
         </div>
-      }
-    </div>
 
-    <div class="card table-card">
-      <div class="card-hd"><span class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition par rôle</span></div>
-      @if (repartitionRoles().length === 0) {
-        <p class="text-muted">Aucun utilisateur.</p>
-      } @else {
-        <div class="role-breakdown">
-          @for (r of repartitionRoles(); track r.role) {
-          <div class="role-row">
-            <span class="role-label">{{ getRoleLabel(r.role) }}</span>
-            <div class="role-bar-wrap"><div class="role-bar" [style.width.%]="(r.count / totalUtilisateurs()) * 100"></div></div>
-            <span class="role-count">{{ r.count }}</span>
+        <!-- ACCÈS RAPIDE AUX MODULES D'ADMINISTRATION -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-compass" style="color:var(--g)"></i> Raccourcis d'Administration</h3>
+              <span class="dash-21-card-hint">Accès direct aux modules de configuration</span>
+            </div>
           </div>
-          }
-        </div>
-      }
-    </div>
-  </div>
 
-  <div class="section-titre"><i class="fa-solid fa-compass"></i> Accès rapide</div>
-  <div class="card-grid-auto">
-    @for (r of raccourcis; track r.route) {
-    <a [routerLink]="r.route" class="raccourci-card">
-      <div class="raccourci-ico"><i class="fa-solid {{ r.icone }}"></i></div>
-      <div class="raccourci-body">
-        <span class="raccourci-label">{{ r.label }}</span>
-        <span class="raccourci-desc">{{ r.description }}</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px">
+            @for (r of raccourcis; track r.route) {
+              <a [routerLink]="r.route" class="dash-21-btn dash-21-btn-ghost" style="justify-content:flex-start;padding:12px;height:auto;text-align:left;border:1.5px solid var(--n200);border-radius:10px">
+                <div style="width:36px;height:36px;border-radius:8px;background:var(--g-gh);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-right:10px">
+                  <i class="fa-solid {{ r.icone }}"></i>
+                </div>
+                <div>
+                  <div style="font-weight:700;color:var(--g-d);font-size:13px">{{ r.label }}</div>
+                  <div style="font-size:11px;color:var(--n500);margin-top:2px">{{ r.description }}</div>
+                </div>
+              </a>
+            }
+          </div>
+        </div>
+
       </div>
-      <i class="fa-solid fa-chevron-right raccourci-arrow"></i>
-    </a>
-    }
-  </div>
 
+      <!-- RIGHT COLUMN (1fr) : INCIDENTS & RÔLES -->
+      <div class="dash-21-side-col">
+
+        <!-- RÉSUMÉ DES INCIDENTS SYSTÈME -->
+        @if (incidentsResume(); as inc) {
+          <div class="dash-21-card" style="margin-bottom:16px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--r)"></i> Santé & Incidents</h3>
+                <span class="dash-21-card-hint">Supervision technique</span>
+              </div>
+            </div>
+
+            <div class="dash-21-gauge-list">
+              <div class="dash-21-gauge-item">
+                <div class="dash-21-gauge-label-row">
+                  <span class="dash-21-gauge-title">Incidents Actifs</span>
+                  <span class="dash-21-gauge-val" [style.color]="inc.actifs > 0 ? 'var(--r)' : 'var(--g)'">{{ inc.actifs }}</span>
+                </div>
+                <span class="dash-21-gauge-sub">{{ inc.enCours }} en cours d'investigation</span>
+              </div>
+
+              <div class="dash-21-gauge-item">
+                <div class="dash-21-gauge-label-row">
+                  <span class="dash-21-gauge-title">Incidents Critiques</span>
+                  <span class="dash-21-gauge-val" [style.color]="inc.critiquesActifs > 0 ? 'var(--r)' : 'var(--g)'">{{ inc.critiquesActifs }}</span>
+                </div>
+                <span class="dash-21-gauge-sub">Alerte temps réel déclenchée</span>
+              </div>
+
+              <div class="dash-21-gauge-item">
+                <div class="dash-21-gauge-label-row">
+                  <span class="dash-21-gauge-title">Incidents Résolus</span>
+                  <span class="dash-21-gauge-val" style="color:var(--g)">{{ inc.resolus }}</span>
+                </div>
+                <span class="dash-21-gauge-sub">Historique des clôtures</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- RÉPARTITION PAR RÔLE -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--y)"></i> Répartition des Rôles</h3>
+              <span class="dash-21-card-hint">Comptes par profil métier</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            @for (r of repartitionRoles(); track r.role) {
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px">
+                  <span style="font-weight:600">{{ getRoleLabel(r.role) }}</span>
+                  <span class="mono fw-bold" style="color:var(--g-d)">{{ r.count }}</span>
+                </div>
+                <div style="height:6px;background:var(--n200);border-radius:3px;overflow:hidden">
+                  <div style="height:100%;border-radius:3px;background:var(--g)" [style.width.%]="(r.count / totalUtilisateurs()) * 100"></div>
+                </div>
+              </div>
+            } @empty {
+              <div style="text-align:center;padding:16px;color:var(--n400);font-size:12px">Aucun utilisateur enregistré.</div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
   }
 </div>

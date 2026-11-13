@@ -1,271 +1,510 @@
-<div class="dash animate-fadeInUp">
-  <div class="ph ph-wm-comptable">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-chart-pie"></i></div>
-      <div>
-        <h1 class="ph-title">Tableau de Bord Comptable</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · NTFoods TANTY</p>
+<div class="dash-21-root animate-fadeIn">
+  <!-- 21ST CENTURY TANTY HEADER -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Pilotage Comptable & Trésorerie</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          EN DIRECT · EXERCICE {{ today | date:'yyyy' }}
+        </span>
       </div>
+      <p class="dash-21-subtitle">
+        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Rapprochements bancaires, caisse centrale & validation des précommandes J+1
+      </p>
     </div>
-    <div class="ph-actions">
-      <a routerLink="/comptable/caisse" class="btn btn-ghost btn-sm"><i class="fa-solid fa-vault"></i> Caisse</a>
-      <a routerLink="/comptable/matieres-premieres" class="btn btn-ghost btn-sm"><i class="fa-solid fa-wheat-awn"></i> Réceptions MP</a>
-      <a routerLink="/comptable/commandes" class="btn btn-primary btn-sm">
-        <i class="fa-solid fa-clipboard-check"></i> Valider commandes
-        @if (commandesEnAttente() > 0) { <span class="btn-badge">{{ commandesEnAttente() }}</span> }
+
+    <div class="dash-21-actions">
+      <a routerLink="/comptable/caisse" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-vault"></i> Caisse
       </a>
-      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
+      <a routerLink="/comptable/matieres-premieres" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-wheat-awn"></i> Réceptions MP
+      </a>
+      <a routerLink="/comptable/commandes" class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-clipboard-check"></i> Valider Commandes
+        @if (commandesEnAttente() > 0) {
+          <span class="dash-21-btn-tag">{{ commandesEnAttente() }}</span>
+        }
+      </a>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser les données">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
     </div>
-  </div>
+  </header>
 
   @if (loading()) {
-  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du tableau de bord…</div>
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Chargement des flux financiers & rapprochements...</p>
+    </div>
   } @else if (loadError()) {
-  <div class="error-state">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <p>{{ loadError() }}</p>
-    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
-  </div>
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Impossible de charger le tableau comptable</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+    </div>
   } @else {
 
-  <div class="kpi-grid">
-    <div class="kpi-card kp-g">
-      <div class="kpi-decor"></div>
-      <div class="kpi-ico ig"><i class="fa-solid fa-money-bill-wave"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Versements du Jour</span>
-        <span class="kpi-val">{{ fCFA(totalVersements()) }}</span>
-        <div class="kpi-meta">{{ versementsValides() }} validés · {{ fiche.nbVersementsEnAttente }} en attente · {{ fiche.nbAlertesRouges }} alertes</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-decor kd-y"></div>
-      <div class="kpi-ico iy"><i class="fa-solid fa-clipboard-check"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Commandes à Valider</span>
-        <span class="kpi-val" [class.text-warning]="commandesEnAttente()>0">{{ commandesEnAttente() }}</span>
-        <div class="kpi-meta">Précommandes J+1, délai 17h00</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-b">
-      <div class="kpi-decor kd-b"></div>
-      <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Facturation du Jour</span>
-        <span class="kpi-val">{{ fCFA(totalFacture()) }}</span>
-        <div class="kpi-meta">{{ facturesEmises() }} factures émises</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Créances en Cours</span>
-        <span class="kpi-val" [class.text-danger]="totalDettes()>0">{{ fCFA(totalDettes()) }}</span>
-        <div class="kpi-meta">{{ dossierActifs() }} dossiers actifs</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ONGLETS -->
-  <div class="period-selector dash-tabs">
-    <button class="period-btn" [class.active]="activeTab()==='apercu'" (click)="setTab('apercu')"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</button>
-    <button class="period-btn" [class.active]="activeTab()==='validations'" (click)="setTab('validations')"><i class="fa-solid fa-circle-check"></i> Validations</button>
-    <button class="period-btn" [class.active]="activeTab()==='pilotage'" (click)="setTab('pilotage')"><i class="fa-solid fa-scale-unbalanced"></i> Pilotage</button>
-  </div>
-
-  <!-- VUE D'ENSEMBLE -->
-  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
-    <div class="kpi-grid">
-      <div class="kpi-card kp-b">
-        <div class="kpi-decor kd-b"></div>
-        <div class="kpi-ico ib"><i class="fa-solid fa-vault"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Trésorerie (encaissé)</span>
-          <span class="kpi-val">{{ fCFA(fiche.sCaisse) }}</span>
-          <div class="kpi-meta">Entrées {{ fCFA(fiche.totalEntrees) }} · Sorties {{ fCFA(fiche.totalSorties) }}</div>
-        </div>
-      </div>
-      <div class="kpi-card kp-r">
-        <div class="kpi-decor kd-r"></div>
-        <div class="kpi-ico ir"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">Décaissements exécutés</span>
-          <span class="kpi-val">{{ fCFA(fiche.totalDecaissements) }}</span>
-          <div class="kpi-meta">{{ fiche.nbDecaissementsEnAttente }} en attente de validation</div>
-        </div>
-      </div>
-      <div class="kpi-card kp-g">
-        <div class="kpi-decor"></div>
-        <div class="kpi-ico ig"><i class="fa-solid fa-file-invoice"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">CA facturé (mois)</span>
-          <span class="kpi-val">{{ fCFA(caMois) }}</span>
-          <div class="kpi-meta">{{ fiche.nbFacturesImpayees }} facture(s) impayée(s)</div>
-        </div>
-      </div>
-      <div class="kpi-card kp-y">
-        <div class="kpi-decor kd-y"></div>
-        <div class="kpi-ico iy"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        <div class="kpi-body">
-          <span class="kpi-lbl">DSO, délai paiement</span>
-          <span class="kpi-val">{{ dso() }} j</span>
-          <div class="kpi-meta">CA réel facturé {{ fCFA(caFactureReel()) }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="two-col">
-      <!-- VERSEMENTS -->
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-money-bill-wave"></i> Versements du Jour</span>
-          <a routerLink="/secretaire/versements" class="btn btn-ghost btn-sm">Voir tout</a>
-        </div>
-        <div class="tbl-wrap">
-          <table class="data-table">
-            <thead><tr><th>Commercial</th><th>Montant</th><th>Type</th><th>Statut</th></tr></thead>
-            <tbody>
-              @for (v of versements; track v.id) {
-              <tr [class.row-alert]="v.alerteRouge">
-                <td>COM-{{ v.commercialId }}</td>
-                <td class="mono">{{ v.cashVerse ? fCFA(v.cashVerse) : '-' }}</td>
-                <td>{{ v.typeVersement ?? '-' }}</td>
-                <td>
-                  @if (v.statut==='VALIDE') { <span class="badge bg-success">Validé</span> }
-                  @else if (v.statut==='EN_ATTENTE') { <span class="badge bg-neutral">Att.</span> }
-                  @else if (v.alerteRouge) { <span class="badge bg-red">Alerte</span> }
-                  @else { <span class="badge bg-orange">À valider</span> }
-                </td>
-              </tr>
-              } @empty {
-              <tr><td colspan="4" class="empty-state">Aucun versement enregistré aujourd'hui.</td></tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- COMMANDES EN ATTENTE -->
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Commandes à Valider</span>
-          <a routerLink="/comptable/commandes" class="btn btn-primary btn-sm">Valider</a>
-        </div>
-        <div class="pcm-list">
-          @for (p of precommandes; track p.id) {
-          <div class="pcm-row" [class.pcm-ready]="p.statut==='VALIDEE_COMPTABLE'">
-            <div class="pcm-id">{{ p.id }}</div>
-            <div class="pcm-com">{{ p.commercialId }}</div>
-            <div class="pcm-lignes">{{ p.nbLignes }} produit(s)</div>
-            @if (p.statut==='VALIDEE_COMPTABLE') { <span class="badge bg-success">Validée ✓</span> }
-            @else if (p.statut==='VALIDEE_SECRETAIRE') { <span class="badge bg-orange">Att. comptable</span> }
-            @else { <span class="badge bg-neutral">Att. secrétaire</span> }
+    <!-- 4-KPI SUITE CARDS -->
+    <section class="dash-21-kpi-grid">
+      <!-- KPI 1 : Versements du Jour -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Versements du Jour</span>
+          <div class="dash-21-kpi-icon-wrap icon-gold">
+            <i class="fa-solid fa-money-bill-wave"></i>
           </div>
-          } @empty {
-          <div class="empty-state">Aucune commande en attente.</div>
-          }
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(totalVersements()) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            <i class="fa-solid fa-check"></i> {{ versementsValides() }} validés
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>{{ fiche.nbVersementsEnAttente }} en attente · <strong [style.color]="fiche.nbAlertesRouges > 0 ? 'var(--r)' : 'inherit'">{{ fiche.nbAlertesRouges }} alerte(s)</strong></span>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- VALIDATIONS -->
-  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='validations'">
-    <!-- FACTURES DOIT/AVOIR -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-file-invoice"></i> Facturation Doit / Avoir</span>
-        <a routerLink="/comptable/factures" class="btn btn-ghost btn-sm">Gérer</a>
+      <!-- KPI 2 : Commandes à Valider -->
+      <div class="dash-21-kpi-card" [style.border-color]="commandesEnAttente() > 0 ? 'rgba(246, 182, 11, 0.6)' : ''">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Commandes à Valider</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value" [style.color]="commandesEnAttente() > 0 ? '#b45309' : 'inherit'">{{ commandesEnAttente() }}</span>
+          <span class="dash-21-trend-pill" [class.trend-warn]="commandesEnAttente() > 0" [class.trend-up]="commandesEnAttente() === 0">
+            {{ commandesEnAttente() > 0 ? 'Délai 17h00' : 'À jour' }}
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Précommandes J+1 pour préparation production & livraison</span>
+        </div>
       </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Numéro</th><th>Client</th><th>Type</th><th>Montant HT</th><th>TTC</th><th>Statut</th></tr></thead>
-          <tbody>
-            @for (f of factures; track f.id) {
-            <tr>
-              <td class="mono fw-bold">{{ f.numero }}</td>
-              <td>{{ f.clientNom }}</td>
-              <td>@if (f.type === 'AVOIR') { <span class="badge bg-orange badge-sm">Avoir</span> } @else { <span class="badge bg-neutral badge-sm">Facture</span> }</td>
-              <td class="mono">{{ fCFA(f.montantHT) }}</td>
-              <td class="mono">{{ fCFA(f.montantTTC) }}</td>
-              <td>@if (f.statut === 'PAYEE') { <span class="badge bg-success badge-sm">Payée</span> } @else { <span class="badge bg-neutral badge-sm">Émise</span> }</td>
-            </tr>
-            } @empty {
-            <tr><td colspan="6" class="empty-state">Aucune facture ce mois-ci.</td></tr>
-            }
-          </tbody>
-        </table>
+
+      <!-- KPI 3 : Trésorerie & Caisse -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Solde Caisse & Trésorerie</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-vault"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(fiche.sCaisse) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            <i class="fa-solid fa-arrow-trend-up"></i> CA: {{ fCFA(caMois) }}
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Entrées {{ fCFA(fiche.totalEntrees) }} · Sorties {{ fCFA(fiche.totalSorties) }}</span>
+        </div>
       </div>
+
+      <!-- KPI 4 : Créances & Recouvrement -->
+      <div class="dash-21-kpi-card" [style.border-color]="totalDettes() > 0 ? 'rgba(194, 43, 43, 0.3)' : ''">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Créances & Recouvrement</span>
+          <div class="dash-21-kpi-icon-wrap icon-red">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value" [style.color]="totalDettes() > 0 ? 'var(--r)' : 'inherit'">{{ fCFA(totalDettes()) }}</span>
+          <span class="dash-21-trend-pill trend-neutral">
+            DSO: {{ dso() }} jours
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>{{ dossierActifs() }} dossier(s) actif(s) · Encaissé {{ fCFA(totalEncaisse()) }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ONGLETS MODERNES -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1.5px solid var(--n200);padding-bottom:8px">
+      <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="activeTab() === 'apercu'" [class.dash-21-btn-ghost]="activeTab() !== 'apercu'" (click)="setTab('apercu')">
+        <i class="fa-solid fa-gauge-high"></i> Vue Opérationnelle
+      </button>
+      <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="activeTab() === 'validations'" [class.dash-21-btn-ghost]="activeTab() !== 'validations'" (click)="setTab('validations')">
+        <i class="fa-solid fa-file-invoice"></i> Factures & Primes Semaine
+      </button>
+      <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="activeTab() === 'pilotage'" [class.dash-21-btn-ghost]="activeTab() !== 'pilotage'" (click)="setTab('pilotage')">
+        <i class="fa-solid fa-scale-unbalanced"></i> Engagements Budgétaires & Variance
+      </button>
     </div>
 
-    <!-- PRIMES -->
-    <div class="card table-card card-mt">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-award"></i> Calcul des primes hebdomadaires</span>
-        <span class="badge badge-secondary badge-sm">{{ fCFA(primeMontant) }} à verser</span>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead><tr><th>Commercial</th><th>Taux global</th><th>Gammes ≥75%</th><th>Prime</th></tr></thead>
-          <tbody>
-            @for (p of primes; track p.commercialId) {
-            <tr [class.row-winner]="p.eligible">
-              <td class="fw-bold">{{ p.commercialId }}</td>
-              <td class="mono">{{ p.tauxGlobal }}%</td>
-              <td class="mono">{{ p.gammesValidees }}/{{ p.gammesTotal }}</td>
-              <td>@if (p.eligible) { <span class="badge bg-success badge-sm">{{ fCFA(p.montant) }}</span> } @else { <span class="badge bg-neutral badge-sm">-</span> }</td>
-            </tr>
-            } @empty {
-            <tr><td colspan="4" class="empty-state">Aucune prime calculée pour cette semaine.</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+    <!-- MAIN 2:1 SPLIT GRID -->
+    <div class="dash-21-grid">
+      <!-- LEFT / MAIN COLUMN (2fr) -->
+      <div class="dash-21-main-col">
 
-  <!-- PILOTAGE -->
-  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='pilotage'">
-    <div class="section-row">
-      <div class="card table-card">
-        <div class="card-hd"><span class="card-title"><i class="fa-solid fa-receipt"></i> Engagement budgétaire par poste</span></div>
-        <div class="budget-list">
-          @for (b of budget; track b.id) {
-          <div class="budget-row">
-            <div class="budget-row-hd">
-              <span class="fw-bold">{{ b.poste }}</span>
-              <span class="mono">{{ fCFA(b.engage) }} · {{ budgetPart(b) }}%</span>
+        @if (activeTab() === 'apercu') {
+          <!-- VERSEMENTS DU JOUR TABLE CARD -->
+          <div class="dash-21-card" style="margin-bottom:16px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-money-bill-wave" style="color:var(--y)"></i> Flux des Versements Commerciaux</h3>
+                <span class="dash-21-card-hint">Pointage des versements cash et chèques du jour</span>
+              </div>
+              <a routerLink="/secretaire/versements" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Voir tout</a>
             </div>
-            <div class="prog-track-wide"><div class="prog-bar" [style.width.%]="budgetPart(b)"></div></div>
+
+            <div class="table-container" style="max-height:300px;overflow-y:auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Commercial</th>
+                    <th>Montant Versé</th>
+                    <th>Mode</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (v of versements; track v.id) {
+                    <tr [class.row-alert]="v.alerteRouge">
+                      <td>
+                        <span class="meta-tag"><code>COM-{{ v.commercialId }}</code></span>
+                      </td>
+                      <td class="mono fw-bold" style="color:var(--g-d)">
+                        {{ v.cashVerse ? fCFA(v.cashVerse) : '-' }}
+                      </td>
+                      <td>
+                        <span style="font-size:12px;font-weight:600">{{ v.typeVersement || 'Espèces' }}</span>
+                      </td>
+                      <td>
+                        @if (v.statut === 'VALIDE') {
+                          <span class="badge badge-success"><i class="fa-solid fa-check"></i> Validé</span>
+                        } @else if (v.alerteRouge) {
+                          <span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> Alerte rouge</span>
+                        } @else {
+                          <span class="badge badge-warning"><i class="fa-solid fa-clock"></i> À pointer</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="4" style="text-align:center;padding:32px;color:var(--n400)">
+                        <i class="fa-solid fa-receipt" style="font-size:24px;margin-bottom:6px;display:block"></i>
+                        Aucun versement enregistré aujourd'hui.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
-          } @empty {
-          <div class="empty-state">Aucun poste budgétaire enregistré.</div>
-          }
-        </div>
+
+          <!-- COMMANDES EN ATTENTE DE VALIDATION -->
+          <div class="dash-21-card">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-clipboard-list" style="color:var(--g)"></i> Précommandes en Attente de Validation Comptable</h3>
+                <span class="dash-21-card-hint">Validation requise avant envoi à la préparation dépôt</span>
+              </div>
+              <a routerLink="/comptable/commandes" class="dash-21-btn dash-21-btn-primary" style="padding:6px 14px;font-size:11.5px">
+                <i class="fa-solid fa-check-double"></i> Écran de Validation
+              </a>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              @for (p of precommandes; track p.id) {
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:#F8FAF8;border:1.5px solid var(--n200)">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:34px;height:34px;border-radius:8px;background:rgba(20,83,45,0.08);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:14px">
+                      <i class="fa-solid fa-box"></i>
+                    </div>
+                    <div>
+                      <div style="font-weight:700;color:var(--g-d);font-size:13px">{{ p.id }} · Commercial : {{ p.commercialId }}</div>
+                      <div style="font-size:11.5px;color:var(--n500)">{{ p.nbLignes }} ligne(s) d'articles commandés</div>
+                    </div>
+                  </div>
+                  <div>
+                    @if (p.statut === 'VALIDEE_COMPTABLE') {
+                      <span class="badge badge-success"><i class="fa-solid fa-check"></i> Validée</span>
+                    } @else if (p.statut === 'VALIDEE_SECRETAIRE') {
+                      <span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Visa Comptable Requis</span>
+                    } @else {
+                      <span class="badge badge-neutral">Attente Secrétaire</span>
+                    }
+                  </div>
+                </div>
+              } @empty {
+                <div style="text-align:center;padding:32px;color:var(--n400)">
+                  <i class="fa-solid fa-check-circle" style="font-size:24px;margin-bottom:6px;display:block;color:var(--g)"></i>
+                  Toutes les précommandes sont à jour de validation comptable.
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (activeTab() === 'validations') {
+          <!-- FACTURATION DOIT / AVOIR -->
+          <div class="dash-21-card" style="margin-bottom:16px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-file-invoice" style="color:var(--g)"></i> Facturation Clientèle (Doit & Avoir)</h3>
+                <span class="dash-21-card-hint">Journal des pièces facturées sur le mois en cours</span>
+              </div>
+              <a routerLink="/comptable/factures" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Gérer factures</a>
+            </div>
+
+            <div class="table-container" style="max-height:280px;overflow-y:auto">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Numéro</th>
+                    <th>Client</th>
+                    <th>Type</th>
+                    <th>Montant HT</th>
+                    <th>Montant TTC</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of factures; track f.id) {
+                    <tr>
+                      <td class="mono fw-bold">{{ f.numero }}</td>
+                      <td>{{ f.clientNom }}</td>
+                      <td>
+                        @if (f.type === 'AVOIR') {
+                          <span class="badge badge-warning">Avoir</span>
+                        } @else {
+                          <span class="badge badge-neutral">Facture</span>
+                        }
+                      </td>
+                      <td class="mono">{{ fCFA(f.montantHT) }}</td>
+                      <td class="mono fw-bold" style="color:var(--g-d)">{{ fCFA(f.montantTTC) }}</td>
+                      <td>
+                        @if (f.statut === 'PAYEE') {
+                          <span class="badge badge-success"><i class="fa-solid fa-check"></i> Payée</span>
+                        } @else {
+                          <span class="badge badge-neutral">Émise</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--n400)">Aucune facture ce mois-ci.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PRIMES COMMERCIALES -->
+          <div class="dash-21-card">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-award" style="color:var(--y)"></i> Calcul Hebdomadaire des Primes Commerciales</h3>
+                <span class="dash-21-card-hint">Condition : Taux global >= 75% sur les gammes cibles</span>
+              </div>
+              <span class="badge badge-secondary" style="font-size:12px;padding:4px 10px">{{ fCFA(primeMontant) }} à verser</span>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Commercial</th>
+                    <th>Taux Global</th>
+                    <th>Gammes Validées</th>
+                    <th>Prime Accordée</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of primes; track p.commercialId) {
+                    <tr [class.row-winner]="p.eligible">
+                      <td class="fw-bold">{{ p.commercialId }}</td>
+                      <td class="mono">
+                        <span class="taux-chip" [class.taux-ok]="p.tauxGlobal >= 75" [class.taux-warn]="p.tauxGlobal < 75">{{ p.tauxGlobal }}%</span>
+                      </td>
+                      <td class="mono">{{ p.gammesValidees }} / {{ p.gammesTotal }}</td>
+                      <td>
+                        @if (p.eligible) {
+                          <span class="badge badge-success fw-bold">{{ fCFA(p.montant) }}</span>
+                        } @else {
+                          <span class="badge badge-neutral">Non éligible</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--n400)">Aucune prime calculée pour cette semaine.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        @if (activeTab() === 'pilotage') {
+          <!-- ENGAGEMENTS BUDGÉTAIRES -->
+          <div class="dash-21-card" style="margin-bottom:16px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-receipt" style="color:var(--g)"></i> Engagement Budgétaire par Poste</h3>
+                <span class="dash-21-card-hint">Consommation des enveloppes de dépenses autorisées</span>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+              @for (b of budget; track b.id) {
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12.5px">
+                    <span style="font-weight:700;color:var(--g-d)">{{ b.poste }}</span>
+                    <span class="mono" style="font-weight:600">{{ fCFA(b.engage) }} · <strong>{{ budgetPart(b) }}%</strong></span>
+                  </div>
+                  <div style="height:8px;background:var(--n200);border-radius:4px;overflow:hidden">
+                    <div style="height:100%;border-radius:4px;background:linear-gradient(90deg, var(--g) 0%, var(--y) 100%)" [style.width.%]="budgetPart(b)"></div>
+                  </div>
+                </div>
+              } @empty {
+                <div style="text-align:center;padding:24px;color:var(--n400)">Aucun poste budgétaire enregistré.</div>
+              }
+            </div>
+          </div>
+
+          <!-- ANALYSE DE VARIANCE -->
+          <div class="dash-21-card">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-scale-unbalanced" style="color:var(--y)"></i> Analyse de Variance (Standard vs Réel)</h3>
+                <span class="dash-21-card-hint">Mesure des écarts de coûts industriels et commerciaux</span>
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Poste Analytique</th>
+                    <th>Standard</th>
+                    <th>Réel</th>
+                    <th>Écart Relatif</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (v of variance; track v.poste) {
+                    <tr>
+                      <td style="font-weight:600">{{ v.poste }}</td>
+                      <td class="mono">{{ v.standard }}</td>
+                      <td class="mono">{{ v.reel }}</td>
+                      <td>
+                        <span class="taux-chip" [class.taux-warn]="variancePct(v) > 0" [class.taux-ok]="variancePct(v) <= 0">
+                          {{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%
+                        </span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--n400)">Aucune variance calculée.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
       </div>
 
-      <div class="card ranking-card">
-        <div class="card-hd"><span class="card-title"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (coûts)</span></div>
-        <div class="tbl-wrap">
-          <table class="data-table">
-            <thead><tr><th>Poste</th><th>Standard</th><th>Réel</th><th>Écart</th></tr></thead>
-            <tbody>
-              @for (v of variance; track v.poste) {
-              <tr>
-                <td class="variance-poste">{{ v.poste }}</td>
-                <td class="mono">{{ v.standard }}</td>
-                <td class="mono">{{ v.reel }}</td>
-                <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
-              </tr>
-              } @empty {
-              <tr><td colspan="4" class="empty-state">Aucune donnée de variance.</td></tr>
-              }
-            </tbody>
-          </table>
+      <!-- RIGHT COLUMN (1fr) : GAUGES & RANKINGS -->
+      <div class="dash-21-side-col">
+        <!-- INDICATEURS CLÉS / GAUGES -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-sliders" style="color:var(--y)"></i> Ratios & Efficience</h3>
+              <span class="dash-21-card-hint">Suivi de la santé financière</span>
+            </div>
+          </div>
+
+          <div class="dash-21-gauge-list">
+            <!-- Jauge Recouvrement -->
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-label-row">
+                <span class="dash-21-gauge-title">Recouvrement Clients</span>
+                <span class="dash-21-gauge-val">
+                  {{ totalDettes() > 0 ? Math.round((totalEncaisse() / (totalEncaisse() + totalDettes())) * 100) : 100 }}%
+                </span>
+              </div>
+              <div class="dash-21-gauge-track">
+                <div class="dash-21-gauge-fill" [style.width.%]="totalDettes() > 0 ? Math.round((totalEncaisse() / (totalEncaisse() + totalDettes())) * 100) : 100"></div>
+              </div>
+              <span class="dash-21-gauge-sub">
+                Encaissé {{ fCFA(totalEncaisse()) }} / Dettes {{ fCFA(totalDettes()) }}
+              </span>
+            </div>
+
+            <!-- Jauge Validation Versements -->
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-label-row">
+                <span class="dash-21-gauge-title">Taux de Pointage Versements</span>
+                <span class="dash-21-gauge-val">
+                  {{ versements.length > 0 ? Math.round((versementsValides() / versements.length) * 100) : 100 }}%
+                </span>
+              </div>
+              <div class="dash-21-gauge-track">
+                <div class="dash-21-gauge-fill" [style.width.%]="versements.length > 0 ? Math.round((versementsValides() / versements.length) * 100) : 100"></div>
+              </div>
+              <span class="dash-21-gauge-sub">
+                {{ versementsValides() }} validé(s) sur {{ versements.length }} bordereaux reçus
+              </span>
+            </div>
+
+            <!-- Jauge DSO -->
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-label-row">
+                <span class="dash-21-gauge-title">Délai Moyen Client (DSO)</span>
+                <span class="dash-21-gauge-val">{{ dso() }} jours</span>
+              </div>
+              <div class="dash-21-gauge-track">
+                <div class="dash-21-gauge-fill" [style.width.%]="Math.min(100, Math.round((dso() / 60) * 100))" [style.background]="dso() > 45 ? 'var(--r)' : 'var(--g)'"></div>
+              </div>
+              <span class="dash-21-gauge-sub">
+                Objectif de l'entreprise : < 30 jours
+              </span>
+            </div>
+          </div>
         </div>
+
+        <!-- TOP COMMERCIAUX PRIMES RANKING -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-trophy" style="color:var(--y)"></i> Palmarès Primes</h3>
+              <span class="dash-21-card-hint">Commerciaux éligibles cette semaine</span>
+            </div>
+          </div>
+
+          <div class="dash-21-top-list">
+            @for (p of primes; track p.commercialId; let idx = $index) {
+              @if (p.eligible) {
+                <div class="dash-21-top-item">
+                  <span class="dash-21-rank-badge" [class.rank-1]="idx === 0" [class.rank-2]="idx === 1" [class.rank-3]="idx === 2">
+                    {{ idx + 1 }}
+                  </span>
+                  <div class="dash-21-top-info">
+                    <span class="dash-21-top-name">{{ p.commercialId }}</span>
+                    <span class="dash-21-top-sub">Taux atteint : {{ p.tauxGlobal }}% · {{ p.gammesValidees }} gammes</span>
+                  </div>
+                  <div class="dash-21-top-stat">
+                    <span class="dash-21-top-val" style="color:var(--g)">{{ fCFA(p.montant) }}</span>
+                  </div>
+                </div>
+              }
+            } @empty {
+              <div style="text-align:center;padding:24px;color:var(--n400);font-size:12px">
+                Aucun commercial éligible pour le moment.
+              </div>
+            }
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
   }
 </div>

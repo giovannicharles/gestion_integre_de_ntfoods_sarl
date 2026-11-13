@@ -1,312 +1,352 @@
-<div class="dash animate-fadeInUp">
-  <!-- HEADER -->
-  <div class="ph ph-wm-controle">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
-      <div>
-        <div class="ph-title">Contrôle de Gestion</div>
-        <div class="ph-sub">Audit · Rentabilité réelle · Sécurisation des flux · {{ today | date:'EEEE dd MMMM
-          yyyy':'':'fr' }}</div>
+<div class="dash-21-root animate-fadeIn">
+  <!-- 21ST CENTURY TANTY HEADER -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Contrôle de Gestion & Audit</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          EN DIRECT · SÉCURISATION DES FLUX
+        </span>
       </div>
+      <p class="dash-21-subtitle">
+        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Surveillance de rentabilité réelle, audit des écarts & pilotage budgétaire
+      </p>
     </div>
-    <div class="ph-actions">
-      <a routerLink="/controle/consommables" class="btn btn-ghost btn-sm"><i class="fa-solid fa-boxes-packing"></i>
-        Consommables</a>
-      <a routerLink="/controle/audit" class="btn btn-outline btn-sm"><i class="fa-solid fa-fingerprint"></i> Piste
-        d'audit</a>
-      <a routerLink="/controle/decaissements" class="btn btn-primary btn-sm"><i
-          class="fa-solid fa-money-check-dollar"></i> Décaissements</a>
-      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i
-          class="fa-solid fa-rotate"></i></button>
+
+    <div class="dash-21-actions">
+      <a routerLink="/controle/consommables" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-boxes-packing"></i> Consommables
+      </a>
+      <a routerLink="/controle/audit" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-fingerprint"></i> Piste d'audit
+      </a>
+      <a routerLink="/controle/decaissements" class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-money-check-dollar"></i> Décaissements
+      </a>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser les flux">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
     </div>
-  </div>
+  </header>
 
   @if (loading()) {
-  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du tableau de bord…</div>
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Audit analytique des marges et budgets en cours...</p>
+    </div>
   } @else if (loadError()) {
-  <div class="error-state">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <p>{{ loadError() }}</p>
-    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
-  </div>
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Erreur lors de la synchronisation du contrôle</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+    </div>
   } @else {
 
-  <!-- ALERTE ÉCARTS ROUGES -->
-  @if (ecartsRouges() > 0) {
-  <div class="alert-banner-red ctrl-alert-between">
-    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ ecartsRouges() }} alerte(s) rouge(s) · écart entre CA
-      déclaré et cash versé à justifier.</span>
-    <a routerLink="/controle/ecarts" class="btn btn-danger btn-sm">Examiner les écarts</a>
-  </div>
-  }
-
-  <!-- KPI (Charte TANTY : Vert / Or / Rouge) -->
-  <div class="kpi-grid">
-    <div class="kpi-card kp-g">
-      <div class="kpi-decor"></div>
-      <div class="kpi-ico ig"><i class="fa-solid fa-vault"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Trésorerie réelle</span>
-        <span class="kpi-val">{{ fCFA(tresorerie()) }}</span>
-        <span class="kpi-meta">Solde caisse encaissé</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Ventes à crédit</span>
-        <span class="kpi-val">{{ fCFA(ventesCredit()) }}</span>
-        <span class="kpi-meta">Encours clients à surveiller</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-b">
-      <div class="kpi-decor kd-b"></div>
-      <div class="kpi-ico ib"><i class="fa-solid fa-percent"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Marge nette moyenne</span>
-        <span class="kpi-val">{{ margeMoyenne() }}%</span>
-        <div class="prog-bar-wrap ctrl-mini-prog">
-          <div class="prog-bar" [class.prog-g]="margeMoyenne()>=35"
-            [class.prog-y]="margeMoyenne()>=25 && margeMoyenne()<35" [class.prog-r]="margeMoyenne()<25"
-            [style.width.%]="Math.min(margeMoyenne(), 100)"></div>
+    <!-- ALERTE ÉCARTS ROUGES EN CAS D'ANOMALIE -->
+    @if (ecartsRouges() > 0) {
+      <div class="stock-alert-msg alert-danger" style="margin-bottom:16px;padding:12px 18px;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size:16px"></i>
+          <span><strong>{{ ecartsRouges() }} alerte(s) rouge(s) détectée(s) :</strong> Écart non justifié entre le CA commercial déclaré et les dépôts de cash constatés.</span>
         </div>
-        <span class="kpi-meta">Sur coûts de revient réels</span>
+        <a routerLink="/controle/ecarts" class="dash-21-btn dash-21-btn-primary" style="padding:5px 12px;font-size:11px">Examiner les écarts</a>
       </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-decor kd-y"></div>
-      <div class="kpi-ico iy"><i class="fa-solid fa-boxes-stacked"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Valorisation stock (PMP)</span>
-        <span class="kpi-val">{{ fCFA(valoStock()) }}</span>
-        <span class="kpi-meta">3 magasins consolidés</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- SYNTHÈSE BUDGÉTAIRE + DÉCAISSEMENTS EN COURS -->
-  <div class="section-row">
-    <div class="card table-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-money-check-dollar"></i> Décaissements en cours</span>
-        <div class="ctrl-hd-actions">
-          <span class="badge bg-red badge-sm">{{ decaissementsAttente() }} en attente</span>
-          <a routerLink="/controle/decaissements" class="btn btn-ghost btn-sm">Voir tout</a>
-        </div>
-      </div>
-      @if (decaissementsEnCours().length > 0) {
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>N°</th>
-              <th>Bénéficiaire</th>
-              <th class="text-right">Montant</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
-            <tr>
-              <td class="fw-bold mono">{{ d.numeroDecaissement }}</td>
-              <td>{{ d.beneficiaire }}</td>
-              <td class="text-right mono fw-bold">{{ fCFA(d.montantFCFA) }}</td>
-              <td>
-                @if (d.statut === 'PROPOSE') {
-                <span class="badge bg-orange badge-sm">Proposé · att. DG (1)</span>
-                } @else {
-                <span class="badge bg-success badge-sm">DG (1) ✓ · att. DG (2)</span>
-                }
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      } @else {
-      <div class="empty-state">Aucun décaissement en attente de visa.</div>
-      }
-    </div>
-
-    <div class="card ranking-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-wallet"></i> Synthèse d'exécution budgétaire</span>
-        @if (budgetDepasse() > 0) {
-        <span class="badge bg-red badge-sm">{{ budgetDepasse() }} dépassement(s)</span>
-        } @else {
-        <span class="badge bg-success badge-sm">Sous contrôle</span>
-        }
-      </div>
-      <div class="ctrl-qs-body">
-        <div class="ctrl-qs-row">
-          <div class="ctrl-qs-hd">
-            <span class="ctrl-qs-lbl">Budget global engagé</span>
-            <span class="ctrl-qs-val mono">{{ fCFA(budgetEngage()) }} / {{ fCFA(budgetTotal()) }}</span>
-          </div>
-          <div class="prog-track-wide">
-            <div class="prog-bar" [class.prog-g]="tauxConsommationBudget() < 80"
-              [class.prog-y]="tauxConsommationBudget() >= 80 && tauxConsommationBudget() < 100"
-              [class.prog-r]="tauxConsommationBudget() >= 100"
-              [style.width.%]="Math.min(tauxConsommationBudget(), 100)"></div>
-          </div>
-          <div class="ctrl-qs-foot">
-            <span>Taux d'engagement : <strong>{{ tauxConsommationBudget() }}%</strong></span>
-            <span>Anomalies critiques : <strong [class.text-danger]="anomaliesElevees() > 0">{{ anomaliesElevees()
-                }}</strong></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MARGES PAR PRODUIT -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-chart-line"></i> Marge par produit (coût de revient réel)</span>
-      <a routerLink="/controle/marges" class="btn btn-ghost btn-sm">Détail</a>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Produit</th>
-            <th>Prix vente</th>
-            <th>Coût revient</th>
-            <th>Marge unit.</th>
-            <th>Taux marge</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (m of marges(); track m.code) {
-          <tr [class.row-alert]="m.margePct < 30">
-            <td class="fw-bold">{{ m.designation }}</td>
-            <td class="mono">{{ fCFA(m.prixVente) }}</td>
-            <td class="mono">{{ fCFA(m.coutRevient) }}</td>
-            <td class="mono">{{ fCFA(m.marge) }}</td>
-            <td>
-              <span class="taux-chip" [class.taux-ok]="m.margePct>=38"
-                [class.taux-mid]="m.margePct>=30 && m.margePct<38" [class.taux-warn]="m.margePct<30">{{ m.margePct
-                }}%</span>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="5" class="empty-state">Aucune donnée de marge disponible.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- BUDGET + VARIANCE -->
-  <div class="charts-row-2 charts-row-2-mt0">
-    <div class="card card-p4">
-      <div class="card-title card-title-mb"><i class="fa-solid fa-wallet"></i> Budget par poste</div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Poste</th>
-              <th class="text-right">Budget</th>
-              <th class="text-right">Engagé</th>
-              <th>Utilisation</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (b of budget(); track b.id) {
-            <tr [class.row-alert]="b.engage > b.budget">
-              <td class="fw-bold">{{ b.poste }}</td>
-              <td class="text-right mono">{{ fCFA(b.budget) }}</td>
-              <td class="text-right mono">{{ fCFA(b.engage) }}</td>
-              <td>
-                <div class="ctrl-prog-cell">
-                  <div class="prog-bar-wrap ctrl-prog-bar">
-                    <div class="prog-bar" [class.prog-r]="budgetPct(b)>=100"
-                      [class.prog-y]="budgetPct(b)>=80 && budgetPct(b)<100" [class.prog-g]="budgetPct(b)<80"
-                      [style.width.%]="Math.min(budgetPct(b), 100)"></div>
-                  </div>
-                  <span class="taux-chip" [class.taux-warn]="budgetPct(b)>=100"
-                    [class.taux-mid]="budgetPct(b)>=80 && budgetPct(b)<100" [class.taux-ok]="budgetPct(b)<80">{{
-                    budgetPct(b) }}%</span>
-                </div>
-              </td>
-            </tr>
-            } @empty {
-            <tr>
-              <td colspan="4" class="empty-state">Aucun poste budgétaire défini.</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card card-p4">
-      <div class="card-title card-title-mb"><i class="fa-solid fa-scale-unbalanced"></i> Analyse de variance (standard
-        vs réel)</div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Poste</th>
-              <th>Standard</th>
-              <th>Réel</th>
-              <th>Écart</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (v of variances(); track v.poste) {
-            <tr>
-              <td class="fw-bold">{{ v.poste }}</td>
-              <td class="mono">{{ v.standard }}</td>
-              <td class="mono">{{ v.reel }}</td>
-              <td><span class="taux-chip" [class.taux-warn]="variancePct(v)>0" [class.taux-ok]="variancePct(v)<=0">{{
-                  variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%</span></td>
-            </tr>
-            } @empty {
-            <tr>
-              <td colspan="4" class="empty-state">Aucune donnée de variance enregistrée.</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ANOMALIES -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-user-secret"></i> Anomalies détectées</span>
-      <span class="badge bg-red badge-sm">{{ anomaliesElevees() }} niveau élevé</span>
-    </div>
-    @if (anomalies().length > 0) {
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Catégorie</th>
-            <th>Référence</th>
-            <th>Description</th>
-            <th>Concerné</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (a of anomalies(); track a.reference) {
-          <tr class="row-alert">
-            <td class="fw-bold">{{ a.categorie }}</td>
-            <td class="mono">{{ a.reference }}</td>
-            <td>{{ a.description }}</td>
-            <td>{{ a.matriculeConcerne ?? '-' }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    } @else {
-    <div class="empty-state">Aucune anomalie détectée.</div>
     }
-  </div>
+
+    <!-- 4-KPI SUITE CARDS -->
+    <section class="dash-21-kpi-grid">
+      <!-- KPI 1 : Trésorerie réelle -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Trésorerie Réelle</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-vault"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(tresorerie()) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            <i class="fa-solid fa-shield-halved"></i> Encaissé
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Solde physique disponible après décaissements validés</span>
+        </div>
+      </div>
+
+      <!-- KPI 2 : Ventes à crédit -->
+      <div class="dash-21-kpi-card" [style.border-color]="ventesCredit() > 0 ? 'rgba(194, 43, 43, 0.35)' : ''">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Encours Ventes à Crédit</span>
+          <div class="dash-21-kpi-icon-wrap icon-red">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value" [style.color]="ventesCredit() > 0 ? 'var(--r)' : 'inherit'">{{ fCFA(ventesCredit()) }}</span>
+          <span class="dash-21-trend-pill trend-warn">
+            À recouvrir
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Risque client et dépassements d'échéances surveillés</span>
+        </div>
+      </div>
+
+      <!-- KPI 3 : Marge nette moyenne -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Marge Nette Moyenne</span>
+          <div class="dash-21-kpi-icon-wrap icon-gold">
+            <i class="fa-solid fa-percent"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ margeMoyenne() }}%</span>
+          <span class="dash-21-trend-pill" [class.trend-up]="margeMoyenne() >= 30" [class.trend-warn]="margeMoyenne() < 30">
+            Objectif: 35%
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Calculée sur les coûts de revient réels de fabrication</span>
+        </div>
+      </div>
+
+      <!-- KPI 4 : Valorisation du Stock -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Valorisation Stock (PMP)</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(valoStock()) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            3 Magasins
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Actif circulant consolidé (Central, Tampon, Mobile)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2:1 SPLIT GRID -->
+    <div class="dash-21-grid">
+      <!-- LEFT / MAIN COLUMN (2fr) -->
+      <div class="dash-21-main-col">
+
+        <!-- MARGE PAR PRODUIT TABLE -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-line" style="color:var(--g)"></i> Rentabilité par Produit (Coûts Réels)</h3>
+              <span class="dash-21-card-hint">Marge unitaire nette après imputation des matières et conditionnements</span>
+            </div>
+            <a routerLink="/controle/marges" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Détail des calculs</a>
+          </div>
+
+          <div class="table-container" style="max-height:300px;overflow-y:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Produit fini</th>
+                  <th>Prix de Vente</th>
+                  <th>Coût de Revient</th>
+                  <th>Marge Unitaire</th>
+                  <th>Taux de Marge</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of marges(); track m.code) {
+                  <tr [class.row-alert]="m.margePct < 30">
+                    <td class="fw-bold">{{ m.designation }}</td>
+                    <td class="mono">{{ fCFA(m.prixVente) }}</td>
+                    <td class="mono">{{ fCFA(m.coutRevient) }}</td>
+                    <td class="mono fw-bold" style="color:var(--g-d)">{{ fCFA(m.marge) }}</td>
+                    <td>
+                      <span class="taux-chip" [class.taux-ok]="m.margePct >= 38" [class.taux-mid]="m.margePct >= 30 && m.margePct < 38" [class.taux-warn]="m.margePct < 30">
+                        {{ m.margePct }}%
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--n400)">Aucune donnée de marge disponible.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- DÉCAISSEMENTS EN COURS -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-money-check-dollar" style="color:var(--y)"></i> Décaissements à Contrôler</h3>
+              <span class="dash-21-card-hint">Demandes de règlement soumises au double visa</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="badge badge-warning" style="font-size:11.5px">{{ decaissementsAttente() }} en attente</span>
+              <a routerLink="/controle/decaissements" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Tout voir</a>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>N° Bordereau</th>
+                  <th>Bénéficiaire</th>
+                  <th class="text-right">Montant FCFA</th>
+                  <th>Étape de Validation</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (d of decaissementsEnCours(); track d.numeroDecaissement) {
+                  <tr>
+                    <td class="fw-bold mono">{{ d.numeroDecaissement }}</td>
+                    <td>{{ d.beneficiaire }}</td>
+                    <td class="text-right mono fw-bold" style="color:var(--g-d)">{{ fCFA(d.montantFCFA) }}</td>
+                    <td>
+                      @if (d.statut === 'PROPOSE') {
+                        <span class="badge badge-warning"><i class="fa-solid fa-hourglass-start"></i> Proposé · Attente DG (1)</span>
+                      } @else {
+                        <span class="badge badge-success"><i class="fa-solid fa-check"></i> DG (1) Validé · Attente DG (2)</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--n400)">Aucun décaissement en attente de visa.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ANOMALIES & AUDIT TRAIL -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-fingerprint" style="color:var(--r)"></i> Journal des Anomalies & Écarts Opérationnels</h3>
+              <span class="dash-21-card-hint">Événements d'alerte horodatés nécessitant un audit</span>
+            </div>
+            @if (anomaliesElevees() > 0) {
+              <span class="badge badge-danger" style="font-size:11.5px">{{ anomaliesElevees() }} critique(s)</span>
+            }
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Catégorie</th>
+                  <th>Référence</th>
+                  <th>Description de l'incident</th>
+                  <th>Agent concerné</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of anomalies(); track a.reference) {
+                  <tr class="row-alert">
+                    <td class="fw-bold" style="color:var(--r)">{{ a.categorie }}</td>
+                    <td class="mono"><code>{{ a.reference }}</code></td>
+                    <td>{{ a.description }}</td>
+                    <td><span class="meta-tag">{{ a.matriculeConcerne || 'Non spécifié' }}</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--n400)">
+                    <i class="fa-solid fa-shield-check" style="color:var(--g);font-size:20px;display:block;margin-bottom:4px"></i>
+                    Aucune anomalie critique détectée. Tous les indicateurs sont au vert.
+                  </td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN (1fr) : GAUGES & BUDGET -->
+      <div class="dash-21-side-col">
+
+        <!-- EXÉCUTION BUDGÉTAIRE GAUGE -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-wallet" style="color:var(--g)"></i> Exécution Budgétaire</h3>
+              <span class="dash-21-card-hint">Consommation globale exercice</span>
+            </div>
+            @if (budgetDepasse() > 0) {
+              <span class="badge badge-danger" style="font-size:11px">{{ budgetDepasse() }} dépassement(s)</span>
+            } @else {
+              <span class="badge badge-success" style="font-size:11px">Sous contrôle</span>
+            }
+          </div>
+
+          <div class="dash-21-gauge-list">
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-label-row">
+                <span class="dash-21-gauge-title">Consommation Globale</span>
+                <span class="dash-21-gauge-val">{{ tauxConsommationBudget() }}%</span>
+              </div>
+              <div class="dash-21-gauge-track">
+                <div class="dash-21-gauge-fill" [style.width.%]="Math.min(tauxConsommationBudget(), 100)" [style.background]="tauxConsommationBudget() >= 100 ? 'var(--r)' : (tauxConsommationBudget() >= 80 ? 'var(--y)' : 'var(--g)')"></div>
+              </div>
+              <span class="dash-21-gauge-sub">
+                Engagé : {{ fCFA(budgetEngage()) }} sur {{ fCFA(budgetTotal()) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- POSTES BUDGÉTAIRES INDIVIDUELS -->
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:11.5px;font-weight:700;color:var(--g-d);text-transform:uppercase;letter-spacing:0.5px">Détail par poste :</div>
+            @for (b of budget(); track b.id) {
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:12px">
+                  <span style="font-weight:600">{{ b.poste }}</span>
+                  <span class="mono" style="font-weight:700" [style.color]="budgetPct(b) > 100 ? 'var(--r)' : 'inherit'">{{ budgetPct(b) }}%</span>
+                </div>
+                <div style="height:6px;background:var(--n200);border-radius:3px;overflow:hidden">
+                  <div style="height:100%;border-radius:3px;background:var(--g)" [style.width.%]="Math.min(budgetPct(b), 100)" [style.background]="budgetPct(b) > 100 ? 'var(--r)' : (budgetPct(b) > 80 ? 'var(--y)' : 'var(--g)')"></div>
+                </div>
+              </div>
+            } @empty {
+              <div style="font-size:12px;color:var(--n400)">Aucun poste budgétaire paramétré.</div>
+            }
+          </div>
+        </div>
+
+        <!-- ANALYSE DE VARIANCE STANDARD VS RÉEL -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-scale-unbalanced" style="color:var(--y)"></i> Variances de Coûts</h3>
+              <span class="dash-21-card-hint">Écarts standardisés vs constatés</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px">
+            @for (v of variances(); track v.poste) {
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;background:#F8FAF8;border:1px solid var(--n150)">
+                <div>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--g-d)">{{ v.poste }}</div>
+                  <div style="font-size:11px;color:var(--n500)">Std: {{ v.standard }} · Réel: {{ v.reel }}</div>
+                </div>
+                <span class="taux-chip" [class.taux-warn]="variancePct(v) > 0" [class.taux-ok]="variancePct(v) <= 0">
+                  {{ variancePct(v) > 0 ? '+' : '' }}{{ variancePct(v) }}%
+                </span>
+              </div>
+            } @empty {
+              <div style="text-align:center;padding:20px;color:var(--n400);font-size:12px">Aucune variance constatée.</div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
   }
 </div>

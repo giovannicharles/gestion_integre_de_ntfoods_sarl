@@ -1,226 +1,300 @@
-<div class="dash animate-fadeInUp">
-  <!-- HEADER -->
-  <div class="ph ph-wm-rp">
-    <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-briefcase"></i></div>
-      <div>
-        <div class="ph-title">Pilotage RP & Commercial</div>
-        <div class="ph-sub">Animation force de vente · Grands comptes · {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</div>
+<div class="dash-21-root animate-fadeIn">
+  <!-- 21ST CENTURY TANTY HEADER -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Pilotage RP & Relations Commerciales</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          EN DIRECT · FORCE DE VENTE
+        </span>
       </div>
+      <p class="dash-21-subtitle">
+        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Animation commerciale terrain, gestion des grands comptes & primes de stimulation
+      </p>
     </div>
-    <div class="ph-actions">
-      <a routerLink="/rp/zones" class="btn btn-ghost btn-sm"><i class="fa-solid fa-map-location-dot"></i> Zones</a>
-      <a routerLink="/rp/grands-comptes" class="btn btn-ghost btn-sm"><i class="fa-solid fa-handshake"></i> Grands comptes</a>
-      <a routerLink="/rp/classement" class="btn btn-primary btn-sm"><i class="fa-solid fa-ranking-star"></i> Classement</a>
-      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser"><i class="fa-solid fa-rotate"></i></button>
+
+    <div class="dash-21-actions">
+      <a routerLink="/rp/zones" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-map-location-dot"></i> Zones
+      </a>
+      <a routerLink="/rp/grands-comptes" class="dash-21-btn dash-21-btn-ghost">
+        <i class="fa-solid fa-handshake"></i> Grands Comptes
+      </a>
+      <a routerLink="/rp/classement" class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-ranking-star"></i> Classement
+      </a>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser les performances">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
     </div>
-  </div>
+  </header>
 
   @if (loading()) {
-  <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du tableau de bord…</div>
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Consolidation des données de vente & grands comptes...</p>
+    </div>
   } @else if (loadError()) {
-  <div class="error-state">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <p>{{ loadError() }}</p>
-    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
-  </div>
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Erreur de chargement du tableau RP</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+    </div>
   } @else {
 
-  @if (relancesDues() > 0) {
-  <div class="alert-banner-red rp-alert-flex">
-    <span><i class="fa-solid fa-bell"></i> {{ relancesDues() }} grand(s) compte(s) nécessite(nt) une relance commerciale prioritaire.</span>
-    <a routerLink="/rp/grands-comptes" class="btn btn-danger btn-sm">Traiter les relances</a>
-  </div>
-  }
-
-  <!-- KPI (21st.dev Style) -->
-  <div class="kpi-grid">
-    <div class="kpi-card kp-g">
-      <div class="kpi-decor"></div>
-      <div class="kpi-ico ig"><i class="fa-solid fa-award"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Primes à verser</span>
-        <span class="kpi-val">{{ fCFA(totalPrimes()) }}</span>
-        <span class="kpi-meta"><i class="fa-solid fa-users"></i> {{ nbEligibles() }} commerciaux éligibles</span>
-      </div>
-      @if (nbEligibles() > 0) {
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-check"></i> {{ nbEligibles() }} qualifié(s)</div>
-      }
-    </div>
-    <div class="kpi-card kp-b">
-      <div class="kpi-decor kd-b"></div>
-      <div class="kpi-ico ib"><i class="fa-solid fa-map-location-dot"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Occupation marchés</span>
-        <span class="kpi-val">{{ occupationMoyenne() }}%</span>
-        <div class="prog-bar-wrap rp-mini-prog">
-          <div class="prog-bar" [class.prog-g]="occupationMoyenne()>=70" [class.prog-y]="occupationMoyenne()>=45 && occupationMoyenne()<70" [class.prog-r]="occupationMoyenne()<45" [style.width.%]="Math.min(occupationMoyenne(), 100)"></div>
+    <!-- BANDEAU RELANCES DUES -->
+    @if (relancesDues() > 0) {
+      <div class="stock-alert-msg alert-danger" style="margin-bottom:16px;padding:12px 18px;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-bell" style="font-size:16px"></i>
+          <span><strong>{{ relancesDues() }} grand(s) compte(s) en attente de relance :</strong> Actions commerciales prioritaires requises pour maintenir le flux de commandes.</span>
         </div>
-        <span class="kpi-meta">Moyenne boutiques livrées / répertoriées</span>
+        <a routerLink="/rp/grands-comptes" class="dash-21-btn dash-21-btn-primary" style="padding:5px 12px;font-size:11px">Traiter les relances</a>
       </div>
-    </div>
-    <div class="kpi-card kp-y">
-      <div class="kpi-decor kd-y"></div>
-      <div class="kpi-ico iy"><i class="fa-solid fa-handshake"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Grands comptes actifs</span>
-        <span class="kpi-val">{{ grandsComptesActifs() }}<span class="kpi-val-sub"> / {{ grandsComptes().length }}</span></span>
-        <div class="prog-bar-wrap rp-mini-prog">
-          <div class="prog-bar prog-y" [style.width.%]="tauxGrandsComptes()"></div>
-        </div>
-        <span class="kpi-meta">{{ fCFA(caGrandsComptes()) }} CA mensuel</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-r">
-      <div class="kpi-decor kd-r"></div>
-      <div class="kpi-ico ir"><i class="fa-solid fa-bell"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Relances dues</span>
-        <span class="kpi-val" [class.text-danger]="relancesDues() > 0">{{ relancesDues() }}</span>
-        <span class="kpi-meta">Clients récurrents à relancer</span>
-      </div>
-      @if (relancesDues() > 0) {
-      <div class="kpi-trend kpt-down"><i class="fa-solid fa-clock"></i> À relancer</div>
-      } @else {
-      <div class="kpi-trend kpt-up"><i class="fa-solid fa-check"></i> À jour</div>
-      }
-    </div>
-  </div>
+    }
 
-  <!-- CLASSEMENT + PRIMES -->
-  <div class="section-row">
-    <div class="card table-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement & primes hebdomadaires</span>
-        <span class="badge badge-secondary badge-sm">Seuil 80% global · 75% / gamme</span>
+    <!-- 4-KPI SUITE CARDS -->
+    <section class="dash-21-kpi-grid">
+      <!-- KPI 1 : Primes à verser -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Primes Hebdo à Verser</span>
+          <div class="dash-21-kpi-icon-wrap icon-gold">
+            <i class="fa-solid fa-award"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(totalPrimes()) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            <i class="fa-solid fa-users"></i> {{ nbEligibles() }} qualifiés
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Taux d'atteinte >= 75% validé sur les gammes TANTY</span>
+        </div>
       </div>
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr><th>Rang</th><th>Commercial</th><th>Taux global</th><th>Gammes ≥75%</th><th>Prime</th></tr>
-          </thead>
-          <tbody>
-            @for (p of primes(); track p.commercialId; let i = $index) {
-            <tr [class.row-winner]="p.eligible">
-              <td><span class="rank-badge" [class.rk-g]="i===0" [class.rk-s]="i===1" [class.rk-b]="i===2">{{ i + 1 }}</span></td>
-              <td>
-                <div class="com-cell">
-                  <div class="com-av">{{ initiales(p.nom) }}</div>
-                  <div><div class="com-name">{{ p.nom }}</div></div>
+
+      <!-- KPI 2 : Occupation Marchés -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Pénétration des Marchés</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ occupationMoyenne() }}%</span>
+          <span class="dash-21-trend-pill" [class.trend-up]="occupationMoyenne() >= 60" [class.trend-warn]="occupationMoyenne() < 60">
+            Moyenne Yaoundé
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Ratio des points de vente approvisionnés régulièrement</span>
+        </div>
+      </div>
+
+      <!-- KPI 3 : Grands Comptes Actifs -->
+      <div class="dash-21-kpi-card">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">CA Portefeuille Grands Comptes</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-handshake"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">{{ fCFA(caGrandsComptes()) }}</span>
+          <span class="dash-21-trend-pill trend-up">
+            {{ grandsComptesActifs() }} actifs
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Supermarchés, grossistes & distributeurs institutionnels</span>
+        </div>
+      </div>
+
+      <!-- KPI 4 : Relances Dues -->
+      <div class="dash-21-kpi-card" [style.border-color]="relancesDues() > 0 ? 'rgba(194, 43, 43, 0.4)' : ''">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Relances Requises</span>
+          <div class="dash-21-kpi-icon-wrap icon-red">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value" [style.color]="relancesDues() > 0 ? 'var(--r)' : 'inherit'">{{ relancesDues() }}</span>
+          <span class="dash-21-trend-pill" [class.trend-warn]="relancesDues() > 0" [class.trend-up]="relancesDues() === 0">
+            {{ relancesDues() > 0 ? 'Action requise' : 'Aucun retard' }}
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Visites ou réapprovisionnements en dépassement de délai</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2:1 MAIN GRID -->
+    <div class="dash-21-grid">
+      <!-- LEFT / MAIN COLUMN (2fr) -->
+      <div class="dash-21-main-col">
+
+        <!-- PERFORMANCE PAR GAMME DE PRODUITS -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-boxes-stacked" style="color:var(--g)"></i> Performance Commerciale par Gamme</h3>
+              <span class="dash-21-card-hint">Suivi de réalisation des quotas d'écoulement</span>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Gamme TANTY</th>
+                  <th class="text-right">Objectif</th>
+                  <th class="text-right">Réalisation</th>
+                  <th>Avancement Quota</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (g of gammes(); track g.gamme) {
+                  <tr>
+                    <td class="fw-bold" style="color:var(--g-d)">{{ g.gamme }}</td>
+                    <td class="text-right mono">{{ fCFA(g.objectif) }}</td>
+                    <td class="text-right mono fw-bold" style="color:var(--g-d)">{{ fCFA(g.ca) }}</td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="flex:1;height:7px;background:var(--n200);border-radius:4px;overflow:hidden">
+                          <div style="height:100%;border-radius:4px" [style.width.%]="Math.min(tauxAtteinte(g.ca, g.objectif), 100)" [style.background]="tauxAtteinte(g.ca, g.objectif) >= 75 ? 'var(--g)' : (tauxAtteinte(g.ca, g.objectif) >= 50 ? 'var(--y)' : 'var(--r)')"></div>
+                        </div>
+                        <span class="taux-chip" [class.taux-ok]="tauxAtteinte(g.ca, g.objectif) >= 75" [class.taux-mid]="tauxAtteinte(g.ca, g.objectif) >= 50 && tauxAtteinte(g.ca, g.objectif) < 75" [class.taux-warn]="tauxAtteinte(g.ca, g.objectif) < 50">
+                          {{ tauxAtteinte(g.ca, g.objectif) }}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--n400)">Aucune gamme configurée.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GRANDS COMPTES PRIORITAIRES -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-handshake" style="color:var(--y)"></i> Grands Comptes Sous Surveillance</h3>
+              <span class="dash-21-card-hint">Échéances de commande & suivi personnalisé</span>
+            </div>
+            <a routerLink="/rp/grands-comptes" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Gérer tous</a>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Enseigne / Client</th>
+                  <th>Secteur / Ville</th>
+                  <th>Contact</th>
+                  <th class="text-right">Volume CA</th>
+                  <th>Statut Relance</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (gc of grandsComptes(); track gc.id) {
+                  <tr>
+                    <td class="fw-bold">{{ gc.nom }}</td>
+                    <td><span class="meta-tag">{{ gc.type || 'Supermarché' }}</span></td>
+                    <td style="font-size:12px;color:var(--n600)">{{ gc.contact || gc.telephone || '-' }}</td>
+                    <td class="text-right mono fw-bold" style="color:var(--g-d)">{{ fCFA(gc.caMensuel || 0) }}</td>
+                    <td>
+                      @if (gc.statut === 'A_RELANCER') {
+                        <span class="badge badge-danger"><i class="fa-solid fa-bell"></i> Relance due</span>
+                      } @else {
+                        <span class="badge badge-success"><i class="fa-solid fa-check"></i> Actif & à jour</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--n400)">Aucun grand compte enregistré.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN (1fr) : PALMARÈS & OCCUPATION -->
+      <div class="dash-21-side-col">
+
+        <!-- TAUX D'OCCUPATION DES SECTEURS -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-shop" style="color:var(--g)"></i> Couverture Marchés</h3>
+              <span class="dash-21-card-hint">Points de vente approvisionnés</span>
+            </div>
+          </div>
+
+          <div class="dash-21-gauge-list">
+            @for (occ of occupation(); track occ.zone) {
+              <div class="dash-21-gauge-item">
+                <div class="dash-21-gauge-label-row">
+                  <span class="dash-21-gauge-title">{{ occ.zone }}</span>
+                  <span class="dash-21-gauge-val">{{ tauxAtteinte(occ.livrees, occ.repertoriees) }}%</span>
                 </div>
-              </td>
-              <td>
-                <div class="progress-cell">
-                  <span class="fw-bold mono">{{ p.tauxGlobal }}%</span>
-                  <div class="prog-bar-wrap prog-bar-wrap-top">
-                    <div class="prog-bar" [class.prog-r]="p.tauxGlobal<80" [style.width.%]="Math.min(p.tauxGlobal,100)"></div>
+                <div class="dash-21-gauge-track">
+                  <div class="dash-21-gauge-fill" [style.width.%]="Math.min(tauxAtteinte(occ.livrees, occ.repertoriees), 100)" [style.background]="tauxAtteinte(occ.livrees, occ.repertoriees) >= 70 ? 'var(--g)' : (tauxAtteinte(occ.livrees, occ.repertoriees) >= 45 ? 'var(--y)' : 'var(--r)')"></div>
+                </div>
+                <span class="dash-21-gauge-sub">
+                  {{ occ.livrees }} livrées / {{ occ.repertoriees }} répertoriées
+                </span>
+              </div>
+            } @empty {
+              <div style="font-size:12px;color:var(--n400);text-align:center;padding:16px">Aucun secteur défini.</div>
+            }
+          </div>
+        </div>
+
+        <!-- PALMARÈS DES PRIMES -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-trophy" style="color:var(--y)"></i> Palmarès des Primes</h3>
+              <span class="dash-21-card-hint">Top commerciaux qualifiés</span>
+            </div>
+          </div>
+
+          <div class="dash-21-top-list">
+            @for (p of primes(); track p.commercialId; let idx = $index) {
+              @if (p.eligible) {
+                <div class="dash-21-top-item">
+                  <span class="dash-21-rank-badge" [class.rank-1]="idx === 0" [class.rank-2]="idx === 1" [class.rank-3]="idx === 2">
+                    {{ idx + 1 }}
+                  </span>
+                  <div class="dash-21-top-info">
+                    <span class="dash-21-top-name">{{ p.commercialId }}</span>
+                    <span class="dash-21-top-sub">Atteinte : {{ p.tauxGlobal }}% · {{ p.gammesValidees }}/{{ p.gammesTotal }} gammes</span>
+                  </div>
+                  <div class="dash-21-top-stat">
+                    <span class="dash-21-top-val" style="color:var(--g)">{{ fCFA(p.montant) }}</span>
                   </div>
                 </div>
-              </td>
-              <td><span class="mono">{{ p.gammesValidees }} / {{ p.gammesTotal }}</span></td>
-              <td>
-                @if (p.eligible) {
-                <span class="badge bg-success"><i class="fa-solid fa-check"></i> {{ fCFA(p.montant) }}</span>
-                } @else {
-                <span class="badge bg-neutral">Non éligible</span>
-                }
-              </td>
-            </tr>
+              }
             } @empty {
-            <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun classement cette semaine</td></tr>
+              <div style="text-align:center;padding:24px;color:var(--n400);font-size:12px">
+                Aucun commercial qualifié pour la prime cette semaine.
+              </div>
             }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card ranking-card">
-      <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-layer-group"></i> Performance par gamme</span>
-      </div>
-      <div class="gammes-list">
-        @for (g of gammes(); track g.gamme) {
-        <div class="gamme-row">
-          <div class="gamme-row-hd">
-            <span class="fw-bold">{{ g.gamme }}
-              @if (g.stock === 'PEREMPTION') { <span class="badge bg-red badge-sm">Péremption</span> }
-              @if (g.stock === 'FAIBLE') { <span class="badge bg-orange badge-sm">Stock faible</span> }
-            </span>
-            <span class="mono">{{ tauxAtteinte(g.ca, g.objectif) }}% @if (g.marge !== null) { · marge {{ g.marge }}% }</span>
-          </div>
-          <div class="prog-track-wide">
-            <div class="prog-bar" [ngClass]="gammeClass(g)" [style.width.%]="Math.min(tauxAtteinte(g.ca,g.objectif),100)"></div>
           </div>
         </div>
-        } @empty {
-        <p class="txt-muted gammes-empty">Aucune donnée de gamme disponible.</p>
-        }
+
       </div>
     </div>
-  </div>
-
-  <!-- OCCUPATION DES MARCHÉS -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-map-location-dot"></i> Taux d'occupation des marchés par zone</span>
-      <a routerLink="/rp/zones" class="btn btn-ghost btn-sm">Gérer les zones</a>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Zone</th><th>Boutiques livrées</th><th>Répertoriées</th><th>Taux occupation</th><th>Potentiel</th></tr>
-        </thead>
-        <tbody>
-          @for (o of occupation(); track o.zone) {
-          <tr>
-            <td class="fw-bold">{{ o.zone }}</td>
-            <td class="mono">{{ o.livrees }}</td>
-            <td class="mono">{{ o.repertoriees }}</td>
-            <td>
-              <div class="occ-cell">
-                <div class="prog-bar-wrap occ-bar"><div class="prog-bar" [class.prog-g]="tauxOccupation(o)>=70" [class.prog-y]="tauxOccupation(o)>=45 && tauxOccupation(o)<70" [class.prog-r]="tauxOccupation(o)<45" [style.width.%]="tauxOccupation(o)"></div></div>
-                <span class="taux-chip" [ngClass]="occupationClass(o)">{{ tauxOccupation(o) }}%</span>
-              </div>
-            </td>
-            <td><span class="zone-chip">{{ o.potentiel }}</span></td>
-          </tr>
-          } @empty {
-          <tr><td colspan="5" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune donnée d'occupation</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- GRANDS COMPTES + MARKETING -->
-  <div class="card table-card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-handshake"></i> Grands comptes & relances</span>
-      <a routerLink="/rp/grands-comptes" class="btn btn-ghost btn-sm">Tout voir</a>
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Compte</th><th>Type</th><th>CA mensuel</th><th>Prochaine relance</th></tr></thead>
-        <tbody>
-          @for (g of grandsComptes(); track g.id) {
-          <tr [class.row-alert]="g.statut === 'RELANCE_DUE'">
-            <td class="fw-bold">{{ g.nom }}<div class="compte-contact">{{ g.contact }}</div></td>
-            <td><span class="zone-chip">{{ g.type }}</span></td>
-            <td class="mono">{{ fCFA(g.caMensuel) }}</td>
-            <td>
-              @if (g.statut === 'RELANCE_DUE') {
-              <span class="badge bg-red badge-sm"><i class="fa-solid fa-bell"></i> {{ g.prochaineRelance | date:'dd MMM':'':'fr' }}</span>
-              } @else {
-              <span class="badge bg-success badge-sm">{{ g.prochaineRelance | date:'dd MMM':'':'fr' }}</span>
-              }
-            </td>
-          </tr>
-          } @empty {
-          <tr><td colspan="4" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucun grand compte enregistré</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
   }
 </div>
