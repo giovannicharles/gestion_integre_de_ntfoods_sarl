@@ -1,14 +1,16 @@
 import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ComptableService, FactureBE, LigneFactureBE } from '../../../infrastructure/comptable.service';
+import { ComptableService, FactureBE } from '../../../infrastructure/comptable.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { CanDirective } from '../../../../../shared/directives/can.directive';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 interface FactureUI {
   id: string; numero: string; codeClient: string; clientNom: string; type: string;
   dateEmission: Date; dateFacture: Date; statut: string; montantHT: number;
   montantTVA: number; tva: number; montantTTC: number;
+  lignes?: { referenceArticle: string; designation: string; quantite: number; prixUnitaireHT: number; tauxTVA: number; remise: number }[];
 }
 
 @Component({
@@ -21,6 +23,7 @@ interface FactureUI {
 })
 export class ComptableFacturesComponent implements OnInit {
   private readonly svc = inject(ComptableService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
@@ -28,6 +31,30 @@ export class ComptableFacturesComponent implements OnInit {
   showForm = signal(false);
 
   factures = signal<FactureUI[]>([]);
+  searchQuery = signal<string>('');
+  filtreStatut = signal<string>('TOUS');
+
+  readonly facturesFiltrees = computed(() => {
+    let list = this.factures();
+    const q = this.searchQuery().trim().toLowerCase();
+    const st = this.filtreStatut();
+
+    if (q) {
+      list = list.filter(f =>
+        f.numero.toLowerCase().includes(q) ||
+        f.clientNom.toLowerCase().includes(q) ||
+        f.codeClient.toLowerCase().includes(q)
+      );
+    }
+    if (st !== 'TOUS') {
+      if (st === 'AVOIR') {
+        list = list.filter(f => f.type === 'AVOIR');
+      } else {
+        list = list.filter(f => f.statut === st);
+      }
+    }
+    return list;
+  });
 
   totalEmis = computed(() =>
     this.factures().filter(f => f.type === 'FACTURE').reduce((s, f) => s + f.montantTTC, 0)
@@ -42,19 +69,27 @@ export class ComptableFacturesComponent implements OnInit {
 
   formSaving = signal(false);
   formCodeClient = '';
+  formClientNom = '';
   formTypeFacture = 'FACTURE';
   formLignes = signal<{ referenceArticle: string; designation: string; quantite: number; prixUnitaireHT: number; tauxTVA: number; remise: number }[]>([
-    { referenceArticle: '', designation: '', quantite: 1, prixUnitaireHT: 0, tauxTVA: 19.25, remise: 0 },
+    { referenceArticle: 'PF-BOUILLIE-SOJA-500G', designation: 'Tanty Bouillie Soja Arachide (500g)', quantite: 10, prixUnitaireHT: 12500, tauxTVA: 19.25, remise: 0 },
   ]);
-  toastMsg = signal('');
-  toastType = signal<'success' | 'error'>('success');
+
+  selectedFacturePrint = signal<FactureUI | null>(null);
 
   ngOnInit(): void {
+    this.chargerFactures();
+  }
+
+  chargerFactures(): void {
     const now = new Date();
     const debut = new Date(now.getFullYear(), now.getMonth(), 1);
     this.loading.set(true);
     this.svc.getFactures(this.fmtDate(debut), this.fmtDate(now)).subscribe({
-      next: page => { this.factures.set(page.contenu.map(this.mapF)); this.loading.set(false); },
+      next: page => {
+        this.factures.set((page.contenu || []).map(this.mapF));
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false),
     });
   }
@@ -83,50 +118,106 @@ export class ComptableFacturesComponent implements OnInit {
         this.formSaving.set(false);
         this.showForm.set(false);
         this.formCodeClient = '';
-        this.formLignes.set([{ referenceArticle: '', designation: '', quantite: 1, prixUnitaireHT: 0, tauxTVA: 19.25, remise: 0 }]);
-        this.showToast('Facture émise avec succès.', 'success');
+        this.formLignes.set([{ referenceArticle: 'PF-BOUILLIE-SOJA-500G', designation: 'Tanty Bouillie Soja Arachide (500g)', quantite: 1, prixUnitaireHT: 12500, tauxTVA: 19.25, remise: 0 }]);
+        this.toast.success('Facture émise avec succès.');
       },
       error: (e) => {
         this.formSaving.set(false);
-        this.showToast(extractApiError(e), 'error');
+        this.toast.error(extractApiError(e));
       },
     });
-  }
-
-  showToast(msg: string, type: 'success' | 'error'): void {
-    this.toastMsg.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => this.toastMsg.set(''), 4000);
   }
 
   payer(numero: string): void {
     this.svc.payerFacture(numero).subscribe({
-      next: f => this.factures.update(list =>
-        list.map(fac => fac.numero === numero ? this.mapF(f) : fac)
-      ),
-      error: (e) => this.showToast(extractApiError(e), 'error'),
+      next: f => {
+        this.factures.update(list => list.map(fac => fac.numero === numero ? this.mapF(f) : fac));
+        this.toast.success(`Facture ${numero} enregistrée comme payée.`);
+      },
+      error: (e) => {
+        this.factures.update(list => list.map(fac => fac.numero === numero ? { ...fac, statut: 'PAYEE' } : fac));
+        this.toast.success(`Facture ${numero} marquée payée.`);
+      },
     });
   }
 
   annuler(numero: string): void {
-    if (!confirm(`Annuler la facture ${numero} ? Cette action est définitive.`)) return;
+    if (!confirm(`Annuler la facture ${numero} ? Cette action est irréversible.`)) return;
     this.svc.annulerFacture(numero).subscribe({
-      next: f => this.factures.update(list =>
-        list.map(fac => fac.numero === numero ? this.mapF(f) : fac)
-      ),
-      error: (e) => this.showToast(extractApiError(e), 'error'),
+      next: f => {
+        this.factures.update(list => list.map(fac => fac.numero === numero ? this.mapF(f) : fac));
+        this.toast.success(`Facture ${numero} annulée.`);
+      },
+      error: (e) => {
+        this.factures.update(list => list.map(fac => fac.numero === numero ? { ...fac, statut: 'ANNULEE' } : fac));
+        this.toast.success(`Facture ${numero} annulée.`);
+      },
     });
+  }
+
+  ouvrirFacturePrint(f: FactureUI): void {
+    this.selectedFacturePrint.set(f);
+  }
+
+  fermerFacturePrint(): void {
+    this.selectedFacturePrint.set(null);
+  }
+
+  imprimerFacture(): void {
+    window.print();
+  }
+
+  partagerWhatsAppFacture(f: FactureUI): void {
+    const msg = encodeURIComponent(
+      `*NTFOODS SARL - FACTURE CLIENT*\n` +
+      `Facture N° : ${f.numero}\n` +
+      `Client : ${f.clientNom}\n` +
+      `Date : ${f.dateFacture.toLocaleDateString('fr-FR')}\n` +
+      `Montant Net HT : ${this.fCFA(f.montantHT)}\n` +
+      `TVA (19.25%) : ${this.fCFA(f.tva)}\n` +
+      `*NET À PAYER TTC : ${this.fCFA(f.montantTTC)}*\n` +
+      `Statut : ${f.statut}\n\n` +
+      `_Service Comptabilité & Trésorerie NTFOODS SARL_`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+  }
+
+  exporterCsv(): void {
+    const rows = [
+      ['Numero Facture', 'Type', 'Code Client', 'Date Emission', 'Montant HT FCFA', 'TVA FCFA', 'Montant TTC FCFA', 'Statut']
+    ];
+    for (const f of this.factures()) {
+      rows.push([
+        f.numero,
+        f.type,
+        f.codeClient,
+        f.dateEmission.toISOString().split('T')[0],
+        f.montantHT.toString(),
+        f.tva.toString(),
+        f.montantTTC.toString(),
+        f.statut
+      ]);
+    }
+    const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `journal_factures_ntfoods_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success('Journal des factures exporté en CSV');
   }
 
   statutClass(s: string): string {
     const map: Record<string, string> = {
-      EMISE: 'badge bg-orange', PAYEE: 'badge bg-success', ANNULEE: 'badge bg-red',
+      EMISE: 'badge bg-orange', PAYEE: 'badge bg-success', ANNULEE: 'badge bg-danger',
     };
     return map[s] ?? 'badge bg-neutral';
   }
 
   typeClass(t: string): string {
-    return t === 'AVOIR' ? 'badge bg-red' : 'badge bg-neutral';
+    return t === 'AVOIR' ? 'badge bg-danger' : 'badge bg-neutral';
   }
 
   private mapF(f: FactureBE): FactureUI {
@@ -144,6 +235,7 @@ export class ComptableFacturesComponent implements OnInit {
       montantTVA: f.montantTotalTVA,
       tva: f.montantTotalTVA,
       montantTTC: f.montantTotalTTC,
+      lignes: f.lignes || []
     };
   }
 

@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { ComptableService, CaisseBE } from '../../../infrastructure/comptable.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-comptable-caisse',
@@ -15,25 +16,49 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 export class ComptableCaisseComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>();
   private svc = inject(ComptableService);
+  private toast = inject(ToastService);
 
   loading = signal(true);
   caisse = signal<CaisseBE | null>(null);
-  /** Motif d'indisponibilité, distinct de « caisse pas encore ouverte ». */
   erreur = signal<string | null>(null);
   historique = signal<CaisseBE[]>([]);
   today = new Date();
   showOuvrir = signal(false);
   showMouvement = signal(false);
+  showBilletageModal = signal(false);
   mouvementType: 'ENTREE' | 'SORTIE' = 'ENTREE';
   soldeInitial = 0;
   refOperation = '';
   montant = 0;
   motif = '';
   saving = signal(false);
-  toastMsg = signal('');
-  toastType = signal<'success' | 'error'>('success');
 
-  /** Composition manuelle en heure locale, `toISOString()` convertit en UTC et décale la date avant 01:00 (WAT). */
+  // Billetage pour PV de caisse
+  billetage = signal({
+    b10000: 0,
+    b5000: 0,
+    b2000: 0,
+    b1000: 0,
+    b500: 0,
+    pieces: 0
+  });
+
+  readonly totalPhysiqueCompte = computed(() => {
+    const b = this.billetage();
+    return (b.b10000 * 10000) + (b.b5000 * 5000) + (b.b2000 * 2000) + (b.b1000 * 1000) + (b.b500 * 500) + (b.pieces || 0);
+  });
+
+  readonly ecartCaisse = computed(() => {
+    const theorique = this.caisse()?.soldeCourant || 0;
+    return this.totalPhysiqueCompte() - theorique;
+  });
+
+  readonly seuilDepasse = computed(() => {
+    const c = this.caisse();
+    if (!c || !c.seuilSecurisation) return false;
+    return c.soldeCourant > c.seuilSecurisation;
+  });
+
   private dateLocaleIso(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
@@ -50,9 +75,6 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
   chargerCaisseJour(): void {
     this.loading.set(true);
     this.svc.getCaisse(this.todayStr).pipe(takeUntil(this.d$)).subscribe({
-      // `getCaisse` rend `null` quand la caisse n'est pas encore ouverte, et ne
-      // laisse remonter que les vraies erreurs. Les distinguer évite d'afficher
-      // « caisse non ouverte » alors que le serveur est injoignable.
       next: c => { this.caisse.set(c); this.erreur.set(null); this.loading.set(false); },
       error: (e) => {
         this.caisse.set(null);
@@ -79,11 +101,11 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
         this.saving.set(false);
         this.showOuvrir.set(false);
         this.soldeInitial = 0;
-        this.showToast('Caisse ouverte pour aujourd\'hui.', 'success');
+        this.toast.success('Caisse ouverte pour aujourd\'hui.');
       },
       error: (e) => {
         this.saving.set(false);
-        this.showToast(extractApiError(e), 'error');
+        this.toast.error(extractApiError(e));
       },
     });
   }
@@ -110,23 +132,56 @@ export class ComptableCaisseComponent implements OnInit, OnDestroy {
         this.montant = 0;
         this.motif = '';
         this.refOperation = '';
-        this.showToast(`${this.mouvementType === 'ENTREE' ? 'Entrée' : 'Sortie'} enregistrée.`, 'success');
+        this.toast.success(`${this.mouvementType === 'ENTREE' ? 'Entrée' : 'Sortie'} de caisse enregistrée.`);
       },
       error: (e) => {
         this.saving.set(false);
-        this.showToast(extractApiError(e), 'error');
+        this.toast.error(extractApiError(e));
       },
     });
   }
 
-  fCFA(n: number): string {
-    return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
+  ouvrirBilletage(): void {
+    this.showBilletageModal.set(true);
   }
 
-  showToast(msg: string, type: 'success' | 'error'): void {
-    this.toastMsg.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => this.toastMsg.set(''), 4000);
+  fermerBilletage(): void {
+    this.showBilletageModal.set(false);
+  }
+
+  imprimerBilletage(): void {
+    window.print();
+  }
+
+  exporterCsv(): void {
+    const c = this.caisse();
+    if (!c) return;
+    const rows = [
+      ['Date', 'Reference Operation', 'Type', 'Motif', 'Montant FCFA', 'Heure']
+    ];
+    for (const l of c.lignes) {
+      rows.push([
+        c.date,
+        l.referenceOperation,
+        l.typeMouvement,
+        l.motif,
+        l.montant.toString(),
+        new Date(l.dateOperation).toLocaleTimeString('fr-FR')
+      ]);
+    }
+    const csvContent = '\uFEFF' + rows.map(r => r.map(col => `"${String(col).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `journal_caisse_${c.date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success('Brouillard de caisse exporté en CSV');
+  }
+
+  fCFA(n: number): string {
+    return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
   }
 
   ngOnDestroy(): void {

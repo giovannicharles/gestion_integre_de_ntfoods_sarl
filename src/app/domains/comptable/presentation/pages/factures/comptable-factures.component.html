@@ -1,182 +1,340 @@
-<div class="ph ph-wm-comptable">
-  <div class="ph-left">
-    <i class="fa-solid fa-file-invoice ph-ico"></i>
-    <div>
-      <h1 class="ph-title">Factures & Avoirs</h1>
-      <p class="ph-sub">Gestion de la facturation client</p>
+<div class="dash animate-fadeInUp">
+  <div class="ph ph-wm-comptable">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-green"><i class="fa-solid fa-file-invoice"></i></div>
+      <div>
+        <div class="ph-breadcrumbs">Comptabilité &bull; Facturation Client</div>
+        <h1 class="ph-title">Factures & Avoirs Clients</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} &bull; Gestion comptable des factures de vente, TVA et encaissements</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter en format CSV compatible Excel">
+        <i class="fa-solid fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-ghost" (click)="chargerFactures()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-primary" (click)="showForm.set(!showForm())">
+        <i class="fa-solid fa-plus"></i> + Émettre Facture
+      </button>
     </div>
   </div>
-  <div class="ph-actions">
-    <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-primary" (click)="showForm.set(!showForm())">
-      <i class="fa-solid fa-plus"></i> Émettre Facture
-    </button>
-  </div>
-</div>
 
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total émis (TTC)</div>
-      <div class="kpi-val">{{ fCFA(totalEmis()) }}</div>
-      <div class="kpi-meta">{{ factures().length }} factures</div>
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Émis (TTC)</span>
+        <span class="kpi-val">{{ fCFA(totalEmis()) }}</span>
+        <span class="kpi-meta">{{ factures().length }} factures émises</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Encaissé (TTC)</span>
+        <span class="kpi-val">{{ fCFA(totalPaye()) }}</span>
+        <span class="kpi-meta">Encaissements confirmés</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Factures en Attente</span>
+        <span class="kpi-val">{{ nbEmises() }}</span>
+        <span class="kpi-meta">À recouvrer</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-ico ir"><i class="fa-solid fa-rotate-left"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Avoirs</span>
+        <span class="kpi-val">{{ fCFA(totalAvoirs()) }}</span>
+        <span class="kpi-meta">Crédits / Retours clients</span>
+      </div>
     </div>
   </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total payé (TTC)</div>
-      <div class="kpi-val">{{ fCFA(totalPaye()) }}</div>
-      <div class="kpi-meta">encaissements confirmés</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Factures émises non payées</div>
-      <div class="kpi-val">{{ nbEmises() }}</div>
-      <div class="kpi-meta">en attente règlement</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-rotate-left"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total avoirs</div>
-      <div class="kpi-val">{{ fCFA(totalAvoirs()) }}</div>
-      <div class="kpi-meta">crédits clients</div>
-    </div>
-  </div>
-</div>
 
-@if (showForm()) {
+  @if (showForm()) {
   <div class="card form-card">
     <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-plus-circle"></i> Nouvelle Facture</h2>
+      <h2 class="card-title"><i class="fa-solid fa-plus-circle"></i> Émission d'une Facture Officielle</h2>
       <button class="btn btn-ghost btn-sm" (click)="showForm.set(false)">
         <i class="fa-solid fa-times"></i>
       </button>
     </div>
+
     <div class="form-row-2">
       <div class="form-group">
-        <label>Code Client</label>
-        <input type="text" class="form-input" [(ngModel)]="formCodeClient" placeholder="ex: CLT-001">
+        <label class="form-label">Code Client *</label>
+        <input type="text" class="form-input" [(ngModel)]="formCodeClient" placeholder="Ex: CLT-DLA-042 ou Nom Client">
       </div>
       <div class="form-group">
-        <label>Type de facture</label>
+        <label class="form-label">Type de Document</label>
         <select class="form-input" [(ngModel)]="formTypeFacture">
-          <option value="FACTURE">Facture</option>
-          <option value="AVOIR">Avoir</option>
+          <option value="FACTURE">Facture Commerciale Définitive</option>
+          <option value="PROFORMA">Facture Pro-Forma</option>
+          <option value="AVOIR">Avoir / Note de Crédit</option>
         </select>
       </div>
     </div>
-    <h3 class="lignes-title">Lignes de facture</h3>
-    @for (l of formLignes(); track $index) {
-      <div class="ligne-facture-row">
-        <div class="form-group form-group-tight">
-          <label class="label-xs">Réf. Article</label>
-          <input type="text" class="form-input" [(ngModel)]="l.referenceArticle" placeholder="SKU">
-        </div>
-        <div class="form-group form-group-tight">
-          <label class="label-xs">Désignation</label>
-          <input type="text" class="form-input" [(ngModel)]="l.designation" placeholder="Désignation">
-        </div>
-        <div class="form-group form-group-tight">
-          <label class="label-xs">Qté</label>
-          <input type="number" class="form-input" [(ngModel)]="l.quantite">
-        </div>
-        <div class="form-group form-group-tight">
-          <label class="label-xs">Prix HT</label>
-          <input type="number" class="form-input" [(ngModel)]="l.prixUnitaireHT">
-        </div>
-        <div class="form-group form-group-tight">
-          <label class="label-xs">TVA %</label>
-          <input type="number" class="form-input" [(ngModel)]="l.tauxTVA">
-        </div>
-        <div class="form-group form-group-tight">
-          <label class="label-xs">Remise %</label>
-          <input type="number" class="form-input" [(ngModel)]="l.remise">
-        </div>
-        <button class="btn btn-ghost btn-sm ligne-del-btn" (click)="supprimerLigne($index)">
-          <i class="fa-solid fa-trash text-danger"></i>
-        </button>
-      </div>
-    }
-    <button class="btn btn-ghost btn-sm btn-ajouter-ligne" (click)="ajouterLigne()">
-      <i class="fa-solid fa-plus"></i> Ajouter une ligne
-    </button>
+
+    <div class="lignes-hd-flex">
+      <h3 class="lignes-title"><i class="fa-solid fa-list-check"></i> Lignes de Facturation</h3>
+      <button class="btn btn-ghost btn-sm" (click)="ajouterLigne()">
+        <i class="fa-solid fa-plus"></i> Ajouter une ligne
+      </button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data-table data-table-sm">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Réf. Article</th>
+            <th style="width: 35%;">Désignation</th>
+            <th class="center" style="width: 10%;">Qté</th>
+            <th class="right" style="width: 15%;">Prix Unitaire HT</th>
+            <th class="center" style="width: 10%;">TVA %</th>
+            <th class="right" style="width: 15%;">Total HT</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of formLignes(); track $index) {
+          <tr>
+            <td>
+              <input type="text" class="form-input form-input-sm" [(ngModel)]="l.referenceArticle" placeholder="SKU">
+            </td>
+            <td>
+              <input type="text" class="form-input form-input-sm" [(ngModel)]="l.designation" placeholder="Désignation produit">
+            </td>
+            <td>
+              <input type="number" class="form-input form-input-sm center" [(ngModel)]="l.quantite" min="1">
+            </td>
+            <td class="right">
+              <input type="number" class="form-input form-input-sm right" [(ngModel)]="l.prixUnitaireHT" min="0">
+            </td>
+            <td class="center">
+              <input type="number" class="form-input form-input-sm center" [(ngModel)]="l.tauxTVA">
+            </td>
+            <td class="right fw-bold text-success">
+              {{ fCFA(l.quantite * l.prixUnitaireHT * (1 - l.remise / 100)) }}
+            </td>
+            <td class="center">
+              <button class="btn-del-row" (click)="supprimerLigne($index)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
     <div class="form-totals">
       <div class="form-total-item">
-        <div class="form-total-lbl">Total HT</div>
+        <div class="form-total-lbl">Total Net HT</div>
         <div class="form-total-val">{{ fCFA(formTotalHT) }}</div>
       </div>
       <div class="form-total-item">
-        <div class="form-total-lbl">Total TVA</div>
+        <div class="form-total-lbl">Total TVA (19.25%)</div>
         <div class="form-total-val">{{ fCFA(formTotalTVA) }}</div>
       </div>
       <div class="form-total-item">
-        <div class="form-total-lbl">Total TTC</div>
+        <div class="form-total-lbl">Total TTC à Payer</div>
         <div class="form-total-val form-total-ttc">{{ fCFA(formTotalTTC) }}</div>
       </div>
     </div>
+
     <div class="form-actions">
       <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
       <button class="btn btn-primary" (click)="emettreFacture()" [disabled]="formSaving() || !formCodeClient">
-        @if (formSaving()) { Émission… } @else { Émettre la facture }
+        @if (formSaving()) { <i class="fa-solid fa-spinner fa-spin"></i> Émission… } @else { <i class="fa-solid fa-paper-plane"></i> Émettre la facture }
       </button>
     </div>
   </div>
-}
+  }
 
-<div class="card card-wm card-wm-comptable">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-list"></i> Liste des Factures</h2>
-    <span class="badge bg-neutral">{{ factures().length }} documents</span>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Numéro</th>
-          <th>Type</th>
-          <th>Client</th>
-          <th>Date</th>
-          <th>Montant HT</th>
-          <th>TVA</th>
-          <th>Montant TTC</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (f of factures(); track f.id) {
+  <div class="card card-wm card-wm-comptable">
+    <div class="card-hd">
+      <div class="card-title-group">
+        <h2 class="card-title"><i class="fa-solid fa-list-check"></i> Journal des Factures</h2>
+        <span class="badge bg-neutral">{{ facturesFiltrees().length }} document(s)</span>
+      </div>
+      <div class="erp-filter-toolbar">
+        <div class="erp-search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Rechercher facture, client..." class="erp-search-input" />
+        </div>
+        <div class="filter-pills">
+          <button class="pill-btn" [class.active]="filtreStatut() === 'TOUS'" (click)="filtreStatut.set('TOUS')">Tous</button>
+          <button class="pill-btn" [class.active]="filtreStatut() === 'EMISE'" (click)="filtreStatut.set('EMISE')">Émises</button>
+          <button class="pill-btn" [class.active]="filtreStatut() === 'PAYEE'" (click)="filtreStatut.set('PAYEE')">Payées</button>
+          <button class="pill-btn" [class.active]="filtreStatut() === 'AVOIR'" (click)="filtreStatut.set('AVOIR')">Avoirs</button>
+          <button class="pill-btn" [class.active]="filtreStatut() === 'ANNULEE'" (click)="filtreStatut.set('ANNULEE')">Annulées</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data-table erp-table">
+        <thead>
           <tr>
-            <td><strong>{{ f.numero }}</strong></td>
+            <th>N° Facture</th>
+            <th>Type</th>
+            <th>Client</th>
+            <th>Date Émission</th>
+            <th class="right">Montant HT</th>
+            <th class="right">TVA</th>
+            <th class="right">Montant TTC</th>
+            <th>Statut</th>
+            <th class="center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of facturesFiltrees(); track f.id) {
+          <tr>
+            <td><strong class="code-ref">{{ f.numero }}</strong></td>
             <td><span [class]="typeClass(f.type)">{{ f.type }}</span></td>
-            <td>{{ f.clientNom }}</td>
+            <td><span class="client-name">{{ f.clientNom }}</span></td>
             <td>{{ f.dateFacture | date:'dd/MM/yyyy' }}</td>
-            <td>{{ fCFA(f.montantHT) }}</td>
-            <td>{{ fCFA(f.tva) }}</td>
-            <td><strong>{{ fCFA(f.montantTTC) }}</strong></td>
+            <td class="right">{{ fCFA(f.montantHT) }}</td>
+            <td class="right text-muted">{{ fCFA(f.tva) }}</td>
+            <td class="right fw-bold text-success">{{ fCFA(f.montantTTC) }}</td>
             <td><span [class]="statutClass(f.statut)">{{ f.statut }}</span></td>
             <td>
               <div class="row-actions-flex">
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirFacturePrint(f)" title="Imprimer Facture Officielle NTFOODS">
+                  <i class="fa-solid fa-print"></i>
+                </button>
+                <button class="btn btn-sm btn-whatsapp-icon" (click)="partagerWhatsAppFacture(f)" title="Partager au client sur WhatsApp">
+                  <i class="fa-brands fa-whatsapp"></i>
+                </button>
                 @if (f.statut === 'EMISE') {
-                  <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Marquer payée">
-                    <i class="fa-solid fa-check"></i>
-                  </button>
+                <button *appCan="['COMPTABLE', 'ADMIN']" class="btn btn-success btn-sm" (click)="payer(f.numero)" title="Enregistrer l'encaissement">
+                  <i class="fa-solid fa-check"></i> Encaisser
+                </button>
                 }
                 @if (f.statut !== 'ANNULEE' && f.statut !== 'PAYEE') {
-                  <button class="btn btn-ghost btn-sm" (click)="annuler(f.numero)" title="Annuler">
-                    <i class="fa-solid fa-ban ico-r"></i>
-                  </button>
+                <button class="btn btn-ghost btn-sm text-danger" (click)="annuler(f.numero)" title="Annuler">
+                  <i class="fa-solid fa-ban"></i>
+                </button>
                 }
               </div>
             </td>
           </tr>
-        } @empty {
-          <tr><td colspan="8" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune facture ce mois-ci</td></tr>
-        }
-      </tbody>
-    </table>
+          } @empty {
+          <tr>
+            <td colspan="9" class="rpt-empty">
+              <i class="fa-solid fa-inbox rpt-empty-icon"></i>
+              <p>Aucune facture correspondant aux filtres.</p>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- MODAL FACTURE IMPRIMABLE AUX NORMES OHADA -->
+  @if (selectedFacturePrint(); as f) {
+  <div class="modal-backdrop print-fullscreen" (click)="fermerFacturePrint()">
+    <div class="modal-card modal-lg print-card" (click)="$event.stopPropagation()">
+      <div class="modal-header no-print">
+        <h3 class="modal-title"><i class="fa-solid fa-file-invoice"></i> Facture Commerciale Officielle</h3>
+        <button class="btn-close" (click)="fermerFacturePrint()">&times;</button>
+      </div>
+
+      <div class="facture-imprimable">
+        <div class="facture-header">
+          <div class="facture-company">
+            <h2>NTFOODS SARL</h2>
+            <p class="tagline">Transformation Agroalimentaire & Produits Céréaliers TANTY</p>
+            <p>Zone Industrielle Bassa, B.P. 12053 Douala - Cameroun</p>
+            <p>Tél: (+237) 233 42 55 60 | Email: facturation&#64;ntfoods.cm</p>
+            <p>N° Contribuable: M011200045230P | RCCM: RC/DLA/2012/B/1500</p>
+            <p>Centre des Impôts : CDI Bassa Douala</p>
+          </div>
+          <div class="facture-meta">
+            <div class="facture-type-badge">{{ f.type }} COMMERCIALE</div>
+            <div class="facture-ref">N° : <strong>{{ f.numero }}</strong></div>
+            <div class="facture-date">Date : {{ f.dateFacture | date:'dd/MM/yyyy' }}</div>
+            <div class="facture-statut">Statut : <strong>{{ f.statut }}</strong></div>
+          </div>
+        </div>
+
+        <div class="facture-client-box">
+          <h4>Facturé à :</h4>
+          <p class="fc-client-nom"><strong>{{ f.clientNom }}</strong></p>
+          <p>Code Client : {{ f.codeClient }}</p>
+          <p>Règlement : Virement / Espèces / Chèque certifié</p>
+        </div>
+
+        <table class="facture-table">
+          <thead>
+            <tr>
+              <th>Désignation des Articles</th>
+              <th class="center">Qté</th>
+              <th class="right">P.U. HT</th>
+              <th class="center">TVA</th>
+              <th class="right">Montant Net HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of (f.lignes && f.lignes.length > 0 ? f.lignes : [{ designation: 'Produits Alimentaires TANTY (Réf ' + f.numero + ')', quantite: 1, prixUnitaireHT: f.montantHT, tauxTVA: 19.25, remise: 0 }]); track $index) {
+            <tr>
+              <td><strong>{{ l.designation }}</strong></td>
+              <td class="center">{{ l.quantite }}</td>
+              <td class="right">{{ fCFA(l.prixUnitaireHT) }}</td>
+              <td class="center">{{ l.tauxTVA }}%</td>
+              <td class="right fw-bold">{{ fCFA(l.quantite * l.prixUnitaireHT) }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"></td>
+              <td class="right fw-bold">Total Brut HT :</td>
+              <td class="right fw-bold">{{ fCFA(f.montantHT) }}</td>
+            </tr>
+            <tr>
+              <td colspan="3"></td>
+              <td class="right">TVA (19.25%) :</td>
+              <td class="right">{{ fCFA(f.tva) }}</td>
+            </tr>
+            <tr class="facture-total-row">
+              <td colspan="3"></td>
+              <td class="right fw-bold">NET À PAYER TTC :</td>
+              <td class="right fw-bold facture-highlight">{{ fCFA(f.montantTTC) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="facture-legal">
+          <p><em>Arrêtée la présente facture à la somme de <strong>{{ fCFA(f.montantTTC) }}</strong> Toutes Taxes Comprises.</em></p>
+          <p class="legal-mention">En cas de retard de paiement, pénalité légale applicable selon les dispositions du droit commercial OHADA.</p>
+        </div>
+
+        <div class="facture-signatures">
+          <div class="sig-box">
+            <p class="sig-title">Le Client (Accusé de réception)</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Date & Signature</p>
+          </div>
+          <div class="sig-box">
+            <p class="sig-title">Le Chef Comptable / Caissier</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Visa & Cachet Officiel NTFOODS</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions no-print">
+        <button class="btn btn-ghost" (click)="fermerFacturePrint()">Fermer</button>
+        <button class="btn btn-primary" (click)="imprimerFacture()"><i class="fa-solid fa-print"></i> Imprimer la Facture</button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

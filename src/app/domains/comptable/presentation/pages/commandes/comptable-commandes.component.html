@@ -1,129 +1,616 @@
-<div class="ph ph-wm-comptable">
-  <div class="ph-left">
-    <i class="fa-solid fa-file-signature ph-ico"></i>
-    <div>
-      <h1 class="ph-title">Validation Précommandes J+1</h1>
-      <p class="ph-sub">Étape comptable, approbation finale avant chargement</p>
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE STANDARD ERP -->
+  <div class="ph ph-wm-comptable">
+    <div class="ph-left">
+      <div class="ph-icon ph-icon-green"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <div>
+        <div class="ph-breadcrumbs">Comptabilité &bull; Gestion Commerciale &bull; Commandes</div>
+        <h1 class="ph-title">Commandes & Ventes Produits Finis</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} &bull; Réception directe WhatsApp / Téléphone & Validation comptable des tournées</p>
+      </div>
     </div>
-  </div>
-  <div class="ph-actions">
-    <span class="badge bg-neutral">{{ today | date:'dd/MM/yyyy' }}</span>
-  </div>
-</div>
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">En attente validation</div>
-      <div class="kpi-val">{{ nbEnAttente() }}</div>
-      <div class="kpi-meta">commandes Secrétaire ✓</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Validées aujourd'hui</div>
-      <div class="kpi-val">{{ nbValidees() }}</div>
-      <div class="kpi-meta">chargement autorisé</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-list-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total commandes</div>
-      <div class="kpi-val">{{ commandes().length }}</div>
-      <div class="kpi-meta">toutes périodes</div>
-    </div>
-  </div>
-</div>
-
-<!-- Workflow Banner -->
-<div class="workflow-banner card">
-  <div class="wf-step wf-done">
-    <i class="fa-solid fa-user-pen"></i>
-    <span>Secrétaire ✓</span>
-  </div>
-  <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-  <div class="wf-step wf-active">
-    <i class="fa-solid fa-calculator"></i>
-    <span>Comptable (en cours)</span>
-  </div>
-  <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-  <div class="wf-step wf-pending">
-    <i class="fa-solid fa-truck-loading"></i>
-    <span>Chargement</span>
-  </div>
-</div>
-
-<div class="card card-wm card-wm-comptable">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Précommandes</h2>
-    <div class="filter-row">
-      <select [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)" class="form-select-sm">
-        @for (s of statutOptions; track s) {
-          <option [value]="s">{{ s === 'TOUTES' ? 'Toutes' : statutLabel(s) }}</option>
-        }
-      </select>
+    <div class="ph-actions">
+      <button class="btn btn-whatsapp" (click)="ouvrirModalExpress()">
+        <i class="fa-brands fa-whatsapp"></i> + Commande WhatsApp / Directe
+      </button>
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter en format CSV compatible Excel">
+        <i class="fa-solid fa-file-csv"></i> Export CSV
+      </button>
+      <button class="btn btn-ghost" (click)="chargerDonnees()" title="Actualiser les données">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
     </div>
   </div>
 
-  @if (commandesFiltrees().length === 0) {
-    <p class="empty-state">Aucune commande pour ce filtre.</p>
+  <!-- KPI SUMMARY STRIP -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-brands fa-whatsapp"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Commandes WhatsApp / Directes</span>
+        <span class="kpi-val">{{ totalCommandesDistance() }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-coins"></i> {{ fCFA(valeurTotalDistance()) }} HT</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">En Attente Visa Comptable</span>
+        <span class="kpi-val">{{ nbDistanceEnAttenteComptable() }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-clock"></i> Commandes à distance à approuver</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-truck-ramp-box"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Tournées J+1 à Valider</span>
+        <span class="kpi-val">{{ nbTourneesEnAttente() }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-truck"></i> {{ nbTourneesValidees() }} camions autorisés</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-ico ir"><i class="fa-solid fa-boxes-packing"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Catalogue Produits Finis</span>
+        <span class="kpi-val">{{ catalogueProduits().length }} Réf.</span>
+        <span class="kpi-meta"><i class="fa-solid fa-check"></i> Barème officiel TANTY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLETS DE NAVIGATION ERP -->
+  <div class="erp-tab-bar">
+    <button class="erp-tab-btn" [class.active]="ongletActif() === 'DISTANCE'" (click)="ongletActif.set('DISTANCE')">
+      <i class="fa-brands fa-whatsapp tab-wa-ico"></i>
+      Commandes Directes & WhatsApp
+      <span class="tab-badge bg-whatsapp">{{ totalCommandesDistance() }}</span>
+    </button>
+    <button class="erp-tab-btn" [class.active]="ongletActif() === 'TOURNEES'" (click)="ongletActif.set('TOURNEES')">
+      <i class="fa-solid fa-truck-fast"></i>
+      Précommandes Tournées J+1
+      <span class="tab-badge bg-primary">{{ commandesTournees().length }}</span>
+    </button>
+  </div>
+
+  <!-- CONTENU ONGLET 1 : COMMANDES DIRECTES / WHATSAPP -->
+  @if (ongletActif() === 'DISTANCE') {
+  <div class="card card-wm card-wm-comptable">
+    <div class="card-hd">
+      <div class="card-title-group">
+        <h2 class="card-title"><i class="fa-solid fa-clipboard-list"></i> Commandes Clients à Distance</h2>
+        <span class="badge bg-neutral">{{ commandesDistanceFiltrees().length }} affichée(s)</span>
+      </div>
+      <div class="erp-filter-toolbar">
+        <div class="erp-search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" [ngModel]="searchDistance()" (ngModelChange)="searchDistance.set($event)" placeholder="Rechercher client, réf, matricule..." class="erp-search-input" />
+        </div>
+        <select [ngModel]="filtreCanalDistance()" (ngModelChange)="filtreCanalDistance.set($event)" class="erp-select">
+          <option value="TOUS">Tous les canaux</option>
+          <option value="WHATSAPP">WhatsApp</option>
+          <option value="APPEL_TELEPHONIQUE">Téléphone</option>
+          <option value="SMS">SMS</option>
+          <option value="EMAIL">Email</option>
+        </select>
+        <select [ngModel]="filtreStatutDistance()" (ngModelChange)="filtreStatutDistance.set($event)" class="erp-select">
+          <option value="TOUS">Tous les statuts</option>
+          <option value="CREEE">En attente</option>
+          <option value="VALIDEE_SECRETAIRE">Visa Secrétaire</option>
+          <option value="VALIDEE_COMPTABLE">Validée Comptable</option>
+          <option value="LIVREE">Livrée</option>
+          <option value="REJETEE">Rejetée</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data-table erp-table">
+        <thead>
+          <tr>
+            <th>Réf. Commande</th>
+            <th>Canal</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Commercial</th>
+            <th>Articles Commandés</th>
+            <th class="right">Montant HT</th>
+            <th>Statut</th>
+            <th class="center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cmd of commandesDistanceFiltrees(); track cmd.numeroCommande) {
+          <tr>
+            <td>
+              <span class="code-ref">{{ cmd.numeroCommande }}</span>
+            </td>
+            <td>
+              <span class="canal-pill">
+                <i [class]="canalIcon(cmd.canal)"></i> {{ cmd.canal }}
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <span class="client-name">{{ cmd.codeClient }}</span>
+                @if (cmd.observations) {
+                <span class="client-sub" [title]="cmd.observations">{{ cmd.observations }}</span>
+                }
+              </div>
+            </td>
+            <td>{{ cmd.dateCommande | date:'dd/MM/yyyy' }}</td>
+            <td><span class="badge bg-neutral">{{ cmd.matriculeCommercial }}</span></td>
+            <td>
+              <div class="cmd-articles-summary">
+                @for (l of (cmd.lignes || []).slice(0, 2); track l.codeProduit) {
+                <div class="article-item-tag">
+                  <strong>{{ l.quantite }}x</strong> {{ l.designation }}
+                </div>
+                }
+                @if ((cmd.lignes || []).length > 2) {
+                <span class="more-articles">+{{ cmd.lignes.length - 2 }} autre(s)</span>
+                }
+              </div>
+            </td>
+            <td class="right fw-bold text-success">{{ fCFA(calculerTotalLignes(cmd)) }}</td>
+            <td>
+              <span [class]="statutClass(cmd.statut)">{{ statutLabel(cmd.statut) }}</span>
+            </td>
+            <td>
+              <div class="row-actions-flex">
+                <button class="btn btn-sm btn-whatsapp-icon" (click)="relancerWhatsAppCommande(cmd)" title="Partager / Renvoyer sur WhatsApp">
+                  <i class="fa-brands fa-whatsapp"></i>
+                </button>
+                <button class="btn btn-sm btn-ghost" (click)="ouvrirProforma(cmd)" title="Consulter & Imprimer le Bon de commande / Proforma">
+                  <i class="fa-solid fa-file-invoice"></i>
+                </button>
+                @if (cmd.statut !== 'VALIDEE_COMPTABLE' && cmd.statut !== 'LIVREE' && cmd.statut !== 'REJETEE') {
+                <button class="btn btn-sm btn-success" (click)="validerCommandeDistance(cmd.numeroCommande)" title="Valider Comptable">
+                  <i class="fa-solid fa-check"></i> Valider
+                </button>
+                <button class="btn btn-sm btn-ghost text-danger" (click)="rejeterCommandeDistance(cmd.numeroCommande)" title="Rejeter">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="9" class="rpt-empty">
+              <i class="fa-brands fa-whatsapp rpt-empty-icon text-whatsapp"></i>
+              <p>Aucune commande client à distance trouvée pour ces filtres.</p>
+              <button class="btn btn-whatsapp btn-sm" (click)="ouvrirModalExpress()">
+                <i class="fa-brands fa-whatsapp"></i> Enregistrer une commande WhatsApp
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
   }
 
-  @for (cmd of commandesFiltrees(); track cmd.id) {
+  <!-- CONTENU ONGLET 2 : PRÉCOMMANDES TOURNÉES J+1 -->
+  @if (ongletActif() === 'TOURNEES') {
+  <!-- Workflow Banner -->
+  <div class="workflow-banner card">
+    <div class="wf-step wf-done">
+      <i class="fa-solid fa-user-pen"></i>
+      <span>1. Secrétaire Commerciale ✓</span>
+    </div>
+    <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="wf-step wf-active">
+      <i class="fa-solid fa-calculator"></i>
+      <span>2. Visa Comptable & Trésorerie (en cours)</span>
+    </div>
+    <div class="wf-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="wf-step wf-pending">
+      <i class="fa-solid fa-truck-ramp-box"></i>
+      <span>3. Magasin & Chargement Camion</span>
+    </div>
+  </div>
+
+  <div class="card card-wm card-wm-comptable">
+    <div class="card-hd">
+      <h2 class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Précommandes Tournées Commerciaux</h2>
+      <div class="filter-row">
+        <select [ngModel]="filtreStatutTournees()" (ngModelChange)="filtreStatutTournees.set($event)" class="form-select-sm">
+          @for (s of statutOptionsTournees; track s) {
+          <option [value]="s">{{ s === 'TOUTES' ? 'Toutes' : statutLabel(s) }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (commandesTourneesFiltrees().length === 0) {
+    <p class="empty-state">Aucune précommande de tournée pour ce filtre.</p>
+    }
+
+    @for (cmd of commandesTourneesFiltrees(); track cmd.id) {
     <div class="cmd-card" [class.cmd-pending]="cmd.statut === 'VALIDEE_SECRETAIRE'">
       <div class="cmd-header">
         <div class="cmd-info">
-          <strong>{{ cmd.id }}</strong>
-          <span class="cmd-commercial">{{ cmd.commercialName || cmd.commercialId }}</span>
-          <span class="cmd-date">{{ cmd.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
+          <div class="cmd-ref-line">
+            <strong class="code-ref">{{ cmd.id }}</strong>
+            <span class="cmd-commercial"><i class="fa-solid fa-user-tie"></i> {{ cmd.commercialName || cmd.commercialId }}</span>
+            <span class="cmd-date"><i class="fa-solid fa-clock"></i> {{ cmd.dateCommande | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
         </div>
         <div class="cmd-actions">
           <span [class]="statutClass(cmd.statut)">{{ statutLabel(cmd.statut) }}</span>
           @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
-            <button class="btn btn-success btn-sm" *appCan="['COMPTABLE', 'DIRECTEUR_GENERAL', 'ADMIN']" (click)="validerCommande(cmd.id)">
-              <i class="fa-solid fa-check"></i> Valider Comptable
-            </button>
+          <button class="btn btn-success btn-sm" (click)="validerTournee(cmd.id)">
+            <i class="fa-solid fa-check"></i> Valider Comptable
+          </button>
           }
         </div>
       </div>
+
       <div class="cmd-signatures">
         <span [class]="cmd.signatureSecretaire ? 'sig-ok' : 'sig-pending'">
-          <i class="fa-solid fa-pen-nib"></i> Secrétaire {{ cmd.signatureSecretaire ? '✓' : '⏳' }}
+          <i class="fa-solid fa-pen-nib"></i> Secrétaire : {{ cmd.signatureSecretaire ? 'Approuvé ✓' : 'En attente' }}
         </span>
         <span [class]="cmd.signatureComptable ? 'sig-ok' : 'sig-pending'">
-          <i class="fa-solid fa-calculator"></i> Comptable {{ cmd.signatureComptable ? '✓' : '⏳' }}
+          <i class="fa-solid fa-calculator"></i> Comptable : {{ cmd.signatureComptable ? 'Validé ✓' : 'En attente' }}
         </span>
       </div>
+
       <div class="tbl-wrap">
-        <table class="data-table">
+        <table class="data-table data-table-sm">
           <thead>
             <tr>
-              <th>Produit</th>
-              <th>Qté demandée</th>
-              <th>Qté validée (comptable)</th>
+              <th>Réf. Article</th>
+              <th>Désignation Produit</th>
+              <th class="center">Qté Demandée (Cartons)</th>
+              <th class="center">Qté Validée Comptable</th>
             </tr>
           </thead>
           <tbody>
-            @for (ligne of cmd.lignes; track trackByLigne($index, ligne)) {
-              <tr>
-                <td>{{ ligne.designation || getProduitDesignation(ligne.produitCode) }}</td>
-                <td>{{ ligne.quantite }}</td>
-                <td>
-                  @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
-                    <input type="number" min="0" class="form-control form-control-sm input-qty"
-                           [(ngModel)]="ligne.quantiteValidee" />
-                  } @else {
-                    {{ ligne.quantiteValidee }}
-                  }
-                </td>
-              </tr>
+            @for (l of cmd.lignes; track l.produitCode) {
+            <tr>
+              <td><code>{{ l.produitCode }}</code></td>
+              <td><strong>{{ l.designation }}</strong></td>
+              <td class="center">{{ l.quantite }}</td>
+              <td class="center">
+                @if (cmd.statut === 'VALIDEE_SECRETAIRE') {
+                <input type="number" [(ngModel)]="l.quantiteValidee" class="form-input input-qty" min="0" />
+                } @else {
+                <span class="fw-bold text-success">{{ l.quantiteValidee }}</span>
+                }
+              </td>
+            </tr>
             }
           </tbody>
         </table>
       </div>
     </div>
+    }
+  </div>
+  }
+
+  <!-- MODAL DE CRÉATION DE COMMANDE WHATSAPP / EXPRESS -->
+  @if (showModalExpress()) {
+  <div class="modal-backdrop" (click)="fermerModalExpress()">
+    <div class="modal-card modal-xl" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-badge-wa"><i class="fa-brands fa-whatsapp"></i></div>
+          <div>
+            <h3 class="modal-title">Nouvelle Commande de Produits Finis (WhatsApp / Direct)</h3>
+            <p class="modal-sub">Enregistrement immédiat dans le processus de vente NTFOODS SARL avec génération devis WhatsApp</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="fermerModalExpress()">&times;</button>
+      </div>
+
+      <div class="modal-body-scrollable">
+        <div class="express-layout">
+          <!-- COLONNE GAUCHE : FORMULAIRE ERP -->
+          <div class="express-form-col">
+            <!-- 1. IDENTIFICATION CLIENT -->
+            <div class="form-section-box">
+              <div class="section-title"><i class="fa-solid fa-user"></i> 1. Identification du Client</div>
+              <div class="client-mode-toggle">
+                <label class="radio-label">
+                  <input type="radio" [value]="true" [ngModel]="formClient().existant" (ngModelChange)="setClientExistant(true)" name="modeClient">
+                  Client Existant
+                </label>
+                <label class="radio-label">
+                  <input type="radio" [value]="false" [ngModel]="formClient().existant" (ngModelChange)="setClientExistant(false)" name="modeClient">
+                  + Nouveau Client Express
+                </label>
+              </div>
+
+              @if (formClient().existant) {
+              <div class="form-group">
+                <label class="form-label">Sélectionner le Client</label>
+                <select class="form-input" [ngModel]="formClient().codeClient" (ngModelChange)="onClientSelect($event)">
+                  <option value="">-- Choisir dans le répertoire client --</option>
+                  @for (cl of clients(); track cl.codeClient) {
+                  <option [value]="cl.codeClient">{{ cl.nom }} ({{ cl.codeClient }} - {{ cl.localite || 'Douala' }})</option>
+                  }
+                </select>
+              </div>
+              }
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Nom du Client / Établissement *</label>
+                  <input type="text" class="form-input" [ngModel]="formClient().nom" (ngModelChange)="updateClientNom($event)" placeholder="Ex: Alimentation Le Progrès" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Téléphone WhatsApp (+237) *</label>
+                  <div class="input-with-icon">
+                    <i class="fa-brands fa-whatsapp text-whatsapp"></i>
+                    <input type="text" class="form-input input-pad-left" [ngModel]="formClient().telephone" (ngModelChange)="updateClientTelephone($event)" placeholder="Ex: 699123456" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ville / Région</label>
+                  <input type="text" class="form-input" [ngModel]="formClient().ville" (ngModelChange)="updateClientVille($event)" placeholder="Ex: Douala, Yaoundé, Bafoussam" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Quartier / Adresse de Livraison</label>
+                  <input type="text" class="form-input" [ngModel]="formClient().quartier" (ngModelChange)="updateClientQuartier($event)" placeholder="Ex: Marché Central, Akwa" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. PARAMÈTRES COMMANDE & COMMERCIAL -->
+            <div class="form-section-box">
+              <div class="section-title"><i class="fa-solid fa-truck"></i> 2. Logistique & Règlement</div>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Commercial Référent</label>
+                  <select class="form-input" [ngModel]="formGeneral().commercialMatricule" (ngModelChange)="updateCommercialMatricule($event)">
+                    @for (com of commerciaux(); track com.matricule) {
+                    <option [value]="com.matricule">{{ com.nomComplet }} ({{ com.matricule }})</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Canal de Réception</label>
+                  <select class="form-input" [ngModel]="formGeneral().canal" (ngModelChange)="updateCanal($event)">
+                    <option value="WHATSAPP">WhatsApp</option>
+                    <option value="APPEL_TELEPHONIQUE">Appel Téléphonique</option>
+                    <option value="SMS">SMS Direct</option>
+                    <option value="EMAIL">Email</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Mode de Règlement Prévu</label>
+                  <select class="form-input" [ngModel]="formGeneral().modeReglement" (ngModelChange)="updateModeReglement($event)">
+                    <option value="ESPECES">Espèces à la livraison</option>
+                    <option value="ORANGE_MONEY">Orange Money (+237)</option>
+                    <option value="MTN_MOMO">MTN Mobile Money</option>
+                    <option value="VIREMENT_BANCAIRE">Virement Bancaire</option>
+                    <option value="CHEQUE">Chèque certifié</option>
+                    <option value="CREDIT">Crédit sous convention</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. LIGNES D'ARTICLES PRODUITS FINIS -->
+            <div class="form-section-box">
+              <div class="section-hd-flex">
+                <div class="section-title"><i class="fa-solid fa-boxes-stacked"></i> 3. Articles Produits Finis TANTY</div>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="ajouterLigneExpress()">
+                  <i class="fa-solid fa-plus"></i> Ajouter un produit
+                </button>
+              </div>
+
+              <div class="express-articles-table-wrap">
+                <table class="data-table data-table-sm">
+                  <thead>
+                    <tr>
+                      <th style="width: 42%;">Produit Fini</th>
+                      <th style="width: 15%;">Conditionnement</th>
+                      <th class="center" style="width: 12%;">Quantité</th>
+                      <th class="right" style="width: 15%;">Prix Unitaire HT</th>
+                      <th class="right" style="width: 12%;">Total HT</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (l of formLignes(); track $index) {
+                    <tr>
+                      <td>
+                        <select class="form-input form-input-sm" [ngModel]="l.codeProduit" (ngModelChange)="onProduitChange($index, $event)">
+                          @for (p of catalogueProduits(); track p.code) {
+                          <option [value]="p.code">{{ p.designation }}</option>
+                          }
+                        </select>
+                      </td>
+                      <td>
+                        <input type="text" class="form-input form-input-sm" [(ngModel)]="l.conditionnement" />
+                      </td>
+                      <td>
+                        <input type="number" class="form-input form-input-sm center" [(ngModel)]="l.quantite" min="1" />
+                      </td>
+                      <td class="right">
+                        <input type="number" class="form-input form-input-sm right" [(ngModel)]="l.prixUnitaire" min="0" />
+                      </td>
+                      <td class="right fw-bold text-success">
+                        {{ fCFA(l.quantite * l.prixUnitaire) }}
+                      </td>
+                      <td class="center">
+                        <button type="button" class="btn-del-row" (click)="supprimerLigneExpress($index)">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- COLONNE DROITE : APERÇU WHATSAPP & TOTAUX -->
+          <div class="express-preview-col">
+            <div class="wa-preview-card">
+              <div class="wa-preview-header">
+                <div class="wa-avatar"><i class="fa-solid fa-building"></i></div>
+                <div class="wa-header-info">
+                  <div class="wa-name">NTFOODS SARL Officiel</div>
+                  <div class="wa-status">Compte Professionnel &bull; En ligne</div>
+                </div>
+              </div>
+
+              <div class="wa-bubble">
+                <pre class="wa-bubble-text">{{ texteWhatsAppMessage }}</pre>
+                <div class="wa-time">{{ today | date:'HH:mm' }} <i class="fa-solid fa-check-double text-whatsapp"></i></div>
+              </div>
+
+              <div class="wa-actions-group">
+                <button type="button" class="btn btn-whatsapp w-100" (click)="envoyerSurWhatsApp()">
+                  <i class="fa-brands fa-whatsapp"></i> Ouvrir & Envoyer sur WhatsApp
+                </button>
+                <button type="button" class="btn btn-ghost w-100" (click)="copierTexteWhatsApp()">
+                  <i class="fa-solid fa-copy"></i> Copier le message WhatsApp
+                </button>
+              </div>
+            </div>
+
+            <!-- RÉCAPITULATIF FINANCIER -->
+            <div class="recap-box">
+              <div class="recap-row">
+                <span>Total Cartons :</span>
+                <strong>{{ totalCartonsExpress }} cartons</strong>
+              </div>
+              <div class="recap-row">
+                <span>Total Net HT :</span>
+                <span>{{ fCFA(totalHTExpress) }}</span>
+              </div>
+              <div class="recap-row">
+                <span>TVA (19.25%) :</span>
+                <span>{{ fCFA(totalTVAExpress) }}</span>
+              </div>
+              <div class="recap-row recap-total">
+                <span>NET À PAYER TTC :</span>
+                <span class="total-ttc-val">{{ fCFA(totalTTCExpress) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" (click)="fermerModalExpress()">Annuler</button>
+        <button type="button" class="btn btn-primary" [disabled]="soumissionEnCours()" (click)="soumettreCommandeExpress()">
+          @if (soumissionEnCours()) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement...
+          } @else {
+          <i class="fa-solid fa-check"></i> Valider & Enregistrer dans l'ERP
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- MODAL DEVIS PROFORMA IMPRIMABLE -->
+  @if (selectedCommandeProforma(); as cmd) {
+  <div class="modal-backdrop print-fullscreen" (click)="fermerProforma()">
+    <div class="modal-card modal-lg print-card" (click)="$event.stopPropagation()">
+      <div class="modal-header no-print">
+        <h3 class="modal-title"><i class="fa-solid fa-file-invoice"></i> Devis / Bon de Commande Officiel</h3>
+        <button class="btn-close" (click)="fermerProforma()">&times;</button>
+      </div>
+
+      <div class="proforma-imprimable">
+        <div class="proforma-header">
+          <div class="company-info">
+            <h2>NTFOODS SARL</h2>
+            <p>Agro-industrie & Transformation Alimentaire (Produits TANTY)</p>
+            <p>Zone Industrielle Bassa, B.P. 12053 Douala - Cameroun</p>
+            <p>Tél: (+237) 233 42 55 60 / 699 00 00 00 | Email: contact&#64;ntfoods.cm</p>
+            <p>N° Contribuable: M011200045230P | RCCM: RC/DLA/2012/B/1500</p>
+          </div>
+          <div class="doc-meta">
+            <div class="doc-type-badge">BON DE COMMANDE / PROFORMA</div>
+            <div class="doc-ref">N° : <strong>{{ cmd.numeroCommande }}</strong></div>
+            <div class="doc-date">Date : {{ cmd.dateCommande | date:'dd/MM/yyyy' }}</div>
+            <div class="doc-canal">Canal : <strong>{{ cmd.canal }}</strong></div>
+          </div>
+        </div>
+
+        <div class="doc-client-grid">
+          <div class="doc-box">
+            <h4>Client Destinataire</h4>
+            <p><strong>Code Client :</strong> {{ cmd.codeClient }}</p>
+            <p><strong>Détails / Livraison :</strong> {{ cmd.observations || 'Livraison magasin standard' }}</p>
+          </div>
+          <div class="doc-box">
+            <h4>Commercial Référent</h4>
+            <p><strong>Matricule :</strong> {{ cmd.matriculeCommercial }}</p>
+            <p><strong>Statut de commande :</strong> <span [class]="statutClass(cmd.statut)">{{ statutLabel(cmd.statut) }}</span></p>
+          </div>
+        </div>
+
+        <table class="proforma-table">
+          <thead>
+            <tr>
+              <th>Réf. Produit</th>
+              <th>Désignation</th>
+              <th>Conditionnement</th>
+              <th class="center">Quantité</th>
+              <th class="right">Prix Unitaire HT</th>
+              <th class="right">Total HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of cmd.lignes; track l.codeProduit) {
+            <tr>
+              <td><code>{{ l.codeProduit }}</code></td>
+              <td><strong>{{ l.designation }}</strong></td>
+              <td>{{ l.conditionnement }}</td>
+              <td class="center">{{ l.quantite }}</td>
+              <td class="right">{{ fCFA(l.prixUnitaire) }}</td>
+              <td class="right fw-bold">{{ fCFA(l.quantite * l.prixUnitaire) }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4"></td>
+              <td class="right fw-bold">Total HT :</td>
+              <td class="right fw-bold">{{ fCFA(calculerTotalLignes(cmd)) }}</td>
+            </tr>
+            <tr>
+              <td colspan="4"></td>
+              <td class="right">TVA (19.25%) :</td>
+              <td class="right">{{ fCFA(calculerTotalLignes(cmd) * 0.1925) }}</td>
+            </tr>
+            <tr class="total-ttc-row">
+              <td colspan="4"></td>
+              <td class="right fw-bold">NET À PAYER TTC :</td>
+              <td class="right fw-bold total-highlight">{{ fCFA(calculerTotalLignes(cmd) * 1.1925) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="proforma-signatures">
+          <div class="sig-box">
+            <p class="sig-title">Le Client (Bon pour accord)</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Date, Signature & Cachet</p>
+          </div>
+          <div class="sig-box">
+            <p class="sig-title">Direction Commerciale & Comptable</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Visa & Cachet NTFOODS SARL</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions no-print">
+        <button class="btn btn-ghost" (click)="fermerProforma()">Fermer</button>
+        <button class="btn btn-primary" (click)="imprimerProforma()"><i class="fa-solid fa-print"></i> Imprimer le Devis</button>
+      </div>
+    </div>
+  </div>
   }
 </div>

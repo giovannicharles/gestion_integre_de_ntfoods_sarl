@@ -26,6 +26,18 @@
 .tab-hidden { display: none; }
 .card-mt { margin-top: var(--sp-4); }
 
+.dash-21-btn-whatsapp {
+  background: #25D366 !important;
+  color: #ffffff !important;
+  border-color: #1eb956 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+.dash-21-btn-whatsapp:hover {
+  background: #1eb956 !important;
+  color: #ffffff !important;
+}
+
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 
 @media (max-width:767px) {

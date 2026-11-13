@@ -804,6 +804,34 @@
   color: var(--n500);
 }
 
+/* Quick WhatsApp Order Button across all ERP pages */
+.tb-quick-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #25D366;
+  color: #ffffff !important;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.25);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.tb-quick-wa-btn:hover {
+  background: #1eb956;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.35);
+}
+@media (max-width: 600px) {
+  .tb-quick-wa-text { display: none; }
+  .tb-quick-wa-btn { padding: 0 10px; }
+}
+
 /* Command Palette Trigger Button */
 .tb-cmdk-btn {
   display: flex;

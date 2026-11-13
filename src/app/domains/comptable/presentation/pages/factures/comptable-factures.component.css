@@ -1,32 +1,121 @@
-.card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
-.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
-.card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
-.form-card { box-shadow: var(--sh-md); }
+/* ═══ COMPTABLE FACTURES & AVOIRS ═══ */
 
+.ph-breadcrumbs { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--n500); margin-bottom: 2px; }
+.ph-icon-green { background: var(--g) !important; color: #ffffff; }
+
+.form-card { box-shadow: var(--sh-md); margin-bottom: var(--sp-4); }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-.lignes-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-.ligne-facture-row { display: grid; grid-template-columns: 1fr 2fr 70px 110px 70px 60px 30px; gap: 8px; align-items: end; margin-bottom: 8px; }
-.form-group-tight { margin: 0; }
-.label-xs { font-size: 10px; }
-.ligne-del-btn { height: 38px; }
-.btn-ajouter-ligne { margin-bottom: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 0.8rem; font-weight: 600; color: var(--n700); }
+.form-input { border: 1.5px solid var(--n300); border-radius: var(--r-md); padding: 0.55rem 0.75rem; font-size: 0.88rem; width: 100%; box-sizing: border-box; }
+.form-input-sm { padding: 0.35rem 0.5rem; font-size: 0.82rem; }
 
-.form-totals { display: flex; justify-content: flex-end; gap: 20px; border-top: 1px solid var(--n150); padding-top: 14px; }
+.lignes-hd-flex { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.lignes-title { font-size: 0.9rem; font-weight: 700; color: var(--g); display: flex; align-items: center; gap: 6px; margin: 0; }
+.btn-del-row { background: none; border: none; color: var(--r); cursor: pointer; padding: 4px; font-size: 0.9rem; }
+.btn-del-row:hover { transform: scale(1.15); }
+
+.form-totals { display: flex; justify-content: flex-end; gap: 24px; border-top: 1.5px solid var(--n200); padding-top: 14px; margin-top: 12px; }
 .form-total-item { text-align: right; }
-.form-total-lbl { font-size: 11px; color: var(--n400); }
-.form-total-val { font-weight: 700; }
-.form-total-ttc { font-weight: 800; font-size: 16px; color: var(--mc); }
+.form-total-lbl { font-size: 0.75rem; color: var(--n500); text-transform: uppercase; }
+.form-total-val { font-weight: 700; font-size: 1rem; color: var(--n800); }
+.form-total-ttc { font-weight: 800; font-size: 1.15rem; color: var(--g); }
 
-.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--n150); }
 
-.row-actions-flex { display: flex; gap: 6px; }
-.ico-r { color: var(--r); }
+/* TOOLBAR & FILTERS */
+.card-title-group { display: flex; align-items: center; gap: 0.75rem; }
+.erp-filter-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.erp-search-box { position: relative; display: flex; align-items: center; }
+.erp-search-box i { position: absolute; left: 10px; color: var(--n400); font-size: 0.85rem; }
+.erp-search-input { border: 1.5px solid var(--n300); border-radius: var(--r-md); padding: 0.45rem 0.75rem 0.45rem 2rem; font-size: 0.85rem; width: 220px; }
+.erp-search-input:focus { border-color: var(--g); outline: none; }
 
-@media (max-width:767px) {
-  .card { padding: 14px; }
-  .card-hd { flex-direction: column; align-items: flex-start; gap: 8px; }
+.filter-pills { display: flex; gap: 4px; background: var(--n100); padding: 3px; border-radius: 6px; }
+.pill-btn {
+  background: transparent; border: none; padding: 4px 10px; border-radius: 4px;
+  font-size: 0.78rem; font-weight: 600; color: var(--n600); cursor: pointer; transition: all 0.15s;
+}
+.pill-btn:hover { color: var(--g); }
+.pill-btn.active { background: #ffffff; color: var(--g); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* DATA TABLE */
+.erp-table { width: 100%; border-collapse: collapse; }
+.erp-table th { background: var(--n100); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; color: var(--n600); }
+.erp-table td { padding: 0.75rem 0.9rem; font-size: 0.86rem; vertical-align: middle; }
+.code-ref { font-family: monospace; font-weight: 700; color: var(--n800); }
+.client-name { font-weight: 600; color: var(--n800); }
+.row-actions-flex { display: flex; gap: 6px; align-items: center; justify-content: center; }
+
+/* MODAL & IMPRESSION FACTURE */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 1050;
+  backdrop-filter: blur(3px); padding: 1rem;
+}
+.modal-card {
+  background: #ffffff; border-radius: var(--r-lg); width: 100%; max-width: 800px;
+  max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem; border-bottom: 1px solid var(--n200); background: var(--n50);
+}
+.modal-title { font-size: 1.15rem; font-weight: 800; color: var(--g); margin: 0; }
+.btn-close { background: none; border: none; font-size: 1.6rem; cursor: pointer; color: var(--n400); }
+.modal-actions {
+  display: flex; justify-content: flex-end; gap: 0.75rem; padding: 0.9rem 1.5rem;
+  border-top: 1px solid var(--n200); background: var(--n50);
+}
+
+.facture-imprimable { padding: 1.5rem; background: #ffffff; overflow-y: auto; }
+.facture-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--g); padding-bottom: 1rem; margin-bottom: 1.25rem; }
+.facture-company h2 { margin: 0; color: var(--g); font-size: 1.35rem; font-weight: 800; }
+.tagline { font-weight: 600; color: var(--g); font-size: 0.8rem; margin: 2px 0 4px 0 !important; }
+.facture-company p { margin: 2px 0; font-size: 0.78rem; color: var(--n600); }
+.facture-meta { text-align: right; }
+.facture-type-badge { background: var(--g); color: #fff; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; margin-bottom: 0.4rem; display: inline-block; }
+.facture-ref { font-size: 0.95rem; color: var(--n800); }
+.facture-date { font-size: 0.82rem; color: var(--n500); }
+.facture-statut { font-size: 0.82rem; color: var(--g); }
+
+.facture-client-box { background: var(--n50); border: 1px solid var(--n200); border-radius: var(--r-md); padding: 0.85rem; margin-bottom: 1.25rem; }
+.facture-client-box h4 { margin: 0 0 0.35rem 0; font-size: 0.8rem; color: var(--n500); text-transform: uppercase; }
+.fc-client-nom { font-size: 1rem; color: var(--n900); margin: 0 0 4px 0; }
+.facture-client-box p { margin: 2px 0; font-size: 0.82rem; color: var(--n700); }
+
+.facture-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; }
+.facture-table th { background: var(--n100); border: 1px solid var(--n200); padding: 6px 10px; font-size: 0.8rem; text-align: left; }
+.facture-table td { border: 1px solid var(--n200); padding: 6px 10px; font-size: 0.82rem; }
+.facture-total-row td { background: var(--n100); font-size: 0.95rem; }
+.facture-highlight { color: var(--g); font-size: 1.15rem; }
+
+.facture-legal { background: #fdfbf3; border-left: 3px solid var(--o); padding: 0.75rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.8rem; }
+.legal-mention { font-size: 0.72rem; color: var(--n500); margin-top: 4px; }
+
+.facture-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; }
+.sig-box { border: 1px dashed var(--n300); border-radius: var(--r-md); padding: 1rem; text-align: center; }
+.sig-title { font-weight: 700; font-size: 0.82rem; color: var(--n700); margin: 0 0 0.5rem 0; }
+.sig-space { height: 60px; }
+.sig-sub { font-size: 0.72rem; color: var(--n400); margin: 0; }
+
+@media print {
+  body * { visibility: hidden; }
+  .facture-imprimable, .facture-imprimable * { visibility: visible; }
+  .facture-imprimable { position: fixed; inset: 0; padding: 2cm; background: white; z-index: 99999; }
+  .no-print { display: none !important; }
+}
+
+@media (max-width: 767px) {
+  .ph { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .ph-actions { width: 100%; flex-wrap: wrap; }
   .form-row-2 { grid-template-columns: 1fr; }
-  .ligne-facture-row { grid-template-columns: 1fr 1fr; }
+  .card-hd { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .erp-filter-toolbar { width: 100%; }
+  .erp-search-input { width: 100%; }
+  .filter-pills { overflow-x: auto; width: 100%; }
   .form-totals { flex-direction: column; gap: 8px; }
-  .form-total-item { width: 100%; }
+  .facture-header, .facture-signatures { grid-template-columns: 1fr; flex-direction: column; gap: 1rem; }
+  .facture-meta { text-align: left; }
 }

@@ -1,189 +1,352 @@
-<div class="page animate-fadeInUp">
+<div class="dash animate-fadeInUp">
   <div class="ph ph-wm-comptable">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-cash-register"></i></div>
+      <div class="ph-icon ph-icon-green"><i class="fa-solid fa-cash-register"></i></div>
       <div>
-        <h1 class="ph-title">Journal de Caisse</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':'fr' }}</p>
+        <div class="ph-breadcrumbs">Comptabilité &bull; Trésorerie</div>
+        <h1 class="ph-title">Journal & Brouillard de Caisse</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} &bull; Gestion des flux d'espèces, encaissements et arrêté journalier</p>
       </div>
     </div>
     <div class="ph-actions">
-      @if (!caisse() && !loading()) {
-        <button class="btn btn-primary" (click)="showOuvrir.set(true)">
-          <i class="fa-solid fa-lock-open"></i> Ouvrir la caisse
-        </button>
-      }
       @if (caisse()) {
+        <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter en format CSV compatible Excel">
+          <i class="fa-solid fa-file-csv"></i> Export CSV
+        </button>
+        <button class="btn btn-ghost" (click)="ouvrirBilletage()" title="Billetage physique et Procès-Verbal de clôture">
+          <i class="fa-solid fa-file-invoice-dollar"></i> PV d'Arrêté & Billetage
+        </button>
         <button class="btn btn-success" (click)="mouvementType='ENTREE';showMouvement.set(true)">
-          <i class="fa-solid fa-arrow-down"></i> Entrée
+          <i class="fa-solid fa-arrow-down"></i> + Entrée Caisse
         </button>
         <button class="btn btn-danger" (click)="mouvementType='SORTIE';showMouvement.set(true)">
-          <i class="fa-solid fa-arrow-up"></i> Sortie
+          <i class="fa-solid fa-arrow-up"></i> - Sortie Caisse
+        </button>
+      } @else if (!loading()) {
+        <button class="btn btn-primary" (click)="showOuvrir.set(true)">
+          <i class="fa-solid fa-lock-open"></i> Ouvrir la caisse du jour
         </button>
       }
     </div>
   </div>
 
-  @if (toastMsg()) {
-    <div class="toast toast-{{ toastType() }}">{{ toastMsg() }}</div>
+  @if (seuilDepasse()) {
+  <div class="alert-banner-seuil">
+    <div class="alert-ico"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="alert-body">
+      <strong>ALERTE SÉCURITÉ TRÉSORERIE : Seuil de sécurisation dépassé</strong>
+      <p>Le solde actuel en caisse ({{ fCFA(caisse()!.soldeCourant) }}) dépasse le seuil maximal autorisé ({{ fCFA(caisse()!.seuilSecurisation) }}). Un versement d'écrêtement vers le compte bancaire NTFOODS est requis sans délai.</p>
+    </div>
+  </div>
   }
 
   @if (loading()) {
     <div class="loading-box">
-      <div class="spinner spinner-lg loading-spinner"></div>Chargement…
+      <div class="spinner spinner-lg loading-spinner"></div>Chargement du journal de caisse…
     </div>
   } @else if (erreur()) {
-    <!-- Une indisponibilité ne se confond pas avec une caisse non ouverte : la
-         première appelle une vérification, la seconde un clic sur « Ouvrir ». -->
     <div class="card">
       <div class="empty-block">
         <i class="fa-solid fa-triangle-exclamation empty-ico empty-ico-warn"></i>
         <h3 class="empty-title">Journal de caisse indisponible</h3>
         <p class="empty-sub">{{ erreur() }}</p>
-        <button class="btn btn-sm" (click)="chargerCaisseJour()">Réessayer</button>
+        <button class="btn btn-primary btn-sm" (click)="chargerCaisseJour()">Réessayer</button>
       </div>
     </div>
   } @else if (!caisse()) {
     <div class="card">
       <div class="empty-block">
         <i class="fa-solid fa-cash-register empty-ico"></i>
-        <h3 class="empty-title">Caisse non ouverte</h3>
-        <p class="empty-sub">Aucun journal de caisse n'existe pour aujourd'hui. Cliquez sur "Ouvrir la caisse" pour démarrer.</p>
+        <h3 class="empty-title">Caisse non ouverte pour aujourd'hui</h3>
+        <p class="empty-sub">Aucun journal de caisse n'existe pour la date du {{ today | date:'dd/MM/yyyy' }}. Veuillez initialiser le solde d'ouverture pour enregistrer les encaissements et décaissements.</p>
+        <button class="btn btn-primary" (click)="showOuvrir.set(true)"><i class="fa-solid fa-lock-open"></i> Ouvrir la caisse</button>
       </div>
     </div>
   } @else {
-    <div class="stats-grid">
-      <div class="card stat-card">
-        <div class="stat-ico stat-ico-g"><i class="fa-solid fa-wallet"></i></div>
-        <div class="stat-val">{{ fCFA(caisse()!.soldeCourant) }}</div>
-        <div class="stat-lbl">Solde actuel</div>
+    <div class="kpi-grid">
+      <div class="kpi-card kp-g">
+        <div class="kpi-ico ig"><i class="fa-solid fa-vault"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Solde Actuel en Caisse</span>
+          <span class="kpi-val">{{ fCFA(caisse()!.soldeCourant) }}</span>
+          <span class="kpi-meta"><i class="fa-solid fa-coins"></i> Espèces disponibles</span>
+        </div>
       </div>
-      <div class="card stat-card">
-        <div class="stat-ico stat-ico-mc"><i class="fa-solid fa-arrow-down"></i></div>
-        <div class="stat-val">{{ fCFA(caisse()!.totalEntrees) }}</div>
-        <div class="stat-lbl">Total entrées</div>
+      <div class="kpi-card kp-b">
+        <div class="kpi-ico ib"><i class="fa-solid fa-arrow-down"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Total Entrées du Jour</span>
+          <span class="kpi-val">{{ fCFA(caisse()!.totalEntrees) }}</span>
+          <span class="kpi-meta">Versements & règlements</span>
+        </div>
       </div>
-      <div class="card stat-card">
-        <div class="stat-ico stat-ico-r"><i class="fa-solid fa-arrow-up"></i></div>
-        <div class="stat-val">{{ fCFA(caisse()!.totalSorties) }}</div>
-        <div class="stat-lbl">Total sorties</div>
+      <div class="kpi-card kp-r">
+        <div class="kpi-ico ir"><i class="fa-solid fa-arrow-up"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Total Sorties du Jour</span>
+          <span class="kpi-val">{{ fCFA(caisse()!.totalSorties) }}</span>
+          <span class="kpi-meta">Dépenses & décaissements</span>
+        </div>
       </div>
-      <div class="card stat-card">
-        <div class="stat-ico stat-ico-o"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="stat-val">{{ fCFA(caisse()!.seuilSecurisation) }}</div>
-        <div class="stat-lbl">Seuil de sécurisation</div>
+      <div class="kpi-card kp-y">
+        <div class="kpi-ico iy"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Seuil de Sécurisation</span>
+          <span class="kpi-val">{{ fCFA(caisse()!.seuilSecurisation) }}</span>
+          <span class="kpi-meta">Plafond dépôt banque</span>
+        </div>
       </div>
     </div>
 
-    <div class="card card-section">
-      <h3 class="section-title">
-        <i class="fa-solid fa-list"></i> Mouvements du jour
-      </h3>
+    <!-- TABLEAU DES MOUVEMENTS DU JOUR -->
+    <div class="card card-wm card-wm-comptable">
+      <div class="card-hd">
+        <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Mouvements de Caisse du Jour</h3>
+        <span class="badge bg-neutral">{{ caisse()!.lignes.length }} opération(s)</span>
+      </div>
+
       @if (!caisse()!.lignes.length) {
-        <p class="empty-msg">Aucun mouvement enregistré.</p>
+        <p class="empty-state">Aucun mouvement enregistré aujourd'hui.</p>
       } @else {
-        <div class="tbl-scroll">
-          <div class="tbl-wrap">
-          <table class="tbl">
+        <div class="tbl-wrap">
+          <table class="data-table erp-table">
             <thead>
-              <tr><th>Référence</th><th>Type</th><th>Motif</th><th>Montant</th><th>Heure</th></tr>
+              <tr>
+                <th>Réf. Opération</th>
+                <th>Type</th>
+                <th>Motif & Description</th>
+                <th class="right">Montant FCFA</th>
+                <th>Opérateur</th>
+                <th>Heure</th>
+              </tr>
             </thead>
             <tbody>
               @for (l of caisse()!.lignes; track l.referenceOperation) {
                 <tr>
-                  <td class="cell-mono">{{ l.referenceOperation }}</td>
+                  <td><strong class="code-ref">{{ l.referenceOperation }}</strong></td>
                   <td>
                     <span class="badge" [class.badge-success]="l.typeMouvement==='ENTREE'" [class.badge-danger]="l.typeMouvement==='SORTIE'">
-                      {{ l.typeMouvement }}
+                      {{ l.typeMouvement === 'ENTREE' ? 'ENTRÉE +' : 'SORTIE -' }}
                     </span>
                   </td>
                   <td>{{ l.motif }}</td>
-                  <td class="cell-amount" [class.text-g]="l.typeMouvement==='ENTREE'" [class.text-r]="l.typeMouvement==='SORTIE'">
+                  <td class="right fw-bold" [class.text-success]="l.typeMouvement==='ENTREE'" [class.text-danger]="l.typeMouvement==='SORTIE'">
                     {{ l.typeMouvement === 'ENTREE' ? '+' : '-' }} {{ fCFA(l.montant) }}
                   </td>
+                  <td><span class="badge bg-neutral">{{ l.matriculeOperateur || 'Caissier' }}</span></td>
                   <td>{{ l.dateOperation | date:'HH:mm' }}</td>
                 </tr>
               }
             </tbody>
           </table>
-          </div>
         </div>
       }
     </div>
   }
 
+  <!-- HISTORIQUE MENSUEL -->
   @if (historique().length > 0) {
     <div class="card card-wm card-wm-comptable">
-      <h3 class="section-title">
-        <i class="fa-solid fa-clock-rotate-left"></i> Historique du mois
-      </h3>
-      <div class="tbl-scroll">
-        <div class="tbl-wrap">
-        <table class="tbl">
+      <div class="card-hd">
+        <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique Mensuel des Arrêtés de Caisse</h3>
+        <span class="badge bg-neutral">{{ historique().length }} journée(s)</span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table erp-table">
           <thead>
-            <tr><th>Date</th><th>Solde initial</th><th>Entrées</th><th>Sorties</th><th>Solde final</th></tr>
+            <tr>
+              <th>Date</th>
+              <th class="right">Solde Initial</th>
+              <th class="right">Total Entrées</th>
+              <th class="right">Total Sorties</th>
+              <th class="right">Solde Clôture</th>
+            </tr>
           </thead>
           <tbody>
             @for (h of historique(); track h.id) {
               <tr>
-                <td>{{ h.date | date:'dd MMM yyyy':'':'fr' }}</td>
-                <td>{{ fCFA(h.soldeCourant - h.totalEntrees + h.totalSorties) }}</td>
-                <td class="text-g cell-amount-sm">{{ fCFA(h.totalEntrees) }}</td>
-                <td class="text-r cell-amount-sm">{{ fCFA(h.totalSorties) }}</td>
-                <td class="cell-amount">{{ fCFA(h.soldeCourant) }}</td>
+                <td><strong>{{ h.date | date:'EEEE dd MMMM yyyy':'':'fr' }}</strong></td>
+                <td class="right">{{ fCFA(h.soldeCourant - h.totalEntrees + h.totalSorties) }}</td>
+                <td class="right text-success">{{ fCFA(h.totalEntrees) }}</td>
+                <td class="right text-danger">{{ fCFA(h.totalSorties) }}</td>
+                <td class="right fw-bold text-success">{{ fCFA(h.soldeCourant) }}</td>
               </tr>
             }
           </tbody>
         </table>
-        </div>
       </div>
     </div>
   }
-</div>
 
-@if (showOuvrir()) {
-  <div class="modal-overlay" (click)="showOuvrir.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Ouvrir la caisse</h3>
-      <div class="form-group">
-        <label>Solde initial (FCFA)</label>
-        <input type="number" class="form-input" [(ngModel)]="soldeInitial" placeholder="0">
+  <!-- MODAL OUVERTURE DE CAISSE -->
+  @if (showOuvrir()) {
+  <div class="modal-backdrop" (click)="showOuvrir.set(false)">
+    <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-lock-open"></i> Ouverture du Journal de Caisse</h3>
+        <button class="btn-close" (click)="showOuvrir.set(false)">&times;</button>
+      </div>
+      <div class="modal-body-pad">
+        <div class="form-group">
+          <label class="form-label">Solde Initial / Fond de Caisse d'Ouverture (FCFA) *</label>
+          <input type="number" class="form-input" [(ngModel)]="soldeInitial" placeholder="0">
+          <p class="form-hint">Montant physique d'espèces comptées dans le coffre au démarrage de la journée.</p>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showOuvrir.set(false)">Annuler</button>
         <button class="btn btn-primary" (click)="ouvrirCaisse()" [disabled]="saving()">
-          @if (saving()) { Ouverture… } @else { Ouvrir }
+          @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Ouverture… } @else { <i class="fa-solid fa-check"></i> Valider l'Ouverture }
         </button>
       </div>
     </div>
   </div>
-}
+  }
 
-@if (showMouvement()) {
-  <div class="modal-overlay" (click)="showMouvement.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">
-        {{ mouvementType === 'ENTREE' ? 'Entrée de caisse' : 'Sortie de caisse' }}
-      </h3>
-      <div class="form-group">
-        <label>Référence opération (optionnel)</label>
-        <input type="text" class="form-input" [(ngModel)]="refOperation" placeholder="Généré automatiquement si vide">
+  <!-- MODAL ENREGISTREMENT MOUVEMENT -->
+  @if (showMouvement()) {
+  <div class="modal-backdrop" (click)="showMouvement.set(false)">
+    <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title" [class.text-success]="mouvementType === 'ENTREE'" [class.text-danger]="mouvementType === 'SORTIE'">
+          <i [class]="mouvementType === 'ENTREE' ? 'fa-solid fa-arrow-down' : 'fa-solid fa-arrow-up'"></i>
+          {{ mouvementType === 'ENTREE' ? 'Nouvelle Entrée de Caisse' : 'Nouvelle Sortie de Caisse' }}
+        </h3>
+        <button class="btn-close" (click)="showMouvement.set(false)">&times;</button>
       </div>
-      <div class="form-group">
-        <label>Montant (FCFA)</label>
-        <input type="number" class="form-input" [(ngModel)]="montant" placeholder="0">
-      </div>
-      <div class="form-group">
-        <label>Motif</label>
-        <input type="text" class="form-input" [(ngModel)]="motif" placeholder="Motif du mouvement">
+      <div class="modal-body-pad">
+        <div class="form-group">
+          <label class="form-label">Référence Pièce / Reçu (optionnel)</label>
+          <input type="text" class="form-input" [(ngModel)]="refOperation" placeholder="Ex: RECU-0012 ou VIDE pour auto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Montant (FCFA) *</label>
+          <input type="number" class="form-input" [(ngModel)]="montant" placeholder="Ex: 50000" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Motif / Justificatif de la Transaction *</label>
+          <input type="text" class="form-input" [(ngModel)]="motif" placeholder="Ex: Versement commercial, Achat carburant groupe...">
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" (click)="showMouvement.set(false)">Annuler</button>
         <button class="btn" [class.btn-success]="mouvementType==='ENTREE'" [class.btn-danger]="mouvementType==='SORTIE'"
           (click)="enregistrerMouvement()" [disabled]="saving() || !montant || !motif">
-          @if (saving()) { Enregistrement… } @else { Enregistrer }
+          @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement… } @else { <i class="fa-solid fa-check"></i> Enregistrer }
         </button>
       </div>
     </div>
   </div>
-}
+  }
+
+  <!-- MODAL BILLETAGE & PROCÈS-VERBAL DE CLÔTURE IMPRIMABLE -->
+  @if (showBilletageModal()) {
+  <div class="modal-backdrop print-fullscreen" (click)="fermerBilletage()">
+    <div class="modal-card modal-lg print-card" (click)="$event.stopPropagation()">
+      <div class="modal-header no-print">
+        <h3 class="modal-title"><i class="fa-solid fa-file-invoice-dollar"></i> Billetage & Arrêté de Caisse Journalier</h3>
+        <button class="btn-close" (click)="fermerBilletage()">&times;</button>
+      </div>
+
+      <div class="billetage-imprimable">
+        <div class="pv-header">
+          <div class="pv-company">
+            <h2>NTFOODS SARL</h2>
+            <p>Direction Administrative et Financière &bull; Service Comptabilité</p>
+            <p>Zone Industrielle Bassa, Douala - Cameroun</p>
+          </div>
+          <div class="pv-meta">
+            <div class="pv-badge">PROCÈS-VERBAL D'ARRÊTÉ DE CAISSE</div>
+            <div class="pv-date">Date : {{ today | date:'dd/MM/yyyy' }}</div>
+          </div>
+        </div>
+
+        <div class="billetage-grid-split">
+          <!-- GAUCHE : DÉCOMPTE PHYSIQUE -->
+          <div class="billetage-box">
+            <h4>Billetage Physique (Décompte des Espèces)</h4>
+            <div class="billet-row">
+              <span>Billets de 10 000 FCFA :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().b10000" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().b10000 * 10000) }}</strong>
+            </div>
+            <div class="billet-row">
+              <span>Billets de 5 000 FCFA :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().b5000" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().b5000 * 5000) }}</strong>
+            </div>
+            <div class="billet-row">
+              <span>Billets de 2 000 FCFA :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().b2000" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().b2000 * 2000) }}</strong>
+            </div>
+            <div class="billet-row">
+              <span>Billets de 1 000 FCFA :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().b1000" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().b1000 * 1000) }}</strong>
+            </div>
+            <div class="billet-row">
+              <span>Billets de 500 FCFA :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().b500" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().b500 * 500) }}</strong>
+            </div>
+            <div class="billet-row">
+              <span>Monnaie / Pièces (Total) :</span>
+              <input type="number" class="billet-input" [(ngModel)]="billetage().pieces" min="0" />
+              <strong class="billet-subtotal">{{ fCFA(billetage().pieces) }}</strong>
+            </div>
+            <div class="billet-total-row">
+              <span>TOTAL ESPÈCES COMPTÉES :</span>
+              <span class="total-physique-val">{{ fCFA(totalPhysiqueCompte()) }}</span>
+            </div>
+          </div>
+
+          <!-- DROITE : RAPPROCHEMENT COMPTABLE -->
+          <div class="rapprochement-box">
+            <h4>Rapprochement Comptable</h4>
+            <div class="recap-line">
+              <span>Solde Théorique Caisse ERP :</span>
+              <strong>{{ fCFA(caisse()?.soldeCourant || 0) }}</strong>
+            </div>
+            <div class="recap-line">
+              <span>Total Physique Compté :</span>
+              <strong class="text-success">{{ fCFA(totalPhysiqueCompte()) }}</strong>
+            </div>
+            <div class="recap-line ecart-line" [class.ecart-nul]="ecartCaisse() === 0" [class.ecart-deficitaire]="ecartCaisse() < 0" [class.ecart-excedentaire]="ecartCaisse() > 0">
+              <span>Écart de Caisse :</span>
+              <strong>{{ ecartCaisse() > 0 ? '+' : '' }}{{ fCFA(ecartCaisse()) }}</strong>
+            </div>
+            <div class="ecart-explication">
+              @if (ecartCaisse() === 0) {
+              <p class="text-success"><i class="fa-solid fa-check-circle"></i> Caisse parfaitement équilibrée. Aucun écart constaté.</p>
+              } @else if (ecartCaisse() < 0) {
+              <p class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Déficit de caisse constaté. Justification obligatoire requise.</p>
+              } @else {
+              <p class="text-warning"><i class="fa-solid fa-triangle-exclamation"></i> Excédent de caisse constaté. Vérifier les pièces d'encaissement.</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="pv-signatures">
+          <div class="sig-box">
+            <p class="sig-title">Le Caissier / Opérateur</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Nom, Date & Émargement</p>
+          </div>
+          <div class="sig-box">
+            <p class="sig-title">Le Chef Comptable / DAF</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Visa & Approbation</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions no-print">
+        <button class="btn btn-ghost" (click)="fermerBilletage()">Fermer</button>
+        <button class="btn btn-primary" (click)="imprimerBilletage()"><i class="fa-solid fa-print"></i> Imprimer le PV de Caisse</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

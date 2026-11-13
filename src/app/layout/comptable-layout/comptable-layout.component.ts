@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -10,6 +10,7 @@ import { ThemeService } from '../../core/services/theme.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ROLE_LABELS } from '../../core/models/user.models';
 import { CommercialService } from '../../domains/commercial/infrastructure/commercial.service';
+import { ComptableService } from '../../domains/comptable/infrastructure/comptable.service';
 import { NotificationCenterComponent } from '../../shared/notification-center/notification-center.component';
 import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-search.component';
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
@@ -28,12 +29,13 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
   templateUrl: './comptable-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
-export class ComptableLayoutComponent implements OnInit {
+export class ComptableLayoutComponent implements OnInit, OnDestroy {
   router = inject(Router);
   alertBadge = inject(AlertBadgeService);
   readonly theme = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly commercialService = inject(CommercialService);
+  private readonly comptableService = inject(ComptableService);
   private readonly clock = inject(ClockService);
 
   sidebarOpen = signal(true);
@@ -42,6 +44,12 @@ export class ComptableLayoutComponent implements OnInit {
   currentPageTitle = signal('Tableau de Bord');
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
+
+  // Badges dynamiques réactifs
+  pendingCommandesCount = signal(0);
+  pendingFacturesCount = signal(0);
+  pendingRecouvrementCount = signal(0);
+  private badgeTimer: any = null;
 
   currentUser = computed(() => this.authService.getCurrentUser());
   userInitials = computed(() => {
@@ -71,15 +79,11 @@ export class ComptableLayoutComponent implements OnInit {
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/comptable/validations' },
   ];
 
-  /** Regroupement par thème (2026-11-09, même motif que DG) : la liste plate de 13 items est
-   * remplacée par 4 groupes dépliables, plus lisible qu'une longue colonne sans hiérarchie. */
-  navGroups: NavGroup[] = [
+  readonly navGroups = computed<NavGroup[]>(() => [
     {
       label: 'Validations & Facturation', icon: 'fa-file-invoice', children: [
-        { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes' },
-        { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures' },
-        // 2026-11-10 (demande explicite du porteur) : suivi des matières premières, symétrique
-        // à l'écran consommables du Contrôleur Général.
+        { label: 'Validation Commandes', icon: 'fa-clipboard-check', route: '/comptable/commandes', badge: this.pendingCommandesCount(), badgeClass: 'bd-orange' },
+        { label: 'Facturation', icon: 'fa-file-invoice', route: '/comptable/factures', badge: this.pendingFacturesCount(), badgeClass: 'bd-neutral' },
         { label: 'Matières Premières', icon: 'fa-wheat-awn', route: '/comptable/matieres-premieres' },
       ]
     },
@@ -87,7 +91,7 @@ export class ComptableLayoutComponent implements OnInit {
       label: 'Caisse & Tournées', icon: 'fa-cash-register', children: [
         { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
         { label: 'Fins de Tournée', icon: 'fa-route', route: '/comptable/sessions' },
-        { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement' },
+        { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement', badge: this.pendingRecouvrementCount(), badgeClass: 'bd-red' },
       ]
     },
     {
@@ -104,39 +108,77 @@ export class ComptableLayoutComponent implements OnInit {
         { label: 'Rapports', icon: 'fa-file-export', route: '/comptable/rapports' },
       ]
     },
-  ];
+  ]);
 
-  /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
   sidebarFiltre = signal('');
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
-  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
+  navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups(), this.sidebarFiltre()));
   rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
   expandedGroup = signal<string | null>('Validations & Facturation');
   toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
-  /** Palette de commandes Ctrl+K (2026-11-02, même composant que DG/Admin). */
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
   commandItems = computed(() => [
     ...this.navItems,
-    ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
+    ...this.navGroups().flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
   ]);
 
   ngOnInit() {
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
-      const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
+      const allItems = [...this.navItems, ...this.navGroups().flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
+
+    this.rafraichirBadges();
+    this.badgeTimer = setInterval(() => this.rafraichirBadges(), 30000);
+  }
+
+  rafraichirBadges(): void {
+    // 1. Commandes tournées + distance
     this.commercialService.getPrecommandesAValiderComptable().subscribe({
       next: page => {
-        const n = page.contenu.filter(p => p.statut === 'VALIDEE_SECRETAIRE').length;
-        const item = this.navGroups.flatMap(g => g.children).find(x => x.route === '/comptable/commandes');
-        if (item) { item.badge = n; item.badgeClass = 'bd-orange'; }
+        const nbTournees = (page.contenu || []).filter(p => p.statut === 'VALIDEE_SECRETAIRE').length;
+        this.commercialService.getCommandesDistance().subscribe({
+          next: distList => {
+            const nbDist = (distList || []).filter(d => d.statut === 'VALIDEE_SECRETAIRE' || d.statut === 'CREEE').length;
+            this.pendingCommandesCount.set(nbTournees + nbDist);
+          },
+          error: () => this.pendingCommandesCount.set(nbTournees)
+        });
       },
       error: () => {},
     });
+
+    // 2. Factures émises non payées
+    const now = new Date();
+    const debut = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const fin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    this.comptableService.getFactures(debut, fin).subscribe({
+      next: page => {
+        const nb = (page.contenu || []).filter(f => f.statut === 'EMISE').length;
+        this.pendingFacturesCount.set(nb);
+      },
+      error: () => {},
+    });
+
+    // 3. Recouvrements en attente
+    this.commercialService.getRecouvrements().subscribe({
+      next: recs => {
+        const nb = (recs || []).filter(r => r.statut !== 'APURE').length;
+        this.pendingRecouvrementCount.set(nb);
+      },
+      error: () => {},
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.badgeTimer) {
+      clearInterval(this.badgeTimer);
+      this.badgeTimer = null;
+    }
   }
 
   @HostListener('window:resize', ['$event'])
@@ -147,8 +189,6 @@ export class ComptableLayoutComponent implements OnInit {
   toggleSidebar() { if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v); else this.sidebarOpen.update(v => !v); }
   closeMobile() { this.mobileOpen.set(false); }
 
-  /** Modal de confirmation réutilisable (2026-11-09, demande explicite du porteur) : remplace
-   * le confirm() natif, jamais stylé, par ConfirmDialogComponent (déjà écrit, jamais monté). */
   showLogoutConfirm = signal(false);
   logout(): void { this.showLogoutConfirm.set(true); }
   confirmerLogout(): void {
