@@ -1,0 +1,48 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-file-shield"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Documents de Magasin & Procès-Verbaux de Stock</h1>
+        <p class="ph-sub">Bordereaux de transfert inter-sites, fiches d'inventaires physiques et décharges de dotations TANTY</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary"><i class="fa-solid fa-file-arrow-up"></i> Archiver Nouveau PV</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 20px;">
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Réf</th>
+          <th>Type</th>
+          <th>Intitulé du Document</th>
+          <th>Entrepôt / Magasin</th>
+          <th>Date</th>
+          <th>Statut</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of documents(); track d.id) {
+        <tr>
+          <td class="mono fw-bold text-primary">{{ d.reference }}</td>
+          <td><span class="badge bg-gold badge-sm">{{ d.type }}</span></td>
+          <td class="fw-bold">{{ d.titre }}</td>
+          <td>{{ d.magasin }}</td>
+          <td>{{ d.date }}</td>
+          <td><span class="badge bg-success badge-sm">{{ d.statut }}</span></td>
+          <td style="text-align: right;">
+            <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Télécharger</button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

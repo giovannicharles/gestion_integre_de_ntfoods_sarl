@@ -1,0 +1,106 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-chart-column"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Statistiques Commerciales & Performance</h1>
+        <p class="ph-sub">Chiffre d’affaires individuel, quotas atteints, simulation de primes et répartition par gamme</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <span class="badge bg-gold" style="font-size: 0.85rem; padding: 8px 12px;">
+        <i class="fa-solid fa-trophy"></i> Rang Actuel : 2e Commercial
+      </span>
+    </div>
+  </div>
+
+  <!-- BLOCS KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Réalisé (Ce Mois)</span>
+        <span class="kpi-val">{{ fCFA(caMoisFCFA()) }}</span>
+        <span class="kpi-meta">{{ tauxRealisation }}% de l'objectif</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-bullseye"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Cible Mensuelle</span>
+        <span class="kpi-val">{{ fCFA(objectifMoisFCFA()) }}</span>
+        <span class="kpi-meta">Quota palier N°1</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Prime Commerciale Estimée</span>
+        <span class="kpi-val">{{ fCFA(primeAcquiseFCFA()) }}</span>
+        <span class="kpi-meta">Calculé sur marge et volume</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAUX DE VENTILATION -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- PAR GAMME -->
+    <div class="card" style="padding: 20px;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-boxes-stacked text-primary" style="margin-right: 8px;"></i>
+        Ventes par Gamme de Produits
+      </h3>
+      <table class="table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Gamme</th>
+            <th style="text-align: right;">Cartons</th>
+            <th style="text-align: right;">CA FCFA</th>
+            <th style="text-align: right;">Part</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of ventesParGamme(); track g.gamme) {
+          <tr>
+            <td class="fw-bold">{{ g.gamme }}</td>
+            <td style="text-align: right;" class="mono">{{ g.cartons }}</td>
+            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(g.caFCFA) }}</td>
+            <td style="text-align: right;"><span class="badge bg-gold badge-sm">{{ g.part }}%</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAR SECTEUR -->
+    <div class="card" style="padding: 20px;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-map-location-dot text-primary" style="margin-right: 8px;"></i>
+        Pénétration par Secteur Commercial
+      </h3>
+      <table class="table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Secteur</th>
+            <th style="text-align: right;">Clients Actifs</th>
+            <th style="text-align: right;">CA Réalisé</th>
+            <th style="text-align: right;">Taux Couverture</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of ventesParSecteur(); track s.secteur) {
+          <tr>
+            <td class="fw-bold">{{ s.secteur }}</td>
+            <td style="text-align: right;" class="mono">{{ s.clients }}</td>
+            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(s.caFCFA) }}</td>
+            <td style="text-align: right;"><span class="badge bg-primary badge-sm">{{ s.tauxCouverture }}%</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

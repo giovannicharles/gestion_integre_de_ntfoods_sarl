@@ -1445,57 +1445,76 @@
 .btn-quick-whatsapp {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
+  gap: 6px;
   background: #25D366;
   color: #FFFFFF !important;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.35);
+  box-shadow: 0 1px 4px rgba(37, 211, 102, 0.35);
   transition: all 0.2s ease;
   border: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .btn-quick-whatsapp:hover {
   background: #20BA5A;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.45);
+  box-shadow: 0 3px 8px rgba(37, 211, 102, 0.45);
 }
 .btn-quick-whatsapp i {
   font-size: 14px;
-}
-@media (max-width: 768px) {
-  .btn-quick-whatsapp span { display: none; }
-  .btn-quick-whatsapp { padding: 6px 9px; border-radius: 50%; }
 }
 
 /* ── Direct Module Guide Button ── */
 .btn-guide-module {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   background: #F1F5F9;
   color: #14532D !important;
   border: 1px solid #CBD5E1;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 6px 11px;
+  padding: 6px 10px;
   border-radius: 6px;
   text-decoration: none;
   white-space: nowrap;
   transition: all 0.2s ease;
-  cursor: pointer;
+  flex-shrink: 0;
 }
 .btn-guide-module:hover {
   background: #E2E8F0;
   color: #0E3E20 !important;
   border-color: #94A3B8;
-  transform: translateY(-1px);
 }
-@media (max-width: 768px) {
-  .btn-guide-module span { display: none; }
-  .btn-guide-module { padding: 6px 9px; border-radius: 50%; }
+.btn-guide-module i {
+  font-size: 13px;
+  color: #14532D;
+}
+
+/* Responsive Topbar pour éviter tout chevauchement */
+@media (max-width: 1440px) {
+  .btn-quick-whatsapp span,
+  .btn-guide-module span {
+    display: none;
+  }
+  .btn-quick-whatsapp,
+  .btn-guide-module {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 1250px) {
+  .tb-date {
+    display: none;
+  }
 }

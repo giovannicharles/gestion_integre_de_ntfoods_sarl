@@ -17,6 +17,9 @@ export const CONTROLE_ROUTES: Routes = [
       { path: 'valorisation', loadComponent: () => import('./pages/valorisation/controle-valorisation.component').then(m => m.ControleValorisationComponent) },
       { path: 'budget', loadComponent: () => import('./pages/budget/controle-budget.component').then(m => m.ControleBudgetComponent) },
       { path: 'variances', loadComponent: () => import('./pages/variances/controle-variances.component').then(m => m.ControleVariancesComponent) },
+      { path: 'documents', loadComponent: () => import('./pages/documents/controle-documents.component').then(m => m.ControleDocumentsComponent) },
+      { path: 'reporting', loadComponent: () => import('./pages/reporting/controle-reporting.component').then(m => m.ControleReportingComponent) },
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/controle-assistant.component').then(m => m.ControleAssistantComponent) },
       { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },
       // 2026-11-08 : le Contrôleur Général fait déjà la 2e validation des réceptions de
       // consommables/matériel (STOCK_RECEPTION_VALIDER_ETAPE2) et a déjà tous les droits de

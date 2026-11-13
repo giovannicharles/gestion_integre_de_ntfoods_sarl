@@ -59,6 +59,8 @@ export const STOCK_ROUTES: Routes = [
       { path: 'magasins', loadComponent: () => import('./pages/magasins/magasin-list.component').then(m => m.MagasinListComponent) },
       { path: 'articles', loadComponent: () => import('./pages/articles/article-list.component').then(m => m.ArticleListComponent) },
       { path: 'tampon', loadComponent: () => import('./pages/buffer/buffer.component').then(m => m.BufferComponent) },
+      { path: 'documents', loadComponent: () => import('./pages/documents/stock-documents.component').then(m => m.StockDocumentsComponent) },
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/stock-assistant.component').then(m => m.StockAssistantComponent) },
       // Demande de transfert central → tampon (2026-09-30) : le seul chemin qui déplaçait réellement le stock
       // (transfer-to-buffer) n'était appelé par aucun écran ; celui-ci passe par le moteur de demandes (invariant 1).
       { path: 'transferts', loadComponent: () => import('./pages/transferts/demande-transfert.component').then(m => m.DemandeTransfertComponent) },

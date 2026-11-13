@@ -1,0 +1,33 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-folder-tree"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Documents de Cadrage Budgétaire & Procédures d'Audit</h1>
+        <p class="ph-sub">Directives budgétaires, référentiels de centres de coûts et protocoles de contrôle interne NT FOODS</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px;">
+    @for (d of documents(); track d.id) {
+    <div class="card" style="padding: 18px; display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid var(--g);">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span class="badge bg-gold badge-sm">{{ d.type }}</span>
+          <span class="badge bg-neutral badge-sm">{{ d.taille }}</span>
+        </div>
+        <h3 style="font-size: 0.98rem; font-weight: 700; color: var(--n900); margin-bottom: 8px;">{{ d.titre }}</h3>
+        <p style="font-size: 0.82rem; color: var(--n600); line-height: 1.45; margin-bottom: 12px;">{{ d.description }}</p>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--n100);">
+        <span style="font-size: 0.75rem; color: var(--n500);">Validité : {{ d.periode }}</span>
+        <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Consulter</button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

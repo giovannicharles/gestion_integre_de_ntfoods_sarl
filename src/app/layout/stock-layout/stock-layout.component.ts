@@ -170,7 +170,9 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
     {
       title: 'Rapports & Configuration', icon: 'fa-file-lines',
       items: [
-        { label: 'Rapports & Documents', icon: 'fa-file-lines', route: '/stock/rapports' },
+        { label: 'Rapports de Stock', icon: 'fa-file-lines', route: '/stock/rapports' },
+        { label: 'Documents & PV Magasin', icon: 'fa-file-shield', route: '/stock/documents' },
+        { label: 'Calculateur Wilson & Réappro', icon: 'fa-boxes-packing', route: '/stock/assistant' },
         { label: 'Notifications', icon: 'fa-bell', route: '/stock/notifications' },
         { label: 'Paramètres', icon: 'fa-gear', route: '/stock/settings' },
       ]

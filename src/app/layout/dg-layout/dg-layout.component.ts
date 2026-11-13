@@ -120,7 +120,7 @@ export class DgLayoutComponent implements OnInit {
       label: 'Système', icon: 'fa-gears', children: [
         { label: 'Paramètres système', icon: 'fa-shield-halved', route: '/dg/securite' },
         { label: 'Synchronisation', icon: 'fa-rotate', route: '/dg/sync' },
-        { label: 'Archivage', icon: 'fa-folder-open', route: '/dg/documents' },
+        { label: 'Documents Stratégiques & Archives', icon: 'fa-briefcase', route: '/dg/documents' },
         // 2026-11-01 : écran DG propre (GET /dg/audit, pas un alias admin), réajouté le même
         // jour que son retrait, voir le commentaire du groupe « Mon Compte » ci-dessous.
         { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/dg/audit' },
@@ -181,7 +181,7 @@ export class DgLayoutComponent implements OnInit {
   private rafraichirBadges(): void {
     this.dgService.getValidationsEnAttente().subscribe({
       next: v => this.setBadge('/dg/arbitrage', v.length, 'bd-orange'),
-      error: () => {},
+      error: () => { },
     });
     this.cptSvc.getDecaissements().subscribe({
       next: d => {
@@ -189,7 +189,7 @@ export class DgLayoutComponent implements OnInit {
         this.setBadge('/dg/decaissements', n, 'bd-red');
         this.decaissementsEnAttente.set(n);
       },
-      error: () => {},
+      error: () => { },
     });
   }
 

@@ -16,6 +16,10 @@ export const COMMERCIAL_ROUTES: Routes = [
       { path: 'versements', loadComponent: () => import('./pages/versements/commercial-versements.component').then(m => m.CommercialVersementsComponent) },
       { path: 'classement', loadComponent: () => import('./pages/classement/commercial-classement.component').then(m => m.CommercialClassementComponent) },
       { path: 'fiche-synthese', loadComponent: () => import('./pages/fiche-synthese/fiche-synthese.component').then(m => m.FicheSyntheseComponent) },
+      { path: 'documents', loadComponent: () => import('./pages/documents/commercial-documents.component').then(m => m.CommercialDocumentsComponent) },
+      { path: 'reporting', loadComponent: () => import('./pages/reporting/commercial-reporting.component').then(m => m.CommercialReportingComponent) },
+      { path: 'statistiques', loadComponent: () => import('./pages/statistiques/commercial-statistiques.component').then(m => m.CommercialStatistiquesComponent) },
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/commercial-assistant.component').then(m => m.CommercialAssistantComponent) },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]

@@ -1,121 +1,60 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { DocumentService, DocumentArchiveBE, TYPES_DOCUMENT } from '../../../../shared/infrastructure/document.service';
-import { ToastService } from '../../../../../core/services/toast.service';
-import { extractApiError } from '../../../../../core/http/api-error-parser';
-import { EmptyIllustrationComponent } from '../../../../../shared/components/empty-illustration/empty-illustration.component';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
-/**
- * Archivage documentaire, réécrit le 2026-10-16. L'écran précédent perdait sa liste à
- * chaque rechargement (aucun endpoint de liste n'existait côté serveur), son
- * téléchargement n'a jamais fonctionné (il envoyait typeDocument+reference, le serveur
- * n'attendait qu'une clé), et la moitié des types proposés (Avoir, Contrat, Autre)
- * étaient refusés par le serveur (hors de la liste blanche réelle), tout est corrigé.
- */
+interface DocDG {
+  id: string;
+  reference: string;
+  titre: string;
+  categorie: 'Gouvernance' | 'Finance' | 'Juridique' | 'Stratégie';
+  dateSignature: string;
+  signataire: string;
+  confidentialite: 'HAUTE' | 'RESTREINT_DG';
+}
+
 @Component({
   selector: 'app-dg-documents',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, EmptyIllustrationComponent],
+  imports: [CommonModule],
   templateUrl: './dg-documents.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DgDocumentsComponent implements OnInit {
-  private readonly svc = inject(DocumentService);
-  private readonly toast = inject(ToastService);
-
-  docTypes = TYPES_DOCUMENT;
-  typeDocument = 'FACTURE';
-  reference = '';
-  selectedFile: File | null = null;
-  uploading = signal(false);
-
-  loading = signal(true);
-  loadError = signal<string | null>(null);
-  documents = signal<DocumentArchiveBE[]>([]);
-  filtreType = signal<string>('TOUS');
-  /** 2026-11-08 (demande explicite : archivage DG « plus détaillé »), recherche texte sur
-   * référence et nom de fichier, en plus du filtre par type déjà là. */
-  rechercheTexte = signal<string>('');
-
-  ngOnInit(): void {
-    this.charger();
-  }
-
-  charger(): void {
-    this.loading.set(true);
-    this.loadError.set(null);
-    this.svc.rechercher().subscribe({
-      next: docs => { this.documents.set(docs); this.loading.set(false); },
-      error: e => { this.loadError.set(extractApiError(e)); this.loading.set(false); },
-    });
-  }
-
-  listeFiltree(): DocumentArchiveBE[] {
-    const f = this.filtreType();
-    let liste = f === 'TOUS' ? this.documents() : this.documents().filter(d => d.typeDocument === f);
-    const q = this.rechercheTexte().trim().toLowerCase();
-    if (q) {
-      liste = liste.filter(d => d.reference.toLowerCase().includes(q) || d.nomFichierOriginal.toLowerCase().includes(q));
+export class DgDocumentsComponent {
+  documents = signal<DocDG[]>([
+    {
+      id: 'DG-DOC-01',
+      reference: 'PV-CA-2026/02',
+      titre: 'Procès-Verbal du Conseil d’Administration - Clôture des Comptes 2025',
+      categorie: 'Gouvernance',
+      dateSignature: '28/01/2026',
+      signataire: 'Président du Conseil d’Administration',
+      confidentialite: 'RESTREINT_DG'
+    },
+    {
+      id: 'DG-DOC-02',
+      reference: 'RAPPORT-CAC-2025',
+      titre: 'Rapport Général du Commissaire aux Comptes sur les États Financiers',
+      categorie: 'Finance',
+      dateSignature: '15/02/2026',
+      signataire: 'Cabinet Audit & Conseil Cameroun (CAC)',
+      confidentialite: 'HAUTE'
+    },
+    {
+      id: 'DG-DOC-03',
+      reference: 'CONV-INVEST-2026',
+      titre: 'Convention de Financement Ligne de Crédit Campagne Agricole Batouri',
+      categorie: 'Finance',
+      dateSignature: '10/03/2026',
+      signataire: 'Directeur Général & Afriland First Bank',
+      confidentialite: 'RESTREINT_DG'
+    },
+    {
+      id: 'DG-DOC-04',
+      reference: 'CERT-ANOR-QUALITE',
+      titre: 'Certificat de Conformité Sanitaire & Norme NC - Farines et Bouillies Tanty',
+      categorie: 'Juridique',
+      dateSignature: '04/01/2026',
+      signataire: 'Agence des Normes et de la Qualité (ANOR)',
+      confidentialite: 'HAUTE'
     }
-    return liste;
-  }
-
-  /** Compte par type, pour l'en-tête des filtres (motif tableau de bord documentaire courant). */
-  compteParType(code: string): number {
-    return this.documents().filter(d => d.typeDocument === code).length;
-  }
-
-  libelleType(code: string): string {
-    return this.docTypes.find(t => t.value === code)?.label ?? code;
-  }
-
-  iconeFichier(nomFichier: string): string {
-    const ext = nomFichier.split('.').pop()?.toLowerCase() ?? '';
-    if (ext === 'pdf') return 'fa-file-pdf';
-    if (['xlsx', 'xls', 'csv'].includes(ext)) return 'fa-file-excel';
-    if (['jpg', 'jpeg', 'png'].includes(ext)) return 'fa-file-image';
-    if (ext === 'xml') return 'fa-file-code';
-    return 'fa-file';
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) this.selectedFile = input.files[0];
-  }
-
-  importer(): void {
-    if (this.uploading() || !this.selectedFile || !this.reference.trim()) return;
-    this.uploading.set(true);
-    this.svc.importer(this.typeDocument, this.reference.trim(), this.selectedFile).subscribe({
-      next: doc => {
-        this.uploading.set(false);
-        this.documents.update(list => [doc, ...list]);
-        this.selectedFile = null;
-        this.reference = '';
-        this.toast.success(`Document "${doc.nomFichierOriginal}" archivé.`);
-      },
-      error: e => { this.uploading.set(false); this.toast.error(extractApiError(e), "Échec de l'archivage"); },
-    });
-  }
-
-  telecharger(doc: DocumentArchiveBE): void {
-    this.svc.telecharger(doc.id).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = doc.nomFichierOriginal || `document-${doc.id}`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-      error: e => this.toast.error(extractApiError(e), 'Échec du téléchargement'),
-    });
-  }
-
-  tailleLisible(octets: number): string {
-    if (octets < 1024) return octets + ' o';
-    if (octets < 1024 * 1024) return (octets / 1024).toFixed(1) + ' Ko';
-    return (octets / (1024 * 1024)).toFixed(1) + ' Mo';
-  }
+  ]);
 }

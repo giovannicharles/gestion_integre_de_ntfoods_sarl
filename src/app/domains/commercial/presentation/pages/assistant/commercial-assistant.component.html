@@ -1,0 +1,132 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-calculator"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Console & Assistant d'Aide à la Vente Commerciale</h1>
+        <p class="ph-sub">Calculateur instantané de remises volume, simulateur de marge pour boutiquiers et argumentaires de closing</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- SIMULATEUR DE REMISES VOLUME -->
+    <div class="card" style="padding: 22px;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 14px;">
+        <i class="fa-solid fa-percent text-primary" style="margin-right: 8px;"></i>
+        Calculateur de Remise par Palier de Volume
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Nombre de Cartons Commandés
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="quantiteCartons()"
+            (input)="quantiteCartons.set(+$any($event.target).value)"
+            min="1"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Prix Carton Standard (FCFA)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="prixCartonStandard()"
+            (input)="prixCartonStandard.set(+$any($event.target).value)"
+            step="500"
+          />
+        </div>
+
+        <div style="background: var(--n50); border: 1px solid var(--n200); border-radius: 8px; padding: 16px; margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n600);">Taux de Remise Applicable :</span>
+            <span class="badge bg-gold" style="font-weight: 700; font-size: 0.9rem;">{{ tauxRemise }}%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n600);">Prix Carton Net Client :</span>
+            <span class="mono fw-bold text-success">{{ fCFA(prixCartonRemise) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n600);">Montant Total Sans Remise :</span>
+            <span class="mono">{{ fCFA(totalSansRemise) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-top: 8px; border-top: 1px dashed var(--n200);">
+            <span style="font-size: 0.9rem; font-weight: 700; color: var(--n800);">Net à Payer Client :</span>
+            <span class="mono fw-bold" style="font-size: 1.15rem; color: var(--g);">{{ fCFA(totalAvecRemise) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+            <span style="font-size: 0.8rem; color: var(--s);">Économie Réalisée par le Client :</span>
+            <span class="mono fw-bold text-success">-{{ fCFA(economieClient) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARGUMENTAIRE DE MARGE POUR LE BOUTIQUIER -->
+    <div class="card" style="padding: 22px;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 14px;">
+        <i class="fa-solid fa-hand-holding-dollar text-primary" style="margin-right: 8px;"></i>
+        Démonstrateur de Rentabilité pour le Boutiquier
+      </h3>
+      <p style="font-size: 0.82rem; color: var(--n600); margin-bottom: 14px;">
+        Utilisez ce simulateur en direct devant le client pour lui prouver le bénéfice net qu’il gagne en achetant les produits TANTY.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Prix de Revente Détail à l'Unité (FCFA)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="prixVenteDetailUnite()"
+            (input)="prixVenteDetailUnite.set(+$any($event.target).value)"
+            step="50"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Nombre d'Unités par Carton
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="unitesParCarton()"
+            (input)="unitesParCarton.set(+$any($event.target).value)"
+          />
+        </div>
+
+        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 16px; margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n700);">Chiffre d'Affaires du Carton :</span>
+            <span class="mono fw-bold">{{ fCFA(caRevendeurCarton) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n700);">Coût d'Achat Tanty au Carton :</span>
+            <span class="mono text-muted">{{ fCFA(prixCartonRemise) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-top: 8px; border-top: 1px dashed #86EFAC;">
+            <span style="font-size: 0.95rem; font-weight: 700; color: #166534;">Bénéfice Net Revendeur :</span>
+            <span class="mono fw-bold" style="font-size: 1.2rem; color: #166534;">+{{ fCFA(beneficeNetRevendeurCarton) }} / carton</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+            <span style="font-size: 0.85rem; font-weight: 600; color: #166534;">Taux de Marge Brute :</span>
+            <span class="badge bg-gold" style="font-size: 0.9rem;">{{ margePourcentRevendeur }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

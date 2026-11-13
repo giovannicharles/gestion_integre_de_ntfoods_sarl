@@ -1,0 +1,111 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-calculator"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Calculateur de Rentabilité & Simulateur de Point Mort</h1>
+        <p class="ph-sub">Seuil de rentabilité en FCFA et en cartons, marge sur coût variable et analyse de structure des coûts</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- PARAMÈTRES DE CALCUL -->
+    <div class="card" style="padding: 22px;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-sliders text-primary" style="margin-right: 8px;"></i>
+        Hypothèses de Coûts & Prix
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Charges Fixes Annuelles (FCFA) (Loyers, Amortissements, Salaires fixes)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="chargesFixesAnnuellesFCFA()"
+            (input)="chargesFixesAnnuellesFCFA.set(+$any($event.target).value)"
+            step="500000"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Prix de Vente Moyen du Carton (FCFA)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="prixVenteCartonMoyenFCFA()"
+            (input)="prixVenteCartonMoyenFCFA.set(+$any($event.target).value)"
+            step="250"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Coût Variable par Carton (FCFA) (Matières premières Batouri, Emballage, Énergie variable)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="coutVariableCartonFCFA()"
+            (input)="coutVariableCartonFCFA.set(+$any($event.target).value)"
+            step="200"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- RÉSULTAT ANALYTIQUE -->
+    <div class="card" style="padding: 22px; background: linear-gradient(180deg, #FFFFFF 0%, #F9FCF9 100%);">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-chart-pie text-primary" style="margin-right: 8px;"></i>
+        Seuil de Rentabilité (Point Mort)
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 16px;">
+          <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: #166534; letter-spacing: 0.04em;">
+            Chiffre d'Affaires Critique Minimum
+          </span>
+          <div class="mono fw-bold" style="font-size: 1.5rem; color: #14532D; margin: 4px 0;">
+            {{ fCFA(seuilRentabiliteFCFA) }}
+          </div>
+          <span style="font-size: 0.8rem; color: #166534;">Niveau de ventes à atteindre pour couvrir l'intégralité des charges fixes.</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
+          <div style="background: var(--n50); border: 1px solid var(--n200); border-radius: 8px; padding: 14px;">
+            <span style="font-size: 0.75rem; color: var(--n500); font-weight: 700; text-transform: uppercase;">Volume Annuel Critique</span>
+            <div class="mono fw-bold" style="font-size: 1.2rem; color: var(--n900); margin-top: 4px;">
+              {{ pointMortCartons }} cartons
+            </div>
+          </div>
+          <div style="background: var(--n50); border: 1px solid var(--n200); border-radius: 8px; padding: 14px;">
+            <span style="font-size: 0.75rem; color: var(--n500); font-weight: 700; text-transform: uppercase;">Cadence Mensuelle</span>
+            <div class="mono fw-bold" style="font-size: 1.2rem; color: var(--g); margin-top: 4px;">
+              {{ pointMortCartonsParMois }} cartons/mois
+            </div>
+          </div>
+        </div>
+
+        <div style="background: var(--n50); border: 1px solid var(--n200); border-radius: 8px; padding: 14px; margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-size: 0.85rem; color: var(--n600);">Marge sur Coût Variable par Carton :</span>
+            <span class="mono fw-bold text-success">{{ fCFA(margeSurCoutVariableCarton) }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+            <span style="font-size: 0.85rem; color: var(--n600);">Taux de Marge sur Coût Variable :</span>
+            <span class="badge bg-gold" style="font-size: 0.85rem;">{{ tauxMargeSurCoutVariable }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

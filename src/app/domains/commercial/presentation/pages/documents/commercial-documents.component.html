@@ -1,0 +1,102 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Documents Commerciaux & Fiches Produits</h1>
+        <p class="ph-sub">Catalogues officiels, barèmes tarifaires, argumentaires de vente et fiches techniques TANTY</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="telecharger(documents()[0])">
+        <i class="fa-solid fa-cloud-arrow-down"></i> Pack Commercial 2026
+      </button>
+    </div>
+  </div>
+
+  <!-- BARRE DE FILTRE -->
+  <div class="card" style="padding: 16px; margin-bottom: 20px;">
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 250px; position: relative;">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Rechercher un catalogue, un tarif, un argumentaire..."
+          [value]="termeRecherche()"
+          (input)="termeRecherche.set($any($event.target).value)"
+          style="padding-left: 36px;"
+        />
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 11px; color: var(--n500);"></i>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="categorieFiltre() === 'TOUS'"
+          [class.btn-outline]="categorieFiltre() !== 'TOUS'"
+          (click)="categorieFiltre.set('TOUS')">
+          Tous ({{ documents().length }})
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="categorieFiltre() === 'Catalogue'"
+          [class.btn-outline]="categorieFiltre() !== 'Catalogue'"
+          (click)="categorieFiltre.set('Catalogue')">
+          Catalogues
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="categorieFiltre() === 'Tarif'"
+          [class.btn-outline]="categorieFiltre() !== 'Tarif'"
+          (click)="categorieFiltre.set('Tarif')">
+          Tarifs & Barèmes
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="categorieFiltre() === 'Argumentaire'"
+          [class.btn-outline]="categorieFiltre() !== 'Argumentaire'"
+          (click)="categorieFiltre.set('Argumentaire')">
+          Argumentaires
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="categorieFiltre() === 'Fiche Produit'"
+          [class.btn-outline]="categorieFiltre() !== 'Fiche Produit'"
+          (click)="categorieFiltre.set('Fiche Produit')">
+          Fiches Produits
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRILLE DES DOCUMENTS -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;">
+    @for (doc of docsFiltres; track doc.id) {
+    <div class="card" style="padding: 18px; display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid var(--g);">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+          <span class="badge bg-gold badge-sm">{{ doc.categorie }}</span>
+          <span class="badge bg-neutral badge-sm">{{ doc.format }} · {{ doc.taille }}</span>
+        </div>
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--n900); margin-bottom: 8px;">{{ doc.titre }}</h3>
+        <p style="font-size: 0.82rem; color: var(--n600); line-height: 1.45; margin-bottom: 14px;">{{ doc.description }}</p>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--n100);">
+        <span style="font-size: 0.75rem; color: var(--n500);">Mis à jour le {{ doc.dateMaj }}</span>
+        <button class="btn btn-outline btn-sm" (click)="telecharger(doc)">
+          <i class="fa-solid fa-download"></i> Télécharger
+        </button>
+      </div>
+    </div>
+    } @empty {
+    <div class="card" style="grid-column: 1 / -1; padding: 40px; text-align: center;">
+      <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; color: var(--n300); margin-bottom: 12px;"></i>
+      <p style="font-weight: 600; color: var(--n700);">Aucun document ne correspond à votre recherche.</p>
+    </div>
+    }
+  </div>
+</div>

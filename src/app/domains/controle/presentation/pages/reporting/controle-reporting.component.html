@@ -1,0 +1,90 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Reporting Budgétaire & Audit des Variances</h1>
+        <p class="ph-sub">Exécution des budgets par centre de coûts analytique, alertes de surconsommation et marges</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary"><i class="fa-solid fa-file-excel"></i> Exporter Rapport</button>
+    </div>
+  </div>
+
+  <!-- KPIS -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-wallet"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Budget Alloué Annuel</span>
+        <span class="kpi-val">{{ fCFA(totalBudget) }}</span>
+        <span class="kpi-meta">Plafond total validé DG</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-receipt"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Dépenses Engagées</span>
+        <span class="kpi-val">{{ fCFA(totalEngage) }}</span>
+        <span class="kpi-meta">{{ tauxGlobal }}% du budget consommé</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Solde Disponible</span>
+        <span class="kpi-val">{{ fCFA(totalBudget - totalEngage) }}</span>
+        <span class="kpi-meta">Marge de manœuvre</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU PAR CENTRE DE COUTS -->
+  <div class="card" style="padding: 20px;">
+    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+      <i class="fa-solid fa-sitemap text-primary" style="margin-right: 8px;"></i>
+      Ventilation de l'Exécution Budgétaire par Centre Analytique
+    </h3>
+
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Centre de Coûts Analytique</th>
+          <th style="text-align: right;">Budget Alloué</th>
+          <th style="text-align: right;">Engagé</th>
+          <th style="text-align: right;">Écart / Reste</th>
+          <th style="text-align: center;">Taux</th>
+          <th style="text-align: center;">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of centres(); track c.code) {
+        <tr>
+          <td class="mono fw-bold text-primary">{{ c.code }}</td>
+          <td class="fw-bold">{{ c.libelle }}</td>
+          <td style="text-align: right;" class="mono">{{ fCFA(c.budgetAlloueFCFA) }}</td>
+          <td style="text-align: right;" class="mono">{{ fCFA(c.depensesEngageesFCFA) }}</td>
+          <td style="text-align: right;" class="mono fw-bold" [class.text-danger]="c.ecartFCFA < 0" [class.text-success]="c.ecartFCFA >= 0">
+            {{ fCFA(c.ecartFCFA) }}
+          </td>
+          <td style="text-align: center;" class="mono fw-bold">{{ c.tauxConsommation }}%</td>
+          <td style="text-align: center;">
+            @if (c.statut === 'CONFORME') {
+            <span class="badge bg-success badge-sm">CONFORME</span>
+            } @else if (c.statut === 'ATTENTION') {
+            <span class="badge bg-gold badge-sm">VIGILANCE</span>
+            } @else {
+            <span class="badge bg-red badge-sm">DÉPASSEMENT</span>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

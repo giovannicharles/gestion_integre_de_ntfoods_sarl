@@ -1,110 +1,50 @@
 <div class="dash animate-fadeInUp">
-
-  <div class="ph ph-wm-dg">
+  <!-- EN-TÊTE -->
+  <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-folder-open"></i></div>
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-briefcase"></i>
+      </div>
       <div>
-        <h1 class="ph-title">Archivage documentaire</h1>
-        <p class="ph-sub">Factures, bons de commande/réception/livraison, certificats, rapports</p>
+        <h1 class="ph-title">Documents Stratégiques & Archives de Gouvernance</h1>
+        <p class="ph-sub">Procès-verbaux de conseils, rapports du commissaire aux comptes, conventions bancaires et certifications ANOR</p>
       </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary"><i class="fa-solid fa-shield"></i> Coffre-Fort Numérique DG</button>
     </div>
   </div>
 
-  <!-- IMPORTER -->
-  <div class="card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-upload"></i> Importer un document</span>
-    </div>
-    <div class="panel-body">
-      <div class="form-row doc-filter-row">
-        <div class="form-group doc-filter-field">
-          <label>Type de document</label>
-          <select class="form-control" [(ngModel)]="typeDocument">
-            @for (t of docTypes; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
-          </select>
-        </div>
-        <div class="form-group doc-filter-field">
-          <label>Référence</label>
-          <input type="text" class="form-control" [(ngModel)]="reference" placeholder="ex : FAC-2026-001">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Fichier (pdf, xlsx, csv, jpg, png, xml)</label>
-        <input type="file" class="form-control" (change)="onFileSelected($event)" accept=".pdf,.xlsx,.csv,.jpg,.jpeg,.png,.xml">
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" [disabled]="uploading() || !selectedFile || !reference.trim()" (click)="importer()">
-          <i class="fa-solid" [class.fa-upload]="!uploading()" [class.fa-spinner]="uploading()" [class.fa-spin]="uploading()"></i>
-          Archiver
-        </button>
-      </div>
-    </div>
+  <div class="card" style="padding: 20px;">
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Réf</th>
+          <th>Catégorie</th>
+          <th>Intitulé du Document Officiel</th>
+          <th>Date Visa</th>
+          <th>Autorité Signataire</th>
+          <th style="text-align: center;">Niveau Sécurité</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of documents(); track d.id) {
+        <tr>
+          <td class="mono fw-bold text-primary">{{ d.reference }}</td>
+          <td><span class="badge bg-gold badge-sm">{{ d.categorie }}</span></td>
+          <td class="fw-bold">{{ d.titre }}</td>
+          <td class="mono">{{ d.dateSignature }}</td>
+          <td class="text-muted">{{ d.signataire }}</td>
+          <td style="text-align: center;">
+            <span class="badge bg-red badge-sm"><i class="fa-solid fa-lock"></i> {{ d.confidentialite }}</span>
+          </td>
+          <td style="text-align: right;">
+            <button class="btn btn-outline btn-sm"><i class="fa-solid fa-file-pdf"></i> Ouvrir</button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
   </div>
-
-  @if (loading()) {
-  <div class="card">
-    @for (i of [1,2,3,4,5]; track i) {
-      <div class="sk-row">
-        <div class="sk-shimmer sk-ico"></div>
-        <div class="sk-lines"><div class="sk-shimmer sk-m"></div><div class="sk-shimmer sk-s"></div></div>
-      </div>
-    }
-  </div>
-  } @else if (loadError()) {
-  <div class="error-state">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <p>{{ loadError() }}</p>
-    <button class="btn btn-outline btn-sm" (click)="charger()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
-  </div>
-  } @else {
-
-  <div class="card table-card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-list"></i> Documents archivés</span>
-      <span class="badge badge-secondary badge-sm">{{ documents().length }} au total</span>
-    </div>
-    <div class="doc-search">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <input type="text" class="form-control" placeholder="Rechercher par référence ou nom de fichier…"
-             [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)">
-    </div>
-    <div class="filter-bar">
-      <button class="filter-btn" [class.active]="filtreType()==='TOUS'" (click)="filtreType.set('TOUS')">Tous ({{ documents().length }})</button>
-      @for (t of docTypes; track t.value) {
-      <button class="filter-btn" [class.active]="filtreType()===t.value" (click)="filtreType.set(t.value)">{{ t.label }} ({{ compteParType(t.value) }})</button>
-      }
-    </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Type</th><th>Référence</th><th>Fichier</th><th class="text-right">Taille</th><th>Importé par</th><th>Date</th><th></th></tr></thead>
-        <tbody>
-          @for (d of listeFiltree(); track d.id) {
-          <tr>
-            <td><span class="badge bg-neutral badge-sm">{{ libelleType(d.typeDocument) }}</span></td>
-            <td class="fw-bold">{{ d.reference }}</td>
-            <td><i class="fa-solid doc-file-ico" [class]="iconeFichier(d.nomFichierOriginal)"></i> {{ d.nomFichierOriginal }}</td>
-            <td class="text-right mono">{{ tailleLisible(d.tailleOctets) }}</td>
-            <td>{{ d.matriculeUploader }}</td>
-            <td>{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td class="text-right">
-              <button class="btn btn-sm btn-ghost" (click)="telecharger(d)"><i class="fa-solid fa-download"></i></button>
-            </td>
-          </tr>
-          } @empty {
-          <tr><td colspan="7">
-            @if (rechercheTexte().trim() || filtreType() !== 'TOUS') {
-              <app-empty-illustration title="Aucun document ne correspond"
-                sub="Essayez un autre terme de recherche ou réinitialisez le filtre par type." />
-            } @else {
-              <app-empty-illustration title="Aucun document archivé"
-                sub="Importez une facture, un bon de commande ou un certificat avec le formulaire ci-dessus." />
-            }
-          </td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  }
-
 </div>

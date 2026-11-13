@@ -100,6 +100,13 @@ export class ControleLayoutComponent implements OnInit {
         { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/controle/commandes-clients' },
       ]
     },
+    {
+      label: 'Études & Directives', icon: 'fa-folder-tree', children: [
+        { label: 'Cadrage & Procédures', icon: 'fa-folder-tree', route: '/controle/documents' },
+        { label: 'Reporting & Budgets', icon: 'fa-chart-line', route: '/controle/reporting' },
+        { label: 'Calculateur Point Mort', icon: 'fa-calculator', route: '/controle/assistant' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */

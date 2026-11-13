@@ -16,6 +16,10 @@ export const SECRETAIRE_ROUTES: Routes = [
       // partagé (voir shared/commande-client), pas un doublon des précommandes J+1.
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       { path: 'session', loadComponent: () => import('./pages/session/secretaire-session.component').then(m => m.SecretaireSessionComponent) },
+      { path: 'documents', loadComponent: () => import('./pages/documents/secretaire-documents.component').then(m => m.SecretaireDocumentsComponent) },
+      { path: 'reporting', loadComponent: () => import('./pages/reporting/secretaire-reporting.component').then(m => m.SecretaireReportingComponent) },
+      { path: 'statistiques', loadComponent: () => import('./pages/statistiques/secretaire-statistiques.component').then(m => m.SecretaireStatistiquesComponent) },
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/secretaire-assistant.component').then(m => m.SecretaireAssistantComponent) },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       { path: 'profil', loadComponent: () => import('../../../shared/mon-profil/mon-profil.component').then(m => m.MonProfilComponent) },
     ]

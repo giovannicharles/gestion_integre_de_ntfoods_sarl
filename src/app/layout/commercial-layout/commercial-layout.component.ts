@@ -74,6 +74,14 @@ export class CommercialLayoutComponent implements OnInit {
         { label: 'Fiche Synthèse', icon: 'fa-file-lines', route: '/commercial/fiche-synthese' },
       ]
     },
+    {
+      label: 'Pilotage & Outils', icon: 'fa-chart-pie', children: [
+        { label: 'Documents & Tarifs', icon: 'fa-folder-open', route: '/commercial/documents' },
+        { label: 'Rapports de Tournée', icon: 'fa-clipboard-list', route: '/commercial/reporting' },
+        { label: 'Statistiques & Ventes', icon: 'fa-chart-column', route: '/commercial/statistiques' },
+        { label: 'Assistant Vente & Marge', icon: 'fa-calculator', route: '/commercial/assistant' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */

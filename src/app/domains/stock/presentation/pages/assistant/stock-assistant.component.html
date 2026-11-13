@@ -1,0 +1,122 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-boxes-packing"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Calculateur de Réapprovisionnement & Stock de Sécurité</h1>
+        <p class="ph-sub">Optimisation des lots de réapprovisionnement (Formule de Wilson) et seuils d'alerte rupture</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- LOT ÉCONOMIQUE DE COMMANDE -->
+    <div class="card" style="padding: 22px;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-boxes-stacked text-primary" style="margin-right: 8px;"></i>
+        Quantité Économique de Commande (Formule de Wilson)
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Consommation Annuelle Prévue (Cartons)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="consommationAnnuelleCartons()"
+            (input)="consommationAnnuelleCartons.set(+$any($event.target).value)"
+            step="500"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Coût Fixe de Passation de Commande (FCFA) (Transport, Administratif)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="coutLancementCommandeFCFA()"
+            (input)="coutLancementCommandeFCFA.set(+$any($event.target).value)"
+            step="1000"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Coût de Possession par Carton et par An (FCFA)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="coutStockageUnitaireAnFCFA()"
+            (input)="coutStockageUnitaireAnFCFA.set(+$any($event.target).value)"
+            step="50"
+          />
+        </div>
+
+        <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 16px; margin-top: 6px;">
+          <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: #166534;">
+            Taille Idéale du Lot de Commande
+          </span>
+          <div class="mono fw-bold" style="font-size: 1.45rem; color: #14532D; margin: 4px 0;">
+            {{ quantiteEconomiqueCommande }} cartons
+          </div>
+          <span style="font-size: 0.8rem; color: #166534;">
+            Fréquence optimale : <strong>{{ nombreCommandesAn }} commandes par an</strong>.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEUIL DE COMMANDE & STOCK DE SÉCURITÉ -->
+    <div class="card" style="padding: 22px;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
+        <i class="fa-solid fa-shield-halved text-primary" style="margin-right: 8px;"></i>
+        Calcul du Seuil d'Alerte & Stock de Sécurité
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Délai Fournisseur / Réapprovisionnement Usine (Jours)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="delaiFournisseurJours()"
+            (input)="delaiFournisseurJours.set(+$any($event.target).value)"
+          />
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; display: block;">
+            Consommation Journalière Moyenne (Cartons/jour)
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            [value]="consommationJournaliereMoyenne()"
+            (input)="consommationJournaliereMoyenne.set(+$any($event.target).value)"
+          />
+        </div>
+
+        <div style="background: var(--n50); border: 1px solid var(--n200); border-radius: 8px; padding: 16px; margin-top: 6px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: var(--n700);">Stock de Sécurité Recommandé :</span>
+            <span class="mono fw-bold text-success">{{ stockSecuriteRecommande }} cartons</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px dashed var(--n200);">
+            <span style="font-size: 0.9rem; font-weight: 700; color: var(--n800);">Seuil de Réappro (Point de Commande) :</span>
+            <span class="badge bg-gold" style="font-size: 1rem; font-weight: 700;">{{ pointDeCommandeSeuilAlerte }} cartons</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
