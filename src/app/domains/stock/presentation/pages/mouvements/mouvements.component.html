@@ -118,61 +118,94 @@
   <!-- AJUST MODAL -->
   @if (showAjust()) {
     <div class="modal-overlay animate-fadeIn" (click)="showAjust.set(false)">
-      <div class="modal-box animate-fadeInUp" style="max-width:540px" (click)="$event.stopPropagation()">
+      <div class="modal-box animate-fadeInUp" style="max-width:580px" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-warning">
-          <div class="modal-title"><i class="fa-solid fa-sliders"></i> Ajustement d'Inventaire</div>
+          <div class="modal-title"><i class="fa-solid fa-sliders" style="color:var(--y)"></i> Ajustement d'Inventaire</div>
           <button class="modal-close" aria-label="Fermer" (click)="showAjust.set(false)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div class="banner banner-warning" style="margin-bottom:16px">
+          <div class="banner banner-warning" style="margin-bottom:12px">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>Génère un mouvement d'audit trail <strong>ADJUSTMENT</strong> pour corriger l'écart physique.</span>
+            <span>Génère un mouvement d'audit trail <strong>ADJUSTMENT</strong> pour corriger l'écart physique constaté.</span>
           </div>
 
-          <div class="form-group" style="margin-bottom:14px">
-            <label class="form-label">Article / Emplacement <span class="req">*</span></label>
-            <select class="form-control" [(ngModel)]="ajustId" (ngModelChange)="onAjustProductChange()">
-              <option [value]="0" disabled>-- Choisir un produit ou emplacement --</option>
-              @for (sl of levels(); track sl.id) {
-                <option [value]="sl.id">{{ sl.productName || sl.productSku }} · {{ sl.warehouseName }} (Dispo: {{ sl.quantity | number }} {{ sl.productUnit }})</option>
+          <!-- RECHERCHE ET CHOIX PRODUIT ULTRA-LISIBLE -->
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Article / Emplacement à ajuster <span class="req">*</span></label>
+            <div class="prod-search-box">
+              <i class="fa-solid fa-magnifying-glass search-ico"></i>
+              <input type="text" class="prod-search-input" [ngModel]="ajustSearchTerm()" (ngModelChange)="ajustSearchTerm.set($event)" placeholder="Filtrer par nom de produit, SKU ou magasin...">
+              @if (ajustSearchTerm()) {
+                <button type="button" class="search-clear-btn" (click)="ajustSearchTerm.set('')"><i class="fa-solid fa-xmark"></i></button>
               }
-            </select>
+            </div>
+
+            <div class="prod-list-scroll">
+              @for (sl of getFilteredAjustLevels(); track sl.id) {
+                <div class="prod-tile" [class.selected]="ajustId === sl.id" (click)="selectAjustProduct(sl)">
+                  <div class="prod-tile-radio">
+                    <i class="fa-solid" [class.fa-circle-check]="ajustId === sl.id" [class.fa-circle]="ajustId !== sl.id"></i>
+                  </div>
+                  <div class="prod-tile-info">
+                    <div class="prod-tile-name">{{ sl.productName || sl.productSku }}</div>
+                    <div class="prod-tile-meta">
+                      <span class="meta-tag"><code>{{ sl.productSku }}</code></span>
+                      <span class="meta-wh"><i class="fa-solid fa-warehouse"></i> {{ sl.warehouseName || 'Dépôt' }}</span>
+                    </div>
+                  </div>
+                  <div class="prod-tile-stock" [class.in-stock]="sl.quantity > 50" [class.low-stock]="sl.quantity > 0 && sl.quantity <= 50" [class.out-stock]="sl.quantity <= 0">
+                    <span class="stock-qty">{{ sl.quantity | number }}</span>
+                    <span class="stock-unit">{{ sl.productUnit || 'unités' }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="prod-empty-msg">
+                  <i class="fa-solid fa-box-open"></i> Aucun article ne correspond à votre recherche
+                </div>
+              }
+            </div>
           </div>
 
           @if (selectedAjustSL; as sl) {
-            <div class="product-preview-card" style="margin-bottom:14px">
-              <div class="pp-header">
-                <div>
-                  <div class="pp-title">{{ sl.productName || sl.productSku }}</div>
-                  <div class="pp-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName }}</div>
-                </div>
-                <div class="pp-qty">
-                  <span class="pp-val">{{ sl.quantity | number }}</span>
-                  <span class="pp-unit">{{ sl.productUnit || 'unités' }} actuelles</span>
-                </div>
+            <div class="selected-preview-banner">
+              <div class="spb-left">
+                <div class="spb-title">{{ sl.productName || sl.productSku }}</div>
+                <div class="spb-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName || 'Dépôt' }}</div>
+              </div>
+              <div class="spb-right">
+                <span class="spb-lbl">Stock théorique :</span>
+                <span class="spb-val">{{ sl.quantity | number }} {{ sl.productUnit || 'unités' }}</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px">
+              <label class="form-label">Nouvelle quantité réelle constatée <span class="req">*</span></label>
+              <div class="qty-stepper-box">
+                <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité comptée">
+                <span class="qty-stepper-unit">{{ sl.productUnit || 'unités' }}</span>
+              </div>
+
+              <div class="variance-alert-box" style="margin-top:8px">
+                @if (ajustQty === sl.quantity) {
+                  <span class="badge badge-neutral"><i class="fa-solid fa-check"></i> Aucun écart physique (0 {{ sl.productUnit }})</span>
+                } @else if (ajustQty > sl.quantity) {
+                  <span class="badge badge-success"><i class="fa-solid fa-plus"></i> Surplus constaté : +{{ (ajustQty - sl.quantity) | number }} {{ sl.productUnit }} (Entrée en stock)</span>
+                } @else {
+                  <span class="badge badge-danger"><i class="fa-solid fa-minus"></i> Manquant constaté : -{{ (sl.quantity - ajustQty) | number }} {{ sl.productUnit }} (Perte déduite)</span>
+                }
               </div>
             </div>
           }
 
-          <div class="form-group" style="margin-bottom:14px">
-            <label class="form-label">Nouvelle quantité réelle constatée <span class="req">*</span></label>
-            <input type="number" class="form-control" min="0" [(ngModel)]="ajustQty" placeholder="Quantité issue du comptage">
-            @if (selectedAjustSL; as sl) {
-              <div style="margin-top:6px;font-size:12px;display:flex;align-items:center;gap:6px">
-                <span>Écart calculé :</span>
-                @if (ajustQty === sl.quantity) {
-                  <span class="badge badge-neutral">Aucun écart (0)</span>
-                } @else if (ajustQty > sl.quantity) {
-                  <span class="badge badge-success"><i class="fa-solid fa-plus"></i> +{{ (ajustQty - sl.quantity) | number }} (Surplus)</span>
-                } @else {
-                  <span class="badge badge-danger"><i class="fa-solid fa-minus"></i> -{{ (sl.quantity - ajustQty) | number }} (Manquant)</span>
-                }
-              </div>
-            }
-          </div>
-
           <div class="form-group" style="margin-bottom:8px">
-            <label class="form-label">Motif de l'ajustement <span class="req">*</span></label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <label class="form-label" style="margin:0">Motif de l'ajustement <span class="req">*</span></label>
+              <div class="preset-motifs">
+                <button type="button" class="motif-chip" (click)="ajustMotif = 'Inventaire tournant périodique'">Inventaire</button>
+                <button type="button" class="motif-chip" (click)="ajustMotif = 'Écart de pesée / comptage physique'">Écart comptage</button>
+                <button type="button" class="motif-chip" (click)="ajustMotif = 'Casse constatée en rayon'">Casse</button>
+              </div>
+            </div>
             <textarea class="form-control" rows="2" placeholder="Ex: Inventaire tournant de fin de mois, casse constatée..." [(ngModel)]="ajustMotif"></textarea>
           </div>
         </div>
@@ -188,70 +221,99 @@
     </div>
   }
 
-  <!-- TRANSFERT MODAL -->
+  <!-- TRANSFERT MODAL (MAGASIN TAMPON) -->
   @if (showTransfert()) {
     <div class="modal-overlay animate-fadeIn" (click)="showTransfert.set(false)">
-      <div class="modal-box animate-fadeInUp" style="max-width:560px" (click)="$event.stopPropagation()">
+      <div class="modal-box animate-fadeInUp" style="max-width:580px" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-teal">
-          <div class="modal-title"><i class="fa-solid fa-boxes-stacked"></i> Transfert vers Magasin Tampon</div>
+          <div class="modal-title"><i class="fa-solid fa-boxes-stacked" style="color:var(--y)"></i> Transfert vers Magasin Tampon</div>
           <button class="modal-close" aria-label="Fermer" (click)="showTransfert.set(false)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
-          <div class="banner banner-primary" style="margin-bottom:16px">
+          <div class="banner banner-primary" style="margin-bottom:12px">
             <i class="fa-solid fa-circle-info"></i>
-            <span>Le tampon ravitaille la production. La quantité choisie est immédiatement déduite du stock central.</span>
+            <span>Le tampon ravitaille la production. La quantité choisie est immédiatement transférée et déduite du stock central.</span>
           </div>
 
-          <div class="form-group" style="margin-bottom:14px">
-            <label class="form-label">Sélectionner la matière première / produit <span class="req">*</span></label>
-            <select class="form-control" [(ngModel)]="transfertId">
-              <option [value]="0" disabled>-- Choisir une matière première --</option>
-              @for (sl of getMPLevels(); track sl.id) {
-                <option [value]="sl.id">{{ sl.productName || sl.productSku }} · Dispo: {{ sl.quantity | number }} {{ sl.productUnit }}</option>
+          <!-- RECHERCHE ET CHOIX PRODUIT ULTRA-LISIBLE -->
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Matière première / Produit à transférer <span class="req">*</span></label>
+            <div class="prod-search-box">
+              <i class="fa-solid fa-magnifying-glass search-ico"></i>
+              <input type="text" class="prod-search-input" [ngModel]="prodSearchTerm()" (ngModelChange)="prodSearchTerm.set($event)" placeholder="Rechercher matière première (nom, SKU, catégorie)...">
+              @if (prodSearchTerm()) {
+                <button type="button" class="search-clear-btn" (click)="prodSearchTerm.set('')"><i class="fa-solid fa-xmark"></i></button>
               }
-            </select>
+            </div>
+
+            <div class="prod-list-scroll">
+              @for (sl of getFilteredMPLevels(); track sl.id) {
+                <div class="prod-tile" [class.selected]="transfertId === sl.id" (click)="selectTransfertProduct(sl)">
+                  <div class="prod-tile-radio">
+                    <i class="fa-solid" [class.fa-circle-check]="transfertId === sl.id" [class.fa-circle]="transfertId !== sl.id"></i>
+                  </div>
+                  <div class="prod-tile-info">
+                    <div class="prod-tile-name">{{ sl.productName || sl.productSku }}</div>
+                    <div class="prod-tile-meta">
+                      <span class="meta-tag"><code>{{ sl.productSku }}</code></span>
+                      <span class="meta-wh"><i class="fa-solid fa-warehouse"></i> {{ sl.warehouseName || 'Stock Central' }}</span>
+                    </div>
+                  </div>
+                  <div class="prod-tile-stock" [class.in-stock]="sl.quantity > 50" [class.low-stock]="sl.quantity > 0 && sl.quantity <= 50" [class.out-stock]="sl.quantity <= 0">
+                    <span class="stock-qty">{{ sl.quantity | number }}</span>
+                    <span class="stock-unit">{{ sl.productUnit || 'unités' }} dispo</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="prod-empty-msg">
+                  <i class="fa-solid fa-box-open"></i> Aucune matière première trouvée
+                </div>
+              }
+            </div>
           </div>
 
           @if (selectedTransfertSL; as sl) {
-            <div class="product-preview-card" style="margin-bottom:14px">
-              <div class="pp-header">
-                <div>
-                  <div class="pp-title">{{ sl.productName || sl.productSku }}</div>
-                  <div class="pp-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName || 'Stock Central' }}</div>
-                </div>
-                <div class="pp-qty">
-                  <span class="pp-val">{{ sl.quantity | number }}</span>
-                  <span class="pp-unit">{{ sl.productUnit || 'unités' }} dispo</span>
-                </div>
+            <div class="selected-preview-banner">
+              <div class="spb-left">
+                <div class="spb-title">{{ sl.productName || sl.productSku }}</div>
+                <div class="spb-sub">SKU: <code>{{ sl.productSku }}</code> · {{ sl.warehouseName || 'Stock Central' }}</div>
+              </div>
+              <div class="spb-right">
+                <span class="spb-lbl">Stock Central Dispo :</span>
+                <span class="spb-val">{{ sl.quantity | number }} {{ sl.productUnit || 'unités' }}</span>
               </div>
             </div>
-          }
 
-          <div class="form-group" style="margin-bottom:14px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <label class="form-label" style="margin:0">Quantité à transférer <span class="req">*</span></label>
-              @if (selectedTransfertSL; as sl) {
-                <div style="display:flex;gap:4px">
-                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(25)">25%</button>
-                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(50)">50%</button>
-                  <button type="button" class="btn btn-xs btn-ghost" (click)="setTransfertPct(100)">Tout (100%)</button>
+            <div class="form-group" style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <label class="form-label" style="margin:0">Quantité à transférer <span class="req">*</span></label>
+                <div class="preset-motifs">
+                  <button type="button" class="motif-chip" (click)="setTransfertPct(25)">25%</button>
+                  <button type="button" class="motif-chip" (click)="setTransfertPct(50)">50%</button>
+                  <button type="button" class="motif-chip" (click)="setTransfertPct(75)">75%</button>
+                  <button type="button" class="motif-chip motif-chip-max" (click)="setTransfertPct(100)">Tout (100%)</button>
+                </div>
+              </div>
+
+              <div class="qty-stepper-box">
+                <input type="number" class="form-control" min="1" [max]="sl.quantity" [(ngModel)]="transfertQty" placeholder="Quantité à transférer"
+                       [style.border-color]="transfertQty > sl.quantity ? 'var(--r)' : ''">
+                <span class="qty-stepper-unit">{{ sl.productUnit || 'unités' }}</span>
+              </div>
+
+              @if (transfertQty > sl.quantity) {
+                <div class="stock-alert-msg alert-danger" style="margin-top:6px">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span>Stock central insuffisant : {{ sl.quantity | number }} {{ sl.productUnit }} disponible(s) maximum</span>
+                </div>
+              } @else if (transfertQty > 0) {
+                <div class="stock-alert-msg alert-success" style="margin-top:6px">
+                  <i class="fa-solid fa-check"></i>
+                  <span>Solde restant en stock central après transfert : <strong>{{ (sl.quantity - transfertQty) | number }} {{ sl.productUnit }}</strong></span>
                 </div>
               }
             </div>
-            <input type="number" class="form-control" min="1" [(ngModel)]="transfertQty" placeholder="Quantité à transférer"
-                   [style.border-color]="selectedTransfertSL && transfertQty > selectedTransfertSL.quantity ? 'var(--r)' : ''">
-            @if (selectedTransfertSL; as sl) {
-              @if (transfertQty > sl.quantity) {
-                <div style="font-size:11px;color:var(--r);margin-top:4px">
-                  <i class="fa-solid fa-triangle-exclamation"></i> Stock central insuffisant : {{ sl.quantity | number }} {{ sl.productUnit }} disponible(s) maximum
-                </div>
-              } @else if (transfertQty > 0) {
-                <div style="font-size:11px;color:var(--g);margin-top:4px">
-                  <i class="fa-solid fa-check"></i> Solde restant en stock central après transfert : <strong>{{ (sl.quantity - transfertQty) | number }} {{ sl.productUnit }}</strong>
-                </div>
-              }
-            }
-          </div>
+          }
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" (click)="showTransfert.set(false)">Annuler</button>

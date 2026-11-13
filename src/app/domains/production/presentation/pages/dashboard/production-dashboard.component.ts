@@ -36,6 +36,7 @@ export class ProductionDashboardComponent implements OnInit {
 
   today = new Date();
   loading = signal(true);
+  Math = Math;
 
   lots = signal<LotDashUI[]>([]);
   ordres = signal<OFBE[]>([]);

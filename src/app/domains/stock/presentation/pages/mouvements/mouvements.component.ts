@@ -37,7 +37,47 @@ export class MouvementsComponent implements OnInit, OnDestroy {
   fCFA(n: number) { return new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA'; }
   getAjustSL() { return this.levels().find(sl => sl.id === +this.ajustId); }
   getTransfertSL() { return this.levels().find(sl => sl.id === +this.transfertId) || this.getMPLevels()[0]; }
-  getMPLevels() { return this.levels().filter(sl => sl.warehouseId === 1 || sl.warehouseName?.toLowerCase().includes('central') || !sl.warehouseId); }
+  getMPLevels() {
+    const central = this.levels().filter(sl => sl.warehouseId === 1 || sl.warehouseName?.toLowerCase().includes('central') || !sl.warehouseId);
+    return central.length > 0 ? central : this.levels();
+  }
+
+  prodSearchTerm = signal('');
+  ajustSearchTerm = signal('');
+
+  getFilteredMPLevels(): StockLevel[] {
+    const list = this.getMPLevels();
+    const q = this.prodSearchTerm().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(sl =>
+      (sl.productName || '').toLowerCase().includes(q) ||
+      (sl.productSku || '').toLowerCase().includes(q) ||
+      (sl.warehouseName || '').toLowerCase().includes(q)
+    );
+  }
+
+  getFilteredAjustLevels(): StockLevel[] {
+    const list = this.levels();
+    const q = this.ajustSearchTerm().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(sl =>
+      (sl.productName || '').toLowerCase().includes(q) ||
+      (sl.productSku || '').toLowerCase().includes(q) ||
+      (sl.warehouseName || '').toLowerCase().includes(q)
+    );
+  }
+
+  selectTransfertProduct(sl: StockLevel): void {
+    this.transfertId = sl.id;
+    if (this.transfertQty <= 0) {
+      this.transfertQty = Math.min(10, sl.quantity > 0 ? sl.quantity : 1);
+    }
+  }
+
+  selectAjustProduct(sl: StockLevel): void {
+    this.ajustId = sl.id;
+    this.ajustQty = sl.quantity;
+  }
 
   get selectedTransfertSL(): StockLevel | undefined {
     return this.levels().find(sl => sl.id === +this.transfertId);

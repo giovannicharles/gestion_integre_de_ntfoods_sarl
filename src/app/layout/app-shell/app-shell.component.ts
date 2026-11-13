@@ -195,11 +195,11 @@ export class AppShellComponent {
   @HostListener('window:resize', ['$event'])
   onResize(e: Event) {
     const w = (e.target as Window).innerWidth;
-    if (w <= 1024) { this._sidebarOpen.set(false); } else { this._mobileOpen.set(false); }
+    if (w <= 768) { this._sidebarOpen.set(false); } else { this._mobileOpen.set(false); }
   }
 
   toggleSidebar(): void {
-    if (window.innerWidth <= 1024) this._mobileOpen.update(v => !v);
+    if (window.innerWidth <= 768) this._mobileOpen.update(v => !v);
     else this._sidebarOpen.update(v => !v);
   }
 
@@ -236,3 +236,4 @@ export class AppShellComponent {
     return parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1);
   });
 }
+

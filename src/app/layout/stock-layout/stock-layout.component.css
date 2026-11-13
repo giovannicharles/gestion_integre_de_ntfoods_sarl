@@ -487,18 +487,18 @@
 }
 
 /* ── Collapsed State (72px Rail) ── */
-.layout-root.sidebar-collapsed .sidebar {
+.layout-root.sidebar-collapsed:not(.mobile-open) .sidebar {
   width: 72px;
   min-width: 72px;
 }
 
-.layout-root.sidebar-collapsed .brand-texts,
-.layout-root.sidebar-collapsed .sb-user-info,
-.layout-root.sidebar-collapsed .sb-section-lbl,
-.layout-root.sidebar-collapsed .sb-lbl,
-.layout-root.sidebar-collapsed .sb-badge,
-.layout-root.sidebar-collapsed .sb-version,
-.layout-root.sidebar-collapsed .sb-group-arrow {
+.layout-root.sidebar-collapsed:not(.mobile-open) .brand-texts,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-user-info,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-section-lbl,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-lbl,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-badge,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-version,
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-group-arrow {
   opacity: 0;
   pointer-events: none;
   width: 0;
@@ -509,25 +509,54 @@
   display: none !important;
 }
 
-.layout-root.sidebar-collapsed .sb-group-children {
+/* Floating Tooltip Pill for collapsed sidebar items on desktop */
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-item {
+  position: relative;
+}
+
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-item:hover .sb-lbl {
+  display: block !important;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  background: #0D3A1E;
+  color: #FFFFFF;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(246, 182, 11, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 1 !important;
+  pointer-events: none;
+  width: auto !important;
+  height: auto !important;
+  visibility: visible !important;
+}
+
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-group-children {
   padding-left: 0;
 }
 
-.layout-root.sidebar-collapsed .sb-group-children::before {
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-group-children::before {
   display: none;
 }
 
-.layout-root.sidebar-collapsed .sb-nav {
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-nav {
   padding: 8px 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(246, 182, 11, 0.4) transparent;
 }
 
-.layout-root.sidebar-collapsed .sb-section {
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-section {
   margin-bottom: 2px;
 }
 
-.layout-root.sidebar-collapsed .sb-item {
+.layout-root.sidebar-collapsed:not(.mobile-open) .sb-item {
   justify-content: center;
   align-items: center;
   padding: 10px 0;
@@ -1013,13 +1042,42 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 272px !important;
-    min-width: 272px !important;
+    width: 280px !important;
+    min-width: 280px !important;
     transform: translateX(-100%);
     z-index: 200;
   }
   .layout-root.mobile-open .sidebar {
-    transform: translateX(0);
+    transform: translateX(0) !important;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45) !important;
+  }
+  .layout-root.mobile-open .brand-texts,
+  .layout-root.mobile-open .sb-user-info,
+  .layout-root.mobile-open .sb-section-lbl,
+  .layout-root.mobile-open .sb-lbl,
+  .layout-root.mobile-open .sb-badge,
+  .layout-root.mobile-open .sb-version,
+  .layout-root.mobile-open .sb-group-arrow {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: auto !important;
+    height: auto !important;
+    margin: initial !important;
+    padding: initial !important;
+    overflow: visible !important;
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+  .layout-root.mobile-open .sb-item {
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
+  }
+  .layout-root.mobile-open .brand-content {
+    display: flex !important;
+  }
+  .layout-root.mobile-open .sb-user {
+    justify-content: flex-start !important;
+    padding: 10px 12px !important;
   }
   .tb-module-chip { display: none; }
   .tb-sep-icon { display: none; }

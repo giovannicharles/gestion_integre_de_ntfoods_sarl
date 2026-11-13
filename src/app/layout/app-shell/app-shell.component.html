@@ -1,4 +1,4 @@
-<div class="layout-root" [class.sidebar-collapsed]="!sidebarOpen()" [class.mobile-open]="mobileOpen()">
+<div class="layout-root" [class.sidebar-collapsed]="!sidebarOpen() && !mobileOpen()" [class.mobile-open]="mobileOpen()">
   @if (mobileOpen()) { <div class="mobile-overlay" (click)="closeMobile()"></div> }
 
   <!-- SIDEBAR -->

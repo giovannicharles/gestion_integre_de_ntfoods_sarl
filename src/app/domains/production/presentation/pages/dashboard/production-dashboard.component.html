@@ -1,414 +1,614 @@
-<div class="dash animate-fadeInUp">
+<div class="dash-21-root animate-fadeInUp">
 
-<div class="ph">
-  <div class="ph-left">
-    <div class="ph-icon"><i class="fa-solid fa-industry"></i></div>
-    <div>
-      <div class="ph-title">Tableau de Bord Production</div>
-      <div class="ph-sub">{{ plan().semaine }}, {{ plan().dateDebut }} au {{ plan().dateFin }}</div>
-    </div>
-  </div>
-  <div class="ph-actions">
-    <button class="btn btn-ghost btn-sm" (click)="chargerDonnees()" [disabled]="loading()">
-      <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
-    </button>
-    <a routerLink="/production/saisie" class="btn btn-primary btn-sm">
-      <i class="fa-solid fa-pen-to-square"></i> Saisie Journalière
-    </a>
-    <button class="btn btn-primary btn-sm" (click)="showCreerOF.set(true)">
-      <i class="fa-solid fa-plus"></i> Nouvel OF
-    </button>
-    <a routerLink="/production/lots" class="btn btn-ghost btn-sm">
-      <i class="fa-solid fa-box"></i> Déclarer lot
-    </a>
-    <a routerLink="/production/rapports" class="btn btn-ghost btn-sm">
-      <i class="fa-solid fa-file-lines"></i> Rapports
-    </a>
-    <a routerLink="/production/besoins" class="btn btn-ghost btn-sm">
-      <i class="fa-solid fa-triangle-exclamation"></i> Besoins
-    </a>
-  </div>
-</div>
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-calendar-week"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Plan semaine</div>
-      <div class="kpi-val">{{ plan().semaine }}</div>
-      <div class="kpi-meta">{{ pphEnCoursReference() ?? 'Aucun PPH en cours' }}</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-boxes-stacked"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots déclarés</div>
-      <div class="kpi-val">{{ nbLotsDeclares() }}</div>
-      <div class="kpi-meta">{{ nbLotsValides() }} validés stock</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Quantité produite (semaine)</div>
-      <div class="kpi-val">{{ dashboard()?.quantiteKgSemaine ?? 0 }} kg</div>
-      <div class="kpi-meta">{{ dashboard()?.cartonsSemaine ?? 0 }} cartons</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-clipboard-check"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Fiches enregistrées (semaine)</div>
-      <div class="kpi-val">{{ fichesSemaine() }}</div>
-      <div class="kpi-meta">fiches journalières</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clipboard-list"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">OF planifiés</div>
-      <div class="kpi-val">{{ ofPlanifies() }}</div>
-      <div class="kpi-meta">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-percent"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Avancement PPH</div>
-      <div class="kpi-val">{{ tauxAvancementPPH() }}%</div>
-      <div class="prog-bar-wrap" style="margin-top:6px"><div class="prog-bar" [class.prog-g]="tauxAvancementPPH()>=80" [class.prog-y]="tauxAvancementPPH()>=50 && tauxAvancementPPH()<80" [class.prog-r]="tauxAvancementPPH()<50" [style.width.%]="tauxAvancementPPH() > 100 ? 100 : tauxAvancementPPH()"></div></div>
-      <div class="kpi-meta">{{ pphEnCoursReference() ?? '-' }}</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-hourglass-half"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots en attente</div>
-      <div class="kpi-val">{{ lotsEnAttente() }}</div>
-      <div class="kpi-meta">validation stock</div>
-    </div>
-  </div>
-</div>
-
-<!-- ORDRES DE FABRICATION -->
-<div class="card">
-  <div class="card-hd">
-    <span class="card-title"><i class="fa-solid fa-clipboard-list"></i> Ordres de fabrication, taux de charge {{ tauxCharge() }}%</span>
-    <span class="badge badge-secondary badge-sm">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</span>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead><tr><th>OF</th><th>PPH</th><th>Produit</th><th>Demandé</th><th>Réalisé</th><th>Avancement</th><th>Échéance</th><th>Statut</th><th>Actions</th></tr></thead>
-      <tbody>
-        @for (o of ordres(); track o.idOF) {
-        <tr>
-          <td class="mono fw-bold">{{ o.idOF }}</td>
-          <td class="mono">{{ o.referencePPH }}</td>
-          <td>
-            <span class="badge bg-neutral">{{ o.codeProduit }}</span>
-            {{ o.designationProduit }}
-          </td>
-          <td class="mono">{{ o.qteDemandee }}</td>
-          <td class="mono">{{ o.qteRealisee }}</td>
-          <td>
-            <div style="display:flex;align-items:center;gap:10px">
-              <div class="prog-bar-wrap" style="max-width:110px"><div [class]="progressClass(progression(o.qteRealisee,o.qteDemandee))" [style.width.%]="progression(o.qteRealisee,o.qteDemandee)"></div></div>
-              <span class="mono">{{ progression(o.qteRealisee,o.qteDemandee) }}%</span>
-            </div>
-          </td>
-          <td class="mono">{{ o.dateButoir ? (o.dateButoir | date:'dd MMM':'':'fr') : '-' }}</td>
-          <td>
-            @if (o.statut === 'HONORE') { <span class="badge bg-success badge-sm">Honoré</span> }
-            @else if (o.statut === 'EN_COURS') { <span class="badge bg-orange badge-sm">En cours</span> }
-            @else if (o.statut === 'ANNULE') { <span class="badge bg-red badge-sm">Annulé</span> }
-            @else { <span class="badge bg-neutral badge-sm">Planifié</span> }
-          </td>
-          <td>
-            <div class="row-actions">
-              <button class="btn btn-sm btn-ghost" (click)="voirDetailOF(o.idOF)">Détails</button>
-              <ng-container *appHasPermission="'PRODUCTION_OF_CREER'">
-                @if (o.statut === 'PLANIFIE') {
-                  <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
-                }
-                @if (o.statut === 'EN_COURS') {
-                  <button class="btn btn-sm btn-primary" (click)="ouvrirProduire(o.idOF)">Produire</button>
-                }
-                @if (o.statut !== 'HONORE' && o.statut !== 'ANNULE') {
-                  <button class="btn btn-sm btn-danger" (click)="annulerOF(o.idOF)">Annuler</button>
-                }
-              </ng-container>
-            </div>
-          </td>
-        </tr>
-        }
-        @empty {
-        <tr><td colspan="9" class="text-center text-muted">Aucun ordre de fabrication</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-chart-simple"></i> Avancement Produits Finis, {{ pphEnCours()?.referencePPH ?? 'Aucun PPH en cours' }}</h2>
-    <a routerLink="/production/plan" class="btn btn-ghost btn-sm">Voir plan complet</a>
-  </div>
-  @for (ligne of (pphEnCours()?.lignes ?? []); track ligne.codeProduit) {
-    <div class="prod-ligne">
-      <div class="prod-info">
-        <span class="prod-code"><span class="badge bg-neutral">{{ ligne.codeProduit }}</span></span>
-        <span class="prod-nom">{{ ligne.nomProduit }}</span>
-        <span class="prod-qty">{{ ligne.productionRealisee }} / {{ ligne.objectifSemaine }}</span>
-      </div>
-      <div class="prog-wrap">
-        <div class="prog-track">
-          <div
-            [class]="progressClass(progression(ligne.productionRealisee, ligne.objectifSemaine))"
-            [style.width.%]="progression(ligne.productionRealisee, ligne.objectifSemaine)"
-          ></div>
+  <!-- ═══ HEADER 21ST CENTURY COCKPIT ═══ -->
+  <div class="dash-21-header">
+    <div class="dash-21-title-block">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="dash-21-icon-box dash-21-icon-green" style="width:46px;height:46px;font-size:20px">
+          <svg viewBox="0 0 36 36" width="30" height="30" fill="none" aria-hidden="true">
+            <path d="M6 28V14L16 20V14L26 20V10L30 12V28H6Z" fill="#14532D" opacity="0.9"/>
+            <circle cx="28" cy="8" r="3" fill="#F6B60B"/>
+            <rect x="10" y="22" width="4" height="6" fill="#FFF8E1"/>
+            <rect x="18" y="22" width="4" height="6" fill="#FFF8E1"/>
+          </svg>
         </div>
-        <span class="prog-pct">{{ progression(ligne.productionRealisee, ligne.objectifSemaine) }}%</span>
+        <div>
+          <h1>Tableau de Bord · Production</h1>
+          <p>
+            <span style="font-weight:700;color:var(--g)">Plan actif : {{ plan().semaine }}</span>
+            <span>·</span>
+            <span>{{ plan().dateDebut }} au {{ plan().dateFin }}</span>
+            <span>·</span>
+            <span class="badge badge-success" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:7px;margin-right:4px"></i>Lignes Actives</span>
+          </p>
+        </div>
       </div>
     </div>
-  } @empty {
-    <p class="text-muted" style="padding: var(--sp-3)">Aucune ligne de production planifiée.</p>
-  }
-</div>
 
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-users"></i> Registres & Présences</h2>
-      <a routerLink="/production/employes" class="btn btn-ghost btn-sm">Voir tout</a>
+    <div class="dash-21-actions">
+      <button class="btn btn-ghost btn-sm" (click)="chargerDonnees()" [disabled]="loading()">
+        <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <a routerLink="/production/saisie" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-pen-to-square"></i> Saisie Journalière
+      </a>
+      <a routerLink="/production/lots" class="btn btn-ghost btn-sm">
+        <i class="fa-solid fa-box"></i> Déclarer lot
+      </a>
+      <button class="btn btn-primary btn-sm" (click)="showCreerOF.set(true)">
+        <i class="fa-solid fa-plus"></i> Nouvel OF
+      </button>
     </div>
-    <p class="text-muted" style="padding: var(--sp-3)">
-      Consultez les registres de présence journaliers depuis la page Employés.
-    </p>
   </div>
 
-  <div class="card">
-    <div class="card-hd">
-      <h2 class="card-title"><i class="fa-solid fa-boxes-packing"></i> Derniers Lots</h2>
-      <a routerLink="/production/lots" class="btn btn-ghost btn-sm">Voir tout</a>
+  <!-- ═══ 21ST CENTURY 4-KPI TOP GRID ═══ -->
+  <div class="dash-21-kpi-grid">
+    <!-- KPI 1 : Production Hebdo -->
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-card-top">
+        <div class="dash-21-icon-box dash-21-icon-green">
+          <i class="fa-solid fa-industry"></i>
+        </div>
+        @if (comparaisonSemaineNvsN1(); as comp) {
+          <span class="dash-21-trend-badge" [ngClass]="comp.variation >= 0 ? 'dash-21-trend-up' : 'dash-21-trend-down'">
+            <i class="fa-solid" [class.fa-arrow-trend-up]="comp.variation >= 0" [class.fa-arrow-trend-down]="comp.variation < 0"></i>
+            {{ comp.variation > 0 ? '+' : '' }}{{ comp.variation }}% vs S-1
+          </span>
+        } @else {
+          <span class="dash-21-trend-badge dash-21-trend-up">
+            <i class="fa-solid fa-bolt"></i> En cours
+          </span>
+        }
+      </div>
+      <div>
+        <div class="dash-21-kpi-lbl">Volume Produit (Semaine)</div>
+        <div class="dash-21-kpi-val">{{ dashboard()?.quantiteKgSemaine ?? 0 | number }} <span style="font-size:16px;font-weight:600">kg</span></div>
+        <div class="dash-21-kpi-sub">
+          <i class="fa-solid fa-boxes-packing"></i>
+          <span>{{ dashboard()?.cartonsSemaine ?? 0 | number }} cartons conditionnés</span>
+        </div>
+      </div>
     </div>
-    @for (l of lots(); track l.id) {
-      <div class="lot-row">
-        <span class="badge bg-neutral">{{ l.codeProduit }}</span>
-        <span class="lot-qty">{{ l.declaredQuantityKg }} kg</span>
-        <span [class]="l.statut === 'VALIDATED_BY_STOCK' ? 'badge bg-success' : 'badge bg-orange'">
-          {{ l.statut === 'VALIDATED_BY_STOCK' ? 'Stock ✓' : 'Déclaré' }}
+
+    <!-- KPI 2 : Avancement PPH -->
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-card-top">
+        <div class="dash-21-icon-box dash-21-icon-gold">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <span class="dash-21-trend-badge dash-21-trend-up">
+          <i class="fa-solid fa-percent"></i> {{ tauxAvancementPPH() }}%
         </span>
       </div>
-    } @empty {
-      <p class="text-muted" style="padding: var(--sp-3)">Aucun lot déclaré récemment.</p>
-    }
-  </div>
-</div>
-
-<!-- ═══════════ STATISTIQUES & GRAPHIQUES (Section 2 du cahier des charges) ═══════════ -->
-<div class="ph" style="margin-top: var(--sp-5)">
-  <div class="ph-left">
-    <div class="ph-icon"><i class="fa-solid fa-chart-line"></i></div>
-    <div>
-      <div class="ph-title" style="font-size:1.1rem">Statistiques & Tendances</div>
-      <div class="ph-sub">4 dernières semaines, données calculées automatiquement</div>
-    </div>
-  </div>
-</div>
-
-@if (chargementStats()) {
-  <p class="text-muted" style="padding: var(--sp-3)">Chargement des statistiques...</p>
-} @else {
-
-@if (comparaisonSemaineNvsN1(); as comp) {
-<div class="kpi-grid">
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Production, Semaine actuelle</div>
-      <div class="kpi-val">{{ comp.actuelle }} kg</div>
-      <div class="kpi-meta">Semaine précédente : {{ comp.precedente }} kg</div>
-    </div>
-  </div>
-  <div class="kpi-card" [class.kp-g]="comp.variation >= 0" [class.kp-r]="comp.variation < 0">
-    <div class="kpi-ico" [class.ig]="comp.variation >= 0" [class.ir]="comp.variation < 0">
-      <i class="fa-solid" [class.fa-arrow-trend-up]="comp.variation >= 0" [class.fa-arrow-trend-down]="comp.variation < 0"></i>
-    </div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Variation S / S-1</div>
-      <div class="kpi-val">{{ comp.variation > 0 ? '+' : '' }}{{ comp.variation }}%</div>
-      <div class="kpi-meta">comparaison automatique</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-database"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Nombre de PPH</div>
-      <div class="kpi-val">{{ pphs().length }}</div>
-      <div class="kpi-meta">tous statuts confondus</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-bottle-droplet"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Fûts nets (semaine)</div>
-      <div class="kpi-val">{{ rapportSemaineCourante()?.totalFutsNets ?? 0 }}</div>
-      <div class="kpi-meta">fûts sortis</div>
-    </div>
-  </div>
-</div>
-}
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-line"></i> Évolution de la production (kg)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProductionKg()" [height]="200" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Évolution des pertes (%)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="200" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-bottle-droplet"></i> Fûts produits vs nets (4 semaines)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="bar" [labels]="labelsEvolution()" [series]="serieFuts()" [height]="200" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-percent"></i> Avancement par Bon de Commande (semaine)</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-mini-chart type="bar" [labels]="labelsAvancementBC()" [series]="serieAvancementBC()" [height]="200" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Répartition des produits fabriqués</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-donut-chart title="" unit="kg" [data]="donutProduits()" />
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-chart-pie"></i> Pertes par type de poudre</h2></div>
-    <div style="padding: 0 var(--sp-4) var(--sp-4)">
-      <app-donut-chart title="" unit="kg" [data]="donutPertes()" />
-    </div>
-  </div>
-</div>
-
-<div class="two-col">
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement des exécutants (semaine)</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Employé</th><th>Quantité</th><th>Taux</th></tr></thead>
-        <tbody>
-          @for (c of classementExecuteurs(); track c.matriculeEmploye) {
-            <tr>
-              <td>#{{ c.rang }}</td>
-              <td>{{ c.nomEmploye }}</td>
-              <td>{{ c.quantiteTotaleRealisee }} {{ c.unite }}</td>
-              <td>{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-hd"><h2 class="card-title"><i class="fa-solid fa-ranking-star"></i> Classement des machinistes (semaine)</h2></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead><tr><th>Rang</th><th>Machiniste</th><th>Productivité</th><th>Efficacité</th></tr></thead>
-        <tbody>
-          @for (c of (classementMachinistes()?.classements ?? []); track c.machinisteMatricule) {
-            <tr>
-              <td>#{{ c.rang }}</td>
-              <td>{{ c.nomMachiniste }}</td>
-              <td>{{ c.productiviteKg }} kg</td>
-              <td>{{ c.efficacite * 100 | number:'1.1-1' }}%</td>
-            </tr>
-          } @empty {
-            <tr><td colspan="4" class="text-center text-muted">Aucune donnée</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-}
-
-<!-- MODAL : CRÉER UN OF -->
-@if (showCreerOF()) {
-<div class="modal-overlay" (click)="showCreerOF.set(false)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-plus"></i> Nouvel ordre de fabrication</h3></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <label>ID OF<input class="input" [(ngModel)]="nouveauOF.idOF" placeholder="OF-..."></label>
-        <label>PPH
-          <select class="input" [(ngModel)]="nouveauOF.referencePPH">
-            <option value="">Choisir,</option>
-            @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }} ({{ p.referenceBC }})</option> }
-          </select>
-        </label>
-        <label>Code produit<input class="input" [(ngModel)]="nouveauOF.codeProduit"></label>
-        <label>Désignation<input class="input" [(ngModel)]="nouveauOF.designationProduit"></label>
-        <label>Qté demandée<input type="number" class="input" [(ngModel)]="nouveauOF.qteDemandee"></label>
-        <label>Date butoir<input type="date" class="input" [(ngModel)]="nouveauOF.dateButoir"></label>
+      <div>
+        <div class="dash-21-kpi-lbl">Avancement Plan Hebdo (PPH)</div>
+        <div class="dash-21-kpi-val" style="color:var(--g)">{{ tauxAvancementPPH() }}%</div>
+        <div class="dash-21-kpi-sub">
+          <i class="fa-solid fa-hashtag"></i>
+          <span>{{ pphEnCoursReference() ?? 'Aucun PPH actif' }}</span>
+        </div>
       </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showCreerOF.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="creerOF()">Créer</button>
-    </div>
-  </div>
-</div>
-}
 
-<!-- MODAL : DÉTAIL D'UN OF -->
-@if (ofDetail()) {
-<div class="modal-overlay" (click)="ofDetail.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-circle-info"></i> Détail OF {{ ofDetail()!.idOF }}</h3></div>
-    <div class="modal-body">
-      <p><strong>PPH :</strong> {{ ofDetail()!.referencePPH }}</p>
-      <p><strong>Produit :</strong> {{ ofDetail()!.codeProduit }}, {{ ofDetail()!.designationProduit }}</p>
-      <p><strong>Demandé :</strong> {{ ofDetail()!.qteDemandee }}, <strong>Réalisé :</strong> {{ ofDetail()!.qteRealisee }}</p>
-      <p><strong>Date butoir :</strong> {{ ofDetail()!.dateButoir ? (ofDetail()!.dateButoir | date:'dd/MM/yyyy') : '-' }}</p>
-      <p><strong>Statut :</strong> {{ ofDetail()!.statut }}</p>
+    <!-- KPI 3 : Ordres de Fabrication -->
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-card-top">
+        <div class="dash-21-icon-box dash-21-icon-sage">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <span class="dash-21-trend-badge dash-21-trend-neutral">
+          Charge: {{ tauxCharge() }}%
+        </span>
+      </div>
+      <div>
+        <div class="dash-21-kpi-lbl">Ordres de Fabrication (OF)</div>
+        <div class="dash-21-kpi-val">{{ ofPlanifies() + ofEnCours() }} <span style="font-size:15px;font-weight:600;color:var(--n500)">actifs</span></div>
+        <div class="dash-21-kpi-sub">
+          <i class="fa-solid fa-check"></i>
+          <span>{{ ofHonores() }} honorés · {{ ofEnCours() }} en atelier</span>
+        </div>
+      </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-primary" (click)="ofDetail.set(null)">Fermer</button>
+
+    <!-- KPI 4 : Lots & Validation Stock -->
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-card-top">
+        <div class="dash-21-icon-box dash-21-icon-red">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        @if (lotsEnAttente() > 0) {
+          <span class="dash-21-trend-badge dash-21-trend-down">
+            <i class="fa-solid fa-clock"></i> {{ lotsEnAttente() }} à valider
+          </span>
+        } @else {
+          <span class="dash-21-trend-badge dash-21-trend-up">
+            <i class="fa-solid fa-check-double"></i> À jour
+          </span>
+        }
+      </div>
+      <div>
+        <div class="dash-21-kpi-lbl">Lots Déclarés Usine</div>
+        <div class="dash-21-kpi-val">{{ nbLotsDeclares() }} <span style="font-size:15px;font-weight:600;color:var(--n500)">lots</span></div>
+        <div class="dash-21-kpi-sub">
+          <i class="fa-solid fa-warehouse"></i>
+          <span>{{ nbLotsValides() }} validés stock · {{ fichesSemaine() }} fiches journalières</span>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-}
-<!-- MODAL : PRODUIRE SUR UN OF -->
-@if (showProduireOF()) {
-<div class="modal-overlay" (click)="showProduireOF.set(null)">
-  <div class="modal-card" (click)="$event.stopPropagation()">
-    <div class="modal-hd"><h3><i class="fa-solid fa-industry"></i> Enregistrer la production</h3></div>
-    <div class="modal-body">
-      <label>Quantité produite<input type="number" class="input" [(ngModel)]="quantiteProduire"></label>
+
+  <!-- ═══ MAIN 2:1 SPLIT GRID ═══ -->
+  <div class="dash-21-grid">
+    <!-- LEFT COLUMN (2/3) -->
+    <div class="dash-21-col-main">
+
+      <!-- ORDRES DE FABRICATION TABLE CARD -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-green" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div>
+              <h3>Ordres de Fabrication en Atelier</h3>
+              <p>Suivi en direct de la charge industrielle (taux de charge {{ tauxCharge() }}%)</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-secondary badge-sm">{{ ofEnCours() }} en cours · {{ ofHonores() }} honorés</span>
+            <button class="btn btn-primary btn-sm" (click)="showCreerOF.set(true)">
+              <i class="fa-solid fa-plus"></i> Créer OF
+            </button>
+          </div>
+        </div>
+        <div class="tbl-wrap" style="padding:0">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>N° OF</th>
+                <th>PPH</th>
+                <th>Produit</th>
+                <th class="text-right">Demandé</th>
+                <th class="text-right">Réalisé</th>
+                <th>Progression</th>
+                <th>Échéance</th>
+                <th>Statut</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of ordres(); track o.idOF) {
+              <tr class="table-row-anim">
+                <td class="mono fw-bold" style="color:var(--g)">{{ o.idOF }}</td>
+                <td class="mono" style="font-size:11px;color:var(--n500)">{{ o.referencePPH }}</td>
+                <td>
+                  <span class="badge bg-neutral" style="margin-right:4px">{{ o.codeProduit }}</span>
+                  <span style="font-weight:600">{{ o.designationProduit }}</span>
+                </td>
+                <td class="mono text-right">{{ o.qteDemandee | number }}</td>
+                <td class="mono text-right" style="font-weight:700;color:var(--g)">{{ o.qteRealisee | number }}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div class="prog-bar-wrap" style="max-width:90px;height:6px">
+                      <div [class]="progressClass(progression(o.qteRealisee, o.qteDemandee))" [style.width.%]="progression(o.qteRealisee, o.qteDemandee)"></div>
+                    </div>
+                    <span class="mono" style="font-size:11px;font-weight:700">{{ progression(o.qteRealisee, o.qteDemandee) }}%</span>
+                  </div>
+                </td>
+                <td class="mono" style="font-size:11px">{{ o.dateButoir ? (o.dateButoir | date:'dd MMM':'':'fr') : '-' }}</td>
+                <td>
+                  @if (o.statut === 'HONORE') { <span class="badge bg-success badge-sm">Honoré</span> }
+                  @else if (o.statut === 'EN_COURS') { <span class="badge bg-orange badge-sm">En cours</span> }
+                  @else if (o.statut === 'ANNULE') { <span class="badge bg-red badge-sm">Annulé</span> }
+                  @else { <span class="badge bg-neutral badge-sm">Planifié</span> }
+                </td>
+                <td class="text-right">
+                  <div class="row-actions" style="justify-content:flex-end">
+                    <button class="btn btn-sm btn-ghost" (click)="voirDetailOF(o.idOF)">Détails</button>
+                    <ng-container *appHasPermission="'PRODUCTION_OF_CREER'">
+                      @if (o.statut === 'PLANIFIE') {
+                        <button class="btn btn-sm btn-primary" (click)="demarrerOF(o.idOF)">Démarrer</button>
+                      }
+                      @if (o.statut === 'EN_COURS') {
+                        <button class="btn btn-sm btn-primary" (click)="ouvrirProduire(o.idOF)">Produire</button>
+                      }
+                      @if (o.statut !== 'HONORE' && o.statut !== 'ANNULE') {
+                        <button class="btn btn-sm btn-danger" (click)="annulerOF(o.idOF)">Annuler</button>
+                      }
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+              }
+              @empty {
+              <tr><td colspan="9" class="text-center text-muted" style="padding:32px">Aucun ordre de fabrication actif cette semaine</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AVANCEMENT PAR PRODUIT FINI (PPH) -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-sage" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-chart-simple"></i>
+            </div>
+            <div>
+              <h3>Avancement Produits Finis · {{ pphEnCours()?.referencePPH ?? 'Plan en cours' }}</h3>
+              <p>Objectifs hebdomadaires vs production réalisée par référence</p>
+            </div>
+          </div>
+          <a routerLink="/production/plan" class="btn btn-ghost btn-sm">Voir plan complet <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="dash-21-card-body" style="padding:16px 20px">
+          @for (ligne of (pphEnCours()?.lignes ?? []); track ligne.codeProduit) {
+            <div class="prod-ligne" style="margin-bottom:14px">
+              <div class="prod-info" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <div>
+                  <span class="badge bg-neutral" style="margin-right:6px">{{ ligne.codeProduit }}</span>
+                  <span class="prod-nom" style="font-weight:600">{{ ligne.nomProduit }}</span>
+                </div>
+                <span class="prod-qty" style="font-family:var(--font-mono);font-size:12px;font-weight:700">
+                  {{ ligne.productionRealisee | number }} / {{ ligne.objectifSemaine | number }}
+                </span>
+              </div>
+              <div class="prog-wrap" style="display:flex;align-items:center;gap:10px">
+                <div class="prog-track" style="flex:1;height:8px;background:var(--n150);border-radius:99px;overflow:hidden">
+                  <div [class]="progressClass(progression(ligne.productionRealisee, ligne.objectifSemaine))"
+                       [style.width.%]="progression(ligne.productionRealisee, ligne.objectifSemaine)"
+                       style="height:100%;border-radius:99px"></div>
+                </div>
+                <span class="prog-pct" style="font-size:12px;font-weight:700;color:var(--g);min-width:40px;text-align:right">
+                  {{ progression(ligne.productionRealisee, ligne.objectifSemaine) }}%
+                </span>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-muted" style="padding:20px;text-align:center">Aucune ligne de production planifiée sur ce PPH.</p>
+          }
+        </div>
+      </div>
+
+      <!-- CHARTS : ÉVOLUTION DE PRODUCTION ET PERTES (4 SEMAINES) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="dash-21-card">
+          <div class="dash-21-card-head">
+            <div class="dash-21-card-title">
+              <div class="dash-21-icon-box dash-21-icon-green" style="width:30px;height:30px;font-size:13px">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <div>
+                <h3 style="font-size:13px">Évolution Production (kg)</h3>
+                <p>4 dernières semaines</p>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 16px">
+            <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionProductionKg()" [height]="180" />
+          </div>
+        </div>
+
+        <div class="dash-21-card">
+          <div class="dash-21-card-head">
+            <div class="dash-21-card-title">
+              <div class="dash-21-icon-box dash-21-icon-red" style="width:30px;height:30px;font-size:13px">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <h3 style="font-size:13px">Taux de Pertes (%)</h3>
+                <p>Matière première transformée</p>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 16px">
+            <app-mini-chart type="line" [labels]="labelsEvolution()" [series]="serieEvolutionPertes()" [height]="180" />
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS : RÉPARTITION ET PERTES PAR POUDRE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="dash-21-card">
+          <div class="dash-21-card-head">
+            <div class="dash-21-card-title">
+              <div class="dash-21-icon-box dash-21-icon-gold" style="width:30px;height:30px;font-size:13px">
+                <i class="fa-solid fa-chart-pie"></i>
+              </div>
+              <div>
+                <h3 style="font-size:13px">Produits Fabriqués (kg)</h3>
+                <p>Semaine courante</p>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 16px">
+            <app-donut-chart title="" unit="kg" [data]="donutProduits()" />
+          </div>
+        </div>
+
+        <div class="dash-21-card">
+          <div class="dash-21-card-head">
+            <div class="dash-21-card-title">
+              <div class="dash-21-icon-box dash-21-icon-sage" style="width:30px;height:30px;font-size:13px">
+                <i class="fa-solid fa-chart-pie"></i>
+              </div>
+              <div>
+                <h3 style="font-size:13px">Pertes par Type de Poudre</h3>
+                <p>Mais / Soja / Arachide</p>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 16px">
+            <app-donut-chart title="" unit="kg" [data]="donutPertes()" />
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-ghost" (click)="showProduireOF.set(null)">Annuler</button>
-      <button class="btn btn-primary" (click)="produireOF(showProduireOF()!)">Enregistrer</button>
+
+    <!-- RIGHT COLUMN (1/3) -->
+    <div class="dash-21-col-side">
+
+      <!-- QUICK GAUGES (INDICES INDUSTRIELS) -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-green" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-gauge-high"></i>
+            </div>
+            <div>
+              <h3>Indices de Performance Usine</h3>
+              <p>Efficacité industrielle en temps réel</p>
+            </div>
+          </div>
+        </div>
+        <div class="dash-21-card-body">
+          <div class="dash-21-gauge-list">
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-head">
+                <span class="dash-21-gauge-lbl">Taux de Charge Lignes</span>
+                <span class="dash-21-gauge-val" style="color:var(--g)">{{ tauxCharge() }}%</span>
+              </div>
+              <div class="dash-21-gauge-bar">
+                <div class="dash-21-gauge-fill dash-21-fill-primary" [style.width.%]="tauxCharge()"></div>
+              </div>
+            </div>
+
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-head">
+                <span class="dash-21-gauge-lbl">Avancement Global PPH</span>
+                <span class="dash-21-gauge-val" style="color:#B47C00">{{ tauxAvancementPPH() }}%</span>
+              </div>
+              <div class="dash-21-gauge-bar">
+                <div class="dash-21-gauge-fill dash-21-fill-accent" [style.width.%]="tauxAvancementPPH()"></div>
+              </div>
+            </div>
+
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-head">
+                <span class="dash-21-gauge-lbl">Taux de Validation Stock</span>
+                <span class="dash-21-gauge-val">{{ nbLotsDeclares() > 0 ? Math.round((nbLotsValides() / nbLotsDeclares()) * 100) : 100 }}%</span>
+              </div>
+              <div class="dash-21-gauge-bar">
+                <div class="dash-21-gauge-fill dash-21-fill-primary" [style.width.%]="nbLotsDeclares() > 0 ? Math.round((nbLotsValides() / nbLotsDeclares()) * 100) : 100"></div>
+              </div>
+            </div>
+
+            <div class="dash-21-gauge-item">
+              <div class="dash-21-gauge-head">
+                <span class="dash-21-gauge-lbl">Fûts Nets Réalisés</span>
+                <span class="dash-21-gauge-val">{{ rapportSemaineCourante()?.totalFutsNets ?? 0 }} fûts</span>
+              </div>
+              <div class="dash-21-gauge-bar">
+                <div class="dash-21-gauge-fill dash-21-fill-accent" style="width:75%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DERNIERS LOTS DÉCLARÉS (FLUX USINE) -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-gold" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-boxes-packing"></i>
+            </div>
+            <div>
+              <h3>Derniers Lots Usine</h3>
+              <p>Validation stock & expédition</p>
+            </div>
+          </div>
+          <a routerLink="/production/lots" class="btn btn-ghost btn-sm">Voir tout <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="dash-21-activity-list">
+          @for (l of lots().slice(0, 5); track l.id) {
+            <div class="dash-21-activity-item">
+              <div class="dash-21-activity-icon dash-21-icon-green">
+                <i class="fa-solid fa-box"></i>
+              </div>
+              <div class="dash-21-activity-content">
+                <div class="dash-21-activity-title">{{ l.designationProduit || l.codeProduit }}</div>
+                <div class="dash-21-activity-sub">Lot : <code>{{ l.id }}</code> · {{ l.declaredQuantityKg | number }} kg</div>
+              </div>
+              <span class="dash-21-trend-badge" [ngClass]="l.statut === 'VALIDATED_BY_STOCK' ? 'dash-21-trend-up' : 'dash-21-trend-neutral'">
+                {{ l.statut === 'VALIDATED_BY_STOCK' ? 'Stock ✓' : 'Déclaré' }}
+              </span>
+            </div>
+          } @empty {
+            <p class="text-muted" style="padding:20px;text-align:center">Aucun lot déclaré récemment.</p>
+          }
+        </div>
+      </div>
+
+      <!-- CLASSEMENT DES EXÉCUTANTS -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-sage" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-ranking-star"></i>
+            </div>
+            <div>
+              <h3>Top Exécutants (Semaine)</h3>
+              <p>Rendement & productivité</p>
+            </div>
+          </div>
+        </div>
+        <div class="dash-21-card-body" style="padding:10px">
+          <div class="dash-21-top-list">
+            @for (c of classementExecuteurs().slice(0, 5); track c.matriculeEmploye) {
+              <div class="dash-21-top-item">
+                <div class="dash-21-top-left">
+                  <div class="dash-21-top-rank">#{{ c.rang }}</div>
+                  <div>
+                    <div class="dash-21-top-name">{{ c.nomEmploye }}</div>
+                    <div style="font-size:10px;color:var(--n400)">{{ c.quantiteTotaleRealisee | number }} {{ c.unite }}</div>
+                  </div>
+                </div>
+                <div class="dash-21-top-val">{{ c.tauxRealisationMoyen | number:'1.1-1' }}%</div>
+              </div>
+            } @empty {
+              <p class="text-muted" style="padding:14px;text-align:center">Données de classement en cours d'actualisation</p>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- CLASSEMENT DES MACHINISTES -->
+      <div class="dash-21-card">
+        <div class="dash-21-card-head">
+          <div class="dash-21-card-title">
+            <div class="dash-21-icon-box dash-21-icon-gold" style="width:34px;height:34px;font-size:15px">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <h3>Machinistes à l'Honneur</h3>
+              <p>Efficacité sur machines d'extrusion</p>
+            </div>
+          </div>
+        </div>
+        <div class="dash-21-card-body" style="padding:10px">
+          <div class="dash-21-top-list">
+            @for (c of (classementMachinistes()?.classements ?? []).slice(0, 5); track c.machinisteMatricule) {
+              <div class="dash-21-top-item">
+                <div class="dash-21-top-left">
+                  <div class="dash-21-top-rank">#{{ c.rang }}</div>
+                  <div>
+                    <div class="dash-21-top-name">{{ c.nomMachiniste }}</div>
+                    <div style="font-size:10px;color:var(--n400)">{{ c.productiviteKg | number }} kg produits</div>
+                  </div>
+                </div>
+                <div class="dash-21-top-val">{{ c.efficacite * 100 | number:'1.1-1' }}%</div>
+              </div>
+            } @empty {
+              <p class="text-muted" style="padding:14px;text-align:center">Aucun machiniste évalué pour cette période</p>
+            }
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
-}
+
+  <!-- ═══ MODALS : CRÉER / DÉTAIL / PRODUIRE OF ═══ -->
+  @if (showCreerOF()) {
+    <div class="modal-overlay animate-fadeIn" (click)="showCreerOF.set(false)">
+      <div class="modal-box animate-fadeInUp" style="max-width:560px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title"><i class="fa-solid fa-plus"></i> Nouvel Ordre de Fabrication (OF)</div>
+          <button class="modal-close" aria-label="Fermer" (click)="showCreerOF.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Identifiant OF <span class="req">*</span></label>
+            <input class="form-control" [(ngModel)]="nouveauOF.idOF" placeholder="Ex: OF-2026-W46-01">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Référence Plan PPH <span class="req">*</span></label>
+            <select class="form-control" [(ngModel)]="nouveauOF.referencePPH">
+              <option value="">-- Choisir un PPH actif --</option>
+              @for (p of pphs(); track p.id) {
+                <option [value]="p.referencePPH">{{ p.referencePPH }} (BC: {{ p.referenceBC }})</option>
+              }
+            </select>
+          </div>
+          <div class="rgrid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group">
+              <label class="form-label">Code Produit <span class="req">*</span></label>
+              <input class="form-control" [(ngModel)]="nouveauOF.codeProduit" placeholder="Ex: TP-500">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Quantité Demandée <span class="req">*</span></label>
+              <input type="number" class="form-control" [(ngModel)]="nouveauOF.qteDemandee" placeholder="Ex: 500">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Désignation Produit</label>
+            <input class="form-control" [(ngModel)]="nouveauOF.designationProduit" placeholder="Désignation complète">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label class="form-label">Date Butoir</label>
+            <input type="date" class="form-control" [(ngModel)]="nouveauOF.dateButoir">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showCreerOF.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="creerOF()">
+            <i class="fa-solid fa-check"></i> Créer l'Ordre de Fabrication
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (ofDetail()) {
+    <div class="modal-overlay animate-fadeIn" (click)="ofDetail.set(null)">
+      <div class="modal-box animate-fadeInUp" style="max-width:520px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title"><i class="fa-solid fa-circle-info"></i> Détail OF {{ ofDetail()!.idOF }}</div>
+          <button class="modal-close" aria-label="Fermer" (click)="ofDetail.set(null)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="banner banner-primary" style="margin-bottom:16px">
+            <i class="fa-solid fa-industry"></i>
+            <span>Ordre rattaché au PPH <strong>{{ ofDetail()!.referencePPH }}</strong></span>
+          </div>
+          <div class="rpt-detail-grid" style="display:flex;flex-direction:column;gap:10px">
+            <div><span style="font-size:12px;color:var(--n500)">Produit :</span> <strong>{{ ofDetail()!.codeProduit }} · {{ ofDetail()!.designationProduit }}</strong></div>
+            <div><span style="font-size:12px;color:var(--n500)">Volume :</span> <strong>{{ ofDetail()!.qteRealisee }} / {{ ofDetail()!.qteDemandee }} unités</strong></div>
+            <div><span style="font-size:12px;color:var(--n500)">Échéance :</span> <strong>{{ ofDetail()!.dateButoir ? (ofDetail()!.dateButoir | date:'dd/MM/yyyy') : '-' }}</strong></div>
+            <div><span style="font-size:12px;color:var(--n500)">Statut actuel :</span> <span class="badge badge-success">{{ ofDetail()!.statut }}</span></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" (click)="ofDetail.set(null)">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showProduireOF()) {
+    <div class="modal-overlay animate-fadeIn" (click)="showProduireOF.set(null)">
+      <div class="modal-box animate-fadeInUp" style="max-width:440px" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title"><i class="fa-solid fa-industry"></i> Enregistrer Production</div>
+          <button class="modal-close" aria-label="Fermer" (click)="showProduireOF.set(null)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Quantité produite réalisée <span class="req">*</span></label>
+            <input type="number" class="form-control" [(ngModel)]="quantiteProduire" placeholder="Nombre d'unités ou cartons">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showProduireOF.set(null)">Annuler</button>
+          <button class="btn btn-primary" (click)="produireOF(showProduireOF()!)">
+            <i class="fa-solid fa-check"></i> Valider la production
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>
