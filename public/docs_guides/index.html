@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portail des Guides d'Utilisation par Module · NTFOODS TANTY ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #14532D;
+      --gold: #F6B60B;
+      --dark: #0F172A;
+      --border: #E2E8F0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #F8FAFC; color: var(--dark); line-height: 1.6; }
+    
+    .hero {
+      background: linear-gradient(135deg, #0A2E17 0%, #14532D 60%, #1E7A42 100%);
+      color: #FFFFFF;
+      padding: 36px 30px;
+      border-bottom: 4px solid var(--gold);
+      text-align: center;
+    }
+    .hero-title { font-size: 28px; font-weight: 900; margin-bottom: 6px; }
+    .hero-subtitle { font-size: 14px; color: var(--gold); font-weight: 700; text-transform: uppercase; }
+    .hero-desc { font-size: 13px; color: #E2E8F0; max-width: 750px; margin: 10px auto 0; }
+
+    .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 22px;
+    }
+
+    .module-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .module-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(20, 83, 45, 0.12); border-color: var(--primary); }
+
+    .card-top {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #FAFBFB;
+    }
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(20, 83, 45, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .card-title { font-size: 16px; font-weight: 800; color: var(--primary); }
+    .card-route { font-size: 11px; font-weight: 700; color: #64748B; background: #F1F5F9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 3px; }
+
+    .card-body { padding: 18px 20px; flex: 1; font-size: 13px; color: #475569; }
+    .card-role { font-weight: 700; color: #0F172A; margin-bottom: 6px; font-size: 12.5px; }
+
+    .card-footer {
+      padding: 14px 20px;
+      background: #F8FAFC;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: #FFFFFF; }
+    .btn-primary:hover { background: #0E3E20; }
+    .btn-gold { background: var(--gold); color: #0F172A; }
+    .btn-gold:hover { background: #D97706; }
+    .btn-outline { background: #FFFFFF; color: #334155; border: 1px solid #CBD5E1; }
+    .btn-outline:hover { background: #F1F5F9; }
+
+    .global-bar {
+      margin-top: 36px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1 class="hero-title">NTFOODS SARL · TANTY ERP DIGITAL</h1>
+    <div class="hero-subtitle">Portail des Guides d'Utilisation Spécifiques par Module</div>
+    <p class="hero-desc">Consultez en ligne ou téléchargez le manuel PowerPoint (.pptx) et Word (.docx) dédié à votre rôle dans l'entreprise.</p>
+  </div>
+
+  <div class="container">
+    <div class="modules-grid">
+
+      <!-- COMMERCIAL -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-truck"></i></div>
+          <div>
+            <div class="card-title">Commercial Terrain</div>
+            <div class="card-route">/commercial</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Commerciaux & Livreurs</div>
+          Précommandes camion J+1, facturation en tournée, saisie WhatsApp, carburant et encaissements créances.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_commercial.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_COMMERCIAL.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_COMMERCIAL.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- SECRETAIRE -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div>
+            <div class="card-title">Secrétariat Commercial</div>
+            <div class="card-route">/secretaire</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Secrétaire Commerciale & Caisse</div>
+          Visa des précommandes, quittances de versement guichet, arrêté de petite caisse et fiches de chargement.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_secretaire.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_SECRETAIRE.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_SECRETAIRE.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- COMPTABLE -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-calculator"></i></div>
+          <div>
+            <div class="card-title">Comptabilité & Finance</div>
+            <div class="card-route">/comptable</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Chef Comptable & Trésorier</div>
+          Visa des commandes avant déstockage, validation des versements, factures OHADA et paiement décaissements.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_comptable.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_COMPTABLE.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_COMPTABLE.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- CONTROLE -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+          <div>
+            <div class="card-title">Contrôle Général & Audit</div>
+            <div class="card-route">/controle</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Contrôleur Général & Auditeur</div>
+          2e validation des consommables et matériel, surveillance budgétaire, contrôle des marges et anti-fraude.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_controle.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_CONTROLE.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_CONTROLE.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-warehouse"></i></div>
+          <div>
+            <div class="card-title">Stocks Central Bassa</div>
+            <div class="card-route">/stock</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Gestionnaire de Stock & Magasiniers</div>
+          Validation des lots de production, réceptions matières premières, sorties camions et comptage invendus.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_stock.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_STOCK.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_STOCK.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- PRODUCTION -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-industry"></i></div>
+          <div>
+            <div class="card-title">Production & Usine</div>
+            <div class="card-route">/production</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Chef d'Usine, Machinistes & Doseurs</div>
+          Plans prévisionnels PPH, pesée et dosage selon formule TANTY, déclaration des lots et suivi machines.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_production.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_PRODUCTION.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_PRODUCTION.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- DG -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-user-tie"></i></div>
+          <div>
+            <div class="card-title">Direction Générale</div>
+            <div class="card-route">/dg</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Directeur Général & Décideurs</div>
+          Cockpit exécutif consolidé, arbitrage des décaissements &gt; 50 000 FCFA, dérogations prix et primes.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_dg.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_DG.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_DG.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- RP -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-handshake"></i></div>
+          <div>
+            <div class="card-title">Relations Publiques</div>
+            <div class="card-route">/rp</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Responsable Grands Comptes & RP</div>
+          Suivi des supermarchés, relances périodiques, gestion des événements, foires et commandes directes.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_rp.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_RP.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_RP.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="module-card">
+        <div class="card-top">
+          <div class="card-icon"><i class="fa-solid fa-gears"></i></div>
+          <div>
+            <div class="card-title">Administration Système</div>
+            <div class="card-route">/admin</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-role"><i class="fa-solid fa-user-tag"></i> Administrateurs IT & DSI</div>
+          Gestion des utilisateurs RBAC, attribution des permissions, journal d'audit et sauvegardes PostgreSQL.
+        </div>
+        <div class="card-footer">
+          <a href="modules/guide_admin.html" class="btn-link btn-primary"><i class="fa-solid fa-book-open"></i> Lire Guide</a>
+          <a href="modules/GUIDE_MODULE_ADMIN.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> PPTX</a>
+          <a href="modules/GUIDE_MODULE_ADMIN.docx" class="btn-link btn-outline" download><i class="fa-solid fa-file-word"></i> DOCX</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BANDEAU GUIDE GLOBAL -->
+    <div class="global-bar">
+      <div>
+        <h3 style="color:var(--primary); font-size:17px; margin-bottom:4px;"><i class="fa-solid fa-book-bookmark"></i> Besoin du Guide Exhaustif Global ?</h3>
+        <p style="font-size:13px; color:#64748B;">Téléchargez le manuel complet regroupant l'ensemble des 9 modules et l'architecture générale.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <a href="GUIDE_UTILISATEUR_TANTY_ERP.pptx" class="btn-link btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> Grand PowerPoint (.pptx)</a>
+        <a href="GUIDE_UTILISATEUR_COMPLET_TANTY_ERP.docx" class="btn-link btn-primary" download><i class="fa-solid fa-file-word"></i> Grand Manuel (.docx)</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

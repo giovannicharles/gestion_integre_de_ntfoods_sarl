@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide d'Utilisation : Commercial Terrain & Ventes · NTFOODS TANTY</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #F8FAFC; color: #0F172A; margin: 0; padding: 0; line-height: 1.6; }
+    .header { background: #14532D; color: #FFFFFF; padding: 24px 32px; border-bottom: 4px solid #F6B60B; }
+    .header-content { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .title { font-size: 24px; font-weight: 800; margin: 0; }
+    .meta { font-size: 13px; color: #F6B60B; font-weight: 700; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; border: none; }
+    .btn-gold { background: #F6B60B; color: #0F172A; }
+    .btn-outline { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+    .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 28px; margin-bottom: 24px; }
+    .proc-title { font-size: 16px; font-weight: 700; color: #14532D; margin: 0 0 6px 0; }
+    .proc-desc { font-size: 13px; color: #64748B; margin: 0 0 14px 0; }
+    .procedure-card { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px 20px; margin-bottom: 18px; }
+    .steps-box { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .steps-box li { display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px; }
+    .step-badge { background: #14532D; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; margin-top: 2px; }
+    
+    /* ── CADRE PHOTO INTERACTIF PERSONNALISABLE ── */
+    .screenshot-zone {
+      border: 2px dashed #94A3B8;
+      background: #F1F5F9;
+      border-radius: 8px;
+      padding: 30px 20px;
+      margin: 22px 0;
+      text-align: center;
+      color: #475569;
+    }
+    .screenshot-zone i { font-size: 32px; color: #14532D; margin-bottom: 8px; }
+    .screenshot-title { font-size: 15px; font-weight: 800; color: #0F172A; }
+    .screenshot-sub { font-size: 12px; color: #64748B; margin-top: 4px; }
+
+    .rules-box { background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 8px; padding: 16px 20px; }
+    .rules-title { font-size: 14px; font-weight: 700; color: #DC2626; margin: 0 0 10px 0; }
+    .rules-box ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #7F1D1D; }
+    @media print {
+      .actions { display: none !important; }
+      body { background: #fff; }
+      .card { border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div>
+        <h1 class="title">Guide Opérationnel : Commercial Terrain & Ventes</h1>
+        <div class="meta">Périmètre : Commerciaux Terrain, Chefs de Vente & Livreurs (/commercial)</div>
+      </div>
+      <div class="actions">
+        <a href="../index.html" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Tous les Modules</a>
+        <a href="GUIDE_MODULE_COMMERCIAL.pptx" class="btn btn-gold" download><i class="fa-solid fa-file-powerpoint"></i> Télécharger PowerPoint</a>
+        <a href="GUIDE_MODULE_COMMERCIAL.docx" class="btn btn-outline" download><i class="fa-solid fa-file-word"></i> Télécharger Word</a>
+        <button onclick="window.print()" class="btn btn-outline"><i class="fa-solid fa-print"></i> Imprimer / PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <p style="font-size:14px; color:#475569; margin-top:0;">Gestion des tournées de livraison, saisie des précommandes J+1, ventes comptant/crédit et recouvrement.</p>
+      
+      <!-- ZONE DE CAPTURE ÉCRAN DÉDIÉE À REMPLIR -->
+      <div class="screenshot-zone" id="screenshot-container">
+        <i class="fa-solid fa-camera"></i>
+        <div class="screenshot-title">Capture de l'Écran Commercial (Précommandes & Ventes Terrain)</div>
+        <div class="screenshot-sub">Zone dédiée aux captures d'écran réelles de votre interface au fur et à mesure des évolutions.</div>
+      </div>
+
+      <h2 style="font-size:18px; color:#14532D; margin:24px 0 14px 0;"><i class="fa-solid fa-tasks"></i> Procédures Pas-à-Pas</h2>
+      
+            <div class="procedure-card">
+              <h3 class="proc-title"><i class="fa-solid fa-list-check"></i> 1. Préparer sa Tournée : Saisie de la Précommande Camion J+1</h3>
+              <p class="proc-desc">Chaque soir avant 18h00, le commercial déclare les besoins en produits finis pour charger son camion le lendemain matin.</p>
+              <ul class="steps-box"><li><span class='step-badge'>1</span><div>Connectez-vous avec vos identifiants commerciaux sur /commercial/precommandes.</div></li><li><span class='step-badge'>2</span><div>Sélectionnez votre zone de distribution (Douala Akwa, Bonabéri, Yaoundé Mfoundi, Bafoussam, etc.).</div></li><li><span class='step-badge'>3</span><div>Renseignez les quantités par référence produit (Tapioca 500g, Céréales instantanées, Bouillies enrichies).</div></li><li><span class='step-badge'>4</span><div>Cliquez sur 'Soumettre la Précommande'. Le statut passe en 'En attente de visa secrétariat'.</div></li></ul>
+            </div>
+            
+            <div class="procedure-card">
+              <h3 class="proc-title"><i class="fa-solid fa-list-check"></i> 2. Saisir les Ventes Directes & Commandes WhatsApp</h3>
+              <p class="proc-desc">Enregistrement rapide des commandes reçues sur le terrain par WhatsApp ou appels téléphoniques.</p>
+              <ul class="steps-box"><li><span class='step-badge'>1</span><div>Cliquez sur le bouton vert '+ Commande WhatsApp' dans la barre supérieure.</div></li><li><span class='step-badge'>2</span><div>Sélectionnez le client en portefeuille ou cochez 'Nouveau Prospect' pour entrer Nom et Téléphone (+237).</div></li><li><span class='step-badge'>3</span><div>Ajoutez les articles demandés. Le système calcule instantanément le Total HT, la TVA 19.25% et le TTC.</div></li><li><span class='step-badge'>4</span><div>Cliquez sur 'Enregistrer & Notifier WhatsApp' pour envoyer la pro-forma au client d'un seul clic.</div></li></ul>
+            </div>
+            
+            <div class="procedure-card">
+              <h3 class="proc-title"><i class="fa-solid fa-list-check"></i> 3. Encaisser les Créances & Frais de Carburant</h3>
+              <p class="proc-desc">Recouvrement des factures en attente et déclaration des pleins de carburant.</p>
+              <ul class="steps-box"><li><span class='step-badge'>1</span><div>Dans 'Recouvrement', sélectionnez le client et la facture échue à solder, puis indiquez le montant perçu.</div></li><li><span class='step-badge'>2</span><div>Dans 'Carburant', enregistrez le kilométrage du camion et la photo du reçu de station-service.</div></li><li><span class='step-badge'>3</span><div>En fin de journée, remettez la totalité des espèces au guichet du Secrétariat Commercial contre quittance.</div></li></ul>
+            </div>
+            
+
+      <div class="rules-box">
+        <div class="rules-title"><i class="fa-solid fa-shield-halved"></i> Règles Strictes d'Entreprise & Conformité</div>
+        <ul><li><i class='fa-solid fa-triangle-exclamation'></i> Toute précommande non soumise avant 18h00 est reportée au surlendemain.</li><li><i class='fa-solid fa-triangle-exclamation'></i> Aucune livraison à crédit n'est autorisée si le client a un impayé supérieur à 30 jours.</li></ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

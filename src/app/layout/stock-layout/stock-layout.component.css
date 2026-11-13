@@ -1438,3 +1438,31 @@
   .btn-quick-whatsapp span { display: none; }
   .btn-quick-whatsapp { padding: 6px 9px; border-radius: 50%; }
 }
+
+/* ── Direct Module Guide Button ── */
+.btn-guide-module {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F1F5F9;
+  color: #14532D !important;
+  border: 1px solid #CBD5E1;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 11px;
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-guide-module:hover {
+  background: #E2E8F0;
+  color: #0E3E20 !important;
+  border-color: #94A3B8;
+  transform: translateY(-1px);
+}
+@media (max-width: 768px) {
+  .btn-guide-module span { display: none; }
+  .btn-guide-module { padding: 6px 9px; border-radius: 50%; }
+}
