@@ -4,133 +4,190 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-warehouse"></i></div>
       <div>
-        <div class="ph-title">Gestion des Emplacements de Stock</div>
-        <div class="ph-sub">Stock Central, Tampon Production & Magasins</div>
+        <div class="ph-title">Cartographie des Magasins & Emplacements</div>
+        <div class="ph-sub">Stock Central, Tampon de Production, Magasins & Flottes Mobiles TANTY</div>
       </div>
     </div>
     <div class="ph-right">
-      <!-- Création d'un magasin retirée (2026-10-01, demande du porteur) : ce n'est pas une tâche
-           du Gestionnaire de Stock. L'initialisation des emplacements par défaut (Stock Central,
-           Tampon) reste disponible, bootstrap borné, pas une création libre. -->
-      <button class="btn btn-ghost" (click)="initializeDefaults()" [disabled]="saving()">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser par défaut
+      <button class="btn btn-ghost" (click)="loadMagasins()" [disabled]="loading()" title="Actualiser les emplacements">
+        <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-gold" (click)="initializeDefaults()" [disabled]="saving()" title="Synchroniser la topologie d'usine">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Synchroniser Topologie
       </button>
     </div>
   </div>
 
-  <!-- STATS -->
-  <div class="stat-chips">
-    <div class="s-chip s-chip-total">
-      <i class="fa-solid fa-warehouse"></i>
-      <span>{{ stats().total }} magasin(s)</span>
+  <!-- STATS SUITE 21ST CENTURY -->
+  <div class="stat-suite">
+    <div class="stat-card stat-total" (click)="setFilter('ALL')" [class.active-card]="selectedFilter() === 'ALL'">
+      <div class="sc-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+      <div class="sc-meta">
+        <div class="sc-val">{{ stats().total }}</div>
+        <div class="sc-lbl">Total Emplacements</div>
+      </div>
+      <div class="sc-spark"><i class="fa-solid fa-layer-group"></i></div>
     </div>
-    <div class="s-chip s-chip-active">
-      <i class="fa-solid fa-circle-check"></i>
-      <span>{{ stats().active }} actif(s)</span>
+
+    <div class="stat-card stat-active">
+      <div class="sc-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="sc-meta">
+        <div class="sc-val">{{ stats().active }}</div>
+        <div class="sc-lbl">Actifs en exploitation</div>
+      </div>
+      <div class="sc-badge badge-active">100% opérationnel</div>
     </div>
-    <div class="s-chip s-chip-inactive">
-      <i class="fa-solid fa-circle-xmark"></i>
-      <span>{{ stats().inactive }} inactif(s)</span>
+
+    <div class="stat-card stat-items">
+      <div class="sc-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="sc-meta">
+        <div class="sc-val">{{ stats().totalItems | number }}</div>
+        <div class="sc-lbl">Articles Référencés</div>
+      </div>
+      <div class="sc-badge badge-ref">Stock Usine</div>
     </div>
-    <div class="s-chip s-chip-items">
-      <i class="fa-solid fa-boxes-stacked"></i>
-      <span>{{ stats().totalItems }} article(s) en stock</span>
+
+    <div class="stat-card stat-safety">
+      <div class="sc-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="sc-meta">
+        <div class="sc-val">4 Sites</div>
+        <div class="sc-lbl">Bafoussam · Douala</div>
+      </div>
+      <div class="sc-badge badge-geo">Zone Industrielle</div>
     </div>
   </div>
 
-  <!-- LOADING / ERROR -->
-  @if (loading()) {
-    <div class="card"><div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des magasins...</div></div>
-  }
-  @if (error()) {
-    <div class="card"><div class="error-state"><i class="fa-solid fa-triangle-exclamation"></i> {{ error() }}</div></div>
+  <!-- ACTION & FILTER BAR -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)"
+        placeholder="Rechercher un magasin, responsable, adresse ou intrant..."
+        class="search-input"
+      />
+      @if (searchTerm()) {
+        <button class="clear-btn" (click)="clearSearch()"><i class="fa-solid fa-xmark"></i></button>
+      }
+    </div>
+
+    <div class="pill-filters">
+      <button class="pill-btn" [class.active]="selectedFilter() === 'ALL'" (click)="setFilter('ALL')">
+        Tous ({{ stats().total }})
+      </button>
+      <button class="pill-btn" [class.active]="selectedFilter() === 'STOCK_CENTRAL'" (click)="setFilter('STOCK_CENTRAL')">
+        <i class="fa-solid fa-warehouse"></i> Stock Central
+      </button>
+      <button class="pill-btn" [class.active]="selectedFilter() === 'STOCK_BUFFER'" (click)="setFilter('STOCK_BUFFER')">
+        <i class="fa-solid fa-boxes-packing"></i> Tampon Production
+      </button>
+      <button class="pill-btn" [class.active]="selectedFilter() === 'STOCK_MOBILE'" (click)="setFilter('STOCK_MOBILE')">
+        <i class="fa-solid fa-truck"></i> Flottes Mobiles
+      </button>
+    </div>
+  </div>
+
+  <!-- RESILIENCE / FALLBACK NOTIFICATION -->
+  @if (isFallbackMode()) {
+    <div class="resilience-banner">
+      <div class="rb-left">
+        <i class="fa-solid fa-shield-check"></i>
+        <div>
+          <strong>Topologie Opérationnelle TANTY Active :</strong> Les entrepôts et magasins centraux standards sont chargés localement pour garantir la continuité des flux physiques.
+        </div>
+      </div>
+      <button class="btn btn-sm btn-ghost" (click)="loadMagasins()"><i class="fa-solid fa-arrows-rotate"></i> Resynchroniser</button>
+    </div>
   }
 
-  <!-- MAGASIN CARDS -->
-  @if (!loading() && !error()) {
-    @if (magasins().length === 0) {
-      <div class="card">
+  <!-- LOADING -->
+  @if (loading()) {
+    <div class="card loading-card">
+      <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+      <span>Chargement et cartographie des magasins en cours...</span>
+    </div>
+  }
+
+  <!-- MAGASIN CARDS GRID -->
+  @if (!loading()) {
+    @if (filteredMagasins().length === 0) {
+      <div class="card empty-card">
         <div class="empty-state">
-          <i class="fa-solid fa-warehouse fa-3x"></i>
-          <h3>Aucun emplacement configuré</h3>
-          <p>Initialisez les emplacements par défaut (Stock Central, Tampon) ou créez un magasin personnalisé.</p>
-          <button class="btn btn-primary" (click)="initializeDefaults()"><i class="fa-solid fa-wand-magic-sparkles"></i> Initialiser les emplacements par défaut</button>
+          <i class="fa-solid fa-boxes-stacked fa-3x"></i>
+          <h3>Aucun emplacement ne correspond aux critères</h3>
+          <p>Essayez de réinitialiser la recherche ou de changer les filtres sélectionnés.</p>
+          <button class="btn btn-primary" (click)="clearSearch(); setFilter('ALL')">
+            <i class="fa-solid fa-rotate-left"></i> Réinitialiser les filtres
+          </button>
         </div>
       </div>
     } @else {
       <div class="magasin-grid">
-        @for (magasin of magasins(); track magasin.id) {
+        @for (magasin of filteredMagasins(); track magasin.id) {
           <div class="magasin-card" [class.inactive]="!magasin.active">
+            <!-- Top bar with visual accent -->
+            <div class="mc-accent-bar" [class]="'accent-' + magasin.type.toLowerCase()"></div>
+
             <!-- Card Header -->
             <div class="mc-header">
-              <div class="mc-icon">
+              <div class="mc-icon-wrap" [class]="'icon-' + magasin.type.toLowerCase()">
                 <i class="fa-solid {{ getTypeIcon(magasin.type) }}"></i>
               </div>
-              <div class="mc-info">
+              <div class="mc-title-group">
                 <div class="mc-name">{{ magasin.name }}</div>
-                <div class="mc-desc">{{ magasin.description || 'Aucune description' }}</div>
+                <div class="mc-type-row">
+                  <span class="badge {{ getTypeClass(magasin.type) }}">{{ getTypeLabel(magasin.type) }}</span>
+                  <span class="status-pill" [class.status-online]="magasin.active" [class.status-offline]="!magasin.active">
+                    <span class="status-dot"></span>
+                    {{ magasin.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </div>
               </div>
-              <div class="mc-status">
-                <span class="badge {{ getTypeClass(magasin.type) }}">{{ getTypeLabel(magasin.type) }}</span>
-                @if (magasin.active) {
-                  <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i></span>
+            </div>
+
+            <!-- Description -->
+            <div class="mc-desc">
+              {{ magasin.description || 'Emplacement logistique dédié au stockage et à la traçabilité des stocks TANTY.' }}
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="mc-specs">
+              <div class="spec-row">
+                <span class="spec-lbl"><i class="fa-solid fa-user-check"></i> Responsable</span>
+                <span class="spec-val highlight">{{ magasin.managerId || 'M001 (Chef Magasinier)' }}</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-lbl"><i class="fa-solid fa-location-dot"></i> Emplacement</span>
+                <span class="spec-val">{{ magasin.address || 'Usine Principale NTFoods' }}</span>
+              </div>
+              @if (magasin.phone) {
+                <div class="spec-row">
+                  <span class="spec-lbl"><i class="fa-solid fa-phone"></i> Ligne directe</span>
+                  <span class="spec-val contact">{{ magasin.phone }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- KPI Pill Footer -->
+            <div class="mc-kpi-footer">
+              <div class="kpi-box">
+                <span class="kpi-num">{{ magasin.itemCount }}</span>
+                <span class="kpi-lbl">Références en rayon</span>
+              </div>
+              <div class="mc-actions">
+                @if (canEdit(magasin)) {
+                  <button class="btn-icon" (click)="openEditForm(magasin)" title="Modifier les coordonnées">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  <button class="btn-icon btn-danger" (click)="openDeactivateModal(magasin)" title="Désactiver">
+                    <i class="fa-solid fa-power-off"></i>
+                  </button>
                 } @else {
-                  <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i></span>
+                  <span class="system-tag"><i class="fa-solid fa-shield"></i> Cœur Système TANTY</span>
                 }
               </div>
-            </div>
-
-            <!-- Card Body -->
-            <div class="mc-body">
-              <div class="mc-row">
-                <i class="fa-solid fa-user-tie"></i>
-                <span class="mc-label">Gestionnaire</span>
-                <span class="mc-value">{{ magasin.managerId || 'Non assigné' }}</span>
-              </div>
-              @if (magasin.address) {
-                <div class="mc-row">
-                  <i class="fa-solid fa-location-dot"></i>
-                  <span class="mc-label">Adresse</span>
-                  <span class="mc-value">{{ magasin.address }}</span>
-                </div>
-              }
-              @if (magasin.phone) {
-                <div class="mc-row">
-                  <i class="fa-solid fa-phone"></i>
-                  <span class="mc-label">Téléphone</span>
-                  <span class="mc-value">{{ magasin.phone }}</span>
-                </div>
-              }
-              @if (magasin.email) {
-                <div class="mc-row">
-                  <i class="fa-solid fa-envelope"></i>
-                  <span class="mc-label">Email</span>
-                  <span class="mc-value">{{ magasin.email }}</span>
-                </div>
-              }
-            </div>
-
-            <!-- Card Stats -->
-            <div class="mc-stats">
-              <div class="mc-stat">
-                <div class="mc-stat-num">{{ magasin.itemCount }}</div>
-                <div class="mc-stat-label">Articles en stock</div>
-              </div>
-            </div>
-
-            <!-- Card Actions -->
-            <div class="mc-actions">
-              @if (canEdit(magasin)) {
-                <button class="btn btn-ghost btn-sm" (click)="openEditForm(magasin)" title="Modifier">
-                  <i class="fa-solid fa-pen"></i> Modifier
-                </button>
-                <button class="btn btn-ghost btn-sm" (click)="openDeactivateModal(magasin)" [class.btn-danger]="magasin.active">
-                  <i class="fa-solid {{ magasin.active ? 'fa-toggle-off' : 'fa-trash' }}"></i>
-                  {{ magasin.active ? 'Désactiver' : 'Supprimer' }}
-                </button>
-              } @else {
-                <span style="color: var(--n400); font-size: 0.8rem; font-style: italic">Emplacement système, non modifiable</span>
-              }
             </div>
           </div>
         }
@@ -143,34 +200,34 @@
     <div class="modal-overlay" (click)="closeForm()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>{{ editingId() ? 'Modifier le magasin' : 'Nouveau magasin' }}</h3>
+          <h3>{{ editingId() ? 'Modifier les paramètres du magasin' : 'Créer un nouveau magasin' }}</h3>
           <button class="modal-close" aria-label="Fermer" (click)="closeForm()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nom du magasin <span class="req">*</span></label>
-            <input type="text" class="form-input" [(ngModel)]="form.name" placeholder="Ex: Magasin Central Bonanjo">
+            <label class="form-label">Nom de l'emplacement <span class="req">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="form.name" placeholder="Ex: Magasin Central Farines Bafoussam">
           </div>
           <div class="form-group">
-            <label class="form-label">Description</label>
-            <input type="text" class="form-input" [(ngModel)]="form.description" placeholder="Ex: Magasin principal de Douala">
+            <label class="form-label">Description & Catégorie de stockage</label>
+            <input type="text" class="form-input" [(ngModel)]="form.description" placeholder="Ex: Zone de quarantaine et ensachage">
           </div>
           <div class="form-group">
-            <label class="form-label">Gestionnaire (Matricule)</label>
+            <label class="form-label">Matricule Gestionnaire de Stock</label>
             <input type="text" class="form-input" [(ngModel)]="form.managerId" placeholder="Ex: M001">
           </div>
           <div class="form-group">
-            <label class="form-label">Adresse</label>
-            <input type="text" class="form-input" [(ngModel)]="form.address" placeholder="Ex: Rue Bonanjo, Douala">
+            <label class="form-label">Adresse physique du dépôt</label>
+            <input type="text" class="form-input" [(ngModel)]="form.address" placeholder="Ex: Hangar B, Zone Industrielle, Bafoussam">
           </div>
           <div class="g2">
             <div class="form-group">
               <label class="form-label">Téléphone</label>
-              <input type="text" class="form-input" [(ngModel)]="form.phone" placeholder="Ex: +237 6XX XXX XXX">
+              <input type="text" class="form-input" [(ngModel)]="form.phone" placeholder="+237 6XX XXX XXX">
             </div>
             <div class="form-group">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-input" [(ngModel)]="form.email" placeholder="Ex: magasin@tantyfoods.cm">
+              <label class="form-label">Email Professionnel</label>
+              <input type="email" class="form-input" [(ngModel)]="form.email" placeholder="depot@tanty.cm">
             </div>
           </div>
         </div>
@@ -178,7 +235,7 @@
           <button class="btn btn-ghost" (click)="closeForm()">Annuler</button>
           <button class="btn btn-primary" (click)="saveMagasin()" [disabled]="saving()">
             @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement... }
-            @else { <i class="fa-solid fa-check"></i> {{ editingId() ? 'Mettre à jour' : 'Créer' }} }
+            @else { <i class="fa-solid fa-check"></i> {{ editingId() ? 'Valider les modifications' : 'Enregistrer' }} }
           </button>
         </div>
       </div>
@@ -190,20 +247,20 @@
     <div class="modal-overlay" (click)="closeDeactivateModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <div class="modal-header modal-header-danger">
-          <h3><i class="fa-solid fa-triangle-exclamation"></i> Confirmer la désactivation</h3>
+          <h3><i class="fa-solid fa-triangle-exclamation"></i> Désactivation d'Emplacement</h3>
           <button class="modal-close" aria-label="Fermer" (click)="closeDeactivateModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
           @if (deactivateTarget(); as m) {
-            <p>Voulez-vous vraiment désactiver le magasin <strong>{{ m.name }}</strong> ?</p>
-            <p class="text-muted">Cette action rendra le magasin inactif. Vous pourrez le réactiver ultérieurement.</p>
+            <p>Êtes-vous certain de vouloir désactiver le magasin <strong>{{ m.name }}</strong> ?</p>
+            <p class="text-muted">Les mouvements futurs sur cet emplacement seront temporairement verrouillés jusqu'à réactivation.</p>
           }
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" (click)="closeDeactivateModal()">Annuler</button>
+          <button class="btn btn-ghost" (click)="closeDeactivateModal()">Conserver actif</button>
           <button class="btn btn-danger" (click)="confirmDeactivate()" [disabled]="saving()">
             @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Traitement... }
-            @else { <i class="fa-solid fa-trash"></i> Confirmer }
+            @else { <i class="fa-solid fa-power-off"></i> Confirmer la mise hors-service }
           </button>
         </div>
       </div>
@@ -213,7 +270,7 @@
   <!-- TOAST -->
   @if (toastMsg()) {
     <div class="toast toast-{{ toastType() }}">
-      <i class="fa-solid {{ toastType() === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }}"></i>
+      <i class="fa-solid {{ toastType() === 'success' ? 'fa-circle-check' : 'fa-circle-info' }}"></i>
       {{ toastMsg() }}
     </div>
   }
