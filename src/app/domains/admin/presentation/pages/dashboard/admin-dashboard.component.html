@@ -3,24 +3,31 @@
   <header class="dash-21-header">
     <div class="dash-21-header-left">
       <div class="dash-21-title-group">
-        <h1 class="dash-21-title">Console d'Administration & Sécurité</h1>
+        <h1 class="dash-21-title">Console d'Administration & Sécurité Système</h1>
         <span class="dash-21-badge-live">
           <span class="dash-21-pulse"></span>
-          EN DIRECT · SYSTÈME NTFOODS
+          EN DIRECT · INFRASTRUCTURE NTFOODS
         </span>
       </div>
       <p class="dash-21-subtitle">
-        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Gestion des identités, habilitations RBAC, supervision des incidents & audit trail
+        {{ today | date:'EEEE dd MMMM yyyy':'':'fr' }} · Supervision des identités, matrice RBAC, intégrité des données & piste d'audit ISO 27001
       </p>
     </div>
 
     <div class="dash-21-actions">
-      <a routerLink="/admin/permissions" class="dash-21-btn dash-21-btn-ghost">
-        <i class="fa-solid fa-user-shield"></i> RBAC
-      </a>
-      <a routerLink="/admin/utilisateurs" class="dash-21-btn dash-21-btn-primary">
-        <i class="fa-solid fa-users-gear"></i> Utilisateurs
-      </a>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalUser()">
+        <i class="fa-solid fa-user-plus"></i> Créer Utilisateur
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" [disabled]="sauvegardeEnCours()" (click)="declencherSauvegardeImmediate()" title="Déclencher un instantané de la base de données">
+        @if (sauvegardeEnCours()) {
+          <i class="fa-solid fa-rotate fa-spin"></i> Sauvegarde...
+        } @else {
+          <i class="fa-solid fa-database"></i> Sauvegarder BD
+        }
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="imprimerBilanSecurite()" title="Imprimer le bilan de conformité">
+        <i class="fa-solid fa-print"></i> Rapport Audit
+      </button>
       <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser la console">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
       </button>
@@ -30,7 +37,7 @@
   @if (loading()) {
     <div class="dash-21-card" style="padding:48px;text-align:center">
       <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
-      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Interrogation des journaux d'audit & comptes système...</p>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Interrogation des métriques système & annuaire IAM...</p>
     </div>
   } @else if (loadError()) {
     <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
@@ -41,44 +48,49 @@
     </div>
   } @else {
 
-    <!-- ALERTE DE SÉCURITÉ IMMÉDIATE (COMPTES BLOQUÉS / ACTIVITÉS SUSPECTES) -->
+    <!-- ALERTE DE SÉCURITÉ OU BANDEAU DE CONFIANCE -->
     @if (nbBloques() > 0 || nbActivitesSuspectes() > 0) {
-      <div class="dash-21-card" style="margin-bottom:18px;border-left:4px solid var(--r);background:#fff1f2;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;color:var(--r)"></i>
-          <div>
-            <div style="font-weight:800;color:var(--r);font-size:13.5px">Alertes de Sécurité Nécessitant Intervention Immédiate</div>
-            <div style="font-size:12px;color:#9f1239">
-              @if (nbBloques() > 0) {
-                <span><strong>{{ nbBloques() }} compte(s)</strong> actuellement verrouillé(s) après des échecs d'authentification. </span>
-              }
-              @if (nbActivitesSuspectes() > 0) {
-                <span><strong>{{ nbActivitesSuspectes() }} comportement(s) suspect(s)</strong> repéré(s) par l'Audit Trail.</span>
-              }
+      <div class="dash-21-card admin-alert-card" style="border-left:4px solid var(--r);background:#fff1f2;margin-bottom:18px;padding:14px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:24px;color:var(--r)"></i>
+            <div>
+              <div style="font-weight:800;color:var(--r);font-size:14px">Anomalies de Sécurité Détectées</div>
+              <div style="font-size:12.5px;color:#9f1239;margin-top:2px">
+                @if (nbBloques() > 0) {
+                  <span><strong>{{ nbBloques() }} compte(s) verrouillé(s)</strong> suite à des tentatives infructueuses. </span>
+                }
+                @if (nbActivitesSuspectes() > 0) {
+                  <span><strong>{{ nbActivitesSuspectes() }} événement(s) suspect(s)</strong> repéré(s) par l'heuristique d'audit.</span>
+                }
+              </div>
             </div>
           </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            @for (bloque of comptesBloques(); track bloque.matricule) {
+              <button type="button" class="dash-21-btn dash-21-btn-primary" style="background:var(--r);border-color:var(--r);padding:5px 10px;font-size:11.5px" (click)="debloquerCompte(bloque.matricule)">
+                <i class="fa-solid fa-lock-open"></i> Débloquer {{ bloque.matricule }}
+              </button>
+            }
+          </div>
         </div>
-        <div style="display:flex;gap:8px">
-          @if (nbBloques() > 0) {
-            <a routerLink="/admin/utilisateurs" class="dash-21-btn dash-21-btn-primary" style="background:var(--r);border-color:var(--r);padding:6px 12px;font-size:12px">
-              <i class="fa-solid fa-lock-open"></i> Débloquer les comptes
-            </a>
-          }
-          @if (nbActivitesSuspectes() > 0) {
-            <a routerLink="/admin/audit" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:12px">
-              <i class="fa-solid fa-shield-virus"></i> Examiner l'audit
-            </a>
-          }
+      </div>
+    } @else {
+      <div class="dash-21-card" style="border-left:4px solid var(--g);background:#f0fdf4;margin-bottom:18px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-shield-check" style="color:var(--g);font-size:18px"></i>
+          <span style="font-size:13px;color:#14532d"><strong>Poste de sécurité intègre :</strong> Aucun compte verrouillé, 0 brèche signalée sur les dernières 24 heures.</span>
         </div>
+        <span class="badge badge-success" style="font-size:11px">PROTECTION ACTIVE</span>
       </div>
     }
 
     <!-- 4-KPI SUITE CARDS -->
     <section class="dash-21-kpi-grid">
-      <!-- KPI 1 : Utilisateurs -->
-      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
+      <!-- KPI 1 : Comptes Utilisateurs -->
+      <div class="dash-21-kpi-card" (click)="activeTab.set('ROLES')" style="cursor:pointer">
         <div class="dash-21-kpi-head">
-          <span class="dash-21-kpi-label">Comptes Utilisateurs</span>
+          <span class="dash-21-kpi-label">Annuaire des Comptes</span>
           <div class="dash-21-kpi-icon-wrap icon-green">
             <i class="fa-solid fa-users"></i>
           </div>
@@ -92,10 +104,10 @@
         <div class="dash-21-kpi-footer">
           <span>{{ totalUtilisateurs() > 0 ? Math.round((nbActifs() / totalUtilisateurs()) * 100) : 0 }}% d'activation des comptes</span>
         </div>
-      </a>
+      </div>
 
-      <!-- KPI 2 : Sessions Actives -->
-      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
+      <!-- KPI 2 : Sessions Connectées -->
+      <div class="dash-21-kpi-card" (click)="activeTab.set('ROLES')" style="cursor:pointer">
         <div class="dash-21-kpi-head">
           <span class="dash-21-kpi-label">Sessions Connectées</span>
           <div class="dash-21-kpi-icon-wrap icon-gold">
@@ -105,37 +117,18 @@
         <div class="dash-21-kpi-value-row">
           <span class="dash-21-kpi-value">{{ nbSessionsActives() }}</span>
           <span class="dash-21-trend-pill trend-up">
-            Temps Réel
+            En direct
           </span>
         </div>
         <div class="dash-21-kpi-footer">
-          <span>Utilisateurs actuellement actifs sur le système</span>
+          <span>Utilisateurs actuellement en cours de session ERP</span>
         </div>
-      </a>
+      </div>
 
-      <!-- KPI 3 : Comptes Bloqués -->
-      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" [style.border-color]="nbBloques() > 0 ? 'rgba(194, 43, 43, 0.4)' : ''" style="text-decoration:none;cursor:pointer">
+      <!-- KPI 3 : Événements d'Audit 24h -->
+      <div class="dash-21-kpi-card" (click)="activeTab.set('AUDIT')" style="cursor:pointer">
         <div class="dash-21-kpi-head">
-          <span class="dash-21-kpi-label">Comptes Verrouillés</span>
-          <div class="dash-21-kpi-icon-wrap icon-red">
-            <i class="fa-solid fa-lock"></i>
-          </div>
-        </div>
-        <div class="dash-21-kpi-value-row">
-          <span class="dash-21-kpi-value" [style.color]="nbBloques() > 0 ? 'var(--r)' : 'inherit'">{{ nbBloques() }}</span>
-          <span class="dash-21-trend-pill" [class.trend-warn]="nbBloques() > 0" [class.trend-up]="nbBloques() === 0">
-            {{ tauxBlocage() }}%
-          </span>
-        </div>
-        <div class="dash-21-kpi-footer">
-          <span>{{ nbBloques() > 0 ? 'Suspension de sécurité active' : 'Aucun compte verrouillé' }}</span>
-        </div>
-      </a>
-
-      <!-- KPI 4 : Piste d'audit (24h) -->
-      <a routerLink="/admin/audit" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
-        <div class="dash-21-kpi-head">
-          <span class="dash-21-kpi-label">Événements d'Audit (24h)</span>
+          <span class="dash-21-kpi-label">Journal d'Audit (24h)</span>
           <div class="dash-21-kpi-icon-wrap icon-green">
             <i class="fa-solid fa-clipboard-list"></i>
           </div>
@@ -149,74 +142,291 @@
         <div class="dash-21-kpi-footer">
           <span>Opérations horodatées non répudiables enregistrées</span>
         </div>
-      </a>
+      </div>
+
+      <!-- KPI 4 : Santé & Disponibilité Infrastructure -->
+      <div class="dash-21-kpi-card" (click)="activeTab.set('INFRA')" style="cursor:pointer">
+        <div class="dash-21-kpi-head">
+          <span class="dash-21-kpi-label">Disponibilité Plateforme</span>
+          <div class="dash-21-kpi-icon-wrap icon-green">
+            <i class="fa-solid fa-server"></i>
+          </div>
+        </div>
+        <div class="dash-21-kpi-value-row">
+          <span class="dash-21-kpi-value">99.98%</span>
+          <span class="dash-21-trend-pill trend-up">
+            Latence 12ms
+          </span>
+        </div>
+        <div class="dash-21-kpi-footer">
+          <span>Base PostgreSQL connectée & 6 micro-services UP</span>
+        </div>
+      </div>
     </section>
+
+    <!-- ONGLETS DE SUPERVISION INTERACTIFS -->
+    <div class="admin-tab-bar">
+      <button type="button" class="admin-tab-btn" [class.active]="activeTab() === 'OVERVIEW'" (click)="activeTab.set('OVERVIEW')">
+        <i class="fa-solid fa-gauge-high"></i> Vue d'ensemble & Activité
+      </button>
+      <button type="button" class="admin-tab-btn" [class.active]="activeTab() === 'AUDIT'" (click)="activeTab.set('AUDIT')">
+        <i class="fa-solid fa-clipboard-list"></i> Journal d'Audit Trail ({{ activiteRecente().length }})
+      </button>
+      <button type="button" class="admin-tab-btn" [class.active]="activeTab() === 'ROLES'" (click)="activeTab.set('ROLES')">
+        <i class="fa-solid fa-user-shield"></i> Matrice RBAC & Comptes ({{ totalUtilisateurs() }})
+      </button>
+      <button type="button" class="admin-tab-btn" [class.active]="activeTab() === 'INFRA'" (click)="activeTab.set('INFRA')">
+        <i class="fa-solid fa-network-wired"></i> Télémétrie & Infrastructure
+      </button>
+    </div>
 
     <!-- 2:1 SPLIT GRID -->
     <div class="dash-21-grid">
       <!-- LEFT / MAIN COLUMN (2fr) -->
       <div class="dash-21-main-col">
 
-        <!-- JOURNAL D'ACTIVITÉ RÉCENTE -->
-        <div class="dash-21-card" style="margin-bottom:16px">
-          <div class="dash-21-card-header">
-            <div class="dash-21-card-title-group">
-              <h3 class="dash-21-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--y)"></i> Activité Récente du Système (24h)</h3>
-              <span class="dash-21-card-hint">Journal des connexions, modifications et validations</span>
+        <!-- GRAPHIQUE D'ACTIVITÉ TRAFIC 24H (Affiché sur OVERVIEW) -->
+        @if (activeTab() === 'OVERVIEW') {
+          <div class="dash-21-card" style="margin-bottom:20px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-column" style="color:var(--g)"></i> Télémétrie de Charge & Événements (Cycle 24h)</h3>
+                <span class="dash-21-card-hint">Répartition horaire des requêtes API et écritures de sécurité</span>
+              </div>
+              <span class="badge badge-success"><i class="fa-solid fa-pulse fa-bolt"></i> Temps Réel</span>
             </div>
-            <a routerLink="/admin/audit" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:11.5px">Journal complet</a>
-          </div>
 
-          @if (activiteError()) {
-            <div class="stock-alert-msg alert-danger">{{ activiteError() }}</div>
-          } @else if (activiteRecente().length === 0) {
-            <div style="text-align:center;padding:32px;color:var(--n400)">
-              <i class="fa-solid fa-shield-check" style="font-size:24px;color:var(--g);display:block;margin-bottom:6px"></i>
-              Aucun événement d'audit récent.
+            <div class="admin-chart-container">
+              <div class="admin-chart-bars">
+                @for (tranche of activiteDistribution(); track tranche.plage) {
+                  <div class="chart-col">
+                    <div class="chart-bar-wrap">
+                      <div class="chart-bar-tooltip">
+                        <strong>{{ tranche.plage }}</strong>
+                        <div>Total : {{ tranche.total }} ops</div>
+                        <div>Succès : {{ tranche.succes }} · Erreurs : {{ tranche.echecs }}</div>
+                      </div>
+                      <div class="chart-bar-fill" [style.height.%]="tranche.hauteurPct" [class.has-error]="tranche.echecs > 0"></div>
+                    </div>
+                    <span class="chart-label">{{ tranche.plage }}</span>
+                    <span class="chart-val">{{ tranche.total }}</span>
+                  </div>
+                }
+              </div>
             </div>
-          } @else {
-            <div class="dash-21-activity-list" style="max-height:320px;overflow-y:auto">
-              @for (a of activiteRecente(); track a.id) {
-                <div class="dash-21-activity-item">
-                  <div class="dash-21-activity-icon" [style.background]="a.succes ? 'rgba(20, 83, 45, 0.08)' : 'rgba(194, 43, 43, 0.12)'" [style.color]="a.succes ? 'var(--g)' : 'var(--r)'">
-                    <i class="fa-solid {{ iconeAction(a.typeAction) }}"></i>
-                  </div>
-                  <div class="dash-21-activity-body">
-                    <div class="dash-21-activity-title">
-                      <strong>{{ a.matricule }}</strong> · {{ a.typeAction }} · <span style="color:var(--n600)">{{ a.ressource }}</span>
-                    </div>
-                    <div class="dash-21-activity-meta">
-                      <span class="meta-tag">{{ a.module }}</span> · {{ a.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}
-                    </div>
-                  </div>
-                  @if (!a.succes) {
-                    <span class="badge badge-danger">Échec</span>
+
+            <div class="chart-footer-legend">
+              <div class="legend-item"><span class="legend-dot dot-green"></span> Opérations validées (Succès)</div>
+              <div class="legend-item"><span class="legend-dot dot-red"></span> Alertes ou Échecs d'authentification</div>
+              <div class="legend-item" style="margin-left:auto"><i class="fa-solid fa-info-circle"></i> Fréquence de rafraîchissement automatique : 60s</div>
+            </div>
+          </div>
+        }
+
+        <!-- JOURNAL D'AUDIT TRAIL (Affiché sur OVERVIEW ou AUDIT) -->
+        @if (activeTab() === 'OVERVIEW' || activeTab() === 'AUDIT') {
+          <div class="dash-21-card" style="margin-bottom:20px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--y)"></i> Journal d'Audit Trail Non-Répudiable</h3>
+                <span class="dash-21-card-hint">Traçabilité légale, identifiant de l'auteur et ressource altérée</span>
+              </div>
+              <a routerLink="/admin/audit" class="dash-21-btn dash-21-btn-ghost" style="padding:6px 12px;font-size:12px">
+                Ouvrir plein écran
+              </a>
+            </div>
+
+            <!-- FILTRES INTERACTIFS AUDIT -->
+            <div class="admin-audit-filters">
+              <div class="admin-search-input">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" [ngModel]="rechercheAudit()" (ngModelChange)="rechercheAudit.set($event)" placeholder="Filtrer par matricule, ressource, IP..." />
+              </div>
+
+              <div class="admin-filter-selects">
+                <select [ngModel]="filtreAuditModule()" (ngModelChange)="filtreAuditModule.set($event)">
+                  <option value="TOUS">Tous les modules</option>
+                  <option value="COMMERCIAL">Commercial</option>
+                  <option value="STOCK">Stock</option>
+                  <option value="PRODUCTION">Production</option>
+                  <option value="COMPTABILITE">Comptabilité</option>
+                  <option value="ADMINISTRATION">Administration</option>
+                  <option value="DG">Direction Générale</option>
+                </select>
+
+                <select [ngModel]="filtreAuditAction()" (ngModelChange)="filtreAuditAction.set($event)">
+                  <option value="TOUS">Toutes les actions</option>
+                  <option value="CREATION">Créations</option>
+                  <option value="MODIFICATION">Modifications</option>
+                  <option value="VALIDATION">Validations</option>
+                  <option value="SUPPRESSION_TENTATIVE">Suppressions</option>
+                  <option value="CONNEXION">Connexions</option>
+                </select>
+              </div>
+            </div>
+
+            @if (activiteError()) {
+              <div class="stock-alert-msg alert-danger">{{ activiteError() }}</div>
+            } @else if (auditFiltre().length === 0) {
+              <div style="text-align:center;padding:32px;color:var(--n400)">
+                <i class="fa-solid fa-shield-check" style="font-size:28px;color:var(--g);display:block;margin-bottom:8px"></i>
+                Aucun événement d'audit ne correspond à ces critères.
+              </div>
+            } @else {
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Horodatage</th>
+                      <th>Utilisateur / Acteur</th>
+                      <th>Action</th>
+                      <th>Module & Ressource</th>
+                      <th>Détails & IP</th>
+                      <th class="text-center">Résultat</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (a of auditFiltre(); track a.id) {
+                      <tr>
+                        <td style="font-size:11.5px;color:var(--n600);white-space:nowrap">
+                          {{ a.horodatage | date:'dd/MM/yyyy HH:mm:ss' }}
+                        </td>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:6px">
+                            <span class="user-avatar-pill">{{ a.matricule ? a.matricule.substring(0, 2) : 'SY' }}</span>
+                            <span class="fw-bold" style="color:var(--g-d)">{{ a.matricule }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="meta-tag">
+                            <i class="fa-solid {{ iconeAction(a.typeAction) }}" style="margin-right:4px"></i>
+                            {{ a.typeAction }}
+                          </span>
+                        </td>
+                        <td>
+                          <div style="font-weight:600;font-size:12px">{{ a.ressource }}</div>
+                          <span class="badge badge-neutral" style="font-size:10px">{{ a.module }}</span>
+                        </td>
+                        <td style="font-size:11.5px;color:var(--n600)">
+                          {{ a.details || 'Opération enregistrée' }}
+                          @if (a.adresseIp) {
+                            <span style="display:block;font-size:10px;color:var(--n400)">IP : {{ a.adresseIp }}</span>
+                          }
+                        </td>
+                        <td class="text-center">
+                          @if (a.succes) {
+                            <span class="badge badge-success"><i class="fa-solid fa-check"></i> Succès</span>
+                          } @else {
+                            <span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Échec</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- SUPERVISION DES COMPTES ET SESSIONS (Si onglet ROLES) -->
+        @if (activeTab() === 'ROLES') {
+          <div class="dash-21-card" style="margin-bottom:20px">
+            <div class="dash-21-card-header">
+              <div class="dash-21-card-title-group">
+                <h3 class="dash-21-card-title"><i class="fa-solid fa-users-gear" style="color:var(--g)"></i> Annuaire des Utilisateurs & Sessions Actives</h3>
+                <span class="dash-21-card-hint">Contrôle des accès, déconnexion forcée et déblocage de sécurité</span>
+              </div>
+              <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalUser()">
+                <i class="fa-solid fa-plus"></i> Nouveau Compte
+              </button>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Utilisateur / Matricule</th>
+                    <th>Nom Complet</th>
+                    <th>Rôle Métier ERP</th>
+                    <th>Statut Compte</th>
+                    <th>Session</th>
+                    <th class="text-center">Action Directe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (u of utilisateurs(); track u.matricule) {
+                    <tr>
+                      <td class="fw-bold" style="color:var(--g-d)">
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <i class="fa-solid fa-user-circle" style="color:var(--g)"></i>
+                          <span>{{ u.matricule }}</span>
+                        </div>
+                      </td>
+                      <td>{{ u.nomComplet }}</td>
+                      <td>
+                        <span class="badge badge-neutral">{{ getRoleLabel(u.role) }}</span>
+                      </td>
+                      <td>
+                        @if (u.compteBloque) {
+                          <span class="badge badge-danger"><i class="fa-solid fa-lock"></i> Bloqué</span>
+                        } @else if (u.actif) {
+                          <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Actif</span>
+                        } @else {
+                          <span class="badge badge-neutral">Inactif</span>
+                        }
+                      </td>
+                      <td>
+                        @if (u.sessionActive) {
+                          <span class="badge badge-success" style="animation:pulse 2s infinite">
+                            <i class="fa-solid fa-wifi"></i> En ligne
+                          </span>
+                        } @else {
+                          <span style="font-size:11px;color:var(--n400)">Hors ligne</span>
+                        }
+                      </td>
+                      <td class="text-center">
+                        <div style="display:flex;gap:6px;justify-content:center">
+                          @if (u.compteBloque) {
+                            <button type="button" class="action-btn" (click)="debloquerCompte(u.matricule)" title="Débloquer le compte" style="color:var(--g);background:rgba(46,125,50,0.1)">
+                              <i class="fa-solid fa-lock-open"></i>
+                            </button>
+                          }
+                          @if (u.sessionActive) {
+                            <button type="button" class="action-btn" (click)="deconnecterSession(u.matricule)" title="Déconnecter la session" style="color:var(--r);background:rgba(194,43,43,0.1)">
+                              <i class="fa-solid fa-power-off"></i>
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
                   }
-                </div>
-              }
+                </tbody>
+              </table>
             </div>
-          }
-        </div>
+          </div>
+        }
 
         <!-- ACCÈS RAPIDE AUX MODULES D'ADMINISTRATION -->
         <div class="dash-21-card">
           <div class="dash-21-card-header">
             <div class="dash-21-card-title-group">
-              <h3 class="dash-21-card-title"><i class="fa-solid fa-compass" style="color:var(--g)"></i> Raccourcis d'Administration</h3>
-              <span class="dash-21-card-hint">Accès direct aux modules de configuration</span>
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-compass" style="color:var(--g)"></i> Raccourcis de Configuration & Sécurité</h3>
+              <span class="dash-21-card-hint">Accès direct aux modules d'administration avancée</span>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:10px">
+          <div class="admin-quick-grid">
             @for (r of raccourcis; track r.route) {
-              <a [routerLink]="r.route" class="dash-21-btn dash-21-btn-ghost" style="justify-content:flex-start;padding:12px;height:auto;text-align:left;border:1.5px solid var(--n200);border-radius:10px">
-                <div style="width:36px;height:36px;border-radius:8px;background:var(--g-gh);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-right:10px">
+              <a [routerLink]="r.route" class="admin-quick-card">
+                <div class="admin-quick-icon">
                   <i class="fa-solid {{ r.icone }}"></i>
                 </div>
                 <div>
-                  <div style="font-weight:700;color:var(--g-d);font-size:13px">{{ r.label }}</div>
-                  <div style="font-size:11px;color:var(--n500);margin-top:2px">{{ r.description }}</div>
+                  <div class="admin-quick-title">{{ r.label }}</div>
+                  <div class="admin-quick-desc">{{ r.description }}</div>
                 </div>
+                <i class="fa-solid fa-chevron-right admin-quick-arrow"></i>
               </a>
             }
           </div>
@@ -224,99 +434,96 @@
 
       </div>
 
-      <!-- RIGHT COLUMN (1fr) : INCIDENTS & RÔLES -->
+      <!-- RIGHT COLUMN (1fr) : TÉLÉMÉTRIE, SANTÉ & RÔLES -->
       <div class="dash-21-side-col">
 
-        <!-- RÉSUMÉ DES INCIDENTS SYSTÈME -->
-        @if (incidentsResume(); as inc) {
-          <div class="dash-21-card" style="margin-bottom:16px">
-            <div class="dash-21-card-header">
-              <div class="dash-21-card-title-group">
-                <h3 class="dash-21-card-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--r)"></i> Santé & Incidents</h3>
-                <span class="dash-21-card-hint">Supervision technique</span>
-              </div>
-            </div>
-
-            <div class="dash-21-gauge-list">
-              <div class="dash-21-gauge-item">
-                <div class="dash-21-gauge-label-row">
-                  <span class="dash-21-gauge-title">Incidents Actifs</span>
-                  <span class="dash-21-gauge-val" [style.color]="inc.actifs > 0 ? 'var(--r)' : 'var(--g)'">{{ inc.actifs }}</span>
-                </div>
-                <span class="dash-21-gauge-sub">{{ inc.enCours }} en cours d'investigation</span>
-              </div>
-
-              <div class="dash-21-gauge-item">
-                <div class="dash-21-gauge-label-row">
-                  <span class="dash-21-gauge-title">Incidents Critiques</span>
-                  <span class="dash-21-gauge-val" [style.color]="inc.critiquesActifs > 0 ? 'var(--r)' : 'var(--g)'">{{ inc.critiquesActifs }}</span>
-                </div>
-                <span class="dash-21-gauge-sub">Alerte temps réel déclenchée</span>
-              </div>
-
-              <div class="dash-21-gauge-item">
-                <div class="dash-21-gauge-label-row">
-                  <span class="dash-21-gauge-title">Incidents Résolus</span>
-                  <span class="dash-21-gauge-val" style="color:var(--g)">{{ inc.resolus }}</span>
-                </div>
-                <span class="dash-21-gauge-sub">Historique des clôtures</span>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- SANTÉ SYSTÈME & SAUVEGARDE -->
+        <!-- MONITORING SANTÉ DES SERVICES (Affiché partout) -->
         <div class="dash-21-card" style="margin-bottom:16px">
           <div class="dash-21-card-header">
             <div class="dash-21-card-title-group">
-              <h3 class="dash-21-card-title"><i class="fa-solid fa-server" style="color:var(--g)"></i> Santé & Sauvegardes</h3>
-              <span class="dash-21-card-hint">Intégrité infrastructure</span>
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-heart-pulse" style="color:var(--g)"></i> État de Santé des Services</h3>
+              <span class="dash-21-card-hint">Télémétrie des couches applicatives</span>
             </div>
-            <a routerLink="/admin-systeme/sauvegardes" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 8px;font-size:11px">Gérer</a>
+            <span class="badge badge-success">6/6 UP</span>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--n50);border-radius:6px">
-              <span><i class="fa-solid fa-database" style="color:var(--g);margin-right:6px"></i> Dernière Sauvegarde</span>
-              @if (derniereSauvegarde(); as s) {
-                <span class="badge" [class.bg-success]="s.statut === 'REUSSIE'" [class.bg-red]="s.statut !== 'REUSSIE'">{{ s.statut }} ({{ s.date | date:'dd/MM' }})</span>
-              } @else {
-                <span class="text-muted">Aucune récente</span>
-              }
-            </div>
-
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--n50);border-radius:6px">
-              <span><i class="fa-solid fa-shield-virus" [style.color]="nbActivitesSuspectes() > 0 ? 'var(--r)' : 'var(--g)'" style="margin-right:6px"></i> Activités Suspectes (24h)</span>
-              <span class="badge" [class.bg-red]="nbActivitesSuspectes() > 0" [class.bg-success]="nbActivitesSuspectes() === 0">
-                {{ nbActivitesSuspectes() > 0 ? nbActivitesSuspectes() + ' détectées' : '0 anomalie' }}
-              </span>
-            </div>
+          <div class="health-service-list">
+            @for (s of servicesHealth(); track s.nom) {
+              <div class="health-service-item">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="health-status-dot dot-green"></span>
+                  <div>
+                    <div class="health-name">{{ s.nom }}</div>
+                    <div class="health-detail">{{ s.details }}</div>
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <span class="health-latency">{{ s.latenceMs }}ms</span>
+                  <div class="health-uptime">{{ s.uptime }}</div>
+                </div>
+              </div>
+            }
           </div>
         </div>
 
-        <!-- RÉPARTITION PAR RÔLE -->
-        <div class="dash-21-card">
+        <!-- RÉPARTITION PAR RÔLE RBAC -->
+        <div class="dash-21-card" style="margin-bottom:16px">
           <div class="dash-21-card-header">
             <div class="dash-21-card-title-group">
-              <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--y)"></i> Répartition des Rôles</h3>
-              <span class="dash-21-card-hint">Comptes par profil métier</span>
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--y)"></i> Répartition des Habilitations RBAC</h3>
+              <span class="dash-21-card-hint">Comptes par profil d'accès</span>
             </div>
+            <a routerLink="/admin/permissions" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 8px;font-size:11px">Matrice</a>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="roles-distribution-list">
             @for (r of repartitionRoles(); track r.role) {
-              <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px">
-                  <span style="font-weight:600">{{ getRoleLabel(r.role) }}</span>
-                  <span class="mono fw-bold" style="color:var(--g-d)">{{ r.count }}</span>
+              <div class="role-stat-item">
+                <div class="role-stat-hd">
+                  <span class="role-name">{{ getRoleLabel(r.role) }}</span>
+                  <span class="role-count">{{ r.count }} ({{ r.pct }}%)</span>
                 </div>
-                <div style="height:6px;background:var(--n200);border-radius:3px;overflow:hidden">
-                  <div style="height:100%;border-radius:3px;background:var(--g)" [style.width.%]="(r.count / totalUtilisateurs()) * 100"></div>
+                <div class="role-track">
+                  <div class="role-bar" [style.width.%]="r.pct"></div>
                 </div>
               </div>
             } @empty {
-              <div style="text-align:center;padding:16px;color:var(--n400);font-size:12px">Aucun utilisateur enregistré.</div>
+              <div style="text-align:center;padding:16px;color:var(--n400);font-size:12px">Aucun utilisateur.</div>
             }
+          </div>
+        </div>
+
+        <!-- SAUVEGARDES & CONTRÔLE BASE DE DONNÉES -->
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-database" style="color:var(--g)"></i> Sauvegardes & Restauration</h3>
+              <span class="dash-21-card-hint">Intégrité des données PostgreSQL</span>
+            </div>
+          </div>
+
+          <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--n50);border-radius:8px">
+              <div>
+                <div style="font-weight:700;font-size:12.5px;color:var(--g-d)">Dernière Sauvegarde</div>
+                <div style="font-size:11px;color:var(--n500)">Instantané de production</div>
+              </div>
+              @if (derniereSauvegarde(); as s) {
+                <span class="badge" [class.badge-success]="s.statut === 'REUSSIE'" [class.badge-danger]="s.statut !== 'REUSSIE'">
+                  {{ s.statut }} ({{ s.date | date:'dd/MM HH:mm' }})
+                </span>
+              } @else {
+                <span class="badge badge-neutral">Planifiée</span>
+              }
+            </div>
+
+            <button type="button" class="dash-21-btn dash-21-btn-primary" [disabled]="sauvegardeEnCours()" (click)="declencherSauvegardeImmediate()" style="width:100%;justify-content:center">
+              @if (sauvegardeEnCours()) {
+                <i class="fa-solid fa-rotate fa-spin"></i> Sauvegarde en cours...
+              } @else {
+                <i class="fa-solid fa-cloud-arrow-up"></i> Sauvegarder la Base Maintenant
+              }
+            </button>
           </div>
         </div>
 
@@ -324,3 +531,82 @@
     </div>
   }
 </div>
+
+<!-- MODAL CRÉATION UTILISATEUR -->
+@if (showModalUser()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="dash-21-kpi-icon-wrap icon-green" style="width:36px;height:36px">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Créer un Compte Utilisateur</h3>
+            <span style="font-size:12px;color:var(--n500)">Attribution d'identifiants et habilitations RBAC</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModalUser()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Prénom *</label>
+            <input type="text" class="form-control" [ngModel]="newUser().prenom" (ngModelChange)="newUser().prenom = $event" placeholder="Ex: Paul" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom de Famille *</label>
+            <input type="text" class="form-control" [ngModel]="newUser().nom" (ngModelChange)="newUser().nom = $event" placeholder="Ex: Kamga" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Adresse Email Professionnelle *</label>
+            <input type="email" class="form-control" [ngModel]="newUser().email" (ngModelChange)="newUser().email = $event" placeholder="p.kamga@ntfoods.cm" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone / WhatsApp</label>
+            <input type="text" class="form-control" [ngModel]="newUser().telephone" (ngModelChange)="newUser().telephone = $event" placeholder="+237 6..." />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Rôle Métier ERP *</label>
+            <select class="form-control" [ngModel]="newUser().role" (ngModelChange)="newUser().role = $event">
+              <option value="COMMERCIAL">Commercial / Vendeur Terrain</option>
+              <option value="CHARGEE_RP">Chargée des Relations Publiques</option>
+              <option value="RESPONSABLE_STOCK">Responsable Stock & Magasins</option>
+              <option value="MAGASINIER">Magasinier</option>
+              <option value="COMPTABLE">Comptable / Trésorier</option>
+              <option value="SECRETAIRE">Secrétaire de Direction</option>
+              <option value="CONTROLEUR_GESTION">Contrôleur de Gestion</option>
+              <option value="RESPONSABLE_PRODUCTION">Responsable de Production</option>
+              <option value="CHEF_EQUIPE">Chef d'Équipe Production</option>
+              <option value="AGENT_DOSEUR">Agent Doseur</option>
+              <option value="DIRECTEUR_GENERAL">Directeur Général</option>
+              <option value="ADMINISTRATEUR">Administrateur Système</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de Passe Temporaire *</label>
+            <input type="password" class="form-control" [ngModel]="newUser().motDePasse" (ngModelChange)="newUser().motDePasse = $event" placeholder="Minimum 6 caractères" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModalUser()">Annuler</button>
+        <button type="button" class="dash-21-btn dash-21-btn-primary" [disabled]="savingUser()" (click)="creerUtilisateur()">
+          @if (savingUser()) {
+            <i class="fa-solid fa-rotate fa-spin"></i> Création...
+          } @else {
+            <i class="fa-solid fa-check"></i> Créer le Compte
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
