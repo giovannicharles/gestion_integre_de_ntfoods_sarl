@@ -9,7 +9,17 @@
         Factures fournisseurs, bordereaux de caisse, quittances d'impôts, relevés bancaires et pièces justificatives
       </p>
     </div>
-    <div class="dash-21-actions">
+    <div class="dash-21-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- SÉLECTEUR DE VUE -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeAffichage() === 'table'" [class.dash-21-btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Vue Tableau" style="padding:4px 10px;font-size:12px">
+          <i class="fa-solid fa-table-list"></i>
+        </button>
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeAffichage() === 'cartes'" [class.dash-21-btn-ghost]="modeAffichage() !== 'cartes'" (click)="modeAffichage.set('cartes')" title="Vue Cartes" style="padding:4px 10px;font-size:12px">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+      </div>
+
       <button class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalImport()">
         <i class="fa-solid fa-cloud-arrow-up"></i> Numériser une pièce
       </button>
@@ -54,58 +64,102 @@
       </button>
     </div>
   } @else {
-    <div class="dash-21-card">
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Nature de Pièce</th>
-              <th>Référence Comptable</th>
-              <th>Fichier Original</th>
-              <th>Taille</th>
-              <th>Enregistré Par</th>
-              <th>Date de Dépôt</th>
-              <th class="text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of listeFiltree; track d.id) {
-            <tr>
-              <td>
-                <span class="meta-tag">{{ typeLabel(d.typeDocument) }}</span>
-              </td>
-              <td class="fw-bold" style="color:var(--g-d)">{{ d.reference }}</td>
-              <td style="font-size:12px">
-                <i class="fa-regular fa-file-pdf" style="color:var(--r);margin-right:6px"></i>
-                {{ d.nomFichierOriginal }}
-              </td>
-              <td class="mono" style="font-size:12px;color:var(--n600)">{{ formatTaille(d.tailleOctets) }}</td>
-              <td>
-                <span class="badge badge-neutral" style="font-size:11px">{{ d.matriculeUploader || 'COMPTABLE' }}</span>
-              </td>
-              <td style="font-size:12px;color:var(--n600)">{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td class="text-center">
-                <button type="button" class="dash-21-btn dash-21-btn-primary" style="padding:5px 12px;font-size:11.5px" (click)="telechargerDocument(d)">
-                  <i class="fa-solid fa-download"></i> Télécharger
-                </button>
-              </td>
-            </tr>
-            } @empty {
+
+    <!-- VUE TABLEAU -->
+    @if (modeAffichage() === 'table') {
+      <div class="dash-21-card">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td colspan="7" style="text-align:center;padding:40px 16px">
-                  <i class="fa-solid fa-folder-open" style="font-size:36px;color:var(--n300);margin-bottom:12px;display:block"></i>
-                  <h4 style="margin:0 0 6px;color:var(--g-d);font-size:15px">Aucune pièce comptable archivée</h4>
-                  <p style="font-size:13px;color:var(--n500);margin:0 0 16px">Numérisez les factures fournisseurs, quittances de caisse et reçus.</p>
-                  <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalImport()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Numériser une pièce
+                <th>Nature de Pièce</th>
+                <th>Référence Comptable</th>
+                <th>Fichier Original</th>
+                <th>Taille</th>
+                <th>Enregistré Par</th>
+                <th>Date de Dépôt</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of listeFiltree; track d.id) {
+              <tr>
+                <td>
+                  <span class="meta-tag">{{ typeLabel(d.typeDocument) }}</span>
+                </td>
+                <td class="fw-bold" style="color:var(--g-d)">{{ d.reference }}</td>
+                <td style="font-size:12px">
+                  <i class="fa-regular fa-file-pdf" style="color:var(--r);margin-right:6px"></i>
+                  {{ d.nomFichierOriginal }}
+                </td>
+                <td class="mono" style="font-size:12px;color:var(--n600)">{{ formatTaille(d.tailleOctets) }}</td>
+                <td>
+                  <span class="badge badge-neutral" style="font-size:11px">{{ d.matriculeUploader || 'COMPTABLE' }}</span>
+                </td>
+                <td style="font-size:12px;color:var(--n600)">{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="text-center">
+                  <button type="button" class="dash-21-btn dash-21-btn-primary" style="padding:5px 12px;font-size:11.5px" (click)="telechargerDocument(d)">
+                    <i class="fa-solid fa-download"></i> Télécharger
                   </button>
                 </td>
               </tr>
-            }
-          </tbody>
-        </table>
+              } @empty {
+                <tr>
+                  <td colspan="7" style="text-align:center;padding:40px 16px">
+                    <i class="fa-solid fa-folder-open" style="font-size:36px;color:var(--n300);margin-bottom:12px;display:block"></i>
+                    <h4 style="margin:0 0 6px;color:var(--g-d);font-size:15px">Aucune pièce comptable archivée</h4>
+                    <p style="font-size:13px;color:var(--n500);margin:0 0 16px">Numérisez les factures fournisseurs, quittances de caisse et reçus.</p>
+                    <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalImport()">
+                      <i class="fa-solid fa-cloud-arrow-up"></i> Numériser une pièce
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    }
+
+    <!-- VUE CARTES -->
+    @if (modeAffichage() === 'cartes') {
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+        @for (d of listeFiltree; track d.id) {
+          <div class="dash-21-card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                <span class="meta-tag">{{ typeLabel(d.typeDocument) }}</span>
+                <span class="mono" style="font-size:11px;color:var(--n500)">{{ formatTaille(d.tailleOctets) }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="width:36px;height:36px;border-radius:8px;background:rgba(46, 125, 50, 0.1);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+                  <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div style="overflow:hidden">
+                  <h4 style="margin:0;font-size:13.5px;font-weight:700;color:var(--g-d);text-overflow:ellipsis;overflow:hidden;white-space:nowrap">{{ d.reference }}</h4>
+                  <div style="font-size:11px;color:var(--n500);text-overflow:ellipsis;overflow:hidden;white-space:nowrap">{{ d.nomFichierOriginal }}</div>
+                </div>
+              </div>
+              <div style="font-size:11.5px;color:var(--n600);margin-bottom:14px">
+                <div><i class="fa-regular fa-clock" style="margin-right:4px"></i>{{ d.dateImport | date:'dd/MM/yyyy HH:mm' }}</div>
+                <div><i class="fa-regular fa-user" style="margin-right:4px"></i>{{ d.matriculeUploader || 'COMPTABLE' }}</div>
+              </div>
+            </div>
+
+            <button type="button" class="dash-21-btn dash-21-btn-primary" style="width:100%;justify-content:center;padding:7px;font-size:12px" (click)="telechargerDocument(d)">
+              <i class="fa-solid fa-download"></i> Télécharger
+            </button>
+          </div>
+        } @empty {
+          <div class="dash-21-card" style="grid-column:1/-1;padding:40px;text-align:center">
+            <i class="fa-solid fa-folder-open" style="font-size:36px;color:var(--n300);margin-bottom:12px;display:block"></i>
+            <h4 style="margin:0 0 6px;color:var(--g-d);font-size:15px">Aucune pièce trouvée</h4>
+            <p style="font-size:13px;color:var(--n500);margin:0">Modifiez vos filtres ou numérisez un nouveau justificatif.</p>
+          </div>
+        }
+      </div>
+    }
+
   }
 </div>
 

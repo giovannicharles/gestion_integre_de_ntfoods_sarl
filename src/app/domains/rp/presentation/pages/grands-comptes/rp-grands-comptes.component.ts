@@ -35,6 +35,28 @@ export class RpGrandsComptesComponent implements OnInit {
   saving = signal(false);
   comptes = signal<GrandCompteResponse[]>([]);
 
+  vueAffichage = signal<'cartes' | 'table'>('cartes');
+  searchQuery = signal<string>('');
+  filtreType = signal<string>('TOUS');
+
+  comptesFiltres = computed(() => {
+    let list = this.comptes();
+    const t = this.filtreType();
+    const q = this.searchQuery().trim().toLowerCase();
+
+    if (t !== 'TOUS') {
+      list = list.filter(c => c.type === t);
+    }
+    if (q) {
+      list = list.filter(c =>
+        c.nom.toLowerCase().includes(q) ||
+        (c.contact && c.contact.toLowerCase().includes(q)) ||
+        (c.telephone && c.telephone.includes(q))
+      );
+    }
+    return list;
+  });
+
   relancesDues = computed(() => this.comptes().filter(c =>
     c.prochaineRelance && new Date(c.prochaineRelance) <= new Date()));
   caTotal = computed(() => this.comptes().reduce((s, c) => s + (c.caMensuel ?? 0), 0));

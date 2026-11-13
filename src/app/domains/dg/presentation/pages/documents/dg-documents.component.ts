@@ -21,6 +21,7 @@ export class DgDocumentsComponent implements OnInit {
   documents = signal<DocumentArchiveBE[]>([]);
   typeFiltre = signal<string>('TOUS');
   termeRecherche = signal<string>('');
+  modeAffichage = signal<'table' | 'cartes'>('table');
 
   // Modal d'import réel
   showModalImport = signal(false);

@@ -30,6 +30,7 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
   filtreStatut = signal<'TOUS' | 'EN_COURS' | 'FINALISEE' | 'ANNULEE'>('TOUS');
   filtreTypeVente = signal<string>('TOUS');
   filtreTexte = signal<string>('');
+  modeAffichage = signal<'table' | 'cartes'>('table');
 
   showAnnuler = signal(false);
   showNonMarchand = signal(false);

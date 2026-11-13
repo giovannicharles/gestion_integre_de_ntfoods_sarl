@@ -10,7 +10,17 @@
         <p class="ph-sub">Gestion documentaire sécurisée, conventions, certificats ANOR, rapports et pièces d'audit centralisées</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- SÉLECTEUR DE VUE -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="modeAffichage() === 'table'" [class.btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Vue Tableau" style="padding:4px 10px">
+          <i class="fa-solid fa-table-list"></i>
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="modeAffichage() === 'cartes'" [class.btn-ghost]="modeAffichage() !== 'cartes'" (click)="modeAffichage.set('cartes')" title="Vue Cartes" style="padding:4px 10px">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+      </div>
+
       <button class="btn btn-primary" (click)="showModalImport.set(true)">
         <i class="fa-solid fa-cloud-arrow-up"></i> Archiver un Document
       </button>
@@ -80,48 +90,86 @@
     <button class="btn btn-outline btn-sm" (click)="chargerDocuments()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
   </div>
   } @else {
-  <!-- TABLEAU -->
-  <div class="card" style="padding: 20px;">
-    <table class="table" style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Type Document</th>
-          <th>Référence</th>
-          <th>Fichier Original</th>
-          <th>Taille</th>
-          <th>Déposé Par</th>
-          <th>Date Archivage</th>
-          <th style="text-align: right;">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (d of documentsFiltres; track d.id) {
-        <tr>
-          <td class="mono fw-bold text-muted">#{{ d.id }}</td>
-          <td><span class="badge bg-gold badge-sm">{{ d.typeDocument }}</span></td>
-          <td class="mono fw-bold text-primary">{{ d.reference }}</td>
-          <td class="fw-bold">{{ d.nomFichierOriginal }}</td>
-          <td class="mono text-muted">{{ (d.tailleOctets / 1024) | number:'1.0-1' }} Ko</td>
-          <td class="text-muted"><i class="fa-solid fa-user-tie"></i> {{ d.matriculeUploader }}</td>
-          <td class="mono">{{ d.dateImport | date:'dd/MM/yyyy · HH:mm' }}</td>
-          <td style="text-align: right;">
-            <button class="btn btn-outline btn-sm" (click)="telecharger(d)" title="Télécharger le fichier réel">
-              <i class="fa-solid fa-download"></i> Télécharger
-            </button>
-          </td>
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="8" style="padding: 36px; text-align: center; color: var(--n600);">
-            <i class="fa-solid fa-folder-open" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
-            Aucun document archivé dans le système pour ces critères.
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  @if (modeAffichage() === 'table') {
+    <!-- TABLEAU -->
+    <div class="card" style="padding: 20px;">
+      <table class="table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type Document</th>
+            <th>Référence</th>
+            <th>Fichier Original</th>
+            <th>Taille</th>
+            <th>Déposé Par</th>
+            <th>Date Archivage</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of documentsFiltres; track d.id) {
+          <tr>
+            <td class="mono fw-bold text-muted">#{{ d.id }}</td>
+            <td><span class="badge bg-gold badge-sm">{{ d.typeDocument }}</span></td>
+            <td class="mono fw-bold text-primary">{{ d.reference }}</td>
+            <td class="fw-bold">{{ d.nomFichierOriginal }}</td>
+            <td class="mono text-muted">{{ (d.tailleOctets / 1024) | number:'1.0-1' }} Ko</td>
+            <td class="text-muted"><i class="fa-solid fa-user-tie"></i> {{ d.matriculeUploader }}</td>
+            <td class="mono">{{ d.dateImport | date:'dd/MM/yyyy · HH:mm' }}</td>
+            <td style="text-align: right;">
+              <button class="btn btn-outline btn-sm" (click)="telecharger(d)" title="Télécharger le fichier réel">
+                <i class="fa-solid fa-download"></i> Télécharger
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8" style="padding: 36px; text-align: center; color: var(--n600);">
+              <i class="fa-solid fa-folder-open" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+              Aucun document archivé dans le système pour ces critères.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (modeAffichage() === 'cartes') {
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+      @for (d of documentsFiltres; track d.id) {
+        <div class="card" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <span class="badge bg-gold badge-sm">{{ d.typeDocument }}</span>
+              <span class="mono text-muted" style="font-size: 11px;">{{ (d.tailleOctets / 1024) | number:'1.0-1' }} Ko</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(194, 43, 43, 0.1); color: var(--r); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div style="overflow: hidden;">
+                <h4 style="margin: 0; font-size: 13.5px; font-weight: 700; color: var(--g-d); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ d.reference }}</h4>
+                <div style="font-size: 11px; color: var(--n500); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ d.nomFichierOriginal }}</div>
+              </div>
+            </div>
+            <div style="font-size: 11.5px; color: var(--n600); margin-bottom: 14px;">
+              <div><i class="fa-regular fa-clock" style="margin-right: 4px;"></i>{{ d.dateImport | date:'dd/MM/yyyy · HH:mm' }}</div>
+              <div><i class="fa-regular fa-user" style="margin-right: 4px;"></i>{{ d.matriculeUploader }}</div>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="width: 100%; justify-content: center;" (click)="telecharger(d)">
+            <i class="fa-solid fa-download"></i> Télécharger
+          </button>
+        </div>
+      } @empty {
+        <div class="card" style="grid-column: 1/-1; padding: 40px; text-align: center;">
+          <i class="fa-solid fa-folder-open" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+          Aucun document archivé dans le système pour ces critères.
+        </div>
+      }
+    </div>
+  }
   }
 
   <!-- MODAL D'IMPORT DOCUMENT RÉEL -->

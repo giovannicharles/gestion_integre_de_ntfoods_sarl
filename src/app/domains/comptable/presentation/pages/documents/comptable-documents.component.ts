@@ -21,6 +21,7 @@ export class ComptableDocumentsComponent implements OnInit {
   documents = signal<DocumentArchiveBE[]>([]);
   filtreType = signal<string>('TOUS');
   rechercheTexte = signal<string>('');
+  modeAffichage = signal<'table' | 'cartes'>('table');
 
   // Modal import
   showModalImport = signal(false);

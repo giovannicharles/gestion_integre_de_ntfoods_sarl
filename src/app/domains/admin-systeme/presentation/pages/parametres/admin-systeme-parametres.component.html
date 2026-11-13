@@ -109,6 +109,15 @@
     <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <span class="card-title"><i class="fa-solid fa-list"></i> Variables Actives</span>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <!-- Switcher Table vs Cartes -->
+        <div class="view-mode-toggle" style="display:inline-flex;background:var(--n100,#f1f5f9);padding:2px;border-radius:8px;border:1px solid var(--n200,#e2e8f0)">
+          <button type="button" class="btn btn-xs" [class.btn-primary]="modeAffichage() === 'table'" [class.btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Mode Tableau">
+            <i class="fa-solid fa-table-cells"></i> <span style="font-size:11px;margin-left:4px">Table</span>
+          </button>
+          <button type="button" class="btn btn-xs" [class.btn-primary]="modeAffichage() === 'cartes'" [class.btn-ghost]="modeAffichage() !== 'cartes'" (click)="modeAffichage.set('cartes')" title="Mode Cartes / Grille">
+            <i class="fa-solid fa-grip"></i> <span style="font-size:11px;margin-left:4px">Cartes</span>
+          </button>
+        </div>
         <input type="text" class="form-control" style="max-width:240px;font-size:12px" placeholder="Rechercher code, nom, groupe..."
                [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
         <label style="font-size:12px">Groupe :</label>
@@ -123,50 +132,92 @@
     @if (loading()) {
       <div class="loading-state" style="padding:32px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des paramètres...</div>
     } @else {
-      <div class="tbl-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Nom &amp; Description</th>
-              <th>Groupe</th>
-              <th>Valeur en production</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of parametresFiltres(); track p.code) {
+      @if (modeAffichage() === 'table') {
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td><span class="mono fw-bold" style="color:var(--g-d)">{{ p.code }}</span></td>
-                <td>
-                  <div style="font-weight:600">{{ p.nom }}</div>
-                  @if (p.description) {
-                    <div class="text-muted" style="font-size:11.5px">{{ p.description }}</div>
-                  }
-                </td>
-                <td><span class="badge bg-neutral">{{ p.groupe || 'GÉNÉRAL' }}</span></td>
-                <td style="min-width:180px">
-                  <input class="form-control" style="font-size:12.5px;padding:4px 8px;font-family:monospace"
-                         [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
-                </td>
-                <td class="actions" style="white-space:nowrap" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
-                  <button class="btn btn-sm btn-primary" [disabled]="!p.modifiable || editValeurs[p.code] === p.valeur" (click)="sauvegarderValeur(p)" title="Enregistrer la modification">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                  </button>
-                  <button class="btn btn-sm btn-ghost" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)" title="Réinitialiser par défaut">
-                    <i class="fa-solid fa-arrow-rotate-left"></i>
-                  </button>
-                  <button class="btn btn-sm btn-ghost-red" (click)="desactiver(p)" title="Désactiver">
-                    <i class="fa-solid fa-ban"></i>
-                  </button>
-                </td>
+                <th>Code</th>
+                <th>Nom &amp; Description</th>
+                <th>Groupe</th>
+                <th>Valeur en production</th>
+                <th>Actions</th>
               </tr>
-            } @empty {
-              <tr><td colspan="5" class="rpt-empty" style="text-align:center;padding:24px"><i class="fa-solid fa-inbox"></i> Aucun paramètre système trouvé.</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              @for (p of parametresFiltres(); track p.code) {
+                <tr>
+                  <td><span class="mono fw-bold" style="color:var(--g-d)">{{ p.code }}</span></td>
+                  <td>
+                    <div style="font-weight:600">{{ p.nom }}</div>
+                    @if (p.description) {
+                      <div class="text-muted" style="font-size:11.5px">{{ p.description }}</div>
+                    }
+                  </td>
+                  <td><span class="badge bg-neutral">{{ p.groupe || 'GÉNÉRAL' }}</span></td>
+                  <td style="min-width:180px">
+                    <input class="form-control" style="font-size:12.5px;padding:4px 8px;font-family:monospace"
+                           [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
+                  </td>
+                  <td class="actions" style="white-space:nowrap" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
+                    <button class="btn btn-sm btn-primary" [disabled]="!p.modifiable || editValeurs[p.code] === p.valeur" (click)="sauvegarderValeur(p)" title="Enregistrer la modification">
+                      <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                    <button class="btn btn-sm btn-ghost" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)" title="Réinitialiser par défaut">
+                      <i class="fa-solid fa-arrow-rotate-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-ghost-red" (click)="desactiver(p)" title="Désactiver">
+                      <i class="fa-solid fa-ban"></i>
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="rpt-empty" style="text-align:center;padding:24px"><i class="fa-solid fa-inbox"></i> Aucun paramètre système trouvé.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (modeAffichage() === 'cartes') {
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:14px;padding:16px">
+          @for (p of parametresFiltres(); track p.code) {
+            <div class="dash-21-card" style="border:1px solid var(--n200,#e2e8f0);border-radius:10px;padding:16px;background:var(--bg,#fff);display:flex;flex-direction:column;justify-content:space-between">
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                  <span class="mono fw-bold" style="font-size:12px;color:var(--g-d,#14532D);background:var(--g-gh,#f0fdf4);padding:2px 8px;border-radius:4px">{{ p.code }}</span>
+                  <span class="badge bg-neutral" style="font-size:11px">{{ p.groupe || 'GÉNÉRAL' }}</span>
+                </div>
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px">{{ p.nom }}</div>
+                @if (p.description) {
+                  <p style="font-size:12px;color:var(--n500,#64748b);margin-bottom:12px;line-height:1.4">{{ p.description }}</p>
+                }
+                <div style="margin-top:10px;background:var(--n50,#f8fafc);padding:10px;border-radius:6px;border:1px solid var(--n200,#e2e8f0)">
+                  <label style="font-size:11px;font-weight:600;color:var(--n500,#64748b);display:block;margin-bottom:4px">Valeur en production :</label>
+                  <input class="form-control" style="font-size:12px;padding:6px 8px;font-family:monospace;width:100%"
+                         [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:14px;padding-top:10px;border-top:1px solid var(--n100,#f1f5f9)" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
+                <button class="btn btn-sm btn-ghost-red" (click)="desactiver(p)" title="Désactiver">
+                  <i class="fa-solid fa-ban"></i>
+                </button>
+                <button class="btn btn-sm btn-ghost" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)" title="Réinitialiser par défaut">
+                  <i class="fa-solid fa-arrow-rotate-left"></i> Défaut
+                </button>
+                <button class="btn btn-sm btn-primary" [disabled]="!p.modifiable || editValeurs[p.code] === p.valeur" (click)="sauvegarderValeur(p)" title="Enregistrer">
+                  <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--n500)">
+              <i class="fa-solid fa-inbox" style="font-size:24px;margin-bottom:8px"></i>
+              <p>Aucun paramètre système trouvé.</p>
+            </div>
+          }
+        </div>
+      }
       <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
         {{ parametresFiltres().length }} paramètre(s) affiché(s)
       </div>

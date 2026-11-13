@@ -280,8 +280,20 @@
     <!-- SEARCH + FILTERS + TABLE -->
     <div class="card">
       <div class="card-hd">
-        <span class="card-title"><i class="fa-solid fa-table"></i> Articles, {{ getLocationName(selectedLocationId()) }}</span>
+        <span class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Articles, {{ getLocationName(selectedLocationId()) }}</span>
         <div class="card-hd-right">
+          <!-- Multi-View Modes Switcher -->
+          <div class="view-mode-toggle" style="display:inline-flex;background:var(--n100,#f1f5f9);padding:2px;border-radius:8px;border:1px solid var(--n200,#e2e8f0)">
+            <button type="button" class="btn btn-xs" [class.btn-primary]="modeAffichage() === 'table'" [class.btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Affichage Tableau">
+              <i class="fa-solid fa-table-cells"></i> <span style="font-size:11px;margin-left:4px">Table</span>
+            </button>
+            <button type="button" class="btn btn-xs" [class.btn-primary]="modeAffichage() === 'cartes'" [class.btn-ghost]="modeAffichage() !== 'cartes'" (click)="modeAffichage.set('cartes')" title="Affichage Cartes / Grille">
+              <i class="fa-solid fa-grip"></i> <span style="font-size:11px;margin-left:4px">Cartes</span>
+            </button>
+            <button type="button" class="btn btn-xs" [class.btn-primary]="modeAffichage() === 'compact'" [class.btn-ghost]="modeAffichage() !== 'compact'" (click)="modeAffichage.set('compact')" title="Affichage Ultra-Compact">
+              <i class="fa-solid fa-list-ul"></i> <span style="font-size:11px;margin-left:4px">Dense</span>
+            </button>
+          </div>
           <select class="filter-select" [ngModel]="filterPackaging()" (ngModelChange)="filterPackaging.set($event); onFilterPackaging()">
             <option value="ALL">Tous conditionnements</option>
             <option value="UNIT">Unité</option>
@@ -294,64 +306,169 @@
           </div>
         </div>
       </div>
-      <div class="tbl-wrap">
-        @if (filtered().length === 0) {
-          <div class="empty-state">
-            <i class="fa-solid fa-inbox"></i>
-            <p>Aucun article trouvé</p>
-          </div>
-        } @else {
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="th-sortable" (click)="sortBy('productSku')">SKU <i class="fa-solid {{ sortIcon('productSku') }}"></i></th>
-                <th>Marque</th>
-                <th>Catégorie</th>
-                <th class="th-sortable" (click)="sortBy('quantity')">Quantité <i class="fa-solid {{ sortIcon('quantity') }}"></i></th>
-                <th>Unité</th>
-                <th>Cartons</th>
-                <th class="th-sortable" (click)="sortBy('unitWeight')">Poids unit. <i class="fa-solid {{ sortIcon('unitWeight') }}"></i></th>
-                <th>Conditionnement</th>
-                <th>Seuil</th>
-                <th class="th-sortable" (click)="sortBy('lastUpdated')">Modifié <i class="fa-solid {{ sortIcon('lastUpdated') }}"></i></th>
-                <th style="text-align:right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of filtered(); track item.id) {
+
+      @if (filtered().length === 0) {
+        <div class="empty-state">
+          <i class="fa-solid fa-inbox"></i>
+          <p>Aucun article trouvé</p>
+        </div>
+      } @else {
+
+        <!-- MODE 1: TABLEAU STANDARD -->
+        @if (modeAffichage() === 'table') {
+          <div class="tbl-wrap">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td class="mono fw-bold">{{ item.productSku }}</td>
-                  <td>{{ item.brandName || '-' }}</td>
-                  <td>{{ item.productCategory || '-' }}</td>
-                  <td class="mono fw-bold">{{ item.quantity | number }}</td>
-                  <td class="mono">{{ item.productUnit || '-' }}</td>
-                  <td class="mono">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }}</td>
-                  <td class="mono">{{ item.unitWeight | number:'1.0-2' }} kg</td>
-                  <td><span class="badge badge-neutral">{{ packagingLabel(item.packagingType) }}</span></td>
-                  <td>
+                  <th class="th-sortable" (click)="sortBy('productSku')">SKU <i class="fa-solid {{ sortIcon('productSku') }}"></i></th>
+                  <th>Marque</th>
+                  <th>Catégorie</th>
+                  <th class="th-sortable" (click)="sortBy('quantity')">Quantité <i class="fa-solid {{ sortIcon('quantity') }}"></i></th>
+                  <th>Unité</th>
+                  <th>Cartons</th>
+                  <th class="th-sortable" (click)="sortBy('unitWeight')">Poids unit. <i class="fa-solid {{ sortIcon('unitWeight') }}"></i></th>
+                  <th>Conditionnement</th>
+                  <th>Seuil</th>
+                  <th class="th-sortable" (click)="sortBy('lastUpdated')">Modifié <i class="fa-solid {{ sortIcon('lastUpdated') }}"></i></th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of filtered(); track item.id) {
+                  <tr>
+                    <td class="mono fw-bold">{{ item.productSku }}</td>
+                    <td>{{ item.brandName || '-' }}</td>
+                    <td>{{ item.productCategory || '-' }}</td>
+                    <td class="mono fw-bold">{{ item.quantity | number }}</td>
+                    <td class="mono">{{ item.productUnit || '-' }}</td>
+                    <td class="mono">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }}</td>
+                    <td class="mono">{{ item.unitWeight | number:'1.0-2' }} kg</td>
+                    <td><span class="badge badge-neutral">{{ packagingLabel(item.packagingType) }}</span></td>
+                    <td>
+                      @if (computeAlert(item) !== 'NORMAL') {
+                        <span class="badge {{ alertClass(computeAlert(item)) }}">{{ computeAlert(item) }}</span>
+                      } @else {
+                        <span class="badge badge-success">OK</span>
+                      }
+                    </td>
+                    <td class="mono cell-date">{{ formatDate(item.lastUpdated) }}</td>
+                    <td>
+                      <div class="row-actions">
+                        <button class="btn btn-sm btn-ghost" (click)="openDetailModal(item)" title="Fiche détaillée"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn btn-sm btn-ghost" (click)="voirLots(item)" title="Lots de Production associés"><i class="fa-solid fa-industry" style="color:var(--color-primary, #14532D)"></i></button>
+                        <button class="btn btn-sm btn-ghost" (click)="voirMouvements(item)" title="Historique des mouvements"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                        <button class="btn btn-sm btn-ghost" (click)="openEditModal(item)" title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn btn-sm btn-success" (click)="openAdjustModal(item, 'add')" title="Ajouter quantité"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn btn-sm btn-danger" (click)="openAdjustModal(item, 'subtract')" title="Retirer quantité"><i class="fa-solid fa-minus"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- MODE 2: CARTES / GRILLE -->
+        @if (modeAffichage() === 'cartes') {
+          <div class="articles-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:16px;padding:16px">
+            @for (item of filtered(); track item.id) {
+              <div class="dash-21-card article-card-item" style="border:1px solid var(--n200,#e2e8f0);border-radius:12px;padding:16px;background:var(--bg,#fff);display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <span class="mono fw-bold" style="font-size:12px;background:var(--n100,#f1f5f9);padding:2px 8px;border-radius:4px;color:var(--n700,#334155)">{{ item.productSku }}</span>
                     @if (computeAlert(item) !== 'NORMAL') {
                       <span class="badge {{ alertClass(computeAlert(item)) }}">{{ computeAlert(item) }}</span>
                     } @else {
                       <span class="badge badge-success">OK</span>
                     }
-                  </td>
-                  <td class="mono cell-date">{{ formatDate(item.lastUpdated) }}</td>
-                  <td>
-                    <div class="row-actions">
-                      <button class="btn btn-sm btn-ghost" (click)="openDetailModal(item)" title="Fiche détaillée"><i class="fa-solid fa-eye"></i></button>
-                      <button class="btn btn-sm btn-ghost" (click)="voirLots(item)" title="Lots de Production associés"><i class="fa-solid fa-industry" style="color:var(--color-primary, #14532D)"></i></button>
-                      <button class="btn btn-sm btn-ghost" (click)="voirMouvements(item)" title="Historique des mouvements"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                      <button class="btn btn-sm btn-ghost" (click)="openEditModal(item)" title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
-                      <button class="btn btn-sm btn-success" (click)="openAdjustModal(item, 'add')" title="Ajouter quantité"><i class="fa-solid fa-plus"></i></button>
-                      <button class="btn btn-sm btn-danger" (click)="openAdjustModal(item, 'subtract')" title="Retirer quantité"><i class="fa-solid fa-minus"></i></button>
+                  </div>
+                  <h4 style="font-size:14px;font-weight:700;margin:0 0 4px;color:var(--g-d,#0f172a)">{{ item.brandName || item.productSku }}</h4>
+                  <p style="font-size:12px;color:var(--n500,#64748b);margin:0 0 12px">{{ item.productCategory || 'Article standard' }} • {{ packagingLabel(item.packagingType) }}</p>
+                  
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--n50,#f8fafc);padding:10px;border-radius:8px;margin-bottom:12px">
+                    <div>
+                      <div style="font-size:11px;color:var(--n500,#64748b)">Quantité dispo</div>
+                      <div class="mono" style="font-size:16px;font-weight:800;color:var(--color-primary,#14532D)">{{ item.quantity | number }} <span style="font-size:11px;font-weight:400">{{ item.productUnit || '' }}</span></div>
                     </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+                    <div>
+                      <div style="font-size:11px;color:var(--n500,#64748b)">Cartons équiv.</div>
+                      <div class="mono" style="font-size:16px;font-weight:700;color:var(--n700,#334155)">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }} ctn</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px;color:var(--n500,#64748b)">Poids unit.</div>
+                      <div class="mono" style="font-size:12px;font-weight:600">{{ item.unitWeight | number:'1.0-2' }} kg</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px;color:var(--n500,#64748b)">Dernière maj</div>
+                      <div class="mono" style="font-size:11px">{{ formatDate(item.lastUpdated) }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--n100,#f1f5f9);padding-top:10px;margin-top:auto;gap:6px;flex-wrap:wrap">
+                  <div style="display:flex;gap:4px">
+                    <button class="btn btn-xs btn-ghost" (click)="openDetailModal(item)" title="Fiche détaillée"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-xs btn-ghost" (click)="voirLots(item)" title="Lots associés"><i class="fa-solid fa-industry" style="color:var(--color-primary,#14532D)"></i></button>
+                    <button class="btn btn-xs btn-ghost" (click)="voirMouvements(item)" title="Mouvements"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                    <button class="btn btn-xs btn-ghost" (click)="openEditModal(item)" title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
+                  </div>
+                  <div style="display:flex;gap:4px">
+                    <button class="btn btn-xs btn-success" (click)="openAdjustModal(item, 'add')" title="Ajouter stock"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn btn-xs btn-danger" (click)="openAdjustModal(item, 'subtract')" title="Sortir stock"><i class="fa-solid fa-minus"></i></button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
         }
-      </div>
+
+        <!-- MODE 3: ULTRA COMPACT -->
+        @if (modeAffichage() === 'compact') {
+          <div class="tbl-wrap" style="padding:0">
+            <table class="data-table" style="font-size:12px">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Article / Marque</th>
+                  <th>Quantité</th>
+                  <th>Cartons</th>
+                  <th>Conditionnement</th>
+                  <th>Statut</th>
+                  <th style="text-align:right">Actions Rapides</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of filtered(); track item.id) {
+                  <tr style="height:32px">
+                    <td class="mono fw-bold">{{ item.productSku }}</td>
+                    <td>{{ item.brandName || item.productSku }}</td>
+                    <td class="mono fw-bold" style="color:var(--color-primary,#14532D)">{{ item.quantity | number }} {{ item.productUnit || '' }}</td>
+                    <td class="mono">{{ (item.quantity / Math.max(1, item.quantityPerCarton)) | number:'1.0-0' }}</td>
+                    <td><span class="badge badge-neutral" style="font-size:10px">{{ packagingLabel(item.packagingType) }}</span></td>
+                    <td>
+                      @if (computeAlert(item) !== 'NORMAL') {
+                        <span class="badge {{ alertClass(computeAlert(item)) }}" style="font-size:10px">{{ computeAlert(item) }}</span>
+                      } @else {
+                        <span class="badge badge-success" style="font-size:10px">OK</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="row-actions" style="gap:2px">
+                        <button class="btn btn-xs btn-ghost" (click)="openDetailModal(item)" title="Fiche"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn btn-xs btn-ghost" (click)="openEditModal(item)" title="Modifier"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn btn-xs btn-success" (click)="openAdjustModal(item, 'add')" title="Ajout"><i class="fa-solid fa-plus"></i></button>
+                        <button class="btn btn-xs btn-danger" (click)="openAdjustModal(item, 'subtract')" title="Retrait"><i class="fa-solid fa-minus"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+      }
       @if (filtered().length > 0) {
         <div class="card-footer">
           <span class="footer-count">{{ filtered().length }} article(s) sur {{ items().length }}</span>

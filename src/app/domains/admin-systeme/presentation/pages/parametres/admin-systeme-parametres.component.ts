@@ -17,6 +17,7 @@ export class AdminSystemeParametresComponent implements OnInit {
   parametres = signal<ParametreSystemeBE[]>([]);
   filtreTexte = signal('');
   filtreGroupe = signal('TOUS');
+  modeAffichage = signal<'table' | 'cartes'>('table');
   loading = signal(false);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);

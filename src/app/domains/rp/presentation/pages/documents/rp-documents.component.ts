@@ -21,6 +21,7 @@ export class RpDocumentsComponent implements OnInit {
   documents = signal<DocumentArchiveBE[]>([]);
   filtreCategorie = signal<string>('TOUS');
   rechercheTexte = signal<string>('');
+  modeAffichage = signal<'table' | 'cartes'>('table');
 
   // Modal d'import réel
   showModalImport = signal(false);

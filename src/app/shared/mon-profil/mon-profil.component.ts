@@ -8,13 +8,14 @@ import { ToastService } from '../../core/services/toast.service';
 import { extractApiError } from '../../core/http/api-error-parser';
 import { ThemeService } from '../../core/services/theme.service';
 
-/**
- * « Mon Profil », écran de libre-service commun à tous les layouts (2026-11-01, demande
- * explicite du porteur : « comme dans les autres, il faut la gestion complète de son profil,
- * ses paramètres utilisateurs »). Un seul composant, monté sous `<prefix>/profil` dans chaque
- * arbre de routes, GET /auth/me et PUT /auth/profil sont déjà ouverts à tout rôle authentifié
- * (AuthController.java), aucun changement serveur nécessaire.
- */
+export interface ModuleDroit {
+  nom: string;
+  code: string;
+  icone: string;
+  acces: boolean;
+  description: string;
+}
+
 @Component({
   selector: 'app-mon-profil',
   standalone: true,
@@ -26,10 +27,6 @@ import { ThemeService } from '../../core/services/theme.service';
 export class MonProfilComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
-  /** 2026-11-08 (demande explicite : « bonne gestion ... ses préférences »). Le service existait
-   * déjà, complet et fonctionnel (persistance localStorage, écoute du thème système), mais
-   * aucun écran n'exposait jamais `toggle()` : le mode sombre s'appliquait seulement au chargement
-   * initial, sans possibilité pour l'utilisateur de le choisir lui-même. */
   readonly theme = inject(ThemeService);
 
   loading = signal(true);
@@ -37,21 +34,21 @@ export class MonProfilComponent implements OnInit {
   profil = signal<ProfilBE | null>(null);
   saving = signal(false);
   savingPwd = signal(false);
-  ongletActif = signal<'infos' | 'securite' | 'preferences'>('infos');
+  ongletActif = signal<'infos' | 'securite' | 'habilitations' | 'preferences'>('infos');
 
   roleLabel = computed(() => {
     const p = this.profil();
     if (!p) return '';
     return ROLE_LABELS[p.role] || p.role;
   });
+
   initiales = computed(() => {
     const p = this.profil();
-    if (!p) return '??';
+    if (!p) return 'NT';
     return ((p.prenom?.[0] || '') + (p.nom?.[0] || '')).toUpperCase();
   });
 
-  // Champs éditables (ModifierProfilRequest), formulaire séparé du signal `profil` pour ne
-  // pousser que des changements volontaires, pas un simple reflet en direct du serveur.
+  // Champs éditables
   telephone = '';
   residence = '';
   cni = '';
@@ -59,8 +56,84 @@ export class MonProfilComponent implements OnInit {
   sexe = '';
   dateNaissance = '';
 
+  // Sécurité
+  motDePasseActuel = '';
   nouveauMotDePasse = '';
   confirmationMotDePasse = '';
+
+  // Préférences sauvegardées
+  densiteAffichage = signal<'confortable' | 'compact' | 'dense'>(
+    (localStorage.getItem('tanty_ui_density') as 'confortable' | 'compact' | 'dense') || 'confortable'
+  );
+  modeAffichagePrefere = signal<'table' | 'cards'>(
+    (localStorage.getItem('tanty_ui_view_mode') as 'table' | 'cards') || 'table'
+  );
+  notifSonores = signal<boolean>(localStorage.getItem('tanty_notif_sound') !== 'false');
+
+  // Droits et permissions calculés selon le rôle
+  modulesDroits = computed<ModuleDroit[]>(() => {
+    const p = this.profil();
+    const r = String(p?.role || '');
+    const isAdmin = r === 'ADMIN' || r === 'ADMINISTRATEUR';
+    const isDg = r === 'DIRECTEUR_GENERAL' || r === 'DG';
+    const isComptable = r === 'COMPTABLE';
+    const isCommercial = r === 'COMMERCIAL';
+    const isRp = r === 'CHARGEE_RP';
+    const isStock = r === 'RESPONSABLE_STOCK' || r === 'MAGASINIER' || r === 'GESTIONNAIRE_STOCK';
+    const isProd = r === 'RESPONSABLE_PRODUCTION' || r === 'CHEF_EQUIPE' || r === 'AGENT_DOSEUR' || r === 'CHEF_PRODUCTION' || r === 'AGENT_PRODUCTION';
+
+    return [
+      {
+        nom: 'Direction & Supervision Générale',
+        code: 'DG',
+        icone: 'fa-briefcase',
+        acces: isAdmin || isDg,
+        description: 'Tableaux de bord consolidés, arbitrages et validations exécutives.'
+      },
+      {
+        nom: 'Relations Publiques & Grands Comptes',
+        code: 'RP',
+        icone: 'fa-handshake',
+        acces: isAdmin || isDg || isRp,
+        description: 'Conventions GMS (DOVV, Carrefour), primes de stimulation et animations de marque.'
+      },
+      {
+        nom: 'Force Commerciale & Ventes Terrain',
+        code: 'COMMERCIAL',
+        icone: 'fa-truck-fast',
+        acces: isAdmin || isDg || isCommercial || isRp,
+        description: 'Tournées urbaines, factures comptant/crédit, précommandes et carburant.'
+      },
+      {
+        nom: 'Comptabilité & Trésorerie OHADA',
+        code: 'COMPTABILITE',
+        icone: 'fa-file-invoice-dollar',
+        acces: isAdmin || isDg || isComptable,
+        description: 'Bordereaux de caisse, rapprochements bancaires, facturation et créances clients.'
+      },
+      {
+        nom: 'Gestion des Stocks & Entrepôts',
+        code: 'STOCK',
+        icone: 'fa-warehouse',
+        acces: isAdmin || isDg || isStock,
+        description: 'Mouvements d\'entrées/sorties, valorisation PMP, alertes de péremption FEFO.'
+      },
+      {
+        nom: 'Production & Unités Industrielles',
+        code: 'PRODUCTION',
+        icone: 'fa-industry',
+        acces: isAdmin || isDg || isProd,
+        description: 'Ordres de fabrication, dosage matières premières et ensachage.'
+      },
+      {
+        nom: 'Console d\'Administration & Sécurité',
+        code: 'ADMIN',
+        icone: 'fa-shield-halved',
+        acces: isAdmin,
+        description: 'Gestion des utilisateurs, habilitations RBAC, sauvegardes et journal d\'audit ISO.'
+      }
+    ];
+  });
 
   ngOnInit(): void {
     this.charger();
@@ -70,7 +143,7 @@ export class MonProfilComponent implements OnInit {
     this.loading.set(true);
     this.loadError.set(null);
     this.auth.consulterMonProfil().subscribe({
-      next: (p) => {
+      next: p => {
         this.profil.set(p);
         this.telephone = p.telephone ?? '';
         this.residence = p.residence ?? '';
@@ -80,7 +153,10 @@ export class MonProfilComponent implements OnInit {
         this.dateNaissance = p.dateNaissance ?? '';
         this.loading.set(false);
       },
-      error: (e) => { this.loadError.set(extractApiError(e)); this.loading.set(false); },
+      error: e => {
+        this.loadError.set(extractApiError(e));
+        this.loading.set(false);
+      },
     });
   }
 
@@ -95,19 +171,22 @@ export class MonProfilComponent implements OnInit {
       sexe: this.sexe || undefined,
       dateNaissance: this.dateNaissance || undefined,
     }).subscribe({
-      next: (p) => {
+      next: p => {
         this.profil.set(p);
         this.saving.set(false);
-        this.toast.success('Profil mis à jour.');
+        this.toast.success('Vos informations personnelles ont été mises à jour avec succès.');
       },
-      error: (e) => { this.saving.set(false); this.toast.error(extractApiError(e), 'Mise à jour impossible'); },
+      error: e => {
+        this.saving.set(false);
+        this.toast.error(extractApiError(e));
+      },
     });
   }
 
   enregistrerMotDePasse(): void {
     if (this.savingPwd()) return;
-    if (this.nouveauMotDePasse.length < 8) {
-      this.toast.error('Le mot de passe doit contenir au moins 8 caractères.');
+    if (this.nouveauMotDePasse.length < 6) {
+      this.toast.error('Le nouveau mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     if (this.nouveauMotDePasse !== this.confirmationMotDePasse) {
@@ -120,9 +199,32 @@ export class MonProfilComponent implements OnInit {
         this.savingPwd.set(false);
         this.nouveauMotDePasse = '';
         this.confirmationMotDePasse = '';
-        this.toast.success('Mot de passe modifié.');
+        this.toast.success('Votre mot de passe a été modifié avec succès.');
       },
-      error: (e) => { this.savingPwd.set(false); this.toast.error(extractApiError(e), 'Échec du changement de mot de passe'); },
+      error: (e: unknown) => {
+        this.savingPwd.set(false);
+        this.toast.error(extractApiError(e));
+      },
     });
+  }
+
+  changerDensite(d: 'confortable' | 'compact' | 'dense'): void {
+    this.densiteAffichage.set(d);
+    localStorage.setItem('tanty_ui_density', d);
+    document.body.setAttribute('data-density', d);
+    this.toast.info(`Densité d'affichage réglée sur : ${d}`);
+  }
+
+  changerModeAffichage(m: 'table' | 'cards'): void {
+    this.modeAffichagePrefere.set(m);
+    localStorage.setItem('tanty_ui_view_mode', m);
+    this.toast.info(`Mode d'affichage par défaut : ${m === 'table' ? 'Tableau' : 'Cartes & Grille'}`);
+  }
+
+  toggleNotifSon(): void {
+    const val = !this.notifSonores();
+    this.notifSonores.set(val);
+    localStorage.setItem('tanty_notif_sound', String(val));
+    this.toast.info(`Notifications sonores : ${val ? 'Activées' : 'Désactivées'}`);
   }
 }

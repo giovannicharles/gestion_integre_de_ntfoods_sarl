@@ -1,159 +1,319 @@
-<div class="dash">
-  <div class="ph">
-    <div class="ph-left">
-      <div class="ph-icon">
-        <svg viewBox="0 0 48 48" width="38" height="38" fill="none" class="animated-ph-svg">
-          <circle cx="24" cy="18" r="8" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
-          <path d="M10 40C10 32.27 16.27 26 24 26C31.73 26 38 32.27 38 40" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
-          <circle cx="34" cy="16" r="3" fill="var(--color-accent, #F6B60B)"/>
-        </svg>
+<div class="dash-21-root animate-fadeIn">
+  <!-- EN-TÊTE DE LA PAGE -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Mon Profil & Paramètres Collaborateur</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          COMPTE VÉRIFIÉ · NTFOODS TANTY
+        </span>
       </div>
-      <div>
-        <div class="ph-title">Mon Profil Utilisateur</div>
-        <div class="ph-sub">Vos informations personnelles, affectation de poste et sécurité de connexion</div>
-      </div>
+      <p class="dash-21-subtitle">
+        Gestion des informations civiles, identifiants d'accès, habilitations de sécurité et préférences d'affichage
+      </p>
     </div>
-  </div>
+    <div class="dash-21-actions">
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser le profil">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
+    </div>
+  </header>
 
   @if (loading()) {
-    <div class="card"><div class="card-body mp-loading"><i class="fa-solid fa-spinner fa-spin"></i> Chargement du profil…</div></div>
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Récupération des données du profil collaborateur...</p>
+    </div>
   } @else if (loadError()) {
-    <div class="card"><div class="card-body mp-error">
-      <i class="fa-solid fa-triangle-exclamation"></i> {{ loadError() }}
-      <button class="btn btn-ghost btn-sm" (click)="charger()">Réessayer</button>
-    </div></div>
-  } @else if (profil()) {
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Erreur lors de la lecture du profil</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="charger()">
+        <i class="fa-solid fa-rotate"></i> Réessayer
+      </button>
+    </div>
+  } @else {
     @if (profil(); as p) {
 
-    <div class="card mp-identity">
-      <div class="mp-avatar">{{ initiales() }}</div>
-      <div class="mp-identity-info">
-        <div class="mp-name">{{ p.prenom }} {{ p.nom }}</div>
-        <div class="mp-meta">
-          <span class="badge badge-primary"><i class="fa-solid fa-user-tie"></i> {{ roleLabel() }}</span>
-          <span class="badge badge-neutral">{{ p.matricule }}</span>
-          @if (p.actif) {
-            <span class="badge badge-success">Compte actif</span>
-          } @else {
-            <span class="badge badge-danger">Compte désactivé</span>
-          }
+    <!-- BANDEAU D'IDENTITÉ SUPÉRIEUR -->
+    <div class="dash-21-card profile-hero-card" style="margin-bottom:20px;padding:24px">
+      <div class="profile-hero-inner">
+        <div class="profile-avatar-large">
+          {{ initiales() }}
         </div>
-        <div class="mp-since">Membre depuis le {{ p.dateCreation | date:'dd/MM/yyyy' }}</div>
+        <div class="profile-hero-content">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <h2 class="profile-hero-name">{{ p.prenom }} {{ p.nom }}</h2>
+            <span class="badge badge-primary"><i class="fa-solid fa-user-tie"></i> {{ roleLabel() }}</span>
+            <span class="badge badge-neutral"><i class="fa-solid fa-id-badge"></i> {{ p.matricule }}</span>
+            @if (p.actif) {
+              <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Compte Actif</span>
+            } @else {
+              <span class="badge badge-danger"><i class="fa-solid fa-ban"></i> Suspendu</span>
+            }
+          </div>
+          <div class="profile-meta-tags">
+            <span><i class="fa-solid fa-envelope"></i> {{ p.email }}</span>
+            @if (telephone) {
+              <span><i class="fa-solid fa-phone"></i> {{ telephone }}</span>
+            }
+            @if (residence) {
+              <span><i class="fa-solid fa-location-dot"></i> {{ residence }}</span>
+            }
+            <span><i class="fa-solid fa-calendar-check"></i> Membre depuis le {{ p.dateCreation | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="mp-tabs">
-      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'infos'" (click)="ongletActif.set('infos')">
-        <i class="fa-solid fa-address-card"></i> Informations
+    <!-- ONGLETS DU PROFIL -->
+    <div class="admin-tab-bar" style="margin-bottom:20px">
+      <button type="button" class="admin-tab-btn" [class.active]="ongletActif() === 'infos'" (click)="ongletActif.set('infos')">
+        <i class="fa-solid fa-address-card"></i> Informations Personnelles
       </button>
-      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'securite'" (click)="ongletActif.set('securite')">
-        <i class="fa-solid fa-lock"></i> Sécurité
+      <button type="button" class="admin-tab-btn" [class.active]="ongletActif() === 'securite'" (click)="ongletActif.set('securite')">
+        <i class="fa-solid fa-lock"></i> Sécurité & Mot de Passe
       </button>
-      <button class="mp-tab" [class.mp-tab-active]="ongletActif() === 'preferences'" (click)="ongletActif.set('preferences')">
-        <i class="fa-solid fa-sliders"></i> Préférences
+      <button type="button" class="admin-tab-btn" [class.active]="ongletActif() === 'habilitations'" (click)="ongletActif.set('habilitations')">
+        <i class="fa-solid fa-user-shield"></i> Habilitations & Droits RBAC
+      </button>
+      <button type="button" class="admin-tab-btn" [class.active]="ongletActif() === 'preferences'" (click)="ongletActif.set('preferences')">
+        <i class="fa-solid fa-sliders"></i> Préférences & Affichage
       </button>
     </div>
 
+    <!-- ONGLET 1 : INFORMATIONS PERSONNELLES -->
     @if (ongletActif() === 'infos') {
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-address-card"></i> Informations personnelles</span>
+      <div class="dash-21-card" style="padding:24px">
+        <div class="dash-21-card-header" style="margin-bottom:20px;padding:0;border:none">
+          <div class="dash-21-card-title-group">
+            <h3 class="dash-21-card-title"><i class="fa-solid fa-id-card" style="color:var(--g)"></i> État Civil & Affectation Professionnelle</h3>
+            <span class="dash-21-card-hint">Informations enregistrées auprès des ressources humaines NTFOODS</span>
+          </div>
         </div>
 
-        <div class="form-grid">
-          <div>
-            <label class="form-label">Email (non modifiable)</label>
-            <input class="form-control" type="text" [value]="p.email" disabled>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Prénom & Nom</label>
+            <input class="form-control" type="text" [value]="p.prenom + ' ' + p.nom" disabled />
+            <span class="form-hint">Modifiable uniquement sur présentation d'acte d'état civil</span>
           </div>
-          <div>
-            <label class="form-label">Téléphone</label>
-            <input class="form-control" type="tel" [(ngModel)]="telephone" placeholder="+237 6XX XXX XXX">
+
+          <div class="form-group">
+            <label class="form-label">Adresse Email Professionnelle</label>
+            <input class="form-control" type="text" [value]="p.email" disabled />
+            <span class="form-hint">Identifiant officiel de messagerie d'entreprise</span>
           </div>
-          <div>
-            <label class="form-label">Résidence</label>
-            <input class="form-control" type="text" [(ngModel)]="residence" placeholder="Ville, quartier">
+
+          <div class="form-group">
+            <label class="form-label">Numéro de Téléphone / WhatsApp *</label>
+            <input class="form-control" type="tel" [(ngModel)]="telephone" placeholder="+237 6XX XXX XXX" />
           </div>
-          <div>
-            <label class="form-label">CNI</label>
-            <input class="form-control" type="text" [(ngModel)]="cni" placeholder="Numéro de CNI">
+
+          <div class="form-group">
+            <label class="form-label">Résidence Actuelle (Ville, Quartier)</label>
+            <input class="form-control" type="text" [(ngModel)]="residence" placeholder="Ex: Yaoundé, Bastos" />
           </div>
-          <div>
-            <label class="form-label">Date de naissance</label>
-            <input class="form-control" type="date" [(ngModel)]="dateNaissance">
+
+          <div class="form-group">
+            <label class="form-label">Numéro de CNI ou Passeport</label>
+            <input class="form-control" type="text" [(ngModel)]="cni" placeholder="Ex: 118492049" />
           </div>
-          <div>
-            <label class="form-label">Lieu de naissance</label>
-            <input class="form-control" type="text" [(ngModel)]="lieuNaissance">
+
+          <div class="form-group">
+            <label class="form-label">Date de Naissance</label>
+            <input class="form-control" type="date" [(ngModel)]="dateNaissance" />
           </div>
-          <div>
-            <label class="form-label">Sexe</label>
+
+          <div class="form-group">
+            <label class="form-label">Lieu de Naissance</label>
+            <input class="form-control" type="text" [(ngModel)]="lieuNaissance" placeholder="Ex: Douala, Bafoussam..." />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Genre</label>
             <select class="form-control" [(ngModel)]="sexe">
               <option value="">Non précisé</option>
               <option value="M">Masculin</option>
               <option value="F">Féminin</option>
             </select>
           </div>
+
           @if (p.dateEmbauche) {
-          <div>
-            <label class="form-label">Date d'embauche (non modifiable)</label>
-            <input class="form-control" type="text" [value]="p.dateEmbauche | date:'dd/MM/yyyy'" disabled>
-          </div>
+            <div class="form-group">
+              <label class="form-label">Date d'Embauche</label>
+              <input class="form-control" type="text" [value]="p.dateEmbauche | date:'dd MMMM yyyy':'':'fr'" disabled />
+            </div>
           }
         </div>
 
-        <div class="form-actions">
-          <button class="btn btn-primary" (click)="enregistrerInfos()" [disabled]="saving()">
-            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
-            Enregistrer
+        <div style="margin-top:24px;display:flex;justify-content:flex-end">
+          <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="enregistrerInfos()" [disabled]="saving()">
+            @if (saving()) {
+              <i class="fa-solid fa-rotate fa-spin"></i> Enregistrement en cours...
+            } @else {
+              <i class="fa-solid fa-check"></i> Enregistrer les Modifications
+            }
           </button>
         </div>
       </div>
     }
 
+    <!-- ONGLET 2 : SÉCURITÉ & MOT DE PASSE -->
     @if (ongletActif() === 'securite') {
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-key"></i> Changer mon mot de passe</span>
-        </div>
-        <p class="mp-hint">Le matricule et le rôle ne peuvent être modifiés que par la Direction ou l'Administration système.</p>
-        <div class="form-grid">
-          <div>
-            <label class="form-label">Nouveau mot de passe</label>
-            <input class="form-control" type="password" [(ngModel)]="nouveauMotDePasse" placeholder="8 caractères minimum" autocomplete="new-password">
-          </div>
-          <div>
-            <label class="form-label">Confirmation</label>
-            <input class="form-control" type="password" [(ngModel)]="confirmationMotDePasse" placeholder="Retapez le mot de passe" autocomplete="new-password">
+      <div class="dash-21-card" style="padding:24px">
+        <div class="dash-21-card-header" style="margin-bottom:20px;padding:0;border:none">
+          <div class="dash-21-card-title-group">
+            <h3 class="dash-21-card-title"><i class="fa-solid fa-key" style="color:var(--g)"></i> Gestion des Identifiants & Sécurité</h3>
+            <span class="dash-21-card-hint">Renouvellement du mot de passe et politique de robustesse</span>
           </div>
         </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" (click)="enregistrerMotDePasse()" [disabled]="savingPwd() || !nouveauMotDePasse">
-            @if (savingPwd()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-shield-halved"></i> }
-            Changer le mot de passe
-          </button>
-        </div>
-      </div>
-    }
 
-    @if (ongletActif() === 'preferences') {
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title"><i class="fa-solid fa-sliders"></i> Préférences d'affichage</span>
-        </div>
-        <div class="mp-pref-row">
-          <div class="mp-pref-label">
-            <i class="fa-solid" [class.fa-moon]="theme.isDark()" [class.fa-sun]="!theme.isDark()"></i>
-            <div>
-              <div class="fw-bold">Mode sombre</div>
-              <div class="text-muted mp-pref-sub">S'applique immédiatement, mémorisé sur cet appareil.</div>
+        <div style="max-width:540px">
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Nouveau mot de passe *</label>
+            <input class="form-control" type="password" [(ngModel)]="nouveauMotDePasse" placeholder="6 caractères minimum" autocomplete="new-password" />
+            <div style="font-size:11px;color:var(--n500);margin-top:4px">
+              Privilégiez une combinaison de lettres, chiffres et caractères spéciaux.
             </div>
           </div>
-          <button class="mp-switch" [class.mp-switch-on]="theme.isDark()" (click)="theme.toggle()" role="switch" [attr.aria-checked]="theme.isDark()">
-            <span class="mp-switch-knob"></span>
+
+          <div class="form-group" style="margin-bottom:20px">
+            <label class="form-label">Confirmation du nouveau mot de passe *</label>
+            <input class="form-control" type="password" [(ngModel)]="confirmationMotDePasse" placeholder="Retapez le mot de passe" autocomplete="new-password" />
+          </div>
+
+          <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="enregistrerMotDePasse()" [disabled]="savingPwd() || !nouveauMotDePasse">
+            @if (savingPwd()) {
+              <i class="fa-solid fa-rotate fa-spin"></i> Mise à jour...
+            } @else {
+              <i class="fa-solid fa-shield-halved"></i> Valider le Nouveau Mot de Passe
+            }
           </button>
+        </div>
+
+        <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--n200)">
+          <h4 style="font-size:14px;font-weight:700;color:var(--g-d);margin:0 0 8px">Authentification Double Facteur (2FA / OTP)</h4>
+          <p style="font-size:12.5px;color:var(--n600);margin:0 0 12px">
+            Les codes de validation pour opérations sensibles (validation de versement de caisse, déblocage de commande, régularisation de stock) sont transmis automatiquement par notification sécurisée.
+          </p>
+          <span class="badge badge-success"><i class="fa-solid fa-check"></i> Protocole OTP Actif</span>
         </div>
       </div>
     }
+
+    <!-- ONGLET 3 : HABILITATIONS & DROITS RBAC -->
+    @if (ongletActif() === 'habilitations') {
+      <div class="dash-21-card" style="padding:24px">
+        <div class="dash-21-card-header" style="margin-bottom:20px;padding:0;border:none">
+          <div class="dash-21-card-title-group">
+            <h3 class="dash-21-card-title"><i class="fa-solid fa-user-shield" style="color:var(--g)"></i> Périmètre Métier & Matrice des Permissions</h3>
+            <span class="dash-21-card-hint">Accréditations accordées selon le rôle {{ roleLabel() }}</span>
+          </div>
+        </div>
+
+        <div class="permissions-matrix-grid">
+          @for (d of modulesDroits(); track d.code) {
+            <div class="perm-card" [class.perm-granted]="d.acces" [class.perm-denied]="!d.acces">
+              <div class="perm-card-head">
+                <div class="perm-icon-wrap" [class.granted]="d.acces">
+                  <i class="fa-solid {{ d.icone }}"></i>
+                </div>
+                <div style="flex:1">
+                  <div class="perm-title">{{ d.nom }}</div>
+                  <span class="perm-badge" [class.badge-success]="d.acces" [class.badge-neutral]="!d.acces">
+                    {{ d.acces ? 'Accès Autorisé' : 'Accès Restreint' }}
+                  </span>
+                </div>
+              </div>
+              <p class="perm-desc">{{ d.description }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ONGLET 4 : PRÉFÉRENCES & AFFICHAGE -->
+    @if (ongletActif() === 'preferences') {
+      <div class="dash-21-card" style="padding:24px">
+        <div class="dash-21-card-header" style="margin-bottom:20px;padding:0;border:none">
+          <div class="dash-21-card-title-group">
+            <h3 class="dash-21-card-title"><i class="fa-solid fa-sliders" style="color:var(--g)"></i> Préférences d'Interface & Ergonomie</h3>
+            <span class="dash-21-card-hint">Personnalisez votre confort visuel sur tous les modules</span>
+          </div>
+        </div>
+
+        <div class="pref-sections-list">
+          <!-- THÈME CLAIR / SOMBRE -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <div class="pref-title"><i class="fa-solid fa-circle-half-stroke"></i> Thème Visuel de l'ERP</div>
+              <div class="pref-desc">Basculer entre le mode clair standard et le mode sombre haute lisibilité.</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="!theme.isDark()" [class.dash-21-btn-ghost]="theme.isDark()" (click)="theme.isDark() && theme.toggle()">
+                <i class="fa-solid fa-sun"></i> Thème Clair
+              </button>
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="theme.isDark()" [class.dash-21-btn-ghost]="!theme.isDark()" (click)="!theme.isDark() && theme.toggle()">
+                <i class="fa-solid fa-moon"></i> Thème Sombre
+              </button>
+            </div>
+          </div>
+
+          <!-- DENSITÉ D'AFFICHAGE -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <div class="pref-title"><i class="fa-solid fa-arrows-up-down"></i> Densité des Tableaux & Cartes</div>
+              <div class="pref-desc">Ajuster l'espacement des lignes pour visualiser plus d'enregistrements à l'écran.</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="densiteAffichage() === 'confortable'" [class.dash-21-btn-ghost]="densiteAffichage() !== 'confortable'" (click)="changerDensite('confortable')">
+                Confortable
+              </button>
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="densiteAffichage() === 'compact'" [class.dash-21-btn-ghost]="densiteAffichage() !== 'compact'" (click)="changerDensite('compact')">
+                Compact
+              </button>
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="densiteAffichage() === 'dense'" [class.dash-21-btn-ghost]="densiteAffichage() !== 'dense'" (click)="changerDensite('dense')">
+                Dense (Haute densité)
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE D'AFFICHAGE PAR DÉFAUT -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <div class="pref-title"><i class="fa-solid fa-table-cells-large"></i> Mode d'Affichage Préféré des Listes</div>
+              <div class="pref-desc">Choisissez l'affichage par défaut des fiches clients, articles et pièces.</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeAffichagePrefere() === 'table'" [class.dash-21-btn-ghost]="modeAffichagePrefere() !== 'table'" (click)="changerModeAffichage('table')">
+                <i class="fa-solid fa-table-list"></i> Tableau Dense
+              </button>
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeAffichagePrefere() === 'cards'" [class.dash-21-btn-ghost]="modeAffichagePrefere() !== 'cards'" (click)="changerModeAffichage('cards')">
+                <i class="fa-solid fa-grip"></i> Cartes Visuelles
+              </button>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS SONORES -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <div class="pref-title"><i class="fa-solid fa-volume-high"></i> Alertes & Notifications Sonores</div>
+              <div class="pref-desc">Émettre un signal sonore lors de l'arrivée d'une nouvelle validation urgente.</div>
+            </div>
+            <div>
+              <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="notifSonores()" [class.dash-21-btn-ghost]="!notifSonores()" (click)="toggleNotifSon()">
+                <i class="fa-solid" [class.fa-bell]="notifSonores()" [class.fa-bell-slash]="!notifSonores()"></i>
+                {{ notifSonores() ? 'Activées' : 'Désactivées' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
     }
   }
 </div>

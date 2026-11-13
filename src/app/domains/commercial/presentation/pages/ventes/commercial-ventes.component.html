@@ -7,7 +7,17 @@
         <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Facturation terrain, finalisation, transactions non-marchandes et avoirs</p>
       </div>
     </div>
-    <div class="ph-actions" style="display:flex;gap:8px">
+    <div class="ph-actions" style="display:flex;align-items:center;gap:8px">
+      <!-- SÉLECTEUR DE VUE -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="modeAffichage() === 'table'" [class.btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Vue Tableau" style="padding:4px 10px">
+          <i class="fa-solid fa-table-list"></i>
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="modeAffichage() === 'cartes'" [class.btn-ghost]="modeAffichage() !== 'cartes'" (click)="modeAffichage.set('cartes')" title="Vue Cartes" style="padding:4px 10px">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+      </div>
+
       <button class="btn btn-ghost" (click)="chargerVentes()" title="Actualiser la liste">
         <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
@@ -99,7 +109,7 @@
           <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>
           Aucune transaction commerciale pour ces critères.
         </p>
-      } @else {
+      } @else if (modeAffichage() === 'table') {
         <div class="tbl-scroll">
           <div class="tbl-wrap">
             <table class="tbl data-table">
@@ -154,6 +164,52 @@
               </tbody>
             </table>
           </div>
+        </div>
+        <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
+          {{ ventesFiltrees().length }} vente(s) affichée(s) sur {{ ventes().length }}
+        </div>
+      } @else if (modeAffichage() === 'cartes') {
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:16px;padding:16px">
+          @for (v of ventesFiltrees(); track v.id) {
+            <div class="card" style="padding:16px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--n200);border-radius:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <span class="cell-mono fw-bold" style="color:var(--g-d);font-size:13px">{{ v.numeroVente }}</span>
+                  <span [class]="statutClass(v.statut)">{{ v.statut }}</span>
+                </div>
+                <div style="font-size:12px;color:var(--n600);margin-bottom:10px">
+                  <div><i class="fa-regular fa-calendar" style="margin-right:4px"></i>{{ v.date | date:'dd MMMM yyyy':'':'fr' }}</div>
+                  <div><i class="fa-solid fa-user-tag" style="margin-right:4px"></i>Client: <strong>{{ v.codeClient }}</strong></div>
+                  @if (v.matriculeCommercial) {
+                    <div><i class="fa-solid fa-truck" style="margin-right:4px"></i>Commercial: {{ v.matriculeCommercial }}</div>
+                  }
+                </div>
+                <div style="margin-bottom:12px;padding:8px 12px;background:var(--n50);border-radius:6px;display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:11px;color:var(--n500)">Montant Total</span>
+                  <strong class="mono" style="font-size:15px;color:var(--g-d)">{{ fCFA(v.montantTotal) }}</strong>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--n200);padding-top:10px;justify-content:flex-end">
+                <button class="btn btn-sm btn-ghost" (click)="imprimerBordereau(v)" title="Imprimer le bordereau">
+                  <i class="fa-solid fa-print"></i> Reçu
+                </button>
+                @if (v.statut === 'EN_COURS') {
+                  <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_VENTE_FINALISER'" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
+                    <i class="fa-solid fa-check"></i>
+                  </button>
+                  <button class="btn btn-ghost-red btn-sm" *appHasPermission="'COMMERCIAL_VENTE_CREER'" (click)="openAnnuler(v.numeroVente)" title="Annuler">
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
+                }
+                @if (v.statut === 'FINALISEE') {
+                  <button class="btn btn-outline btn-sm" (click)="openAvoir(v.numeroVente)" title="Émettre un avoir">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Avoir
+                  </button>
+                }
+              </div>
+            </div>
+          }
         </div>
         <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
           {{ ventesFiltrees().length }} vente(s) affichée(s) sur {{ ventes().length }}

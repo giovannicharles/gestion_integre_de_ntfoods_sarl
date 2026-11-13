@@ -3,12 +3,45 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-handshake"></i></div>
       <div>
-        <div class="ph-title">CRM · Grands Comptes</div>
-        <div class="ph-sub">Hôtels · GMS · Boulangeries · {{ fCFA(caTotal()) }} CA mensuel cumulé</div>
+        <div class="ph-title">CRM · Grands Comptes VIP & Partenaires GMS</div>
+        <div class="ph-sub">Hôtels · GMS · Boulangeries · {{ fCFA(caTotal()) }} CA mensuel consolidé</div>
       </div>
     </div>
-    <div class="ph-actions">
-      <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm" (click)="ouvrirCreation()"><i class="fa-solid fa-plus"></i> Nouveau grand compte</button>
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- SÉLECTEUR DE MODE D'AFFICHAGE -->
+      <div class="view-mode-toggle" style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="vueAffichage() === 'cartes'" [class.btn-ghost]="vueAffichage() !== 'cartes'" (click)="vueAffichage.set('cartes')" title="Affichage en cartes" style="padding:4px 10px;border-radius:4px">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="vueAffichage() === 'table'" [class.btn-ghost]="vueAffichage() !== 'table'" (click)="vueAffichage.set('table')" title="Affichage en tableau" style="padding:4px 10px;border-radius:4px">
+          <i class="fa-solid fa-table-list"></i>
+        </button>
+      </div>
+
+      <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm" (click)="ouvrirCreation()">
+        <i class="fa-solid fa-plus"></i> Nouveau grand compte
+      </button>
+    </div>
+  </div>
+
+  <!-- BARRE DE RECHERCHE ET FILTRES RAPIDES -->
+  <div class="card" style="margin-bottom:16px;padding:12px 18px">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;position:relative">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n400)"></i>
+        <input type="text" class="input" style="padding-left:34px;width:100%" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Rechercher par enseigne, acheteur, téléphone..." />
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--n600)">Segment :</span>
+        <select class="input" style="min-width:160px" [ngModel]="filtreType()" (ngModelChange)="filtreType.set($event)">
+          <option value="TOUS">Tous les segments</option>
+          <option value="GMS">GMS / Supermarchés</option>
+          <option value="HÔTEL">Hôtels & Restaurants</option>
+          <option value="BOULANGERIE">Boulangeries</option>
+          <option value="GROSSISTE">Grossistes</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -23,108 +56,186 @@
   } @else {
 
   @if (relancesDues().length > 0) {
-  <div class="alert-banner-red">
-    <i class="fa-solid fa-bell"></i> {{ relancesDues().length }} compte(s) en attente de relance, commande récurrente non renouvelée.
+  <div class="alert-banner-red" style="margin-bottom:16px">
+    <i class="fa-solid fa-bell"></i> {{ relancesDues().length }} compte(s) en attente de relance : cadences de commande ou visites à reprogrammer.
   </div>
   }
 
-  <div class="card-grid-auto">
-    @for (c of comptes(); track c.id) {
-    <div class="card card-wm card-wm-rp gc-card">
-      <div class="gc-head">
-        <div class="kpi-ico ig"><i class="fa-solid {{ icon(c.type) }}"></i></div>
-        <div class="gc-head-info">
-          <div class="fw-bold">{{ c.nom }}</div>
-          <div class="gc-head-meta">{{ c.type }} · {{ c.telephone }}</div>
+  <!-- AFFICHAGE EN CARTES -->
+  @if (vueAffichage() === 'cartes') {
+    <div class="card-grid-auto">
+      @for (c of comptesFiltres(); track c.id) {
+      <div class="card card-wm card-wm-rp gc-card">
+        <div class="gc-head">
+          <div class="kpi-ico ig"><i class="fa-solid {{ icon(c.type) }}"></i></div>
+          <div class="gc-head-info">
+            <div class="fw-bold">{{ c.nom }}</div>
+            <div class="gc-head-meta">{{ c.type }} · {{ c.telephone || 'Sans téléphone' }}</div>
+          </div>
+          @if (c.statut === 'ACTIF') { <span class="badge bg-success badge-sm">Actif</span> }
+          @else { <span class="badge bg-red badge-sm">{{ c.statut }}</span> }
         </div>
-        @if (c.statut === 'ACTIF') { <span class="badge bg-success badge-sm">Actif</span> }
-        @else { <span class="badge bg-red badge-sm">{{ c.statut }}</span> }
-      </div>
-      <div class="fiche-kpis rgrid-2 gc-kpis">
-        <div class="fiche-kpi"><span class="fk-lbl">CA mensuel</span><span class="fk-val gc-fk-val-sm">{{ fCFA(c.caMensuel) }}</span></div>
-        <div class="fiche-kpi">
-          <span class="fk-lbl">Prochaine relance</span>
-          <span class="fk-val gc-fk-val-sm" [class.text-danger]="estRelanceDue(c)">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '-' }}</span>
+        <div class="fiche-kpis rgrid-2 gc-kpis">
+          <div class="fiche-kpi"><span class="fk-lbl">CA mensuel</span><span class="fk-val gc-fk-val-sm">{{ fCFA(c.caMensuel) }}</span></div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Prochaine relance</span>
+            <span class="fk-val gc-fk-val-sm" [class.text-danger]="estRelanceDue(c)">{{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy':'fr') : '-' }}</span>
+          </div>
+        </div>
+        <div class="gc-actions">
+          @if (estRelanceDue(c)) {
+          <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm gc-btn-flex" (click)="marquerRelance(c)" title="Enregistrer la relance et planifier la suivante">
+            <i class="fa-solid fa-phone"></i> Relancé
+          </button>
+          }
+          <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-outline btn-sm gc-btn-flex" (click)="ouvrirEdition(c)"><i class="fa-solid fa-pen"></i> Modifier</button>
+          <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-danger btn-sm" (click)="archiver(c)" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
         </div>
       </div>
-      <div class="gc-actions">
-        @if (estRelanceDue(c)) {
-        <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm gc-btn-flex" (click)="marquerRelance(c)" title="Enregistrer la relance et planifier la suivante">
-          <i class="fa-solid fa-phone"></i> Relancé
-        </button>
-        }
-        <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-outline btn-sm gc-btn-flex" (click)="ouvrirEdition(c)"><i class="fa-solid fa-pen"></i> Modifier</button>
-        <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-danger btn-sm" (click)="archiver(c)" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
+      } @empty {
+      <div class="empty-state" style="grid-column:1/-1">
+        <i class="fa-solid fa-handshake-slash"></i>
+        <p>Aucun grand compte trouvé pour ces filtres.</p>
+      </div>
+      }
+    </div>
+  }
+
+  <!-- AFFICHAGE EN TABLEAU DENSE -->
+  @if (vueAffichage() === 'table') {
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Enseigne / Établissement</th>
+              <th>Segment</th>
+              <th>Contact & Téléphone</th>
+              <th class="text-right">CA Mensuel</th>
+              <th>Dernière Commande</th>
+              <th>Prochaine Relance</th>
+              <th>Statut</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of comptesFiltres(); track c.id) {
+              <tr>
+                <td>
+                  <div class="fw-bold" style="color:var(--g-d);display:flex;align-items:center;gap:8px">
+                    <i class="fa-solid {{ icon(c.type) }}" style="color:var(--g)"></i>
+                    <span>{{ c.nom }}</span>
+                  </div>
+                </td>
+                <td><span class="meta-tag">{{ c.type }}</span></td>
+                <td>
+                  <div style="font-weight:600;font-size:12px">{{ c.contact || 'Non renseigné' }}</div>
+                  <div style="font-size:11px;color:var(--n500)">{{ c.telephone }}</div>
+                </td>
+                <td class="text-right mono fw-bold" style="color:var(--g-d)">{{ fCFA(c.caMensuel) }}</td>
+                <td style="font-size:12px">{{ c.derniereCommande ? (c.derniereCommande | date:'dd/MM/yyyy') : '-' }}</td>
+                <td>
+                  <span [class.text-danger]="estRelanceDue(c)" style="font-size:12px;font-weight:600">
+                    {{ c.prochaineRelance ? (c.prochaineRelance | date:'dd/MM/yyyy') : 'Non définie' }}
+                  </span>
+                </td>
+                <td>
+                  @if (c.statut === 'ACTIF') {
+                    <span class="badge bg-success badge-sm">Actif</span>
+                  } @else {
+                    <span class="badge bg-red badge-sm">{{ c.statut }}</span>
+                  }
+                </td>
+                <td class="text-center">
+                  <div style="display:flex;gap:6px;justify-content:center">
+                    @if (estRelanceDue(c)) {
+                      <button class="btn btn-primary btn-sm" (click)="marquerRelance(c)" title="Marquer relance effectuée" style="padding:4px 8px">
+                        <i class="fa-solid fa-phone"></i>
+                      </button>
+                    }
+                    <button class="btn btn-outline btn-sm" (click)="ouvrirEdition(c)" title="Modifier" style="padding:4px 8px">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" (click)="archiver(c)" title="Archiver" style="padding:4px 8px">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" style="text-align:center;padding:32px;color:var(--n400)">
+                  Aucun compte correspondant.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </div>
-    } @empty {
-    <div class="empty-state gc-empty"><i class="fa-solid fa-handshake"></i><p>Aucun grand compte enregistré</p></div>
-    }
-  </div>
+  }
+
   }
 
   @if (showForm()) {
-  <div class="modal-overlay" (click)="fermerForm()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-handshake"></i> {{ editingId() ? 'Modifier le grand compte' : 'Nouveau grand compte' }}</h3>
-        <button class="modal-close" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
+  <div class="modal-backdrop">
+    <div class="modal card">
+      <div class="card-hd">
+        <span class="card-title">{{ editingId() ? 'Modifier grand compte' : 'Nouveau grand compte' }}</span>
+        <button class="btn btn-ghost btn-sm" (click)="fermerForm()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Nom *</label>
-          <input type="text" [ngModel]="form().nom" (ngModelChange)="actualiserChamp('nom', $event)" placeholder="Ex : Hôtel Mont Fébé" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
+      <form (ngSubmit)="enregistrer()">
+        <div class="form-grid rgrid-2">
+          <div class="fg">
+            <label>Nom de l'enseigne</label>
+            <input class="input" type="text" [ngModel]="form().nom" (ngModelChange)="actualiserChamp('nom', $event)" name="nom" required>
+          </div>
+          <div class="fg">
             <label>Type</label>
-            <select [ngModel]="form().type" (ngModelChange)="actualiserChamp('type', $event)">
-              <option value="HOTEL">Hôtel</option>
-              <option value="GMS">GMS</option>
+            <select class="input" [ngModel]="form().type" (ngModelChange)="actualiserChamp('type', $event)" name="type">
+              <option value="HÔTEL">Hôtel</option>
+              <option value="GMS">GMS / Supermarché</option>
               <option value="BOULANGERIE">Boulangerie</option>
-              <option value="AUTRE">Autre</option>
+              <option value="GROSSISTE">Grossiste</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="fg">
+            <label>Contact référent</label>
+            <input class="input" type="text" [ngModel]="form().contact" (ngModelChange)="actualiserChamp('contact', $event)" name="contact">
+          </div>
+          <div class="fg">
+            <label>Téléphone</label>
+            <input class="input" type="tel" [ngModel]="form().telephone" (ngModelChange)="actualiserChamp('telephone', $event)" name="telephone">
+          </div>
+          <div class="fg">
+            <label>CA mensuel moyen (FCFA)</label>
+            <input class="input" type="number" [ngModel]="form().caMensuel" (ngModelChange)="actualiserChamp('caMensuel', +$event)" name="caMensuel" min="0">
+          </div>
+          <div class="fg">
             <label>Statut</label>
-            <select [ngModel]="form().statut" (ngModelChange)="actualiserChamp('statut', $event)">
+            <select class="input" [ngModel]="form().statut" (ngModelChange)="actualiserChamp('statut', $event)" name="statut">
               <option value="ACTIF">Actif</option>
+              <option value="RELANCE_DUE">Relance due</option>
               <option value="INACTIF">Inactif</option>
             </select>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Contact</label>
-            <input type="text" [ngModel]="form().contact" (ngModelChange)="actualiserChamp('contact', $event)" />
-          </div>
-          <div class="form-group">
-            <label>Téléphone</label>
-            <input type="text" [ngModel]="form().telephone" (ngModelChange)="actualiserChamp('telephone', $event)" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>CA mensuel (FCFA)</label>
-          <input type="number" min="0" [ngModel]="form().caMensuel" (ngModelChange)="actualiserChamp('caMensuel', $event)" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
+          <div class="fg">
             <label>Dernière commande</label>
-            <input type="date" [ngModel]="form().derniereCommande" (ngModelChange)="actualiserChamp('derniereCommande', $event)" />
+            <input class="input" type="date" [ngModel]="form().derniereCommande" (ngModelChange)="actualiserChamp('derniereCommande', $event)" name="derniereCommande">
           </div>
-          <div class="form-group">
+          <div class="fg">
             <label>Prochaine relance</label>
-            <input type="date" [ngModel]="form().prochaineRelance" (ngModelChange)="actualiserChamp('prochaineRelance', $event)" />
+            <input class="input" type="date" [ngModel]="form().prochaineRelance" (ngModelChange)="actualiserChamp('prochaineRelance', $event)" name="prochaineRelance">
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline btn-sm" [disabled]="saving()" (click)="fermerForm()">Annuler</button>
-        <button class="btn btn-primary btn-sm" [disabled]="saving()" (click)="enregistrer()">
-          <i class="fa-solid" [class.fa-spinner]="saving()" [class.fa-spin]="saving()" [class.fa-check]="!saving()"></i>
-          {{ editingId() ? 'Enregistrer' : 'Créer' }}
-        </button>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" (click)="fermerForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement… }
+            @else { Enregistrer }
+          </button>
+        </div>
+      </form>
     </div>
   </div>
   }

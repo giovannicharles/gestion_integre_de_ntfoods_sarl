@@ -76,6 +76,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   showForm = signal(false);
   saving = signal(false);
   search = signal('');
+  modeAffichage = signal<'table' | 'cartes' | 'compact'>((localStorage.getItem('tanty_ui_view_mode') === 'cards') ? 'cartes' : 'table');
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
   newItemSelectedProductId = signal<number | null>(null);
