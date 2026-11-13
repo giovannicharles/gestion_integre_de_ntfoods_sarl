@@ -1,2 +1,529 @@
-/* Mise en page assurée par les classes globales (src/styles.css) : .dash, .ph, .kpi-grid, .card,
-   .data-table, .badge, .modal-overlay... Pas de style local nécessaire pour cet écran. */
+/* ==========================================================================
+   TANTY ERP - LOTS DE PRODUCTION (GESTION DU STOCK)
+   Charte graphique : Vert Forêt (#14532D), Or Chaud (#F6B60B), Rouge (#C22B2B)
+   ========================================================================== */
+
+/* Animation globale */
+.animate-fadeInUp {
+  animation: fadeInUp 0.25s ease-out;
+}
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Page Header & Icon */
+.animated-ph-svg {
+  transition: transform 0.3s ease;
+}
+.ph-icon:hover .animated-ph-svg {
+  transform: scale(1.05);
+}
+
+/* KPI Cards Interactives */
+.kpi-interactive {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1.5px solid var(--color-border, #E2E8F0);
+}
+.kpi-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-primary, #14532D);
+}
+.kpi-active {
+  border-color: var(--color-primary, #14532D) !important;
+  box-shadow: 0 0 0 2px rgba(20, 83, 45, 0.25), 0 6px 16px rgba(20, 83, 45, 0.08) !important;
+  background: linear-gradient(to bottom, #FFFFFF, var(--color-primary-light, #EAF2ED)) !important;
+}
+.kpi-active-tag {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: var(--color-primary, #14532D);
+  color: #FFFFFF;
+}
+.kpi-subtext {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #64748B);
+  margin-top: 3px;
+  display: block;
+}
+
+/* Bannière Succès Dernière Validation */
+.validation-success-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(20, 83, 45, 0.08);
+}
+.banner-icon {
+  font-size: 1.6rem;
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+}
+.banner-body {
+  flex: 1;
+  min-width: 240px;
+}
+.banner-title {
+  font-size: 0.95rem;
+  color: #14532D;
+  margin-bottom: 4px;
+}
+.banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #166534;
+}
+.banner-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.banner-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Card Header Hints */
+.card-hd-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #64748B);
+  font-weight: normal;
+}
+
+/* Filter Pills */
+.filter-pills {
+  display: inline-flex;
+  background: var(--color-bg-subtle, #F1F5F9);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 3px;
+}
+.filter-pill {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text, #1E293B);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-pill:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+.filter-pill.active {
+  background: #FFFFFF;
+  color: var(--color-primary, #14532D);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.dot-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-green { background: #16A34A; }
+.dot-red { background: #DC2626; }
+
+/* Styled Search Box */
+.search-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.search-ico {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-muted, #94A3B8);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+.search-box-styled {
+  padding-left: 32px !important;
+  padding-right: 28px !important;
+  font-size: 0.82rem !important;
+  width: 250px;
+  border-radius: 8px !important;
+}
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+/* Table Enhancements */
+.lot-pill {
+  display: inline-block;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+.clickable-pill {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--color-primary, #14532D);
+}
+.clickable-pill:hover {
+  border-color: var(--color-primary, #14532D);
+  background: var(--color-primary-light, #EAF2ED);
+}
+.carton-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.warehouse-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-primary, #14532D);
+  background: var(--color-primary-light, #EAF2ED);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+.dlc-badge {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.action-buttons-group {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.btn-outline-danger {
+  border: 1px solid #FCA5A5;
+  background: #FEF2F2;
+  color: #DC2626;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-outline-danger:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 36px 16px !important;
+}
+.empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+.empty-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text, #1E293B);
+  margin-bottom: 4px;
+}
+.empty-subtext {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #64748B);
+}
+
+/* Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-border, #E2E8F0);
+  background: var(--color-bg-subtle, #F8FAFC);
+}
+.pagination-info {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #64748B);
+}
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+}
+
+/* Modals */
+.confirm-summary-box {
+  background: var(--color-bg-subtle, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--color-border, #E2E8F0);
+  font-size: 0.88rem;
+}
+.summary-line:last-child {
+  border-bottom: none;
+}
+.summary-label {
+  color: var(--color-text-muted, #64748B);
+}
+
+/* Modal Lot Details */
+.lot-meta-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.lmc-item {
+  background: var(--color-bg-subtle, #F8FAFC);
+  border: 1px solid var(--color-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.lmc-lbl {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #64748B);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.lmc-val {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text, #1E293B);
+}
+.lot-section-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--color-primary, #14532D);
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--color-border, #F1F5F9);
+}
+.dir-lbl {
+  color: var(--color-text-muted, #64748B);
+}
+
+/* ==========================================================================
+   BON D'ENTRÉE EN MAGASIN (PRINTABLE VOUCHER)
+   ========================================================================== */
+.modal-voucher {
+  max-width: 680px !important;
+  width: 95%;
+  background: #FFFFFF;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.voucher-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+}
+.voucher-printable-content {
+  padding: 24px 30px;
+  color: #1E293B;
+  background: #FFFFFF;
+}
+.voucher-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--color-primary, #14532D);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+.company-logo-text {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-primary, #14532D);
+}
+.company-sub {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin-top: 2px;
+}
+.voucher-badge-approved {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 2px solid #16A34A;
+  color: #16A34A;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  transform: rotate(-3deg);
+}
+.voucher-title-section {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.voucher-main-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary, #14532D);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.voucher-ref {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-accent, #B45309);
+  margin: 4px 0;
+}
+.voucher-date {
+  font-size: 0.78rem;
+  color: #64748B;
+}
+.voucher-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 18px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+.vd-item {
+  display: flex;
+  flex-direction: column;
+}
+.vd-label {
+  font-size: 0.72rem;
+  color: #64748B;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.vd-value {
+  font-size: 0.88rem;
+}
+.voucher-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid #E2E8F0;
+}
+.sig-block {
+  text-align: center;
+}
+.sig-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+.sig-name {
+  font-size: 0.8rem;
+  color: #1E293B;
+  font-weight: 600;
+}
+.sig-space {
+  margin-top: 18px;
+  padding: 10px;
+  border: 1px dashed #94A3B8;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: #16A34A;
+  font-weight: 700;
+  background: #F0FDF4;
+}
+.voucher-footer-text {
+  margin-top: 20px;
+  font-size: 0.7rem;
+  color: #94A3B8;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Print Media Query */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .modal-overlay {
+    position: static !important;
+    background: none !important;
+  }
+  .modal-voucher, .voucher-printable-content, .voucher-printable-content * {
+    visibility: visible !important;
+  }
+  .modal-voucher {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

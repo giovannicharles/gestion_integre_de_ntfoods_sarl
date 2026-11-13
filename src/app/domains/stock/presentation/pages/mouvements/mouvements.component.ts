@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, takeUntil, catchError, of } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { StockLevelUseCase } from '../../../application/use-cases/inventaire/stock-level.use-case';
@@ -16,6 +17,8 @@ Chart.register(...registerables);
 export class MouvementsComponent implements OnInit, OnDestroy {
   private d$ = new Subject<void>(); private uc = inject(StockLevelUseCase); private repo = inject(StockApiRepository); private auth = inject(AuthService); private api = inject(ApiService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   loading = signal(true); all = signal<StockMovement[]>([]); filtered = signal<StockMovement[]>([]); paginated = signal<StockMovement[]>([]);
   levels = signal<StockLevel[]>([]); search = ''; filterType = ''; filterProd = ''; filterStatus = '';
   pendingCount = signal(0); validating = signal(false);
@@ -26,10 +29,23 @@ export class MouvementsComponent implements OnInit, OnDestroy {
   Math = Math;
   toastMsg = signal(''); toastType = signal<'success' | 'error'>('success');
   get pages() { return Array.from({ length: this.totalPages() }, (_, i) => i + 1); }
-  ngOnInit() { forkJoin({ m: this.uc.getMovements().pipe(catchError(() => of([]))), l: this.uc.getAll().pipe(catchError(() => of([]))), p: this.api.get<StockMovement[]>('stock/movements/pending').pipe(catchError(() => of([]))) }).pipe(takeUntil(this.d$)).subscribe({ next: ({ m, l, p }) => { this.all.set(m); this.levels.set(l); this.pendingCount.set(p?.length || 0); this.applyFilters(); this.loading.set(false); }, error: (err) => { this.loading.set(false); this.showToast(extractApiError(err) || 'Erreur lors du chargement des mouvements', 'error'); } }); }
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.search = params['search'];
+      }
+      if (params['type']) {
+        this.filterType = params['type'];
+      }
+    });
+    forkJoin({ m: this.uc.getMovements().pipe(catchError(() => of([]))), l: this.uc.getAll().pipe(catchError(() => of([]))), p: this.api.get<StockMovement[]>('stock/movements/pending').pipe(catchError(() => of([]))) }).pipe(takeUntil(this.d$)).subscribe({ next: ({ m, l, p }) => { this.all.set(m); this.levels.set(l); this.pendingCount.set(p?.length || 0); this.applyFilters(); this.loading.set(false); }, error: (err) => { this.loading.set(false); this.showToast(extractApiError(err) || 'Erreur lors du chargement des mouvements', 'error'); } });
+  }
   applyFilters() { let r = this.all(); if (this.search) { const q = this.search.toLowerCase(); r = r.filter(m => (m.product?.designation || m.product?.sku || '').toLowerCase().includes(q) || (m.reference || m.referenceNumber || '').toLowerCase().includes(q)); } if (this.filterType) r = r.filter(m => m.type === this.filterType); if (this.filterProd) r = r.filter(m => m.productId === +this.filterProd); if (this.filterStatus) r = r.filter(m => (m.status || 'VALIDATED') === this.filterStatus); this.filtered.set(r); const t = Math.ceil(r.length / this.ps) || 1; this.totalPages.set(t); this.goTo(1); }
   goTo(p: number) { const n = Math.max(1, Math.min(p, this.totalPages())); this.cp.set(n); const s = (n - 1) * this.ps; this.paginated.set(this.filtered().slice(s, s + this.ps)); }
   count(t: string) { return this.all().filter(m => m.type === t).length; }
+  setFilterType(t: string) { this.filterType = this.filterType === t ? '' : t; this.applyFilters(); }
+  voirTrace(ref?: string) { if (!ref) return; this.router.navigate(['/stock/lots/trace'], { queryParams: { lot: ref } }); }
+  voirArticle(sku?: string) { if (!sku) return; this.router.navigate(['/stock/articles'], { queryParams: { sku, search: sku } }); }
   isEntree(t: string) { return t.startsWith('RECEPTION') || t === 'TRANSFER_MOBILE_TO_CENTRAL'; }
   getIcon(t: string) { const m: Record<string, string> = { RECEPTION_PRODUCTION: 'fa-industry', RECEPTION_CONSOMMABLE: 'fa-arrow-circle-down', RECEPTION_RAW_MATERIAL: 'fa-arrow-circle-down', RECEPTION_MATERIEL: 'fa-arrow-circle-down', TRANSFER_CENTRAL_TO_BUFFER: 'fa-boxes-stacked', TRANSFER_BUFFER_TO_MOBILE: 'fa-truck', TRANSFER_MOBILE_TO_CENTRAL: 'fa-arrow-rotate-left', SALE: 'fa-cash-register', ADJUSTMENT: 'fa-sliders', LOSS: 'fa-triangle-exclamation', EXPIRATION: 'fa-calendar-xmark' }; return m[t] || 'fa-circle'; }
   getColor(t: string) { const m: Record<string, string> = { RECEPTION_PRODUCTION: 'mc-t', RECEPTION_CONSOMMABLE: 'mc-g', RECEPTION_RAW_MATERIAL: 'mc-g', RECEPTION_MATERIEL: 'mc-g', TRANSFER_CENTRAL_TO_BUFFER: 'mc-t', TRANSFER_BUFFER_TO_MOBILE: 'mc-b', TRANSFER_MOBILE_TO_CENTRAL: 'mc-g', SALE: 'mc-b', ADJUSTMENT: 'mc-n', LOSS: 'mc-r', EXPIRATION: 'mc-r' }; return m[t] || 'mc-n'; }

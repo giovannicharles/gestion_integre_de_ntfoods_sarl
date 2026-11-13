@@ -1,57 +1,68 @@
-import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy} from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProductionService, LotBE } from '../../../../production/infrastructure/production.service';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 /**
- * Écran Stock, « Lots de Production » (2026-10-01, demande explicite du porteur).
+ * Écran Stock — « Lots de Production » (NTFOODS SARL).
  *
- * Volontairement séparé de `ProductionLotsComponent` (module Production) : le Gestionnaire de
- * Stock ne doit JAMAIS être renvoyé dans le tableau de bord / la navigation du module Production
- *, chaque module garde sa propre interface, même quand les deux consultent la même ressource
- * backend. Cet écran réutilise `ProductionService` (simple injectable partagé, pas une frontière
- * de module) pour les mêmes appels déjà autorisés au Gestionnaire de Stock côté API
- * (`PRODUCTION_LOT_VALIDER_STOCK`, `LotController.java`), mais s'affiche entièrement sous le
- * layout Stock.
- *
- * Volontairement SANS la déclaration de lot (réservée au Chef de Production) : seule la
- * consultation et la validation/rejet, le rôle réel du Gestionnaire de Stock dans ce circuit.
+ * Permet au Gestionnaire de Stock de contrôler, valider physiquement ou rejeter
+ * les lots déclarés par le Chef de Production.
+ * La validation intègre automatiquement les quantités au Stock Central (Magasin Central PF),
+ * génère le Bon d'Entrée Magasin (BEM) et met à jour l'arbre de traçabilité.
  */
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-stock-lots-production',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, HasPermissionDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, HasPermissionDirective],
   templateUrl: './stock-lots-production.component.html',
   styleUrls: ['./stock-lots-production.component.css'],
 })
 export class StockLotsProductionComponent implements OnInit {
   private readonly svc = inject(ProductionService);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   loading = signal(false);
   lots = signal<LotBE[]>([]);
   lotsAValider = signal<LotBE[]>([]);
   showRejeter = signal<LotBE | null>(null);
   lotAConfirmer = signal<LotBE | null>(null);
+  lotDetails = signal<LotBE | null>(null);
+  lotBonEntree = signal<LotBE | null>(null);
+  dernierLotValide = signal<LotBE | null>(null);
+
   motifRejet = '';
   message = signal('');
   erreurAction = signal<string | null>(null);
   searchQuery = signal('');
+  filtreStatut = signal<'TOUS' | 'A_VALIDER' | 'VALIDATED_BY_STOCK' | 'REJETE'>('TOUS');
+
   page = signal(1);
   pageSize = 10;
 
   lotsFiltres = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    const list = this.lots();
+    const st = this.filtreStatut();
+    let list = this.lots();
+
+    if (st !== 'TOUS' && st !== 'A_VALIDER') {
+      list = list.filter(l => l.statut === st);
+    }
+
     if (!q) return list;
     return list.filter(l =>
       (l.numeroLot || '').toLowerCase().includes(q) ||
       (l.productSku || '').toLowerCase().includes(q) ||
       (l.productName || '').toLowerCase().includes(q) ||
+      (l.referencePPH || '').toLowerCase().includes(q) ||
+      (l.matriculeChefProduction || '').toLowerCase().includes(q) ||
       (l.statut || '').toLowerCase().includes(q)
     );
   });
@@ -66,9 +77,22 @@ export class StockLotsProductionComponent implements OnInit {
   nbAValider = computed(() => this.lotsAValider().length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
   nbRejetes = computed(() => this.lots().filter(l => l.statut === 'REJETE').length);
-  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.declaredQuantityKg, 0));
+  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + (l.declaredQuantityKg || 0), 0));
+  totalCartonsDeclares = computed(() => this.lots().reduce((s, l) => s + (l.equivalentUnits || 0), 0));
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchQuery.set(params['search']);
+      }
+      if (params['filter']) {
+        const f = params['filter'];
+        if (['TOUS', 'A_VALIDER', 'VALIDATED_BY_STOCK', 'REJETE'].includes(f)) {
+          this.filtreStatut.set(f as any);
+        }
+      }
+    });
+
     this.chargerLots();
     this.chargerLotsAValider();
   }
@@ -76,19 +100,35 @@ export class StockLotsProductionComponent implements OnInit {
   chargerLots(): void {
     this.loading.set(true);
     this.svc.getLots().subscribe({
-      next: list => { this.lots.set(list); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.message.set('Erreur lors du chargement des lots'); },
+      next: list => {
+        this.lots.set(list || []);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.message.set('Erreur lors du chargement des lots.');
+      },
     });
   }
 
   chargerLotsAValider(): void {
     this.svc.getLotsAValider().subscribe({
-      next: list => this.lotsAValider.set(list),
+      next: list => this.lotsAValider.set(list || []),
       error: () => {},
     });
   }
 
-  /** Ouvre le modal de confirmation personnalisé (remplace le confirm natif). */
+  setFiltreStatut(statut: 'TOUS' | 'A_VALIDER' | 'VALIDATED_BY_STOCK' | 'REJETE'): void {
+    this.filtreStatut.set(statut);
+    this.page.set(1);
+    if (statut === 'A_VALIDER') {
+      const el = document.getElementById('lots-en-attente-card');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
   ouvrirValiderLot(lot: LotBE): void {
     this.lotAConfirmer.set(lot);
   }
@@ -97,7 +137,6 @@ export class StockLotsProductionComponent implements OnInit {
     this.lotAConfirmer.set(null);
   }
 
-  /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
   confirmerValidationLot(): void {
     const lot = this.lotAConfirmer();
     if (!lot) return;
@@ -107,9 +146,10 @@ export class StockLotsProductionComponent implements OnInit {
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
-        const msg = `Lot ${l.numeroLot} validé et intégré au stock central.`;
+        this.dernierLotValide.set(l);
+        const msg = `Lot ${l.numeroLot} validé avec succès et intégré au Stock Central.`;
         this.message.set(msg);
-        this.toast.success(msg, 'Validation Lot Stock');
+        this.toast.success(msg, 'Validation Stock Central');
       },
       error: (err) => {
         const msg = extractApiError(err);
@@ -123,26 +163,62 @@ export class StockLotsProductionComponent implements OnInit {
     this.ouvrirValiderLot(lot);
   }
 
+  ouvrirDetails(lot: LotBE): void {
+    this.lotDetails.set(lot);
+  }
+
+  fermerDetails(): void {
+    this.lotDetails.set(null);
+  }
+
+  ouvrirBonEntree(lot: LotBE): void {
+    this.lotBonEntree.set(lot);
+  }
+
+  fermerBonEntree(): void {
+    this.lotBonEntree.set(null);
+  }
+
+  imprimerBon(): void {
+    window.print();
+  }
+
+  voirEnStock(sku: string): void {
+    this.router.navigate(['/stock/articles'], { queryParams: { sku, search: sku } });
+  }
+
+  voirTracabilite(numeroLot: string): void {
+    this.router.navigate(['/stock/lots/trace'], { queryParams: { lot: numeroLot } });
+  }
+
+  voirMouvements(numeroLot: string): void {
+    this.router.navigate(['/stock/mouvements'], { queryParams: { search: numeroLot } });
+  }
+
   exportLotsCsv(): void {
     const list = this.lotsFiltres();
     if (list.length === 0) {
       this.toast.warning('Aucun lot à exporter.', 'Export CSV');
       return;
     }
-    const headers = ['Numéro Lot', 'Produit', 'PPH/Réf', 'Qté Déclarée (Kg)', 'Date Création', 'Statut'];
+    const headers = ['Numéro Lot', 'Produit', 'SKU', 'PPH/Réf', 'Qté Déclarée (Kg)', 'Cartons Équivalents', 'Date Production', 'DLC', 'Chef Production', 'Statut'];
     const rows = list.map(l => [
       `"${l.numeroLot || ''}"`,
-      `"${l.productSku || l.productName || ''}"`,
+      `"${(l.productName || '').replace(/"/g, '""')}"`,
+      `"${l.productSku || ''}"`,
       `"${l.referencePPH || ''}"`,
       l.declaredQuantityKg ?? 0,
-      `"${l.createdAt ? l.createdAt.substring(0, 10) : ''}"`,
+      l.equivalentUnits ?? 0,
+      `"${l.dateProduction ? l.dateProduction.substring(0, 10) : ''}"`,
+      `"${l.dlc ? l.dlc.substring(0, 10) : ''}"`,
+      `"${l.matriculeChefProduction || ''}"`,
       `"${l.statut || ''}"`
     ]);
     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `lots_production_${new Date().toISOString().substring(0, 10)}.csv`);
+    link.setAttribute('download', `lots_production_stock_${new Date().toISOString().substring(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -163,7 +239,7 @@ export class StockLotsProductionComponent implements OnInit {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.showRejeter.set(null);
-        this.message.set('Lot rejeté');
+        this.message.set(`Lot ${l.numeroLot} rejeté.`);
         this.toast.warning(`Lot ${l.numeroLot} rejeté.`, 'Lot rejeté');
       },
       error: (err) => {
@@ -179,7 +255,15 @@ export class StockLotsProductionComponent implements OnInit {
   }
 
   private remplacerLot(l: LotBE): void {
-    this.lots.update(list => list.map(x => x.numeroLot === l.numeroLot ? l : x));
+    this.lots.update(list => {
+      const idx = list.findIndex(x => x.numeroLot === l.numeroLot);
+      if (idx >= 0) {
+        const copy = [...list];
+        copy[idx] = l;
+        return copy;
+      }
+      return [l, ...list];
+    });
   }
 
   pagePrecedente(): void {
@@ -195,18 +279,18 @@ export class StockLotsProductionComponent implements OnInit {
   }
 
   statutClass(s: string): string {
-    if (s === 'VALIDATED_BY_STOCK') return 'badge bg-success';
-    if (s === 'REJETE') return 'badge bg-red';
-    if (s === 'RECEPTIONNE_STOCK') return 'badge bg-neutral';
-    return 'badge bg-orange';
+    if (s === 'VALIDATED_BY_STOCK') return 'badge badge-success';
+    if (s === 'REJETE') return 'badge badge-danger';
+    if (s === 'RECEPTIONNE_STOCK') return 'badge badge-warning';
+    return 'badge badge-neutral';
   }
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {
       DECLARE: 'Déclaré Production',
-      RECEPTIONNE_STOCK: 'Réceptionné Stock',
-      VALIDATED_BY_STOCK: 'Validé Stock',
-      REJETE: 'Rejeté',
+      RECEPTIONNE_STOCK: 'En attente contrôle',
+      VALIDATED_BY_STOCK: 'Validé Stock Central',
+      REJETE: 'Rejeté non conforme',
     };
     return map[s] ?? s;
   }

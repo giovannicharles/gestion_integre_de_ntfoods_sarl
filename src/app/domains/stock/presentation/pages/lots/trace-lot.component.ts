@@ -1,6 +1,7 @@
-import { Component, inject, signal, ChangeDetectionStrategy} from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../../../../core/http/api.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
@@ -55,14 +56,25 @@ const LIBELLES_RELATION: Record<string, string> = {
   templateUrl: './trace-lot.component.html',
   styleUrls: ['./trace-lot.component.css'],
 })
-export class TraceLotComponent {
+export class TraceLotComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   numeroLot = '';
   loading = signal(false);
   error = signal<string | null>(null);
   recherchee = signal(false);
   trace = signal<TraceLotResponse | null>(null);
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['lot']) {
+        this.numeroLot = params['lot'];
+        this.tracer();
+      }
+    });
+  }
 
   libelleRelation(type: string): string {
     return LIBELLES_RELATION[type] ?? type;

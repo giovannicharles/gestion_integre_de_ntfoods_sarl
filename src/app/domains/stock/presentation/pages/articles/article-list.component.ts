@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject, AfterViewInit, ViewChild, ElementRef, OnDestroy, ChangeDetectionStrategy} from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { ApiService } from '../../../../../core/http/api.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
@@ -53,6 +54,8 @@ type AlertLevel = 'CRITIQUE' | 'FAIBLE' | 'NORMAL';
 export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('invMaterialChart') invMaterialCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('invQtyChart') invQtyCanvas!: ElementRef<HTMLCanvasElement>;
@@ -116,6 +119,17 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.newItem.updatedBy = this.auth.getCurrentUser()?.matricule || 'system';
+
+    this.route.queryParams.subscribe(params => {
+      if (params['search'] || params['sku']) {
+        const q = params['search'] || params['sku'];
+        this.search.set(q);
+      }
+      if (params['locationId']) {
+        this.selectedLocationId.set(params['locationId']);
+      }
+    });
+
     this.loadLocations();
     this.loadProducts();
   }
@@ -135,7 +149,10 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (data) => {
         this.locations.set(data || []);
         if (data && data.length > 0) {
-          this.selectedLocationId.set(data[0].id);
+          if (!this.selectedLocationId()) {
+            const central = data.find(l => l.type === 'STOCK_CENTRAL' || (l.name || '').toLowerCase().includes('central'));
+            this.selectedLocationId.set(central ? central.id : data[0].id);
+          }
           this.loadItems();
         } else {
           this.loading.set(false);
@@ -653,6 +670,23 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedLocationType(): string {
     const loc = this.locations().find(l => l.id === this.selectedLocationId());
     return loc?.type || '';
+  }
+
+  voirMouvements(item: StockItem): void {
+    this.router.navigate(['/stock/mouvements'], { queryParams: { search: item.productSku } });
+  }
+
+  voirLots(item: StockItem): void {
+    this.router.navigate(['/stock/lots-production'], { queryParams: { search: item.productSku } });
+  }
+
+  voirTrace(item: StockItem): void {
+    this.router.navigate(['/stock/lots/trace'], { queryParams: { sku: item.productSku } });
+  }
+
+  selectLocation(locId: string): void {
+    this.selectedLocationId.set(locId);
+    this.onLocationChange();
   }
 
   private showToast(msg: string, type: 'success' | 'error'): void {

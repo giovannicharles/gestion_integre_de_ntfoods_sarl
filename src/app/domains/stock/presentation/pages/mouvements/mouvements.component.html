@@ -42,11 +42,11 @@
   @if (!loading()) {
     <!-- KPI CARDS -->
     <div class="kpi-row">
-      <div class="kc kc-g"><i class="fa-solid fa-arrow-circle-down"></i><div><span>{{ count('RECEPTION_PRODUCTION') + count('RECEPTION_CONSOMMABLE') + count('RECEPTION_RAW_MATERIAL') + count('RECEPTION_MATERIEL') }}</span><span>Réceptions</span></div></div>
-      <div class="kc kc-t"><i class="fa-solid fa-boxes-stacked"></i><div><span>{{ count('TRANSFER_CENTRAL_TO_BUFFER') }}</span><span>Central → Tampon</span></div></div>
-      <div class="kc kc-b"><i class="fa-solid fa-truck"></i><div><span>{{ count('TRANSFER_BUFFER_TO_MOBILE') }}</span><span>Dotations</span></div></div>
-      <div class="kc kc-n"><i class="fa-solid fa-sliders"></i><div><span>{{ count('ADJUSTMENT') }}</span><span>Ajustements</span></div></div>
-      <div class="kc kc-r"><i class="fa-solid fa-triangle-exclamation"></i><div><span>{{ count('LOSS') + count('EXPIRATION') }}</span><span>Pertes / Expir.</span></div></div>
+      <div class="kc kc-g" style="cursor:pointer" (click)="setFilterType('RECEPTION_PRODUCTION')"><i class="fa-solid fa-arrow-circle-down"></i><div><span>{{ count('RECEPTION_PRODUCTION') + count('RECEPTION_CONSOMMABLE') + count('RECEPTION_RAW_MATERIAL') + count('RECEPTION_MATERIEL') }}</span><span>Réceptions</span></div></div>
+      <div class="kc kc-t" style="cursor:pointer" (click)="setFilterType('TRANSFER_CENTRAL_TO_BUFFER')"><i class="fa-solid fa-boxes-stacked"></i><div><span>{{ count('TRANSFER_CENTRAL_TO_BUFFER') }}</span><span>Central → Tampon</span></div></div>
+      <div class="kc kc-b" style="cursor:pointer" (click)="setFilterType('TRANSFER_BUFFER_TO_MOBILE')"><i class="fa-solid fa-truck"></i><div><span>{{ count('TRANSFER_BUFFER_TO_MOBILE') }}</span><span>Dotations</span></div></div>
+      <div class="kc kc-n" style="cursor:pointer" (click)="setFilterType('ADJUSTMENT')"><i class="fa-solid fa-sliders"></i><div><span>{{ count('ADJUSTMENT') }}</span><span>Ajustements</span></div></div>
+      <div class="kc kc-r" style="cursor:pointer" (click)="setFilterType('LOSS')"><i class="fa-solid fa-triangle-exclamation"></i><div><span>{{ count('LOSS') + count('EXPIRATION') }}</span><span>Pertes / Expir.</span></div></div>
       @if (pendingCount() > 0) {
         <div class="kc kc-w" style="cursor:pointer" (click)="filterStatus='PENDING';applyFilters()"><i class="fa-solid fa-hourglass-half"></i><div><span>{{ pendingCount() }}</span><span>En attente</span></div></div>
       }
@@ -90,13 +90,13 @@
           @for (m of paginated(); track m.id) {
             <tr class="table-row-anim">
               <td><div class="mov-type-cell"><div class="mov-ico {{ getColor(m.type) }}"><i class="fa-solid {{ getIcon(m.type) }}"></i></div><span class="mov-type-label">{{ getLabel(m.type) }}</span></div></td>
-              <td><div class="prod-cell"><span class="prod-name">{{ m.product?.designation || m.product?.sku || m.productSku || 'Produit #'+m.productId }}</span><span class="prod-sku">{{ m.productSku || m.product?.sku || '' }}</span></div></td>
+              <td><div class="prod-cell" style="cursor:pointer" (click)="voirArticle(m.productSku || m.product?.sku)" title="Voir l'article en stock"><span class="prod-name">{{ m.product?.designation || m.product?.sku || m.productSku || 'Produit #'+m.productId }}</span><span class="prod-sku">{{ m.productSku || m.product?.sku || '' }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65rem"></i></span></div></td>
               <td><span class="warehouse-chip">{{ m.warehouse?.name?.substring(0,14)||'-' }}</span></td>
               <td class="text-right"><span class="qty-before">{{ m.previousStock!=null ? (m.previousStock | number) : '-' }}</span></td>
               <td class="text-center"><span class="qty-movement" [class.qty-in]="isEntree(m.type)" [class.qty-out]="!isEntree(m.type)">{{ isEntree(m.type)?'+':'-' }}{{ m.quantity | number }}</span></td>
               <td class="text-right"><span class="qty-after">{{ m.newStock!=null ? (m.newStock | number) : '-' }}</span></td>
               <td><span class="badge {{ getStatusClass(m.status) }}">{{ getStatusLabel(m.status) }}</span></td>
-              <td><span class="ref-code">{{ m.referenceNumber||m.reference||'-' }}</span></td>
+              <td><span class="ref-code" style="cursor:pointer" (click)="voirTrace(m.referenceNumber||m.reference)" title="Tracer le lot/référence">{{ m.referenceNumber||m.reference||'-' }}</span></td>
               <td><div class="date-cell"><span class="date-main">{{ (m.requestedAt||m.createdAt) | date:'dd/MM/yyyy' }}</span><span class="date-time">{{ (m.requestedAt||m.createdAt) | date:'HH:mm' }}</span></div></td>
               <td>
                 @if (m.status === 'PENDING') {

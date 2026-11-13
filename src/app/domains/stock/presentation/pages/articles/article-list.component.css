@@ -23,6 +23,11 @@
 .loc-select { padding:8px 14px;border:1.5px solid var(--n200);border-radius:var(--r-md);font-size:13px;color:var(--n800);background:#fff;cursor:pointer;min-width:280px;outline:none; }
 .loc-select:focus { border-color:var(--b); }
 
+.loc-pills { display:flex;gap:6px;flex-wrap:wrap; }
+.loc-pill-btn { border:1.5px solid var(--n200);background:#fff;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;color:var(--n700);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s ease; }
+.loc-pill-btn:hover { border-color:var(--color-primary, #14532D);color:var(--color-primary, #14532D); }
+.loc-pill-btn.active { border-color:var(--color-primary, #14532D);background:var(--color-primary-light, #EAF2ED);color:var(--color-primary, #14532D);font-weight:700;box-shadow:0 1px 3px rgba(20,83,45,0.15); }
+
 /* ── KPI BAR ── */
 .kpi-bar { display:flex;align-items:center;padding:16px 24px;background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);box-shadow:var(--sh-sm);flex-wrap:wrap; }
 .kpi-item { display:flex;flex-direction:column;gap:2px;padding:6px 16px;border-radius:var(--r-md);transition:all .15s ease; }

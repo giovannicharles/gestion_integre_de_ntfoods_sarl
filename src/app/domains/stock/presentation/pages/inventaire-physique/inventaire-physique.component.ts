@@ -88,7 +88,10 @@ export class InventairePhysiqueComponent implements OnInit, OnDestroy {
       next: ({ inventories, locations }) => {
         this.inventories.set(inventories || []);
         this.locations.set(locations || []);
-        if (locations && locations.length > 0) this.selectedLocationId.set(locations[0].id);
+        if (locations && locations.length > 0) {
+          const central = locations.find(l => l.type === 'STOCK_CENTRAL' || (l.name || '').toLowerCase().includes('central'));
+          this.selectedLocationId.set(central ? central.id : locations[0].id);
+        }
         this.loading.set(false);
       },
       error: () => {
