@@ -343,11 +343,22 @@
             Cette action enregistre le mouvement d'entrée production, crédite les articles du Magasin Central,
             et génère le Bon d'Entrée Magasin officiel.
           </div>
+
+          @if (erreurAction()) {
+            <div class="alert alert-danger" style="margin-top:16px">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <strong>Erreur :</strong> {{ erreurAction() }}
+            </div>
+          }
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" (click)="annulerValidation()">Annuler</button>
-          <button class="btn btn-primary" (click)="confirmerValidationLot()">
-            <i class="fa-solid fa-check-double"></i> Certifier & Intégrer au Stock Central
+          <button class="btn btn-ghost" [disabled]="validatingLot() !== null" (click)="annulerValidation()">Annuler</button>
+          <button class="btn btn-primary" [disabled]="validatingLot() !== null" (click)="confirmerValidationLot()">
+            @if (validatingLot() === lot.numeroLot) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Certification & Entrée en cours...
+            } @else {
+              <i class="fa-solid fa-check-double"></i> Certifier & Intégrer au Stock Central
+            }
           </button>
         </div>
       </div>

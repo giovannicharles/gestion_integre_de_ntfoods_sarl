@@ -34,6 +34,7 @@ export class StockLotsProductionComponent implements OnInit {
   lotsAValider = signal<LotBE[]>([]);
   showRejeter = signal<LotBE | null>(null);
   lotAConfirmer = signal<LotBE | null>(null);
+  validatingLot = signal<string | null>(null);
   lotDetails = signal<LotBE | null>(null);
   lotBonEntree = signal<LotBE | null>(null);
   dernierLotValide = signal<LotBE | null>(null);
@@ -140,18 +141,23 @@ export class StockLotsProductionComponent implements OnInit {
   confirmerValidationLot(): void {
     const lot = this.lotAConfirmer();
     if (!lot) return;
-    this.lotAConfirmer.set(null);
+    this.validatingLot.set(lot.numeroLot);
     this.erreurAction.set(null);
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
+        this.validatingLot.set(null);
+        this.lotAConfirmer.set(null);
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.dernierLotValide.set(l);
         const msg = `Lot ${l.numeroLot} validé avec succès et intégré au Stock Central.`;
         this.message.set(msg);
         this.toast.success(msg, 'Validation Stock Central');
+        this.chargerLots();
+        this.chargerLotsAValider();
       },
       error: (err) => {
+        this.validatingLot.set(null);
         const msg = extractApiError(err);
         this.erreurAction.set(msg);
         this.toast.error(msg, 'Échec validation lot');
