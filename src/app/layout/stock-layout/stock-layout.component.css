@@ -1042,42 +1042,153 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 280px !important;
-    min-width: 280px !important;
+    width: 284px !important;
+    min-width: 284px !important;
     transform: translateX(-100%);
-    z-index: 200;
+    z-index: 300;
+    box-shadow: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .layout-root.mobile-open .sidebar {
     transform: translateX(0) !important;
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6) !important;
   }
-  .layout-root.mobile-open .brand-texts,
-  .layout-root.mobile-open .sb-user-info,
-  .layout-root.mobile-open .sb-section-lbl,
-  .layout-root.mobile-open .sb-lbl,
-  .layout-root.mobile-open .sb-badge,
-  .layout-root.mobile-open .sb-version,
-  .layout-root.mobile-open .sb-group-arrow {
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 58, 30, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 280;
+  }
+  .layout-root.mobile-open .brand-texts {
+    display: flex !important;
+    flex-direction: column !important;
     opacity: 1 !important;
-    pointer-events: auto !important;
+    visibility: visible !important;
     width: auto !important;
     height: auto !important;
-    margin: initial !important;
-    padding: initial !important;
-    overflow: visible !important;
+  }
+  .layout-root.mobile-open .brand-name {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: var(--g-d) !important;
+  }
+  .layout-root.mobile-open .brand-sub {
+    display: block !important;
+    opacity: 0.9 !important;
+    visibility: visible !important;
+    font-size: 9px !important;
+    color: var(--g) !important;
+    font-weight: 700 !important;
+  }
+  .layout-root.mobile-open .sb-user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .layout-root.mobile-open .sb-name {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+  }
+  .layout-root.mobile-open .sb-role {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 11px !important;
+    color: var(--y) !important;
+  }
+  .layout-root.mobile-open .sb-section-lbl {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto !important;
+    padding: 10px 10px 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: var(--y) !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+  }
+  .layout-root.mobile-open .sb-lbl {
     display: inline-block !important;
+    flex: 1 1 auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .layout-root.mobile-open .sb-item.sb-active .sb-lbl {
+    color: var(--g-d) !important;
+    font-weight: 800 !important;
+  }
+  .layout-root.mobile-open .sb-badge {
+    display: inline-flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 2px 7px !important;
+  }
+  .layout-root.mobile-open .sb-version {
+    display: block !important;
+    opacity: 1 !important;
     visibility: visible !important;
   }
+  .layout-root.mobile-open .sb-group-arrow {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: auto !important;
+    height: auto !important;
+  }
   .layout-root.mobile-open .sb-item {
+    display: flex !important;
+    align-items: center !important;
     justify-content: flex-start !important;
+    gap: 10px !important;
     padding: 10px 14px !important;
+    width: 100% !important;
+    border-radius: 8px !important;
   }
   .layout-root.mobile-open .brand-content {
     display: flex !important;
+    align-items: center !important;
   }
   .layout-root.mobile-open .sb-user {
+    display: flex !important;
+    align-items: center !important;
     justify-content: flex-start !important;
     padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+  .layout-root.mobile-open app-sidebar-search {
+    display: block !important;
+    padding: 8px 10px !important;
   }
   .tb-module-chip { display: none; }
   .tb-sep-icon { display: none; }

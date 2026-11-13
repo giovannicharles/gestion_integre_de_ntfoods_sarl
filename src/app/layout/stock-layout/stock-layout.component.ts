@@ -269,14 +269,14 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    if (window.innerWidth <= 768) this.sidebarOpen.set(false);
+    if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.loadSidebarBadges();
     this.badgePollTimer = setInterval(() => this.loadSidebarBadges(), 30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const cur = this.filteredNav().find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth <= 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
   }
 
@@ -415,11 +415,11 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
   @HostListener('window:resize', ['$event'])
   onResize(e: Event) {
     const w = (e.target as Window).innerWidth;
-    if (w <= 768) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); this.sidebarOpen.set(true); }
+    if (w <= 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); this.sidebarOpen.set(true); }
   }
 
   toggleSidebar() {
-    if (window.innerWidth <= 768) this.mobileOpen.update(v => !v);
+    if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v);
     else this.sidebarOpen.update(v => !v);
   }
 

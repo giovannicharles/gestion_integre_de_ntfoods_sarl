@@ -118,13 +118,13 @@ export class ControleLayoutComponent implements OnInit {
   ]);
 
   ngOnInit() {
-    if (window.innerWidth < 768) this.sidebarOpen.set(false);
+    if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];
       const cur = allItems.find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);
-      if (window.innerWidth <= 768) this.mobileOpen.set(false);
+      if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
     // 2026-11-02 : les badges "Décaissements"/"Budget & Achats" étaient des littéraux fixes
@@ -157,11 +157,11 @@ export class ControleLayoutComponent implements OnInit {
   @HostListener('window:resize', ['$event'])
   onResize(e: Event) {
     const w = (e.target as Window).innerWidth;
-    if (w < 768) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); }
+    if (w <= 1024) { this.sidebarOpen.set(false); } else { this.mobileOpen.set(false); this.sidebarOpen.set(true); }
   }
 
   toggleSidebar() {
-    if (window.innerWidth <= 768) this.mobileOpen.update(v => !v);
+    if (window.innerWidth <= 1024) this.mobileOpen.update(v => !v);
     else this.sidebarOpen.update(v => !v);
   }
   closeMobile() { this.mobileOpen.set(false); }
