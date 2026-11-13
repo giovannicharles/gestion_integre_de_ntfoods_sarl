@@ -1,89 +1,175 @@
-<div class="page">
-  <header class="page-header">
-    <h1>Paramètres système</h1>
-    <p class="subtitle">Configuration technique de la plateforme, distinct des paramètres métier (module Administration).</p>
-    <button class="btn-primary" (click)="afficherFormCreation.set(!afficherFormCreation())">
-      {{ afficherFormCreation() ? 'Annuler' : 'Nouveau paramètre' }}
-    </button>
-  </header>
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-gears"></i></div>
+      <div>
+        <h1 class="ph-title">Paramètres Système &amp; Variables Techniques</h1>
+        <p class="ph-sub">Configuration d'infrastructure, seuils applicatifs, politique de session et timeouts</p>
+      </div>
+    </div>
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="charger()" title="Actualiser les paramètres">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-primary" (click)="afficherFormCreation.set(!afficherFormCreation())" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
+        <i class="fa-solid fa-plus"></i> {{ afficherFormCreation() ? 'Fermer' : 'Nouveau paramètre' }}
+      </button>
+    </div>
+  </div>
 
   @if (succes()) {
-    <div class="alert alert-success">{{ succes() }}</div>
+    <div class="alert alert-success" style="margin-bottom:16px"><i class="fa-solid fa-circle-check"></i> {{ succes() }}</div>
   }
   @if (erreur()) {
-    <div class="alert alert-error">{{ erreur() }}</div>
+    <div class="alert alert-error" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div>
   }
 
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-sliders"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Total Paramètres</div>
+        <div class="kpi-val">{{ parametres().length }}</div>
+        <div class="kpi-meta">variables système</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-layer-group"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Groupes</div>
+        <div class="kpi-val">{{ groupesDisponibles().length - 1 }}</div>
+        <div class="kpi-meta">domaines techniques</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Modifiables</div>
+        <div class="kpi-val">100%</div>
+        <div class="kpi-meta">à chaud sans reboot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMULAIRE CRÉATION -->
   @if (afficherFormCreation()) {
-    <form class="form-creation" (ngSubmit)="creer()">
-      <div class="form-row">
-        <label>Code
-          <input name="code" [(ngModel)]="formCreation.code" required maxlength="100" placeholder="EX: MAX_LOGIN_ATTEMPTS" />
-        </label>
-        <label>Nom
-          <input name="nom" [(ngModel)]="formCreation.nom" required maxlength="200" />
-        </label>
+    <div class="card mb-sp4" style="background:var(--n50);border:1.5px solid var(--n300);margin-bottom:16px">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-plus-circle"></i> Définir une nouvelle variable système</span>
       </div>
-      <div class="form-row">
-        <label>Valeur
-          <input name="valeur" [(ngModel)]="formCreation.valeur" required />
-        </label>
-        <label>Type
-          <select name="typeValeur" [(ngModel)]="formCreation.typeValeur">
-            <option value="STRING">STRING</option>
-            <option value="INTEGER">INTEGER</option>
-            <option value="BOOLEAN">BOOLEAN</option>
-            <option value="JSON">JSON</option>
-            <option value="DURATION">DURATION</option>
-          </select>
-        </label>
-        <label>Groupe
-          <input name="groupe" [(ngModel)]="formCreation.groupe" placeholder="AUTH, SECURITY, SYSTEME..." />
-        </label>
-      </div>
-      <div class="form-row">
-        <label>Description
-          <input name="description" [(ngModel)]="formCreation.description" />
-        </label>
-      </div>
-      <button type="submit" class="btn-primary">Créer</button>
-    </form>
-  }
-
-  @if (loading()) {
-    <p>Chargement...</p>
-  } @else {
-    <div class="tbl-wrap">
-    <table class="table-parametres">
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Nom</th>
-          <th>Groupe</th>
-          <th>Valeur</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of parametres(); track p.code) {
-          <tr>
-            <td>{{ p.code }}</td>
-            <td>{{ p.nom }}</td>
-            <td>{{ p.groupe }}</td>
-            <td>
-              <input [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
-            </td>
-            <td class="actions" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
-              <button class="btn-small" [disabled]="!p.modifiable" (click)="sauvegarderValeur(p)">Enregistrer</button>
-              <button class="btn-small" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)">Réinitialiser</button>
-              <button class="btn-small btn-danger" (click)="desactiver(p)">Désactiver</button>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="5">Aucun paramètre système.</td></tr>
-        }
-      </tbody>
-    </table>
+      <form class="form-creation" (ngSubmit)="creer()" style="padding:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:4px">Code technique * :</label>
+            <input class="form-control" name="code" [(ngModel)]="formCreation.code" required maxlength="100" placeholder="EX: AUTH_MAX_FAILED_ATTEMPTS" />
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:4px">Désignation / Nom * :</label>
+            <input class="form-control" name="nom" [(ngModel)]="formCreation.nom" required maxlength="200" placeholder="Nombre max de tentatives avant verrouillage" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:12px">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:4px">Valeur par défaut * :</label>
+            <input class="form-control" name="valeur" [(ngModel)]="formCreation.valeur" required />
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:4px">Type :</label>
+            <select class="form-control" name="typeValeur" [(ngModel)]="formCreation.typeValeur">
+              <option value="STRING">STRING</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="BOOLEAN">BOOLEAN</option>
+              <option value="JSON">JSON</option>
+              <option value="DURATION">DURATION</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:4px">Groupe :</label>
+            <input class="form-control" name="groupe" [(ngModel)]="formCreation.groupe" placeholder="SECURITY, SYSTEME..." />
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-weight:600;margin-bottom:4px">Description :</label>
+          <input class="form-control" name="description" [(ngModel)]="formCreation.description" placeholder="Impact sur l'architecture et les opérations" />
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button type="button" class="btn btn-ghost" (click)="afficherFormCreation.set(false)">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!formCreation.code.trim() || !formCreation.valeur.trim()">
+            <i class="fa-solid fa-check"></i> Créer le paramètre
+          </button>
+        </div>
+      </form>
     </div>
   }
+
+  <!-- TABLE DES PARAMÈTRES -->
+  <div class="card table-card">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fa-solid fa-list"></i> Variables Actives</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="text" class="form-control" style="max-width:240px;font-size:12px" placeholder="Rechercher code, nom, groupe..."
+               [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+        <label style="font-size:12px">Groupe :</label>
+        <select class="form-control" style="max-width:180px;font-size:12px" [ngModel]="filtreGroupe()" (ngModelChange)="filtreGroupe.set($event)">
+          @for (g of groupesDisponibles(); track g) {
+            <option [value]="g">{{ g }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state" style="padding:32px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des paramètres...</div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Nom &amp; Description</th>
+              <th>Groupe</th>
+              <th>Valeur en production</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of parametresFiltres(); track p.code) {
+              <tr>
+                <td><span class="mono fw-bold" style="color:var(--g-d)">{{ p.code }}</span></td>
+                <td>
+                  <div style="font-weight:600">{{ p.nom }}</div>
+                  @if (p.description) {
+                    <div class="text-muted" style="font-size:11.5px">{{ p.description }}</div>
+                  }
+                </td>
+                <td><span class="badge bg-neutral">{{ p.groupe || 'GÉNÉRAL' }}</span></td>
+                <td style="min-width:180px">
+                  <input class="form-control" style="font-size:12.5px;padding:4px 8px;font-family:monospace"
+                         [(ngModel)]="editValeurs[p.code]" [disabled]="!p.modifiable" (keydown.enter)="sauvegarderValeur(p)" />
+                </td>
+                <td class="actions" style="white-space:nowrap" *appCan="['DIRECTEUR_GENERAL', 'ADMIN']">
+                  <button class="btn btn-sm btn-primary" [disabled]="!p.modifiable || editValeurs[p.code] === p.valeur" (click)="sauvegarderValeur(p)" title="Enregistrer la modification">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                  </button>
+                  <button class="btn btn-sm btn-ghost" [disabled]="!p.modifiable || !p.valeurParDefaut" (click)="reinitialiser(p)" title="Réinitialiser par défaut">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                  </button>
+                  <button class="btn btn-sm btn-ghost-red" (click)="desactiver(p)" title="Désactiver">
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="rpt-empty" style="text-align:center;padding:24px"><i class="fa-solid fa-inbox"></i> Aucun paramètre système trouvé.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
+        {{ parametresFiltres().length }} paramètre(s) affiché(s)
+      </div>
+    }
+  </div>
 </div>

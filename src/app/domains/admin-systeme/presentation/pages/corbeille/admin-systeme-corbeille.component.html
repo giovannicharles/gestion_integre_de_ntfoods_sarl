@@ -1,52 +1,113 @@
-<div class="page">
-  <header class="page-header">
-    <h1>Corbeille</h1>
-    <p class="subtitle">Enregistrements supprimés logiquement, tous modules confondus. La restauration doit être approuvée par un DG, un Contrôleur général ou un Admin.</p>
-  </header>
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-trash-can"></i></div>
+      <div>
+        <h1 class="ph-title">Corbeille Système &amp; Rétention</h1>
+        <p class="ph-sub">Registre des suppressions logiques transversales et workflow de restauration à double approbation</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost" (click)="charger()" title="Actualiser la corbeille">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+    </div>
+  </div>
 
   @if (succes()) {
-    <div class="alert alert-success">{{ succes() }}</div>
+    <div class="alert alert-success" style="margin-bottom:16px"><i class="fa-solid fa-circle-check"></i> {{ succes() }}</div>
   }
   @if (erreur()) {
-    <div class="alert alert-error">{{ erreur() }}</div>
+    <div class="alert alert-error" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div>
   }
 
-  @if (loading()) {
-    <p>Chargement...</p>
-  } @else {
-    <div class="tbl-wrap">
-    <table class="table-corbeille">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Référence</th>
-          <th>Libellé</th>
-          <th>Supprimé le</th>
-          <th>Par</th>
-          <th>Motif de restauration</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (e of elements(); track cle(e)) {
-          <tr>
-            <td>{{ e.typeEntite }}</td>
-            <td>{{ e.reference }}</td>
-            <td>{{ e.libelle }}</td>
-            <td>{{ e.dateSuppression | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ e.supprimePar }}</td>
-            <td>
-              <input [(ngModel)]="motifParElement[cle(e)]" placeholder="Motif obligatoire" />
-            </td>
-            <td>
-              <button class="btn-small" (click)="demanderRestauration(e)">Demander la restauration</button>
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7">La corbeille est vide.</td></tr>
-        }
-      </tbody>
-    </table>
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-trash"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Éléments en Corbeille</div>
+        <div class="kpi-val">{{ elements().length }}</div>
+        <div class="kpi-meta">toutes entités</div>
+      </div>
     </div>
-  }
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-layer-group"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Types d'Objets</div>
+        <div class="kpi-val">{{ typesDisponibles().length - 1 }}</div>
+        <div class="kpi-meta">tables impactées</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Protection Rétention</div>
+        <div class="kpi-val">100%</div>
+        <div class="kpi-meta">restauration sécurisée</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card table-card">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fa-solid fa-list"></i> Éléments Supprimés</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="text" class="form-control" style="max-width:240px;font-size:12px" placeholder="Rechercher réf, libellé, auteur..."
+               [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+        <label style="font-size:12px">Type :</label>
+        <select class="form-control" style="max-width:180px;font-size:12px" [ngModel]="filtreType()" (ngModelChange)="filtreType.set($event)">
+          @for (t of typesDisponibles(); track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state" style="padding:32px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement de la corbeille...</div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Type d'Entité</th>
+              <th>Référence</th>
+              <th>Désignation / Libellé</th>
+              <th>Supprimé le</th>
+              <th>Auteur</th>
+              <th>Motif de Restauration</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of elementsFiltres(); track cle(e)) {
+              <tr>
+                <td><span class="badge bg-neutral">{{ e.typeEntite }}</span></td>
+                <td><span class="mono fw-bold" style="color:var(--g-d)">{{ e.reference }}</span></td>
+                <td><strong>{{ e.libelle }}</strong></td>
+                <td class="text-muted" style="font-size:12px">{{ e.dateSuppression | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td><span class="badge bg-neutral">{{ e.supprimePar }}</span></td>
+                <td>
+                  <input class="form-control" style="font-size:12px;padding:4px 8px" [(ngModel)]="motifParElement[cle(e)]" placeholder="Motif obligatoire pour validation" />
+                </td>
+                <td style="text-align:right">
+                  <button class="btn btn-sm btn-outline" (click)="demanderRestauration(e)" [disabled]="!motifParElement[cle(e)]" title="Créer une demande de restauration">
+                    <i class="fa-solid fa-rotate-left"></i> Restaurer
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="rpt-empty" style="text-align:center;padding:24px"><i class="fa-solid fa-inbox"></i> Aucun élément dans la corbeille.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
+        {{ elementsFiltres().length }} élément(s) affiché(s)
+      </div>
+    }
+  </div>
 </div>

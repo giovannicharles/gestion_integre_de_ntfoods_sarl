@@ -48,6 +48,7 @@ export class AdminUtilisateursComponent implements OnInit {
 
   users = signal<UserUI[]>([]);
   filtreRole = signal<string>('TOUS');
+  filtreStatut = signal<'TOUS' | 'ACTIFS' | 'INACTIFS' | 'BLOQUES' | 'SESSIONS_ACTIVES'>('TOUS');
   filtreTexte = signal<string>('');
   /** Deux modes d'affichage de la même liste, demande explicite du porteur (2026-10-25). */
   vueAffichage = signal<'table' | 'cartes'>('table');
@@ -85,8 +86,20 @@ export class AdminUtilisateursComponent implements OnInit {
 
   usersFiltres = computed(() => {
     const r = this.filtreRole();
+    const st = this.filtreStatut();
     const t = this.filtreTexte().trim().toLowerCase();
     let list = r === 'TOUS' ? this.users() : this.users().filter(u => u.role === r);
+
+    if (st === 'ACTIFS') {
+      list = list.filter(u => u.actif && !u.compteBloque);
+    } else if (st === 'INACTIFS') {
+      list = list.filter(u => !u.actif);
+    } else if (st === 'BLOQUES') {
+      list = list.filter(u => u.compteBloque);
+    } else if (st === 'SESSIONS_ACTIVES') {
+      list = list.filter(u => u.sessionActive);
+    }
+
     if (t) {
       list = list.filter(u =>
         u.matricule.toLowerCase().includes(t) || u.nom.toLowerCase().includes(t) || u.email.toLowerCase().includes(t)
@@ -94,6 +107,68 @@ export class AdminUtilisateursComponent implements OnInit {
     }
     return list;
   });
+
+  setFiltreStatut(st: 'TOUS' | 'ACTIFS' | 'INACTIFS' | 'BLOQUES' | 'SESSIONS_ACTIVES'): void {
+    if (this.filtreStatut() === st && st !== 'TOUS') {
+      this.filtreStatut.set('TOUS');
+    } else {
+      this.filtreStatut.set(st);
+    }
+  }
+
+  genererMotDePasse(target: 'creation' | 'reset'): void {
+    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!#@$%';
+    let pwd = 'Tty!';
+    for (let i = 0; i < 8; i++) {
+      pwd += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    if (target === 'creation') {
+      this.form.motDePasse = pwd;
+    } else {
+      this.nouveauMotDePasse = pwd;
+    }
+    this.toast.info('Mot de passe temporaire fort généré : ' + pwd);
+  }
+
+  copierPressePapier(texte: string, label: string = 'Information'): void {
+    if (!texte) return;
+    navigator.clipboard.writeText(texte).then(() => {
+      this.toast.success(`${label} copié dans le presse-papier.`);
+    }).catch(() => {
+      this.toast.info(`Sélectionnez et copiez : ${texte}`);
+    });
+  }
+
+  exporterCsv(): void {
+    const list = this.usersFiltres();
+    if (!list.length) {
+      this.toast.info('Aucun utilisateur à exporter.');
+      return;
+    }
+    const headers = ['Matricule', 'Nom Complet', 'Email', 'Role', 'Statut', 'Compte Bloque', 'Session Active', 'Date Creation'];
+    const rows = list.map(u => [
+      `"${u.matricule}"`,
+      `"${u.nom.replace(/"/g, '""')}"`,
+      `"${u.email}"`,
+      `"${this.getRoleLabel(u.role)}"`,
+      u.actif ? 'Actif' : 'Inactif',
+      u.compteBloque ? 'Oui' : 'Non',
+      u.sessionActive ? 'Oui' : 'Non',
+      u.dateCreation ? new Date(u.dateCreation).toLocaleDateString('fr-FR') : ''
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `utilisateurs_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} utilisateur(s) exporté(s) avec succès.`);
+  }
 
   nbActifs   = computed(() => this.users().filter(u => u.actif).length);
   nbInactifs = computed(() => this.users().filter(u => !u.actif).length);

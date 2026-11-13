@@ -2,48 +2,87 @@
   <div class="ph-left">
     <i class="fa-solid fa-scroll ph-ico"></i>
     <div>
-      <h1 class="ph-title">Audit Trail</h1>
-      <p class="ph-sub">Journal de toutes les actions système</p>
+      <h1 class="ph-title">Piste d'Audit & Sécurité (Audit Trail)</h1>
+      <p class="ph-sub">Journal certifié et immuable de l'ensemble des opérations du progiciel NTFOODS</p>
     </div>
   </div>
   <div class="ph-actions">
-    <button class="btn btn-ghost btn-sm">
+    <div class="periode-pills">
+      <button class="btn btn-sm" [class.btn-primary]="filtrePeriode() === '24H'" [class.btn-ghost]="filtrePeriode() !== '24H'" (click)="changerPeriode('24H')">24h</button>
+      <button class="btn btn-sm" [class.btn-primary]="filtrePeriode() === '7J'" [class.btn-ghost]="filtrePeriode() !== '7J'" (click)="changerPeriode('7J')">7 jours</button>
+      <button class="btn btn-sm" [class.btn-primary]="filtrePeriode() === '30J'" [class.btn-ghost]="filtrePeriode() !== '30J'" (click)="changerPeriode('30J')">30 jours</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser le journal">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <button class="btn btn-ghost btn-sm" (click)="exporterCsv()" title="Télécharger l'audit au format CSV">
       <i class="fa-solid fa-download"></i> Exporter CSV
     </button>
   </div>
 </div>
 
+<!-- ANOMALIES & ACTIVITÉS SUSPECTES SI DÉTECTÉES -->
+@if (activitesSuspectes().length > 0) {
+  <div class="card" style="margin-bottom:16px;border-left:4px solid var(--r);background:#fff1f2">
+    <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+      <i class="fa-solid fa-shield-virus" style="font-size:24px;color:var(--r)"></i>
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--r);font-size:13.5px">Détection d'anomalies de sécurité (24h)</div>
+        <div style="font-size:12px;color:#9f1239">
+          @for (s of activitesSuspectes(); track s.matricule + s.ressource) {
+            <span style="display:inline-block;margin-right:12px">
+              <strong>{{ s.matricule }}</strong> : {{ s.occurrences }} tentatives répétées sur <em>{{ s.ressource }}</em>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- KPIs INTERACTIFS -->
 <div class="kpi-grid">
-  <div class="kpi-card kp-b">
+  <div class="kpi-card kp-b" [class.kpi-active-filter]="filtreNiveau() === 'TOUS'" (click)="setFiltreNiveau('TOUS')" title="Cliquer pour afficher tous les événements" style="cursor:pointer">
     <div class="kpi-ico ib"><i class="fa-solid fa-list"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Total événements</div>
-      <div class="kpi-val">{{ auditLog().length }}</div>
-      <div class="kpi-meta">depuis aujourd'hui</div>
+      <div class="kpi-val">{{ nbTotal() }}</div>
+      <div class="kpi-meta">période : {{ filtrePeriode() }}</div>
     </div>
   </div>
-  <div class="kpi-card kp-r">
+  <div class="kpi-card kp-r" [class.kpi-active-filter]="filtreNiveau() === 'ALERTE'" (click)="setFiltreNiveau('ALERTE')" title="Cliquer pour filtrer les alertes et échecs" style="cursor:pointer">
     <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
     <div class="kpi-body">
-      <div class="kpi-lbl">Alertes</div>
+      <div class="kpi-lbl">Alertes & Échecs</div>
       <div class="kpi-val">{{ nbAlertes() }}</div>
-      <div class="kpi-meta">actions critiques</div>
+      <div class="kpi-meta">actions critiques & suspensions</div>
     </div>
   </div>
-  <div class="kpi-card kp-y">
+  <div class="kpi-card kp-y" [class.kpi-active-filter]="filtreNiveau() === 'IMPORTANT'" (click)="setFiltreNiveau('IMPORTANT')" title="Cliquer pour filtrer les opérations clés" style="cursor:pointer">
     <div class="kpi-ico iy"><i class="fa-solid fa-exclamation-circle"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Importants</div>
       <div class="kpi-val">{{ nbImportants() }}</div>
-      <div class="kpi-meta">à surveiller</div>
+      <div class="kpi-meta">créations, modifications, validations</div>
     </div>
   </div>
 </div>
 
+<!-- TABLE ET FILTRES -->
 <div class="card">
   <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-filter"></i> Journal d'Audit</h2>
-    <div class="filter-row">
+    <h2 class="card-title"><i class="fa-solid fa-filter"></i> Événements Enregistrés</h2>
+    <div class="filter-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input type="text" class="form-select-sm search-input" placeholder="Rechercher (matricule, détails, IP, code)..."
+             [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)" style="min-width:240px">
+      
+      <label>Module :</label>
+      <select [ngModel]="filtreModule()" (ngModelChange)="filtreModule.set($event)" class="form-select-sm">
+        @for (m of modules; track m) {
+          <option [value]="m">{{ m }}</option>
+        }
+      </select>
+
       <label>Niveau :</label>
       <div class="niveau-btns">
         @for (n of niveaux; track n) {
@@ -58,6 +97,7 @@
       </div>
     </div>
   </div>
+
   <div class="tbl-wrap">
     <table class="data-table">
       <thead>
@@ -65,28 +105,98 @@
           <th>Horodatage</th>
           <th>Utilisateur</th>
           <th>Rôle</th>
+          <th>Module</th>
           <th>Action</th>
-          <th>Détails</th>
+          <th>Détails & Ressource</th>
           <th>IP</th>
           <th>Niveau</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        @for (log of logsFiltres(); track log.id) {
-          <tr [class]="!log.succes ? 'row-alerte' : niveauDe(log.typeAction) === 'IMPORTANT' ? 'row-important' : ''">
-            <td><span class="ts-cell">{{ log.horodatage | date:'dd/MM HH:mm:ss' }}</span></td>
-            <td><strong>{{ log.matricule }}</strong></td>
-            <td><span class="badge bg-neutral">{{ log.role }}</span></td>
-            <td><code class="action-code">{{ log.typeAction }}</code></td>
-            <td class="details-cell">{{ log.details }}</td>
-            <td><span class="ip-code">{{ log.adresseIp }}</span></td>
-            <td><span [class]="niveauClass(niveauDe(log.typeAction))">{{ niveauDe(log.typeAction) }}</span></td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune entrée d'audit pour ces filtres</td></tr>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr><td colspan="9" style="text-align:center;padding:16px"><div class="sk-shimmer" style="height:18px;border-radius:4px"></div></td></tr>
+          }
+        } @else {
+          @for (log of logsFiltres(); track log.id) {
+            <tr [class]="!log.succes ? 'row-alerte' : niveauDe(log.typeAction) === 'IMPORTANT' ? 'row-important' : ''" (click)="ouvrirDetails(log)" style="cursor:pointer">
+              <td><span class="ts-cell">{{ log.horodatage | date:'dd/MM HH:mm:ss' }}</span></td>
+              <td><strong>{{ log.matricule }}</strong></td>
+              <td><span class="badge bg-neutral">{{ log.role }}</span></td>
+              <td><span class="badge bg-success" style="font-size:10.5px">{{ log.module }}</span></td>
+              <td><code class="action-code">{{ log.typeAction }}</code></td>
+              <td class="details-cell">
+                <span *ngIf="log.referenceEntite" class="mono" style="font-size:11px;color:var(--g);font-weight:700">[{{ log.referenceEntite }}] </span>
+                {{ log.details }}
+              </td>
+              <td><span class="ip-code">{{ log.adresseIp }}</span></td>
+              <td>
+                @if (!log.succes) {
+                  <span class="badge bg-red"><i class="fa-solid fa-xmark"></i> Échec</span>
+                } @else {
+                  <span [class]="niveauClass(niveauDe(log.typeAction))">{{ niveauDe(log.typeAction) }}</span>
+                }
+              </td>
+              <td style="text-align:right" (click)="$event.stopPropagation()">
+                <button class="btn btn-xs btn-ghost" (click)="ouvrirDetails(log)" title="Voir l'inspection technique">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="9" class="rpt-empty"><i class="fa-solid fa-inbox"></i> Aucune entrée d'audit pour ces filtres</td></tr>
+          }
         }
       </tbody>
     </table>
   </div>
-  <div class="table-footer">{{ logsFiltres().length }} entrées affichées</div>
+  <div class="table-footer">{{ logsFiltres().length }} événement(s) affiché(s) sur {{ nbTotal() }}</div>
 </div>
+
+<!-- MODAL DÉTAILS ÉVÉNEMENT D'AUDIT -->
+@if (selectedLog(); as log) {
+  <div class="modal-overlay" (click)="fermerDetails()">
+    <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:680px">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-shield-halved" style="color:var(--g);font-size:20px"></i>
+          <div>
+            <h3 style="margin:0;font-size:16px">Détail de l'Événement d'Audit #{{ log.id }}</h3>
+            <span style="font-size:12px;color:var(--n500)">{{ log.horodatage | date:'EEEE dd MMMM yyyy HH:mm:ss' }}</span>
+          </div>
+        </div>
+        <button class="modal-close" (click)="fermerDetails()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body" style="padding:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div><strong style="font-size:12px;color:var(--n500)">Matricule :</strong> <div style="font-size:14px;font-weight:700">{{ log.matricule }}</div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Rôle :</strong> <div><span class="badge bg-neutral">{{ log.role }}</span></div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Action :</strong> <div><code class="action-code">{{ log.typeAction }}</code></div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Module :</strong> <div><span class="badge bg-success">{{ log.module }}</span></div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Ressource / Réf :</strong> <div class="mono">{{ log.ressource }} {{ log.referenceEntite ? '— ' + log.referenceEntite : '' }}</div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Adresse IP :</strong> <div class="mono">{{ log.adresseIp }}</div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Appel API :</strong> <div class="mono" style="font-size:11.5px">{{ log.methodeHttp }} {{ log.endpoint }}</div></div>
+          <div><strong style="font-size:12px;color:var(--n500)">Temps d'exécution :</strong> <div class="mono">{{ log.dureeMs || 0 }} ms</div></div>
+        </div>
+
+        <div style="background:var(--n50);padding:14px;border-radius:8px;border:1px solid var(--n200);margin-bottom:12px">
+          <strong style="font-size:12px;color:var(--n700);display:block;margin-bottom:6px">Détails de l'opération :</strong>
+          <div style="font-size:13px;line-height:1.5;color:var(--n900)">{{ log.details }}</div>
+        </div>
+
+        @if (!log.succes) {
+          <div style="background:#fee2e2;padding:12px;border-radius:8px;border:1px solid #f87171;color:#991b1b;font-size:12.5px">
+            <strong><i class="fa-solid fa-triangle-exclamation"></i> Motif d'échec :</strong>
+            <div style="margin-top:4px">{{ log.messageErreur || 'Action refusée ou erreur interne.' }}</div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end">
+        <button class="btn btn-secondary" (click)="fermerDetails()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}

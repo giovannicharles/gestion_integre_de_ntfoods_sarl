@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSystemeService, SauvegardeBE } from '../../../infrastructure/admin-systeme.service';
@@ -23,6 +23,15 @@ export class AdminSystemeSauvegardesComponent implements OnInit {
   declenchementEnCours = signal(false);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
+  showConfirmModal = signal(false);
+
+  nbTotal = computed(() => this.sauvegardes().length);
+  nbReussies = computed(() => this.sauvegardes().filter(s => s.statut === 'REUSSIE').length);
+  nbEchecs = computed(() => this.sauvegardes().filter(s => s.statut === 'ECHEC').length);
+  derniereTaille = computed(() => {
+    const s = this.sauvegardes().find(x => x.tailleOctets);
+    return s?.tailleOctets ? (s.tailleOctets / (1024 * 1024)).toFixed(1) + ' Mo' : '-';
+  });
 
   formPlanification = {
     actif: true,

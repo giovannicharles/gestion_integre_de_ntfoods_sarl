@@ -8,7 +8,10 @@
         <p class="ph-sub">Journal d'audit transversal (tous modules), échecs récents et comportements à risque</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser les télémétries">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
       <a routerLink="/admin/incidents" class="btn btn-ghost btn-sm"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</a>
     </div>
   </div>

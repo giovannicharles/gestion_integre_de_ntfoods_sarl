@@ -1,75 +1,178 @@
-<div class="page">
-  <header class="page-header">
-    <h1>Sauvegardes</h1>
-    <p class="subtitle">Sauvegarde automatique et manuelle de la base de données.</p>
-    <div class="actions">
-      <button class="btn-primary" [disabled]="declenchementEnCours()" (click)="declencher()">
-        {{ declenchementEnCours() ? 'Sauvegarde en cours...' : 'Déclencher une sauvegarde maintenant' }}
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon"><i class="fa-solid fa-database"></i></div>
+      <div>
+        <h1 class="ph-title">Sauvegardes &amp; Continuité d'Activité</h1>
+        <p class="ph-sub">Gestion des copies de sécurité PostgreSQL, snapshots système et planifications automatiques</p>
+      </div>
+    </div>
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="charger()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
-      <button class="btn-secondary" (click)="afficherFormPlanification.set(!afficherFormPlanification())">
-        {{ afficherFormPlanification() ? 'Annuler' : 'Modifier la planification' }}
+      <button class="btn btn-ghost" (click)="afficherFormPlanification.set(!afficherFormPlanification())">
+        <i class="fa-solid fa-calendar-gear"></i> {{ afficherFormPlanification() ? 'Fermer planification' : 'Modifier la planification' }}
+      </button>
+      <button class="btn btn-primary" [disabled]="declenchementEnCours()" (click)="showConfirmModal.set(true)">
+        @if (declenchementEnCours()) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Sauvegarde en cours...
+        } @else {
+          <i class="fa-solid fa-cloud-arrow-up"></i> Sauvegarder maintenant
+        }
       </button>
     </div>
-  </header>
+  </div>
 
   @if (succes()) {
-    <div class="alert alert-success">{{ succes() }}</div>
+    <div class="alert alert-success" style="margin-bottom:16px"><i class="fa-solid fa-circle-check"></i> {{ succes() }}</div>
   }
   @if (erreur()) {
-    <div class="alert alert-error">{{ erreur() }}</div>
+    <div class="alert alert-error" style="margin-bottom:16px"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreur() }}</div>
   }
 
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-database"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Total Sauvegardes</div>
+        <div class="kpi-val">{{ nbTotal() }}</div>
+        <div class="kpi-meta">points de restauration</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Réussies</div>
+        <div class="kpi-val">{{ nbReussies() }}</div>
+        <div class="kpi-meta">copies vérifiées</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r">
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Échecs</div>
+        <div class="kpi-val">{{ nbEchecs() }}</div>
+        <div class="kpi-meta">anomalies signalées</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hard-drive"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Dernière Taille</div>
+        <div class="kpi-val">{{ derniereTaille() }}</div>
+        <div class="kpi-meta">volume compressé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMULAIRE MODIFICATION PLANIFICATION -->
   @if (afficherFormPlanification()) {
-    <form class="form-planification" (ngSubmit)="demanderModificationPlanification()">
-      <p class="hint">Cette modification doit être approuvée par un DG ou un second Admin avant de prendre effet.</p>
-      <div class="form-row">
-        <label class="checkbox">
-          <input type="checkbox" name="actif" [(ngModel)]="formPlanification.actif" />
-          Sauvegarde automatique active
-        </label>
-        <label>Fréquence (heures)
-          <input type="number" name="frequenceHeures" min="1" [(ngModel)]="formPlanification.frequenceHeures" />
-        </label>
+    <div class="card mb-sp4" style="background:var(--n50);border:1.5px solid var(--n300);margin-bottom:16px">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-sliders"></i> Soumettre une modification de planification</span>
       </div>
-      <div class="form-row">
-        <label class="motif">Motif
-          <input name="motif" [(ngModel)]="formPlanification.motif" required placeholder="Pourquoi ce changement ?" />
-        </label>
-      </div>
-      <button type="submit" class="btn-primary">Soumettre la demande</button>
-    </form>
+      <form class="form-planification" (ngSubmit)="demanderModificationPlanification()" style="padding:16px">
+        <p class="hint" style="color:var(--n600);font-size:12.5px;margin-bottom:14px">
+          <i class="fa-solid fa-shield-halved" style="color:var(--g)"></i> Conformément au principe de double validation (4-eyes), toute altération de la politique de rétention et fréquence doit être approuvée par la Direction Générale avant activation.
+        </p>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600">
+            <input type="checkbox" name="actif" [(ngModel)]="formPlanification.actif" />
+            Sauvegarde automatique planifiée
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600">
+            Fréquence (heures) :
+            <input type="number" class="form-control" style="max-width:120px" name="frequenceHeures" min="1" [(ngModel)]="formPlanification.frequenceHeures" />
+          </label>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-weight:600;margin-bottom:4px">Motif de la modification * :</label>
+          <input class="form-control" name="motif" [(ngModel)]="formPlanification.motif" required placeholder="Ex : Renforcement de la fréquence de sauvegarde avant clôture comptable" />
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" (click)="afficherFormPlanification.set(false)">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!formPlanification.motif.trim()">
+            <i class="fa-solid fa-paper-plane"></i> Soumettre au moteur d'approbation
+          </button>
+        </div>
+      </form>
+    </div>
   }
 
-  @if (loading()) {
-    <p>Chargement...</p>
-  } @else {
-    <div class="tbl-wrap">
-    <table class="table-sauvegardes">
-      <thead>
-        <tr>
-          <th>Début</th>
-          <th>Statut</th>
-          <th>Type</th>
-          <th>Déclenché par</th>
-          <th>Taille</th>
-          <th>Erreur</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (s of sauvegardes(); track s.id) {
-          <tr [class.row-echec]="s.statut === 'ECHEC'">
-            <td>{{ s.dateDebut | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ s.statut }}</td>
-            <td>{{ s.typeDeclenchement }}</td>
-            <td>{{ s.matriculeDeclencheur ?? '-' }}</td>
-            <td>{{ s.tailleOctets ? (s.tailleOctets / 1024 / 1024).toFixed(1) + ' Mo' : '-' }}</td>
-            <td>{{ s.messageErreur ?? '-' }}</td>
-          </tr>
-        } @empty {
-          <tr><td colspan="6">Aucune sauvegarde enregistrée.</td></tr>
-        }
-      </tbody>
-    </table>
+  <!-- TABLEAU HISTORIQUE DES SAUVEGARDES -->
+  <div class="card table-card">
+    <div class="card-hd">
+      <span class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique des Snapshots de Sécurité</span>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state" style="padding:32px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des sauvegardes...</div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date &amp; Heure</th>
+              <th>Statut</th>
+              <th>Type de déclenchement</th>
+              <th>Auteur</th>
+              <th>Taille</th>
+              <th>Détails &amp; Diagnostics</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of sauvegardes(); track s.id) {
+              <tr [class.row-alert]="s.statut === 'ECHEC'">
+                <td class="mono fw-bold">{{ s.dateDebut | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                <td>
+                  @if (s.statut === 'REUSSIE') {
+                    <span class="badge bg-success"><i class="fa-solid fa-circle-check"></i> Réussie</span>
+                  } @else if (s.statut === 'ECHEC') {
+                    <span class="badge bg-red"><i class="fa-solid fa-triangle-exclamation"></i> Échec</span>
+                  } @else {
+                    <span class="badge bg-orange"><i class="fa-solid fa-spinner fa-spin"></i> En cours</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge bg-neutral">{{ s.typeDeclenchement }}</span>
+                </td>
+                <td>{{ s.matriculeDeclencheur ?? 'SYSTÈME' }}</td>
+                <td class="mono">{{ s.tailleOctets ? (s.tailleOctets / 1024 / 1024).toFixed(1) + ' Mo' : '-' }}</td>
+                <td class="text-muted" style="font-size:12px">{{ s.messageErreur ?? 'Sauvegarde vérifiée et chiffrée' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="rpt-empty" style="text-align:center;padding:24px"><i class="fa-solid fa-inbox"></i> Aucune sauvegarde enregistrée.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- MODAL DE CONFIRMATION DE SAUVEGARDE MANUELLE -->
+  @if (showConfirmModal()) {
+    <div class="modal-overlay" (click)="showConfirmModal.set(false)">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:480px">
+        <div class="modal-header">
+          <h3 style="margin:0;font-size:16px"><i class="fa-solid fa-database" style="color:var(--g)"></i> Déclencher un Snapshot</h3>
+          <button class="modal-close" (click)="showConfirmModal.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px;font-size:13.5px;color:var(--n700)">
+          <p>Vous êtes sur le point d'ordonner une sauvegarde immédiate à chaud de la base de données NTFOODS.</p>
+          <div style="background:var(--n50);padding:12px;border-radius:8px;border:1px solid var(--n200);margin-top:10px">
+            <i class="fa-solid fa-circle-info" style="color:var(--g)"></i> L'opération s'exécute en arrière-plan sans interruption du service opérationnel.
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" (click)="showConfirmModal.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="showConfirmModal.set(false); declencher()">
+            <i class="fa-solid fa-check"></i> Confirmer la sauvegarde
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>

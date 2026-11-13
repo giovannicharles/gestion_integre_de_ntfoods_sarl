@@ -43,7 +43,15 @@
   </div>
 
   <div class="card table-card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list"></i> Codes actifs</span></div>
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span class="card-title"><i class="fa-solid fa-list"></i> Registre des Codes de Validation</span>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'TOUS'" [class.btn-ghost]="filtreStatut() !== 'TOUS'" (click)="filtreStatut.set('TOUS')">Tous</button>
+        <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'ACTIFS'" [class.btn-ghost]="filtreStatut() !== 'ACTIFS'" (click)="filtreStatut.set('ACTIFS')">Actifs</button>
+        <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'BLOQUES'" [class.btn-ghost]="filtreStatut() !== 'BLOQUES'" (click)="filtreStatut.set('BLOQUES')">Bloqués</button>
+        <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'REVOQUES'" [class.btn-ghost]="filtreStatut() !== 'REVOQUES'" (click)="filtreStatut.set('REVOQUES')">Révoqués</button>
+      </div>
+    </div>
 
     @if (loading()) {
     <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement…</div>
@@ -63,7 +71,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (code of codes(); track code.id) {
+        @for (code of codesFiltres(); track code.id) {
         <tr [class.row-alert]="code.bloque">
           <td class="fw-bold"><i class="fa-solid fa-user ico-user"></i>{{ code.utilisateurNom }}</td>
           <td>{{ code.dateAttribution | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -109,11 +117,16 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Code de validation</label>
-          <div class="mono fw-bold code-reveal">{{ nouveauCode }}</div>
+          <label>Code de validation confidentiel</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="mono fw-bold code-reveal" style="flex:1">{{ nouveauCode }}</div>
+            <button type="button" class="btn btn-outline" (click)="copierCode(nouveauCode)" title="Copier le code">
+              <i class="fa-solid fa-copy"></i> Copier
+            </button>
+          </div>
         </div>
         <div class="info-banner code-warning">
-          <i class="fa-solid fa-triangle-exclamation"></i> Conservez ce code confidentiellement. Ne le partagez jamais.
+          <i class="fa-solid fa-triangle-exclamation"></i> Conservez ce code confidentiellement. Transmettez-le de façon sécurisée à l'utilisateur désigné.
         </div>
       </div>
       <div class="form-actions">

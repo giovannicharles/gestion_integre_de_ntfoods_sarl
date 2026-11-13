@@ -92,6 +92,38 @@ export class AdminPermissionsComponent implements OnInit {
     });
   }
 
+  deplierTout(): void {
+    this.modulesReplies.set(new Set());
+  }
+
+  replierTout(): void {
+    const tous = new Set(this.groupesRole().map(g => g.module));
+    this.modulesReplies.set(tous);
+  }
+
+  exporterMatriceCsv(): void {
+    const roles = this.roles();
+    const mat = this.matrice();
+    if (!roles.length) return;
+    const headers = ['Role', 'Nombre Permissions', 'Liste Permissions'];
+    const rows = roles.map(r => [
+      `"${r}"`,
+      (mat[r] || []).length,
+      `"${(mat[r] || []).join(', ')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(row => row.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `matrice_rbac_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.toast.success('Matrice RBAC exportée en CSV avec succès.');
+  }
+
   /** Vue inverse « qui a cette permission par défaut », calculée depuis la matrice déjà en mémoire. */
   permissionSelectionnee = signal<string | null>(null);
   rolesAvecPermission = computed(() => {

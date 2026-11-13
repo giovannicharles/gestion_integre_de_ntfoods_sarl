@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CodeValidationService, CodeValidation, AttributionCodeResponse } from '../../../../../core/services/code-validation.service';
 import { AdminService, UtilisateurBE } from '../../../infrastructure/admin.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-code-validation',
@@ -14,10 +15,22 @@ import { AdminService, UtilisateurBE } from '../../../infrastructure/admin.servi
 export class AdminCodeValidationComponent implements OnInit {
   private codeValidationService = inject(CodeValidationService);
   private adminService = inject(AdminService);
+  private toast = inject(ToastService);
 
   codes = this.codeValidationService.codesActifs;
   loading = this.codeValidationService.loading;
   error = this.codeValidationService.error;
+
+  filtreStatut = signal<'TOUS' | 'ACTIFS' | 'BLOQUES' | 'REVOQUES'>('TOUS');
+
+  codesFiltres = computed(() => {
+    const st = this.filtreStatut();
+    const list = this.codes();
+    if (st === 'ACTIFS') return list.filter(c => c.actif && !c.bloque);
+    if (st === 'BLOQUES') return list.filter(c => c.bloque);
+    if (st === 'REVOQUES') return list.filter(c => !c.actif);
+    return list;
+  });
 
   utilisateurs: UtilisateurBE[] = [];
   utilisateurSelectionne: number | null = null;
@@ -30,6 +43,15 @@ export class AdminCodeValidationComponent implements OnInit {
   showRevokeModal = false;
   codeToRevoke: CodeValidation | null = null;
   motifRevocation: string = '';
+
+  copierCode(code: string): void {
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      this.toast.success('Code de validation copié dans le presse-papier !');
+    }).catch(() => {
+      this.toast.info('Code : ' + code);
+    });
+  }
 
   ngOnInit() {
     this.codeValidationService.listerCodesActifs();

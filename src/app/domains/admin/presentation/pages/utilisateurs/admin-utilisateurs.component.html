@@ -3,28 +3,34 @@
   <div class="ph-left">
     <i class="fa-solid fa-users-gear ph-ico"></i>
     <div>
-      <h1 class="ph-title">Gestion Utilisateurs</h1>
-      <p class="ph-sub">Comptes, rôles et accès système</p>
+      <h1 class="ph-title">Gestion des Identités & Comptes</h1>
+      <p class="ph-sub">Gestion unifiée des profils collaborateurs, rôles d'accès RBAC et cycles de session</p>
     </div>
   </div>
-  <div class="ph-actions" *appCan="['ADMIN', 'DIRECTEUR_GENERAL']">
-    <button class="btn btn-primary" (click)="ouvrirModal()">
+  <div class="ph-actions">
+    <button class="btn btn-ghost" (click)="charger()" title="Actualiser la liste">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
+    <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter la sélection en CSV">
+      <i class="fa-solid fa-file-csv"></i> Exporter CSV
+    </button>
+    <button class="btn btn-primary" (click)="ouvrirModal()" *appCan="['ADMIN', 'DIRECTEUR_GENERAL']">
       <i class="fa-solid fa-user-plus"></i> Nouvel Utilisateur
     </button>
   </div>
 </div>
 
-<!-- KPIs -->
+<!-- KPIs INTERACTIFS -->
 <div class="kpi-grid">
-  <div class="kpi-card kp-b">
+  <div class="kpi-card kp-b" [class.kpi-active-filter]="filtreStatut() === 'TOUS'" (click)="setFiltreStatut('TOUS')" title="Cliquer pour afficher tous les comptes" style="cursor:pointer">
     <div class="kpi-ico ib"><i class="fa-solid fa-users"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Total utilisateurs</div>
       <div class="kpi-val">{{ users().length }}</div>
-      <div class="kpi-meta">comptes enregistrés</div>
+      <div class="kpi-meta">tous comptes confondus</div>
     </div>
   </div>
-  <div class="kpi-card kp-g">
+  <div class="kpi-card kp-g" [class.kpi-active-filter]="filtreStatut() === 'ACTIFS'" (click)="setFiltreStatut('ACTIFS')" title="Cliquer pour filtrer les comptes actifs" style="cursor:pointer">
     <div class="kpi-ico ig"><i class="fa-solid fa-user-check"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Actifs</div>
@@ -32,7 +38,7 @@
       <div class="kpi-meta">accès autorisé</div>
     </div>
   </div>
-  <div class="kpi-card kp-r">
+  <div class="kpi-card kp-r" [class.kpi-active-filter]="filtreStatut() === 'INACTIFS'" (click)="setFiltreStatut('INACTIFS')" title="Cliquer pour filtrer les comptes inactifs" style="cursor:pointer">
     <div class="kpi-ico ir"><i class="fa-solid fa-user-slash"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Inactifs</div>
@@ -40,20 +46,20 @@
       <div class="kpi-meta">comptes suspendus</div>
     </div>
   </div>
-  <div class="kpi-card kp-r">
+  <div class="kpi-card kp-r" [class.kpi-active-filter]="filtreStatut() === 'BLOQUES'" (click)="setFiltreStatut('BLOQUES')" title="Cliquer pour filtrer les comptes bloqués" style="cursor:pointer">
     <div class="kpi-ico ir"><i class="fa-solid fa-lock"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Bloqués</div>
       <div class="kpi-val">{{ nbBloques() }}</div>
-      <div class="kpi-meta">après 3 tentatives échouées</div>
+      <div class="kpi-meta">suspicion sécurité / 3 échecs</div>
     </div>
   </div>
-  <div class="kpi-card kp-y">
+  <div class="kpi-card kp-y" [class.kpi-active-filter]="filtreStatut() === 'SESSIONS_ACTIVES'" (click)="setFiltreStatut('SESSIONS_ACTIVES')" title="Cliquer pour filtrer les sessions actives" style="cursor:pointer">
     <div class="kpi-ico iy"><i class="fa-solid fa-signal"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Sessions actives</div>
       <div class="kpi-val">{{ nbSessionsActives() }}</div>
-      <div class="kpi-meta">connectés en ce moment</div>
+      <div class="kpi-meta">connectés en direct</div>
     </div>
   </div>
 </div>
@@ -230,8 +236,13 @@
             <input class="input" type="email" [(ngModel)]="form.email" placeholder="jean.dupont@ntfoods.cm">
           </div>
           <div class="nu-field">
-            <label class="nu-label">Mot de passe <span class="nu-req">*</span></label>
-            <input class="input" type="password" [(ngModel)]="form.motDePasse" placeholder="Minimum 6 caractères">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label class="nu-label" style="margin:0">Mot de passe <span class="nu-req">*</span></label>
+              <button type="button" class="btn btn-xs btn-ghost" (click)="genererMotDePasse('creation')" style="font-size:11px;padding:2px 8px">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Générer fort
+              </button>
+            </div>
+            <input class="input" type="text" [(ngModel)]="form.motDePasse" placeholder="Minimum 6 caractères">
           </div>
         </div>
 
@@ -401,8 +412,13 @@
       </div>
       <div class="nu-modal-body">
         <div class="nu-field">
-          <label class="nu-label">Nouveau mot de passe <span class="nu-req">*</span></label>
-          <input class="input" type="password" [(ngModel)]="nouveauMotDePasse" placeholder="Minimum 6 caractères">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="nu-label" style="margin:0">Nouveau mot de passe <span class="nu-req">*</span></label>
+            <button type="button" class="btn btn-xs btn-ghost" (click)="genererMotDePasse('reset')" style="font-size:11px;padding:2px 8px">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Générer fort
+            </button>
+          </div>
+          <input class="input" type="text" [(ngModel)]="nouveauMotDePasse" placeholder="Minimum 6 caractères">
         </div>
       </div>
       <div class="nu-modal-footer">

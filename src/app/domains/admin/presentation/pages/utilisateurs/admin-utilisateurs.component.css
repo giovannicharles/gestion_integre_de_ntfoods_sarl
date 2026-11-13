@@ -76,6 +76,11 @@
   transform: translateY(-3px);
   box-shadow: var(--sh-md);
 }
+.kpi-card.kpi-active-filter {
+  border-color: var(--g) !important;
+  box-shadow: 0 0 0 2px var(--g), 0 8px 20px rgba(20, 83, 45, 0.15) !important;
+  background: linear-gradient(to bottom, #ffffff, #f0fdf4) !important;
+}
 .kpi-card::before {
   content: "";
   position: absolute; top: -40px; right: -40px;

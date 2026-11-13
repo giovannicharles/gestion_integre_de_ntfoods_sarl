@@ -1,13 +1,72 @@
 <div class="incidents-page">
   <div class="page-header">
-    <h1><i class="fa-solid fa-triangle-exclamation"></i> Incidents</h1>
-    <p class="subtitle">Suivi des incidents techniques et fonctionnels signalés</p>
-    <button class="btn btn-primary" (click)="ouvrirCreation()">
-      <i class="fa-solid fa-plus"></i> Signaler un incident
-    </button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:24px;color:var(--r)"></i>
+      <div>
+        <h1 style="margin:0;font-size:20px;font-weight:800">Gestion des Incidents Plateforme</h1>
+        <p class="subtitle" style="margin:0">Triage, investigation technique, assignation et cycle de résolution</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="chargerIncidents()" title="Actualiser">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Télécharger la liste des incidents">
+        <i class="fa-solid fa-download"></i> Exporter CSV
+      </button>
+      <button class="btn btn-primary" (click)="ouvrirCreation()">
+        <i class="fa-solid fa-plus"></i> Signaler un incident
+      </button>
+    </div>
   </div>
 
-  <div class="toolbar">
+  <!-- KPI SUMMARY ROW -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:16px">
+    <div class="card" style="padding:14px;border-left:4px solid var(--r);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:8px;background:rgba(194,43,43,0.1);color:var(--r);display:flex;align-items:center;justify-content:center;font-size:16px">
+        <i class="fa-solid fa-fire"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase">Critiques actifs</div>
+        <div style="font-size:20px;font-weight:800;color:var(--r)">{{ nbCritiques() }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px;border-left:4px solid var(--y);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:8px;background:rgba(246,182,11,0.15);color:var(--y-d, #b45309);display:flex;align-items:center;justify-content:center;font-size:16px">
+        <i class="fa-solid fa-clock"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase">Nouveaux</div>
+        <div style="font-size:20px;font-weight:800;color:var(--g-d)">{{ nbNouveaux() }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px;border-left:4px solid #3b82f6;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:8px;background:rgba(59,130,246,0.1);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:16px">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase">En cours</div>
+        <div style="font-size:20px;font-weight:800;color:var(--g-d)">{{ nbEnCours() }}</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px;border-left:4px solid var(--g);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:8px;background:rgba(20,83,45,0.1);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:16px">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase">Résolus / Clôturés</div>
+        <div style="font-size:20px;font-weight:800;color:var(--g)">{{ nbResolus() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+    <input type="text" class="form-control" style="max-width:260px" placeholder="Rechercher (titre, ref, auteur)..."
+           [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+
     <div class="filter-group">
       <label>Gravité :</label>
       <select [ngModel]="filtrePriorite()" (ngModelChange)="filtrePriorite.set($event)">
@@ -15,7 +74,8 @@
         @for (p of priorites; track p) { <option [value]="p">{{ p }}</option> }
       </select>
     </div>
-    <label class="checkbox-item">
+
+    <label class="checkbox-item" style="margin-left:auto">
       <input type="checkbox" [ngModel]="afficherRejetes()" (ngModelChange)="afficherRejetes.set($event)">
       Afficher les rejetés
     </label>

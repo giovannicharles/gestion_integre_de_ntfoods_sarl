@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSystemeService, ElementCorbeilleBE } from '../../../infrastructure/admin-systeme.service';
@@ -19,11 +19,33 @@ export class AdminSystemeCorbeilleComponent implements OnInit {
   private readonly svc = inject(AdminSystemeService);
 
   elements = signal<ElementCorbeilleBE[]>([]);
+  filtreTexte = signal('');
+  filtreType = signal('TOUS');
   loading = signal(false);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
 
   motifParElement: Record<string, string> = {};
+
+  typesDisponibles = computed(() => {
+    const s = new Set<string>();
+    this.elements().forEach(e => s.add(e.typeEntite));
+    return ['TOUS', ...Array.from(s).sort()];
+  });
+
+  elementsFiltres = computed(() => {
+    const t = this.filtreTexte().trim().toLowerCase();
+    const type = this.filtreType();
+    return this.elements().filter(e => {
+      const matchType = type === 'TOUS' || e.typeEntite === type;
+      const matchText = !t ||
+        (e.reference || '').toLowerCase().includes(t) ||
+        (e.libelle || '').toLowerCase().includes(t) ||
+        (e.typeEntite || '').toLowerCase().includes(t) ||
+        (e.supprimePar || '').toLowerCase().includes(t);
+      return matchType && matchText;
+    });
+  });
 
   ngOnInit(): void {
     this.charger();

@@ -4,9 +4,17 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-user-shield"></i></div>
       <div>
-        <h1 class="ph-title">Permissions &amp; RBAC</h1>
-        <p class="ph-sub">Matrice rôle → permission, et dérogations individuelles par utilisateur</p>
+        <h1 class="ph-title">Permissions &amp; RBAC (Habilitations)</h1>
+        <p class="ph-sub">Matrice de contrôle d'accès basée sur les rôles et registre des dérogations individuelles</p>
       </div>
+    </div>
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" (click)="exporterMatriceCsv()" title="Télécharger la matrice de droits">
+        <i class="fa-solid fa-file-csv"></i> Exporter Matrice
+      </button>
+      <button class="btn btn-ghost btn-sm" (click)="charger()" title="Actualiser la matrice">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
     </div>
   </div>
 
@@ -32,6 +40,17 @@
           @for (r of roles(); track r) {
           <button class="filter-btn" [class.active]="roleSelectionne()===r" (click)="roleSelectionne.set(r)">{{ r }}</button>
           }
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--n500);font-weight:600">Permissions du rôle ({{ permissionsDuRole().length }})</span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn-xs btn-ghost" (click)="deplierTout()" style="font-size:11px;padding:2px 6px">
+              <i class="fa-solid fa-angles-down"></i> Déplier tout
+            </button>
+            <button type="button" class="btn btn-xs btn-ghost" (click)="replierTout()" style="font-size:11px;padding:2px 6px">
+              <i class="fa-solid fa-angles-up"></i> Replier tout
+            </button>
+          </div>
         </div>
         <input type="text" class="form-control mb-10" placeholder="Filtrer les permissions (ex : STOCK, COMMANDE...)"
                [ngModel]="filtrePermission()" (ngModelChange)="filtrePermission.set($event)">

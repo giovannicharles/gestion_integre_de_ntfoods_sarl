@@ -5,7 +5,22 @@
 
 .niveau-btns { display: flex; gap: var(--sp-1); }
 .niveau-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; background: transparent; cursor: pointer; font-size: 0.8rem; }
-.niveau-btn.active { background: var(--mc); color: #fff; border-color: var(--mc); }
+.niveau-btn.active { background: var(--g); color: #fff; border-color: var(--g); font-weight: 700; }
+
+.periode-pills { display: flex; gap: 4px; background: var(--n100); padding: 2px; border-radius: 8px; }
+
+.kpi-card {
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), border-color .18s;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+.kpi-card.kpi-active-filter {
+  border-color: var(--g) !important;
+  box-shadow: 0 0 0 2px var(--g), 0 8px 20px rgba(20, 83, 45, 0.15) !important;
+  background: linear-gradient(to bottom, #ffffff, #f0fdf4) !important;
+}
 
 .ts-cell { font-family: monospace; font-size: 0.8rem; white-space: nowrap; }
 .action-code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; white-space: nowrap; }
@@ -15,6 +30,29 @@
 .row-alerte { background: var(--r-gh); }
 .row-important { background: var(--o-gh); }
 .table-footer { font-size: 0.8rem; color: var(--text-muted); padding-top: var(--sp-2); text-align: right; }
+
+/* MODAL STYLES */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; z-index: 1050; padding: 16px;
+}
+.modal-box {
+  background: var(--w); border-radius: 14px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column; overflow: hidden; animation: zoomIn 0.18s ease-out;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+  border-bottom: 1px solid var(--n200); background: var(--n50);
+}
+.modal-close {
+  background: transparent; border: none; font-size: 18px; color: var(--n500); cursor: pointer;
+}
+.modal-close:hover { color: var(--r); }
+
+@keyframes zoomIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
 @media (max-width:767px) {
   .card { padding: 14px; }

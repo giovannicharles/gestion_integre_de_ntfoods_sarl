@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminSystemeService, ParametreSystemeBE, CreerParametreSystemeRequest } from '../../../infrastructure/admin-systeme.service';
@@ -15,6 +15,8 @@ export class AdminSystemeParametresComponent implements OnInit {
   private readonly svc = inject(AdminSystemeService);
 
   parametres = signal<ParametreSystemeBE[]>([]);
+  filtreTexte = signal('');
+  filtreGroupe = signal('TOUS');
   loading = signal(false);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
@@ -23,6 +25,28 @@ export class AdminSystemeParametresComponent implements OnInit {
 
   formCreation: CreerParametreSystemeRequest = this.formVide();
   afficherFormCreation = signal(false);
+
+  groupesDisponibles = computed(() => {
+    const s = new Set<string>();
+    this.parametres().forEach(p => {
+      if (p.groupe) s.add(p.groupe);
+    });
+    return ['TOUS', ...Array.from(s).sort()];
+  });
+
+  parametresFiltres = computed(() => {
+    const t = this.filtreTexte().trim().toLowerCase();
+    const grp = this.filtreGroupe();
+    return this.parametres().filter(p => {
+      const matchGrp = grp === 'TOUS' || p.groupe === grp;
+      const matchTxt = !t ||
+        p.code.toLowerCase().includes(t) ||
+        p.nom.toLowerCase().includes(t) ||
+        (p.description || '').toLowerCase().includes(t) ||
+        (p.groupe || '').toLowerCase().includes(t);
+      return matchGrp && matchTxt;
+    });
+  });
 
   ngOnInit(): void {
     this.charger();

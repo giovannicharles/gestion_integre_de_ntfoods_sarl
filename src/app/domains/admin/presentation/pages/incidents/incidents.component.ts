@@ -79,6 +79,8 @@ export class IncidentsComponent implements OnInit {
   actionEnCours = false;
 
   filtrePriorite = signal<string>('TOUS');
+  filtreTexte = signal<string>('');
+  filtreModule = signal<string>('TOUS');
   afficherRejetes = signal(false);
 
   showCreateModal = false;
@@ -102,11 +104,60 @@ export class IncidentsComponent implements OnInit {
   types = ['TECHNIQUE', 'FONCTIONNEL', 'DONNEES', 'SECURITE', 'PERFORMANCE'];
   priorites = ['CRITIQUE', 'HAUTE', 'MOYENNE', 'BASSE'];
 
-  private parNiveau = (statut: string) => computed(() =>
-    this.incidents()
+  nbCritiques = computed(() => this.incidents().filter(i => i.priorite === 'CRITIQUE' && i.statut !== 'RESOLU' && i.statut !== 'CLOTURE' && i.statut !== 'REJETE').length);
+  nbEnCours = computed(() => this.incidents().filter(i => i.statut === 'EN_COURS').length);
+  nbNouveaux = computed(() => this.incidents().filter(i => i.statut === 'OUVERT').length);
+  nbResolus = computed(() => this.incidents().filter(i => i.statut === 'RESOLU' || i.statut === 'CLOTURE').length);
+
+  private parNiveau = (statut: string) => computed(() => {
+    const p = this.filtrePriorite();
+    const m = this.filtreModule();
+    const t = this.filtreTexte().trim().toLowerCase();
+
+    return this.incidents()
       .filter((i) => i.statut === statut)
-      .filter((i) => this.filtrePriorite() === 'TOUS' || i.priorite === this.filtrePriorite())
-  );
+      .filter((i) => p === 'TOUS' || i.priorite === p)
+      .filter((i) => m === 'TOUS' || (i.moduleConcerne || '').toUpperCase() === m)
+      .filter((i) => !t ||
+        (i.reference || '').toLowerCase().includes(t) ||
+        (i.titre || '').toLowerCase().includes(t) ||
+        (i.description || '').toLowerCase().includes(t) ||
+        (i.signaleurNom || '').toLowerCase().includes(t)
+      );
+  });
+
+  exporterCsv(): void {
+    const list = this.incidents();
+    if (!list.length) {
+      this.toast.info('Aucun incident à exporter.');
+      return;
+    }
+    const headers = ['Reference', 'Titre', 'Type', 'Priorite', 'Statut', 'Module', 'Signaleur', 'Assigne A', 'Date Creation', 'Date Resolution'];
+    const rows = list.map(i => [
+      `"${i.reference}"`,
+      `"${(i.titre || '').replace(/"/g, '""')}"`,
+      `"${i.type}"`,
+      `"${i.priorite}"`,
+      `"${i.statut}"`,
+      `"${i.moduleConcerne || ''}"`,
+      `"${i.signaleurNom || ''}"`,
+      `"${i.assigneANom || ''}"`,
+      `"${i.dateCreation || ''}"`,
+      `"${i.dateResolution || ''}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `incidents_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} incident(s) exporté(s) en CSV.`);
+  }
 
   colonneNouveau = this.parNiveau('OUVERT');
   colonneEnCours = this.parNiveau('EN_COURS');

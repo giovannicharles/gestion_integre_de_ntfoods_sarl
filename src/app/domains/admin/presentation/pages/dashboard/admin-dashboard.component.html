@@ -44,7 +44,7 @@
     <!-- 4-KPI SUITE CARDS -->
     <section class="dash-21-kpi-grid">
       <!-- KPI 1 : Utilisateurs -->
-      <div class="dash-21-kpi-card">
+      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
         <div class="dash-21-kpi-head">
           <span class="dash-21-kpi-label">Comptes Utilisateurs</span>
           <div class="dash-21-kpi-icon-wrap icon-green">
@@ -60,10 +60,10 @@
         <div class="dash-21-kpi-footer">
           <span>{{ totalUtilisateurs() > 0 ? Math.round((nbActifs() / totalUtilisateurs()) * 100) : 0 }}% d'activation des comptes</span>
         </div>
-      </div>
+      </a>
 
       <!-- KPI 2 : Sessions Actives -->
-      <div class="dash-21-kpi-card">
+      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
         <div class="dash-21-kpi-head">
           <span class="dash-21-kpi-label">Sessions Connectées</span>
           <div class="dash-21-kpi-icon-wrap icon-gold">
@@ -79,10 +79,10 @@
         <div class="dash-21-kpi-footer">
           <span>Utilisateurs actuellement actifs sur le système</span>
         </div>
-      </div>
+      </a>
 
       <!-- KPI 3 : Comptes Bloqués -->
-      <div class="dash-21-kpi-card" [style.border-color]="nbBloques() > 0 ? 'rgba(194, 43, 43, 0.4)' : ''">
+      <a routerLink="/admin/utilisateurs" class="dash-21-kpi-card" [style.border-color]="nbBloques() > 0 ? 'rgba(194, 43, 43, 0.4)' : ''" style="text-decoration:none;cursor:pointer">
         <div class="dash-21-kpi-head">
           <span class="dash-21-kpi-label">Comptes Verrouillés</span>
           <div class="dash-21-kpi-icon-wrap icon-red">
@@ -98,10 +98,10 @@
         <div class="dash-21-kpi-footer">
           <span>{{ nbBloques() > 0 ? 'Suspension de sécurité active' : 'Aucun compte verrouillé' }}</span>
         </div>
-      </div>
+      </a>
 
       <!-- KPI 4 : Piste d'audit (24h) -->
-      <div class="dash-21-kpi-card">
+      <a routerLink="/admin/audit" class="dash-21-kpi-card" style="text-decoration:none;cursor:pointer">
         <div class="dash-21-kpi-head">
           <span class="dash-21-kpi-label">Événements d'Audit (24h)</span>
           <div class="dash-21-kpi-icon-wrap icon-green">
@@ -117,7 +117,7 @@
         <div class="dash-21-kpi-footer">
           <span>Opérations horodatées non répudiables enregistrées</span>
         </div>
-      </div>
+      </a>
     </section>
 
     <!-- 2:1 SPLIT GRID -->
@@ -232,6 +232,35 @@
             </div>
           </div>
         }
+
+        <!-- SANTÉ SYSTÈME & SAUVEGARDE -->
+        <div class="dash-21-card" style="margin-bottom:16px">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-server" style="color:var(--g)"></i> Santé & Sauvegardes</h3>
+              <span class="dash-21-card-hint">Intégrité infrastructure</span>
+            </div>
+            <a routerLink="/admin-systeme/sauvegardes" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 8px;font-size:11px">Gérer</a>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--n50);border-radius:6px">
+              <span><i class="fa-solid fa-database" style="color:var(--g);margin-right:6px"></i> Dernière Sauvegarde</span>
+              @if (derniereSauvegarde(); as s) {
+                <span class="badge" [class.bg-success]="s.statut === 'REUSSIE'" [class.bg-red]="s.statut !== 'REUSSIE'">{{ s.statut }} ({{ s.date | date:'dd/MM' }})</span>
+              } @else {
+                <span class="text-muted">Aucune récente</span>
+              }
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--n50);border-radius:6px">
+              <span><i class="fa-solid fa-shield-virus" [style.color]="nbActivitesSuspectes() > 0 ? 'var(--r)' : 'var(--g)'" style="margin-right:6px"></i> Activités Suspectes (24h)</span>
+              <span class="badge" [class.bg-red]="nbActivitesSuspectes() > 0" [class.bg-success]="nbActivitesSuspectes() === 0">
+                {{ nbActivitesSuspectes() > 0 ? nbActivitesSuspectes() + ' détectées' : '0 anomalie' }}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <!-- RÉPARTITION PAR RÔLE -->
         <div class="dash-21-card">

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AdminService } from '../../../infrastructure/admin.service';
 import { AuditService, JournalAuditBE } from '../../../../../core/audit/audit.service';
 import { DgService, IncidentResumeBE } from '../../../../dg/infrastructure/dg.service';
+import { AdminSystemeService } from '../../../../admin-systeme/infrastructure/admin-systeme.service';
 import { ROLE_LABELS } from '../../../../../core/models/user.models';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
 
@@ -37,6 +38,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly adminSvc = inject(AdminService);
   private readonly auditSvc = inject(AuditService);
   private readonly dgSvc = inject(DgService);
+  private readonly adminSysSvc = inject(AdminSystemeService);
 
   today = new Date();
   Math = Math;
@@ -56,6 +58,8 @@ export class AdminDashboardComponent implements OnInit {
   incidentsResume = signal<IncidentResumeBE | null>(null);
   activiteRecente = signal<JournalAuditBE[]>([]);
   nbEvenements24h = signal(0);
+  derniereSauvegarde = signal<{ date: string; statut: string } | null>(null);
+  nbActivitesSuspectes = signal(0);
 
   raccourcis: RaccourciAdmin[] = [
     { label: 'Utilisateurs', icone: 'fa-users-gear', route: '/admin/utilisateurs', description: 'Comptes, rôles, sessions' },
@@ -115,6 +119,21 @@ export class AdminDashboardComponent implements OnInit {
     this.auditSvc.getAuditParPeriode(hier, aujourdhui, { size: 8, sort: 'horodatage,desc' }).subscribe({
       next: page => { this.activiteRecente.set(page.contenu); this.nbEvenements24h.set(page.totalElements); },
       error: (err) => this.activiteError.set(extractApiError(err)),
+    });
+
+    this.auditSvc.getActivitesSuspectes(24, 4).subscribe({
+      next: list => this.nbActivitesSuspectes.set(list.length),
+      error: () => {}
+    });
+
+    this.adminSysSvc.historiqueSauvegardes(0, 1).subscribe({
+      next: page => {
+        const d = page.contenu[0];
+        if (d) {
+          this.derniereSauvegarde.set({ date: d.dateFin ?? d.dateDebut, statut: d.statut });
+        }
+      },
+      error: () => {}
     });
   }
 
