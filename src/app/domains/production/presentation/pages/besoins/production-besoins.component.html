@@ -18,7 +18,7 @@
 }
 
 <div class="kpi-grid">
-  <div class="kpi-card kp-y">
+  <div class="kpi-card kp-y" style="cursor:pointer" (click)="changerFiltre(filtreStatut() === 'EN_ATTENTE' ? '' : 'EN_ATTENTE')">
     <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">En attente</div>
@@ -26,7 +26,7 @@
       <div class="kpi-meta">à traiter</div>
     </div>
   </div>
-  <div class="kpi-card kp-g">
+  <div class="kpi-card kp-g" style="cursor:pointer" (click)="changerFiltre(filtreStatut() === 'VALIDE' ? '' : 'VALIDE')">
     <div class="kpi-ico ig"><i class="fa-solid fa-check"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Validés</div>
@@ -34,7 +34,7 @@
       <div class="kpi-meta">approvisionnement lancé</div>
     </div>
   </div>
-  <div class="kpi-card kp-r">
+  <div class="kpi-card kp-r" style="cursor:pointer" (click)="changerFiltre(filtreStatut() === 'REJETE' ? '' : 'REJETE')">
     <div class="kpi-ico ir"><i class="fa-solid fa-xmark"></i></div>
     <div class="kpi-body">
       <div class="kpi-lbl">Rejetés</div>

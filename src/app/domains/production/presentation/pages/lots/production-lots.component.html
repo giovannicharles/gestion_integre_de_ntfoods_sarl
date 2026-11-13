@@ -1,261 +1,559 @@
-<div class="ph">
-  <div class="ph-left">
-    <i class="fa-solid fa-boxes-packing ph-ico"></i>
-    <div>
-      <h1 class="ph-title">Lots & Conversion Produits Finis</h1>
-      <p class="ph-sub">Déclarations de production et validation stock</p>
-    </div>
-  </div>
-  <div class="ph-actions">
-    <button class="btn btn-primary" (click)="ouvrirDeclarerLot()">
-      <i class="fa-solid fa-plus"></i> Déclarer Lot
-    </button>
-  </div>
-</div>
-
-@if (message()) {
-  <div class="alert alert-info">{{ message() }}</div>
-}
-@if (erreurAction()) {
-  <div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurAction() }}</div>
-}
-
-<div class="kpi-grid">
-  <div class="kpi-card kp-y">
-    <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Lots déclarés (en attente)</div>
-      <div class="kpi-val">{{ nbDeclares() }}</div>
-      <div class="kpi-meta">en attente validation stock</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-g">
-    <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Validés par le Stock</div>
-      <div class="kpi-val">{{ nbValidesStock() }}</div>
-      <div class="kpi-meta">intégrés en inventaire</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-r">
-    <div class="kpi-ico ir"><i class="fa-solid fa-xmark"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Rejetés</div>
-      <div class="kpi-val">{{ nbRejetes() }}</div>
-      <div class="kpi-meta">non conformes</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-weight-hanging"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Total déclaré (kg)</div>
-      <div class="kpi-val">{{ totalKgDeclares() }} kg</div>
-      <div class="kpi-meta">masse totale produite</div>
-    </div>
-  </div>
-  <div class="kpi-card kp-b">
-    <div class="kpi-ico ib"><i class="fa-solid fa-box"></i></div>
-    <div class="kpi-body">
-      <div class="kpi-lbl">Cartons</div>
-      <div class="kpi-val">{{ totalCartons() }}</div>
-      <div class="kpi-meta">total conditionné</div>
-    </div>
-  </div>
-</div>
-
-@if (lotsAValider().length > 0) {
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-triangle-exclamation"></i> Lots en attente de validation stock</h2>
-    <span class="badge bg-orange badge-sm">{{ lotsAValider().length }} à traiter</span>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>N° Lot</th><th>Produit</th><th>PPH</th><th>Quantité</th><th>Cartons</th><th>DLC</th><th>Déclaré par</th><th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (l of lotsAValider(); track l.numeroLot) {
-        <tr>
-          <td><strong>{{ l.numeroLot }}</strong></td>
-          <td><span class="badge bg-neutral">{{ l.productSku }}</span> {{ l.productName }}</td>
-          <td class="mono">{{ l.referencePPH }}</td>
-          <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
-          <td>{{ l.equivalentUnits }}</td>
-          <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
-          <td>{{ l.matriculeChefProduction }}</td>
-          <td>
-            <div class="row-actions" *appHasPermission="'PRODUCTION_LOT_VALIDER_STOCK'">
-              <button class="btn btn-sm btn-primary" (click)="validerLot(l)">Valider</button>
-              <button class="btn btn-sm btn-danger" (click)="ouvrirRejeter(l)">Rejeter</button>
-            </div>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-}
-
-<div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des Lots</h2>
-  </div>
-  <div class="tbl-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>N° Lot</th>
-          <th>Code Produit</th>
-          <th>Désignation</th>
-          <th>PPH</th>
-          <th>Date Production</th>
-          <th>DLC</th>
-          <th>Quantité (kg)</th>
-          <th>Cartons</th>
-          <th>Déclaré par</th>
-          <th>Statut</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (l of lots(); track l.numeroLot) {
-          <tr [class]="l.statut === 'DECLARE' ? 'row-pending' : ''">
-            <td><strong>{{ l.numeroLot }}</strong></td>
-            <td><span class="badge bg-neutral">{{ l.productSku }}</span></td>
-            <td>{{ l.productName }}</td>
-            <td class="mono">{{ l.referencePPH }}</td>
-            <td>{{ l.dateProduction | date:'dd/MM/yyyy' }}</td>
-            <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ l.declaredQuantityKg }} kg</strong></td>
-            <td>{{ l.equivalentUnits }}</td>
-            <td>{{ l.matriculeChefProduction }}</td>
-            <td>
-              <span [class]="statutClass(l.statut)">{{ statutLabel(l.statut) }}</span>
-              @if (l.statut === 'REJETE' && l.motifRejet) {
-                <div class="text-muted" style="font-size:11px;margin-top:2px">{{ l.motifRejet }}</div>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="10" class="text-center text-muted">Aucun lot déclaré</td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-@if (showDeclarerLot()) {
-<div class="modal-overlay" (click)="showDeclarerLot.set(false)">
-  <div class="modal-box" style="max-width:900px;" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fa-solid fa-plus" style="color:var(--g)"></i>
-        Déclarer un lot de production
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE DE PAGE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon">
+        <svg viewBox="0 0 48 48" width="40" height="40" fill="none" class="animated-ph-svg">
+          <rect x="6" y="8" width="36" height="32" rx="4" fill="var(--color-primary-light, #EAF2ED)" stroke="var(--color-primary, #14532D)" stroke-width="2.5"/>
+          <path d="M14 18H34M14 26H28" stroke="var(--color-primary, #14532D)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="33" cy="27" r="4" fill="var(--color-accent, #F6B60B)"/>
+        </svg>
       </div>
-      <button class="modal-close" (click)="showDeclarerLot.set(false)">
-        <i class="fa-solid fa-xmark"></i>
+      <div>
+        <h1 class="ph-title">Lots & Conversion Produits Finis</h1>
+        <p class="ph-sub">Déclaration officielle par le Chef de Production et suivi d'intégration au <strong>Stock Central</strong></p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-secondary" (click)="exportLotsCsv()">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
+      <button class="btn btn-ghost" (click)="chargerLots(); chargerLotsAValider()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-primary" (click)="ouvrirDeclarerLot()">
+        <i class="fa-solid fa-plus"></i> Déclarer un Lot
       </button>
     </div>
-    <div class="modal-body">
-      <div class="form-row" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
-        <label style="flex:1;min-width:160px;">
-          <span class="lot-lbl">Date de production</span>
-          <input type="date" class="input" [value]="dateProduction" disabled style="background:var(--n50);color:var(--n500);">
-        </label>
-        <span class="lot-date-chip">Date figée : {{ dateProduction | date:'dd/MM/yyyy' }}</span>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info animate-fadeIn"><i class="fa-solid fa-circle-info"></i> {{ message() }}</div>
+  }
+  @if (erreurAction()) {
+    <div class="alert alert-danger animate-fadeIn"><i class="fa-solid fa-triangle-exclamation"></i> {{ erreurAction() }}</div>
+  }
+
+  <!-- CARTES KPI INTERACTIVES -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-interactive" [class.kpi-active]="filtreStatut() === 'DECLARE'" (click)="setFiltreStatut('DECLARE')">
+      <div class="kpi-ico" style="color:var(--color-accent, #F6B60B); background:rgba(246,182,11,0.12)"><i class="fa-solid fa-clock"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Lots déclarés</span>
+        <span class="kpi-val">{{ nbDeclares() }}</span>
+        <span class="kpi-subtext">En attente contrôle stock</span>
       </div>
-      @if (erreurDeclaration()) {
-      <div class="alert alert-danger" style="margin-top:12px">
-        <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurDeclaration() }}
+      @if (filtreStatut() === 'DECLARE') { <span class="kpi-active-tag">Actif</span> }
+    </div>
+
+    <div class="kpi-card kpi-interactive" [class.kpi-active]="filtreStatut() === 'VALIDATED_BY_STOCK'" (click)="setFiltreStatut('VALIDATED_BY_STOCK')">
+      <div class="kpi-ico" style="color:var(--color-primary, #14532D); background:rgba(20,83,45,0.12)"><i class="fa-solid fa-check-double"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Validés Stock</span>
+        <span class="kpi-val">{{ nbValidesStock() }}</span>
+        <span class="kpi-subtext">Intégrés au stock central</span>
       </div>
-      }
-      <div style="margin-top:12px;">
-        @for (l of lignesLot; track $index; let i = $index) {
-          <div class="lc-card">
-            <div class="lc-header">
-              <span class="lc-badge">{{ i + 1 }}</span>
-              <span class="lc-title">Ligne {{ i + 1 }}</span>
-              <button class="lc-del" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-            <div class="lc-body">
-              <div class="form-group">
-                <label class="form-label">Produit <span class="req">*</span></label>
-                <app-product-search
-                  [products]="produits()"
-                  [initialLabel]="l.productLabel"
-                  placeholder="Tapez le code ou le nom du produit fini…"
-                  (productSelected)="surSelectionProduit(l, $event)"
-                  (cleared)="surEffacementProduit(l)">
-                </app-product-search>
-              </div>
-              <div class="lc-row">
-                <div class="form-group">
-                  <label class="form-label">PPH <span class="req">*</span></label>
-                  <select class="input" [(ngModel)]="l.referencePPH">
-                    <option value="">Choisir,</option>
-                    @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Quantité déclarée (kg) <span class="req">*</span></label>
-                  <input type="number" class="input" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1">
-                </div>
-              </div>
-              <div class="lc-row">
-                <div class="form-group">
-                  <label class="form-label">Conditionnement <span class="req">*</span></label>
-                  <app-conditioning-quantity [codeProduit]="l.product?.sku ?? null" (lignesChange)="surLignesConditionnement(l, $event)" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">DLC <span class="req">*</span></label>
-                  <input type="date" class="input" [(ngModel)]="l.dlc">
-                </div>
-              </div>
+      @if (filtreStatut() === 'VALIDATED_BY_STOCK') { <span class="kpi-active-tag">Actif</span> }
+    </div>
+
+    <div class="kpi-card kpi-interactive" [class.kpi-active]="filtreStatut() === 'REJETE'" (click)="setFiltreStatut('REJETE')">
+      <div class="kpi-ico" style="color:var(--color-danger, #C22B2B); background:rgba(194,43,43,0.12)"><i class="fa-solid fa-xmark"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Rejetés</span>
+        <span class="kpi-val">{{ nbRejetes() }}</span>
+        <span class="kpi-subtext">Non conformes</span>
+      </div>
+      @if (filtreStatut() === 'REJETE') { <span class="kpi-active-tag">Actif</span> }
+    </div>
+
+    <div class="kpi-card kpi-interactive" [class.kpi-active]="filtreStatut() === 'TOUS'" (click)="setFiltreStatut('TOUS')">
+      <div class="kpi-ico" style="color:var(--color-primary, #14532D); background:rgba(20,83,45,0.08)"><i class="fa-solid fa-weight-hanging"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total déclaré</span>
+        <span class="kpi-val">{{ totalKgDeclares() | number:'1.0-1' }} kg</span>
+        <span class="kpi-subtext">{{ totalCartons() | number:'1.0-0' }} cartons produits</span>
+      </div>
+      @if (filtreStatut() === 'TOUS') { <span class="kpi-active-tag">Tous</span> }
+    </div>
+  </div>
+
+  <!-- SECTION 1 : LOTS EN ATTENTE DE VALIDATION STOCK -->
+  @if (lotsAValider().length > 0) {
+    <div class="card table-card">
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="card-title"><i class="fa-solid fa-hourglass-half" style="color:var(--color-accent, #F6B60B)"></i> Lots transmis en attente de prise en charge magasin</span>
+          <span class="badge badge-warning">{{ lotsAValider().length }} à traiter</span>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>N° Lot</th>
+              <th>Produit</th>
+              <th>PPH</th>
+              <th class="text-right">Quantité (kg)</th>
+              <th class="text-center">Cartons</th>
+              <th>DLC</th>
+              <th>Déclaré par</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lotsAValider(); track l.numeroLot) {
+              <tr class="row-hover">
+                <td class="fw-bold mono"><span class="lot-pill">{{ l.numeroLot }}</span></td>
+                <td>
+                  <div class="fw-semibold">{{ l.productName }}</div>
+                  <div class="text-muted text-xs mono">SKU: {{ l.productSku }}</div>
+                </td>
+                <td class="mono">{{ l.referencePPH }}</td>
+                <td class="text-right mono fw-bold">{{ l.declaredQuantityKg | number:'1.0-2' }} kg</td>
+                <td class="text-center mono"><span class="carton-badge">{{ l.equivalentUnits }}</span></td>
+                <td>{{ l.dlc | date:'dd/MM/yyyy' }}</td>
+                <td><span class="user-chip"><i class="fa-solid fa-user-gear"></i> {{ l.matriculeChefProduction }}</span></td>
+                <td class="text-center">
+                  <div class="action-buttons-group">
+                    <button class="btn btn-ghost btn-sm" (click)="ouvrirDetails(l)" title="Voir la fiche détaillée">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <span *appHasPermission="'PRODUCTION_LOT_VALIDER_STOCK'">
+                      <button class="btn btn-primary btn-sm" (click)="validerLot(l)" title="Valider physiquement et intégrer au stock">
+                        <i class="fa-solid fa-check"></i> Valider
+                      </button>
+                      <button class="btn btn-outline-danger btn-sm" (click)="ouvrirRejeter(l)" title="Rejeter">
+                        <i class="fa-solid fa-xmark"></i> Rejeter
+                      </button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- SECTION 2 : REGISTRE GLOBAL DES LOTS DE PRODUCTION -->
+  <div class="card table-card" style="margin-top:24px">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="card-title"><i class="fa-solid fa-table"></i> Registre Général des Lots de Production</span>
+        <span class="badge badge-neutral">{{ lotsFiltres().length }} lot(s)</span>
+      </div>
+
+      <!-- FILTRES RAPIDES ET RECHERCHE -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="filter-pills">
+          <button class="filter-pill" [class.active]="filtreStatut() === 'TOUS'" (click)="setFiltreStatut('TOUS')">Tous</button>
+          <button class="filter-pill" [class.active]="filtreStatut() === 'DECLARE'" (click)="setFiltreStatut('DECLARE')">
+            <span class="dot-status dot-yellow"></span> En attente
+          </button>
+          <button class="filter-pill" [class.active]="filtreStatut() === 'VALIDATED_BY_STOCK'" (click)="setFiltreStatut('VALIDATED_BY_STOCK')">
+            <span class="dot-status dot-green"></span> Validés Stock
+          </button>
+          <button class="filter-pill" [class.active]="filtreStatut() === 'REJETE'" (click)="setFiltreStatut('REJETE')">
+            <span class="dot-status dot-red"></span> Rejetés
+          </button>
+        </div>
+
+        @if (pphs().length > 0) {
+          <select class="form-input form-input-sm" [ngModel]="filtrePPH()" (ngModelChange)="filtrePPH.set($event); page.set(1)" style="max-width:180px">
+            <option value="">Tous les PPH</option>
+            @for (p of pphs(); track p.id) {
+              <option [value]="p.referencePPH">{{ p.referencePPH }}</option>
+            }
+          </select>
+        }
+
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-magnifying-glass search-ico"></i>
+          <input type="text" class="form-input search-box-styled"
+                 placeholder="Rechercher lot, SKU, OF, produit…"
+                 [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); page.set(1)" />
+          @if (searchQuery()) {
+            <button class="clear-search-btn" (click)="searchQuery.set(''); page.set(1)"><i class="fa-solid fa-xmark"></i></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Lot</th>
+            <th>Produit & SKU</th>
+            <th>PPH</th>
+            <th>Date Production</th>
+            <th>DLC</th>
+            <th class="text-right">Quantité (kg)</th>
+            <th class="text-center">Cartons</th>
+            <th>Déclaré par</th>
+            <th>Statut</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr><td colspan="10" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des lots…</td></tr>
+          } @else {
+            @for (l of lotsPaginees(); track l.numeroLot) {
+              <tr class="row-hover" [class.row-pending]="l.statut === 'DECLARE'">
+                <td class="fw-bold mono">
+                  <span class="lot-pill clickable-pill" (click)="ouvrirDetails(l)" title="Fiche détaillée">{{ l.numeroLot }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ l.productName }}</div>
+                  <div class="text-muted text-xs mono">SKU: {{ l.productSku }}</div>
+                </td>
+                <td class="mono">{{ l.referencePPH || 'N/A' }}</td>
+                <td>{{ l.dateProduction | date:'dd/MM/yyyy' }}</td>
+                <td><span class="dlc-badge">{{ l.dlc | date:'dd/MM/yyyy' }}</span></td>
+                <td class="text-right mono fw-bold">{{ l.declaredQuantityKg | number:'1.0-2' }} kg</td>
+                <td class="text-center mono"><span class="carton-badge">{{ l.equivalentUnits }}</span></td>
+                <td><span class="user-chip"><i class="fa-solid fa-user-gear"></i> {{ l.matriculeChefProduction }}</span></td>
+                <td>
+                  <span class="{{ statutClass(l.statut) }}">{{ statutLabel(l.statut) }}</span>
+                  @if (l.statut === 'REJETE' && l.motifRejet) {
+                    <div class="text-muted text-xs" style="margin-top:2px">{{ l.motifRejet }}</div>
+                  }
+                </td>
+                <td class="text-center">
+                  <div class="action-buttons-group">
+                    <button class="btn btn-ghost btn-sm" (click)="ouvrirDetails(l)" title="Détails du lot"><i class="fa-solid fa-eye"></i></button>
+                    @if (l.statut === 'VALIDATED_BY_STOCK') {
+                      <button class="btn btn-secondary btn-sm" (click)="ouvrirBonEntree(l)" title="Bon d'Entrée Magasin"><i class="fa-solid fa-file-invoice"></i></button>
+                      <button class="btn btn-ghost btn-sm" (click)="voirEnStock(l.productSku)" title="Voir en Stock Central"><i class="fa-solid fa-box-archive" style="color:var(--color-primary, #14532D)"></i></button>
+                    }
+                    <button class="btn btn-ghost btn-sm" (click)="voirTracabilite(l.numeroLot)" title="Fiche Traçabilité"><i class="fa-solid fa-route" style="color:var(--color-accent, #F6B60B)"></i></button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="empty-state">
+                  <i class="fa-solid fa-inbox empty-icon"></i>
+                  <div class="empty-text">Aucun lot correspondant aux critères.</div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    @if (totalPages() > 1) {
+      <div class="table-pagination">
+        <span class="pagination-info">Page {{ page() }} sur {{ totalPages() }} ({{ lotsFiltres().length }} lots)</span>
+        <div class="pagination-controls">
+          <button class="btn btn-ghost btn-sm" [disabled]="page() <= 1" (click)="pagePrecedente()">
+            <i class="fa-solid fa-chevron-left"></i> Précédent
+          </button>
+          <button class="btn btn-ghost btn-sm" [disabled]="page() >= totalPages()" (click)="pageSuivante()">
+            Suivant <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- MODAL : DÉCLARER UN NOUVEAU LOT -->
+  @if (showDeclarerLot()) {
+    <div class="modal-overlay" (click)="showDeclarerLot.set(false)">
+      <div class="modal-content modal-xl" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-primary">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-industry fa-lg"></i>
+            <div>
+              <h3>Déclaration de Lot de Production</h3>
+              <p class="modal-sub">Déclaration par le Chef de Production pour transfert vers le Stock Central</p>
             </div>
           </div>
-        }
-      </div>
-      <button class="btn btn-ghost" (click)="ajouterLigne()">
-        <i class="fa-solid fa-plus"></i> Ajouter une ligne
-      </button>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="showDeclarerLot.set(false)">Annuler</button>
-      <button class="btn btn-primary" (click)="declarerLot()">
-        <i class="fa-solid fa-check"></i> Déclarer {{ lignesLot.length }} lot(s)
-      </button>
-    </div>
-  </div>
-</div>
-}
+          <button class="modal-close" (click)="showDeclarerLot.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="fw-semibold text-sm">Date de production :</span>
+              <span class="badge badge-central mono">{{ dateProduction | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="text-muted text-xs">
+              <i class="fa-solid fa-shield-halved"></i> Horodatage sécurisé et conforme aux normes sanitaires TANTY.
+            </div>
+          </div>
 
-@if (showRejeter()) {
-<div class="modal-overlay" (click)="showRejeter.set(null)">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title">
-        <i class="fa-solid fa-xmark" style="color:var(--r)"></i>
-        Rejeter le lot {{ showRejeter()?.numeroLot }}
+          @if (erreurDeclaration()) {
+            <div class="alert alert-danger" style="margin-bottom:14px">
+              <i class="fa-solid fa-triangle-exclamation"></i> {{ erreurDeclaration() }}
+            </div>
+          }
+
+          <div>
+            @for (l of lignesLot; track $index; let i = $index) {
+              <div class="lc-card">
+                <div class="lc-header">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="lc-badge">{{ i + 1 }}</span>
+                    <span class="lc-title fw-bold">Ligne de fabrication {{ i + 1 }}</span>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" (click)="supprimerLigne(i)" title="Supprimer cette ligne" [disabled]="lignesLot.length === 1">
+                    <i class="fa-solid fa-trash text-danger"></i>
+                  </button>
+                </div>
+                <div class="lc-body">
+                  <div class="form-group" style="margin-bottom:12px">
+                    <label class="form-label">Produit Fini TANTY <span class="req">*</span></label>
+                    <app-product-search
+                      [products]="produits()"
+                      [initialLabel]="l.productLabel"
+                      placeholder="Tapez le code ou le nom du produit fini (Bouillie, Soja, Arachide...)..."
+                      (productSelected)="surSelectionProduit(l, $event)"
+                      (cleared)="surEffacementProduit(l)">
+                    </app-product-search>
+                  </div>
+                  <div class="grid-2col">
+                    <div class="form-group">
+                      <label class="form-label">Plan PPH de rattachement <span class="req">*</span></label>
+                      <select class="form-input" [(ngModel)]="l.referencePPH">
+                        <option value="">Sélectionner un PPH...</option>
+                        @for (p of pphs(); track p.id) {
+                          <option [value]="p.referencePPH">{{ p.referencePPH }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Quantité déclarée (kg) <span class="req">*</span></label>
+                      <input type="number" class="form-input mono" [(ngModel)]="l.declaredQuantityKg" min="0" step="0.1" placeholder="Ex: 1152.0">
+                    </div>
+                  </div>
+                  <div class="grid-2col" style="margin-top:12px">
+                    <div class="form-group">
+                      <label class="form-label">Conditionnement & Cartons <span class="req">*</span></label>
+                      <app-conditioning-quantity [codeProduit]="l.product?.sku ?? null" (lignesChange)="surLignesConditionnement(l, $event)" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Date Limite de Consommation (DLC) <span class="req">*</span></label>
+                      <input type="date" class="form-input mono" [(ngModel)]="l.dlc">
+                    </div>
+                  </div>
+                  <div class="form-group" style="margin-top:10px">
+                    <label class="form-label">Remarques ou observations (optionnel)</label>
+                    <input type="text" class="form-input" [(ngModel)]="l.notes" placeholder="Ex: Ligne 2, shift du matin, contrôlé conforme">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div style="margin-top:14px">
+            <button class="btn btn-outline btn-sm" (click)="ajouterLigne()">
+              <i class="fa-solid fa-plus"></i> Ajouter une ligne de produit
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showDeclarerLot.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="declarerLot()">
+            <i class="fa-solid fa-check"></i> Déclarer et transmettre {{ lignesLot.length }} lot(s) au Stock
+          </button>
+        </div>
       </div>
-      <button class="modal-close" (click)="showRejeter.set(null)">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
     </div>
-    <div class="modal-body">
-      <label>
-        <span class="lot-lbl">Motif du rejet</span>
-        <textarea class="input" rows="3" [(ngModel)]="motifRejet" placeholder="Précisez le motif de non-conformité..."></textarea>
-      </label>
+  }
+
+  <!-- MODAL : CONFIRMATION VALIDATION DU LOT (SI GESTIONNAIRE DE STOCK) -->
+  @if (lotAConfirmer(); as lot) {
+    <div class="modal-overlay" (click)="annulerValidation()">
+      <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-primary">
+          <h3>Validation Physique — Lot {{ lot.numeroLot }}</h3>
+          <button class="modal-close" (click)="annulerValidation()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <p>Confirmez-vous l'intégration du lot <strong>{{ lot.numeroLot }}</strong> ({{ lot.productSku }}) pour une quantité de <strong>{{ lot.declaredQuantityKg }} kg</strong> au Magasin Central ?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="annulerValidation()">Annuler</button>
+          <button class="btn btn-primary" (click)="confirmerValidationLot()"><i class="fa-solid fa-check"></i> Valider et intégrer</button>
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="showRejeter.set(null)">Annuler</button>
-      <button class="btn btn-danger" (click)="confirmerRejet()">Confirmer le rejet</button>
+  }
+
+  <!-- MODAL : REJET DU LOT AVEC MOTIF -->
+  @if (showRejeter(); as lot) {
+    <div class="modal-overlay" (click)="showRejeter.set(null)">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-danger">
+          <h3>Rejeter le lot {{ lot.numeroLot }}</h3>
+          <button class="modal-close" (click)="showRejeter.set(null)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Motif du rejet <span class="req">*</span></label>
+            <textarea class="form-input" rows="3" [(ngModel)]="motifRejet" placeholder="Précisez la non-conformité..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" (click)="showRejeter.set(null)">Annuler</button>
+          <button class="btn btn-danger" [disabled]="!motifRejet.trim()" (click)="confirmerRejet()">Confirmer le rejet</button>
+        </div>
+      </div>
     </div>
-  </div>
+  }
+
+  <!-- MODAL : FICHE DÉTAILS COMPLÈTE DU LOT -->
+  @if (lotDetails(); as lot) {
+    <div class="modal-overlay" (click)="fermerDetails()">
+      <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header-primary">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-barcode fa-lg"></i>
+            <div>
+              <h3>Fiche Lot de Production — {{ lot.numeroLot }}</h3>
+              <p class="modal-sub">{{ lot.productName }} · SKU: {{ lot.productSku }}</p>
+            </div>
+          </div>
+          <button class="modal-close" (click)="fermerDetails()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="lot-meta-cards">
+            <div class="lmc-item">
+              <div class="lmc-lbl">Statut actuel</div>
+              <div class="lmc-val"><span class="{{ statutClass(lot.statut) }}">{{ statutLabel(lot.statut) }}</span></div>
+            </div>
+            <div class="lmc-item">
+              <div class="lmc-lbl">Quantité déclarée</div>
+              <div class="lmc-val mono">{{ lot.declaredQuantityKg | number:'1.0-2' }} kg</div>
+            </div>
+            <div class="lmc-item">
+              <div class="lmc-lbl">Cartons équivalents</div>
+              <div class="lmc-val mono">{{ lot.equivalentUnits }} carton(s)</div>
+            </div>
+            <div class="lmc-item">
+              <div class="lmc-lbl">Date Production</div>
+              <div class="lmc-val">{{ lot.dateProduction | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="lmc-item">
+              <div class="lmc-lbl">DLC</div>
+              <div class="lmc-val">{{ lot.dlc | date:'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="lmc-item">
+              <div class="lmc-lbl">Chef Production</div>
+              <div class="lmc-val">{{ lot.matriculeChefProduction }}</div>
+            </div>
+          </div>
+
+          <div class="detail-info-row">
+            <span class="dir-lbl">Plan PPH associé :</span>
+            <span class="dir-val mono">{{ lot.referencePPH || 'N/A' }}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="dir-lbl">Emplacement cible :</span>
+            <span class="dir-val"><i class="fa-solid fa-warehouse"></i> Magasin Central — Produits Finis (STOCK_CENTRAL)</span>
+          </div>
+          @if (lot.statut === 'REJETE' && lot.motifRejet) {
+            <div class="alert alert-danger" style="margin-top:14px">
+              <strong>Motif du rejet :</strong> {{ lot.motifRejet }}
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          @if (lot.statut === 'VALIDATED_BY_STOCK') {
+            <button class="btn btn-secondary" (click)="ouvrirBonEntree(lot); fermerDetails()">
+              <i class="fa-solid fa-file-invoice"></i> Voir le Bon d'Entrée
+            </button>
+            <button class="btn btn-primary" (click)="voirEnStock(lot.productSku); fermerDetails()">
+              <i class="fa-solid fa-box-archive"></i> Voir dans le Stock Central
+            </button>
+          }
+          <button class="btn btn-outline" (click)="voirTracabilite(lot.numeroLot); fermerDetails()">
+            <i class="fa-solid fa-route"></i> Fiche Traçabilité
+          </button>
+          <button class="btn btn-ghost" (click)="fermerDetails()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL : BON D'ENTRÉE EN MAGASIN (BEM) IMPRIMABLE -->
+  @if (lotBonEntree(); as lot) {
+    <div class="modal-overlay" (click)="fermerBonEntree()">
+      <div class="modal-content modal-voucher" (click)="$event.stopPropagation()">
+        <div class="voucher-top-actions no-print">
+          <button class="btn btn-primary btn-sm" (click)="imprimerBon()">
+            <i class="fa-solid fa-print"></i> Imprimer / Exporter PDF
+          </button>
+          <button class="btn btn-ghost btn-sm" (click)="fermerBonEntree()"><i class="fa-solid fa-xmark"></i> Fermer</button>
+        </div>
+        <div class="voucher-printable-content">
+          <div class="voucher-header">
+            <div class="voucher-company">
+              <div class="company-logo-text">NTFOODS SARL · TANTY</div>
+              <div class="company-sub">Agro-industrie & Transformation Alimentaire · Douala, Cameroun</div>
+              <div class="company-sub">Circuit Production vers Magasin Central</div>
+            </div>
+            <div class="voucher-stamp">
+              <span class="voucher-badge-approved">ENTRÉE VALIDÉE</span>
+            </div>
+          </div>
+          <div class="voucher-title-section">
+            <div class="voucher-main-title">BON D'ENTRÉE EN MAGASIN (BEM)</div>
+            <div class="voucher-ref mono">RÉF : BEM-{{ lot.numeroLot }}</div>
+            <div class="voucher-date">Intégré au Stock Central : {{ (lot.validatedAt || lot.createdAt || '') | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+          <div class="voucher-details-grid">
+            <div class="vd-item">
+              <span class="vd-label">N° de Lot :</span>
+              <span class="vd-value mono fw-bold">{{ lot.numeroLot }}</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Plan PPH / OF :</span>
+              <span class="vd-value mono">{{ lot.referencePPH || 'Standard' }}</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Produit :</span>
+              <span class="vd-value fw-bold">{{ lot.productName }}</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Code SKU :</span>
+              <span class="vd-value mono">{{ lot.productSku }}</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Masse Totale (kg) :</span>
+              <span class="vd-value mono fw-bold text-success">{{ lot.declaredQuantityKg | number:'1.0-2' }} kg</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Cartons :</span>
+              <span class="vd-value mono fw-bold">{{ lot.equivalentUnits }} carton(s)</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">Date Production :</span>
+              <span class="vd-value">{{ lot.dateProduction | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="vd-item">
+              <span class="vd-label">DLC :</span>
+              <span class="vd-value">{{ lot.dlc | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+          <div class="voucher-signatures">
+            <div class="sig-block">
+              <div class="sig-label">Le Chef de Production</div>
+              <div class="sig-name">{{ lot.matriculeChefProduction }}</div>
+              <div class="sig-space">Visa Production Validé</div>
+            </div>
+            <div class="sig-block">
+              <div class="sig-label">Le Gestionnaire de Stock</div>
+              <div class="sig-name">{{ lot.matriculeGestionnaireValidation || 'Gestionnaire Stock Central' }}</div>
+              <div class="sig-space">Visa Réception Magasin Conforme</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 </div>
-}

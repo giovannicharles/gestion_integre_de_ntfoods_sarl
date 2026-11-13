@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { FormuleLigneBE, ProductionService, ReferentielProductionBE } from '../../../infrastructure/production.service';
 
 interface LigneEdition { matierePremiere: string; proportionKg: number | null; }
@@ -31,7 +32,7 @@ export function libelleCategorie(code: string): string {
 @Component({
   selector: 'app-formules-production',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, FormsModule],
+  imports: [CommonModule, DecimalPipe, FormsModule, RouterLink],
   templateUrl: './formules-production.component.html',
   styleUrls: ['./formules-production.component.css'],
 })

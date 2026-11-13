@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   FormulationService, FormulationBE, LigneFormulationBE, PerteOperationBE,
   BesoinProductionBE, CapaciteProductionBE, FormulationStatutBE,
@@ -24,7 +25,7 @@ interface LigneEdition {
 @Component({
   selector: 'app-formulation',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, HasPermissionDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, RouterLink, HasPermissionDirective],
   templateUrl: './formulation.component.html',
   styleUrls: ['./formulation.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

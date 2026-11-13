@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ProductionService, LotBE, PPHBE } from '../../../infrastructure/production.service';
 import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
@@ -16,7 +17,7 @@ interface LotFormLigne {
   product: Product | null;
   productLabel: string;
   declaredQuantityKg: number;
-  /** Décomposition par conditionnement (P4), [0] alimente conditioningType/conditioningQty/equivalentUnits. */
+  /** Décomposition par conditionnement, [0] alimente conditioningType/conditioningQty/equivalentUnits. */
   lignesConditionnement: LigneConditionnement[];
   dlc: string;
   notes: string;
@@ -25,7 +26,7 @@ interface LotFormLigne {
 @Component({
   selector: 'app-production-lots',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, HasPermissionDirective],
+  imports: [CommonModule, DatePipe, DecimalPipe, FormsModule, ProductSearchComponent, ConditioningQuantityComponent, HasPermissionDirective],
   templateUrl: './production-lots.component.html',
   styleUrls: ['./production-lots.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +35,7 @@ export class ProductionLotsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
   private readonly stockRepo = inject(StockApiRepository);
   private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
 
   today = new Date();
   loading = signal(false);
@@ -41,20 +43,25 @@ export class ProductionLotsComponent implements OnInit {
   lots = signal<LotBE[]>([]);
   lotsAValider = signal<LotBE[]>([]);
   pphs = signal<PPHBE[]>([]);
-  /**
-   * Produits finis réels (module conditionnement, projetés dans le catalogue opérationnel
-   *, voir CatalogueOperationnelSeeder/ProduitsFinisOperationnelSeeder, backend) : même
-   * source que le combobox de Stock (StockApiRepository.getFinishedProducts), réutilisée
-   * ici plutôt que ressaisie en texte libre (P3, 2026-10-15, cause du 400 systématique
-   * corrigée dans la même tranche, voir production.service.ts : LotBE).
-   */
   produits = signal<Product[]>([]);
+
   showDeclarerLot = signal(false);
   showRejeter = signal<LotBE | null>(null);
+  lotAConfirmer = signal<LotBE | null>(null);
+  lotDetails = signal<LotBE | null>(null);
+  lotBonEntree = signal<LotBE | null>(null);
+
   motifRejet = '';
   message = signal('');
   erreurAction = signal<string | null>(null);
   erreurDeclaration = signal<string | null>(null);
+
+  searchQuery = signal('');
+  filtreStatut = signal<'TOUS' | 'DECLARE' | 'VALIDATED_BY_STOCK' | 'REJETE'>('TOUS');
+  filtrePPH = signal('');
+
+  page = signal(1);
+  pageSize = 10;
 
   dateProduction = this.formatDate(new Date());
   lignesLot: LotFormLigne[] = [];
@@ -62,18 +69,49 @@ export class ProductionLotsComponent implements OnInit {
   nbDeclares = computed(() => this.lots().filter(l => l.statut === 'DECLARE').length);
   nbValidesStock = computed(() => this.lots().filter(l => l.statut === 'VALIDATED_BY_STOCK').length);
   nbRejetes = computed(() => this.lots().filter(l => l.statut === 'REJETE').length);
-  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + l.declaredQuantityKg, 0));
-  totalCartons = computed(() => this.lots().reduce((s, l) => s + l.equivalentUnits, 0));
+  totalKgDeclares = computed(() => this.lots().reduce((s, l) => s + (l.declaredQuantityKg || 0), 0));
+  totalCartons = computed(() => this.lots().reduce((s, l) => s + (l.equivalentUnits || 0), 0));
+
+  lotsFiltres = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const st = this.filtreStatut();
+    const pph = this.filtrePPH().trim();
+    let list = this.lots();
+
+    if (st !== 'TOUS') {
+      list = list.filter(l => l.statut === st);
+    }
+    if (pph) {
+      list = list.filter(l => l.referencePPH === pph);
+    }
+    if (!q) return list;
+
+    return list.filter(l =>
+      (l.numeroLot || '').toLowerCase().includes(q) ||
+      (l.productSku || '').toLowerCase().includes(q) ||
+      (l.productName || '').toLowerCase().includes(q) ||
+      (l.referencePPH || '').toLowerCase().includes(q) ||
+      (l.matriculeChefProduction || '').toLowerCase().includes(q) ||
+      (l.statut || '').toLowerCase().includes(q)
+    );
+  });
+
+  totalPages = computed(() => Math.max(1, Math.ceil(this.lotsFiltres().length / this.pageSize)));
+
+  lotsPaginees = computed(() => {
+    const start = (this.page() - 1) * this.pageSize;
+    return this.lotsFiltres().slice(start, start + this.pageSize);
+  });
 
   ngOnInit(): void {
     this.chargerLots();
     this.chargerLotsAValider();
     this.svc.getPPHs().subscribe({
-      next: p => this.pphs.set(p),
+      next: p => this.pphs.set(p || []),
       error: () => this.message.set('Impossible de charger la liste des PPH')
     });
     this.stockRepo.getFinishedProducts().subscribe({
-      next: p => this.produits.set(p),
+      next: p => this.produits.set(p || []),
       error: () => this.message.set('Impossible de charger le catalogue des produits finis')
     });
   }
@@ -81,17 +119,79 @@ export class ProductionLotsComponent implements OnInit {
   chargerLots(): void {
     this.loading.set(true);
     this.svc.getLots().subscribe({
-      next: list => { this.lots.set(list); this.loading.set(false); },
+      next: list => { this.lots.set(list || []); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
 
-  /** Lots déclarés en attente de validation par le Gestionnaire de Stock. */
   chargerLotsAValider(): void {
     this.svc.getLotsAValider().subscribe({
-      next: list => this.lotsAValider.set(list),
+      next: list => this.lotsAValider.set(list || []),
       error: () => {},
     });
+  }
+
+  setFiltreStatut(statut: 'TOUS' | 'DECLARE' | 'VALIDATED_BY_STOCK' | 'REJETE'): void {
+    this.filtreStatut.set(statut);
+    this.page.set(1);
+  }
+
+  ouvrirDetails(lot: LotBE): void {
+    this.lotDetails.set(lot);
+  }
+
+  fermerDetails(): void {
+    this.lotDetails.set(null);
+  }
+
+  ouvrirBonEntree(lot: LotBE): void {
+    this.lotBonEntree.set(lot);
+  }
+
+  fermerBonEntree(): void {
+    this.lotBonEntree.set(null);
+  }
+
+  imprimerBon(): void {
+    window.print();
+  }
+
+  voirEnStock(sku: string): void {
+    this.router.navigate(['/stock/articles'], { queryParams: { sku, search: sku } });
+  }
+
+  voirTracabilite(numeroLot: string): void {
+    this.router.navigate(['/stock/lots/trace'], { queryParams: { lot: numeroLot } });
+  }
+
+  exportLotsCsv(): void {
+    const list = this.lotsFiltres();
+    if (list.length === 0) {
+      this.toast.warning('Aucun lot à exporter.', 'Export CSV');
+      return;
+    }
+    const headers = ['N° Lot', 'Produit', 'SKU', 'PPH', 'Date Production', 'DLC', 'Qté Déclarée (kg)', 'Cartons', 'Chef Production', 'Statut'];
+    const rows = list.map(l => [
+      `"${l.numeroLot || ''}"`,
+      `"${(l.productName || '').replace(/"/g, '""')}"`,
+      `"${l.productSku || ''}"`,
+      `"${l.referencePPH || ''}"`,
+      `"${l.dateProduction ? l.dateProduction.substring(0, 10) : ''}"`,
+      `"${l.dlc ? l.dlc.substring(0, 10) : ''}"`,
+      l.declaredQuantityKg ?? 0,
+      l.equivalentUnits ?? 0,
+      `"${l.matriculeChefProduction || ''}"`,
+      `"${l.statut || ''}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `lots_production_${new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.toast.success(`${list.length} lot(s) exporté(s) en CSV.`, 'Export CSV');
   }
 
   declarerLot(): void {
@@ -100,7 +200,7 @@ export class ProductionLotsComponent implements OnInit {
       l.product && l.referencePPH && l.declaredQuantityKg > 0 && l.dlc && l.lignesConditionnement.length > 0
     );
     if (valides.length === 0) {
-      this.erreurDeclaration.set('Chaque ligne doit avoir un produit sélectionné (dans la liste, pas un code tapé au hasard), un PPH, une quantité (kg) positive, un conditionnement et une DLC.');
+      this.erreurDeclaration.set('Chaque ligne doit avoir un produit sélectionné, un PPH, une quantité positive, un conditionnement et une DLC valide.');
       return;
     }
     const requests = valides.map(l => {
@@ -125,7 +225,7 @@ export class ProductionLotsComponent implements OnInit {
         this.chargerLotsAValider();
         this.showDeclarerLot.set(false);
         this.lignesLot = [];
-        const msg = `${crees.length} lot(s) déclaré(s), en attente de validation stock`;
+        const msg = `${crees.length} lot(s) déclaré(s) avec succès, transmis au Stock Central pour validation.`;
         this.message.set(msg);
         this.toast.success(msg, 'Déclaration de lot');
       },
@@ -177,16 +277,26 @@ export class ProductionLotsComponent implements OnInit {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  /** Validation physique par le Gestionnaire de Stock, déclenche le verrouillage de la fiche. */
-  validerLot(lot: LotBE): void {
-    if (!confirm(`Valider le lot ${lot.numeroLot} et l'intégrer au stock central ?`)) return;
+  ouvrirValiderLot(lot: LotBE): void {
+    this.lotAConfirmer.set(lot);
+  }
+
+  annulerValidation(): void {
+    this.lotAConfirmer.set(null);
+  }
+
+  confirmerValidationLot(): void {
+    const lot = this.lotAConfirmer();
+    if (!lot) return;
+    this.lotAConfirmer.set(null);
     this.erreurAction.set(null);
     this.svc.validerLot(lot.numeroLot).subscribe({
       next: l => {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
-        this.message.set('Lot validé, fiche de production verrouillée');
-        this.toast.success(`Lot ${l.numeroLot} validé et intégré au stock central.`, 'Validation Lot');
+        const msg = `Lot ${l.numeroLot} validé et intégré au stock central.`;
+        this.message.set(msg);
+        this.toast.success(msg, 'Validation Lot Stock');
       },
       error: (err) => {
         const msg = extractApiError(err);
@@ -194,6 +304,10 @@ export class ProductionLotsComponent implements OnInit {
         this.toast.error(msg, 'Échec validation lot');
       }
     });
+  }
+
+  validerLot(lot: LotBE): void {
+    this.ouvrirValiderLot(lot);
   }
 
   ouvrirRejeter(lot: LotBE): void {
@@ -210,10 +324,27 @@ export class ProductionLotsComponent implements OnInit {
         this.remplacerLot(l);
         this.lotsAValider.update(list => list.filter(x => x.numeroLot !== l.numeroLot));
         this.showRejeter.set(null);
-        this.message.set('Lot rejeté');
+        this.message.set(`Lot ${l.numeroLot} rejeté.`);
+        this.toast.warning(`Lot ${l.numeroLot} rejeté.`, 'Lot rejeté');
       },
-      error: (err) => this.erreurAction.set(extractApiError(err))
+      error: (err) => {
+        const msg = extractApiError(err);
+        this.erreurAction.set(msg);
+        this.toast.error(msg, 'Échec rejet lot');
+      }
     });
+  }
+
+  pagePrecedente(): void {
+    if (this.page() > 1) {
+      this.page.set(this.page() - 1);
+    }
+  }
+
+  pageSuivante(): void {
+    if (this.page() < this.totalPages()) {
+      this.page.set(this.page() + 1);
+    }
   }
 
   private remplacerLot(l: LotBE): void {
@@ -221,18 +352,18 @@ export class ProductionLotsComponent implements OnInit {
   }
 
   statutClass(s: string): string {
-    if (s === 'VALIDATED_BY_STOCK') return 'badge bg-success';
-    if (s === 'REJETE') return 'badge bg-red';
-    if (s === 'RECEPTIONNE_STOCK') return 'badge bg-neutral';
-    return 'badge bg-orange';
+    if (s === 'VALIDATED_BY_STOCK') return 'badge badge-success';
+    if (s === 'REJETE') return 'badge badge-danger';
+    if (s === 'RECEPTIONNE_STOCK') return 'badge badge-warning';
+    return 'badge badge-neutral';
   }
 
   statutLabel(s: string): string {
     const map: Record<string, string> = {
       DECLARE: 'Déclaré Production',
-      RECEPTIONNE_STOCK: 'Réceptionné Stock',
-      VALIDATED_BY_STOCK: 'Validé Stock',
-      REJETE: 'Rejeté',
+      RECEPTIONNE_STOCK: 'En attente contrôle',
+      VALIDATED_BY_STOCK: 'Validé Stock Central',
+      REJETE: 'Rejeté non conforme',
     };
     return map[s] ?? s;
   }

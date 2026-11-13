@@ -55,11 +55,9 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'agent-production/registres', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/registres/ap-registres.component').then(m => m.ApRegistresComponent) },
       { path: 'agent-production/fiches', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/agent-production/fiches/ap-fiches.component').then(m => m.ApFichesComponent) },
       { path: 'formules', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/formules/formules-production.component').then(m => m.FormulesProductionComponent) },
+      { path: 'formulation', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/formulation/formulation.component').then(m => m.FormulationComponent) },
       { path: 'composition-emballage', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/composition-emballage/composition-emballage.component').then(m => m.CompositionEmballageComponent) },
       { path: 'lots', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/lots/production-lots.component').then(m => m.ProductionLotsComponent) },
-      // 'formules' (pas 'formulation') : branche le lien de nav déjà présent dans
-      // production-role-config.ts (chef_production, responsable_salle), jusqu'ici mort.
-      { path: 'formules', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/formulation/formulation.component').then(m => m.FormulationComponent) },
       // Unifié le 2026-09-22 (docs/PROGRESS.md) sur 'lots' (LotController), qui a sa propre
       // déclaration, cf. stock.routes.ts pour le détail du doublon éliminé.
       { path: 'declaration-lot', redirectTo: 'lots', pathMatch: 'full' },

@@ -1,37 +1,229 @@
-.card { padding: var(--sp-4); margin-bottom: var(--sp-4); }
-.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
-.card-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: var(--sp-2); }
-.row-pending { background: var(--o-gh); }
+/* ==========================================================================
+   TANTY ERP - MODULE PRODUCTION (LOTS & CONVERSION)
+   Charte graphique : Vert Forêt (#14532D), Or Chaud (#F6B60B), Rouge (#C22B2B)
+   ========================================================================== */
 
-.alert { padding: var(--sp-3); border-radius: 6px; margin-bottom: var(--sp-3); }
-.alert-info { background: var(--info-bg, var(--b-gh)); color: var(--info-text, var(--b)); border: 1px solid var(--b); }
-.alert-danger { background: var(--r-gh); color: var(--r); border: 1px solid var(--r); display: flex; align-items: center; gap: 8px; }
+.dash { display: flex; flex-direction: column; gap: var(--sp-4); padding: 20px; max-width: 1400px; margin: 0 auto; }
 
-.lot-lbl { display: block; font-size: 0.8rem; font-weight: 600; color: var(--n700); margin-bottom: 4px; }
-.lot-date-chip { display: inline-flex; align-items: center; background: var(--g-bg, var(--s-gh)); color: var(--g, var(--g)); padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
+/* Animation globale */
+.animate-fadeInUp { animation: fadeInUp 0.25s ease-out; }
+.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Refonte du 2026-11-10 (demandée par le porteur : "comme pour réception", zone produit plus
-   aérée) : la saisie produit était crammée dans une cellule de 260px au milieu d'une ligne de
-   tableau à 6 colonnes. Remplacée par une carte par ligne, le champ produit sur toute la largeur
-   avec son propre label, comme le fait déjà l'écran de réception. */
-.lc-card { border: 1.5px solid var(--n200); border-radius: var(--r-md); margin-bottom: 12px; transition: border-color .2s, box-shadow .2s; }
+/* Header */
+.ph { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
+.ph-left { display: flex; align-items: center; gap: 13px; }
+.ph-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.ph-title { font-size: 1.25rem; font-weight: 800; color: var(--color-text, #1E293B); margin: 0; }
+.ph-sub { font-size: 0.8rem; color: var(--color-text-muted, #64748B); margin-top: 2px; }
+.ph-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* KPI Cards Interactives */
+.kpi-interactive {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1.5px solid var(--color-border, #E2E8F0);
+}
+.kpi-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-primary, #14532D);
+}
+.kpi-active {
+  border-color: var(--color-primary, #14532D) !important;
+  box-shadow: 0 0 0 2px rgba(20, 83, 45, 0.25), 0 6px 16px rgba(20, 83, 45, 0.08) !important;
+  background: linear-gradient(to bottom, #FFFFFF, var(--color-primary-light, #EAF2ED)) !important;
+}
+.kpi-active-tag {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  background: var(--color-primary, #14532D);
+  color: #FFFFFF;
+}
+.kpi-subtext {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #64748B);
+  margin-top: 3px;
+  display: block;
+}
+
+/* Filter Pills */
+.filter-pills {
+  display: inline-flex;
+  background: var(--color-bg-subtle, #F1F5F9);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 3px;
+}
+.filter-pill {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text, #1E293B);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-pill:hover { background: rgba(255, 255, 255, 0.6); }
+.filter-pill.active {
+  background: #FFFFFF;
+  color: var(--color-primary, #14532D);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.dot-status { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-yellow { background: #EAB308; }
+.dot-green { background: #16A34A; }
+.dot-red { background: #DC2626; }
+
+/* Styled Search Box */
+.search-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.search-ico {
+  position: absolute;
+  left: 10px;
+  color: var(--color-text-muted, #94A3B8);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+.search-box-styled {
+  padding-left: 32px !important;
+  padding-right: 28px !important;
+  font-size: 0.82rem !important;
+  width: 240px;
+  border-radius: 8px !important;
+}
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+/* Table styling */
+.card { background: #fff; border: 1.5px solid var(--color-border, #E2E8F0); border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.card-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--color-border, #E2E8F0); }
+.card-title { font-size: 0.95rem; font-weight: 700; color: var(--color-text, #1E293B); display: flex; align-items: center; gap: 8px; margin: 0; }
+.row-pending { background: rgba(246, 182, 11, 0.05); }
+
+.lot-pill {
+  display: inline-block;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+.clickable-pill {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--color-primary, #14532D);
+}
+.clickable-pill:hover {
+  border-color: var(--color-primary, #14532D);
+  background: var(--color-primary-light, #EAF2ED);
+}
+.carton-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.user-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; color: #475569; }
+.dlc-badge { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.action-buttons-group { display: inline-flex; gap: 5px; align-items: center; }
+
+.empty-state { text-align: center; padding: 36px 16px !important; }
+.empty-icon { font-size: 2.2rem; margin-bottom: 8px; opacity: 0.8; }
+.empty-text { font-weight: 600; font-size: 0.95rem; color: var(--color-text, #1E293B); }
+
+/* Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-border, #E2E8F0);
+  background: var(--color-bg-subtle, #F8FAFC);
+}
+.pagination-info { font-size: 0.82rem; color: var(--color-text-muted, #64748B); }
+.pagination-controls { display: flex; gap: 6px; }
+
+/* Ligne Conditionnement Cards */
+.lc-card { border: 1.5px solid var(--color-border, #E2E8F0); border-radius: 8px; margin-bottom: 12px; transition: border-color .2s; background: #FAFAFA; }
 .lc-card:last-child { margin-bottom: 0; }
-.lc-card:hover { border-color: var(--n300); box-shadow: var(--sh-sm); }
-.lc-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--n50); border-bottom: 1px solid var(--n150); border-radius: var(--r-md) var(--r-md) 0 0; }
-.lc-badge { width: 22px; height: 22px; border-radius: 50%; background: var(--g); color: var(--w); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lc-title { font-size: 11px; font-weight: 800; color: var(--n500); text-transform: uppercase; letter-spacing: .5px; }
-.lc-del { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--n400); font-size: 13px; width: 28px; height: 28px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.lc-del:hover { background: var(--r-gh); color: var(--r); }
+.lc-card:hover { border-color: var(--color-primary, #14532D); }
+.lc-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: #F1F5F9; border-bottom: 1px solid #E2E8F0; border-radius: 8px 8px 0 0; }
+.lc-badge { width: 22px; height: 22px; border-radius: 50%; background: var(--color-primary, #14532D); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lc-title { font-size: 12px; font-weight: 700; color: #334155; }
 .lc-body { padding: 14px; }
-.lc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
-@media (max-width: 600px) { .lc-row { grid-template-columns: 1fr; } }
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 650px) { .grid-2col { grid-template-columns: 1fr; } }
 
-@media (max-width:767px) {
-  .card { padding:14px; }
-  .card-hd { flex-direction:column;align-items:flex-start;gap:8px; }
-  .filter-row { flex-direction:column;align-items:flex-start;width:100%;gap:6px; }
-  .form-actions { flex-direction:column;gap:8px; }
-  .form-actions .btn { width:100%;justify-content:center; }
-  .modal-overlay { align-items:flex-end;padding:0; }
-  .modal-box { width:100%;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0; }
+/* Lot Meta Cards */
+.lot-meta-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.lmc-item { background: var(--color-bg-subtle, #F8FAFC); border: 1px solid var(--color-border, #E2E8F0); border-radius: 8px; padding: 10px 12px; }
+.lmc-lbl { font-size: 0.72rem; color: var(--color-text-muted, #64748B); text-transform: uppercase; margin-bottom: 4px; }
+.lmc-val { font-weight: 700; font-size: 0.95rem; color: var(--color-text, #1E293B); }
+.detail-info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.85rem; border-bottom: 1px solid var(--color-border, #F1F5F9); }
+.dir-lbl { color: var(--color-text-muted, #64748B); }
+
+/* Bon d'entrée imprimable */
+.modal-voucher { max-width: 660px !important; width: 95%; background: #FFFFFF; border-radius: 12px; overflow: hidden; }
+.voucher-top-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+.voucher-printable-content { padding: 24px 30px; color: #1E293B; background: #FFFFFF; }
+.voucher-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--color-primary, #14532D); padding-bottom: 14px; margin-bottom: 16px; }
+.company-logo-text { font-size: 1.2rem; font-weight: 800; color: var(--color-primary, #14532D); }
+.company-sub { font-size: 0.78rem; color: #64748B; margin-top: 2px; }
+.voucher-badge-approved { display: inline-block; padding: 6px 12px; border: 2px solid #16A34A; color: #16A34A; font-weight: 800; font-size: 0.75rem; border-radius: 6px; transform: rotate(-3deg); }
+.voucher-title-section { text-align: center; margin-bottom: 18px; }
+.voucher-main-title { font-size: 1.15rem; font-weight: 800; color: var(--color-primary, #14532D); }
+.voucher-ref { font-size: 0.9rem; font-weight: 700; color: var(--color-accent, #B45309); margin: 4px 0; }
+.voucher-date { font-size: 0.78rem; color: #64748B; }
+.voucher-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; }
+.vd-item { display: flex; flex-direction: column; }
+.vd-label { font-size: 0.72rem; color: #64748B; text-transform: uppercase; margin-bottom: 2px; }
+.vd-value { font-size: 0.88rem; }
+.voucher-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #E2E8F0; }
+.sig-block { text-align: center; }
+.sig-label { font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px; }
+.sig-name { font-size: 0.8rem; color: #1E293B; font-weight: 600; }
+.sig-space { margin-top: 14px; padding: 10px; border: 1px dashed #94A3B8; border-radius: 6px; font-size: 0.72rem; color: #16A34A; font-weight: 700; background: #F0FDF4; }
+
+@media print {
+  body * { visibility: hidden; }
+  .no-print { display: none !important; }
+  .modal-overlay { position: static !important; background: none !important; }
+  .modal-voucher, .voucher-printable-content, .voucher-printable-content * { visibility: visible !important; }
+  .modal-voucher { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow: none !important; }
 }

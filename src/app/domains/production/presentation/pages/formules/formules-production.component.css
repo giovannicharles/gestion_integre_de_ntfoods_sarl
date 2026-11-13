@@ -5,6 +5,11 @@
 
 :host { display: block; }
 
+.sub-nav-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.sub-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; background: #F1F5F9; color: #64748B; border: 1.5px solid transparent; transition: all 0.15s ease; }
+.sub-pill:hover { color: #14532D; background: #FFFFFF; border-color: #E2E8F0; }
+.sub-pill.active { background: #FFFFFF; color: #14532D; border-color: #14532D; font-weight: 700; box-shadow: 0 2px 6px rgba(20, 83, 45, 0.1); }
+
 /* ── Bandeau ──────────────────────────────────────────────── */
 .fp-hero {
   display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;

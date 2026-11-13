@@ -13,6 +13,16 @@
   </div>
 </div>
 
+<!-- NAVIGATION ONGLETS SOUS-MODULE RECETTES -->
+<nav class="sub-nav-pills" style="display:flex;gap:8px;margin-bottom:16px;">
+  <a class="sub-pill" routerLink="/production/formules">
+    <i class="fa-solid fa-flask"></i> Formules & Recettes Produits
+  </a>
+  <a class="sub-pill active" routerLink="/production/formulation">
+    <i class="fa-solid fa-vial"></i> Nomenclatures & Pertes d'Opération (Formulation Avancée)
+  </a>
+</nav>
+
 @if (message()) {
   <div class="alert alert-info">{{ message() }}</div>
 }
