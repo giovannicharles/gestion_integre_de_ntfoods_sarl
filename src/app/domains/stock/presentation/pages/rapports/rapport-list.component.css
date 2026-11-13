@@ -1,8 +1,13 @@
 /* Styles spécifiques, hérite du design system global (styles.css / charte TANTY) */
 
 .rpt-section { margin-bottom: 22px; }
-.rpt-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.rpt-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .rpt-section-head h2 { font-family: var(--font-d); font-size: 16px; font-weight: 700; color: var(--n900); margin: 0; }
+.rpt-doc-search-wrap { position: relative; display: flex; align-items: center; min-width: 260px; }
+.rpt-doc-search-wrap i { position: absolute; left: 10px; color: var(--n400); font-size: 12px; }
+.rpt-doc-search-wrap input { padding-left: 30px; border-radius: var(--r-full); background: #fff; }
+.rpt-doc-empty { grid-column: 1 / -1; padding: 32px; text-align: center; color: var(--n400); display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 13px; }
+.rpt-doc-empty i { font-size: 24px; color: var(--n300); }
 
 .rpt-form-card { margin-bottom: 22px; }
 .rpt-form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }

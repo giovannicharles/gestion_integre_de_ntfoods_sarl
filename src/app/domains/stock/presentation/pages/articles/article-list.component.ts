@@ -80,6 +80,7 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   sortKey = signal<SortKey>('productSku');
   sortDir = signal<SortDir>('asc');
   filterPackaging = signal('ALL');
+  filterAlert = signal<'ALL' | 'CRITIQUE' | 'FAIBLE' | 'NORMAL'>('ALL');
 
   showAdjustModal = signal(false);
   adjustItem = signal<StockItem | null>(null);
@@ -340,6 +341,10 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (pkg !== 'ALL') {
       r = r.filter(i => i.packagingType === pkg);
     }
+    const alertLvl = this.filterAlert();
+    if (alertLvl !== 'ALL') {
+      r = r.filter(i => this.computeAlert(i) === alertLvl);
+    }
 
     const sk = this.sortKey();
     const sd = this.sortDir();
@@ -365,6 +370,15 @@ export class ArticleListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onFilterPackaging(): void {
+    this.applyFilters();
+  }
+
+  setFilterAlert(level: 'ALL' | 'CRITIQUE' | 'FAIBLE' | 'NORMAL'): void {
+    if (this.filterAlert() === level && level !== 'ALL') {
+      this.filterAlert.set('ALL');
+    } else {
+      this.filterAlert.set(level);
+    }
     this.applyFilters();
   }
 

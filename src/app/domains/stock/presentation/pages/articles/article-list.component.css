@@ -25,8 +25,11 @@
 
 /* ── KPI BAR ── */
 .kpi-bar { display:flex;align-items:center;padding:16px 24px;background:#fff;border:1.5px solid var(--n200);border-radius:var(--r-lg);box-shadow:var(--sh-sm);flex-wrap:wrap; }
-.kpi-item { display:flex;flex-direction:column;gap:2px;padding:0 20px; }
-.kpi-item:first-child { padding-left:0; }
+.kpi-item { display:flex;flex-direction:column;gap:2px;padding:6px 16px;border-radius:var(--r-md);transition:all .15s ease; }
+.kpi-item:first-child { padding-left:12px; }
+.kpi-clickable { cursor:pointer; }
+.kpi-clickable:hover { background:var(--g-gh); }
+.kpi-clickable.kpi-active { background:var(--g-gh); box-shadow:0 0 0 1.5px var(--g); }
 .kpi-val { font-family:var(--font-d);font-size:21px;font-weight:800;color:var(--n900);line-height:1; }
 .kpi-lbl { font-size:10px;color:var(--n400);font-weight:600;text-transform:uppercase;letter-spacing:.3px; }
 .kpi-sep { width:1px;height:40px;background:var(--n200); }

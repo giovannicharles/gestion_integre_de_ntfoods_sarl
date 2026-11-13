@@ -234,6 +234,15 @@ export class RapportListComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   documentTemplates: DocumentTemplate[] = [];
+  docSearch = signal('');
+  filteredDocTemplates = computed(() => {
+    const q = this.docSearch().toLowerCase().trim();
+    if (!q) return this.documentTemplates;
+    return this.documentTemplates.filter(d =>
+      d.label.toLowerCase().includes(q) ||
+      d.description.toLowerCase().includes(q)
+    );
+  });
 
   newReport: GenerateReportRequest = {
     type: 'STOCK_CENTRAL_STATUS',

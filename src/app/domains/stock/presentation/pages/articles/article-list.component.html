@@ -56,21 +56,42 @@
 
   @if (!loading()) {
 
-    <!-- KPI BAR -->
+    <!-- KPI BAR INTERACTIVE -->
     <div class="kpi-bar">
-      <div class="kpi-item"><span class="kpi-val">{{ items().length }}</span><span class="kpi-lbl">Références</span></div>
+      <div class="kpi-item kpi-clickable" [class.kpi-active]="filterAlert() === 'ALL'" (click)="setFilterAlert('ALL')" title="Afficher toutes les références">
+        <span class="kpi-val">{{ items().length }}</span>
+        <span class="kpi-lbl">Références</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val">{{ totalQuantity | number }}</span><span class="kpi-lbl">Quantité totale</span></div>
+      <div class="kpi-item">
+        <span class="kpi-val">{{ totalQuantity | number }}</span>
+        <span class="kpi-lbl">Quantité totale</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val">{{ totalCartons | number }}</span><span class="kpi-lbl">Cartons</span></div>
+      <div class="kpi-item">
+        <span class="kpi-val">{{ totalCartons | number }}</span>
+        <span class="kpi-lbl">Cartons</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val">{{ totalWeight | number:'1.0-1' }}</span><span class="kpi-lbl">Poids (kg)</span></div>
+      <div class="kpi-item">
+        <span class="kpi-val">{{ totalWeight | number:'1.0-1' }}</span>
+        <span class="kpi-lbl">Poids (kg)</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val kpi-danger">{{ criticalCount }}</span><span class="kpi-lbl">Critique</span></div>
+      <div class="kpi-item kpi-clickable" [class.kpi-active]="filterAlert() === 'CRITIQUE'" (click)="setFilterAlert('CRITIQUE')" title="Filtrer : rupture ou stock critique">
+        <span class="kpi-val kpi-danger">{{ criticalCount }}</span>
+        <span class="kpi-lbl">Critique</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val kpi-warning">{{ lowCount }}</span><span class="kpi-lbl">Faible</span></div>
+      <div class="kpi-item kpi-clickable" [class.kpi-active]="filterAlert() === 'FAIBLE'" (click)="setFilterAlert('FAIBLE')" title="Filtrer : sous seuil de réapprovisionnement">
+        <span class="kpi-val kpi-warning">{{ lowCount }}</span>
+        <span class="kpi-lbl">Faible</span>
+      </div>
       <div class="kpi-sep"></div>
-      <div class="kpi-item"><span class="kpi-val kpi-success">{{ normalCount }}</span><span class="kpi-lbl">Normal</span></div>
+      <div class="kpi-item kpi-clickable" [class.kpi-active]="filterAlert() === 'NORMAL'" (click)="setFilterAlert('NORMAL')" title="Filtrer : stock suffisant">
+        <span class="kpi-val kpi-success">{{ normalCount }}</span>
+        <span class="kpi-lbl">Normal</span>
+      </div>
     </div>
 
     <!-- INVENTORY STATS DASHBOARD -->

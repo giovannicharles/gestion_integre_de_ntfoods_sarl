@@ -346,7 +346,14 @@
 
     <!-- DOCUMENT TEMPLATES -->
     <div class="rpt-section">
-      <div class="rpt-section-head"><span class="sh-ico sh-g"><i class="fa-solid fa-file-export"></i></span><h2>Documents à générer</h2></div>
+      <div class="rpt-section-head">
+        <span class="sh-ico sh-g"><i class="fa-solid fa-file-export"></i></span>
+        <h2>Documents officiels & Fiches de stock</h2>
+        <div class="rpt-doc-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="form-control form-control-sm" placeholder="Rechercher une fiche, valorisation, inventaire..." [ngModel]="docSearch()" (ngModelChange)="docSearch.set($event)">
+        </div>
+      </div>
 
       <div class="rpt-period-bar">
         <label><i class="fa-solid fa-calendar"></i> Période pour les synthèses :</label>
@@ -356,7 +363,7 @@
       </div>
 
       <div class="rpt-doc-grid">
-        @for (doc of documentTemplates; track doc.id) {
+        @for (doc of filteredDocTemplates(); track doc.id) {
           <div class="rpt-doc-card" (click)="doc.action()">
             <div class="rpt-doc-icon" [style.background]="doc.color + '20'" [style.color]="doc.color">
               <i class="fa-solid {{ doc.icon }}"></i>
@@ -366,7 +373,12 @@
               <p>{{ doc.description }}</p>
               @if (doc.needsPeriod) { <span class="rpt-doc-tag"><i class="fa-solid fa-calendar-day"></i> Période</span> }
             </div>
-            <button class="rpt-doc-btn"aria-label="Télécharger le document"><i class="fa-solid fa-download"></i></button>
+            <button class="rpt-doc-btn" aria-label="Télécharger le document"><i class="fa-solid fa-download"></i></button>
+          </div>
+        } @empty {
+          <div class="rpt-doc-empty">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>Aucune fiche ne correspond à votre recherche</span>
           </div>
         }
       </div>
