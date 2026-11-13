@@ -7,84 +7,102 @@
       </div>
       <div>
         <h1 class="ph-title">Reporting Budgétaire & Audit des Variances</h1>
-        <p class="ph-sub">Exécution des budgets par centre de coûts analytique, alertes de surconsommation et marges</p>
+        <p class="ph-sub">Exécution budgétaire globale, analyse des postes de dépenses et marges brutes calculées par le serveur</p>
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-primary"><i class="fa-solid fa-file-excel"></i> Exporter Rapport</button>
+      <button class="btn btn-outline" (click)="chargerControle()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
     </div>
   </div>
+
+  @if (loading()) {
+  <div class="card" style="padding: 40px; text-align: center;">
+    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 2rem; margin-bottom: 12px;"></i>
+    <p style="font-weight: 600; color: var(--n700);">Chargement des budgets et marges depuis le serveur…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="card" style="padding: 30px; text-align: center; border-left: 4px solid var(--r);">
+    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 10px;"></i>
+    <p class="text-danger fw-bold">{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerControle()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
 
   <!-- KPIS -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-ico ig"><i class="fa-solid fa-wallet"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Budget Alloué Annuel</span>
-        <span class="kpi-val">{{ fCFA(totalBudget) }}</span>
-        <span class="kpi-meta">Plafond total validé DG</span>
+        <span class="kpi-lbl">Budget Total Alloué</span>
+        <span class="kpi-val">{{ fCFA(budgetTotal) }}</span>
+        <span class="kpi-meta">{{ controle()?.nombrePostesBudget ?? 0 }} postes budgétaires</span>
       </div>
     </div>
     <div class="kpi-card kp-y">
       <div class="kpi-ico iy"><i class="fa-solid fa-receipt"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Dépenses Engagées</span>
-        <span class="kpi-val">{{ fCFA(totalEngage) }}</span>
-        <span class="kpi-meta">{{ tauxGlobal }}% du budget consommé</span>
+        <span class="kpi-lbl">Budget Engagé</span>
+        <span class="kpi-val">{{ fCFA(budgetEngage) }}</span>
+        <span class="kpi-meta">{{ tauxConsommation }}% du budget consommé</span>
       </div>
     </div>
     <div class="kpi-card kp-b">
       <div class="kpi-ico ib"><i class="fa-solid fa-scale-balanced"></i></div>
       <div class="kpi-body">
         <span class="kpi-lbl">Solde Disponible</span>
-        <span class="kpi-val">{{ fCFA(totalBudget - totalEngage) }}</span>
+        <span class="kpi-val">{{ fCFA(soldeDisponible) }}</span>
         <span class="kpi-meta">Marge de manœuvre</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ir"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Budgets Dépassés</span>
+        <span class="kpi-val" [class.text-danger]="(controle()?.budgetsDepasses ?? 0) > 0">{{ controle()?.budgetsDepasses ?? 0 }}</span>
+        <span class="kpi-meta">{{ controle()?.nombreVariances ?? 0 }} variances constatées</span>
       </div>
     </div>
   </div>
 
-  <!-- TABLEAU PAR CENTRE DE COUTS -->
+  <!-- TABLEAU DU TOP MARGES RÉEL -->
   <div class="card" style="padding: 20px;">
-    <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
-      <i class="fa-solid fa-sitemap text-primary" style="margin-right: 8px;"></i>
-      Ventilation de l'Exécution Budgétaire par Centre Analytique
-    </h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin: 0;">
+        <i class="fa-solid fa-chart-pie text-primary" style="margin-right: 8px;"></i>
+        Produits TANTY à Plus Forte Marge & Rentabilité (Calculé en Temps Réel)
+      </h3>
+      <span class="badge bg-gold badge-sm">Marge Moyenne : {{ controle()?.margeMoyennePct ?? 0 }}%</span>
+    </div>
 
     <table class="table" style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
-          <th>Code</th>
-          <th>Centre de Coûts Analytique</th>
-          <th style="text-align: right;">Budget Alloué</th>
-          <th style="text-align: right;">Engagé</th>
-          <th style="text-align: right;">Écart / Reste</th>
-          <th style="text-align: center;">Taux</th>
-          <th style="text-align: center;">Statut</th>
+          <th>Code Article</th>
+          <th>Désignation Produit</th>
+          <th style="text-align: right;">Taux de Marge (%)</th>
+          <th style="text-align: right;">Marge Brute Réalisée</th>
         </tr>
       </thead>
       <tbody>
-        @for (c of centres(); track c.code) {
+        @for (m of controle()?.topMarges ?? []; track m.code) {
         <tr>
-          <td class="mono fw-bold text-primary">{{ c.code }}</td>
-          <td class="fw-bold">{{ c.libelle }}</td>
-          <td style="text-align: right;" class="mono">{{ fCFA(c.budgetAlloueFCFA) }}</td>
-          <td style="text-align: right;" class="mono">{{ fCFA(c.depensesEngageesFCFA) }}</td>
-          <td style="text-align: right;" class="mono fw-bold" [class.text-danger]="c.ecartFCFA < 0" [class.text-success]="c.ecartFCFA >= 0">
-            {{ fCFA(c.ecartFCFA) }}
-          </td>
-          <td style="text-align: center;" class="mono fw-bold">{{ c.tauxConsommation }}%</td>
-          <td style="text-align: center;">
-            @if (c.statut === 'CONFORME') {
-            <span class="badge bg-success badge-sm">CONFORME</span>
-            } @else if (c.statut === 'ATTENTION') {
-            <span class="badge bg-gold badge-sm">VIGILANCE</span>
-            } @else {
-            <span class="badge bg-red badge-sm">DÉPASSEMENT</span>
-            }
+          <td class="mono fw-bold text-primary">{{ m.code }}</td>
+          <td class="fw-bold">{{ m.designation }}</td>
+          <td style="text-align: right;" class="text-success fw-bold">{{ m.margePct }}%</td>
+          <td style="text-align: right;" class="mono fw-bold">{{ fCFA(m.margeTotaleFCFA) }}</td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="4" style="padding: 36px; text-align: center; color: var(--n600);">
+            <i class="fa-solid fa-calculator" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+            Aucune analyse de marge disponible pour l'instant.
           </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
+  }
 </div>

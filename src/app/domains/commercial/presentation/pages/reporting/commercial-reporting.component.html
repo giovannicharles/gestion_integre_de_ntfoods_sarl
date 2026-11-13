@@ -6,99 +6,111 @@
         <i class="fa-solid fa-clipboard-list"></i>
       </div>
       <div>
-        <h1 class="ph-title">Rapport Journalier de Tournée Commerciale</h1>
-        <p class="ph-sub">Supervision terrain · Boutiques visitées · Encaissements · Taux de conversion</p>
+        <h1 class="ph-title">Rapport d'Activité & Ventes de Tournée</h1>
+        <p class="ph-sub">Bilan réel des ventes enregistrées, encaissements cash et créances terrain du commercial</p>
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-outline">
-        <i class="fa-solid fa-print"></i> Imprimer Rapport
-      </button>
-      <button class="btn btn-primary">
-        <i class="fa-solid fa-plus"></i> Nouvelle Visite
+      <button class="btn btn-outline" (click)="chargerDonneesReelles()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
       </button>
     </div>
   </div>
 
-  <!-- KPIS DE TOURNÉE -->
+  @if (loading()) {
+  <div class="card" style="padding: 40px; text-align: center;">
+    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 2rem; margin-bottom: 12px;"></i>
+    <p style="font-weight: 600; color: var(--n700);">Chargement des ventes et encaissements depuis le serveur…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="card" style="padding: 30px; text-align: center; border-left: 4px solid var(--r);">
+    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 10px;"></i>
+    <p class="text-danger fw-bold">{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerDonneesReelles()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- KPIS RÉELS -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
       <div class="kpi-ico ig"><i class="fa-solid fa-shop"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Boutiques Visitées</span>
-        <span class="kpi-val">{{ totalVisites }}</span>
-        <span class="kpi-meta">{{ boutiquesLivrees }} livrées avec succès</span>
+        <span class="kpi-lbl">Ventes Réalisées</span>
+        <span class="kpi-val">{{ totalVentesCount }}</span>
+        <span class="kpi-meta">sur les tournées en cours</span>
       </div>
     </div>
     <div class="kpi-card kp-y">
-      <div class="kpi-ico iy"><i class="fa-solid fa-boxes-packing"></i></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-sack-dollar"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Cartons Livrés</span>
-        <span class="kpi-val">{{ totalCartons }}</span>
-        <span class="kpi-meta">sur dotation du jour</span>
+        <span class="kpi-lbl">Chiffre d'Affaires Total</span>
+        <span class="kpi-val">{{ fCFA(totalCaFCFA) }}</span>
+        <span class="kpi-meta">valeur totale livrée</span>
       </div>
     </div>
     <div class="kpi-card kp-b">
       <div class="kpi-ico ib"><i class="fa-solid fa-money-bill-wave"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Cash Encaissé</span>
-        <span class="kpi-val">{{ fCFA(totalCash) }}</span>
-        <span class="kpi-meta">à verser en caisse</span>
+        <span class="kpi-lbl">Cash Encaissé Réel</span>
+        <span class="kpi-val">{{ fCFA(totalCashEncaisse) }}</span>
+        <span class="kpi-meta">règlements cash enregistrés</span>
       </div>
     </div>
     <div class="kpi-card kp-g">
-      <div class="kpi-ico ig"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-hand-holding-dollar"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Taux de Conversion</span>
-        <span class="kpi-val">{{ tauxReussite }}%</span>
-        <span class="kpi-meta">Objectif : > 75%</span>
+        <span class="kpi-lbl">Créances / Reste Dû</span>
+        <span class="kpi-val" [class.text-danger]="totalCreancesRestantes > 0">{{ fCFA(totalCreancesRestantes) }}</span>
+        <span class="kpi-meta">{{ totalRecouvrementsEnCours }} dossiers recouvrement</span>
       </div>
     </div>
   </div>
 
-  <!-- TABLEAU DU JOURNAL DE TOURNÉE -->
+  <!-- TABLEAU RÉEL DES VENTES EN BASE DE DONNÉES -->
   <div class="card" style="padding: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <h3 style="font-size: 1rem; font-weight: 700; color: var(--n800); margin: 0;">
         <i class="fa-solid fa-route text-primary" style="margin-right: 8px;"></i>
-        Détail Chronologique des Visites Terrain
+        Historique des Ventes du Commercial Connecté
       </h3>
-      <span class="badge bg-gold badge-sm">Tournée Active</span>
+      <span class="badge bg-gold badge-sm">{{ ventes().length }} vente(s) enregistrée(s)</span>
     </div>
 
     <table class="table" style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
-          <th>Heure</th>
-          <th>Point de Vente</th>
-          <th>Secteur / Quartier</th>
-          <th>Statut</th>
-          <th style="text-align: right;">Cartons</th>
-          <th style="text-align: right;">Cash Encaissé</th>
-          <th>Observations</th>
+          <th>N° Vente</th>
+          <th>Date</th>
+          <th>Code Client</th>
+          <th>Mode Paiement</th>
+          <th style="text-align: right;">Articles</th>
+          <th style="text-align: right;">Total TTC</th>
+          <th style="text-align: center;">Statut</th>
         </tr>
       </thead>
       <tbody>
-        @for (v of visites(); track v.id) {
+        @for (v of ventes(); track v.id) {
         <tr>
-          <td class="mono fw-bold">{{ v.heure }}</td>
-          <td class="fw-bold">{{ v.nomBoutique }}</td>
-          <td class="text-muted">{{ v.quartier }}</td>
-          <td>
-            @if (v.statut === 'LIVRE') {
-            <span class="badge bg-success badge-sm">LIVRÉ</span>
-            } @else if (v.statut === 'COMMANDE_PRISE') {
-            <span class="badge bg-primary badge-sm">CMD PRISE</span>
-            } @else {
-            <span class="badge bg-neutral badge-sm">NON RÉASSORTI</span>
-            }
+          <td class="mono fw-bold text-primary">{{ v.numeroVente }}</td>
+          <td>{{ v.date | date:'dd/MM/yyyy · HH:mm' }}</td>
+          <td class="fw-bold">{{ v.codeClient }}</td>
+          <td><span class="badge bg-neutral badge-sm">{{ v.modeReglement || 'CASH' }}</span></td>
+          <td style="text-align: right;" class="mono">{{ v.lignes?.length || 0 }} réf</td>
+          <td style="text-align: right;" class="mono fw-bold">{{ fCFA(v.montantTotal) }}</td>
+          <td style="text-align: center;">
+            <span class="badge bg-success badge-sm">{{ v.statut || 'VALIDÉE' }}</span>
           </td>
-          <td style="text-align: right;" class="mono">{{ v.cartonsLivres }}</td>
-          <td style="text-align: right;" class="mono fw-bold">{{ fCFA(v.montantEncaisseFCFA) }}</td>
-          <td style="font-size: 0.8rem; color: var(--n600);">{{ v.commentaire }}</td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="8" style="padding: 36px; text-align: center; color: var(--n600);">
+            <i class="fa-solid fa-cash-register" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+            Aucune vente enregistrée pour ce compte commercial pour l'instant.
+          </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
+  }
 </div>

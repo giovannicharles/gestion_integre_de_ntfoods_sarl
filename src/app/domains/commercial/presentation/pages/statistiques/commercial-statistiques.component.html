@@ -6,101 +6,130 @@
         <i class="fa-solid fa-chart-column"></i>
       </div>
       <div>
-        <h1 class="ph-title">Statistiques Commerciales & Performance</h1>
-        <p class="ph-sub">Chiffre d’affaires individuel, quotas atteints, simulation de primes et répartition par gamme</p>
+        <h1 class="ph-title">Statistiques & Classement Commercial</h1>
+        <p class="ph-sub">Performances officielles du réseau commercial NT FOODS, ventes par gamme et atteinte des objectifs</p>
       </div>
     </div>
     <div class="ph-actions">
-      <span class="badge bg-gold" style="font-size: 0.85rem; padding: 8px 12px;">
-        <i class="fa-solid fa-trophy"></i> Rang Actuel : 2e Commercial
+      @if (monClassement()) {
+      <span class="badge bg-gold" style="font-size: 0.85rem; padding: 8px 14px;">
+        <i class="fa-solid fa-trophy"></i> Rang : {{ monClassement()?.rang }}e / {{ commerciaux().length }} commerciaux
       </span>
+      }
+      <button class="btn btn-outline" (click)="chargerStatistiques()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
     </div>
   </div>
 
-  <!-- BLOCS KPI -->
+  @if (loading()) {
+  <div class="card" style="padding: 40px; text-align: center;">
+    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 2rem; margin-bottom: 12px;"></i>
+    <p style="font-weight: 600; color: var(--n700);">Chargement des statistiques commerciales depuis le serveur…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="card" style="padding: 30px; text-align: center; border-left: 4px solid var(--r);">
+    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 10px;"></i>
+    <p class="text-danger fw-bold">{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerStatistiques()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+
+  <!-- KPIS -->
   <div class="kpi-grid">
     <div class="kpi-card kp-g">
-      <div class="kpi-ico ig"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-ranking-star"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">CA Réalisé (Ce Mois)</span>
-        <span class="kpi-val">{{ fCFA(caMoisFCFA()) }}</span>
-        <span class="kpi-meta">{{ tauxRealisation }}% de l'objectif</span>
-      </div>
-    </div>
-    <div class="kpi-card kp-b">
-      <div class="kpi-ico ib"><i class="fa-solid fa-bullseye"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Cible Mensuelle</span>
-        <span class="kpi-val">{{ fCFA(objectifMoisFCFA()) }}</span>
-        <span class="kpi-meta">Quota palier N°1</span>
+        <span class="kpi-lbl">Commerciaux Actifs</span>
+        <span class="kpi-val">{{ commerciaux().length }}</span>
+        <span class="kpi-meta">en compétition sur le réseau</span>
       </div>
     </div>
     <div class="kpi-card kp-y">
-      <div class="kpi-ico iy"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <div class="kpi-ico iy"><i class="fa-solid fa-layer-group"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Prime Commerciale Estimée</span>
-        <span class="kpi-val">{{ fCFA(primeAcquiseFCFA()) }}</span>
-        <span class="kpi-meta">Calculé sur marge et volume</span>
+        <span class="kpi-lbl">Gammes Distribuées</span>
+        <span class="kpi-val">{{ gammes().length }}</span>
+        <span class="kpi-meta">marques et gammes actives</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Total Réseau</span>
+        <span class="kpi-val">{{ fCFA(totalCaEntreprise()) }}</span>
+        <span class="kpi-meta">chiffre d'affaires cumulé</span>
       </div>
     </div>
   </div>
 
   <!-- TABLEAUX DE VENTILATION -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px;">
     <!-- PAR GAMME -->
     <div class="card" style="padding: 20px;">
       <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
         <i class="fa-solid fa-boxes-stacked text-primary" style="margin-right: 8px;"></i>
-        Ventes par Gamme de Produits
+        Performances Réelles par Gamme de Produits TANTY
       </h3>
       <table class="table" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
             <th>Gamme</th>
-            <th style="text-align: right;">Cartons</th>
-            <th style="text-align: right;">CA FCFA</th>
-            <th style="text-align: right;">Part</th>
+            <th style="text-align: right;">CA Réalisé</th>
+            <th style="text-align: right;">Objectif</th>
+            <th style="text-align: right;">Marge</th>
+            <th style="text-align: center;">Stock</th>
           </tr>
         </thead>
         <tbody>
-          @for (g of ventesParGamme(); track g.gamme) {
+          @for (g of gammes(); track g.gamme) {
           <tr>
             <td class="fw-bold">{{ g.gamme }}</td>
-            <td style="text-align: right;" class="mono">{{ g.cartons }}</td>
-            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(g.caFCFA) }}</td>
-            <td style="text-align: right;"><span class="badge bg-gold badge-sm">{{ g.part }}%</span></td>
+            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(g.ca) }}</td>
+            <td style="text-align: right;" class="mono">{{ fCFA(g.objectif) }}</td>
+            <td style="text-align: right;" class="text-success fw-bold">{{ g.marge !== null ? g.marge + '%' : '-' }}</td>
+            <td style="text-align: center;"><span class="badge bg-primary badge-sm">{{ g.stock || 'DISPONIBLE' }}</span></td>
           </tr>
+          } @empty {
+          <tr><td colspan="5" style="text-align: center; padding: 24px;">Données des gammes en cours de synchronisation.</td></tr>
           }
         </tbody>
       </table>
     </div>
 
-    <!-- PAR SECTEUR -->
+    <!-- CLASSEMENT COMMERCIAUX RÉEL -->
     <div class="card" style="padding: 20px;">
       <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--n800); margin-bottom: 16px;">
-        <i class="fa-solid fa-map-location-dot text-primary" style="margin-right: 8px;"></i>
-        Pénétration par Secteur Commercial
+        <i class="fa-solid fa-award text-primary" style="margin-right: 8px;"></i>
+        Classement Officiel des Vendeurs
       </h3>
       <table class="table" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
-            <th>Secteur</th>
-            <th style="text-align: right;">Clients Actifs</th>
+            <th>Rang</th>
+            <th>Commercial</th>
+            <th>Ventes</th>
             <th style="text-align: right;">CA Réalisé</th>
-            <th style="text-align: right;">Taux Couverture</th>
           </tr>
         </thead>
         <tbody>
-          @for (s of ventesParSecteur(); track s.secteur) {
-          <tr>
-            <td class="fw-bold">{{ s.secteur }}</td>
-            <td style="text-align: right;" class="mono">{{ s.clients }}</td>
-            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(s.caFCFA) }}</td>
-            <td style="text-align: right;"><span class="badge bg-primary badge-sm">{{ s.tauxCouverture }}%</span></td>
+          @for (c of commerciaux(); track c.matricule; let i = $index) {
+          <tr [class.row-alert]="c.matricule === currentUser()?.matricule">
+            <td class="mono fw-bold">
+              @if (i === 0) { <span class="badge bg-gold badge-sm">1er</span> }
+              @else if (i === 1) { <span class="badge bg-neutral badge-sm">2e</span> }
+              @else { <span class="badge bg-neutral badge-sm">{{ i + 1 }}e</span> }
+            </td>
+            <td class="fw-bold">{{ c.nomComplet }}</td>
+            <td class="mono">{{ c.nbVentes }} vente(s)</td>
+            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(c.caRealise) }}</td>
           </tr>
+          } @empty {
+          <tr><td colspan="4" style="text-align: center; padding: 24px;">Aucun classement disponible.</td></tr>
           }
         </tbody>
       </table>
     </div>
   </div>
+  }
 </div>

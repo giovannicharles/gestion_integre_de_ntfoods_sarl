@@ -1,60 +1,108 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-interface DocDG {
-  id: string;
-  reference: string;
-  titre: string;
-  categorie: 'Gouvernance' | 'Finance' | 'Juridique' | 'Stratégie';
-  dateSignature: string;
-  signataire: string;
-  confidentialite: 'HAUTE' | 'RESTREINT_DG';
-}
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DocumentService, DocumentArchiveBE, TYPES_DOCUMENT } from '../../../../shared/infrastructure/document.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { extractApiError } from '../../../../../core/http/api-error-parser';
 
 @Component({
   selector: 'app-dg-documents',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, DatePipe],
   templateUrl: './dg-documents.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DgDocumentsComponent {
-  documents = signal<DocDG[]>([
-    {
-      id: 'DG-DOC-01',
-      reference: 'PV-CA-2026/02',
-      titre: 'Procès-Verbal du Conseil d’Administration - Clôture des Comptes 2025',
-      categorie: 'Gouvernance',
-      dateSignature: '28/01/2026',
-      signataire: 'Président du Conseil d’Administration',
-      confidentialite: 'RESTREINT_DG'
-    },
-    {
-      id: 'DG-DOC-02',
-      reference: 'RAPPORT-CAC-2025',
-      titre: 'Rapport Général du Commissaire aux Comptes sur les États Financiers',
-      categorie: 'Finance',
-      dateSignature: '15/02/2026',
-      signataire: 'Cabinet Audit & Conseil Cameroun (CAC)',
-      confidentialite: 'HAUTE'
-    },
-    {
-      id: 'DG-DOC-03',
-      reference: 'CONV-INVEST-2026',
-      titre: 'Convention de Financement Ligne de Crédit Campagne Agricole Batouri',
-      categorie: 'Finance',
-      dateSignature: '10/03/2026',
-      signataire: 'Directeur Général & Afriland First Bank',
-      confidentialite: 'RESTREINT_DG'
-    },
-    {
-      id: 'DG-DOC-04',
-      reference: 'CERT-ANOR-QUALITE',
-      titre: 'Certificat de Conformité Sanitaire & Norme NC - Farines et Bouillies Tanty',
-      categorie: 'Juridique',
-      dateSignature: '04/01/2026',
-      signataire: 'Agence des Normes et de la Qualité (ANOR)',
-      confidentialite: 'HAUTE'
+export class DgDocumentsComponent implements OnInit {
+  private readonly docSvc = inject(DocumentService);
+  private readonly toast = inject(ToastService);
+
+  loading = signal(true);
+  loadError = signal<string | null>(null);
+  documents = signal<DocumentArchiveBE[]>([]);
+  typeFiltre = signal<string>('TOUS');
+  termeRecherche = signal<string>('');
+
+  // Modal d'import réel
+  showModalImport = signal(false);
+  importType = signal('RAPPORT');
+  importReference = signal('');
+  fichierSelectionne: File | null = null;
+  importEnCours = signal(false);
+
+  readonly typesDisponibles = TYPES_DOCUMENT;
+
+  ngOnInit(): void {
+    this.chargerDocuments();
+  }
+
+  chargerDocuments(): void {
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.docSvc.rechercher().subscribe({
+      next: (docs) => {
+        this.documents.set(docs);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.loadError.set(extractApiError(err));
+        this.loading.set(false);
+      }
+    });
+  }
+
+  get documentsFiltres(): DocumentArchiveBE[] {
+    const q = this.termeRecherche().toLowerCase().trim();
+    const type = this.typeFiltre();
+    return this.documents().filter(d => {
+      const matchType = type === 'TOUS' || d.typeDocument === type;
+      const matchQ = !q ||
+        d.reference.toLowerCase().includes(q) ||
+        d.nomFichierOriginal.toLowerCase().includes(q) ||
+        d.matriculeUploader.toLowerCase().includes(q);
+      return matchType && matchQ;
+    });
+  }
+
+  onFileChange(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.fichierSelectionne = input.files[0];
     }
-  ]);
+  }
+
+  importerDocument(): void {
+    if (!this.fichierSelectionne || !this.importReference().trim()) {
+      this.toast.error('Veuillez renseigner une référence et choisir un fichier.');
+      return;
+    }
+    this.importEnCours.set(true);
+    this.docSvc.importer(this.importType(), this.importReference().trim(), this.fichierSelectionne).subscribe({
+      next: (doc) => {
+        this.toast.success(`Document ${doc.nomFichierOriginal} archivé avec succès.`);
+        this.showModalImport.set(false);
+        this.fichierSelectionne = null;
+        this.importReference.set('');
+        this.importEnCours.set(false);
+        this.chargerDocuments();
+      },
+      error: (err) => {
+        this.toast.error(extractApiError(err) || "Échec de l'archivage du document.");
+        this.importEnCours.set(false);
+      }
+    });
+  }
+
+  telecharger(doc: DocumentArchiveBE): void {
+    this.docSvc.telecharger(doc.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.nomFichierOriginal || `document-${doc.id}`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => this.toast.error(extractApiError(err) || 'Impossible de télécharger le document.')
+    });
+  }
 }

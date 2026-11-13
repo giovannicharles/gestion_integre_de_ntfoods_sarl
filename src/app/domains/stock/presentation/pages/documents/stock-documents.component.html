@@ -6,43 +6,176 @@
         <i class="fa-solid fa-file-shield"></i>
       </div>
       <div>
-        <h1 class="ph-title">Documents de Magasin & Procès-Verbaux de Stock</h1>
-        <p class="ph-sub">Bordereaux de transfert inter-sites, fiches d'inventaires physiques et décharges de dotations TANTY</p>
+        <h1 class="ph-title">Bons de Magasin & Pièces Justificatives de Stock</h1>
+        <p class="ph-sub">Bons de réception, fiches de transfert, bons de sortie et décharges signées rattachées au stock physique</p>
       </div>
     </div>
     <div class="ph-actions">
-      <button class="btn btn-primary"><i class="fa-solid fa-file-arrow-up"></i> Archiver Nouveau PV</button>
+      <button class="btn btn-primary" (click)="showModalImport.set(true)">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Numériser un Bon
+      </button>
+      <button class="btn btn-outline" (click)="chargerDocuments()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
     </div>
   </div>
 
+  <!-- FILTRES -->
+  <div class="card" style="padding: 16px; margin-bottom: 20px;">
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 260px; position: relative;">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Rechercher par référence bon, nom de fichier, magasinier..."
+          [value]="termeRecherche()"
+          (input)="termeRecherche.set($any($event.target).value)"
+          style="padding-left: 36px;"
+        />
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 11px; color: var(--n500);"></i>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'TOUS'"
+          [class.btn-outline]="typeFiltre() !== 'TOUS'"
+          (click)="typeFiltre.set('TOUS')">
+          Tous ({{ documents().length }})
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'BON_RECEPTION'"
+          [class.btn-outline]="typeFiltre() !== 'BON_RECEPTION'"
+          (click)="typeFiltre.set('BON_RECEPTION')">
+          Réceptions
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'BON_LIVRAISON'"
+          [class.btn-outline]="typeFiltre() !== 'BON_LIVRAISON'"
+          (click)="typeFiltre.set('BON_LIVRAISON')">
+          Livraisons
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'BON_DOTATION'"
+          [class.btn-outline]="typeFiltre() !== 'BON_DOTATION'"
+          (click)="typeFiltre.set('BON_DOTATION')">
+          Dotations
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="card" style="padding: 40px; text-align: center;">
+    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 2rem; margin-bottom: 12px;"></i>
+    <p style="font-weight: 600; color: var(--n700);">Chargement des documents de stock depuis la base de données…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="card" style="padding: 30px; text-align: center; border-left: 4px solid var(--r);">
+    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 10px;"></i>
+    <p class="text-danger fw-bold">{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerDocuments()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
   <div class="card" style="padding: 20px;">
     <table class="table" style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr>
-          <th>Réf</th>
-          <th>Type</th>
-          <th>Intitulé du Document</th>
-          <th>Entrepôt / Magasin</th>
-          <th>Date</th>
-          <th>Statut</th>
+          <th>ID</th>
+          <th>Type de Bon</th>
+          <th>Référence</th>
+          <th>Nom Fichier</th>
+          <th>Taille</th>
+          <th>Enregistré Par</th>
+          <th>Date Numérisation</th>
           <th style="text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
-        @for (d of documents(); track d.id) {
+        @for (d of documentsFiltres; track d.id) {
         <tr>
+          <td class="mono fw-bold text-muted">#{{ d.id }}</td>
+          <td><span class="badge bg-gold badge-sm">{{ d.typeDocument }}</span></td>
           <td class="mono fw-bold text-primary">{{ d.reference }}</td>
-          <td><span class="badge bg-gold badge-sm">{{ d.type }}</span></td>
-          <td class="fw-bold">{{ d.titre }}</td>
-          <td>{{ d.magasin }}</td>
-          <td>{{ d.date }}</td>
-          <td><span class="badge bg-success badge-sm">{{ d.statut }}</span></td>
+          <td class="fw-bold">{{ d.nomFichierOriginal }}</td>
+          <td class="mono text-muted">{{ (d.tailleOctets / 1024) | number:'1.0-1' }} Ko</td>
+          <td class="text-muted"><i class="fa-solid fa-user"></i> {{ d.matriculeUploader }}</td>
+          <td class="mono">{{ d.dateImport | date:'dd/MM/yyyy · HH:mm' }}</td>
           <td style="text-align: right;">
-            <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Télécharger</button>
+            <button class="btn btn-outline btn-sm" (click)="telecharger(d)" title="Télécharger le fichier réel">
+              <i class="fa-solid fa-download"></i> Télécharger
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="8" style="padding: 36px; text-align: center; color: var(--n600);">
+            <i class="fa-solid fa-file-circle-check" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+            Aucun bon numérisé correspondant aux filtres.
           </td>
         </tr>
         }
       </tbody>
     </table>
   </div>
+  }
+
+  <!-- MODAL D'IMPORT BON RÉEL -->
+  @if (showModalImport()) {
+  <div class="modal-overlay" (click)="showModalImport.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-cloud-arrow-up"></i> Numériser & Archiver un Bon</div>
+        <button type="button" class="btn btn-sm btn-outline" (click)="showModalImport.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Type de Document de Magasin
+            </label>
+            <select class="form-control" [ngModel]="importType()" (ngModelChange)="importType.set($event)">
+              @for (t of typesStock; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Numéro de Référence du Bon (ex: BR-2026-089, BL-0045, DECH-CAM-02...)
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ex : BR-2026-089, BL-0045..."
+              [ngModel]="importReference()"
+              (ngModelChange)="importReference.set($event)"
+            />
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Fichier Numérisé / Photo du Bon
+            </label>
+            <input type="file" class="form-control" (change)="onFileChange($event)" />
+          </div>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid var(--n150); display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-outline" (click)="showModalImport.set(false)" [disabled]="importEnCours()">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="importerDocument()" [disabled]="importEnCours()">
+          @if (importEnCours()) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...
+          } @else {
+          <i class="fa-solid fa-check"></i> Archiver le Bon
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

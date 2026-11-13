@@ -6,28 +6,176 @@
         <i class="fa-solid fa-folder-tree"></i>
       </div>
       <div>
-        <h1 class="ph-title">Documents de Cadrage Budgétaire & Procédures d'Audit</h1>
-        <p class="ph-sub">Directives budgétaires, référentiels de centres de coûts et protocoles de contrôle interne NT FOODS</p>
+        <h1 class="ph-title">Documents de Cadrage Budgétaire & Pièces d'Audit</h1>
+        <p class="ph-sub">Rapports d'audit interne, factures auditées, bons de réception validés et pièces justificatives</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-primary" (click)="showModalImport.set(true)">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Archiver Pièce d'Audit
+      </button>
+      <button class="btn btn-outline" (click)="chargerDocuments()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTRES -->
+  <div class="card" style="padding: 16px; margin-bottom: 20px;">
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+      <div style="flex: 1; min-width: 260px; position: relative;">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Rechercher par référence, auditeur, nom de pièce..."
+          [value]="termeRecherche()"
+          (input)="termeRecherche.set($any($event.target).value)"
+          style="padding-left: 36px;"
+        />
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 11px; color: var(--n500);"></i>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'TOUS'"
+          [class.btn-outline]="typeFiltre() !== 'TOUS'"
+          (click)="typeFiltre.set('TOUS')">
+          Tous ({{ documents().length }})
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'RAPPORT'"
+          [class.btn-outline]="typeFiltre() !== 'RAPPORT'"
+          (click)="typeFiltre.set('RAPPORT')">
+          Rapports d'Audit
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'FACTURE'"
+          [class.btn-outline]="typeFiltre() !== 'FACTURE'"
+          (click)="typeFiltre.set('FACTURE')">
+          Factures Auditées
+        </button>
+        <button
+          class="btn btn-sm"
+          [class.btn-primary]="typeFiltre() === 'BON_RECEPTION'"
+          [class.btn-outline]="typeFiltre() !== 'BON_RECEPTION'"
+          (click)="typeFiltre.set('BON_RECEPTION')">
+          Réceptions Contrôlées
+        </button>
       </div>
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px;">
-    @for (d of documents(); track d.id) {
-    <div class="card" style="padding: 18px; display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid var(--g);">
-      <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <span class="badge bg-gold badge-sm">{{ d.type }}</span>
-          <span class="badge bg-neutral badge-sm">{{ d.taille }}</span>
-        </div>
-        <h3 style="font-size: 0.98rem; font-weight: 700; color: var(--n900); margin-bottom: 8px;">{{ d.titre }}</h3>
-        <p style="font-size: 0.82rem; color: var(--n600); line-height: 1.45; margin-bottom: 12px;">{{ d.description }}</p>
+  @if (loading()) {
+  <div class="card" style="padding: 40px; text-align: center;">
+    <i class="fa-solid fa-spinner fa-spin text-primary" style="font-size: 2rem; margin-bottom: 12px;"></i>
+    <p style="font-weight: 600; color: var(--n700);">Chargement des dossiers d'audit depuis le serveur…</p>
+  </div>
+  } @else if (loadError()) {
+  <div class="card" style="padding: 30px; text-align: center; border-left: 4px solid var(--r);">
+    <i class="fa-solid fa-triangle-exclamation text-danger" style="font-size: 2rem; margin-bottom: 10px;"></i>
+    <p class="text-danger fw-bold">{{ loadError() }}</p>
+    <button class="btn btn-outline btn-sm" (click)="chargerDocuments()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
+  </div>
+  } @else {
+  <div class="card" style="padding: 20px;">
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type Audit</th>
+          <th>Référence</th>
+          <th>Fichier Justificatif</th>
+          <th>Taille</th>
+          <th>Auditeur / Contrôleur</th>
+          <th>Date Audit</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of documentsFiltres; track d.id) {
+        <tr>
+          <td class="mono fw-bold text-muted">#{{ d.id }}</td>
+          <td><span class="badge bg-gold badge-sm">{{ d.typeDocument }}</span></td>
+          <td class="mono fw-bold text-primary">{{ d.reference }}</td>
+          <td class="fw-bold">{{ d.nomFichierOriginal }}</td>
+          <td class="mono text-muted">{{ (d.tailleOctets / 1024) | number:'1.0-1' }} Ko</td>
+          <td class="text-muted"><i class="fa-solid fa-user-shield"></i> {{ d.matriculeUploader }}</td>
+          <td class="mono">{{ d.dateImport | date:'dd/MM/yyyy · HH:mm' }}</td>
+          <td style="text-align: right;">
+            <button class="btn btn-outline btn-sm" (click)="telecharger(d)" title="Télécharger la pièce d'audit">
+              <i class="fa-solid fa-download"></i> Télécharger
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="8" style="padding: 36px; text-align: center; color: var(--n600);">
+            <i class="fa-solid fa-clipboard-check" style="font-size: 2.2rem; color: var(--n300); display: block; margin-bottom: 10px;"></i>
+            Aucune pièce d'audit archivée avec ces filtres.
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- MODAL D'IMPORT AUDIT -->
+  @if (showModalImport()) {
+  <div class="modal-overlay" (click)="showModalImport.set(false)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-cloud-arrow-up"></i> Archiver une Pièce d'Audit Contrôle</div>
+        <button type="button" class="btn btn-sm btn-outline" (click)="showModalImport.set(false)"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--n100);">
-        <span style="font-size: 0.75rem; color: var(--n500);">Validité : {{ d.periode }}</span>
-        <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Consulter</button>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Type de Document de Contrôle
+            </label>
+            <select class="form-control" [ngModel]="importType()" (ngModelChange)="importType.set($event)">
+              @for (t of typesControle; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Référence du Dossier d'Audit (ex: AUDIT-BASSA-01, FACT-CONTROLE-89...)
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ex : AUDIT-BASSA-01..."
+              [ngModel]="importReference()"
+              (ngModelChange)="importReference.set($event)"
+            />
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--n700); margin-bottom: 4px; display: block;">
+              Fichier Justificatif (PDF, Excel, Scan)
+            </label>
+            <input type="file" class="form-control" (change)="onFileChange($event)" />
+          </div>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid var(--n150); display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-outline" (click)="showModalImport.set(false)" [disabled]="importEnCours()">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="importerDocument()" [disabled]="importEnCours()">
+          @if (importEnCours()) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...
+          } @else {
+          <i class="fa-solid fa-check"></i> Archiver le Document
+          }
+        </button>
       </div>
     </div>
-    }
   </div>
+  }
 </div>
