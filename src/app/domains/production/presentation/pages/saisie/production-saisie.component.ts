@@ -39,7 +39,12 @@ export class ProductionSaisieComponent implements OnInit {
       .reduce((s, r) => s + r.nbFutsProduits, 0);
   });
 
-  perteMoyenne = computed(() => 0);
+  perteMoyenne = computed(() => {
+    const list = this.broyage().filter(r => r.pctPertes != null);
+    if (!list.length) return 0;
+    const somme = list.reduce((s, r) => s + (r.pctPertes ?? 0), 0);
+    return Math.round((somme / list.length) * 10) / 10;
+  });
 
   ngOnInit(): void {
     this.prodSvc.getSessionsBroyage().subscribe({
