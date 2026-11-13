@@ -3,41 +3,74 @@
     <div class="ph-left">
       <div class="ph-icon ph-icon-orange"><i class="fa-solid fa-gas-pump"></i></div>
       <div>
-        <h1 class="ph-title">Gestion Carburant</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · {{ auth.user()?.nomComplet }} · Douala Akwa</p>
+        <h1 class="ph-title">Gestion Flotte & Carburant</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · {{ auth.user()?.nomComplet }} · Flotte Commerciale NTFOODS</p>
       </div>
     </div>
     <div class="ph-actions">
+      <button class="btn btn-ghost" (click)="exporterCsv()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
       @if (!showForm()) {
-      <button class="btn btn-primary" (click)="showForm.set(true)"><i class="fa-solid fa-plus"></i> Nouvelle fiche</button>
+      <button class="btn btn-primary" (click)="showForm.set(true)"><i class="fa-solid fa-plus"></i> Nouvelle dotation</button>
       }
     </div>
   </div>
 
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-gas-pump"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Volume Total Consommé</span>
+        <span class="kpi-val">{{ totalLitres() }} Litres</span>
+        <span class="kpi-meta"><i class="fa-solid fa-truck"></i> Flotte véhicules tournée</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-coins"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Dépense Totale Carburant</span>
+        <span class="kpi-val">{{ fCFA(totalDepenses()) }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-receipt"></i> Justificatifs stations partenaires</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Fiches Enregistrées</span>
+        <span class="kpi-val">{{ nbFichesValidees() }} / {{ fiches().length }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-route"></i> Rattachées aux feuilles de route</span>
+      </div>
+    </div>
+  </div>
+
   @if (submitted()) {
-  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Consommation de carburant enregistrée.</div>
+  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Consommation de carburant enregistrée avec succès.</div>
   }
 
   <!-- FORMULAIRE -->
   @if (showForm()) {
   <div class="card form-card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-gas-pump"></i> Nouvelle Fiche Carburant</span></div>
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-gas-pump"></i> Nouvelle Dotation Carburant</span></div>
     <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Véhicule (Immatriculation)</label>
+        <input type="text" class="form-input" [ngModel]="form().immatriculation" (ngModelChange)="updateImmatriculation($event)" placeholder="Ex: LT-452-AC" />
+      </div>
       <div class="form-group">
         <label class="form-label">Kilométrage compteur (km)</label>
         <input type="number" class="form-input" [ngModel]="form().kmCompteur" (ngModelChange)="updateKmCompteur($event)" placeholder="Ex: 187220" />
       </div>
       <div class="form-group">
-        <label class="form-label">Litres demandés</label>
+        <label class="form-label">Volume demandé (Litres)</label>
         <input type="number" class="form-input" [ngModel]="form().litresDemandes" (ngModelChange)="updateLitresDemandes($event)" placeholder="Ex: 60" />
       </div>
       <div class="form-group">
-        <label class="form-label">Station</label>
+        <label class="form-label">Station Service</label>
         <input type="text" class="form-input" [ngModel]="form().station" (ngModelChange)="updateStation($event)" placeholder="Ex: Total Akwa, Douala" />
       </div>
       <div class="form-group">
         <label class="form-label">Montant (FCFA)</label>
-        <input type="number" class="form-input" [ngModel]="form().montant" (ngModelChange)="updateMontant($event)" placeholder="Ex: 30000" />
+        <input type="number" class="form-input" [ngModel]="form().montant" (ngModelChange)="updateMontant($event)" placeholder="Ex: 50000" />
       </div>
       <div class="form-group">
         <label class="form-label">Feuille de route du jour (trajet réel, obligatoire)</label>
@@ -47,7 +80,7 @@
         <input type="text" class="form-input" [value]="feuillesRoute()[0].numeroFeuillRoute" disabled />
         } @else {
         <select class="form-input" [ngModel]="numeroFeuillRouteChoisi()" (ngModelChange)="numeroFeuillRouteChoisi.set($event)">
-          <option value="">Choisir,</option>
+          <option value="">Choisir...</option>
           @for (f of feuillesRoute(); track f.id) { <option [value]="f.numeroFeuillRoute">{{ f.numeroFeuillRoute }} ({{ f.nombreVisites }} visite(s))</option> }
         </select>
         }
@@ -62,7 +95,7 @@
 
   <!-- FICHES -->
   <div class="card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list"></i> Mes Fiches Carburant</span></div>
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list"></i> Historique des Fiches de Carburant</span></div>
     <div class="fiches-list">
       @for (f of fiches(); track f.id) {
       <div class="fiche-card" [class.fiche-ok]="f.statut==='ENREGISTREE'">
@@ -73,17 +106,85 @@
           @else { <span class="badge bg-orange">{{ f.statut }}</span> }
         </div>
         <div class="fiche-details">
+          <div class="fiche-detail"><span class="fd-lbl">Date</span><span class="fd-val">{{ f.dateCreation | date:'dd/MM/yyyy' }}</span></div>
           <div class="fiche-detail"><span class="fd-lbl">Km Compteur</span><span class="fd-val">{{ f.kmCompteur.toLocaleString() }} km</span></div>
           <div class="fiche-detail"><span class="fd-lbl">Volume</span><span class="fd-val">{{ f.litresDemandes }} L</span></div>
           <div class="fiche-detail"><span class="fd-lbl">Montant</span><span class="fd-val fw-bold">{{ fCFA(f.montant) }}</span></div>
           <div class="fiche-detail"><span class="fd-lbl">Station</span><span class="fd-val">{{ f.station }}</span></div>
         </div>
-
+        <div class="fiche-actions-row">
+          <button class="btn btn-ghost btn-sm" (click)="ouvrirBon(f)"><i class="fa-solid fa-receipt"></i> Bon de Ravitaillement</button>
+        </div>
       </div>
       }
       @empty {
-      <div class="empty-state"><i class="fa-solid fa-gas-pump"></i><p>Aucune fiche carburant</p></div>
+      <div class="empty-state"><i class="fa-solid fa-gas-pump"></i><p>Aucune fiche carburant enregistrée</p></div>
       }
     </div>
   </div>
+
+  <!-- MODAL BON DE RAVITAILLEMENT CARBURANT -->
+  @if (selectedFiche(); as f) {
+  <div class="modal-backdrop print-fullscreen" (click)="fermerBon()">
+    <div class="modal-card modal-lg print-card" (click)="$event.stopPropagation()">
+      <div class="modal-header no-print">
+        <h3 class="modal-title"><i class="fa-solid fa-gas-pump"></i> Bon de Ravitaillement Carburant</h3>
+        <button class="btn-close" (click)="fermerBon()">&times;</button>
+      </div>
+
+      <div class="bon-imprimable">
+        <div class="bon-header">
+          <div class="bon-company">
+            <h2>NTFOODS SARL</h2>
+            <p>Agro-industrie & Distribution Alimentaire</p>
+            <p>Zone Industrielle Bassa, Douala - Cameroun</p>
+            <p>Tél: (+237) 233 42 55 60 | RCCM: RC/DLA/2012/B/1500</p>
+          </div>
+          <div class="bon-meta">
+            <div class="bon-type-badge">JUSTIFICATIF CARBURANT</div>
+            <div class="bon-ref">Réf: <strong>{{ f.id }}</strong></div>
+            <div class="bon-date">Date: {{ f.dateCreation | date:'dd/MM/yyyy' }}</div>
+          </div>
+        </div>
+
+        <div class="bon-section-grid">
+          <div class="bon-box">
+            <h4>Commercial & Véhicule</h4>
+            <p><strong>Matricule :</strong> {{ f.commercialId }}</p>
+            <p><strong>Véhicule / Immat :</strong> {{ f.immatriculation }}</p>
+            <p><strong>Kilométrage Compteur :</strong> {{ f.kmCompteur.toLocaleString() }} km</p>
+          </div>
+          <div class="bon-box">
+            <h4>Station & Fourniture</h4>
+            <p><strong>Station Partenaire :</strong> {{ f.station }}</p>
+            <p><strong>Volume Carburant :</strong> {{ f.litresDemandes }} Litres</p>
+            <p><strong>Montant Pris en Charge :</strong> <span class="highlight-val">{{ fCFA(f.montant) }}</span></p>
+          </div>
+        </div>
+
+        <div class="bon-mentions">
+          <p><em>Dotation carburant autorisée pour exécution de la feuille de route commerciale du jour. Pièce comptable justificative pour décharge caisse.</em></p>
+        </div>
+
+        <div class="bon-signatures">
+          <div class="sig-box">
+            <p class="sig-title">Le Chauffeur / Commercial</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Date & Émargement</p>
+          </div>
+          <div class="sig-box">
+            <p class="sig-title">Le Responsable Flotte / Caisse</p>
+            <div class="sig-space"></div>
+            <p class="sig-sub">Visa & Cachet</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions no-print">
+        <button class="btn btn-ghost" (click)="fermerBon()">Fermer</button>
+        <button class="btn btn-primary" (click)="imprimerBon()"><i class="fa-solid fa-print"></i> Imprimer le Bon</button>
+      </div>
+    </div>
+  </div>
+  }
 </div>

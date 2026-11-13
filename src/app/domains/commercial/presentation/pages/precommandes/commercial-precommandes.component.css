@@ -48,6 +48,44 @@
 .modal-title { font-family: var(--font-d); font-size: 18px; font-weight: 700; margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
+.kpi-card.kpi-active-filter {
+  border-color: var(--g) !important;
+  box-shadow: 0 0 0 2px var(--g), 0 8px 20px rgba(20, 83, 45, 0.15) !important;
+  background: linear-gradient(to bottom, #ffffff, #f0fdf4) !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: #fff !important;
+  }
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: none;
+  }
+  .modal-box {
+    box-shadow: none;
+    border: none;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .modal-header, .modal-footer {
+    display: none !important;
+  }
+}
+
 @media (max-width:767px) {
   .modal-actions { flex-wrap: wrap; }
   .modal-actions > .btn { flex: 1; justify-content: center; }

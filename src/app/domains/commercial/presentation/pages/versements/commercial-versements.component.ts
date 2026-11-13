@@ -33,10 +33,61 @@ export class CommercialVersementsComponent implements OnInit {
   motif = signal('');
   submitted = signal(false);
   showForm = signal(false);
+  showQuittanceModal = signal(false);
+  selectedVersement = signal<VersementUI | null>(null);
 
   monVersement = computed(() => this.versements()[0] ?? null);
+  totalVerse = computed(() => this.versements().reduce((sum, v) => sum + v.cashVerse, 0));
+  nbValides = computed(() => this.versements().filter(v => v.statut === 'VALIDE').length);
+  nbAttente = computed(() => this.versements().filter(v => v.statut !== 'VALIDE' && v.statut !== 'REJETE').length);
+  nbEcarts = computed(() => this.versements().filter(v => v.ecart !== 0 || v.alerteRouge).length);
 
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
+
+  imprimerQuittance(v: VersementUI): void {
+    this.selectedVersement.set(v);
+    this.showQuittanceModal.set(true);
+  }
+
+  fermerQuittance(): void {
+    this.showQuittanceModal.set(false);
+    this.selectedVersement.set(null);
+  }
+
+  lancerImpression(): void {
+    window.print();
+  }
+
+  exporterCsv(): void {
+    const list = this.versements();
+    if (!list.length) {
+      this.toast.info('Aucun versement à exporter.');
+      return;
+    }
+    const headers = ['Reference', 'Commercial', 'Date', 'Type Versement', 'Montant Attendu', 'Cash Verse', 'Ecart', 'Statut'];
+    const rows = list.map(v => [
+      `"${v.id}"`,
+      `"${v.commercialId}"`,
+      `"${v.date ? new Date(v.date).toLocaleDateString('fr-FR') : ''}"`,
+      `"${v.typeVersement || 'ESPECES'}"`,
+      v.montantAttendu,
+      v.cashVerse,
+      v.ecart,
+      `"${v.statut}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `versements_caisse_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} versement(s) exporté(s) en CSV.`);
+  }
 
   ngOnInit(): void {
     const matricule = this.auth.user()?.matricule;

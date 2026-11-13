@@ -16,23 +16,70 @@
 .fiche-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
 .fiche-id { font-size: .72rem; font-weight: 700; color: var(--n400); }
 .fiche-immat { font-size: .85rem; font-weight: 600; flex: 1; display: flex; align-items: center; gap: .4rem; }
-.fiche-details { display: grid; grid-template-columns: repeat(4,1fr); gap: .75rem; margin-bottom: .75rem; }
+.fiche-details { display: grid; grid-template-columns: repeat(5,1fr); gap: .75rem; margin-bottom: .75rem; }
 .fiche-detail { display: flex; flex-direction: column; }
 .fd-lbl { font-size: .7rem; color: var(--n500); font-weight: 600; text-transform: uppercase; }
 .fd-val { font-size: .88rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.fiche-sigs { display: flex; align-items: center; gap: .75rem; font-size: .82rem; }
-.sig-step { display: flex; align-items: center; gap: .3rem; color: var(--n400); }
-.sig-done { color: var(--s); font-weight: 600; }
-.sig-arrow { color: var(--n300); }
-.fiche-sup { font-size: .78rem; color: var(--n500); margin-top: .5rem; display: flex; align-items: center; gap: .3rem; }
+.fiche-actions-row { display: flex; justify-content: flex-end; border-top: 1px dashed var(--n200); padding-top: .5rem; }
 .empty-state { text-align: center; padding: 3rem; color: var(--n400); }
 .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+/* MODAL & BON DE RAVITAILLEMENT */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  backdrop-filter: blur(2px); padding: 1rem;
+}
+.modal-card {
+  background: #ffffff; border-radius: var(--r-lg); width: 100%; max-width: 700px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem; border-bottom: 1px solid var(--n200);
+}
+.modal-title { font-size: 1.1rem; font-weight: 700; color: var(--g); display: flex; align-items: center; gap: .5rem; }
+.btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--n400); }
+.modal-actions {
+  display: flex; justify-content: flex-end; gap: .75rem; padding: 1rem 1.5rem;
+  border-top: 1px solid var(--n200); background: var(--n50);
+}
+
+.bon-imprimable { padding: 1.5rem; background: #ffffff; }
+.bon-header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--g); padding-bottom: 1rem; margin-bottom: 1.25rem; }
+.bon-company h2 { margin: 0; color: var(--g); font-size: 1.3rem; font-weight: 800; letter-spacing: .5px; }
+.bon-company p { margin: 2px 0; font-size: .8rem; color: var(--n600); }
+.bon-meta { text-align: right; }
+.bon-type-badge { background: var(--g); color: #fff; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: .75rem; letter-spacing: .5px; display: inline-block; margin-bottom: .4rem; }
+.bon-ref { font-size: .9rem; color: var(--n800); }
+.bon-date { font-size: .8rem; color: var(--n500); }
+
+.bon-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+.bon-box { background: var(--n50); border: 1px solid var(--n200); border-radius: var(--r-md); padding: .9rem; }
+.bon-box h4 { margin: 0 0 .5rem 0; font-size: .85rem; color: var(--g); text-transform: uppercase; border-bottom: 1px solid var(--n200); padding-bottom: 4px; }
+.bon-box p { margin: 4px 0; font-size: .82rem; color: var(--n700); }
+.highlight-val { color: var(--g); font-weight: 800; font-size: 1rem; }
+
+.bon-mentions { background: #fdf8e2; border-left: 3px solid var(--o); padding: .75rem; border-radius: 4px; font-size: .78rem; color: #856404; margin-bottom: 1.25rem; }
+.bon-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+.sig-box { border: 1px dashed var(--n300); border-radius: var(--r-md); padding: 1rem; text-align: center; }
+.sig-title { font-weight: 700; font-size: .82rem; color: var(--n700); margin: 0 0 .5rem 0; }
+.sig-space { height: 60px; }
+.sig-sub { font-size: .72rem; color: var(--n400); margin: 0; }
+
+@media print {
+  body * { visibility: hidden; }
+  .bon-imprimable, .bon-imprimable * { visibility: visible; }
+  .bon-imprimable { position: fixed; inset: 0; padding: 2cm; background: white; z-index: 99999; }
+  .no-print { display: none !important; }
+}
 
 @media (max-width:767px) {
   .form-grid { grid-template-columns:1fr; }
   .fiche-details { grid-template-columns:repeat(2,1fr); }
-  .fiche-sigs { flex-wrap:wrap;gap:.5rem; }
   .fiche-header { flex-wrap:wrap;gap:.5rem; }
+  .bon-section-grid { grid-template-columns:1fr; }
 }
 
 @media (max-width:480px) {

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -34,14 +34,94 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
 
   today = new Date();
   precommandes = signal<PrecommandeUI[]>([]);
+  filtreStatut = signal<'TOUS' | 'EN_ATTENTE' | 'VALIDEE_SECRETAIRE' | 'VALIDEE_COMPTABLE' | 'REFUSEE'>('TOUS');
+  filtreTexte = signal<string>('');
   loading = signal(false);
   showForm = signal(false);
   submitted = signal(false);
+  showBonModal = signal(false);
+  selectedPrecommande = signal<PrecommandeUI | null>(null);
+
   lignes = signal<LigneUI[]>([
     { produitCode: '', designation: '', quantite: 0 },
   ]);
   produits = signal<ProduitUI[]>([]);
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
+
+  nbTotal = computed(() => this.precommandes().length);
+  nbPretChargement = computed(() => this.precommandes().filter(p => p.statut === 'VALIDEE_COMPTABLE').length);
+  nbAttente = computed(() => this.precommandes().filter(p => p.statut !== 'VALIDEE_COMPTABLE' && p.statut !== 'REFUSEE').length);
+  totalCartons = computed(() => this.precommandes().reduce((sum, p) => sum + p.lignes.reduce((s, l) => s + (l.quantite || 0), 0), 0));
+
+  precommandesFiltrees = computed(() => {
+    const st = this.filtreStatut();
+    const t = this.filtreTexte().trim().toLowerCase();
+
+    return this.precommandes().filter(p => {
+      let matchStatut = true;
+      if (st === 'EN_ATTENTE') matchStatut = p.statut === 'EN_ATTENTE' || !p.signatureSecretaire;
+      else if (st === 'VALIDEE_SECRETAIRE') matchStatut = p.statut === 'VALIDEE_SECRETAIRE';
+      else if (st === 'VALIDEE_COMPTABLE') matchStatut = p.statut === 'VALIDEE_COMPTABLE';
+      else if (st === 'REFUSEE') matchStatut = p.statut === 'REFUSEE';
+
+      const matchText = !t ||
+        p.id.toLowerCase().includes(t) ||
+        p.lignes.some(l => (l.designation || '').toLowerCase().includes(t) || l.produitCode.toLowerCase().includes(t));
+
+      return matchStatut && matchText;
+    });
+  });
+
+  setFiltreStatut(st: 'TOUS' | 'EN_ATTENTE' | 'VALIDEE_SECRETAIRE' | 'VALIDEE_COMPTABLE' | 'REFUSEE'): void {
+    if (this.filtreStatut() === st && st !== 'TOUS') {
+      this.filtreStatut.set('TOUS');
+    } else {
+      this.filtreStatut.set(st);
+    }
+  }
+
+  imprimerBon(pcm: PrecommandeUI): void {
+    this.selectedPrecommande.set(pcm);
+    this.showBonModal.set(true);
+  }
+
+  fermerBon(): void {
+    this.showBonModal.set(false);
+    this.selectedPrecommande.set(null);
+  }
+
+  lancerImpression(): void {
+    window.print();
+  }
+
+  exporterCsv(): void {
+    const list = this.precommandesFiltrees();
+    if (!list.length) {
+      this.showToast('Aucune précommande à exporter.', 'error');
+      return;
+    }
+    const headers = ['N° Precommande', 'Commercial', 'Date', 'Statut', 'Nb Produits', 'Detail Lignes'];
+    const rows = list.map(p => [
+      `"${p.id}"`,
+      `"${p.commercialId}"`,
+      `"${p.dateCommande ? new Date(p.dateCommande).toLocaleDateString('fr-FR') : ''}"`,
+      `"${p.statut}"`,
+      p.lignes.length,
+      `"${p.lignes.map(l => `${l.produitCode}: ${l.quantite}`).join(' | ')}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `precommandes_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.showToast(`${list.length} précommande(s) exportée(s) en CSV.`, 'success');
+  }
 
   ngOnInit(): void {
     const demain = this.fmtDate(new Date(Date.now() + 86_400_000));

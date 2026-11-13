@@ -3,8 +3,39 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-ranking-star"></i></div>
       <div>
-        <h1 class="ph-title">Classement Hebdomadaire</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Semaine {{ numeroSemaine }}</p>
+        <h1 class="ph-title">Classement Hebdomadaire & Performance</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Semaine {{ numeroSemaine }} · Équipe Force de Vente NTFOODS</p>
+      </div>
+    </div>
+    <div class="ph-actions">
+      <button class="btn btn-ghost" (click)="exporterCsv()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+    </div>
+  </div>
+
+  <!-- KPI SUMMARY CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">CA Total Équipe (Semaine)</span>
+        <span class="kpi-val">{{ fCFA(totalCaEquipe()) }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-coins"></i> Ventes cumulées réseau</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-y">
+      <div class="kpi-ico iy"><i class="fa-solid fa-trophy"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Leader du Classement</span>
+        <span class="kpi-val">{{ topVendeurNom() }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-star"></i> {{ fCFA(topVendeurCa()) }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-cart-shopping"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Ventes Conclues</span>
+        <span class="kpi-val">{{ totalVentesEquipe() }}</span>
+        <span class="kpi-meta"><i class="fa-solid fa-users"></i> {{ commerciaux().length }} commerciaux actifs</span>
       </div>
     </div>
   </div>
@@ -18,15 +49,15 @@
       <div class="my-rank" [class.rank-gold]="com.rang===1">{{ com.rang }}e</div>
       <div class="my-info">
         <div class="my-name">{{ com.nomComplet }}</div>
-        <div class="my-zone">{{ com.nbVentes }} ventes</div>
+        <div class="my-zone">{{ com.nbVentes }} ventes enregistrées</div>
       </div>
       <div class="my-stats">
         <div class="my-stat"><span class="my-stat-lbl">CA Réalisé</span><span class="my-stat-val text-success">{{ fCFA(com.caRealise) }}</span></div>
         <div class="my-stat"><span class="my-stat-lbl">Ventes</span><span class="my-stat-val">{{ com.nbVentes }}</span></div>
-        <div class="my-stat"><span class="my-stat-lbl">Taux</span><span class="my-stat-val" [class.text-success]="tauxRealisation(com)>=100">{{ tauxRealisation(com) }}%</span></div>
+        <div class="my-stat"><span class="my-stat-lbl">Taux Réalisation</span><span class="my-stat-val" [class.text-success]="tauxRealisation(com)>=100">{{ tauxRealisation(com) }}%</span></div>
       </div>
       @if (isEligible(com)) {
-      <span class="badge bg-success prime-badge"><i class="fa-solid fa-award"></i> Prime éligible</span>
+      <span class="badge bg-success prime-badge"><i class="fa-solid fa-award"></i> Prime éligible ✓</span>
       }
     </div>
   </div>
@@ -35,7 +66,7 @@
 
   <!-- CLASSEMENT COMPLET -->
   <div class="card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet, Semaine {{ numeroSemaine }}</span></div>
+    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list-ol"></i> Classement Complet · Semaine {{ numeroSemaine }}</span></div>
     <div class="ranking-list">
       @for (com of commerciaux(); track com.matricule) {
       <div class="ranking-row" [class.my-row]="com.matricule===monId()">
@@ -45,12 +76,12 @@
         <div class="rank-av">{{ com.nomComplet.charAt(0) }}</div>
         <div class="rank-info">
           <span class="rank-name">{{ com.nomComplet }}</span>
-          <span class="rank-zone">{{ com.nbVentes }} ventes</span>
+          <span class="rank-zone">{{ com.nbVentes }} ventes réalisées</span>
         </div>
         <div class="rank-progress">
           <div class="rank-val">{{ fCFA(com.caRealise) }}</div>
           <div class="rank-bar-wrap"><div class="rank-bar" [style.width.%]="tauxRealisation(com)" [class.bar-over]="tauxRealisation(com)>=100"></div></div>
-          <div class="rank-pct">{{ tauxRealisation(com) }}% · {{ com.nbVentes }} ventes</div>
+          <div class="rank-pct">{{ tauxRealisation(com) }}% de l'objectif · {{ com.nbVentes }} commandes</div>
         </div>
         @if (isEligible(com)) { <span class="badge bg-success badge-sm">✓ Prime</span> }
         @else { <span class="badge bg-neutral badge-sm">-</span> }

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -26,9 +26,17 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
   ventes = signal<VenteBE[]>([]);
   fCFA = (n: number) => new Intl.NumberFormat('fr-CM').format(Math.round(n)) + ' FCFA';
 
+  today = new Date();
+  filtreStatut = signal<'TOUS' | 'EN_COURS' | 'FINALISEE' | 'ANNULEE'>('TOUS');
+  filtreTypeVente = signal<string>('TOUS');
+  filtreTexte = signal<string>('');
+
   showAnnuler = signal(false);
   showNonMarchand = signal(false);
   showAvoir = signal(false);
+  showTicketModal = signal(false);
+  selectedVenteDetail = signal<VenteBE | null>(null);
+
   selectedNumero = '';
   annulerMotif = '';
   saving = signal(false);
@@ -52,6 +60,79 @@ export class CommercialVentesComponent implements OnInit, OnDestroy {
 
   toastMsg = signal('');
   toastType = signal<'success' | 'error'>('success');
+
+  totalCA = computed(() => this.ventes().filter(v => v.statut === 'FINALISEE').reduce((sum, v) => sum + (v.montantTotal || 0), 0));
+  nbFinalisees = computed(() => this.ventes().filter(v => v.statut === 'FINALISEE').length);
+  nbEnCours = computed(() => this.ventes().filter(v => v.statut === 'EN_COURS').length);
+  nbAnnulees = computed(() => this.ventes().filter(v => v.statut === 'ANNULEE').length);
+
+  ventesFiltrees = computed(() => {
+    const st = this.filtreStatut();
+    const tp = this.filtreTypeVente();
+    const t = this.filtreTexte().trim().toLowerCase();
+
+    return this.ventes().filter(v => {
+      const matchStatut = st === 'TOUS' || v.statut === st;
+      const matchType = tp === 'TOUS' || v.typeVente === tp;
+      const matchText = !t ||
+        (v.numeroVente || '').toLowerCase().includes(t) ||
+        (v.codeClient || '').toLowerCase().includes(t) ||
+        (v.matriculeCommercial || '').toLowerCase().includes(t);
+      return matchStatut && matchType && matchText;
+    });
+  });
+
+  setFiltreStatut(st: 'TOUS' | 'EN_COURS' | 'FINALISEE' | 'ANNULEE'): void {
+    if (this.filtreStatut() === st && st !== 'TOUS') {
+      this.filtreStatut.set('TOUS');
+    } else {
+      this.filtreStatut.set(st);
+    }
+  }
+
+  imprimerBordereau(v: VenteBE): void {
+    this.selectedVenteDetail.set(v);
+    this.showTicketModal.set(true);
+  }
+
+  fermerBordereau(): void {
+    this.showTicketModal.set(false);
+    this.selectedVenteDetail.set(null);
+  }
+
+  lancerImpression(): void {
+    window.print();
+  }
+
+  exporterCsv(): void {
+    const list = this.ventesFiltrees();
+    if (!list.length) {
+      this.showToast('Aucune vente à exporter.', 'error');
+      return;
+    }
+    const headers = ['Numero Vente', 'Date', 'Code Client', 'Commercial', 'Type Vente', 'Montant Total (FCFA)', 'Statut'];
+    const rows = list.map(v => [
+      `"${v.numeroVente}"`,
+      `"${v.date ? new Date(v.date).toLocaleDateString('fr-FR') : ''}"`,
+      `"${v.codeClient || ''}"`,
+      `"${v.matriculeCommercial || ''}"`,
+      `"${v.typeVente || 'NORMALE'}"`,
+      v.montantTotal || 0,
+      `"${v.statut}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `journal_ventes_tanty_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.showToast(`${list.length} vente(s) exportée(s) en CSV.`, 'success');
+  }
 
   ngOnInit(): void {
     this.chargerVentes();

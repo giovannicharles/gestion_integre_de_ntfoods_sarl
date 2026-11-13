@@ -25,6 +25,34 @@
 .text-danger { color: var(--r) !important; }
 .mono { font-variant-numeric: tabular-nums; }
 
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; z-index: 1050; padding: 16px;
+}
+.modal-box {
+  background: var(--w); border-radius: 14px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column; overflow: hidden; animation: zoomIn 0.18s ease-out;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+  border-bottom: 1px solid var(--n200); background: var(--n50);
+}
+.modal-close {
+  background: transparent; border: none; font-size: 18px; color: var(--n500); cursor: pointer;
+}
+.modal-close:hover { color: var(--r); }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; background: #fff !important;
+  }
+  .modal-overlay { position: absolute; inset: 0; background: none; }
+  .modal-box { box-shadow: none; border: none; max-width: 100% !important; width: 100% !important; }
+  .modal-header, .modal-footer { display: none !important; }
+}
+
 @media (max-width:767px) {
   .form-grid { grid-template-columns:1fr; }
   .status-card { flex-direction:column;gap:.5rem; }

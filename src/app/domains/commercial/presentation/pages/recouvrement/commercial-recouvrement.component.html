@@ -3,69 +3,125 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
       <div>
-        <h1 class="ph-title">Recouvrement Clients</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Suivi des créances et encaissements</p>
+        <h1 class="ph-title">Recouvrement Clients &amp; Créances</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Suivi des créances terrain, encaissements et apurement des dettes</p>
       </div>
+    </div>
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="charger()" title="Actualiser les créances">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Télécharger l'état des créances en CSV">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
     </div>
   </div>
 
-  <div class="kpi-grid kpi-grid-3">
-    <div class="kpi-card kp-r">
+  <!-- KPIs INTERACTIFS -->
+  <div class="kpi-grid kpi-grid-4">
+    <div class="kpi-card kp-r" [class.kpi-active-filter]="filtreStatut() === 'TOUS'" (click)="setFiltreStatut('TOUS')" style="cursor:pointer" title="Afficher toutes les créances">
       <div class="kpi-decor kd-r"></div>
       <div class="kpi-ico ir"><i class="fa-solid fa-file-invoice-dollar"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">Total Créances</span>
+        <span class="kpi-lbl">Total Créances Émises</span>
         <span class="kpi-val">{{ fCFA(totalDettes()) }}</span>
         <div class="kpi-meta">{{ clientsDebiteurs() }} clients débiteurs</div>
       </div>
     </div>
-    <div class="kpi-card kp-g">
-      <div class="kpi-decor"></div>
-      <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
-      <div class="kpi-body">
-        <span class="kpi-lbl">Encaissé cette semaine</span>
-        <span class="kpi-val text-success">{{ fCFA(totalEncaisse()) }}</span>
-        <div class="kpi-meta">{{ nbApures() }} dossiers apurés</div>
-      </div>
-    </div>
-    <div class="kpi-card kp-y">
+    <div class="kpi-card kp-y" [class.kpi-active-filter]="filtreStatut() === 'EN_COURS'" (click)="setFiltreStatut('EN_COURS')" style="cursor:pointer" title="Filtrer les dossiers en cours">
       <div class="kpi-decor kd-y"></div>
       <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
       <div class="kpi-body">
-        <span class="kpi-lbl">En Cours de Recouvrement</span>
-        <span class="kpi-val">{{ nbEnCours() }}</span>
-        <div class="kpi-meta">dossiers actifs</div>
+        <span class="kpi-lbl">Solde Restant Dû</span>
+        <span class="kpi-val text-danger">{{ fCFA(totalSoldeRestant()) }}</span>
+        <div class="kpi-meta">{{ nbEnCours() }} dossier(s) actif(s)</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-g" [class.kpi-active-filter]="filtreStatut() === 'APURE'" (click)="setFiltreStatut('APURE')" style="cursor:pointer" title="Filtrer les dossiers soldés">
+      <div class="kpi-decor"></div>
+      <div class="kpi-ico ig"><i class="fa-solid fa-check-double"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Total Encaissé</span>
+        <span class="kpi-val text-success">{{ fCFA(totalEncaisse()) }}</span>
+        <div class="kpi-meta">{{ nbApures() }} dossier(s) apuré(s)</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-percent"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-lbl">Taux de Recouvrement</span>
+        <span class="kpi-val">{{ totalDettes() > 0 ? (totalEncaisse() / totalDettes() * 100).toFixed(1) : 0 }}%</span>
+        <div class="kpi-meta">efficacité encaissement</div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-table"></i> Suivi des Créances par Client</span></div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr><th>Client</th><th>Type</th><th>Créance initiale</th><th>Encaissé</th><th>Solde restant</th><th>Statut</th></tr>
-        </thead>
-        <tbody>
-          @for (r of recouvrement(); track r.id) {
-          <tr>
-            <td><strong>{{ r.clientNom }}</strong></td>
-            <td><span class="zone-chip">{{ getClientType(r.clientId) }}</span></td>
-            <td class="mono">{{ fCFA(r.montantDette) }}</td>
-            <td class="mono text-success">{{ fCFA(r.montantEncaisse) }}</td>
-            <td class="mono" [class.text-danger]="r.soldeRestant>0">{{ fCFA(r.soldeRestant) }}</td>
-            <td>
-              @if (r.statut==='APURE') { <span class="badge bg-success">Apuré ✓</span> }
-              @else if (r.statut==='PARTIEL') { <span class="badge bg-orange">Partiel</span> }
-              @else { <span class="badge bg-neutral">En attente</span> }
-            </td>
-          </tr>
-          }
-          @if (recouvrement().length === 0) {
-          <tr><td colspan="6" class="empty-row">Aucune créance active pour votre zone</td></tr>
-          }
-        </tbody>
-      </table>
+  <!-- TABLEAU -->
+  <div class="card table-card">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fa-solid fa-table"></i> Portefeuille Créances par Client</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="text" class="form-control" style="max-width:240px;font-size:12px" placeholder="Rechercher client, code, dossier..."
+               [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'TOUS'" [class.btn-ghost]="filtreStatut() !== 'TOUS'" (click)="setFiltreStatut('TOUS')">Tous</button>
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'EN_COURS'" [class.btn-ghost]="filtreStatut() !== 'EN_COURS'" (click)="setFiltreStatut('EN_COURS')">En cours</button>
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'APURE'" [class.btn-ghost]="filtreStatut() !== 'APURE'" (click)="setFiltreStatut('APURE')">Apurés</button>
+        </div>
+      </div>
     </div>
+
+    @if (loading()) {
+      <div class="loading-box" style="padding:40px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des créances...</div>
+    } @else {
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dossier</th>
+              <th>Client</th>
+              <th>Créance Initiale</th>
+              <th>Total Encaissé</th>
+              <th>Solde Restant</th>
+              <th>Échéance</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of recouvrementsFiltres(); track r.id) {
+              <tr>
+                <td class="mono fw-bold" style="color:var(--g-d)">{{ r.id }}</td>
+                <td>
+                  <strong>{{ r.clientNom }}</strong>
+                  <div class="mono text-muted" style="font-size:11px">{{ r.clientId }}</div>
+                </td>
+                <td class="mono">{{ fCFA(r.montantDette) }}</td>
+                <td class="mono text-success fw-bold">{{ fCFA(r.montantEncaisse) }}</td>
+                <td class="mono fw-bold" [class.text-danger]="r.soldeRestant > 0" [class.text-success]="r.soldeRestant === 0">
+                  {{ fCFA(r.soldeRestant) }}
+                </td>
+                <td class="text-muted" style="font-size:12px">
+                  {{ r.dateEcheance ? (r.dateEcheance | date:'dd/MM/yyyy') : 'Non définie' }}
+                </td>
+                <td>
+                  @if (r.statut === 'APURE' || r.soldeRestant === 0) {
+                    <span class="badge bg-success"><i class="fa-solid fa-check"></i> Apuré</span>
+                  } @else if (r.statut === 'PARTIEL') {
+                    <span class="badge bg-orange">Partiel</span>
+                  } @else {
+                    <span class="badge bg-red">En attente</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="rpt-empty" style="text-align:center;padding:32px"><i class="fa-solid fa-inbox"></i> Aucune créance pour ces filtres.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
+        {{ recouvrementsFiltres().length }} créance(s) affichée(s)
+      </div>
+    }
   </div>
 </div>

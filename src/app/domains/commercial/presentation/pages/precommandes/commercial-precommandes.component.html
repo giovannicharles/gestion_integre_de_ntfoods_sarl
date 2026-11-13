@@ -3,116 +3,306 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-cart-plus"></i></div>
       <div>
-        <h1 class="ph-title">Précommandes J+1</h1>
-        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Commandez pour chargement du lendemain · Deadline : 17h00</p>
+        <h1 class="ph-title">Précommandes J+1 (Chargement Camion)</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Commandes anticipées terrain · Deadline quotidienne : 17h00</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="ngOnInit()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter en CSV">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
       @if (!showForm()) {
-      <button class="btn btn-primary" (click)="showForm.set(true)"><i class="fa-solid fa-plus"></i> Nouvelle précommande</button>
+        <button class="btn btn-primary" (click)="showForm.set(true)">
+          <i class="fa-solid fa-plus"></i> Nouvelle précommande
+        </button>
       }
     </div>
   </div>
 
   @if (submitted()) {
-  <div class="card success-banner"><i class="fa-solid fa-check-circle"></i> Précommande soumise, en attente validation Secrétaire Caisse puis Comptable.</div>
+    <div class="card success-banner" style="margin-bottom:16px;background:rgba(20,83,45,0.1);border-left:4px solid var(--g);color:var(--g-d);padding:12px 16px;font-weight:600">
+      <i class="fa-solid fa-check-circle"></i> Précommande soumise avec succès ! Elle est désormais en circuit de double validation (Secrétaire Caisse puis Comptable).
+    </div>
   }
 
   @if (toastMsg()) {
-  <div class="toast-banner toast-{{ toastType() }}">{{ toastMsg() }}</div>
+    <div class="toast-banner toast-{{ toastType() }}" style="margin-bottom:16px">{{ toastMsg() }}</div>
   }
 
-  <!-- FORMULAIRE -->
-  @if (showForm()) {
-  <div class="card form-card">
-    <div class="card-hd">
-      <span class="card-title"><i class="fa-solid fa-cart-plus"></i> Précommande pour {{ today | date:'EEEE dd MMMM yyyy':'':"fr" | date:'dd/MM/yyyy' }}</span>
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-b" [class.kpi-active-filter]="filtreStatut() === 'TOUS'" (click)="setFiltreStatut('TOUS')" style="cursor:pointer" title="Afficher toutes les précommandes">
+      <div class="kpi-ico ib"><i class="fa-solid fa-cart-shopping"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Précommandes J+1</div>
+        <div class="kpi-val">{{ nbTotal() }}</div>
+        <div class="kpi-meta">dossiers déclarés</div>
+      </div>
     </div>
-    <div class="tbl-wrap">
-      <table class="data-table lignes-table">
-        <thead><tr><th>Produit</th><th>Gamme</th><th>Prix Unit.</th><th>Quantité</th><th></th></tr></thead>
-        <tbody>
-          @for (ligne of lignes(); track $index; let i = $index) {
-          <tr>
-            <td>
-              <select class="form-select-sm" [(ngModel)]="ligne.produitCode">
-                @for (p of produits(); track p.code) { <option [value]="p.code">{{ p.code }}, {{ p.designation }}</option> }
-              </select>
-            </td>
-            <td>{{ getProduit(ligne.produitCode)?.gamme ?? '-' }}</td>
-            <td class="mono">{{ getProduit(ligne.produitCode)?.prixHT ? fCFA(getProduit(ligne.produitCode)!.prixHT) : '-' }}</td>
-            <td><input type="number" class="qty-input" [(ngModel)]="ligne.quantite" min="0" placeholder="0" /></td>
-            <td><button class="btn-rm" (click)="removeLigne(i)" title="Supprimer"><i class="fa-solid fa-trash"></i></button></td>
-          </tr>
-          }
-        </tbody>
-      </table>
+    <div class="kpi-card kp-g" [class.kpi-active-filter]="filtreStatut() === 'VALIDEE_COMPTABLE'" (click)="setFiltreStatut('VALIDEE_COMPTABLE')" style="cursor:pointer" title="Filtrer les précommandes prêtes pour chargement">
+      <div class="kpi-ico ig"><i class="fa-solid fa-truck-ramp-box"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Prêt Chargement</div>
+        <div class="kpi-val text-success">{{ nbPretChargement() }}</div>
+        <div class="kpi-meta">validées comptabilité ✓</div>
+      </div>
     </div>
-    <div class="form-footer">
-      <button class="btn btn-ghost btn-sm" (click)="addLigne()"><i class="fa-solid fa-plus"></i> Ajouter un produit</button>
-      <div class="form-actions">
-        <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
-        <button class="btn btn-primary" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Soumettre</button>
+    <div class="kpi-card kp-y" [class.kpi-active-filter]="filtreStatut() === 'EN_ATTENTE'" (click)="setFiltreStatut('EN_ATTENTE')" style="cursor:pointer" title="Filtrer les dossiers en attente">
+      <div class="kpi-ico iy"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">En Attente Validation</div>
+        <div class="kpi-val">{{ nbAttente() }}</div>
+        <div class="kpi-meta">visa caisse ou comptable</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b">
+      <div class="kpi-ico ib"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Total Cartons</div>
+        <div class="kpi-val">{{ totalCartons() }}</div>
+        <div class="kpi-meta">volume global prévu</div>
       </div>
     </div>
   </div>
+
+  <!-- FORMULAIRE CRÉATION -->
+  @if (showForm()) {
+    <div class="card form-card" style="margin-bottom:20px;border:1.5px solid var(--g)">
+      <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="card-title"><i class="fa-solid fa-cart-plus"></i> Nouvelle Précommande Terrain pour {{ today | date:'dd/MM/yyyy' }}</span>
+        <button class="btn btn-xs btn-ghost" (click)="showForm.set(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-table lignes-table">
+          <thead><tr><th>Produit</th><th>Gamme</th><th>Prix Unit. HT</th><th>Quantité (Cartons)</th><th></th></tr></thead>
+          <tbody>
+            @for (ligne of lignes(); track $index; let i = $index) {
+              <tr>
+                <td>
+                  <select class="form-control" [(ngModel)]="ligne.produitCode">
+                    <option value="">Sélectionner un produit...</option>
+                    @for (p of produits(); track p.code) { <option [value]="p.code">{{ p.code }} — {{ p.designation }}</option> }
+                  </select>
+                </td>
+                <td>{{ getProduit(ligne.produitCode)?.gamme ?? '-' }}</td>
+                <td class="mono">{{ getProduit(ligne.produitCode)?.prixHT ? fCFA(getProduit(ligne.produitCode)!.prixHT) : '-' }}</td>
+                <td><input type="number" class="form-control qty-input" style="max-width:120px" [(ngModel)]="ligne.quantite" min="0" placeholder="0" /></td>
+                <td style="text-align:right"><button class="btn btn-xs btn-ghost-red" (click)="removeLigne(i)" title="Supprimer la ligne"><i class="fa-solid fa-trash"></i></button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="form-footer" style="padding:14px;display:flex;justify-content:space-between;align-items:center;background:var(--n50)">
+        <button class="btn btn-ghost btn-sm" (click)="addLigne()"><i class="fa-solid fa-plus"></i> Ajouter une ligne produit</button>
+        <div class="form-actions" style="display:flex;gap:10px">
+          <button class="btn btn-ghost" (click)="showForm.set(false)">Annuler</button>
+          <button class="btn btn-primary" (click)="soumettre()"><i class="fa-solid fa-paper-plane"></i> Soumettre la précommande</button>
+        </div>
+      </div>
+    </div>
   }
 
-  <!-- LISTE PRÉCOMMANDES -->
-  <div class="card">
-    <div class="card-hd"><span class="card-title"><i class="fa-solid fa-list"></i> Mes Précommandes</span></div>
-    <div class="pcm-list">
-      @for (pcm of precommandes(); track pcm.id) {
-      <div class="pcm-card" [class.pcm-ok]="pcm.statut==='VALIDEE_COMPTABLE'" [class.pcm-mid]="pcm.statut==='VALIDEE_SECRETAIRE'">
-        <div class="pcm-header">
-          <div class="pcm-id">{{ pcm.id }}</div>
-          @if (pcm.statut==='VALIDEE_COMPTABLE') { <span class="badge bg-success">Prêt Chargement ✓</span> }
-          @else if (pcm.statut==='VALIDEE_SECRETAIRE') { <span class="badge bg-orange">Att. Comptable</span> }
-          @else { <span class="badge bg-neutral">Att. Secrétaire Caisse</span> }
+  <!-- LISTE DES PRÉCOMMANDES -->
+  <div class="card table-card">
+    <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <span class="card-title"><i class="fa-solid fa-list"></i> Suivi des Précommandes &amp; Signatures</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="text" class="form-control" style="max-width:220px;font-size:12px" placeholder="Rechercher dossier, produit..."
+               [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'TOUS'" [class.btn-ghost]="filtreStatut() !== 'TOUS'" (click)="setFiltreStatut('TOUS')">Toutes</button>
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'VALIDEE_COMPTABLE'" [class.btn-ghost]="filtreStatut() !== 'VALIDEE_COMPTABLE'" (click)="setFiltreStatut('VALIDEE_COMPTABLE')">Prêtes</button>
+          <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'EN_ATTENTE'" [class.btn-ghost]="filtreStatut() !== 'EN_ATTENTE'" (click)="setFiltreStatut('EN_ATTENTE')">En attente</button>
         </div>
-        <div class="pcm-lignes">
-          @for (l of pcm.lignes; track l.produitCode) {
-          <div class="pcm-ligne">
-            <span class="pcm-code">{{ l.produitCode }}</span>
-            <span class="pcm-qty">{{ l.quantite }} {{ getProduit(l.produitCode)?.unite ?? 'u' }}</span>
-            <span class="pcm-prod">{{ getProduit(l.produitCode)?.designation }}</span>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-box" style="padding:40px;text-align:center"><i class="fa-solid fa-spinner fa-spin"></i> Chargement des précommandes...</div>
+    } @else {
+      <div class="pcm-list" style="display:flex;flex-direction:column;gap:12px;padding:16px">
+        @for (pcm of precommandesFiltrees(); track pcm.id) {
+          <div class="pcm-card" [class.pcm-ok]="pcm.statut==='VALIDEE_COMPTABLE'" [class.pcm-mid]="pcm.statut==='VALIDEE_SECRETAIRE'" style="background:var(--w);border:1px solid var(--n200);border-radius:10px;padding:16px">
+            <div class="pcm-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="mono fw-bold" style="font-size:14px;color:var(--g-d)">{{ pcm.id }}</span>
+                <span class="badge bg-neutral" style="font-size:11px">Commercial : {{ pcm.commercialId }}</span>
+                <span class="text-muted" style="font-size:11.5px">Prévu pour le {{ pcm.dateCommande | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                @if (pcm.statut==='VALIDEE_COMPTABLE') {
+                  <span class="badge bg-success"><i class="fa-solid fa-check"></i> Prêt Chargement</span>
+                } @else if (pcm.statut==='VALIDEE_SECRETAIRE') {
+                  <span class="badge bg-orange">Attente Comptable</span>
+                } @else {
+                  <span class="badge bg-neutral">Attente Secrétaire Caisse</span>
+                }
+                <button class="btn btn-xs btn-ghost" (click)="imprimerBon(pcm)" title="Imprimer le bon de chargement">
+                  <i class="fa-solid fa-print"></i> Bon
+                </button>
+              </div>
+            </div>
+
+            <div class="pcm-lignes" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;background:var(--n50);border-radius:8px;padding:12px;margin-bottom:12px">
+              @for (l of pcm.lignes; track l.produitCode) {
+                <div class="pcm-ligne" style="font-size:12px">
+                  <strong class="mono" style="color:var(--g-d)">{{ l.produitCode }}</strong> :
+                  <span style="font-weight:700">{{ l.quantite }} carton(s)</span>
+                  <div style="color:var(--n500);font-size:11px">{{ getProduit(l.produitCode)?.designation || l.designation }}</div>
+                </div>
+              }
+            </div>
+
+            <!-- Double Approbation Workflow -->
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+              <div class="pcm-sigs" style="display:flex;align-items:center;gap:14px;font-size:12px">
+                <div class="sig-step" [class.sig-done]="pcm.signatureSecretaire" style="display:flex;align-items:center;gap:6px">
+                  <i class="fa-solid" [class.fa-circle-check]="pcm.signatureSecretaire" [class.fa-circle]="!pcm.signatureSecretaire" [style.color]="pcm.signatureSecretaire ? 'var(--g)' : 'var(--n400)'"></i>
+                  <span>1. Visa Secrétaire Caisse</span>
+                </div>
+                <div class="sig-arrow" style="color:var(--n400)">→</div>
+                <div class="sig-step" [class.sig-done]="pcm.signatureComptable" style="display:flex;align-items:center;gap:6px">
+                  <i class="fa-solid" [class.fa-circle-check]="pcm.signatureComptable" [class.fa-circle]="!pcm.signatureComptable" [style.color]="pcm.signatureComptable ? 'var(--g)' : 'var(--n400)'"></i>
+                  <span>2. Visa Comptable</span>
+                </div>
+              </div>
+
+              @if (pcm.statut === 'VALIDEE_COMPTABLE') {
+                <div class="pcm-actions" style="display:flex;gap:8px">
+                  <button class="btn btn-ghost-red btn-sm" (click)="openRefus(pcm.id)"><i class="fa-solid fa-ban"></i> Refuser</button>
+                  <button class="btn btn-success btn-sm" (click)="livrer(pcm.id)"><i class="fa-solid fa-truck"></i> Valider Livraison Camion</button>
+                </div>
+              }
+            </div>
           </div>
-          }
-        </div>
-        <div class="pcm-sigs">
-          <div class="sig-step" [class.sig-done]="pcm.signatureSecretaire"><i class="fa-solid" [class.fa-circle-check]="pcm.signatureSecretaire" [class.fa-circle]="!pcm.signatureSecretaire"></i> Secrétaire Caisse</div>
-          <div class="sig-arrow">→</div>
-          <div class="sig-step" [class.sig-done]="pcm.signatureComptable"><i class="fa-solid" [class.fa-circle-check]="pcm.signatureComptable" [class.fa-circle]="!pcm.signatureComptable"></i> Comptable</div>
-        </div>
-        @if (pcm.statut === 'VALIDEE_COMPTABLE') {
-        <div class="pcm-actions">
-          <button class="btn btn-ghost btn-sm" (click)="openRefus(pcm.id)"><i class="fa-solid fa-ban"></i> Refuser</button>
-          <button class="btn btn-success btn-sm" (click)="livrer(pcm.id)"><i class="fa-solid fa-truck"></i> Livrer</button>
-        </div>
+        } @empty {
+          <div class="empty-state" style="padding:32px;text-align:center;color:var(--n500)">
+            <i class="fa-solid fa-cart-plus" style="font-size:24px;display:block;margin-bottom:8px"></i>
+            <p>Aucune précommande pour ces critères.</p>
+          </div>
         }
       </div>
-      }
-      @empty {
-      <div class="empty-state"><i class="fa-solid fa-cart-plus"></i><p>Aucune précommande soumise</p></div>
-      }
-    </div>
+    }
   </div>
-</div>
 
-@if (showRefus()) {
-<div class="modal-overlay" (click)="showRefus.set(false)">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <h3 class="modal-title">Refuser la précommande {{ refusNumero }}</h3>
-    <div class="form-group">
-      <label>Motif de refus</label>
-      <input type="text" class="form-input" [(ngModel)]="refusMotif" placeholder="Motif obligatoire">
+  <!-- MODAL REFUS PRÉCOMMANDE -->
+  @if (showRefus()) {
+    <div class="modal-overlay" (click)="showRefus.set(false)">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:440px">
+        <div class="modal-header">
+          <h3 style="margin:0;font-size:16px"><i class="fa-solid fa-ban" style="color:var(--r)"></i> Refuser la Précommande {{ refusNumero }}</h3>
+          <button class="modal-close" (click)="showRefus.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <p style="font-size:13px;color:var(--n700)">Veuillez indiquer le motif du refus (tracé dans l'audit) :</p>
+          <textarea class="form-control" [(ngModel)]="refusMotif" rows="3" placeholder="Rupture de stock usine, solde client dépassé..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" (click)="showRefus.set(false)">Retour</button>
+          <button class="btn btn-danger" [disabled]="!refusMotif.trim() || refusSaving()" (click)="confirmerRefus()">
+            @if (refusSaving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Confirmer le refus
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" (click)="showRefus.set(false)">Fermer</button>
-      <button class="btn btn-danger" (click)="confirmerRefus()" [disabled]="refusSaving() || !refusMotif">
-        @if (refusSaving()) { Refus… } @else { Confirmer le refus }
-      </button>
+  }
+
+  <!-- MODAL BON DE CHARGEMENT CAMION IMPRIMABLE -->
+  @if (showBonModal()) {
+    <div class="modal-overlay" (click)="fermerBon()">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:680px">
+        <div class="modal-header" style="background:var(--g-gh);border-bottom:2px solid var(--g)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-truck-ramp-box" style="color:var(--g);font-size:22px"></i>
+            <div>
+              <h3 style="margin:0;font-size:16px;color:var(--g-d)">Bon de Chargement Camion J+1</h3>
+              <span style="font-size:11.5px;color:var(--n600)">Ordre de préparation et sortie magasin</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm btn-primary" (click)="lancerImpression()">
+              <i class="fa-solid fa-print"></i> Imprimer
+            </button>
+            <button class="modal-close" (click)="fermerBon()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
+        <div class="modal-body print-area" style="padding:24px;background:#fff">
+          @if (selectedPrecommande(); as sp) {
+            <!-- En-tête -->
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--g);padding-bottom:14px;margin-bottom:18px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <img src="/logo_tanty.jpg" alt="NTFOODS" style="height:44px;border-radius:6px;border:1px solid var(--n200)" />
+                <div>
+                  <div style="font-size:15px;font-weight:900;color:var(--g-d)">NTFOODS S.A.R.L</div>
+                  <div style="font-size:11px;color:var(--n500)">Magasin Central &amp; Expéditions · BP 15243 Douala</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div class="badge bg-neutral mono" style="font-size:13px">{{ sp.id }}</div>
+                <div style="font-size:11.5px;color:var(--n500);margin-top:4px">Date : {{ sp.dateCommande | date:'dd/MM/yyyy' }}</div>
+              </div>
+            </div>
+
+            <!-- Commercial & Statut -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--n50);border:1px solid var(--n200);border-radius:8px;padding:14px;margin-bottom:18px">
+              <div>
+                <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Commercial Assigné</span>
+                <strong style="font-size:14px;color:var(--g-d)">{{ sp.commercialId }}</strong>
+              </div>
+              <div>
+                <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Statut Approbation</span>
+                <span class="badge" [class.bg-success]="sp.statut === 'VALIDEE_COMPTABLE'" [class.bg-orange]="sp.statut !== 'VALIDEE_COMPTABLE'">{{ sp.statut }}</span>
+              </div>
+            </div>
+
+            <!-- Liste des produits à charger -->
+            <table class="data-table" style="width:100%;margin-bottom:20px">
+              <thead>
+                <tr>
+                  <th>Code SKU</th>
+                  <th>Désignation Produit</th>
+                  <th style="text-align:right">Quantité Cartons</th>
+                  <th style="text-align:center">Pointage Magasin</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (l of sp.lignes; track l.produitCode) {
+                  <tr>
+                    <td class="mono fw-bold">{{ l.produitCode }}</td>
+                    <td>{{ getProduit(l.produitCode)?.designation || l.designation }}</td>
+                    <td class="mono fw-bold" style="text-align:right;font-size:14px">{{ l.quantite }}</td>
+                    <td style="text-align:center"><span style="display:inline-block;width:18px;height:18px;border:1.5px solid var(--n400);border-radius:3px"></span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+
+            <!-- Signatures -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;border-top:1px dashed var(--n300);padding-top:16px">
+              <div style="border:1px solid var(--n200);border-radius:6px;padding:10px;min-height:75px">
+                <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:35px">
+                  Magasinier Expédition (Sortie Stock) :
+                </span>
+              </div>
+              <div style="border:1px solid var(--n200);border-radius:6px;padding:10px;min-height:75px">
+                <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:35px">
+                  Chauffeur / Commercial (Prise en charge) :
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end">
+          <button class="btn btn-secondary" (click)="fermerBon()">Fermer</button>
+        </div>
+      </div>
     </div>
-  </div>
+  }
 </div>
-}

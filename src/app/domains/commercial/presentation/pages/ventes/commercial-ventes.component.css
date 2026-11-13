@@ -48,6 +48,44 @@
 .rgrid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .hint-r { color: var(--r); }
 .hint-n { color: var(--n400); }
+
+.kpi-card.kpi-active-filter {
+  border-color: var(--g) !important;
+  box-shadow: 0 0 0 2px var(--g), 0 8px 20px rgba(20, 83, 45, 0.15) !important;
+  background: linear-gradient(to bottom, #ffffff, #f0fdf4) !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: #fff !important;
+  }
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: none;
+  }
+  .modal-box {
+    box-shadow: none;
+    border: none;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .modal-header, .modal-footer {
+    display: none !important;
+  }
+}
 .photo-status { font-size: 11px; }
 .photo-status-n { color: var(--n400); }
 .photo-status-s { color: var(--s); }

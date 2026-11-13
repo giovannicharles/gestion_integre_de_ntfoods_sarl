@@ -3,11 +3,17 @@
     <div class="ph-left">
       <div class="ph-icon"><i class="fa-solid fa-cart-shopping"></i></div>
       <div>
-        <h1 class="ph-title">Ventes</h1>
-        <p class="ph-sub">Finalisation, annulation, transactions non marchandes et avoirs</p>
+        <h1 class="ph-title">Opérations Commerciales &amp; Ventes</h1>
+        <p class="ph-sub">{{ today | date:'EEEE dd MMMM yyyy':'':"fr" }} · Facturation terrain, finalisation, transactions non-marchandes et avoirs</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;gap:8px">
+      <button class="btn btn-ghost" (click)="chargerVentes()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+      </button>
+      <button class="btn btn-ghost" (click)="exporterCsv()" title="Télécharger le journal des ventes en CSV">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
       <button class="btn btn-primary" (click)="openNonMarchand()">
         <i class="fa-solid fa-plus"></i> Transaction non marchande
       </button>
@@ -18,193 +24,383 @@
     <div class="toast toast-{{ toastType() }}">{{ toastMsg() }}</div>
   }
 
+  <!-- KPIs EXÉCUTIFS DU MOIS -->
+  <div class="kpi-grid">
+    <div class="kpi-card kp-g">
+      <div class="kpi-ico ig"><i class="fa-solid fa-wallet"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Chiffre d'Affaires Finalisé</div>
+        <div class="kpi-val text-success">{{ fCFA(totalCA()) }}</div>
+        <div class="kpi-meta">ventes encaissées ce mois</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-b" [class.kpi-active-filter]="filtreStatut() === 'FINALISEE'" (click)="setFiltreStatut('FINALISEE')" style="cursor:pointer" title="Filtrer les ventes finalisées">
+      <div class="kpi-ico ib"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Ventes Finalisées</div>
+        <div class="kpi-val">{{ nbFinalisees() }}</div>
+        <div class="kpi-meta">livrées et validées</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-y" [class.kpi-active-filter]="filtreStatut() === 'EN_COURS'" (click)="setFiltreStatut('EN_COURS')" style="cursor:pointer" title="Filtrer les ventes en cours">
+      <div class="kpi-ico iy"><i class="fa-solid fa-clock"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">En Cours</div>
+        <div class="kpi-val">{{ nbEnCours() }}</div>
+        <div class="kpi-meta">en attente de clôture</div>
+      </div>
+    </div>
+    <div class="kpi-card kp-r" [class.kpi-active-filter]="filtreStatut() === 'ANNULEE'" (click)="setFiltreStatut('ANNULEE')" style="cursor:pointer" title="Filtrer les ventes annulées">
+      <div class="kpi-ico ir"><i class="fa-solid fa-ban"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-lbl">Annulations / Avoirs</div>
+        <div class="kpi-val">{{ nbAnnulees() + avoirs().length }}</div>
+        <div class="kpi-meta">ajustements comptables</div>
+      </div>
+    </div>
+  </div>
+
   @if (loading()) {
-    <div class="loading-box">
-      <div class="spinner spinner-lg loading-spinner"></div>Chargement…
+    <div class="loading-box" style="padding:40px;text-align:center">
+      <div class="spinner spinner-lg loading-spinner" style="margin:0 auto 12px"></div>
+      Chargement du registre commercial...
     </div>
   } @else {
+    <!-- REGISTRE DES VENTES -->
     <div class="card card-section">
-      <h3 class="section-title">
-        <i class="fa-solid fa-list"></i> Ventes du mois
-      </h3>
-      @if (!ventes().length) {
-        <p class="empty-msg">Aucune vente sur la période.</p>
+      <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <h3 class="section-title" style="margin:0">
+          <i class="fa-solid fa-list"></i> Registre des Ventes &amp; Facturations
+        </h3>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="text" class="form-control" style="max-width:220px;font-size:12px" placeholder="Rechercher n°, client, matricule..."
+                 [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
+
+          <label style="font-size:12px">Type :</label>
+          <select class="form-control" style="max-width:140px;font-size:12px" [ngModel]="filtreTypeVente()" (ngModelChange)="filtreTypeVente.set($event)">
+            <option value="TOUS">Tous types</option>
+            <option value="NORMALE">NORMALE</option>
+            <option value="DON">DON</option>
+            <option value="AVARIE">AVARIE</option>
+            <option value="DEGUSTATION">DEGUSTATION</option>
+          </select>
+
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'TOUS'" [class.btn-ghost]="filtreStatut() !== 'TOUS'" (click)="setFiltreStatut('TOUS')">Tous</button>
+            <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'FINALISEE'" [class.btn-ghost]="filtreStatut() !== 'FINALISEE'" (click)="setFiltreStatut('FINALISEE')">Finalisées</button>
+            <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'EN_COURS'" [class.btn-ghost]="filtreStatut() !== 'EN_COURS'" (click)="setFiltreStatut('EN_COURS')">En cours</button>
+            <button class="btn btn-xs" [class.btn-primary]="filtreStatut() === 'ANNULEE'" [class.btn-ghost]="filtreStatut() !== 'ANNULEE'" (click)="setFiltreStatut('ANNULEE')">Annulées</button>
+          </div>
+        </div>
+      </div>
+
+      @if (!ventesFiltrees().length) {
+        <p class="empty-msg" style="text-align:center;padding:32px;color:var(--n500)">
+          <i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>
+          Aucune transaction commerciale pour ces critères.
+        </p>
       } @else {
         <div class="tbl-scroll">
           <div class="tbl-wrap">
-          <table class="tbl">
-            <thead>
-              <tr><th>Numéro</th><th>Date</th><th>Client</th><th>Type</th><th>Montant</th><th>Statut</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              @for (v of ventes(); track v.id) {
+            <table class="tbl data-table">
+              <thead>
                 <tr>
-                  <td class="cell-mono">{{ v.numeroVente }}</td>
-                  <td>{{ v.date | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ v.codeClient }}</td>
-                  <td><span class="badge bg-neutral">{{ v.typeVente }}</span></td>
-                  <td class="cell-amount">{{ fCFA(v.montantTotal) }}</td>
-                  <td><span [class]="statutClass(v.statut)">{{ v.statut }}</span></td>
-                  <td>
-                    <div class="row-actions">
-                      @if (v.statut === 'EN_COURS') {
-                        <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_VENTE_FINALISER'" (click)="finaliserVente(v.numeroVente)" title="Finaliser">
-                          <i class="fa-solid fa-check"></i>
-                        </button>
-                        <button class="btn btn-ghost btn-sm" *appHasPermission="'COMMERCIAL_VENTE_CREER'" (click)="openAnnuler(v.numeroVente)" title="Annuler">
-                          <i class="fa-solid fa-ban ico-r"></i>
-                        </button>
-                      }
-                      @if (v.statut === 'FINALISEE') {
-                        <button class="btn btn-ghost btn-sm" (click)="openAvoir(v.numeroVente)" title="Émettre avoir">
-                          <i class="fa-solid fa-file-invoice ico-o"></i>
-                        </button>
-                      }
-                    </div>
-                  </td>
+                  <th>N° Vente</th>
+                  <th>Date</th>
+                  <th>Code Client</th>
+                  <th>Commercial</th>
+                  <th>Type Transaction</th>
+                  <th style="text-align:right">Montant Total</th>
+                  <th>Statut</th>
+                  <th style="text-align:right">Actions</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (v of ventesFiltrees(); track v.id) {
+                  <tr>
+                    <td class="cell-mono fw-bold" style="color:var(--g-d)">{{ v.numeroVente }}</td>
+                    <td>{{ v.date | date:'dd/MM/yyyy' }}</td>
+                    <td><span class="badge bg-neutral">{{ v.codeClient }}</span></td>
+                    <td class="mono" style="font-size:11.5px">{{ v.matriculeCommercial || '-' }}</td>
+                    <td>
+                      <span class="badge" [class.bg-neutral]="v.typeVente === 'NORMALE'" [class.bg-orange]="v.typeVente === 'DON' || v.typeVente === 'DEGUSTATION'" [class.bg-red]="v.typeVente === 'AVARIE'">
+                        {{ v.typeVente || 'NORMALE' }}
+                      </span>
+                    </td>
+                    <td class="cell-amount mono fw-bold" style="text-align:right">{{ fCFA(v.montantTotal) }}</td>
+                    <td><span [class]="statutClass(v.statut)">{{ v.statut }}</span></td>
+                    <td style="text-align:right">
+                      <div class="row-actions" style="justify-content:flex-end;gap:4px">
+                        <button class="btn btn-sm btn-ghost" (click)="imprimerBordereau(v)" title="Imprimer le bordereau / reçu de vente">
+                          <i class="fa-solid fa-print"></i> Reçu
+                        </button>
+                        @if (v.statut === 'EN_COURS') {
+                          <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_VENTE_FINALISER'" (click)="finaliserVente(v.numeroVente)" title="Valider et finaliser la vente">
+                            <i class="fa-solid fa-check"></i> Finaliser
+                          </button>
+                          <button class="btn btn-ghost-red btn-sm" *appHasPermission="'COMMERCIAL_VENTE_CREER'" (click)="openAnnuler(v.numeroVente)" title="Annuler la vente">
+                            <i class="fa-solid fa-ban"></i>
+                          </button>
+                        }
+                        @if (v.statut === 'FINALISEE') {
+                          <button class="btn btn-outline btn-sm" (click)="openAvoir(v.numeroVente)" title="Émettre un avoir sur cette facture">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> Avoir
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
+        </div>
+        <div class="table-footer" style="padding:10px 16px;text-align:right;font-size:12px;color:var(--n500)">
+          {{ ventesFiltrees().length }} vente(s) affichée(s) sur {{ ventes().length }}
         </div>
       }
     </div>
 
+    <!-- REGISTRE DES AVOIRS ÉMIS -->
     @if (avoirs().length > 0) {
-      <div class="card">
+      <div class="card card-section" style="margin-top:20px">
         <h3 class="section-title">
-          <i class="fa-solid fa-file-invoice"></i> Avoirs émis
+          <i class="fa-solid fa-file-invoice-dollar" style="color:var(--y)"></i> Avoirs Commerciaux Émis ({{ avoirs().length }})
         </h3>
         <div class="tbl-scroll">
           <div class="tbl-wrap">
-          <table class="tbl">
-            <thead>
-              <tr><th>Numéro</th><th>Vente originale</th><th>Client</th><th>Montant TTC</th><th>Motif</th><th>Statut</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              @for (a of avoirs(); track a.id) {
-                <tr>
-                  <td class="cell-mono">{{ a.numeroAvoir }}</td>
-                  <td>{{ a.numeroVenteOriginale }}</td>
-                  <td>{{ a.codeClient }}</td>
-                  <td class="cell-amount cell-amount-r">{{ fCFA(a.montantTTC) }}</td>
-                  <td>{{ a.motif }}</td>
-                  <td><span class="badge" [class.bg-orange]="a.statut==='EMIS'" [class.bg-success]="a.statut==='VALIDE'">{{ a.statut }}</span></td>
-                  <td>
-                    @if (a.statut === 'EMIS') {
-                      <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_FACTURE_AVOIR_GERER'" (click)="validerAvoir(a.numeroAvoir)" title="Valider">
-                        <i class="fa-solid fa-check"></i>
-                      </button>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+            <table class="tbl data-table">
+              <thead>
+                <tr><th>Numéro Avoir</th><th>Vente originale</th><th>Client</th><th>Montant TTC</th><th>Motif</th><th>Statut</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                @for (a of avoirs(); track a.id) {
+                  <tr>
+                    <td class="cell-mono fw-bold">{{ a.numeroAvoir }}</td>
+                    <td class="cell-mono text-muted">{{ a.numeroVenteOriginale }}</td>
+                    <td><span class="badge bg-neutral">{{ a.codeClient }}</span></td>
+                    <td class="cell-amount cell-amount-r mono fw-bold" style="color:var(--r)">{{ fCFA(a.montantTTC) }}</td>
+                    <td style="font-size:12px">{{ a.motif }}</td>
+                    <td><span class="badge" [class.bg-orange]="a.statut==='EMIS'" [class.bg-success]="a.statut==='VALIDE'">{{ a.statut }}</span></td>
+                    <td>
+                      @if (a.statut === 'EMIS') {
+                        <button class="btn btn-success btn-sm" *appHasPermission="'COMMERCIAL_FACTURE_AVOIR_GERER'" (click)="validerAvoir(a.numeroAvoir)" title="Valider l'avoir">
+                          <i class="fa-solid fa-check"></i> Valider
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     }
   }
+
+  <!-- MODAL TRANSACTION NON MARCHANDE -->
+  @if (showNonMarchand()) {
+    <div class="modal-overlay" (click)="showNonMarchand.set(false)">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:540px">
+        <div class="modal-header">
+          <h3 style="margin:0;font-size:16px"><i class="fa-solid fa-hand-holding-heart" style="color:var(--g)"></i> Déclarer une Transaction Non Marchande</h3>
+          <button class="modal-close" (click)="showNonMarchand.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Type de transaction * :</label>
+              <select class="form-control" [(ngModel)]="nmTypeVente">
+                <option value="DON">DON</option>
+                <option value="AVARIE">AVARIE</option>
+                <option value="DEGUSTATION">DÉGUSTATION</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Code Client / Bénéficiaire * :</label>
+              <input class="form-control" [(ngModel)]="nmCodeClient" placeholder="Ex: CLI-001 ou INTERNE" />
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Code Produit * :</label>
+              <input class="form-control" [(ngModel)]="nmCodeProduit" placeholder="Ex: TTY-SOJA-500" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Désignation Produit :</label>
+              <input class="form-control" [(ngModel)]="nmDesignation" placeholder="Bouillie Tanty Soja" />
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Quantité * :</label>
+              <input type="number" class="form-control" [(ngModel)]="nmQuantite" min="1" />
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Conditionnement :</label>
+              <select class="form-control" [(ngModel)]="nmConditionnement">
+                <option value="CARTON">CARTON</option>
+                <option value="PAQUET">PAQUET</option>
+                <option value="UNITE">UNITE</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Motif explicatif :</label>
+            <textarea class="form-control" [(ngModel)]="nmMotif" rows="2" placeholder="Circonstances du don ou nature de l'avarie..."></textarea>
+          </div>
+
+          @if (photoRequise()) {
+            <div style="background:#fffbeb;border:1px solid var(--y);padding:10px;border-radius:8px;margin-bottom:12px">
+              <label style="display:block;font-size:12px;font-weight:700;color:var(--g-d);margin-bottom:4px">
+                <i class="fa-solid fa-camera"></i> Photo Justificative Obligatoire (Avarie) * :
+              </label>
+              <input type="file" accept="image/*" (change)="onPhotoSelected($event)" style="font-size:12px" />
+              @if (uploadingPhoto()) {
+                <div style="font-size:11px;color:var(--g);margin-top:4px"><i class="fa-solid fa-spinner fa-spin"></i> Téléversement de la photo...</div>
+              }
+            </div>
+          }
+        </div>
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" (click)="showNonMarchand.set(false)" [disabled]="saving()">Annuler</button>
+          <button class="btn btn-primary" (click)="confirmerNonMarchand()" [disabled]="saving() || !nmCodeClient || !nmCodeProduit || (photoRequise() && !nmPhotoDocId)">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> Enregistrement... }
+            @else { <i class="fa-solid fa-check"></i> Enregistrer }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL ANNULATION VENTE -->
+  @if (showAnnuler()) {
+    <div class="modal-overlay" (click)="showAnnuler.set(false)">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:440px">
+        <div class="modal-header">
+          <h3 style="margin:0;font-size:16px"><i class="fa-solid fa-ban" style="color:var(--r)"></i> Annuler la Vente {{ selectedNumero }}</h3>
+          <button class="modal-close" (click)="showAnnuler.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <p style="font-size:13px;color:var(--n700)">Veuillez renseigner le motif obligatoire de l'annulation (tracé dans l'audit trail) :</p>
+          <textarea class="form-control" [(ngModel)]="annulerMotif" rows="3" placeholder="Erreur de saisie, client indisponible..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" (click)="showAnnuler.set(false)">Retour</button>
+          <button class="btn btn-danger" [disabled]="!annulerMotif.trim() || saving()" (click)="confirmerAnnuler()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Confirmer l'annulation
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL ÉMISSION D'AVOIR -->
+  @if (showAvoir()) {
+    <div class="modal-overlay" (click)="showAvoir.set(false)">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:460px">
+        <div class="modal-header">
+          <h3 style="margin:0;font-size:16px"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--y)"></i> Émettre un Avoir pour {{ selectedNumero }}</h3>
+          <button class="modal-close" (click)="showAvoir.set(false)"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <p style="font-size:13px;color:var(--n700)">Cette action crée une écriture d'avoir comptable en compensation de la vente originale.</p>
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:4px">Motif d'émission de l'avoir * :</label>
+          <textarea class="form-control" [(ngModel)]="avoirMotif" rows="3" placeholder="Retour marchandise, remise commerciale accordée..."></textarea>
+        </div>
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" (click)="showAvoir.set(false)">Annuler</button>
+          <button class="btn btn-primary" [disabled]="!avoirMotif.trim() || saving()" (click)="confirmerAvoir()">
+            @if (saving()) { <i class="fa-solid fa-spinner fa-spin"></i> } @else { <i class="fa-solid fa-check"></i> }
+            Émettre l'avoir
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL BORDEREAU DE VENTE IMPRIMABLE -->
+  @if (showTicketModal()) {
+    <div class="modal-overlay" (click)="fermerBordereau()">
+      <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:680px">
+        <div class="modal-header" style="background:var(--g-gh);border-bottom:2px solid var(--g)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-receipt" style="color:var(--g);font-size:22px"></i>
+            <div>
+              <h3 style="margin:0;font-size:16px;color:var(--g-d)">Bordereau / Reçu de Vente NTFOODS</h3>
+              <span style="font-size:11.5px;color:var(--n600)">Justificatif commercial officiel</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm btn-primary" (click)="lancerImpression()">
+              <i class="fa-solid fa-print"></i> Imprimer
+            </button>
+            <button class="modal-close" (click)="fermerBordereau()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+
+        <div class="modal-body print-area" style="padding:24px;background:#fff">
+          @if (selectedVenteDetail(); as vd) {
+            <!-- En-tête officiel -->
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--g);padding-bottom:14px;margin-bottom:18px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <img src="/logo_tanty.jpg" alt="NTFOODS" style="height:44px;border-radius:6px;border:1px solid var(--n200)" />
+                <div>
+                  <div style="font-size:15px;font-weight:900;color:var(--g-d)">NTFOODS S.A.R.L</div>
+                  <div style="font-size:11px;color:var(--n500)">BP 15243 Douala - Cameroun · Division Commerciale</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div class="badge bg-neutral mono" style="font-size:13px">{{ vd.numeroVente }}</div>
+                <div style="font-size:11.5px;color:var(--n500);margin-top:4px">Date : {{ vd.date | date:'dd/MM/yyyy' }}</div>
+              </div>
+            </div>
+
+            <!-- Client & Détails -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--n50);border:1px solid var(--n200);border-radius:8px;padding:14px;margin-bottom:20px">
+              <div>
+                <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Client / Point de Vente</span>
+                <strong style="font-size:14px;color:var(--g-d)">{{ vd.codeClient }}</strong>
+                <div style="font-size:12px;color:var(--n600)">Type : {{ vd.typeVente || 'NORMALE' }}</div>
+              </div>
+              <div>
+                <span style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;display:block">Commercial Responsable</span>
+                <div class="mono" style="font-size:13px;font-weight:700">{{ vd.matriculeCommercial || 'Équipe terrain' }}</div>
+                <div style="font-size:12px;color:var(--n600)">Statut : <span [class]="statutClass(vd.statut)">{{ vd.statut }}</span></div>
+              </div>
+            </div>
+
+            <!-- Récapitulatif Financier -->
+            <div style="background:var(--g-gh);border:1px solid var(--g);border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+              <span style="font-size:14px;font-weight:800;color:var(--g-d)">MONTANT TOTAL TRANSACTION :</span>
+              <span class="mono" style="font-size:22px;font-weight:900;color:var(--g-d)">{{ fCFA(vd.montantTotal) }}</span>
+            </div>
+
+            <!-- Signatures -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;border-top:1px dashed var(--n300);padding-top:16px">
+              <div style="border:1px solid var(--n200);border-radius:6px;padding:10px;min-height:75px">
+                <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:35px">
+                  Réception Client (Signature &amp; Cachet) :
+                </span>
+              </div>
+              <div style="border:1px solid var(--n200);border-radius:6px;padding:10px;min-height:75px">
+                <span style="font-size:11px;font-weight:700;color:var(--n600);text-transform:uppercase;display:block;margin-bottom:35px">
+                  Visa Commercial / Livreur NTFOODS :
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer" style="padding:14px 20px;display:flex;justify-content:flex-end">
+          <button class="btn btn-secondary" (click)="fermerBordereau()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
-
-@if (showAnnuler()) {
-  <div class="modal-overlay" (click)="showAnnuler.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Annuler la vente {{ selectedNumero }}</h3>
-      <div class="form-group">
-        <label>Motif d'annulation</label>
-        <input type="text" class="form-input" [(ngModel)]="annulerMotif" placeholder="Motif obligatoire">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="showAnnuler.set(false)">Fermer</button>
-        <button class="btn btn-danger" (click)="confirmerAnnuler()" [disabled]="saving() || !annulerMotif">
-          @if (saving()) { Annulation… } @else { Confirmer l'annulation }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (showNonMarchand()) {
-  <div class="modal-overlay" (click)="showNonMarchand.set(false)">
-    <div class="modal-box modal-box-wide" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Transaction non marchande</h3>
-      <div class="rgrid-2">
-        <div class="form-group">
-          <label>Type</label>
-          <select class="form-input" [(ngModel)]="nmTypeVente">
-            <option value="DON">Don</option>
-            <option value="DOTATION">Dotation</option>
-            <option value="AVARIE">Avarie</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Code Client</label>
-          <input type="text" class="form-input" [(ngModel)]="nmCodeClient" placeholder="CLT-001">
-        </div>
-        <div class="form-group">
-          <label>Code Produit</label>
-          <input type="text" class="form-input" [(ngModel)]="nmCodeProduit" placeholder="SKU">
-        </div>
-        <div class="form-group">
-          <label>Désignation</label>
-          <input type="text" class="form-input" [(ngModel)]="nmDesignation" placeholder="Désignation">
-        </div>
-        <div class="form-group">
-          <label>Conditionnement</label>
-          <select class="form-input" [(ngModel)]="nmConditionnement">
-            <option value="CARTON">Carton</option>
-            <option value="SAC">Sac</option>
-            <option value="KG">Kg</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Quantité</label>
-          <input type="number" class="form-input" [(ngModel)]="nmQuantite">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Motif</label>
-        <input type="text" class="form-input" [(ngModel)]="nmMotif" placeholder="Motif de la transaction">
-      </div>
-      @if (nmTypeVente === 'AVARIE') {
-      <div class="form-group">
-        <label>
-          Photo justificative
-          @if (photoRequise()) { <span class="hint-r">obligatoire au-delà de {{ seuilPhotoAvarie() }} unité(s)</span> }
-          @else if (seuilPhotoAvarie() !== null) { <span class="hint-n">(facultative en dessous de {{ seuilPhotoAvarie() }} unité(s))</span> }
-        </label>
-        <input type="file" class="form-input" accept=".jpg,.jpeg,.png,.pdf" (change)="onPhotoSelected($event)">
-        @if (uploadingPhoto()) { <span class="photo-status photo-status-n"><i class="fa-solid fa-spinner fa-spin"></i> Import en cours…</span> }
-        @else if (nmPhotoDocId) { <span class="photo-status photo-status-s"><i class="fa-solid fa-check"></i> Photo archivée.</span> }
-      </div>
-      }
-      <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="showNonMarchand.set(false)">Annuler</button>
-        <button class="btn btn-primary" (click)="confirmerNonMarchand()" [disabled]="saving() || !nmCodeClient || !nmCodeProduit || uploadingPhoto()">
-          @if (saving()) { Enregistrement… } @else { Enregistrer }
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-@if (showAvoir()) {
-  <div class="modal-overlay" (click)="showAvoir.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3 class="modal-title">Émettre un avoir, {{ selectedNumero }}</h3>
-      <div class="form-group">
-        <label>Motif de l'avoir</label>
-        <input type="text" class="form-input" [(ngModel)]="avoirMotif" placeholder="Motif obligatoire">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" (click)="showAvoir.set(false)">Fermer</button>
-        <button class="btn btn-primary" (click)="confirmerAvoir()" [disabled]="saving() || !avoirMotif">
-          @if (saving()) { Émission… } @else { Émettre l'avoir }
-        </button>
-      </div>
-    </div>
-  </div>
-}

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ClassementCommercialBE } from '../../../../dg/infrastructure/dg.service';
 import { CommercialService } from '../../../infrastructure/commercial.service';
@@ -16,23 +16,20 @@ import { fCFA, tauxAtteinte } from '../../../../../shared/utils/format.utils';
 })
 export class CommercialClassementComponent implements OnInit {
   today = new Date();
-  // `/api/dg/**` est réservé au Directeur Général ; le commercial y recevait un
-  // 403 sur son propre classement. La même donnée passe par le module
-  // commercial, sous la permission COMMERCIAL_VENTE_CONSULTER qu'il détient.
   private readonly comSvc = inject(CommercialService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
 
   commerciaux = signal<ClassementCommercialBE[]>([]);
-  /**
-   * Matricule de l'utilisateur connecté, qui sert à mettre en évidence sa
-   * propre ligne. Il était figé à `COM004`, un matricule qui n'existe pas :
-   * la ligne surlignée n'était donc jamais la bonne, et pour tout le monde la
-   * même. Il vient maintenant de la session.
-   */
   monId = signal<string>('');
   fCFA = fCFA;
   tauxAtteinte = tauxAtteinte;
+
+  readonly totalCaEquipe = computed(() => this.commerciaux().reduce((acc, c) => acc + (c.caRealise || 0), 0));
+  readonly totalVentesEquipe = computed(() => this.commerciaux().reduce((acc, c) => acc + (c.nbVentes || 0), 0));
+  readonly topVendeur = computed(() => this.commerciaux()[0] ?? null);
+  readonly topVendeurNom = computed(() => this.topVendeur()?.nomComplet || 'En attente');
+  readonly topVendeurCa = computed(() => this.topVendeur()?.caRealise || 0);
 
   ngOnInit(): void {
     this.monId.set(this.auth.user()?.matricule ?? '');
@@ -42,11 +39,6 @@ export class CommercialClassementComponent implements OnInit {
     });
   }
 
-  /**
-   * Numéro de semaine ISO-8601 réel, calculé côté client, remplace le libellé
-   * fixe « S26-2026 » qui restait affiché quelle que soit la semaine réelle
-   * (trouvé en vérifiant l'écran en direct, pas en lisant le code seul).
-   */
   get numeroSemaine(): string {
     const d = new Date(Date.UTC(this.today.getFullYear(), this.today.getMonth(), this.today.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -63,5 +55,31 @@ export class CommercialClassementComponent implements OnInit {
 
   isEligible(c: ClassementCommercialBE): boolean {
     return this.tauxRealisation(c) >= 100;
+  }
+
+  exporterCsv(): void {
+    const rows = [
+      ['Rang', 'Matricule', 'Nom Complet', 'CA Realise FCFA', 'Nombre Ventes', 'Taux Realisation %', 'Eligible Prime']
+    ];
+    for (const c of this.commerciaux()) {
+      rows.push([
+        c.rang.toString(),
+        c.matricule,
+        c.nomComplet,
+        c.caRealise.toString(),
+        c.nbVentes.toString(),
+        this.tauxRealisation(c).toString() + '%',
+        this.isEligible(c) ? 'OUI' : 'NON'
+      ]);
+    }
+    const csvContent = '\uFEFF' + rows.map(r => r.map(col => `"${String(col).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `classement_commerciaux_${this.numeroSemaine}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success('Classement exporté en CSV');
   }
 }
