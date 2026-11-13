@@ -127,9 +127,11 @@ export class ControleLayoutComponent implements OnInit {
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
-    // 2026-11-02 : les badges "Décaissements"/"Budget & Achats" étaient des littéraux fixes
-    // (toujours "2"), jamais recalculés, même défaut que dg-layout (décaissements) corrigé le
-    // 2026-11-01. ControleDashboardService expose déjà decaissementsAttente/budgetDepasse.
+    this.rafraichirBadges();
+    setInterval(() => this.rafraichirBadges(), 30000);
+  }
+
+  private rafraichirBadges(): void {
     this.controleSvc.getDashboard().subscribe({
       next: d => {
         this.setBadge('/controle/decaissements', d.decaissementsAttente, 'bd-red');
@@ -138,8 +140,6 @@ export class ControleLayoutComponent implements OnInit {
       error: () => {},
     });
 
-    // 2026-11-08 : nouvel écran Consommables, badge sur le nombre de réceptions en attente de
-    // la 2e validation (consommables + matériel), même motif que les badges ci-dessus.
     forkJoin({
       consommable: this.receiptUc.getPendingSecondValidation('CONSOMMABLE'),
       materiel: this.receiptUc.getPendingSecondValidation('MATERIEL'),
@@ -151,7 +151,10 @@ export class ControleLayoutComponent implements OnInit {
 
   private setBadge(route: string, count: number, badgeClass: string): void {
     const item = this.navGroups.flatMap(g => g.children).find(n => n.route === route);
-    if (item && count > 0) { item.badge = count; item.badgeClass = badgeClass; }
+    if (item) {
+      item.badge = count > 0 ? count : undefined;
+      item.badgeClass = count > 0 ? badgeClass : undefined;
+    }
   }
 
   @HostListener('window:resize', ['$event'])

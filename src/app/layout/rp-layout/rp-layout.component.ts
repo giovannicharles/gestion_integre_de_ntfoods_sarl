@@ -115,11 +115,19 @@ export class RpLayoutComponent implements OnInit {
       if (cur) this.currentPageTitle.set(cur.label);
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
+    this.rafraichirBadges();
+    setInterval(() => this.rafraichirBadges(), 30000);
+  }
+
+  private rafraichirBadges(): void {
     this.rpService.getDashboard().subscribe({
       next: d => {
         this.alertCount.set(d.relancesDues);
         const gc = this.navGroups.flatMap(g => g.children).find(n => n.route === '/rp/grands-comptes');
-        if (gc) { gc.badge = d.relancesDues; gc.badgeClass = 'bd-orange'; }
+        if (gc) {
+          gc.badge = d.relancesDues > 0 ? d.relancesDues : undefined;
+          gc.badgeClass = d.relancesDues > 0 ? 'bd-orange' : undefined;
+        }
       },
       error: () => {},
     });

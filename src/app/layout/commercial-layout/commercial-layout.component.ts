@@ -62,6 +62,7 @@ export class CommercialLayoutComponent implements OnInit {
     {
       label: 'Terrain', icon: 'fa-cash-register', children: [
         { label: 'Ventes', icon: 'fa-cash-register', route: '/commercial/ventes' },
+        { label: 'Commandes WhatsApp & Directes', icon: 'fa-cart-shopping', route: '/commercial/commandes-clients' },
         { label: 'Carburant', icon: 'fa-gas-pump', route: '/commercial/carburant' },
       ]
     },

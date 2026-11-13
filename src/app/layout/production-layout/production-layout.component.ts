@@ -77,6 +77,7 @@ export class ProductionLayoutComponent implements OnInit {
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
     this.chargerBadges();
+    setInterval(() => this.chargerBadges(), 30000);
   }
 
   private chargerBadges(): void {

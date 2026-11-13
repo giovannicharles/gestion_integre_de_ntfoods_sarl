@@ -81,6 +81,11 @@ export const ADMIN_ROUTES: Routes = [
         path: 'postes-production',
         loadComponent: () => import('./pages/postes-production/postes-production.component').then(m => m.PostesProductionComponent)
       },
+      // Prise de commande client WhatsApp & supervision commandes
+      {
+        path: 'commandes-clients',
+        loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent)
+      },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       {
         path: 'profil',

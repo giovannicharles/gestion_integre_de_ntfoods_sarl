@@ -164,6 +164,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       title: 'Commercial', icon: 'fa-users',
       items: [
         { label: 'Module Commercial', icon: 'fa-users', route: '/stock/commercial', roles: ['GESTIONNAIRE_STOCK', 'COMMERCIAL', 'ADMIN'] },
+        { label: 'Commandes WhatsApp & Directes', icon: 'fa-cart-shopping', route: '/stock/commandes-clients' },
       ]
     },
     {

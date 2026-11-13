@@ -105,6 +105,7 @@ export class AdminLayoutComponent implements OnInit {
       label: 'Conformité & Suivi', icon: 'fa-clipboard-list', children: [
         { label: 'Codes observation', icon: 'fa-clipboard-question', route: '/admin/codes-observation' },
         { label: 'Incidents', icon: 'fa-triangle-exclamation', route: '/admin/incidents' },
+        { label: 'Commandes WhatsApp & Supervision', icon: 'fa-cart-shopping', route: '/admin/commandes-clients' },
         { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
         { label: 'Workflows de validation', icon: 'fa-diagram-project', route: '/admin/validation-workflows' },
       ]

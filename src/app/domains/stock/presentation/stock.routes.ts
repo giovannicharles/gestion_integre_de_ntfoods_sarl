@@ -39,6 +39,8 @@ export const STOCK_ROUTES: Routes = [
       { path: 'mouvements', loadComponent: () => import('./pages/mouvements/mouvements.component').then(m => m.MouvementsComponent) },
       { path: 'session', loadComponent: () => import('./pages/session/session.component').then(m => m.SessionComponent) },
       { path: 'commercial', loadComponent: () => import('./pages/commercial/commercial.component').then(m => m.CommercialComponent) },
+      // Commandes clients hors tournée (WhatsApp, téléphone, comptoir magasin central)
+      { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       { path: 'mobile-stock', loadComponent: () => import('./pages/mobile-stock/mobile-stock.component').then(m => m.MobileStockComponent) },
       { path: 'alertes', loadComponent: () => import('./pages/alertes/alertes.component').then(m => m.AlertesComponent) },
       // Comptage des invendus de fin de tournée (2026-11-09) : RetourController existait déjà

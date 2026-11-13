@@ -8,6 +8,8 @@ export const COMMERCIAL_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'precommandes', pathMatch: 'full' },
       { path: 'precommandes', loadComponent: () => import('./pages/precommandes/commercial-precommandes.component').then(m => m.CommercialPrecommandesComponent) },
+      // Commandes clients WhatsApp & directes
+      { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       { path: 'ventes', loadComponent: () => import('./pages/ventes/commercial-ventes.component').then(m => m.CommercialVentesComponent) },
       { path: 'carburant', loadComponent: () => import('./pages/carburant/commercial-carburant.component').then(m => m.CommercialCarburantComponent) },
       { path: 'recouvrement', loadComponent: () => import('./pages/recouvrement/commercial-recouvrement.component').then(m => m.CommercialRecouvrementComponent) },

@@ -88,6 +88,7 @@ export class DgLayoutComponent implements OnInit {
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/dg/classement' },
         { label: 'Objectifs CA', icon: 'fa-bullseye', route: '/dg/objectifs' },
         { label: 'Arbitrage Prix', icon: 'fa-scale-balanced', route: '/dg/arbitrage' },
+        { label: 'Commandes WhatsApp & VIP', icon: 'fa-cart-shopping', route: '/dg/commandes-clients' },
         { label: 'Promotions', icon: 'fa-tags', route: '/dg/promotions' },
         { label: 'Tarification', icon: 'fa-money-check-dollar', route: '/dg/tarification' },
         { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/dg/zones' },
@@ -170,6 +171,11 @@ export class DgLayoutComponent implements OnInit {
       if (window.innerWidth <= 1024) this.mobileOpen.set(false);
     });
 
+    this.rafraichirBadges();
+    setInterval(() => this.rafraichirBadges(), 30000);
+  }
+
+  private rafraichirBadges(): void {
     this.dgService.getValidationsEnAttente().subscribe({
       next: v => this.setBadge('/dg/arbitrage', v.length, 'bd-orange'),
       error: () => {},
@@ -186,7 +192,10 @@ export class DgLayoutComponent implements OnInit {
 
   private setBadge(route: string, count: number, badgeClass: string): void {
     const item = this.navGroups.flatMap(g => g.children).find(n => n.route === route);
-    if (item) { item.badge = count; item.badgeClass = badgeClass; }
+    if (item) {
+      item.badge = count > 0 ? count : undefined;
+      item.badgeClass = count > 0 ? badgeClass : undefined;
+    }
   }
 
   @HostListener('window:resize', ['$event'])

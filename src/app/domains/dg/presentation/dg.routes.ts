@@ -53,6 +53,8 @@ export const DG_ROUTES: Routes = [
       { path: 'promotions', loadComponent: () => import('../../commercialisation/presentation/pages/promotions/promotions.component').then(m => m.PromotionsComponent) },
       { path: 'tarification', loadComponent: () => import('../../commercial/presentation/pages/tarification/tarification.component').then(m => m.TarificationComponent) },
       { path: 'zones', loadComponent: () => import('../../commercial/presentation/pages/zones-admin/zones-admin.component').then(m => m.ZonesAdminComponent) },
+      // Commandes clients grands comptes & WhatsApp
+      { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
     ]
   }
 ];
