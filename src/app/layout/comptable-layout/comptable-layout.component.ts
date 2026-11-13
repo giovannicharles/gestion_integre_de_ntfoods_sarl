@@ -76,6 +76,7 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/comptable/dashboard' },
+    { label: 'Assistant Fiscal & OHADA', icon: 'fa-calculator', route: '/comptable/assistant' },
     { label: 'Mes validations', icon: 'fa-clipboard-check', route: '/comptable/validations' },
   ];
 
@@ -88,24 +89,27 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      label: 'Caisse & Tournées', icon: 'fa-cash-register', children: [
-        { label: 'Caisse', icon: 'fa-cash-register', route: '/comptable/caisse' },
+      label: 'Trésorerie, Caisse & Banques', icon: 'fa-cash-register', children: [
+        { label: 'Caisse Principale', icon: 'fa-cash-register', route: '/comptable/caisse' },
+        { label: 'Rapprochement Bancaire', icon: 'fa-building-columns', route: '/comptable/rapprochement' },
         { label: 'Fins de Tournée', icon: 'fa-route', route: '/comptable/sessions' },
-        { label: 'Recouvrement', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement', badge: this.pendingRecouvrementCount(), badgeClass: 'bd-red' },
+        { label: 'Recouvrement Créances', icon: 'fa-hand-holding-dollar', route: '/comptable/recouvrement', badge: this.pendingRecouvrementCount(), badgeClass: 'bd-red' },
+      ]
+    },
+    {
+      label: 'Documents & Rapports', icon: 'fa-folder-open', children: [
+        { label: 'Statistiques & Ratios BFR', icon: 'fa-chart-line', route: '/comptable/statistiques' },
+        { label: 'Pièces & Documents OHADA', icon: 'fa-file-contract', route: '/comptable/documents' },
+        { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
+        { label: 'Rapports Périodiques', icon: 'fa-file-export', route: '/comptable/rapports' },
       ]
     },
     {
       label: 'Pilotage Commercial', icon: 'fa-bullseye', children: [
         { label: 'Objectifs', icon: 'fa-bullseye', route: '/comptable/objectifs' },
-        { label: 'Primes', icon: 'fa-money-bill-trend-up', route: '/comptable/primes' },
+        { label: 'Primes Commerciaux', icon: 'fa-money-bill-trend-up', route: '/comptable/primes' },
         { label: 'Zones de Vente', icon: 'fa-draw-polygon', route: '/comptable/zones' },
         { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/comptable/commandes-clients' },
-      ]
-    },
-    {
-      label: 'Rapports', icon: 'fa-file-export', children: [
-        { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
-        { label: 'Rapports', icon: 'fa-file-export', route: '/comptable/rapports' },
       ]
     },
   ]);

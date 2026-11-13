@@ -1,18 +1,14 @@
 <div class="page-wrap animate-fadeInUp">
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-brain"></i></div>
+      <div class="ph-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
       <div>
-        <h1 class="ph-title">Analyse IA · Entreprise 360°</h1>
-        <p class="ph-sub">Analyses intelligentes par domaine · TantyAI</p>
+        <h1 class="ph-title">Diagnostic Global · Entreprise 360°</h1>
+        <p class="ph-sub">Audit analytique et ratios directoriaux par domaine · NTFOODS SARL</p>
       </div>
     </div>
     <div class="ph-actions">
-      @if (!iaConfigured()) {
-        <span class="ia-offline-badge"><i class="fa-solid fa-circle-xmark"></i> IA hors ligne</span>
-      } @else {
-        <span class="ia-online-badge"><i class="fa-solid fa-circle-check"></i> IA active</span>
-      }
+      <span class="ia-online-badge"><i class="fa-solid fa-circle-check"></i> Moteur Analytique Actif</span>
     </div>
   </div>
 
@@ -39,13 +35,13 @@
   <!-- TAB NAVIGATION -->
   <div class="ia-tabs">
     <button class="ia-tab" [class.active]="activeTab() === 'analysis'" (click)="selectTab('analysis')">
-      <i class="fa-solid fa-chart-line"></i> Analyse
+      <i class="fa-solid fa-chart-line"></i> Diagnostic & Ratios
     </button>
     <button class="ia-tab" [class.active]="activeTab() === 'suggestions'" (click)="selectTab('suggestions')">
-      <i class="fa-solid fa-lightbulb"></i> Suggestions
+      <i class="fa-solid fa-lightbulb"></i> Recommandations
     </button>
     <button class="ia-tab" [class.active]="activeTab() === 'predictions'" (click)="selectTab('predictions')">
-      <i class="fa-solid fa-crystal-ball"></i> Prédictions
+      <i class="fa-solid fa-chart-area"></i> Projections de Risque
     </button>
   </div>
 
@@ -55,10 +51,10 @@
       @if (!result() && !loading()) {
         <div class="analysis-empty">
           <i class="fa-solid fa-magnifying-glass-chart"></i>
-          <h3>Analyse IA, {{ getDomainLabel() }}</h3>
-          <p>L'IA va automatiquement récupérer les données réelles de votre entreprise et les analyser.</p>
+          <h3>Audit Analytique, {{ getDomainLabel() }}</h3>
+          <p>Le moteur consolide automatiquement les données réelles d'exploitation pour dresser le bilan opérationnel.</p>
           <button class="btn-run" (click)="runAnalysis()">
-            <i class="fa-solid fa-play"></i> Lancer l'analyse
+            <i class="fa-solid fa-play"></i> Lancer le diagnostic
           </button>
         </div>
       }
@@ -66,7 +62,7 @@
       @if (loading() && activeTab() === 'analysis') {
         <div class="analysis-loading">
           <div class="loader-orb"></div>
-          <span>Analyse en cours... L'IA traite vos données réelles.</span>
+          <span>Analyse en cours... Consolidation des indicateurs réels.</span>
         </div>
       }
 
@@ -198,11 +194,11 @@
     @if (activeTab() === 'predictions') {
       @if (!predictions() && !loading()) {
         <div class="analysis-empty">
-          <i class="fa-solid fa-crystal-ball"></i>
-          <h3>Prédictions IA, Ruptures de stock</h3>
-          <p>L'IA analyse vos données de stock réelles pour prédire les ruptures, détecter les patterns saisonniers et optimiser les seuils.</p>
+          <i class="fa-solid fa-chart-area"></i>
+          <h3>Projections & Risques de Rupture</h3>
+          <p>Le moteur modélise les flux et les tendances de consommation pour identifier les risques d'approvisionnement et optimiser les seuils de sécurité.</p>
           <button class="btn-run" (click)="runPredictions()">
-            <i class="fa-solid fa-play"></i> Lancer les prédictions
+            <i class="fa-solid fa-play"></i> Lancer la modélisation
           </button>
         </div>
       }
@@ -210,7 +206,7 @@
       @if (loading() && activeTab() === 'predictions') {
         <div class="analysis-loading">
           <div class="loader-orb"></div>
-          <span>Calcul des prédictions... L'IA analyse les tendances.</span>
+          <span>Calcul des modélisations... Analyse des cadences et flux.</span>
         </div>
       }
 

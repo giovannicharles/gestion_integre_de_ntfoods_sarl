@@ -253,42 +253,49 @@
 .sb-section-lbl {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: 8px;
+  font-size: 11px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.5);
+  color: #FDE047 !important;
   letter-spacing: 0.08em;
-  padding: 10px 10px 5px;
+  padding: 8px 12px;
+  margin: 6px 4px 3px 4px;
+  background: rgba(246, 182, 11, 0.12);
+  border-left: 3px solid var(--y, #F6B60B);
+  border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-transform: uppercase;
+  transition: all 0.2s ease;
 }
 
 .sb-section-lbl i {
-  font-size: 10px;
-  color: var(--y);
-  opacity: 0.85;
+  font-size: 11.5px;
+  color: var(--y, #F6B60B);
+  opacity: 1;
 }
 
 .sb-section-toggle {
   width: 100%;
-  background: none;
+  background: rgba(246, 182, 11, 0.12);
   border: none;
   cursor: pointer;
   font: inherit;
-  color: inherit;
+  color: #FDE047 !important;
   text-align: left;
-  border-radius: 6px;
-  transition: all 0.15s ease;
+  border-radius: 4px;
+  transition: all 0.18s ease;
 }
 
 .sb-section-toggle:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.06);
+  color: #FFFFFF !important;
+  background: rgba(246, 182, 11, 0.24);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .sb-section-toggle .sb-group-arrow {
   margin-left: auto;
+  color: #FDE047;
 }
 
 /* ── Navigation Items (Charte TANTY sur fond vert) ── */
@@ -425,23 +432,49 @@
 .sb-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 4px;
 }
 
 .sb-group-header {
   cursor: pointer;
   width: 100%;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  margin: 2px 0;
+  padding: 8px 10px;
   text-align: left;
   font: inherit;
-  color: inherit;
+  color: #F8FAFC !important;
+  font-weight: 700;
+  font-size: 12.5px;
+  transition: all 0.18s ease;
+}
+
+.sb-group-header .sb-ico i {
+  color: #F6B60B;
+}
+
+.sb-group-header:hover {
+  background: rgba(246, 182, 11, 0.14) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(246, 182, 11, 0.35);
+}
+
+.sb-group-header.sb-group-open {
+  background: rgba(246, 182, 11, 0.18) !important;
+  color: #FDE047 !important;
+  font-weight: 800;
+  border-left: 3px solid #F6B60B;
+  border-color: rgba(246, 182, 11, 0.4);
 }
 
 .sb-group-arrow {
   margin-left: auto;
   font-size: 10px;
   transition: transform 0.2s ease;
-  opacity: 0.75;
+  color: #F6B60B !important;
+  opacity: 1 !important;
 }
 
 .sb-group-children {

@@ -1,10 +1,30 @@
 import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, catchError } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
-import { DgService, KpisDgBE, ClassementCommercialBE, TauxOccupationSecteurBE, AnomalieBE, ZonePerformanceBE, VersementDuJourBE, RapportComparatifBE, ValidationEnAttenteBE, IncidentResumeBE, MoisCaBE, MoisSoldeCaisseBE } from '../../../infrastructure/dg.service';
+import {
+  DgService,
+  KpisDgBE,
+  ClassementCommercialBE,
+  TauxOccupationSecteurBE,
+  AnomalieBE,
+  ZonePerformanceBE,
+  VersementDuJourBE,
+  RapportComparatifBE,
+  ValidationEnAttenteBE,
+  IncidentResumeBE,
+  MoisCaBE,
+  MoisSoldeCaisseBE,
+  DashboardFinancierDgBE,
+  DashboardProductionDgBE,
+  DashboardStockDgBE,
+  ConcentrationClientsBE,
+  ControleGestionResumeBE,
+  PerformanceGammeBE
+} from '../../../infrastructure/dg.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
+import { ToastService } from '../../../../../core/services/toast.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
 /** 2026-11-01 : ajout de "quarter" (trimestre calendaire), désormais supporté par le backend
@@ -33,30 +53,34 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('tresorerieSparkCanvas') tresorerieSparkCanvas?: ElementRef<HTMLCanvasElement>;
   private charts: Chart[] = [];
   private readonly dgSvc = inject(DgService);
+  private readonly toast = inject(ToastService);
 
   today = new Date();
   loading = signal(true);
   loadError = signal<string | null>(null);
-  /** Échec d'un rafraîchissement périodique (pas bloquant, l'affichage précédent reste). */
   liveError = signal<string | null>(null);
   selectedPeriod = signal<'today' | 'week' | 'month' | 'quarter'>('today');
-  /** Onglets du bas de page : réduit le défilement (12+ cartes empilées avant) sans rien supprimer.
-   *  Affichage par CSS (pas @if) pour ne jamais détruire les <canvas> Chart.js en changeant d'onglet. */
-  activeTab = signal<'apercu' | 'commercial' | 'marches' | 'arbitrage'>('apercu');
-  setTab(t: 'apercu' | 'commercial' | 'marches' | 'arbitrage') { this.activeTab.set(t); }
+
+  /** Onglets de pilotage directionnel exhaustif */
+  activeTab = signal<'apercu' | 'financier' | 'production' | 'stocks' | 'commercial' | 'marches' | 'arbitrage'>('apercu');
+  setTab(t: 'apercu' | 'financier' | 'production' | 'stocks' | 'commercial' | 'marches' | 'arbitrage') { this.activeTab.set(t); }
 
   kpis = signal<KpisDgBE | null>(null);
+  dashboardFinancier = signal<DashboardFinancierDgBE | null>(null);
+  dashboardProduction = signal<DashboardProductionDgBE | null>(null);
+  dashboardStock = signal<DashboardStockDgBE | null>(null);
+  concentrationClients = signal<ConcentrationClientsBE | null>(null);
+  controleGestion = signal<ControleGestionResumeBE | null>(null);
+  gammes = signal<PerformanceGammeBE[]>([]);
+
   commerciaux = signal<ClassementCommercialBE[]>([]);
   occupation = signal<TauxOccupationSecteurBE[]>([]);
   anomalies = signal<AnomalieBE[]>([]);
   zones = signal<ZonePerformanceBE[]>([]);
   versementsDuJour = signal<VersementDuJourBE[]>([]);
   comparatif = signal<RapportComparatifBE | null>(null);
-  /** Vue unifiée (précommandes, dotations, BC, réceptions, versements, carburant), jusqu'ici invisible depuis ce tableau de bord : il fallait déjà savoir aller sur /dg/arbitrage. */
   validationsEnAttente = signal<ValidationEnAttenteBE[]>([]);
   incidentsResume = signal<IncidentResumeBE | null>(null);
-  /** Mini-graphiques par carte KPI (2026-11-01, dernier point du bloc 1 DG_MODULE_SPEC.md) : réutilise les
-   *  mêmes historiques que `/dg/reporting` et `/dg/supervision`, aucune nouvelle API. */
   historiqueCa = signal<MoisCaBE[]>([]);
   historiqueTresorerie = signal<MoisSoldeCaisseBE[]>([]);
   derniereMiseAJour = signal<Date | null>(null);
@@ -187,25 +211,37 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refreshHandle = setInterval(() => this.chargerDonneesVivantes(), INTERVALLE_RAFRAICHISSEMENT_MS);
   }
 
-  /** Chargé une fois (référentiel du jour) : classement, occupation, zones, versements. */
+  /** Chargé une fois (référentiel du jour) : classement, occupation, zones, versements et cockpits industriels/financiers. */
   chargerDonneesStatiques() {
     this.loading.set(true);
     this.loadError.set(null);
     forkJoin({
-      classement: this.dgSvc.getClassement(),
-      occupation: this.dgSvc.getTauxOccupationMarches(),
-      zones: this.dgSvc.getZones(),
-      versements: this.dgSvc.getVersementsDuJour(),
-      historiqueCa: this.dgSvc.getHistoriqueCaMensuel(6),
-      historiqueTresorerie: this.dgSvc.getHistoriqueTresorerie(6),
+      classement: this.dgSvc.getClassement().pipe(catchError(() => of([]))),
+      occupation: this.dgSvc.getTauxOccupationMarches().pipe(catchError(() => of([]))),
+      zones: this.dgSvc.getZones().pipe(catchError(() => of([]))),
+      versements: this.dgSvc.getVersementsDuJour().pipe(catchError(() => of([]))),
+      historiqueCa: this.dgSvc.getHistoriqueCaMensuel(6).pipe(catchError(() => of([]))),
+      historiqueTresorerie: this.dgSvc.getHistoriqueTresorerie(6).pipe(catchError(() => of([]))),
+      financier: this.dgSvc.getDashboardFinancier().pipe(catchError(() => of(null))),
+      production: this.dgSvc.getDashboardProduction().pipe(catchError(() => of(null))),
+      stock: this.dgSvc.getDashboardStock().pipe(catchError(() => of(null))),
+      concentration: this.dgSvc.getConcentrationClients().pipe(catchError(() => of(null))),
+      controle: this.dgSvc.getControleGestion().pipe(catchError(() => of(null))),
+      gammes: this.dgSvc.getPerformanceGammes().pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ classement, occupation, zones, versements, historiqueCa, historiqueTresorerie }) => {
-        this.commerciaux.set(classement);
-        this.occupation.set(occupation);
-        this.zones.set(zones);
-        this.versementsDuJour.set(versements);
-        this.historiqueCa.set(historiqueCa);
-        this.historiqueTresorerie.set(historiqueTresorerie);
+      next: (res) => {
+        this.commerciaux.set(res.classement);
+        this.occupation.set(res.occupation);
+        this.zones.set(res.zones);
+        this.versementsDuJour.set(res.versements);
+        this.historiqueCa.set(res.historiqueCa);
+        this.historiqueTresorerie.set(res.historiqueTresorerie);
+        this.dashboardFinancier.set(res.financier);
+        this.dashboardProduction.set(res.production);
+        this.dashboardStock.set(res.stock);
+        this.concentrationClients.set(res.concentration);
+        this.controleGestion.set(res.controle);
+        this.gammes.set(res.gammes);
         this.loading.set(false);
         setTimeout(() => this.buildSparklines(), 0);
       },
@@ -213,6 +249,16 @@ export class DgDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadError.set(extractApiError(e));
         this.loading.set(false);
       },
+    });
+  }
+
+  resoudreValidationRapide(v: ValidationEnAttenteBE, accord: boolean) {
+    this.dgSvc.resoudreValidation(v.reference, v.type, accord).subscribe({
+      next: () => {
+        this.toast.success(`Dossier ${v.reference} ${accord ? 'validé et autorisé' : 'rejeté'} par la Direction Générale.`);
+        this.validationsEnAttente.update(list => list.filter(item => item.reference !== v.reference));
+      },
+      error: (e) => this.toast.error(extractApiError(e) || 'Action non autorisée')
     });
   }
 

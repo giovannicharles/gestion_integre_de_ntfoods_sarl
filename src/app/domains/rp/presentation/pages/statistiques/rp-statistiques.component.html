@@ -1,0 +1,137 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Statistiques & Pénétration Territoriale RP</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-chart-pie"></i> ANALYSE DE MARCHÉ</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Indicateurs de couverture des points de vente, parts de marché régionales et présence en linéaires GMS
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-ghost" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Imprimer Bilan
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI SUMMARY -->
+  <section class="dash-21-kpi-grid" style="margin-bottom:24px;">
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">CA Global Sous Supervision RP</span>
+        <div class="dash-21-kpi-icon-wrap icon-gold"><i class="fa-solid fa-coins"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ fCFA(totalCaRegions()) }}</span>
+        <span class="dash-21-trend-pill trend-up">+12.4% vs M-1</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Consolidation des 5 régions camerounaises</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Points de Vente Actifs Livrés</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(20,83,45,0.12); color:#14532D;"><i class="fa-solid fa-store"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" style="color:#14532D;">{{ totalPdVActifs() }}</span>
+        <span class="dash-21-trend-pill trend-up">74.5% de couverture</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Sur 710 magasins et supermarchés recensés</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Taux Moyen de Rupture Linéaire</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(194,43,43,0.12); color:#C22B2B;"><i class="fa-solid fa-boxes-packing"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" style="color:#C22B2B;">2.8%</span>
+        <span class="dash-21-trend-pill" style="background:#DCFCE7; color:#15803D;">Excellente dispo</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Objectif national : &lt; 5%</span></div>
+    </div>
+  </section>
+
+  <!-- TABLEAU RÉGIONS -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:24px;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-map-location-dot"></i> Pénétration Commerciale par Bassin Régional</span>
+      <span class="badge bg-green badge-sm">5 Régions Clés</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Bassin Régional</th>
+            <th>PdV Recensés</th>
+            <th>PdV Actifs</th>
+            <th>Taux de Couverture</th>
+            <th>CA Mensuel Réalisé</th>
+            <th>Croissance vs M-1</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of regions(); track r.region) {
+          <tr>
+            <td><strong>{{ r.region }}</strong></td>
+            <td>{{ r.pointsDeVenteRepertories }}</td>
+            <td><strong style="color:#14532D;">{{ r.pointsDeVenteActifs }}</strong></td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="prog-bar-wrap" style="width:90px; height:6px; background:#E2E8F0; border-radius:3px;">
+                  <div class="prog-bar prog-g" [style.width.%]="r.tauxCouverture" style="height:100%; border-radius:3px;"></div>
+                </div>
+                <strong>{{ r.tauxCouverture }}%</strong>
+              </div>
+            </td>
+            <td><strong>{{ fCFA(r.caMensuel) }}</strong></td>
+            <td><span class="badge bg-green badge-sm">+{{ r.croissancePct }}%</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TABLEAU GAMMES -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-layer-group"></i> Performance des Gammes en Réseau Partenaire</span>
+      <span class="badge bg-neutral badge-sm">Données Consolidées</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Gamme de Produit</th>
+            <th>Volume Expédié (Cartons)</th>
+            <th>Part de Volume</th>
+            <th>Chiffre d'Affaires</th>
+            <th>Taux de Rupture Constaté</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of gammes(); track g.gamme) {
+          <tr>
+            <td><strong>{{ g.gamme }}</strong></td>
+            <td>{{ g.cartonsVendus }} cartons</td>
+            <td>
+              <span class="badge bg-blue badge-sm">{{ g.partVolume }}% du total</span>
+            </td>
+            <td><strong style="color:#14532D;">{{ fCFA(g.chiffreAffaires) }}</strong></td>
+            <td>
+              <span class="badge" [class.bg-green]="g.ruptureLineairePct < 3" [class.bg-orange]="g.ruptureLineairePct >= 3">
+                {{ g.ruptureLineairePct }}%
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,109 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Reporting des Campagnes & Activations RP</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-chart-line"></i> ROI & IMPACT MARCHÉ</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Bilan des dégustations terrain, têtes de gondole GMS, salons professionnels et retombées commerciales NTFOODS
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-ghost" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Exporter PDF
+      </button>
+      <button class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-plus"></i> Nouvelle Activation
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI SUMMARY -->
+  <section class="dash-21-kpi-grid" style="margin-bottom:24px;">
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Budget Activations Engagé</span>
+        <div class="dash-21-kpi-icon-wrap icon-gold"><i class="fa-solid fa-sack-dollar"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ fCFA(totalBudget()) }}</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Sur {{ campagnes().length }} opérations ciblées</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">CA Additionnel Direct Généré</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(20,83,45,0.12); color:#14532D;"><i class="fa-solid fa-cash-register"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" style="color:#14532D;">{{ fCFA(totalCa()) }}</span>
+        <span class="dash-21-trend-pill trend-up">+{{ roiMoyen() }}% ROI</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Ventes constatées sous 30 jours</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Prospects & Contacts Qualifiés</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(59,130,246,0.12); color:#2563EB;"><i class="fa-solid fa-id-card-clip"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalContacts() }}</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Grossistes, gérants et consommateurs VIP</span></div>
+    </div>
+  </section>
+
+  <!-- TABLEAU DU REPORTING -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-bullhorn"></i> Synthèse Détaillée des Événements & Campagnes</span>
+      <span class="badge bg-green badge-sm">ROI Positif Moyen: +{{ roiMoyen() }}%</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Campagne / Événement</th>
+            <th>Lieu & Déploiement</th>
+            <th>Période</th>
+            <th>Budget Investi</th>
+            <th>CA Généré</th>
+            <th>Échantillons</th>
+            <th>ROI</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of campagnes(); track c.id) {
+          <tr>
+            <td>
+              <span class="badge" [class.bg-blue]="c.type==='PROMO_GMS'" [class.bg-green]="c.type==='DEGUSTATION'" [class.bg-orange]="c.type==='STREET_MARKETING'" [class.bg-neutral]="c.type==='SALON'">
+                {{ c.type }}
+              </span>
+            </td>
+            <td><strong>{{ c.titre }}</strong></td>
+            <td><i class="fa-solid fa-location-dot" style="color:#DC2626; margin-right:4px;"></i> {{ c.lieu }}</td>
+            <td>{{ c.dateDebut | date:'dd/MM' }} au {{ c.dateFin | date:'dd/MM/yyyy' }}</td>
+            <td><strong>{{ fCFA(c.budgetEngage) }}</strong></td>
+            <td><strong style="color:#14532D;">{{ fCFA(c.caGenere) }}</strong></td>
+            <td>{{ c.echantillonsDistribues }} unités</td>
+            <td>
+              <span class="badge bg-green badge-sm">+{{ c.roi }}%</span>
+            </td>
+            <td>
+              <span class="badge" [class.bg-green]="c.statut==='TERMINE'" [class.bg-orange]="c.statut==='EN_COURS'" [class.bg-neutral]="c.statut==='PLANIFIE'">
+                {{ c.statut }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

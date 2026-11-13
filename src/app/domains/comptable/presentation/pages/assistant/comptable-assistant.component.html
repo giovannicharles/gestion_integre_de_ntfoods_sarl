@@ -1,0 +1,98 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Assistant Comptable & Fiscalité OHADA</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-calculator"></i> EXPERT FISCAL & SYSCOHADA</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Imputation comptable normalisée, calcul automatique des taxes camerounaises (TVA 19.25% / Acompte IS) et règles de contrôle interne
+      </p>
+    </div>
+  </header>
+
+  <div style="display:grid; grid-template-columns:1fr 400px; gap:24px; align-items:start;">
+    <!-- CHAT -->
+    <div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; height:580px;">
+      <div style="padding:16px 20px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:800; color:#0F172A;"><i class="fa-solid fa-comments"></i> Console de Consultation Financière & Fiscale</span>
+        <span class="badge bg-green badge-sm">SYSCOHADA Révisé</span>
+      </div>
+
+      <div style="flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px; background:#F1F5F9;">
+        @for (msg of messages(); track $index) {
+        <div [style.align-self]="msg.expediteur==='USER' ? 'flex-end' : 'flex-start'" style="max-width:85%;">
+          <div [style.background]="msg.expediteur==='USER' ? 'var(--g-d, #14532D)' : '#FFFFFF'" [style.color]="msg.expediteur==='USER' ? '#FFFFFF' : '#0F172A'" style="padding:14px 18px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); font-size:13.5px; line-height:1.45;">
+            {{ msg.texte }}
+          </div>
+          <span style="font-size:10.5px; color:#94A3B8; margin-top:4px; display:block;" [style.text-align]="msg.expediteur==='USER' ? 'right' : 'left'">{{ msg.heure }}</span>
+
+          @if (msg.options && msg.options.length > 0) {
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+            @for (opt of msg.options; track opt) {
+            <button class="btn btn-outline btn-sm" (click)="choisirOption(opt)" style="background:#FFFFFF; font-size:11.5px; font-weight:600;">
+              {{ opt }}
+            </button>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <div style="padding:14px 20px; background:#FFFFFF; border-top:1px solid #E2E8F0; display:flex; gap:10px;">
+        <input type="text" class="input" style="flex:1" placeholder="Interroger le plan comptable, calcul d'impôt, TVA..." [ngModel]="saisieUtilisateur()" (ngModelChange)="saisieUtilisateur.set($event)" (keyup.enter)="envoyerMessage()">
+        <button class="btn btn-primary" (click)="envoyerMessage()"><i class="fa-solid fa-paper-plane"></i> Poser</button>
+      </div>
+    </div>
+
+    <!-- CALCULATEUR FISCAL -->
+    <div class="card" style="padding:22px;">
+      <h3 style="font-size:15px; font-weight:800; color:#14532D; margin-top:0; display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-coins"></i> Simulateur Décompte Fiscal (DGI)
+      </h3>
+      <p style="font-size:12px; color:#64748B; margin-bottom:18px;">Calcul instantané de la TVA (19.25%) et du précompte / acompte d'impôt.</p>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Montant Hors Taxes (HT) en FCFA :</label>
+        <input type="number" class="input" [ngModel]="montantHT()" (ngModelChange)="montantHT.set(+$event)" min="0" step="100000">
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:6px;">Taux Acompte IS / Précompte :</label>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-sm" [class.btn-primary]="tauxAcompte() === 2.2" [class.btn-ghost]="tauxAcompte() !== 2.2" (click)="tauxAcompte.set(2.2)">Régime Réel (2.2%)</button>
+          <button class="btn btn-sm" [class.btn-primary]="tauxAcompte() === 5.5" [class.btn-ghost]="tauxAcompte() !== 5.5" (click)="tauxAcompte.set(5.5)">Prestataires (5.5%)</button>
+        </div>
+      </div>
+
+      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:14px; margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px;">
+          <span>Montant Brut HT :</span>
+          <strong>{{ fCFA(montantHT()) }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px; color:#2563EB;">
+          <span>TVA Cameroun (19.25%) :</span>
+          <strong>+{{ fCFA(montantTva()) }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px; font-weight:700;">
+          <span>Total TTC Facturé :</span>
+          <strong>{{ fCFA(totalTTC()) }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12.5px; color:#DC2626;">
+          <span>Retenue Acompte IS ({{ tauxAcompte() }}%) :</span>
+          <strong>-{{ fCFA(montantAcompte()) }}</strong>
+        </div>
+        <div style="border-top:1px solid #CBD5E1; padding-top:8px; display:flex; justify-content:space-between; font-size:14px; color:#14532D;">
+          <strong>Net Décaissable Fournisseur :</strong>
+          <strong style="font-size:16px;">{{ fCFA(netAPayerFournisseur()) }}</strong>
+        </div>
+      </div>
+
+      <div class="alert-banner" style="background:#EFF6FF; border:1px solid #BFDBFE; color:#1E40AF; font-size:11.5px; padding:10px 14px; border-radius:6px;">
+        <i class="fa-solid fa-circle-check"></i> La retenue d'acompte doit être reversée à la recette des impôts de rattachement au plus tard le 15 du mois suivant.
+      </div>
+    </div>
+  </div>
+</div>
+

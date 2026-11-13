@@ -1,0 +1,143 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Statistiques Financières & BFR</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-chart-line"></i> RATIOS DE GESTION OHADA</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Délai moyen de règlement (DSO), pyramide des créances, besoin en fonds de roulement et solvabilité NTFOODS
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-ghost" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Exporter Ratios
+      </button>
+    </div>
+  </header>
+
+  <!-- 4-KPI SUITE CARDS -->
+  <section class="dash-21-kpi-grid" style="margin-bottom:24px;">
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">DSO (Délai Moyen Client)</span>
+        <div class="dash-21-kpi-icon-wrap icon-gold"><i class="fa-solid fa-stopwatch"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">34 Jours</span>
+        <span class="dash-21-trend-pill trend-up">-8j vs Juin</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Objectif contractuel : &lt; 45 jours</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">BFR d'Exploitation</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(20,83,45,0.12); color:#14532D;"><i class="fa-solid fa-scale-balanced"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ fCFA(15200000) }}</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Stocks + Créances - Dettes Fournisseurs</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Trésorerie Nette Disponible</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(59,130,246,0.12); color:#2563EB;"><i class="fa-solid fa-vault"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" style="color:#2563EB;">{{ fCFA(45200000) }}</span>
+        <span class="dash-21-trend-pill trend-up">Solvabilité saine</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>Caisse siège + Comptes Afriland & BICEC</span></div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Encours Créances Total</span>
+        <div class="dash-21-kpi-icon-wrap" style="background:rgba(194,43,43,0.12); color:#C22B2B;"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" style="color:#C22B2B;">{{ fCFA(totalCreances()) }}</span>
+      </div>
+      <div class="dash-21-kpi-footer"><span>78 clients avec factures en attente</span></div>
+    </div>
+  </section>
+
+  <!-- TABLEAU PYRAMIDE DES CRÉANCES -->
+  <div class="card" style="padding:0; overflow:hidden; margin-bottom:24px;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-layer-group"></i> Balance Âgée & Pyramide du Risque Client</span>
+      <span class="badge bg-neutral badge-sm">Recouvrement & Provisions</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tranche d'Ancienneté</th>
+            <th>Montant Total Échu</th>
+            <th>Nombre de Débiteurs</th>
+            <th>Part du Portefeuille</th>
+            <th>Niveau de Risque & Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of tranchesCreances(); track t.tranche) {
+          <tr>
+            <td><strong>{{ t.tranche }}</strong></td>
+            <td><strong>{{ fCFA(t.montant) }}</strong></td>
+            <td>{{ t.nombreClients }} clients</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="prog-bar-wrap" style="width:80px; height:6px; background:#E2E8F0; border-radius:3px;">
+                  <div class="prog-bar" [class.prog-g]="t.niveauRisque==='FAIBLE'" [class.prog-y]="t.niveauRisque==='MOYEN'" [class.prog-r]="t.niveauRisque==='ELEVE' || t.niveauRisque==='CONTENTIEUX'" [style.width.%]="t.partPourcent" style="height:100%; border-radius:3px;"></div>
+                </div>
+                <span>{{ t.partPourcent }}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [class.bg-green]="t.niveauRisque==='FAIBLE'" [class.bg-orange]="t.niveauRisque==='MOYEN'" [class.bg-red]="t.niveauRisque==='ELEVE' || t.niveauRisque==='CONTENTIEUX'">
+                {{ t.niveauRisque }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORIQUE MENSUEL -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-calendar-days"></i> Historique Semestriel des Principaux Ratios</span>
+      <span class="badge bg-green badge-sm">Progression Constante</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Période</th>
+            <th>Chiffre d'Affaires</th>
+            <th>Besoin en Fonds de Roulement</th>
+            <th>Trésorerie Nette Clôture</th>
+            <th>DSO Moyen</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of historiqueRatios(); track h.mois) {
+          <tr>
+            <td><strong>{{ h.mois }}</strong></td>
+            <td><strong>{{ fCFA(h.ca) }}</strong></td>
+            <td>{{ fCFA(h.bfr) }}</td>
+            <td><strong style="color:#14532D;">{{ fCFA(h.tresorerieNette) }}</strong></td>
+            <td><span class="badge bg-blue badge-sm">{{ h.dsoJours }} jours</span></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

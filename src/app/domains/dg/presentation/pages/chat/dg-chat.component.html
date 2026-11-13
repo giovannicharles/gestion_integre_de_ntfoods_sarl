@@ -1,17 +1,17 @@
 <div class="page-wrap animate-fadeInUp">
   <div class="ph">
     <div class="ph-left">
-      <div class="ph-icon"><i class="fa-solid fa-comments"></i></div>
+      <div class="ph-icon"><i class="fa-solid fa-terminal"></i></div>
       <div>
-        <h1 class="ph-title">Assistant IA · Direction Générale</h1>
-        <p class="ph-sub">Posez vos questions sur tous les aspects de l'entreprise · TantyAI</p>
+        <h1 class="ph-title">Console Décisionnelle · Direction Générale</h1>
+        <p class="ph-sub">Interrogation synthétique des indicateurs consolidés · NTFOODS SARL</p>
       </div>
     </div>
   </div>
 
   @if (contextError()) {
     <div class="alert-banner alert-banner-wrap">
-      <span><i class="fa-solid fa-triangle-exclamation"></i> Le contexte entreprise n'a pas pu être chargé, l'assistant répondra sans les données en temps réel.</span>
+      <span><i class="fa-solid fa-triangle-exclamation"></i> Le contexte entreprise n'a pas pu être chargé en temps réel.</span>
       <button class="btn btn-ghost btn-sm" (click)="chargerContexte()"><i class="fa-solid fa-rotate"></i> Réessayer</button>
     </div>
   }
@@ -19,7 +19,7 @@
   @if (loading()) {
     <div class="chat-loading">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <span>Chargement du contexte entreprise...</span>
+      <span>Chargement des indicateurs consolidés...</span>
     </div>
   } @else {
     <div class="chat-container">
@@ -27,33 +27,33 @@
         <div class="side-card">
           <div class="side-card-header">
             <i class="fa-solid fa-circle-info"></i>
-            <span>Vue 360° Entreprise</span>
+            <span>Vision Consolidée NTFOODS</span>
           </div>
           <p class="side-card-desc">
-            Cet assistant IA a accès aux données en temps réel de tous les modules :
-            stock, production, commercial, financier et administration.
+            Ce moteur décisionnel interroge en direct les données opérationnelles des 5 divisions :
+            stock central Bassa, usine de transformation, forces commerciales terrain, trésorerie et conformité.
           </p>
           <div class="side-tags">
-            <span class="side-tag"><i class="fa-solid fa-warehouse"></i> Stock</span>
-            <span class="side-tag"><i class="fa-solid fa-industry"></i> Production</span>
-            <span class="side-tag"><i class="fa-solid fa-handshake"></i> Commercial</span>
-            <span class="side-tag"><i class="fa-solid fa-coins"></i> Financier</span>
-            <span class="side-tag"><i class="fa-solid fa-chart-line"></i> Reporting</span>
+            <span class="side-tag"><i class="fa-solid fa-warehouse"></i> Stock Central</span>
+            <span class="side-tag"><i class="fa-solid fa-industry"></i> Usine Bassa</span>
+            <span class="side-tag"><i class="fa-solid fa-handshake"></i> Réseau Vente</span>
+            <span class="side-tag"><i class="fa-solid fa-coins"></i> Trésorerie</span>
+            <span class="side-tag"><i class="fa-solid fa-chart-line"></i> Rentabilité</span>
           </div>
         </div>
 
         <div class="side-card">
           <div class="side-card-header">
             <i class="fa-solid fa-lightbulb"></i>
-            <span>Suggestions de questions</span>
+            <span>Requêtes fréquentes</span>
           </div>
           <ul class="suggestion-list">
-            <li>"Quelle est la valeur totale du stock ?"</li>
-            <li>"Quels produits sont en rupture ?"</li>
-            <li>"Quel est le CA du mois ?"</li>
-            <li>"Combien de lots en attente ?"</li>
-            <li>"Y a-t-il des alertes critiques ?"</li>
-            <li>"Analyse la rentabilité de la production"</li>
+            <li>"Quelle est la valorisation totale des stocks ?"</li>
+            <li>"Quelles références sont sous le seuil d'alerte ?"</li>
+            <li>"Quel est le CA consolidé du mois vs budget ?"</li>
+            <li>"Combien de lots de production sont en attente ?"</li>
+            <li>"Quelles sont les créances clients échues ?"</li>
+            <li>"Quel est le rendement matière de l'usine Bassa ?"</li>
           </ul>
         </div>
       </div>
@@ -61,11 +61,11 @@
       <div class="chat-main">
         <app-ai-chat
           domain="dg"
-          title="TantyAI, Assistant DG"
-          subtitle="Vision stratégique 360°"
+          title="Console Décisionnelle DG"
+          subtitle="Vision stratégique consolidée"
           accent="green"
           [contextData]="contextData()"
-          welcomeMessage="Bonjour Monsieur le Directeur. Je suis TantyAI, votre assistant stratégique. J'ai accès aux données de tous les modules de l'entreprise. Posez-moi vos questions sur le stock, la production, le commercial, le financier ou toute autre préoccupation."
+          welcomeMessage="Bonjour Monsieur le Directeur Général. Cette console consolide les indicateurs en temps réel de NTFOODS SARL. Vous pouvez interroger la trésorerie, la rentabilité usine, les niveaux de stock ou les performances de vente."
           [quickReplies]="quickReplies"
           (quickReplyAction)="onQuickReply($event)"
         />

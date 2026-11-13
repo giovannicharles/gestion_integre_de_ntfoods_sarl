@@ -126,11 +126,11 @@
         <app-signaler-incident></app-signaler-incident>
         <app-command-palette #commandPalette [items]="commandItems()"></app-command-palette>
         <div class="tb-divider"></div>
-        <button class="tb-icon-btn" routerLink="/dg/chat" title="Assistant IA" style="color:#1A6B2A">
-          <i class="fa-solid fa-robot"></i>
+        <button class="tb-icon-btn" routerLink="/dg/chat" title="Console Décisionnelle" style="color:var(--g-d)">
+          <i class="fa-solid fa-terminal"></i>
         </button>
-        <button class="tb-icon-btn" routerLink="/dg/ia-analyse" title="Analyse IA 360°" style="color:#B8860B">
-          <i class="fa-solid fa-brain"></i>
+        <button class="tb-icon-btn" routerLink="/dg/ia-analyse" title="Diagnostic Global 360°" style="color:var(--y-d)">
+          <i class="fa-solid fa-magnifying-glass-chart"></i>
         </button>
         <button class="dm-toggle" (click)="theme.toggle()" title="Mode sombre / clair">
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
@@ -152,11 +152,7 @@
     </main>
   </div>
 
-  <!-- FLOATING AI BUTTON -->
-  <a class="fab-ai" routerLink="/dg/chat" title="Assistant IA TantyAI">
-    <i class="fa-solid fa-robot"></i>
-    <span class="fab-pulse"></span>
-  </a>
+
 
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
     message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"

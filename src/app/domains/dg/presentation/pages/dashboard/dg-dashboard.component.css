@@ -115,3 +115,19 @@
   .arbitrage-promo { flex-direction:column; align-items:flex-start; }
   .arbitrage-promo > .btn { width:100%; justify-content:center; }
 }
+
+/* Grilles Exécutives DG (Finances, Production, Stocks, Arbitrage) */
+.exec-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-4); }
+.exec-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+@media (max-width: 900px) { .exec-grid-2 { grid-template-columns: 1fr; } }
+.exec-card { padding: var(--sp-4); }
+.exec-kpi-box { background: var(--n50); border: 1px solid var(--n200); border-radius: var(--r-md); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 4px; }
+.exec-kpi-lbl { font-size: .75rem; text-transform: uppercase; font-weight: 700; color: var(--n600); letter-spacing: .03em; }
+.exec-kpi-val { font-size: 1.35rem; font-weight: 800; color: var(--n900); font-variant-numeric: tabular-nums; }
+.exec-kpi-sub { font-size: .75rem; color: var(--n500); margin-top: 2px; }
+.exec-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.exec-table th { background: var(--n100); color: var(--n700); font-weight: 700; padding: .65rem .8rem; text-align: left; }
+.exec-table td { padding: .65rem .8rem; border-bottom: 1px solid var(--n100); }
+.exec-table tr:hover { background: var(--n50); }
+.arbitrage-actions { display: flex; gap: 6px; }
+

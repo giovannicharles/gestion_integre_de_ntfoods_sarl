@@ -1,0 +1,106 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Rapprochement Bancaire Consolidé</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-building-columns"></i> TRÉSORERIE & BANQUES</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Pointage des opérations de relevé bancaire vs écritures comptables du compte 521 (Afriland & BICEC)
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-ghost" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Imprimer l'État
+      </button>
+      <button class="dash-21-btn dash-21-btn-primary" (click)="validerEtatRapprochement()">
+        <i class="fa-solid fa-stamp"></i> Valider Clôture Mensuelle
+      </button>
+    </div>
+  </header>
+
+  <!-- SÉLECTEUR DE COMPTE BANCAIRE -->
+  <div class="card" style="margin-bottom:24px; padding:18px 24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; gap:12px;">
+        <button class="btn" [class.btn-primary]="compteSelectionne()==='AFRILAND'" [class.btn-ghost]="compteSelectionne()!=='AFRILAND'" (click)="changerCompte('AFRILAND')">
+          <i class="fa-solid fa-building-columns"></i> Afriland First Bank (Douala)
+        </button>
+        <button class="btn" [class.btn-primary]="compteSelectionne()==='BICEC'" [class.btn-ghost]="compteSelectionne()!=='BICEC'" (click)="changerCompte('BICEC')">
+          <i class="fa-solid fa-building-columns"></i> BICEC Cameroun (Yaoundé)
+        </button>
+      </div>
+
+      <div style="display:flex; gap:20px; align-items:center;">
+        <div>
+          <span style="font-size:11.5px; color:#64748B; display:block;">Solde Relevé Bancaire :</span>
+          <strong style="font-size:16px; color:#14532D;">{{ fCFA(soldeReleveBancaire()) }}</strong>
+        </div>
+        <div style="height:32px; width:1px; background:#CBD5E1;"></div>
+        <div>
+          <span style="font-size:11.5px; color:#64748B; display:block;">Solde Grand Livre (521) :</span>
+          <strong style="font-size:16px; color:#2563EB;">{{ fCFA(soldeComptableERP()) }}</strong>
+        </div>
+        <div style="height:32px; width:1px; background:#CBD5E1;"></div>
+        <div>
+          <span style="font-size:11.5px; color:#64748B; display:block;">Écart Théorique :</span>
+          <strong style="font-size:16px; color:#DC2626;">{{ fCFA(soldeReleveBancaire() - soldeComptableERP()) }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU DES OPÉRATIONS EN SUSPENS -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-arrows-split-up-and-left"></i> Écritures Non Pointées & Suspends de Rapprochement</span>
+      <span class="badge bg-neutral badge-sm">{{ lignesSuspension().length }} écriture(s)</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Référence Pièce</th>
+            <th>Libellé de l'Opération</th>
+            <th>Nature du Suspend</th>
+            <th>Débit Banque</th>
+            <th>Crédit Banque</th>
+            <th>Pointage</th>
+            <th style="text-align:right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ligne of lignesSuspension(); track ligne.id) {
+          <tr [style.background]="ligne.estRapproche ? '#F0FDF4' : ''">
+            <td>{{ ligne.dateOperation | date:'dd/MM/yyyy' }}</td>
+            <td><code>{{ ligne.referencePiece }}</code></td>
+            <td><strong>{{ ligne.libelle }}</strong></td>
+            <td>
+              <span class="badge" [class.bg-orange]="ligne.type==='CHEQUE_CIRCULATION'" [class.bg-blue]="ligne.type==='VIREMENT_ATTENTE'" [class.bg-red]="ligne.type==='FRAIS_BANCAIRES'">
+                {{ ligne.type }}
+              </span>
+            </td>
+            <td><strong style="color:#14532D;">{{ ligne.debit > 0 ? fCFA(ligne.debit) : '-' }}</strong></td>
+            <td><strong style="color:#DC2626;">{{ ligne.credit > 0 ? fCFA(ligne.credit) : '-' }}</strong></td>
+            <td>
+              @if (ligne.estRapproche) {
+                <span class="badge bg-green badge-sm"><i class="fa-solid fa-check"></i> Pointé</span>
+              } @else {
+                <span class="badge bg-neutral badge-sm">En suspens</span>
+              }
+            </td>
+            <td style="text-align:right">
+              <button class="btn btn-sm" [class.btn-primary]="!ligne.estRapproche" [class.btn-outline]="ligne.estRapproche" (click)="toggleRapprochement(ligne)">
+                <i class="fa-solid" [class.fa-check]="!ligne.estRapproche" [class.fa-rotate-left]="ligne.estRapproche"></i>
+                {{ ligne.estRapproche ? 'Dépointer' : 'Pointer' }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

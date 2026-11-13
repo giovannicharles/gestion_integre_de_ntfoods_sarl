@@ -109,11 +109,11 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      title: 'Intelligence Artificielle', icon: 'fa-brain',
+      title: 'Prévisions & Planification', icon: 'fa-chart-line',
       items: [
-        { label: 'Prévisions & Ruptures', icon: 'fa-brain', route: '/stock/ia-predictions' },
-        { label: 'Réapprovisionnement IA', icon: 'fa-robot', route: '/stock/ia-reappro' },
-        { label: 'Optimisation Transferts', icon: 'fa-shuffle', route: '/stock/ia-transferts' },
+        { label: 'Prévisions & Ruptures', icon: 'fa-chart-line', route: '/stock/ia-predictions' },
+        { label: 'Plan de Réapprovisionnement', icon: 'fa-boxes-packing', route: '/stock/ia-reappro' },
+        { label: 'Optimisation Transferts', icon: 'fa-truck-ramp-box', route: '/stock/ia-transferts' },
       ]
     },
     {

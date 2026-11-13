@@ -79,18 +79,14 @@
     <div class="banner banner-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>{{ error() }}</span></div>
   }
 
-  <!-- ═══ INSIGHTS IA ═══ -->
+  <!-- ═══ SYNTHÈSE ANALYTIQUE DES STOCKS ═══ -->
   @if (showIaInsight()) {
     <div class="card ia-insight-card animate-fadeInUp">
       <div class="ia-insight-head">
         <div class="ia-insight-title">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Analyse IA du stock, TantyAI</span>
-          @if (iaConfigured()) {
-            <span class="badge badge-success badge-sm">Gemini</span>
-          } @else {
-            <span class="badge badge-neutral badge-sm">Mode hors-ligne</span>
-          }
+          <i class="fa-solid fa-magnifying-glass-chart"></i>
+          <span>Synthèse Analytique des Stocks</span>
+          <span class="badge badge-success badge-sm">Temps Réel</span>
         </div>
         <button class="btn btn-ghost btn-sm" (click)="closeIaInsight()"aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -98,7 +94,7 @@
         @if (iaInsightLoading()) {
           <div class="ia-insight-loading">
             <div class="spinner spinner-sm"></div>
-            <span>TantyAI analyse vos données de stock…</span>
+            <span>Analyse algorithmique des stocks et flux en cours…</span>
           </div>
         } @else if (iaInsight()) {
           <p class="ia-insight-summary">{{ iaInsight()!.summary }}</p>
@@ -128,18 +124,18 @@
         } @else {
           <div class="ia-insight-loading">
             <i class="fa-solid fa-circle-exclamation" style="color:var(--n400)"></i>
-            <span>Impossible de récupérer l'analyse IA. Vérifiez que le serveur backend est démarré.</span>
+            <span>Impossible de récupérer l'analyse. Vérifiez que le serveur backend est démarré.</span>
           </div>
         }
       </div>
     </div>
   }
 
-  <!-- ═══ CONSEILS IA PROACTIFS ═══ -->
+  <!-- ═══ RECOMMANDATIONS DE RÉASSORT ═══ -->
   @if (!loading() && (iaSuggestions().length > 0 || iaSuggestionsLoading())) {
     <div class="ia-tips-row">
       <div class="ia-tips-head">
-        <span class="ia-tips-title"><i class="fa-solid fa-lightbulb"></i> Conseils TantyAI pour le gestionnaire</span>
+        <span class="ia-tips-title"><i class="fa-solid fa-lightbulb"></i> Recommandations de Réassort et Rotation</span>
         <button class="btn btn-ghost btn-sm" (click)="refreshIaSuggestions()" [disabled]="iaSuggestionsLoading()">
           <i class="fa-solid fa-rotate-right" [class.fa-spin]="iaSuggestionsLoading()"></i>
         </button>

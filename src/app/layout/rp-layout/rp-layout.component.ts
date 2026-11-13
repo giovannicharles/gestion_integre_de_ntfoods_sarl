@@ -66,28 +66,32 @@ export class RpLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/rp/dashboard' },
+    { label: 'Assistant Négociation', icon: 'fa-headset', route: '/rp/assistant' },
   ];
 
-  /** Regroupement par thème (2026-11-09, même motif que DG/Comptable). */
+  /** Regroupement par thème enrichi pour la Direction RP & Commerciale. */
   navGroups: NavGroup[] = [
     {
-      label: 'Commercial', icon: 'fa-ranking-star', children: [
+      label: 'Analyses & Reporting', icon: 'fa-chart-line', children: [
+        { label: 'Reporting Campagnes', icon: 'fa-bullhorn', route: '/rp/reporting' },
+        { label: 'Statistiques Marché', icon: 'fa-chart-pie', route: '/rp/statistiques' },
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/rp/classement' },
-        { label: 'Objectifs', icon: 'fa-bullseye', route: '/rp/objectifs' },
-        { label: 'Promotions', icon: 'fa-tags', route: '/rp/promotions' },
-        { label: 'Tarification', icon: 'fa-money-check-dollar', route: '/rp/tarification' },
+        { label: 'Objectifs Vente', icon: 'fa-bullseye', route: '/rp/objectifs' },
       ]
     },
     {
-      label: 'Zones & Territoire', icon: 'fa-map-location-dot', children: [
+      label: 'Grands Comptes & Partenaires', icon: 'fa-handshake', children: [
+        { label: 'Grands Comptes VIP', icon: 'fa-building', route: '/rp/grands-comptes' },
+        { label: 'Documents & Contrats', icon: 'fa-folder-open', route: '/rp/documents' },
+        { label: 'Commandes VIP & WhatsApp', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
+      ]
+    },
+    {
+      label: 'Territoire & Tarification', icon: 'fa-map-location-dot', children: [
         { label: 'Zones & Marchés', icon: 'fa-map-location-dot', route: '/rp/zones' },
-        { label: 'Administration Zones', icon: 'fa-draw-polygon', route: '/rp/zones-admin' },
-      ]
-    },
-    {
-      label: 'Grands Comptes', icon: 'fa-handshake', children: [
-        { label: 'Grands Comptes', icon: 'fa-handshake', route: '/rp/grands-comptes' },
-        { label: 'Commandes clients', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
+        { label: 'Découpage Zones', icon: 'fa-draw-polygon', route: '/rp/zones-admin' },
+        { label: 'Promotions GMS', icon: 'fa-tags', route: '/rp/promotions' },
+        { label: 'Grille Tarifaire', icon: 'fa-money-check-dollar', route: '/rp/tarification' },
       ]
     },
   ];
@@ -97,7 +101,7 @@ export class RpLayoutComponent implements OnInit {
   navItemsFiltres = computed(() => filtrerNavItems(this.navItems, this.sidebarFiltre()));
   navGroupsFiltres = computed(() => filtrerNavGroupes(this.navGroups, this.sidebarFiltre()));
   rechercheActive = computed(() => this.sidebarFiltre().trim().length > 0);
-  expandedGroup = signal<string | null>('Commercial');
+  expandedGroup = signal<string | null>('Analyses & Reporting');
   toggleGroup(label: string): void { this.expandedGroup.update(v => v === label ? null : label); }
 
   /** Palette de commandes Ctrl+K (2026-11-02, même composant que DG/Admin/Comptable). */

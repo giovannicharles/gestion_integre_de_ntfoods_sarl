@@ -1,0 +1,87 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Espace Documentaire RP & Partenariats</h1>
+        <span class="dash-21-badge-live">
+          <i class="fa-solid fa-folder-open"></i> ARCHIVES OFFICIELLES
+        </span>
+      </div>
+      <p class="dash-21-subtitle">
+        Contrats cadres grands comptes, conventions d'activation, catalogues officiels et fiches d'homologation NTFOODS SARL
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Nouveau Document
+      </button>
+    </div>
+  </header>
+
+  <!-- FILTRES -->
+  <div class="card" style="margin-bottom:20px; padding:16px 20px;">
+    <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'TOUS'" [class.btn-ghost]="filtreCategorie() !== 'TOUS'" (click)="filtreCategorie.set('TOUS')">Tous ({{ documentsRp().length }})</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CONTRAT'" [class.btn-ghost]="filtreCategorie() !== 'CONTRAT'" (click)="filtreCategorie.set('CONTRAT')">Contrats Cadres</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CONVENTION'" [class.btn-ghost]="filtreCategorie() !== 'CONVENTION'" (click)="filtreCategorie.set('CONVENTION')">Conventions GMS</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CATALOGUE'" [class.btn-ghost]="filtreCategorie() !== 'CATALOGUE'" (click)="filtreCategorie.set('CATALOGUE')">Catalogues</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'PLV'" [class.btn-ghost]="filtreCategorie() !== 'PLV'" (click)="filtreCategorie.set('PLV')">Kits PLV</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'FICHE_TECHNIQUE'" [class.btn-ghost]="filtreCategorie() !== 'FICHE_TECHNIQUE'" (click)="filtreCategorie.set('FICHE_TECHNIQUE')">Homologations</button>
+      </div>
+      <div style="min-width:260px;">
+        <input type="text" class="input input-sm" style="width:100%" placeholder="Rechercher par mot-clé, partenaire..." [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU DES DOCUMENTS -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-file-contract"></i> Registre des Pièces Officielles</span>
+      <span class="badge bg-neutral badge-sm">{{ listeFiltree().length }} document(s)</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Titre du Document</th>
+            <th>Partenaire / Destinataire</th>
+            <th>Date d'Enregistrement</th>
+            <th>Format & Poids</th>
+            <th>Statut</th>
+            <th style="text-align:right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doc of listeFiltree(); track doc.id) {
+          <tr>
+            <td>
+              <span class="badge" [class.bg-blue]="doc.categorie==='CONTRAT'" [class.bg-green]="doc.categorie==='CONVENTION'" [class.bg-orange]="doc.categorie==='PLV'" [class.bg-neutral]="doc.categorie==='CATALOGUE' || doc.categorie==='FICHE_TECHNIQUE'">
+                {{ doc.categorie }}
+              </span>
+            </td>
+            <td>
+              <strong style="color:#0F172A;">{{ doc.titre }}</strong>
+              <div style="font-size:11px; color:#64748B;">{{ doc.fichier }}</div>
+            </td>
+            <td><i class="fa-solid fa-building" style="color:#64748B; margin-right:4px;"></i> {{ doc.partenaire }}</td>
+            <td>{{ doc.dateAjout | date:'dd MMM yyyy' }}</td>
+            <td><span class="badge bg-neutral badge-sm"><i class="fa-solid fa-file-pdf" style="color:#DC2626; margin-right:4px;"></i> {{ doc.taille }}</span></td>
+            <td>
+              <span class="badge bg-green badge-sm"><i class="fa-solid fa-check"></i> {{ doc.statut }}</span>
+            </td>
+            <td style="text-align:right">
+              <button class="btn btn-outline btn-sm" (click)="telechargerDocument(doc)" title="Télécharger">
+                <i class="fa-solid fa-download"></i> Ouvrir
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

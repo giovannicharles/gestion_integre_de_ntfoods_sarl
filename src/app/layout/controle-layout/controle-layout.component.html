@@ -46,21 +46,22 @@
             [title]="!sidebarOpen() ? group.label : ''">
             <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
             <span class="sb-lbl">{{ group.label }}</span>
-            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
+            <i class="fa-solid fa-chevron-down sb-group-arrow"
+              [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
           </button>
           @if (expandedGroup() === group.label || rechercheActive()) {
-            <div class="sb-group-children">
-              @for (child of group.children; track child.route) {
-              <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
-                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
-                <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
-                <span class="sb-lbl">{{ child.label }}</span>
-                @if (child.badge && child.badge > 0) {
-                <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
-                }
-              </a>
+          <div class="sb-group-children">
+            @for (child of group.children; track child.route) {
+            <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
+              [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
+              <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
+              <span class="sb-lbl">{{ child.label }}</span>
+              @if (child.badge && child.badge > 0) {
+              <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
               }
-            </div>
+            </a>
+            }
+          </div>
           }
         </div>
         }
@@ -86,10 +87,12 @@
         </div>
       </div>
       <div class="tb-right">
-        <a href="/docs_guides/modules/guide_controle.html" target="_blank" class="btn-guide-module" title="Consulter le guide Contrôle & Audit">
+        <a href="/docs_guides/modules/guide_controle.html" target="_blank" class="btn-guide-module"
+          title="Consulter le guide Contrôle & Audit">
           <i class="fa-solid fa-circle-question"></i> <span>Guide Contrôle</span>
         </a>
-        <a class="btn-quick-whatsapp" routerLink="/controle/commandes-clients" title="Prise de commande client WhatsApp / Express">
+        <a class="btn-quick-whatsapp" routerLink="/controle/commandes-clients"
+          title="Prise de commande client WhatsApp / Express">
           <i class="fa-brands fa-whatsapp"></i> <span>+ Commande WhatsApp</span>
         </a>
         <app-header-search [items]="commandItems()"></app-header-search>
@@ -103,7 +106,8 @@
           <i class="fa-regular fa-calendar"></i>
           <span>{{ currentTime() | date:'EEE dd MMM · HH:mm':'':"fr" }}</span>
         </div>
-        <button class="tb-icon-btn" routerLink="/controle/decaissements" title="Décaissements à valider" [class.tb-alert-pulse]="criticalCount() > 0">
+        <button class="tb-icon-btn" routerLink="/controle/decaissements" title="Décaissements à valider"
+          [class.tb-alert-pulse]="criticalCount() > 0">
           <i class="fa-solid fa-money-check-dollar"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-red">{{ alertCount() }}</span> }
         </button>
@@ -129,6 +133,6 @@
   </div>
 
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
-    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
-    cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter" cancelText="Annuler"
+    (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
 </div>

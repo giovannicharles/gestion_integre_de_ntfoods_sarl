@@ -67,6 +67,9 @@ export class DgLayoutComponent implements OnInit {
     const u = this.currentUser();
     if (!u) return '';
     const r = u.roles?.[0] || '';
+    if (r === 'ADMIN') {
+      return 'Direction Générale (Super-Admin)';
+    }
     return ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r;
   });
 
@@ -78,9 +81,9 @@ export class DgLayoutComponent implements OnInit {
 
   navGroups: NavGroup[] = [
     {
-      label: 'Intelligence IA', icon: 'fa-brain', children: [
-        { label: 'Assistant IA Chat', icon: 'fa-comments', route: '/dg/chat' },
-        { label: 'Analyse IA 360°', icon: 'fa-magnifying-glass-chart', route: '/dg/ia-analyse' },
+      label: 'Pilotage Stratégique', icon: 'fa-compass', children: [
+        { label: 'Console Décisionnelle', icon: 'fa-terminal', route: '/dg/chat' },
+        { label: 'Diagnostic Global 360°', icon: 'fa-magnifying-glass-chart', route: '/dg/ia-analyse' },
       ]
     },
     {
@@ -158,7 +161,7 @@ export class DgLayoutComponent implements OnInit {
     ...this.navGroups.flatMap(g => g.children.map(c => ({ ...c, groupe: g.label }))),
   ]);
 
-  expandedGroup = signal<string | null>('Intelligence IA');
+  expandedGroup = signal<string | null>('Pilotage Stratégique');
   showNotifPanel = signal(false);
 
   ngOnInit() {

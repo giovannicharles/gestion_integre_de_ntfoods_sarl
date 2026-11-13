@@ -195,13 +195,15 @@
     }
   </div>
 
-  <!-- ONGLETS, casse les 12+ cartes empilées en 4 sections ; affichage par CSS, les <canvas>
-       Chart.js (onglet "Vue d'ensemble") ne sont jamais détruits en changeant d'onglet. -->
-  <div class="period-selector dash-tabs">
-    <button class="period-btn" [class.active]="activeTab()==='apercu'" (click)="setTab('apercu')"><i class="fa-solid fa-gauge-high"></i> Vue d'ensemble</button>
-    <button class="period-btn" [class.active]="activeTab()==='commercial'" (click)="setTab('commercial')"><i class="fa-solid fa-ranking-star"></i> Commercial</button>
-    <button class="period-btn" [class.active]="activeTab()==='marches'" (click)="setTab('marches')"><i class="fa-solid fa-map-location-dot"></i> Marchés</button>
-    <button class="period-btn" [class.active]="activeTab()==='arbitrage'" (click)="setTab('arbitrage')"><i class="fa-solid fa-scale-balanced"></i> Arbitrage</button>
+  <!-- ONGLETS DE PILOTAGE DIRECTIONNEL EXÉCUTIF -->
+  <div class="period-selector dash-tabs" style="margin-bottom:20px; flex-wrap:wrap;">
+    <button class="period-btn" [class.active]="activeTab()==='apercu'" (click)="setTab('apercu')"><i class="fa-solid fa-gauge-high"></i> Vue Stratégique</button>
+    <button class="period-btn" [class.active]="activeTab()==='financier'" (click)="setTab('financier')"><i class="fa-solid fa-coins"></i> Cockpit Trésorerie</button>
+    <button class="period-btn" [class.active]="activeTab()==='production'" (click)="setTab('production')"><i class="fa-solid fa-industry"></i> Usine & Rendements</button>
+    <button class="period-btn" [class.active]="activeTab()==='stocks'" (click)="setTab('stocks')"><i class="fa-solid fa-warehouse"></i> Magasins & Stocks</button>
+    <button class="period-btn" [class.active]="activeTab()==='commercial'" (click)="setTab('commercial')"><i class="fa-solid fa-ranking-star"></i> Ventes & Gammes</button>
+    <button class="period-btn" [class.active]="activeTab()==='marches'" (click)="setTab('marches')"><i class="fa-solid fa-map-location-dot"></i> Marchés & Territoires</button>
+    <button class="period-btn" [class.active]="activeTab()==='arbitrage'" (click)="setTab('arbitrage')"><i class="fa-solid fa-scale-balanced"></i> Arbitrage Immédiat</button>
   </div>
 
   <div class="tab-panel" [class.tab-hidden]="activeTab()!=='apercu'">
@@ -411,18 +413,314 @@
   </div>
   </div><!-- /tab-panel marches -->
 
-  <!-- ARBITRAGE PRIX (LOCK NUMÉRIQUE) -->
-  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='arbitrage'">
-  <div class="card arbitrage-promo">
-    <div class="arbitrage-promo-left">
-      <div class="kpi-ico iy"><i class="fa-solid fa-unlock-keyhole"></i></div>
-      <div>
-        <div class="fw-bold">Déblocage des prix exceptionnels (Lock numérique)</div>
-        <div class="arbitrage-promo-desc">Autorisez à distance les ventes hors grille demandées par les commerciaux.</div>
+  <!-- TAB : PILOTAGE FINANCIER & TRÉSORERIE -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='financier'">
+    <div class="exec-grid-4">
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Solde de Caisse & Banques</span>
+        <span class="exec-kpi-val text-primary">{{ fCFA(dashboardFinancier()?.soldeCaisse ?? 0) }}</span>
+        <span class="exec-kpi-sub">Comptes 521/571 centralisés</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Créances Clients Totales</span>
+        <span class="exec-kpi-val text-warning">{{ fCFA(dashboardFinancier()?.totalCreances ?? 0) }}</span>
+        <span class="exec-kpi-sub">{{ dashboardFinancier()?.nbRecouvrementsEnCours ?? 0 }} dossiers en cours</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Factures Émises</span>
+        <span class="exec-kpi-val">{{ fCFA(dashboardFinancier()?.totalFacturesEmises ?? 0) }}</span>
+        <span class="exec-kpi-sub">{{ dashboardFinancier()?.nbFacturesImpayees ?? 0 }} impayées</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Décaissements Exécutés</span>
+        <span class="exec-kpi-val text-danger">{{ fCFA(dashboardFinancier()?.totalDecaissementsExecutes ?? 0) }}</span>
+        <span class="exec-kpi-sub">{{ dashboardFinancier()?.nbDecaissementsEnAttente ?? 0 }} en validation</span>
       </div>
     </div>
-    <a routerLink="/dg/arbitrage" class="btn btn-primary"><i class="fa-solid fa-scale-balanced"></i> Gérer les arbitrages</a>
-  </div>
+
+    <div class="exec-grid-2">
+      <div class="card exec-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-users-viewfinder"></i> Concentration du Chiffre d'Affaires</span>
+          <span class="badge bg-gold badge-sm">Top Clients</span>
+        </div>
+        <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 12px;">
+          Part des 5 premiers clients : <strong>{{ concentrationClients()?.pourcentTop5 ?? 0 }}%</strong> du CA total ({{ concentrationClients()?.nombreClientsActifs ?? 0 }} clients actifs).
+        </p>
+        <table class="exec-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Localité</th>
+              <th style="text-align: right;">CA Réalisé</th>
+              <th style="text-align: right;">Part</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of concentrationClients()?.topClients ?? []; track c.codeClient) {
+            <tr>
+              <td class="fw-bold">{{ c.nomClient }}</td>
+              <td>{{ c.localite || 'Cameroun' }}</td>
+              <td style="text-align: right;" class="mono fw-bold">{{ fCFA(c.caFCFA) }}</td>
+              <td style="text-align: right;"><span class="badge bg-primary badge-sm">{{ c.pourcentDuTotal }}%</span></td>
+            </tr>
+            } @empty {
+            <tr><td colspan="4" class="empty-state">Données de concentration en attente de synchronisation.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card exec-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-calculator"></i> Contrôle de Gestion & Marges</span>
+          <span class="badge bg-primary badge-sm">Budget & Rentabilité</span>
+        </div>
+        <div class="exec-grid-4" style="grid-template-columns: 1fr 1fr; margin-bottom: 14px;">
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Budget Total</span>
+            <span class="fk-val">{{ fCFA(controleGestion()?.budgetTotalFCFA ?? 0) }}</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Budget Engagé</span>
+            <span class="fk-val text-warning">{{ fCFA(controleGestion()?.budgetEngageFCFA ?? 0) }}</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Marge Moyenne</span>
+            <span class="fk-val text-success">{{ controleGestion()?.margeMoyennePct ?? 0 }}%</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Budgets Dépassés</span>
+            <span class="fk-val" [class.text-danger]="(controleGestion()?.budgetsDepasses ?? 0) > 0">{{ controleGestion()?.budgetsDepasses ?? 0 }}</span>
+          </div>
+        </div>
+        <div class="card-hd" style="margin-top: 10px;">
+          <span class="card-title" style="font-size: 0.85rem;"><i class="fa-solid fa-chart-pie"></i> Produits à plus forte marge</span>
+        </div>
+        <table class="exec-table">
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th style="text-align: right;">Taux de Marge</th>
+              <th style="text-align: right;">Marge Brute</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of controleGestion()?.topMarges ?? []; track m.code) {
+            <tr>
+              <td>{{ m.designation }}</td>
+              <td style="text-align: right;" class="text-success fw-bold">{{ m.margePct }}%</td>
+              <td style="text-align: right;" class="mono">{{ fCFA(m.margeTotaleFCFA) }}</td>
+            </tr>
+            } @empty {
+            <tr><td colspan="3" class="empty-state">Analyse des marges par produit calculée en fin de cycle.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-panel financier -->
+
+  <!-- TAB : PILOTAGE INDUSTRIEL & PRODUCTION -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='production'">
+    <div class="exec-grid-4">
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Volume Produit (Période)</span>
+        <span class="exec-kpi-val text-primary">{{ dashboardProduction()?.quantiteProduiteKg ?? 0 }} Kg</span>
+        <span class="exec-kpi-sub">{{ dashboardProduction()?.nbCartons ?? 0 }} cartons conditionnés</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Ordres de Fabrication</span>
+        <span class="exec-kpi-val text-success">{{ dashboardProduction()?.nbOFHonores ?? 0 }} / {{ (dashboardProduction()?.nbOFPlanifies ?? 0) + (dashboardProduction()?.nbOFEnCours ?? 0) + (dashboardProduction()?.nbOFHonores ?? 0) }}</span>
+        <span class="exec-kpi-sub">{{ dashboardProduction()?.nbOFEnCours ?? 0 }} OFs en cours d'exécution</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Lots Qualité Contrôlés</span>
+        <span class="exec-kpi-val">{{ dashboardProduction()?.nbLotsValides ?? 0 }} conformes</span>
+        <span class="exec-kpi-sub" [class.text-danger]="(dashboardProduction()?.nbLotsRejetes ?? 0) > 0">{{ dashboardProduction()?.nbLotsRejetes ?? 0 }} lots rejetés</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Programmes Hebdo (PPH)</span>
+        <span class="exec-kpi-val text-warning">{{ dashboardProduction()?.nbPPHEnCours ?? 0 }} actifs</span>
+        <span class="exec-kpi-sub">{{ dashboardProduction()?.nbPPHClotures ?? 0 }} PPH clôturés</span>
+      </div>
+    </div>
+
+    <div class="card exec-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-industry"></i> Performances Industrielles par Gamme TANTY</span>
+        <a routerLink="/dg/production" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> Cockpit Usine</a>
+      </div>
+      <table class="exec-table">
+        <thead>
+          <tr>
+            <th>Gamme de Produits</th>
+            <th style="text-align: right;">CA Réalisé</th>
+            <th style="text-align: right;">Objectif CA</th>
+            <th style="text-align: right;">Marge Brute</th>
+            <th style="text-align: center;">Statut Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of gammes(); track g.gamme) {
+          <tr>
+            <td class="fw-bold">{{ g.gamme }}</td>
+            <td style="text-align: right;" class="mono fw-bold">{{ fCFA(g.ca) }}</td>
+            <td style="text-align: right;" class="mono">{{ fCFA(g.objectif) }}</td>
+            <td style="text-align: right;" class="text-success fw-bold">{{ g.marge !== null ? g.marge + '%' : '-' }}</td>
+            <td style="text-align: center;"><span class="badge bg-primary badge-sm">{{ g.stock || 'DISPONIBLE' }}</span></td>
+          </tr>
+          } @empty {
+          <tr><td colspan="5" class="empty-state">Aucun historique de production disponible pour cette période.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /tab-panel production -->
+
+  <!-- TAB : PILOTAGE DES STOCKS MULTI-ENTREPÔTS -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='stocks'">
+    <div class="exec-grid-4">
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Entrepôt Central (Yaoundé)</span>
+        <span class="exec-kpi-val text-primary">{{ dashboardStock()?.totalQuantiteCentral ?? 0 }} U</span>
+        <span class="exec-kpi-sub">{{ dashboardStock()?.nbProduitsCentral ?? 0 }} références référencées</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Entrepôt Tampon (Douala)</span>
+        <span class="exec-kpi-val text-success">{{ dashboardStock()?.totalQuantiteTampon ?? 0 }} U</span>
+        <span class="exec-kpi-sub">{{ dashboardStock()?.nbProduitsTampon ?? 0 }} références en transit</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Flotte Mobile (Camions)</span>
+        <span class="exec-kpi-val text-warning">{{ dashboardStock()?.totalQuantiteMobile ?? 0 }} U</span>
+        <span class="exec-kpi-sub">{{ dashboardStock()?.nbProduitsMobile ?? 0 }} dotations en tournée</span>
+      </div>
+      <div class="exec-kpi-box">
+        <span class="exec-kpi-lbl">Alertes Seuils Critiques</span>
+        <span class="exec-kpi-val" [class.text-danger]="(dashboardStock()?.nbProduitsSousSeuil ?? 0) > 0">{{ dashboardStock()?.nbProduitsSousSeuil ?? 0 }}</span>
+        <span class="exec-kpi-sub">{{ dashboardStock()?.nbAlertesActives ?? 0 }} alertes actives</span>
+      </div>
+    </div>
+
+    <div class="exec-grid-2">
+      <div class="card exec-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-boxes-stacked"></i> Synthèse de Disponibilité Stock</span>
+          <span class="badge bg-primary badge-sm">Supervision Globale</span>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--n600); line-height: 1.5;">
+          Les niveaux de stock consolidés sur le hub central de Yaoundé Nsam et le hub tampon de Douala Bassa
+          garantissent l'approvisionnement des réseaux GMS (Carrefour, Dovv, Santa Lucia) et du canal traditionnel.
+        </p>
+        <div class="fiche-kpis" style="margin-top: 14px;">
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Valeur Stock Immobilisé</span>
+            <span class="fk-val text-primary">{{ fCFA(valoStock()) }}</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Stock Matières Premières</span>
+            <span class="fk-val">{{ fCFA(kpis()?.stockMatieresPremieres ?? 0) }}</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Stock Produits Finis</span>
+            <span class="fk-val text-success">{{ fCFA(kpis()?.stockProduitsFinis ?? 0) }}</span>
+          </div>
+          <div class="fiche-kpi">
+            <span class="fk-lbl">Consommables & Emballages</span>
+            <span class="fk-val">{{ fCFA(kpis()?.stockConsommables ?? 0) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card exec-card">
+        <div class="card-hd">
+          <span class="card-title"><i class="fa-solid fa-bell"></i> Surveillance des Alertes de Stock</span>
+          <a routerLink="/dg/supervision" class="btn btn-outline btn-sm">Vue Détaillée</a>
+        </div>
+        <table class="exec-table">
+          <thead>
+            <tr>
+              <th>Réf / Alerte</th>
+              <th>Entrepôt</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of anomalies(); track a.reference) {
+            <tr>
+              <td class="fw-bold">{{ a.categorie }} - {{ a.reference }}</td>
+              <td>Magasin Central / Bassa</td>
+              <td><span class="badge bg-red badge-sm">{{ a.priorite || 'URGENT' }}</span></td>
+            </tr>
+            } @empty {
+            <tr><td colspan="3" class="empty-state">Aucune anomalie ni rupture critique de stock signalée.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-panel stocks -->
+
+  <!-- TAB : ARBITRAGE DG & VALIDATIONS D'URGENCE (LOCK NUMÉRIQUE) -->
+  <div class="tab-panel" [class.tab-hidden]="activeTab()!=='arbitrage'">
+    <div class="card arbitrage-promo" style="margin-bottom: var(--sp-4);">
+      <div class="arbitrage-promo-left">
+        <div class="kpi-ico iy"><i class="fa-solid fa-unlock-keyhole"></i></div>
+        <div>
+          <div class="fw-bold">Déblocage des prix exceptionnels & Dossiers en attente (Lock numérique)</div>
+          <div class="arbitrage-promo-desc">Autorisez ou refusez directement les remises hors barème, commandes sous plafond et demandes d'exception.</div>
+        </div>
+      </div>
+      <a routerLink="/dg/arbitrage" class="btn btn-primary"><i class="fa-solid fa-scale-balanced"></i> Console Complète d'Arbitrage</a>
+    </div>
+
+    <div class="card exec-card">
+      <div class="card-hd">
+        <span class="card-title"><i class="fa-solid fa-signature"></i> Dossiers Soumis à Décision DG Immédiate</span>
+        <span class="badge bg-gold badge-sm">{{ validationsEnAttente().length }} en attente</span>
+      </div>
+      <table class="exec-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Référence</th>
+            <th>Motif / Description</th>
+            <th>Demandeur</th>
+            <th>Délai</th>
+            <th style="text-align: right;">Action Arbitrage</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of validationsEnAttente(); track v.reference) {
+          <tr>
+            <td><span class="badge bg-primary badge-sm">{{ v.type }}</span></td>
+            <td class="fw-bold mono">{{ v.reference }}</td>
+            <td>{{ v.description }}</td>
+            <td class="text-muted">{{ v.matriculeConcerne }}</td>
+            <td><span class="badge bg-gold badge-sm">{{ v.depuis }}</span></td>
+            <td style="text-align: right;">
+              <div class="arbitrage-actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-primary btn-sm" (click)="resoudreValidationRapide(v, true)" title="Valider immédiatement">
+                  <i class="fa-solid fa-check"></i> Valider
+                </button>
+                <button type="button" class="btn btn-outline btn-sm text-danger" (click)="resoudreValidationRapide(v, false)" title="Refuser">
+                  <i class="fa-solid fa-xmark"></i> Rejeter
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="empty-state" style="padding: 24px;">
+              <i class="fa-solid fa-circle-check text-success" style="font-size: 1.5rem; display: block; margin-bottom: 8px;"></i>
+              Tous les arbitrages et validations directionnels sont à jour. Aucun blocage en attente.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </div><!-- /tab-panel arbitrage -->
 
   }<!-- /loadError-else -->

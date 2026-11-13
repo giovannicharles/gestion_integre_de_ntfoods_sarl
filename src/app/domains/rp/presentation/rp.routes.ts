@@ -18,6 +18,14 @@ export const RP_ROUTES: Routes = [
       { path: 'objectifs', loadComponent: () => import('../../dg/presentation/pages/objectifs/dg-objectifs.component').then(m => m.DgObjectifsComponent) },
       { path: 'tarification', loadComponent: () => import('../../commercial/presentation/pages/tarification/tarification.component').then(m => m.TarificationComponent) },
       { path: 'grands-comptes', loadComponent: () => import('./pages/grands-comptes/rp-grands-comptes.component').then(m => m.RpGrandsComptesComponent) },
+      // Documents institutionnels & conventions GMS
+      { path: 'documents', loadComponent: () => import('./pages/documents/rp-documents.component').then(m => m.RpDocumentsComponent) },
+      // Reporting des campagnes d'activations & retombées commerciales
+      { path: 'reporting', loadComponent: () => import('./pages/reporting/rp-reporting.component').then(m => m.RpReportingComponent) },
+      // Statistiques territoriales & couverture des marchés
+      { path: 'statistiques', loadComponent: () => import('./pages/statistiques/rp-statistiques.component').then(m => m.RpStatistiquesComponent) },
+      // Assistant & Guide de négociation commerciale RP
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/rp-assistant.component').then(m => m.RpAssistantComponent) },
       // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email), écran
       // partagé (voir shared/commande-client), accessible aux grands comptes qu'elle suit.
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },

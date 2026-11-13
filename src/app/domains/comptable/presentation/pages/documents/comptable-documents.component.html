@@ -1,0 +1,91 @@
+<div class="dash-21-root animate-fadeIn">
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Pièces & Documents Comptables OHADA</h1>
+        <span class="dash-21-badge-live"><i class="fa-solid fa-file-invoice"></i> ARCHIVES JURIDIQUES & FISCALES</span>
+      </div>
+      <p class="dash-21-subtitle">
+        Factures fournisseurs, relevés bancaires, bordereaux de caisse, grand livre et quittances DGI/CNPS
+      </p>
+    </div>
+    <div class="dash-21-actions">
+      <button class="dash-21-btn dash-21-btn-primary">
+        <i class="fa-solid fa-plus"></i> Imputer une Pièce
+      </button>
+    </div>
+  </header>
+
+  <!-- FILTRES -->
+  <div class="card" style="margin-bottom:20px; padding:16px 20px;">
+    <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'TOUS'" [class.btn-ghost]="filtreType() !== 'TOUS'" (click)="filtreType.set('TOUS')">Toutes les Pièces ({{ documents().length }})</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'RELEVE_BANCAIRE'" [class.btn-ghost]="filtreType() !== 'RELEVE_BANCAIRE'" (click)="filtreType.set('RELEVE_BANCAIRE')">Relevés Bancaires</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'FACTURE_FOURNISSEUR'" [class.btn-ghost]="filtreType() !== 'FACTURE_FOURNISSEUR'" (click)="filtreType.set('FACTURE_FOURNISSEUR')">Factures Fournisseurs</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'BORDEREAU_CAISSE'" [class.btn-ghost]="filtreType() !== 'BORDEREAU_CAISSE'" (click)="filtreType.set('BORDEREAU_CAISSE')">Bordereaux Caisse</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'DECLARATION_FISCALE'" [class.btn-ghost]="filtreType() !== 'DECLARATION_FISCALE'" (click)="filtreType.set('DECLARATION_FISCALE')">Impôts & DGI</button>
+        <button class="btn btn-sm" [class.btn-primary]="filtreType() === 'GRAND_LIVRE'" [class.btn-ghost]="filtreType() !== 'GRAND_LIVRE'" (click)="filtreType.set('GRAND_LIVRE')">Grand Livre</button>
+      </div>
+      <div style="min-width:280px;">
+        <input type="text" class="input input-sm" style="width:100%" placeholder="Rechercher par N° pièce, tiers, libellé..." [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU -->
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
+      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-list-check"></i> Registre Général des Pièces Justificatives</span>
+      <span class="badge bg-neutral badge-sm">{{ listeFiltree().length }} pièce(s) affichée(s)</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>N° Pièce</th>
+            <th>Type</th>
+            <th>Libellé de l'Écriture</th>
+            <th>Compte OHADA Imputé</th>
+            <th>Tiers / Banque</th>
+            <th>Date Opération</th>
+            <th>Montant TTC</th>
+            <th>Statut</th>
+            <th style="text-align:right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doc of listeFiltree(); track doc.id) {
+          <tr>
+            <td><code>{{ doc.numeroPiece }}</code></td>
+            <td>
+              <span class="badge" [class.bg-blue]="doc.type==='RELEVE_BANCAIRE'" [class.bg-orange]="doc.type==='FACTURE_FOURNISSEUR'" [class.bg-green]="doc.type==='BORDEREAU_CAISSE'" [class.bg-neutral]="doc.type==='DECLARATION_FISCALE' || doc.type==='GRAND_LIVRE'">
+                {{ doc.type }}
+              </span>
+            </td>
+            <td>
+              <strong style="color:#0F172A;">{{ doc.titre }}</strong>
+              <div style="font-size:11px; color:#64748B;">Fichier : {{ doc.fichier }}</div>
+            </td>
+            <td><span class="badge bg-neutral badge-sm">{{ doc.compteOhada }}</span></td>
+            <td><strong>{{ doc.banqueOuTiers }}</strong></td>
+            <td>{{ doc.dateOperation | date:'dd/MM/yyyy' }}</td>
+            <td><strong style="color:#14532D;">{{ fCFA(doc.montant) }}</strong></td>
+            <td>
+              <span class="badge" [class.bg-green]="doc.statut==='RAPPROCHE'" [class.bg-blue]="doc.statut==='COMPTABILISE'" [class.bg-orange]="doc.statut==='A_VERIFIER'">
+                {{ doc.statut }}
+              </span>
+            </td>
+            <td style="text-align:right">
+              <button class="btn btn-outline btn-sm" (click)="telecharger(doc)" title="Télécharger la pièce">
+                <i class="fa-solid fa-download"></i> Justificatif
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

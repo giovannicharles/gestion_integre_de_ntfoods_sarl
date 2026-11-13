@@ -11,6 +11,14 @@ export const COMPTABLE_ROUTES: Routes = [
       { path: 'commandes', loadComponent: () => import('./pages/commandes/comptable-commandes.component').then(m => m.ComptableCommandesComponent) },
       { path: 'factures', loadComponent: () => import('./pages/factures/comptable-factures.component').then(m => m.ComptableFacturesComponent) },
       { path: 'caisse', loadComponent: () => import('./pages/caisse/comptable-caisse.component').then(m => m.ComptableCaisseComponent) },
+      // Rapprochement bancaire relevé vs grand livre
+      { path: 'rapprochement', loadComponent: () => import('./pages/rapprochement/comptable-rapprochement.component').then(m => m.ComptableRapprochementComponent) },
+      // Documents comptables & justificatifs OHADA
+      { path: 'documents', loadComponent: () => import('./pages/documents/comptable-documents.component').then(m => m.ComptableDocumentsComponent) },
+      // Statistiques financières, BFR & DSO
+      { path: 'statistiques', loadComponent: () => import('./pages/statistiques/comptable-statistiques.component').then(m => m.ComptableStatistiquesComponent) },
+      // Assistant comptable & fiscalité OHADA
+      { path: 'assistant', loadComponent: () => import('./pages/assistant/comptable-assistant.component').then(m => m.ComptableAssistantComponent) },
       // Suivi des matières premières (2026-11-10, demande explicite du porteur), symétrique à
       // l'écran consommables du Contrôleur Général.
       { path: 'matieres-premieres', loadComponent: () => import('./pages/matieres-premieres/comptable-mp.component').then(m => m.ComptableMpComponent) },
