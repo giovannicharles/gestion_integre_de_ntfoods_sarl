@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide d'Utilisation Complet · NTFOODS TANTY ERP Digital</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #14532D;
+      --primary-light: #1E7A42;
+      --gold: #B45309;
+      --gold-light: #F59E0B;
+      --dark: #0F172A;
+      --slate: #334155;
+      --gray-light: #F8FAFC;
+      --border: #E2E8F0;
+      --red: #C22B2B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #F1F5F9;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── HEADER BANNER ── */
+    .header-banner {
+      background: linear-gradient(135deg, #0E3E20 0%, #14532D 60%, #1E7A42 100%);
+      color: #FFFFFF;
+      padding: 30px 40px;
+      border-bottom: 4px solid #F6B60B;
+      position: relative;
+    }
+    .header-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .brand-title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: #F6B60B;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .header-meta {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-top: 6px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-gold {
+      background: #F6B60B;
+      color: #0F172A;
+    }
+    .btn-gold:hover { background: #E5A505; transform: translateY(-1px); }
+    .btn-outline-white {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    .btn-outline-white:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* ── LAYOUT WITH STICKY SIDEBAR ── */
+    .main-wrapper {
+      max-width: 1280px;
+      margin: 30px auto;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 28px;
+      padding: 0 20px;
+    }
+
+    .doc-sidebar {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .sidebar-heading {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #64748B;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .toc-link:hover {
+      background: #F1F5F9;
+      color: var(--primary);
+    }
+    .toc-link i {
+      font-size: 13px;
+      width: 18px;
+      color: var(--primary);
+    }
+
+    /* ── CONTENT AREA ── */
+    .doc-content {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px 42px;
+    }
+
+    .doc-section {
+      margin-bottom: 48px;
+      border-bottom: 1px solid #F1F5F9;
+      padding-bottom: 36px;
+    }
+    .doc-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .section-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(20, 83, 45, 0.1);
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--slate);
+      margin-bottom: 18px;
+    }
+
+    .procedure-box {
+      background: var(--gray-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+    }
+    .procedure-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .steps-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13.5px;
+    }
+    .step-number {
+      background: var(--primary);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── SCREENSHOT SHOWCASE ── */
+    .screenshot-card {
+      margin: 18px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: #0F172A;
+    }
+    .screenshot-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .screenshot-caption {
+      background: #F8FAFC;
+      border-top: 1px solid var(--border);
+      padding: 8px 14px;
+      font-size: 11.5px;
+      color: #64748B;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── CALLOUT ALERTS ── */
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: #F0FDF4;
+      padding: 12px 18px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    .callout-title {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout-warning {
+      border-left-color: #DC2626;
+      background: #FEF2F2;
+    }
+    .callout-warning .callout-title { color: #DC2626; }
+
+    /* ── RESPONSIVE & PRINT ── */
+    @media (max-width: 900px) {
+      .main-wrapper { grid-template-columns: 1fr; }
+      .doc-sidebar { display: none; }
+      .header-container { flex-direction: column; align-items: flex-start; }
+      .doc-content { padding: 20px; }
+    }
+
+    @media print {
+      body { background: #FFFFFF; font-size: 12px; }
+      .header-banner { padding: 15px 20px; border-bottom: 2px solid #000; }
+      .header-actions, .doc-sidebar { display: none !important; }
+      .main-wrapper { max-width: 100%; margin: 0; padding: 0; display: block; }
+      .doc-content { border: none; padding: 0; }
+      .doc-section { page-break-after: always; padding-bottom: 20px; margin-bottom: 20px; }
+      .screenshot-card { box-shadow: none; border: 1px solid #CCC; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header-banner">
+    <div class="header-container">
+      <div>
+        <div class="brand-title">NTFOODS SARL · TANTY ERP DIGITAL</div>
+        <div class="brand-subtitle">Guide d'Utilisation & Manuel des Procédures Opérationnelles</div>
+        <div class="header-meta">
+          <i class="fa-solid fa-location-dot"></i> Zone Industrielle de Bassa, Douala · 
+          <i class="fa-solid fa-code-commit"></i> Version 2.0 (Release Nov 2026) · 
+          <i class="fa-solid fa-globe"></i> PWA Production Active
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="GUIDE_UTILISATEUR_TANTY_ERP.pptx" class="btn-action btn-gold" download>
+          <i class="fa-solid fa-file-powerpoint"></i> Télécharger PowerPoint (.pptx)
+        </a>
+        <a href="GUIDE_UTILISATEUR_COMPLET_TANTY_ERP.docx" class="btn-action btn-outline-white" download>
+          <i class="fa-solid fa-file-word"></i> Télécharger Word (.docx)
+        </a>
+        <button onclick="window.print()" class="btn-action btn-outline-white">
+          <i class="fa-solid fa-print"></i> Imprimer / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- WRAPPER -->
+  <div class="main-wrapper">
+
+    <!-- SOMMAIRE GAUCHE -->
+    <aside class="doc-sidebar">
+      <div class="sidebar-heading">Table des Matières</div>
+      <ul class="toc-list">
+        <li><a href="#intro" class="toc-link"><i class="fa-solid fa-shield-halved"></i> 1. Vision & Règles d'Or</a></li>
+        <li><a href="#whatsapp" class="toc-link"><i class="fa-brands fa-whatsapp"></i> 2. Commande WhatsApp</a></li>
+        <li><a href="#commercial" class="toc-link"><i class="fa-solid fa-truck"></i> 3. Commercial Terrain</a></li>
+        <li><a href="#secretaire" class="toc-link"><i class="fa-solid fa-clipboard-check"></i> 4. Secrétariat Commercial</a></li>
+        <li><a href="#comptable" class="toc-link"><i class="fa-solid fa-calculator"></i> 5. Comptabilité & Caisse</a></li>
+        <li><a href="#controle" class="toc-link"><i class="fa-solid fa-magnifying-glass-chart"></i> 6. Contrôle & Audit</a></li>
+        <li><a href="#stock" class="toc-link"><i class="fa-solid fa-warehouse"></i> 7. Stock Bassa & Lots</a></li>
+        <li><a href="#production" class="toc-link"><i class="fa-solid fa-industry"></i> 8. Production Industrielle</a></li>
+        <li><a href="#dg" class="toc-link"><i class="fa-solid fa-user-tie"></i> 9. Direction Générale</a></li>
+        <li><a href="#admin" class="toc-link"><i class="fa-solid fa-gears"></i> 10. Administration Système</a></li>
+      </ul>
+    </aside>
+
+    <!-- CONTENU DROITE -->
+    <main class="doc-content">
+
+      <!-- SECTION 1 -->
+      <section id="intro" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-shield-halved"></i> 1. Vision Générale & Règles d'Or
+          <span class="section-tag">Gouvernance</span>
+        </h2>
+        <p class="section-subtitle">Les fondements de la séparation des tâches et du contrôle interne chez NTFOODS SARL.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-key"></i> Les 4 Principes Inviolables de l'ERP</h4>
+          <ul class="steps-list">
+            <li>
+              <span class="step-number">1</span>
+              <div><strong>Contrôle à 4 Yeux sur les Ventes :</strong> Le Secrétariat vérifie l'opérationnel, la Comptabilité délivre le bon à livrer financier, et le Magasin Central assure le déstockage physique.</div>
+            </li>
+            <li>
+              <span class="step-number">2</span>
+              <div><strong>Circuit Sécurisé des Décaissements :</strong> Demande initiale ➔ Visa de conformité du Contrôle de Gestion ➔ Arbitrage de la Direction Générale (&gt;50 000 FCFA) ➔ Paiement effectif en caisse.</div>
+            </li>
+            <li>
+              <span class="step-number">3</span>
+              <div><strong>Double Visa des Réceptions Matières :</strong> Contrôle physique par le Gestionnaire de Stock ➔ Seconde validation indépendante par le Contrôleur Général avant éligibilité au paiement.</div>
+            </li>
+            <li>
+              <span class="step-number">4</span>
+              <div><strong>Traçabilité Industrielle Ininterrompue :</strong> Aucun produit fini ne peut être chargé sans rattachement à un numéro de lot validé lors du contrôle qualité usine.</div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section id="whatsapp" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-brands fa-whatsapp text-success"></i> 2. Prise de Commande WhatsApp & Ventes Directes
+          <span class="section-tag">Transversal</span>
+        </h2>
+        <p class="section-subtitle">Comment saisir une commande reçue par message instantané depuis n'importe quel écran.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-list-check"></i> Procédure Pas-à-Pas</h4>
+          <ul class="steps-list">
+            <li><span class="step-number">1</span><div>Cliquez sur le bouton vert <strong>+ Commande WhatsApp</strong> en haut à droite.</div></li>
+            <li><span class="step-number">2</span><div>Sélectionnez le client en portefeuille ou cochez <strong>Nouveau Prospect</strong> pour saisir Nom et Numéro WhatsApp (+237).</div></li>
+            <li><span class="step-number">3</span><div>Ajoutez les produits finis TANTY (tapioca, céréales, bouillie, etc.). Les montants HT, TVA 19.25% et TTC se calculent automatiquement.</div></li>
+            <li><span class="step-number">4</span><div>Cliquez sur <strong>Enregistrer & Notifier WhatsApp</strong>. L'application génère le devis pro-forma et ouvre la conversation WhatsApp en 1 clic.</div></li>
+          </ul>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/orders_1.png" alt="Commandes clients WhatsApp">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Interface de gestion des commandes clients et ventes directes</span>
+            <span class="mono">Module /commandes-clients</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section id="commercial" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-truck"></i> 3. Module Commercial Terrain
+          <span class="section-tag">/commercial</span>
+        </h2>
+        <p class="section-subtitle">Organisation des tournées de livraison, saisie des précommandes et recouvrement client.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-cart-plus"></i> Précommandes J+1 pour Chargement Camion</h4>
+          <p>Le commercial soumet chaque jour avant 18h00 son besoin en produits finis pour charger son camion le lendemain matin. Dès soumission, le Secrétariat et le Stock Central reçoivent une alerte de préparation.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/orders_2.png" alt="Précommandes terrain">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Saisie des précommandes et suivi des ventes par zone</span>
+            <span class="mono">Module Commercial</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 -->
+      <section id="secretaire" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-clipboard-check"></i> 4. Module Secrétariat Commercial
+          <span class="section-tag">/secretaire</span>
+        </h2>
+        <p class="section-subtitle">Visa des précommandes, encaissement des versements au guichet et tenue de la petite caisse.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-money-bill-wave"></i> Enregistrement des Versements & Quittances</h4>
+          <p>Au retour de tournée, le commercial dépose le cash au guichet. La secrétaire saisit le versement, vérifie l'absence d'écart par rapport aux ventes déclarées, et imprime immédiatement la <strong>Quittance Officielle de Caisse NTFOODS</strong> signée par les deux parties.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/accounting_1.png" alt="Journal des versements">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Suivi des versements commerciaux et petite caisse</span>
+            <span class="mono">Module Secrétaire</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5 -->
+      <section id="comptable" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-calculator"></i> 5. Module Comptabilité & Finance
+          <span class="section-tag">/comptable</span>
+        </h2>
+        <p class="section-subtitle">Visa comptable des ventes, exécution des décaissements et facturation officielle.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-stamp"></i> Visa Comptable des Commandes</h4>
+          <p>La comptabilité examine la solvabilité et valide la commande. Ce visa débloque le statut <strong>Prête à livrer</strong> pour le magasinier central et génère la facture définitive au format OHADA.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/accounting_2.png" alt="Comptabilité et finances">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Écritures comptables, facturation et balance âgée</span>
+            <span class="mono">Module Comptable</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6 -->
+      <section id="controle" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-magnifying-glass-chart"></i> 6. Module Contrôle Général & Audit
+          <span class="section-tag">/controle</span>
+        </h2>
+        <p class="section-subtitle">Deuxième validation des réceptions, contrôle des dépassements budgétaires et anti-fraude.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-boxes-packing"></i> Deuxième Validation des Consommables & Matériel</h4>
+          <p>Le Contrôleur Général effectue une inspection indépendante sur les livraisons fournisseurs d'emballages, étiquettes et pièces détachées. Son visa valide la régularité du bon de livraison avant tout règlement comptable.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/analytics_admin_1.png" alt="Contrôle de gestion">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Tableaux de bord de contrôle budgétaire et analyse de rentabilité</span>
+            <span class="mono">Module Contrôle</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7 -->
+      <section id="stock" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-warehouse"></i> 7. Module Stocks Central Bassa
+          <span class="section-tag">/stock</span>
+        </h2>
+        <p class="section-subtitle">Réceptions de matières premières, validation des lots de production et chargement camions.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-box"></i> Intégration des Lots de Production</h4>
+          <p>Dès que l'usine achève le conditionnement d'un lot, le Gestionnaire de Stock clique sur <strong>Valider Lot</strong> dans l'écran <em>Lots Production</em>. Cette action intègre physiquement et comptablement les articles dans les stocks vendables de l'entreprise.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/new_stocks_1.png" alt="Gestion des stocks">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Mouvements de stock central et traçabilité des lots</span>
+            <span class="mono">Module Stock</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 8 -->
+      <section id="production" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-industry"></i> 8. Module Production & Usine
+          <span class="section-tag">/production</span>
+        </h2>
+        <p class="section-subtitle">Plans prévisionnels hebdomadaires, dosage des formules agroalimentaires et pesées atelier.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-flask"></i> Respect Strict de la Formulation TANTY</h4>
+          <p>Chaque ligne de fabrication (tapioca enrichi, céréales instantanées) impose le respect au gramme près de la recette agréée. Le système bloque toute déclaration si l'écart de rendement matière dépasse le seuil de tolérance de 2%.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/new_product_component_1.png" alt="Production et formulation">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Formulation, ordonnancement et postes de fabrication</span>
+            <span class="mono">Module Production</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 9 -->
+      <section id="dg" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-user-tie"></i> 9. Module Direction Générale
+          <span class="section-tag">/dg</span>
+        </h2>
+        <p class="section-subtitle">Arbitrage des dépenses stratégiques, cockpit exécutif consolidé et seuils de trésorerie.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-scale-balanced"></i> Arbitrage 1-Clic des Décaissements</h4>
+          <p>Le Directeur Général consulte en direct les décaissements en attente. Pour chaque demande supérieure à 50 000 FCFA, il arbitre avec motif d'accord ou de refus. Il supervise également les primes commerciales et les quotas de vente mensuels.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/dashboardHome_a_haut.png" alt="Cockpit exécutif DG">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Cockpit exécutif consolidé : CA, production et trésorerie</span>
+            <span class="mono">Module DG</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 10 -->
+      <section id="admin" class="doc-section">
+        <h2 class="section-title">
+          <i class="fa-solid fa-gears"></i> 10. Module Administration Système
+          <span class="section-tag">/admin</span>
+        </h2>
+        <p class="section-subtitle">Gestion des comptes, permissions RBAC, journal d'audit et sauvegardes automatisées.</p>
+
+        <div class="procedure-box">
+          <h4 class="procedure-title"><i class="fa-solid fa-database"></i> Sauvegardes & Sécurité</h4>
+          <p>La base PostgreSQL fait l'objet de sauvegardes automatiques quotidiennes avec rétention sur 14 jours via le script PowerShell <code>scripts/backup_postgresql.ps1</code>. Le journal d'audit trace de façon inviolable chaque transaction sensible.</p>
+        </div>
+
+        <div class="screenshot-card">
+          <img src="../comprehension_du_projet/PHOTOS_DE_GENUKA/settings_1.png" alt="Administration système">
+          <div class="screenshot-caption">
+            <span><i class="fa-solid fa-camera"></i> Paramètres système, permissions et politiques de sécurité</span>
+            <span class="mono">Module Administration</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
