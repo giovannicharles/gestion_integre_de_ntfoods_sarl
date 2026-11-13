@@ -2,86 +2,173 @@
   <header class="dash-21-header">
     <div class="dash-21-header-left">
       <div class="dash-21-title-group">
-        <h1 class="dash-21-title">Espace Documentaire RP & Partenariats</h1>
+        <h1 class="dash-21-title">Documents RP & Référencements GMS</h1>
         <span class="dash-21-badge-live">
-          <i class="fa-solid fa-folder-open"></i> ARCHIVES OFFICIELLES
+          <span class="dash-21-pulse"></span>
+          ARCHIVAGE SÉCURISÉ NTFOODS
         </span>
       </div>
       <p class="dash-21-subtitle">
-        Contrats cadres grands comptes, conventions d'activation, catalogues officiels et fiches d'homologation NTFOODS SARL
+        Conventions annuelles de référencement, contrats de distribution, bons de commande VIP et fiches techniques
       </p>
     </div>
+
     <div class="dash-21-actions">
-      <button class="dash-21-btn dash-21-btn-primary">
-        <i class="fa-solid fa-cloud-arrow-up"></i> Nouveau Document
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalImport()">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Importer un document
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="chargerDocuments()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
       </button>
     </div>
   </header>
 
-  <!-- FILTRES -->
-  <div class="card" style="margin-bottom:20px; padding:16px 20px;">
-    <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;">
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'TOUS'" [class.btn-ghost]="filtreCategorie() !== 'TOUS'" (click)="filtreCategorie.set('TOUS')">Tous ({{ documentsRp().length }})</button>
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CONTRAT'" [class.btn-ghost]="filtreCategorie() !== 'CONTRAT'" (click)="filtreCategorie.set('CONTRAT')">Contrats Cadres</button>
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CONVENTION'" [class.btn-ghost]="filtreCategorie() !== 'CONVENTION'" (click)="filtreCategorie.set('CONVENTION')">Conventions GMS</button>
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'CATALOGUE'" [class.btn-ghost]="filtreCategorie() !== 'CATALOGUE'" (click)="filtreCategorie.set('CATALOGUE')">Catalogues</button>
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'PLV'" [class.btn-ghost]="filtreCategorie() !== 'PLV'" (click)="filtreCategorie.set('PLV')">Kits PLV</button>
-        <button class="btn btn-sm" [class.btn-primary]="filtreCategorie() === 'FICHE_TECHNIQUE'" [class.btn-ghost]="filtreCategorie() !== 'FICHE_TECHNIQUE'" (click)="filtreCategorie.set('FICHE_TECHNIQUE')">Homologations</button>
+  <!-- FILTRES DE RECHERCHE -->
+  <div class="dash-21-card" style="margin-bottom:16px;padding:14px 20px">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;position:relative">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--n400)"></i>
+        <input type="text" class="form-control" style="padding-left:34px" [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)" placeholder="Rechercher par référence, nom de fichier ou partenaire..." />
       </div>
-      <div style="min-width:260px;">
-        <input type="text" class="input input-sm" style="width:100%" placeholder="Rechercher par mot-clé, partenaire..." [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)">
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:12px;font-weight:700;color:var(--n600);white-space:nowrap">Type :</label>
+        <select class="form-control" style="min-width:180px" [ngModel]="filtreCategorie()" (ngModelChange)="filtreCategorie.set($event)">
+          <option value="TOUS">Tous les documents</option>
+          @for (t of typesDisponibles; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
       </div>
     </div>
   </div>
 
-  <!-- TABLEAU DES DOCUMENTS -->
-  <div class="card" style="padding:0; overflow:hidden;">
-    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
-      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-file-contract"></i> Registre des Pièces Officielles</span>
-      <span class="badge bg-neutral badge-sm">{{ listeFiltree().length }} document(s)</span>
+  @if (loading()) {
+    <div class="dash-21-card" style="padding:48px;text-align:center">
+      <div class="spinner" style="margin:0 auto 16px;width:36px;height:36px;border-width:3px"></div>
+      <p style="font-weight:700;color:var(--g-d);font-size:15px;margin:0">Chargement de la base documentaire RP...</p>
     </div>
-    <div class="tbl-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Titre du Document</th>
-            <th>Partenaire / Destinataire</th>
-            <th>Date d'Enregistrement</th>
-            <th>Format & Poids</th>
-            <th>Statut</th>
-            <th style="text-align:right">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (doc of listeFiltree(); track doc.id) {
-          <tr>
-            <td>
-              <span class="badge" [class.bg-blue]="doc.categorie==='CONTRAT'" [class.bg-green]="doc.categorie==='CONVENTION'" [class.bg-orange]="doc.categorie==='PLV'" [class.bg-neutral]="doc.categorie==='CATALOGUE' || doc.categorie==='FICHE_TECHNIQUE'">
-                {{ doc.categorie }}
-              </span>
-            </td>
-            <td>
-              <strong style="color:#0F172A;">{{ doc.titre }}</strong>
-              <div style="font-size:11px; color:#64748B;">{{ doc.fichier }}</div>
-            </td>
-            <td><i class="fa-solid fa-building" style="color:#64748B; margin-right:4px;"></i> {{ doc.partenaire }}</td>
-            <td>{{ doc.dateAjout | date:'dd MMM yyyy' }}</td>
-            <td><span class="badge bg-neutral badge-sm"><i class="fa-solid fa-file-pdf" style="color:#DC2626; margin-right:4px;"></i> {{ doc.taille }}</span></td>
-            <td>
-              <span class="badge bg-green badge-sm"><i class="fa-solid fa-check"></i> {{ doc.statut }}</span>
-            </td>
-            <td style="text-align:right">
-              <button class="btn btn-outline btn-sm" (click)="telechargerDocument(doc)" title="Télécharger">
-                <i class="fa-solid fa-download"></i> Ouvrir
-              </button>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
+  } @else if (loadError()) {
+    <div class="dash-21-card" style="padding:32px;text-align:center;border-color:var(--r)">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:32px;color:var(--r);margin-bottom:12px;display:block"></i>
+      <h3 style="font-size:16px;font-weight:800;color:var(--g-d);margin-bottom:6px">Erreur lors de la récupération des documents</h3>
+      <p style="color:var(--n500);font-size:13px;margin-bottom:16px">{{ loadError() }}</p>
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="chargerDocuments()">
+        <i class="fa-solid fa-rotate"></i> Réessayer
+      </button>
     </div>
-  </div>
+  } @else {
+    <div class="dash-21-card">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Type de Pièce</th>
+              <th>Référence / Titre</th>
+              <th>Nom du Fichier</th>
+              <th>Taille</th>
+              <th>Déposé Par</th>
+              <th>Date d'Import</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (doc of listeFiltree; track doc.id) {
+              <tr>
+                <td>
+                  <span class="meta-tag">{{ typeLabel(doc.typeDocument) }}</span>
+                </td>
+                <td class="fw-bold" style="color:var(--g-d)">
+                  {{ doc.reference }}
+                </td>
+                <td style="font-size:12px">
+                  <i class="fa-regular fa-file-pdf" style="color:var(--r);margin-right:6px"></i>
+                  {{ doc.nomFichierOriginal }}
+                </td>
+                <td class="mono" style="font-size:12px;color:var(--n600)">
+                  {{ formatTaille(doc.tailleOctets) }}
+                </td>
+                <td>
+                  <span class="badge badge-neutral" style="font-size:11px">
+                    {{ doc.matriculeUploader || 'SYSTÈME' }}
+                  </span>
+                </td>
+                <td style="font-size:12px;color:var(--n600)">
+                  {{ doc.dateImport | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="text-center">
+                  <button type="button" class="dash-21-btn dash-21-btn-primary" style="padding:5px 12px;font-size:11.5px" (click)="telechargerDocument(doc)" title="Télécharger le fichier original">
+                    <i class="fa-solid fa-download"></i> Télécharger
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" style="text-align:center;padding:40px 16px">
+                  <i class="fa-solid fa-folder-open" style="font-size:36px;color:var(--n300);margin-bottom:12px;display:block"></i>
+                  <h4 style="margin:0 0 6px;color:var(--g-d);font-size:15px">Aucun document archivé</h4>
+                  <p style="font-size:13px;color:var(--n500);margin:0 0 16px">Téléversez les conventions GMS, accords cadres ou bons de commande.</p>
+                  <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalImport()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Téléverser un premier document
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
 </div>
 
+<!-- MODAL D'IMPORT DOCUMENT -->
+@if (showModalImport()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Archiver un Nouveau Document</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModalImport()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Catégorie du document *</label>
+          <select class="form-control" [ngModel]="importType()" (ngModelChange)="importType.set($event)">
+            @for (t of typesDisponibles; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Référence ou Intitulé de la Pièce</label>
+          <input type="text" class="form-control" [ngModel]="importReference()" (ngModelChange)="importReference.set($event)" placeholder="Ex: CONVENTION-DOVV-2026, CONTRAT-CARREFOUR-WARDA" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Fichier à téléverser (PDF, image, document) *</label>
+          <input type="file" class="form-control" (change)="onFichierSelectionne($event)" />
+          @if (fichierSelectionne) {
+            <div style="font-size:11.5px;color:var(--g);margin-top:4px">
+              <i class="fa-solid fa-check"></i> {{ fichierSelectionne.name }} ({{ formatTaille(fichierSelectionne.size) }})
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModalImport()">Annuler</button>
+        <button type="button" class="dash-21-btn dash-21-btn-primary" [disabled]="importEnCours() || !fichierSelectionne" (click)="executerImport()">
+          @if (importEnCours()) {
+            <i class="fa-solid fa-rotate fa-spin"></i> Téléversement en cours...
+          } @else {
+            <i class="fa-solid fa-cloud-arrow-up"></i> Archiver le document
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

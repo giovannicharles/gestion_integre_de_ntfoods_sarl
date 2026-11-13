@@ -3,103 +3,171 @@
     <div class="dash-21-header-left">
       <div class="dash-21-title-group">
         <h1 class="dash-21-title">Reporting des Campagnes & Activations RP</h1>
-        <span class="dash-21-badge-live"><i class="fa-solid fa-chart-line"></i> ROI & IMPACT MARCHÉ</span>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          BILAN D'IMPACT COMMERCIAL
+        </span>
       </div>
       <p class="dash-21-subtitle">
-        Bilan des dégustations terrain, têtes de gondole GMS, salons professionnels et retombées commerciales NTFOODS
+        Analyse de retour sur investissement (ROI), dégustations supermarchés, salons professionnels et street-marketing TANTY
       </p>
     </div>
+
     <div class="dash-21-actions">
-      <button class="dash-21-btn dash-21-btn-ghost" onclick="window.print()">
-        <i class="fa-solid fa-print"></i> Exporter PDF
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModal()">
+        <i class="fa-solid fa-plus"></i> Nouvelle Campagne RP
       </button>
-      <button class="dash-21-btn dash-21-btn-primary">
-        <i class="fa-solid fa-plus"></i> Nouvelle Activation
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="imprimerRapport()" title="Imprimer le bilan des activations">
+        <i class="fa-solid fa-print"></i> Imprimer
       </button>
     </div>
   </header>
 
-  <!-- KPI SUMMARY -->
-  <section class="dash-21-kpi-grid" style="margin-bottom:24px;">
+  <!-- 4-KPI SUITE CARDS -->
+  <section class="dash-21-kpi-grid">
     <div class="dash-21-kpi-card">
       <div class="dash-21-kpi-head">
-        <span class="dash-21-kpi-label">Budget Activations Engagé</span>
-        <div class="dash-21-kpi-icon-wrap icon-gold"><i class="fa-solid fa-sack-dollar"></i></div>
+        <span class="dash-21-kpi-label">Budget Total Engagé</span>
+        <div class="dash-21-kpi-icon-wrap icon-gold">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
       </div>
       <div class="dash-21-kpi-value-row">
         <span class="dash-21-kpi-value">{{ fCFA(totalBudget()) }}</span>
+        <span class="dash-21-trend-pill trend-up">
+          {{ campagnes().length }} opérations
+        </span>
       </div>
-      <div class="dash-21-kpi-footer"><span>Sur {{ campagnes().length }} opérations ciblées</span></div>
+      <div class="dash-21-kpi-footer">
+        <span>Frais d'animation, hôtesses, stands & logistique</span>
+      </div>
     </div>
 
     <div class="dash-21-kpi-card">
       <div class="dash-21-kpi-head">
-        <span class="dash-21-kpi-label">CA Additionnel Direct Généré</span>
-        <div class="dash-21-kpi-icon-wrap" style="background:rgba(20,83,45,0.12); color:#14532D;"><i class="fa-solid fa-cash-register"></i></div>
+        <span class="dash-21-kpi-label">CA Directement Généré</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
       </div>
       <div class="dash-21-kpi-value-row">
-        <span class="dash-21-kpi-value" style="color:#14532D;">{{ fCFA(totalCa()) }}</span>
-        <span class="dash-21-trend-pill trend-up">+{{ roiMoyen() }}% ROI</span>
+        <span class="dash-21-kpi-value">{{ fCFA(totalCa()) }}</span>
+        <span class="dash-21-trend-pill trend-up">
+          +{{ roiMoyen() }}% ROI
+        </span>
       </div>
-      <div class="dash-21-kpi-footer"><span>Ventes constatées sous 30 jours</span></div>
+      <div class="dash-21-kpi-footer">
+        <span>Ventes fermes générées pendant et après campagnes</span>
+      </div>
     </div>
 
     <div class="dash-21-kpi-card">
       <div class="dash-21-kpi-head">
-        <span class="dash-21-kpi-label">Prospects & Contacts Qualifiés</span>
-        <div class="dash-21-kpi-icon-wrap" style="background:rgba(59,130,246,0.12); color:#2563EB;"><i class="fa-solid fa-id-card-clip"></i></div>
+        <span class="dash-21-kpi-label">Échantillons Distribués</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-bowl-food"></i>
+        </div>
       </div>
       <div class="dash-21-kpi-value-row">
-        <span class="dash-21-kpi-value">{{ totalContacts() }}</span>
+        <span class="dash-21-kpi-value">{{ totalEchantillons() | number }}</span>
+        <span class="dash-21-trend-pill trend-up">
+          Dégustations TANTY
+        </span>
       </div>
-      <div class="dash-21-kpi-footer"><span>Grossistes, gérants et consommateurs VIP</span></div>
+      <div class="dash-21-kpi-footer">
+        <span>Gobelets de bouillie & sachets dégustation offerts</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Contacts Qualifiés Reçus</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-address-book"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalContacts() | number }}</span>
+        <span class="dash-21-trend-pill trend-up">
+          Bases acheteurs
+        </span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Fiches prospects, prescripteurs et acheteurs collectées</span>
+      </div>
     </div>
   </section>
 
-  <!-- TABLEAU DU REPORTING -->
-  <div class="card" style="padding:0; overflow:hidden;">
-    <div style="padding:16px 20px; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center; background:#F8FAFC;">
-      <span style="font-size:14px; font-weight:800; color:#0F172A;"><i class="fa-solid fa-bullhorn"></i> Synthèse Détaillée des Événements & Campagnes</span>
-      <span class="badge bg-green badge-sm">ROI Positif Moyen: +{{ roiMoyen() }}%</span>
+  <!-- TABLEAU DES CAMPAGNES RP -->
+  <div class="dash-21-card">
+    <div class="dash-21-card-header">
+      <div class="dash-21-card-title-group">
+        <h3 class="dash-21-card-title"><i class="fa-solid fa-bullhorn" style="color:var(--g)"></i> Historique des Opérations de Notoriété & Promotion</h3>
+        <span class="dash-21-card-hint">Détail des actions de terrain et retombées commerciales</span>
+      </div>
     </div>
-    <div class="tbl-wrap">
+
+    <div class="table-container">
       <table class="data-table">
         <thead>
           <tr>
+            <th>Opération / Intitulé</th>
             <th>Type</th>
-            <th>Campagne / Événement</th>
-            <th>Lieu & Déploiement</th>
+            <th>Lieu & Périmètre</th>
             <th>Période</th>
-            <th>Budget Investi</th>
-            <th>CA Généré</th>
-            <th>Échantillons</th>
-            <th>ROI</th>
+            <th class="text-right">Budget Engagé</th>
+            <th class="text-right">CA Généré</th>
+            <th class="text-center">ROI Net</th>
             <th>Statut</th>
+            <th class="text-center">Action</th>
           </tr>
         </thead>
         <tbody>
           @for (c of campagnes(); track c.id) {
-          <tr>
-            <td>
-              <span class="badge" [class.bg-blue]="c.type==='PROMO_GMS'" [class.bg-green]="c.type==='DEGUSTATION'" [class.bg-orange]="c.type==='STREET_MARKETING'" [class.bg-neutral]="c.type==='SALON'">
-                {{ c.type }}
-              </span>
-            </td>
-            <td><strong>{{ c.titre }}</strong></td>
-            <td><i class="fa-solid fa-location-dot" style="color:#DC2626; margin-right:4px;"></i> {{ c.lieu }}</td>
-            <td>{{ c.dateDebut | date:'dd/MM' }} au {{ c.dateFin | date:'dd/MM/yyyy' }}</td>
-            <td><strong>{{ fCFA(c.budgetEngage) }}</strong></td>
-            <td><strong style="color:#14532D;">{{ fCFA(c.caGenere) }}</strong></td>
-            <td>{{ c.echantillonsDistribues }} unités</td>
-            <td>
-              <span class="badge bg-green badge-sm">+{{ c.roi }}%</span>
-            </td>
-            <td>
-              <span class="badge" [class.bg-green]="c.statut==='TERMINE'" [class.bg-orange]="c.statut==='EN_COURS'" [class.bg-neutral]="c.statut==='PLANIFIE'">
-                {{ c.statut }}
-              </span>
-            </td>
-          </tr>
+            <tr>
+              <td>
+                <div class="fw-bold" style="color:var(--g-d)">{{ c.titre }}</div>
+                <div style="font-size:11px;color:var(--n500)">
+                  <i class="fa-solid fa-users" style="margin-right:4px"></i>{{ c.contactsQualifies }} contacts · {{ c.echantillonsDistribues }} dégustations
+                </div>
+              </td>
+              <td>
+                <span class="meta-tag">{{ c.type }}</span>
+              </td>
+              <td style="font-size:12px;color:var(--n700)">
+                <i class="fa-solid fa-location-dot" style="color:var(--g);margin-right:4px"></i>{{ c.lieu }}
+              </td>
+              <td style="font-size:12px;color:var(--n600)">
+                Du {{ c.dateDebut | date:'dd/MM' }} au {{ c.dateFin | date:'dd/MM/yyyy' }}
+              </td>
+              <td class="text-right mono" style="font-size:12.5px">{{ fCFA(c.budgetEngage) }}</td>
+              <td class="text-right mono fw-bold" style="color:var(--g-d);font-size:12.5px">{{ fCFA(c.caGenere) }}</td>
+              <td class="text-center">
+                <span class="taux-chip" [class.taux-ok]="calculerRoi(c) >= 100" [class.taux-mid]="calculerRoi(c) >= 0 && calculerRoi(c) < 100" [class.taux-warn]="calculerRoi(c) < 0">
+                  +{{ calculerRoi(c) }}%
+                </span>
+              </td>
+              <td>
+                @if (c.statut === 'TERMINE') {
+                  <span class="badge badge-success"><i class="fa-solid fa-check"></i> Terminé</span>
+                } @else if (c.statut === 'EN_COURS') {
+                  <span class="badge badge-warning"><i class="fa-solid fa-bolt"></i> En cours</span>
+                } @else {
+                  <span class="badge badge-neutral"><i class="fa-regular fa-clock"></i> Planifié</span>
+                }
+              </td>
+              <td class="text-center">
+                <button type="button" class="action-btn" (click)="supprimerCampagne(c.id)" title="Retirer cette campagne" style="color:var(--r);background:rgba(194,43,43,0.08)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" style="text-align:center;padding:32px;color:var(--n400)">
+                Aucune campagne enregistrée pour cette période.
+              </td>
+            </tr>
           }
         </tbody>
       </table>
@@ -107,3 +175,84 @@
   </div>
 </div>
 
+<!-- MODAL NOUVELLE CAMPAGNE -->
+@if (showModal()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-bullhorn" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Planifier une Campagne RP</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label">Titre de l'Opération *</label>
+          <input type="text" class="form-control" [ngModel]="nouvelleCampagne().titre" (ngModelChange)="nouvelleCampagne().titre = $event" placeholder="Ex: Grande Dégustation Tapioca Sans Sable Carrefour" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Type d'Action</label>
+            <select class="form-control" [ngModel]="nouvelleCampagne().type" (ngModelChange)="nouvelleCampagne().type = $event">
+              <option value="DEGUSTATION">Dégustation en Magasin</option>
+              <option value="PROMO_GMS">Tête de Gondole GMS</option>
+              <option value="STREET_MARKETING">Animation Terrains & Marchés</option>
+              <option value="SALON">Foire ou Salon Professionnel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lieu / Supermarché *</label>
+            <input type="text" class="form-control" [ngModel]="nouvelleCampagne().lieu" (ngModelChange)="nouvelleCampagne().lieu = $event" placeholder="Ex: DOVV Bastos, Yaoundé" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Date Début</label>
+            <input type="date" class="form-control" [ngModel]="nouvelleCampagne().dateDebut" (ngModelChange)="nouvelleCampagne().dateDebut = $event" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date Fin</label>
+            <input type="date" class="form-control" [ngModel]="nouvelleCampagne().dateFin" (ngModelChange)="nouvelleCampagne().dateFin = $event" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Budget Alloué (FCFA)</label>
+            <input type="number" class="form-control" [ngModel]="nouvelleCampagne().budgetEngage" (ngModelChange)="nouvelleCampagne().budgetEngage = $event" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">CA Attendu / Réalisé (FCFA)</label>
+            <input type="number" class="form-control" [ngModel]="nouvelleCampagne().caGenere" (ngModelChange)="nouvelleCampagne().caGenere = $event" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Échantillons Prévus</label>
+            <input type="number" class="form-control" [ngModel]="nouvelleCampagne().echantillonsDistribues" (ngModelChange)="nouvelleCampagne().echantillonsDistribues = $event" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Statut</label>
+            <select class="form-control" [ngModel]="nouvelleCampagne().statut" (ngModelChange)="nouvelleCampagne().statut = $event">
+              <option value="PLANIFIE">Planifié</option>
+              <option value="EN_COURS">En cours</option>
+              <option value="TERMINE">Terminé</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModal()">Annuler</button>
+        <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="enregistrerCampagne()">
+          <i class="fa-solid fa-check"></i> Enregistrer l'opération
+        </button>
+      </div>
+    </div>
+  </div>
+}

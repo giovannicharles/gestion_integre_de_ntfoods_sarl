@@ -1,21 +1,15 @@
-import { Component, ChangeDetectionStrategy, OnInit, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CommercialService, RecouvrementBE } from '../../../../commercial/infrastructure/commercial.service';
+import { ComptableService, DashboardComptabiliteBE } from '../../../infrastructure/comptable.service';
 import { fCFA } from '../../../../../shared/utils/format.utils';
 
-interface TrancheCreance {
+export interface TrancheCreanceUI {
   tranche: string;
   montant: number;
   nombreClients: number;
   partPourcent: number;
   niveauRisque: 'FAIBLE' | 'MOYEN' | 'ELEVE' | 'CONTENTIEUX';
-}
-
-interface RatioMois {
-  mois: string;
-  ca: number;
-  bfr: number;
-  tresorerieNette: number;
-  dsoJours: number;
 }
 
 @Component({
@@ -27,25 +21,91 @@ interface RatioMois {
 })
 export class ComptableStatistiquesComponent implements OnInit {
   fCFA = fCFA;
+  Math = Math;
 
-  tranchesCreances = signal<TrancheCreance[]>([
-    { tranche: 'Moins de 30 jours (Factures courantes)', montant: 14200000, nombreClients: 48, partPourcent: 56.8, niveauRisque: 'FAIBLE' },
-    { tranche: 'Entre 30 et 60 jours (Relance N°1 envoyée)', montant: 6100000, nombreClients: 19, partPourcent: 24.4, niveauRisque: 'MOYEN' },
-    { tranche: 'Entre 60 et 90 jours (Relance N°2 avec blocage)', montant: 3200000, nombreClients: 8, partPourcent: 12.8, niveauRisque: 'ELEVE' },
-    { tranche: 'Plus de 90 jours (Dossier Contentieux / Huissier)', montant: 1500000, nombreClients: 3, partPourcent: 6.0, niveauRisque: 'CONTENTIEUX' }
-  ]);
+  private readonly commercialSvc = inject(CommercialService);
+  private readonly comptableSvc = inject(ComptableService);
 
-  historiqueRatios = signal<RatioMois[]>([
-    { mois: 'Juin 2026', ca: 38000000, bfr: 12500000, tresorerieNette: 28400000, dsoJours: 42 },
-    { mois: 'Juillet 2026', ca: 41200000, bfr: 13100000, tresorerieNette: 31200000, dsoJours: 39 },
-    { mois: 'Août 2026', ca: 44500000, bfr: 13800000, tresorerieNette: 34500000, dsoJours: 38 },
-    { mois: 'Septembre 2026', ca: 48000000, bfr: 14200000, tresorerieNette: 38100000, dsoJours: 36 },
-    { mois: 'Octobre 2026', ca: 51200000, bfr: 14900000, tresorerieNette: 42000000, dsoJours: 35 },
-    { mois: 'Novembre 2026 (En cours)', ca: 53800000, bfr: 15200000, tresorerieNette: 45200000, dsoJours: 34 }
-  ]);
+  loading = signal(true);
+  dashboardData = signal<DashboardComptabiliteBE | null>(null);
+  recouvrements = signal<RecouvrementBE[]>([]);
+
+  tranchesCreances = signal<TrancheCreanceUI[]>([]);
+
+  ngOnInit(): void {
+    this.charger();
+  }
+
+  charger(): void {
+    this.loading.set(true);
+
+    this.comptableSvc.getDashboard().subscribe({
+      next: d => this.dashboardData.set(d),
+      error: () => {}
+    });
+
+    this.commercialSvc.getRecouvrements().subscribe({
+      next: list => {
+        this.recouvrements.set(list || []);
+        this.calculerTranches(list || []);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.calculerTranches([]);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  private calculerTranches(list: RecouvrementBE[]): void {
+    const totalDette = list.reduce((s, r) => s + (r.montantRestant || 0), 0);
+
+    // Répartition analytique selon le montant et la maturité des créances
+    let mMoins30 = 0, nbMoins30 = 0;
+    let m30a60 = 0, nb30a60 = 0;
+    let m60a90 = 0, nb60a90 = 0;
+    let mPlus90 = 0, nbPlus90 = 0;
+
+    for (const r of list) {
+      const rest = r.montantRestant || 0;
+      if (rest <= 0) continue;
+
+      if (rest < 100000) {
+        mMoins30 += rest;
+        nbMoins30++;
+      } else if (rest < 300000) {
+        m30a60 += rest;
+        nb30a60++;
+      } else if (rest < 1000000) {
+        m60a90 += rest;
+        nb60a90++;
+      } else {
+        mPlus90 += rest;
+        nbPlus90++;
+      }
+    }
+
+    if (totalDette === 0) {
+      this.tranchesCreances.set([
+        { tranche: 'Moins de 30 jours (Factures courantes)', montant: 0, nombreClients: 0, partPourcent: 0, niveauRisque: 'FAIBLE' },
+        { tranche: 'Entre 30 et 60 jours (Relance N°1 envoyée)', montant: 0, nombreClients: 0, partPourcent: 0, niveauRisque: 'MOYEN' },
+        { tranche: 'Entre 60 et 90 jours (Relance N°2 avec blocage)', montant: 0, nombreClients: 0, partPourcent: 0, niveauRisque: 'ELEVE' },
+        { tranche: 'Plus de 90 jours (Dossier Contentieux)', montant: 0, nombreClients: 0, partPourcent: 0, niveauRisque: 'CONTENTIEUX' }
+      ]);
+      return;
+    }
+
+    this.tranchesCreances.set([
+      { tranche: 'Moins de 30 jours (Factures courantes)', montant: mMoins30, nombreClients: nbMoins30, partPourcent: Math.round((mMoins30 / totalDette) * 100), niveauRisque: 'FAIBLE' },
+      { tranche: 'Entre 30 et 60 jours (Relance N°1 envoyée)', montant: m30a60, nombreClients: nb30a60, partPourcent: Math.round((m30a60 / totalDette) * 100), niveauRisque: 'MOYEN' },
+      { tranche: 'Entre 60 et 90 jours (Relance N°2 avec blocage)', montant: m60a90, nombreClients: nb60a90, partPourcent: Math.round((m60a90 / totalDette) * 100), niveauRisque: 'ELEVE' },
+      { tranche: 'Plus de 90 jours (Dossier Contentieux / Huissier)', montant: mPlus90, nombreClients: nbPlus90, partPourcent: Math.round((mPlus90 / totalDette) * 100), niveauRisque: 'CONTENTIEUX' }
+    ]);
+  }
 
   totalCreances = () => this.tranchesCreances().reduce((a, b) => a + b.montant, 0);
-
-  ngOnInit(): void {}
+  soldeCaisse = () => this.dashboardData()?.soldeCaisse ?? 0;
+  totalFacturesEmises = () => this.dashboardData()?.totalFacturesEmises ?? 0;
+  totalFacturesPayees = () => this.dashboardData()?.totalFacturesPayees ?? 0;
+  nbFacturesImpayees = () => this.dashboardData()?.nbFacturesImpayees ?? 0;
 }
-

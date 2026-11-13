@@ -95,7 +95,7 @@
           <td>{{ v.date | date:'dd/MM/yyyy · HH:mm' }}</td>
           <td class="fw-bold">{{ v.codeClient }}</td>
           <td><span class="badge bg-neutral badge-sm">{{ v.modeReglement || 'CASH' }}</span></td>
-          <td style="text-align: right;" class="mono">{{ v.lignes?.length || 0 }} réf</td>
+          <td style="text-align: right;" class="mono">{{ v.lignes.length }} réf</td>
           <td style="text-align: right;" class="mono fw-bold">{{ fCFA(v.montantTotal) }}</td>
           <td style="text-align: center;">
             <span class="badge bg-success badge-sm">{{ v.statut || 'VALIDÉE' }}</span>
