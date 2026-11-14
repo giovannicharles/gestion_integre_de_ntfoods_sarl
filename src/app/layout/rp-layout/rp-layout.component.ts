@@ -77,7 +77,7 @@ export class RpLayoutComponent implements OnInit {
       label: 'Analyses & Reporting', icon: 'fa-chart-line', children: [
         { label: 'Reporting Campagnes', icon: 'fa-bullhorn', route: '/rp/reporting' },
         { label: 'Statistiques & Évolutions', icon: 'fa-chart-pie', route: '/rp/statistiques' },
-        { label: 'Studio Rapports & Documents', icon: 'fa-wand-magic-sparkles', route: '/rp/studio-documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/rp/studio-documents' },
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/rp/classement' },
         { label: 'Objectifs Vente', icon: 'fa-bullseye', route: '/rp/objectifs' },
       ]

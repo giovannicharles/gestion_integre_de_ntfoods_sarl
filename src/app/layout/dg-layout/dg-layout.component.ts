@@ -86,7 +86,7 @@ export class DgLayoutComponent implements OnInit {
       label: 'Pilotage Stratégique', icon: 'fa-compass', children: [
         { label: 'Console Décisionnelle', icon: 'fa-terminal', route: '/dg/chat' },
         { label: 'Diagnostic Global 360°', icon: 'fa-magnifying-glass-chart', route: '/dg/ia-analyse' },
-        { label: 'Studio Rapports & Documents', icon: 'fa-wand-magic-sparkles', route: '/dg/studio-documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/dg/studio-documents' },
         { label: 'Visas & Directives Inter-Services', icon: 'fa-signature', route: '/dg/partage' },
       ]
     },

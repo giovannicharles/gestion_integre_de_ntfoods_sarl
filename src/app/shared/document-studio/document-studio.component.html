@@ -1,596 +1,253 @@
-<div class="dash-21-root studio-root animate-fadeIn">
-  <!-- EN-TÊTE DU STUDIO DE DOCUMENTS (NOTRE WORD TANTY) -->
-  <header class="dash-21-header no-print">
-    <div class="dash-21-header-left">
-      <div class="dash-21-title-group">
-        <h1 class="dash-21-title">TantyDoc Studio · Suite Bureautique Intégrée</h1>
-        <span class="dash-21-badge-live">
-          <span class="dash-21-pulse"></span>
-          COMPOSITION, ÉDITION & DIFFUSION OFFICIELLE
-        </span>
-      </div>
-      <p class="dash-21-subtitle">
-        Éditeur de documents institutionnels NTFOODS multi-modules avec assistance IA créative, prévisualisation WYSIWYG
-        A4, partage direct et impression
-      </p>
-    </div>
-
-    <div class="dash-21-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <!-- BASCULE EDITEUR / SPLIT / APERÇU -->
-      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
-        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="vueActive() === 'EDITEUR'"
-          [class.dash-21-btn-ghost]="vueActive() !== 'EDITEUR'" (click)="vueActive.set('EDITEUR')"
-          style="padding:6px 10px;font-size:12px">
-          <i class="fa-solid fa-sliders"></i> Conception
-        </button>
-        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="vueActive() === 'SPLIT'"
-          [class.dash-21-btn-ghost]="vueActive() !== 'SPLIT'" (click)="vueActive.set('SPLIT')"
-          style="padding:6px 10px;font-size:12px" title="Éditeur à gauche + Aperçu A4 en direct à droite">
-          <i class="fa-solid fa-table-columns"></i> Double Écran
-        </button>
-        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="vueActive() === 'PREVIEW'"
-          [class.dash-21-btn-ghost]="vueActive() !== 'PREVIEW'" (click)="vueActive.set('PREVIEW')"
-          style="padding:6px 10px;font-size:12px">
-          <i class="fa-solid fa-eye"></i> Aperçu A4
-        </button>
-      </div>
-
-      @if (vueActive() !== 'EDITEUR') {
-      <div
-        style="display:inline-flex;align-items:center;gap:4px;background:var(--n100);border:1px solid var(--n200);border-radius:6px;padding:2px 6px;font-size:11px;color:var(--n700)">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <button type="button" class="btn-toolbar-mini"
-          (click)="zoomPreview.set(zoomPreview() > 60 ? zoomPreview() - 10 : 60)" title="Réduire">-</button>
-        <span style="min-width:34px;text-align:center;font-weight:700">{{ zoomPreview() }}%</span>
-        <button type="button" class="btn-toolbar-mini"
-          (click)="zoomPreview.set(zoomPreview() < 120 ? zoomPreview() + 10 : 120)" title="Agrandir">+</button>
-      </div>
-      }
-
-      <!-- NOUVEAU DOCUMENT -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="nouveauDocument()"
-        title="Initialiser un nouveau document">
-        <i class="fa-solid fa-file-circle-plus"></i> Nouveau
-      </button>
-
-      <!-- BIBLIOTHÈQUE LOCALE -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="ouvrirBibliotheque()"
-        title="Ouvrir un document sauvegardé">
-        <i class="fa-solid fa-folder-open"></i> Bibliothèque ({{ bibliotheque().length }})
-      </button>
-
-      <!-- ASSISTANCE IA CRÉATIVE -->
-      <button type="button" class="dash-21-btn btn-ia-gradient" (click)="showModalIaPrompt.set(true)"
-        title="Générer un document complet avec l'IA">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Copilot IA
-      </button>
-
-      <!-- PARTAGE INTERNE DIRECT -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="ouvrirModalPartage()"
-        title="Transmettre à un autre service (DG, Contrôle, Commercial...)">
-        <i class="fa-solid fa-share-nodes"></i> Partager Interne
-      </button>
-
-      <!-- PARTAGE WHATSAPP DIRECT -->
-      <button type="button" class="dash-21-btn btn-wa-share" (click)="partagerSurWhatsApp()"
-        title="Partager la synthèse officielle sur WhatsApp">
-        <i class="fa-brands fa-whatsapp"></i> WhatsApp
-      </button>
-
-      <!-- EXPORT WORD & COPIE -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="exporterWordDoc()"
-        title="Télécharger au format Microsoft Word (.doc)">
-        <i class="fa-solid fa-file-word" style="color:#2563EB"></i> Word
-      </button>
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="copierTexteBrut()"
-        title="Copier le contenu texte dans le presse-papiers">
-        <i class="fa-regular fa-copy"></i> Copier
-      </button>
-
-      <!-- EXPORT / IMPORT FICHIER -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="exporterFichierTantyDoc()"
-        title="Télécharger le fichier .json">
-        <i class="fa-solid fa-download"></i> JSON
-      </button>
-      <input type="file" #fileInput (change)="importerFichierTantyDoc($event)" accept=".json,.tantydoc"
-        style="display:none" />
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fileInput.click()"
-        title="Importer un fichier sauvegardé">
-        <i class="fa-solid fa-upload"></i> Importer
-      </button>
-
-      <!-- SAUVEGARDER BROUILLON -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="sauvegarderBrouillon()"
-        title="Sauvegarder le brouillon">
-        <i class="fa-solid fa-floppy-disk"></i> Enregistrer
-      </button>
-
-      <!-- GED ARCHIVAGE -->
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="archiverDansGed()"
-        [disabled]="sauvegardeEnCours()" title="Archiver dans la GED sécurisée">
-        <i class="fa-solid fa-box-archive" [class.fa-spin]="sauvegardeEnCours()"></i> GED
-      </button>
-
-      <!-- IMPRIMER OU EXPORTER EN PDF -->
-      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="imprimerDocument()"
-        title="Imprimer ou enregistrer en PDF">
-        <i class="fa-solid fa-print"></i> Imprimer / PDF
-      </button>
-    </div>
-  </header>
-
-  <!-- CONTENU : MODE ÉDITEUR OU DOUBLE ÉCRAN -->
-  <div [class.studio-split-container]="vueActive() === 'SPLIT'">
-    @if (vueActive() === 'EDITEUR' || vueActive() === 'SPLIT') {
-    <div class="studio-grid animate-fadeIn no-print" [class.studio-grid-compact]="vueActive() === 'SPLIT'">
-      <!-- COLONNE GAUCHE : MÉTADONNÉES, DESIGN & INSERTION RAPIDE -->
-      <div class="studio-config-panel">
-        <!-- PALETTE D'INSERTION RAPIDE DE BLOCS -->
-        <div class="dash-21-card"
-          style="padding:14px;margin-bottom:14px;background:linear-gradient(180deg, #ffffff 0%, var(--n100) 100%)">
-          <h3 class="config-section-title"><i class="fa-solid fa-cube" style="color:var(--g)"></i> Insérer un Bloc de
-            Contenu</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('TEXTE')">
-              <i class="fa-solid fa-paragraph"></i> Paragraphe Texte
-            </button>
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('KPIS')">
-              <i class="fa-solid fa-chart-line"></i> Bloc de KPIs
-            </button>
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('TABLEAU_DONNEES')">
-              <i class="fa-solid fa-table"></i> Tableau Chiffré
-            </button>
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('CALLOUT')">
-              <i class="fa-solid fa-lightbulb"></i> Encart Spécial
-            </button>
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('RECOMMANDATIONS')">
-              <i class="fa-solid fa-list-check"></i> Plan d'Actions
-            </button>
-            <button type="button" class="btn-insert-block" (click)="ajouterNouvelleSection('SIGNATURES')">
-              <i class="fa-solid fa-signature"></i> Bloc Visas
-            </button>
-            <button type="button" class="btn-insert-block" style="grid-column:span 2"
-              (click)="ajouterNouvelleSection('ANNEXES')">
-              <i class="fa-solid fa-paperclip"></i> Annexes & Pièces Jointes
-            </button>
-          </div>
+<div class="studio-shell">
+  <!-- BARRE SUPÉRIEURE ÉPURÉE (STYLE WORD / DOCS) -->
+  <header class="studio-ribbon no-print">
+    <!-- LIGNE 1 : CONTEXTE, ACTIONS & EXPORTS -->
+    <div class="ribbon-row-top">
+      <div class="ribbon-brand">
+        <div class="ribbon-logo">
+          <i class="fa-solid fa-pen-nib"></i>
         </div>
-
-        <!-- MÉTADONNÉES DU DOCUMENT -->
-        <div class="dash-21-card" style="padding:16px;margin-bottom:14px">
-          <h3 class="config-section-title"><i class="fa-solid fa-file-lines" style="color:var(--g)"></i> Métadonnées
-            Officielles</h3>
-
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Département Émetteur</label>
-            <select class="form-control" [ngModel]="doc().moduleOrigine" (ngModelChange)="changerModule($event)">
+        <div>
+          <div class="ribbon-title-wrap">
+            <span class="ribbon-title">TantyDoc Studio</span>
+            <span class="ribbon-badge">{{ doc().moduleOrigine }}</span>
+          </div>
+          <div class="ribbon-selectors">
+            <select class="ribbon-select" [ngModel]="doc().moduleOrigine" (ngModelChange)="changerModule($event)" title="Service émetteur">
               @for (m of modulesDisponibles; track m.code) {
-              <option [value]="m.code">{{ m.label }}</option>
+                <option [value]="m.code">{{ m.label }}</option>
               }
             </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Modèle & Type de Document</label>
-            <select class="form-control" [ngModel]="doc().typeDocument" (ngModelChange)="changerTypeDocument($event)">
+            <select class="ribbon-select" [ngModel]="doc().typeDocument" (ngModelChange)="changerTypeDocument($event)" title="Modèle de document">
               @for (t of typesDocumentsActifs(); track t.code) {
-              <option [value]="t.code">{{ t.label }}</option>
+                <option [value]="t.code">{{ t.label }}</option>
               }
             </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Titre du Document</label>
-            <input type="text" class="form-control" [ngModel]="doc().titre" (ngModelChange)="doc().titre = $event" />
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-            <div class="form-group">
-              <label class="form-label">Référence Officielle</label>
-              <input type="text" class="form-control mono" [ngModel]="doc().reference"
-                (ngModelChange)="doc().reference = $event" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Date du Document</label>
-              <input type="date" class="form-control" [ngModel]="doc().dateDocument"
-                (ngModelChange)="doc().dateDocument = $event" />
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-            <div class="form-group">
-              <label class="form-label">Lieu d'Émission</label>
-              <input type="text" class="form-control" [ngModel]="doc().lieu" (ngModelChange)="doc().lieu = $event" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Statut</label>
-              <select class="form-control" [ngModel]="doc().statut" (ngModelChange)="doc().statut = $event">
-                <option value="BROUILLON">Brouillon Interne</option>
-                <option value="SOUMIS">Soumis pour Visa</option>
-                <option value="VALIDE">Validé Direction</option>
-                <option value="OFFICIEL">Document Officiel</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Destinataire Prévu</label>
-            <input type="text" class="form-control" [ngModel]="doc().destinataire"
-              (ngModelChange)="doc().destinataire = $event"
-              placeholder="Ex: Direction Générale, Carrefour Cameroun, DOVV..." />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Auteur / Rédacteur</label>
-            <input type="text" class="form-control" [ngModel]="doc().auteur" (ngModelChange)="doc().auteur = $event" />
-          </div>
-        </div>
-
-        <!-- STYLE & MISE EN PAGE DU PAPIER A4 -->
-        <div class="dash-21-card" style="padding:16px">
-          <h3 class="config-section-title"><i class="fa-solid fa-palette" style="color:var(--y)"></i> Style & Gabarit
-            Papier A4</h3>
-
-          <div class="form-group" style="margin-bottom:10px">
-            <label class="form-label">Charte Graphique / Thème</label>
-            <select class="form-control" [ngModel]="doc().themeDesign" (ngModelChange)="doc().themeDesign = $event">
-              <option value="FORET_OR">🌿 Vert Forêt & Or TANTY (Officiel)</option>
-              <option value="CORPORATE_SLATE">🏢 Corporate Slate & Ardoise</option>
-              <option value="PRESTIGE_BORDEAUX">🏛️ Prestige Direction & Or</option>
-              <option value="MINIMALISTE">📄 Minimaliste Noir & Blanc (Éco Impression)</option>
-            </select>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="form-group">
-              <label class="form-label">Format Page</label>
-              <select class="form-control" [ngModel]="doc().formatPage" (ngModelChange)="doc().formatPage = $event">
-                <option value="A4_PORTRAIT">A4 Portrait</option>
-                <option value="A4_PAYSAGE">A4 Paysage</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Filigrane</label>
-              <select class="form-control" [ngModel]="doc().filigrane" (ngModelChange)="doc().filigrane = $event">
-                <option value="ORIGINAL">ORIGINAL</option>
-                <option value="OFFICIEL">OFFICIEL</option>
-                <option value="CONFIDENTIEL">CONFIDENTIEL</option>
-                <option value="PROJET">PROJET / DRAFT</option>
-                <option value="VALIDE_DG">VALIDÉ DG</option>
-                <option value="DIFFUSION RESTREINTE">DIFFUSION RESTREINTE</option>
-                <option value="">Aucun filigrane</option>
-              </select>
-            </div>
-          </div>
-
-          <div
-            style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--n200);display:flex;flex-direction:column;gap:6px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--n700);cursor:pointer">
-              <input type="checkbox" [ngModel]="doc().enteteRepublique"
-                (ngModelChange)="doc().enteteRepublique = $event" />
-              <span>En-tête officiel République du Cameroun</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--n700);cursor:pointer">
-              <input type="checkbox" [ngModel]="doc().afficherCachetOfficiel"
-                (ngModelChange)="doc().afficherCachetOfficiel = $event" />
-              <span>Cachet rond officiel NT FOODS SARL</span>
-            </label>
           </div>
         </div>
       </div>
 
-      <!-- COLONNE DROITE : BLOCS DE CONTENU & ASSISTANCE IA -->
-      <div class="studio-sections-panel">
-        <div class="dash-21-card" style="padding:18px">
-          <div
-            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n200);flex-wrap:wrap;gap:10px">
-            <div>
-              <h2 style="font-size:16px;font-weight:800;color:var(--g-d);margin:0">Composition & Corps du Document</h2>
-              <p style="font-size:12px;color:var(--n500);margin:2px 0 0">{{ doc().sections.length }} section(s)
-                paramétrée(s)</p>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ajouterNouvelleSection('TEXTE')"
-                style="font-size:12px;padding:6px 12px">
-                <i class="fa-solid fa-plus"></i> Ajouter une section
-              </button>
-            </div>
-          </div>
+      <div class="ribbon-actions">
+        <!-- BASCULE ÉDITION DIRECTE / APERÇU FINAL -->
+        <div class="segmented-control">
+          <button type="button" class="seg-btn" [class.active]="modeEdition() === 'DIRECT'" (click)="modeEdition.set('DIRECT')" title="Cliquer directement sur la feuille pour rédiger">
+            <i class="fa-solid fa-pen-to-square"></i> Édition directe
+          </button>
+          <button type="button" class="seg-btn" [class.active]="modeEdition() === 'APERCU'" (click)="modeEdition.set('APERCU')" title="Voir la feuille propre sans repères d'édition">
+            <i class="fa-solid fa-eye"></i> Aperçu final
+          </button>
+        </div>
 
-          <div class="sections-accordion">
-            @for (sec of doc().sections; track sec.id; let idx = $index) {
-            <div class="section-card" [class.section-inactive]="!sec.actif">
-              <div class="section-header">
-                <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-                  <input type="checkbox" [checked]="sec.actif" (change)="toggleSection(sec)"
-                    title="Inclure cette section dans le document" />
-                  <input type="text" class="section-title-input" [ngModel]="sec.titre"
-                    (ngModelChange)="sec.titre = $event" />
-                  <span class="meta-tag">{{ sec.type }}</span>
-                </div>
+        <button type="button" class="r-btn r-btn-ghost" [class.r-btn-active]="showAide()" (click)="showAide.set(!showAide())" title="Afficher l'aide rapide">
+          <i class="fa-regular fa-circle-question"></i> Aide
+        </button>
 
-                <div style="display:flex;align-items:center;gap:6px">
-                  <!-- ORDONNANCEMENT & DUPLICATION DE SECTION -->
-                  <button type="button" class="btn-action-mini" (click)="monterSection(idx)" [disabled]="idx === 0"
-                    title="Monter">
-                    <i class="fa-solid fa-arrow-up"></i>
-                  </button>
-                  <button type="button" class="btn-action-mini" (click)="descendreSection(idx)"
-                    [disabled]="idx === doc().sections.length - 1" title="Descendre">
-                    <i class="fa-solid fa-arrow-down"></i>
-                  </button>
-                  <button type="button" class="btn-action-mini" (click)="dupliquerSection(idx)"
-                    title="Dupliquer cette section">
-                    <i class="fa-regular fa-clone"></i>
-                  </button>
+        <button type="button" class="r-btn r-btn-ghost" (click)="ouvrirBibliotheque()" title="Ouvrir un document enregistré">
+          <i class="fa-solid fa-folder-open"></i> Mes docs
+        </button>
 
-                  <!-- ASSISTANCE IA PAR SECTION -->
-                  @if (sec.type === 'RESUME' || sec.type === 'TEXTE' || sec.type === 'RECOMMANDATIONS' || sec.type ===
-                  'CALLOUT') {
-                  <div class="btn-group-ia">
-                    <button type="button" class="btn-ia-action" (click)="ameliorerAvecIa(sec, 'PROFESSIONNALISER')"
-                      [disabled]="iaEnCours()" title="Professionnaliser le ton">
-                      <i class="fa-solid fa-wand-magic-sparkles"></i> IA Ton Pro
-                    </button>
-                    <button type="button" class="btn-ia-subaction" (click)="ameliorerAvecIa(sec, 'RESUMER')"
-                      [disabled]="iaEnCours()" title="Résumer en 3 points">
-                      Résumer
-                    </button>
-                    <button type="button" class="btn-ia-subaction" (click)="ameliorerAvecIa(sec, 'PLAN_ACTION')"
-                      [disabled]="iaEnCours()" title="Transformer en plan d'actions">
-                      Plan d'actions
-                    </button>
-                  </div>
-                  }
-                  <button type="button" class="btn-action-mini" (click)="supprimerSection(idx)"
-                    title="Supprimer la section">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </div>
-              </div>
+        <button type="button" class="r-btn r-btn-ghost" (click)="sauvegarderBrouillon()" title="Enregistrer sur ce poste">
+          <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+        </button>
 
-              @if (sec.actif) {
-              <div class="section-body">
-                <!-- ENCART CALLOUT -->
-                @if (sec.type === 'CALLOUT') {
-                <div style="margin-bottom:8px;display:flex;gap:8px;align-items:center">
-                  <label style="font-size:11px;font-weight:700">Type d'encart :</label>
-                  <select class="form-control-sm" style="width:140px" [ngModel]="sec.calloutType"
-                    (ngModelChange)="sec.calloutType = $event">
-                    <option value="IMPORTANT">Important</option>
-                    <option value="INFO">Information</option>
-                    <option value="DECISION">Décision DG</option>
-                    <option value="RECOMMANDATION">Recommandation</option>
-                    <option value="ALERTE">Alerte Prioritaire</option>
-                  </select>
-                </div>
-                <textarea class="form-control" rows="3" [ngModel]="sec.contenuTexte"
-                  (ngModelChange)="sec.contenuTexte = $event" placeholder="Texte de l'encart spécial..."></textarea>
-                }
+        <button type="button" class="r-btn r-btn-ghost" (click)="ouvrirModalPartage()" title="Transmettre à un autre service">
+          <i class="fa-solid fa-share-nodes"></i> Partager
+        </button>
 
-                <!-- PARAGRAPHE DE TEXTE OU RÉSUMÉ OU RECOMMANDATIONS -->
-                @if (sec.type === 'RESUME' || sec.type === 'TEXTE' || sec.type === 'RECOMMANDATIONS') {
-                <div
-                  style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;padding:4px 8px;background:var(--n100);border-radius:6px;border:1px solid var(--n200)">
-                  <div style="display:flex;align-items:center;gap:4px">
-                    <button type="button" class="btn-toolbar-mini"
-                      [class.active]="(sec.alignement || 'left') === 'left'" (click)="sec.alignement = 'left'"
-                      title="Aligner à gauche">
-                      <i class="fa-solid fa-align-left"></i>
-                    </button>
-                    <button type="button" class="btn-toolbar-mini" [class.active]="sec.alignement === 'center'"
-                      (click)="sec.alignement = 'center'" title="Centrer">
-                      <i class="fa-solid fa-align-center"></i>
-                    </button>
-                    <button type="button" class="btn-toolbar-mini" [class.active]="sec.alignement === 'justify'"
-                      (click)="sec.alignement = 'justify'" title="Justifier">
-                      <i class="fa-solid fa-align-justify"></i>
-                    </button>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-                    <button type="button" class="btn-toolbar-mini" (click)="insererSnippet(sec, '• ')"
-                      title="Ajouter une puce">+ •</button>
-                    <button type="button" class="btn-toolbar-mini" (click)="insererSnippet(sec, '1. ')"
-                      title="Ajouter une numérotation">+ 1.</button>
-                    <button type="button" class="btn-toolbar-mini" (click)="insererSnippet(sec, '✓ ')"
-                      title="Ajouter une coche">+ ✓</button>
-                    <button type="button" class="btn-toolbar-mini" (click)="insererSnippet(sec, '→ Action : ')"
-                      title="Ajouter une action">+ →</button>
-                    <button type="button" class="btn-toolbar-mini"
-                      (click)="insererSnippet(sec, '[Date : ' + (doc().dateDocument || '') + '] ')"
-                      title="Insérer la date du document">+ Date</button>
-                  </div>
-                </div>
-                <textarea class="form-control" rows="4" [ngModel]="sec.contenuTexte"
-                  (ngModelChange)="sec.contenuTexte = $event"
-                  placeholder="Saisissez le texte officiel de cette section..."></textarea>
-                }
+        <button type="button" class="r-btn r-btn-ghost" (click)="exporterWordDoc()" title="Télécharger en Microsoft Word (.doc)">
+          <i class="fa-solid fa-file-word" style="color:#2563EB"></i> Word
+        </button>
 
-                <!-- BLOC DE KPIS -->
-                @if (sec.type === 'KPIS' && sec.kpis) {
-                <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-                  <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:3px 8px;font-size:11px"
-                    (click)="ajouterKpi(sec)">
-                    <i class="fa-solid fa-plus"></i> Ajouter KPI
-                  </button>
-                </div>
-                <div class="kpis-editor-grid">
-                  @for (kpi of sec.kpis; track $index; let kIdx = $index) {
-                  <div class="kpi-mini-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-                      <span style="font-size:10px;font-weight:700;color:var(--n500)">KPI #{{ kIdx + 1 }}</span>
-                      @if (sec.kpis.length > 1) {
-                      <button type="button" (click)="supprimerKpi(sec, kIdx)"
-                        style="border:none;background:transparent;color:var(--r);cursor:pointer;font-size:10px"
-                        title="Supprimer ce KPI">&times;</button>
-                      }
-                    </div>
-                    <input type="text" class="form-control-sm fw-bold" [ngModel]="kpi.label"
-                      (ngModelChange)="kpi.label = $event" placeholder="Intitulé" />
-                    <input type="text" class="form-control-sm mono text-green" style="margin-top:4px"
-                      [ngModel]="kpi.valeur" (ngModelChange)="kpi.valeur = $event" placeholder="Valeur" />
-                    <input type="text" class="form-control-sm text-muted" style="margin-top:4px"
-                      [ngModel]="kpi.sousTitre" (ngModelChange)="kpi.sousTitre = $event"
-                      placeholder="Sous-titre / Tendance" />
-                  </div>
-                  }
-                </div>
-                }
+        <button type="button" class="r-btn r-btn-wa" (click)="partagerSurWhatsApp()" title="Partager le résumé sur WhatsApp">
+          <i class="fa-brands fa-whatsapp"></i>
+        </button>
 
-                <!-- TABLEAU DE DONNÉES CHIFFRÉ -->
-                @if (sec.type === 'TABLEAU_DONNEES' && sec.colonnesTableau && sec.lignesTableau) {
-                <div
-                  style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-                  <label
-                    style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--n700);cursor:pointer">
-                    <input type="checkbox" [ngModel]="sec.afficherTotalTableau"
-                      (ngModelChange)="sec.afficherTotalTableau = $event" />
-                    <span>Ligne TOTAL GÉNÉRAL automatique</span>
-                  </label>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 10px;font-size:11px"
-                      (click)="ajouterColonneTableau(sec)">
-                      <i class="fa-solid fa-table-columns"></i> + Colonne
-                    </button>
-                    <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 10px;font-size:11px"
-                      (click)="supprimerDerniereColonneTableau(sec)" [disabled]="sec.colonnesTableau.length <= 1">
-                      <i class="fa-solid fa-minus"></i> - Colonne
-                    </button>
-                    <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:4px 10px;font-size:11px"
-                      (click)="ajouterLigneTableau(sec)">
-                      <i class="fa-solid fa-plus"></i> + Ligne
-                    </button>
-                  </div>
-                </div>
+        <button type="button" class="r-btn r-btn-ghost" (click)="archiverDansGed()" [disabled]="sauvegardeEnCours()" title="Archiver dans la GED">
+          <i class="fa-solid fa-box-archive" [class.fa-spin]="sauvegardeEnCours()"></i> GED
+        </button>
 
-                <div class="table-container" style="max-height:280px;border:1px solid var(--n200);border-radius:6px">
-                  <table class="data-table">
-                    <thead>
-                      <tr>
-                        @for (col of sec.colonnesTableau; track $index; let cIdx = $index) {
-                        <th>
-                          <input type="text"
-                            style="width:100%;font-weight:700;border:none;background:transparent;font-size:11.5px;color:var(--n700)"
-                            [ngModel]="sec.colonnesTableau[cIdx]"
-                            (ngModelChange)="sec.colonnesTableau[cIdx] = $event" />
-                        </th>
-                        }
-                        <th style="width:30px"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (lig of sec.lignesTableau; track $index; let rIdx = $index) {
-                      <tr>
-                        @for (cell of lig; track $index; let cIdx = $index) {
-                        <td>
-                          <input type="text"
-                            style="width:100%;border:none;background:transparent;font-size:12px;padding:3px"
-                            [ngModel]="lig[cIdx]" (ngModelChange)="lig[cIdx] = $event" />
-                        </td>
-                        }
-                        <td style="text-align:center">
-                          @if (sec.lignesTableau.length > 1) {
-                          <button type="button" (click)="supprimerLigneTableau(sec, rIdx)"
-                            style="border:none;background:transparent;color:var(--r);cursor:pointer;font-size:11px"
-                            title="Supprimer la ligne">&times;</button>
-                          }
-                        </td>
-                      </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-                }
+        <button type="button" class="r-btn r-btn-primary" (click)="imprimerDocument()" title="Imprimer ou enregistrer en PDF">
+          <i class="fa-solid fa-print"></i> Imprimer / PDF
+        </button>
+      </div>
+    </div>
 
-                <!-- SIGNATURES & VISAS -->
-                @if (sec.type === 'SIGNATURES' && sec.signatures) {
-                <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-                  <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:3px 8px;font-size:11px"
-                    (click)="ajouterSignataire(sec)">
-                    <i class="fa-solid fa-plus"></i> Ajouter Signataire
-                  </button>
-                </div>
-                <div
-                  style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-top:8px">
-                  @for (sig of sec.signatures; track $index; let sIdx = $index) {
-                  <div
-                    style="border:1px dashed var(--n300);padding:10px;border-radius:6px;background:var(--n100);position:relative">
-                    @if (sec.signatures.length > 1) {
-                    <button type="button" (click)="supprimerSignataire(sec, sIdx)"
-                      style="position:absolute;top:6px;right:8px;border:none;background:transparent;color:var(--r);cursor:pointer;font-size:12px"
-                      title="Supprimer ce signataire">&times;</button>
-                    }
-                    <input type="text" class="form-control-sm fw-bold" style="width:85%" [ngModel]="sig.role"
-                      (ngModelChange)="sig.role = $event" placeholder="Rôle / Titre" />
-                    <input type="text" class="form-control-sm" style="margin-top:6px" [ngModel]="sig.nom"
-                      (ngModelChange)="sig.nom = $event" placeholder="Nom complet" />
-                    <select class="form-control-sm" style="margin-top:6px" [ngModel]="sig.statut"
-                      (ngModelChange)="sig.statut = $event">
-                      <option value="Signé et visé">Signé et visé</option>
-                      <option value="Approuvé pour exécution">Approuvé pour exécution</option>
-                      <option value="Vérifié">Vérifié & Conforme</option>
-                      <option value="En attente de visa">En attente de visa</option>
-                    </select>
-                  </div>
-                  }
-                </div>
-                }
+    <!-- LIGNE 2 : TYPOGRAPHIE, COULEUR, INSERTION DE BLOCS & OPTIONS -->
+    <div class="ribbon-row-format">
+      <!-- TYPOGRAPHIE & COULEUR -->
+      <div class="format-group">
+        <span class="format-lbl" title="Police du document"><i class="fa-solid fa-font"></i></span>
+        <select class="format-select" [ngModel]="doc().police" (ngModelChange)="setPolice($event)" title="Choisir la police">
+          @for (f of policesDisponibles; track f.value) {
+            <option [value]="f.value">{{ f.label }}</option>
+          }
+        </select>
 
-                <!-- ANNEXES & PIÈCES JOINTES -->
-                @if (sec.type === 'ANNEXES' && sec.annexes) {
-                <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-                  <button type="button" class="dash-21-btn dash-21-btn-ghost" style="padding:3px 8px;font-size:11px"
-                    (click)="ajouterAnnexe(sec)">
-                    <i class="fa-solid fa-plus"></i> Ajouter Pièce Jointe
-                  </button>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  @for (ann of sec.annexes; track $index; let aIdx = $index) {
-                  <div
-                    style="display:grid;grid-template-columns:1.2fr 2fr 1.8fr auto;gap:8px;align-items:center;background:var(--n100);padding:8px;border-radius:6px;border:1px solid var(--n200)">
-                    <input type="text" class="form-control-sm" [ngModel]="ann.code"
-                      (ngModelChange)="ann.code = $event" placeholder="Réf. (ex: PJ-01)" />
-                    <input type="text" class="form-control-sm fw-bold" [ngModel]="ann.titre"
-                      (ngModelChange)="ann.titre = $event" placeholder="Nom de la pièce jointe" />
-                    <input type="text" class="form-control-sm" [ngModel]="ann.description" (ngModelChange)="ann.description = $event"
-                      placeholder="Observation / Format" />
-                    @if (sec.annexes.length > 1) {
-                    <button type="button" (click)="supprimerAnnexe(sec, aIdx)"
-                      style="border:none;background:transparent;color:var(--r);cursor:pointer;font-size:13px"
-                      title="Supprimer">&times;</button>
-                    }
-                  </div>
-                  }
-                </div>
-                }
-              </div>
-              }
-            </div>
-            }
-          </div>
+        <select class="format-select format-select-sm" [ngModel]="doc().taillePolice" (ngModelChange)="setTaillePolice($event)" title="Taille du texte">
+          @for (s of taillesDisponibles; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+
+        <select class="format-select format-select-sm" [ngModel]="doc().interligne" (ngModelChange)="setInterligne($event)" title="Interligne">
+          @for (lh of interlignesDisponibles; track lh.value) {
+            <option [value]="lh.value">{{ lh.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="ribbon-divider"></div>
+
+      <!-- PALETTE DE COULEURS -->
+      <div class="format-group">
+        <span class="format-lbl" title="Couleur principale"><i class="fa-solid fa-palette"></i></span>
+        <div class="color-swatches">
+          @for (c of couleursDisponibles; track c.hex) {
+            <button type="button"
+                    class="color-dot"
+                    [style.background]="c.hex"
+                    [class.selected]="doc().couleurPrincipale === c.hex"
+                    (click)="setCouleurPrincipale(c.hex)"
+                    [title]="c.label"></button>
+          }
+          <input type="color"
+                 class="color-picker-native"
+                 [ngModel]="doc().couleurPrincipale || '#14532D'"
+                 (ngModelChange)="setCouleurPrincipale($event)"
+                 title="Couleur personnalisée" />
+        </div>
+      </div>
+
+      <div class="ribbon-divider"></div>
+
+      <!-- INSERTION RAPIDE DE BLOCS -->
+      <div class="format-group">
+        <span class="format-lbl">Insérer :</span>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('TEXTE')" title="Ajouter un paragraphe de texte">
+          <i class="fa-solid fa-paragraph"></i> Texte
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('KPIS')" title="Ajouter des indicateurs chiffrés">
+          <i class="fa-solid fa-chart-simple"></i> KPIs
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('TABLEAU_DONNEES')" title="Ajouter un tableau">
+          <i class="fa-solid fa-table"></i> Tableau
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('CALLOUT')" title="Ajouter un encart important">
+          <i class="fa-solid fa-circle-exclamation"></i> Encart
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('RECOMMANDATIONS')" title="Ajouter un plan d'actions">
+          <i class="fa-solid fa-list-check"></i> Plan
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('SIGNATURES')" title="Ajouter un bloc signatures">
+          <i class="fa-solid fa-signature"></i> Visas
+        </button>
+        <button type="button" class="insert-chip" (click)="ajouterNouvelleSection('ANNEXES')" title="Ajouter des pièces jointes">
+          <i class="fa-solid fa-paperclip"></i> Annexes
+        </button>
+      </div>
+
+      <div class="ribbon-divider"></div>
+
+      <!-- OPTIONS PAGE & ZOOM -->
+      <div class="format-group" style="margin-left:auto">
+        <button type="button" class="r-btn r-btn-ghost" [class.r-btn-active]="showOptionsPage()" (click)="showOptionsPage.set(!showOptionsPage())" style="padding:4px 9px;font-size:11.5px">
+          <i class="fa-solid fa-sliders"></i> Page & Options
+        </button>
+        <div class="zoom-pill">
+          <button type="button" (click)="zoomPreview.set(zoomPreview() > 70 ? zoomPreview() - 10 : 70)" title="Réduire">-</button>
+          <span>{{ zoomPreview() }}%</span>
+          <button type="button" (click)="zoomPreview.set(zoomPreview() < 120 ? zoomPreview() + 10 : 120)" title="Agrandir">+</button>
         </div>
       </div>
     </div>
+
+    <!-- PANNEAU D'OPTIONS DE PAGE (REPLIABLE) -->
+    @if (showOptionsPage()) {
+      <div class="options-drawer animate-fadeIn">
+        <div class="opt-item">
+          <label>Format</label>
+          <select class="format-select" [ngModel]="doc().formatPage" (ngModelChange)="doc().formatPage = $event">
+            <option value="A4_PORTRAIT">A4 Portrait</option>
+            <option value="A4_PAYSAGE">A4 Paysage</option>
+          </select>
+        </div>
+        <div class="opt-item">
+          <label>Filigrane</label>
+          <select class="format-select" [ngModel]="doc().filigrane" (ngModelChange)="doc().filigrane = $event">
+            <option value="ORIGINAL">ORIGINAL</option>
+            <option value="OFFICIEL">OFFICIEL</option>
+            <option value="CONFIDENTIEL">CONFIDENTIEL</option>
+            <option value="PROJET">PROJET</option>
+            <option value="VALIDE_DG">VALIDÉ DG</option>
+            <option value="">Aucun</option>
+          </select>
+        </div>
+        <div class="opt-item">
+          <label>Statut</label>
+          <select class="format-select" [ngModel]="doc().statut" (ngModelChange)="doc().statut = $event">
+            <option value="BROUILLON">Brouillon</option>
+            <option value="EN_VALIDATION">En validation</option>
+            <option value="VALIDE">Validé</option>
+            <option value="ARCHIVE">Archivé</option>
+          </select>
+        </div>
+        <label class="opt-check">
+          <input type="checkbox" [ngModel]="doc().enteteRepublique" (ngModelChange)="doc().enteteRepublique = $event" />
+          <span>En-tête République du Cameroun</span>
+        </label>
+        <label class="opt-check">
+          <input type="checkbox" [ngModel]="doc().afficherCachetOfficiel" (ngModelChange)="doc().afficherCachetOfficiel = $event" />
+          <span>Cachet NT FOODS</span>
+        </label>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button type="button" class="insert-chip" (click)="copierTexteBrut()" title="Copier tout le texte">
+            <i class="fa-regular fa-copy"></i> Copier texte
+          </button>
+          <button type="button" class="insert-chip" (click)="exporterFichierTantyDoc()" title="Exporter le fichier JSON">
+            <i class="fa-solid fa-download"></i> JSON
+          </button>
+          <label class="insert-chip" style="cursor:pointer" title="Importer un fichier .json">
+            <i class="fa-solid fa-upload"></i> Importer
+            <input type="file" accept=".json" style="display:none" (change)="importerFichierTantyDoc($event)" />
+          </label>
+          <button type="button" class="insert-chip" (click)="nouveauDocument()" title="Réinitialiser le modèle">
+            <i class="fa-solid fa-file-circle-plus"></i> Nouveau
+          </button>
+        </div>
+      </div>
     }
 
-    <!-- CONTENU : MODE APERÇU A4 RÉEL (WYSIWYG ET ZONE D'IMPRESSION OFFICIELLE) -->
-    <div class="a4-preview-wrapper" [class.hidden-screen]="vueActive() === 'EDITEUR'"
-      [class.a4-preview-split]="vueActive() === 'SPLIT'">
-      <div class="a4-sheet"
-        [style.transform]="vueActive() !== 'EDITEUR' && zoomPreview() !== 100 ? 'scale(' + (zoomPreview() / 100) + ')' : null"
-        [style.transform-origin]="vueActive() !== 'EDITEUR' && zoomPreview() !== 100 ? 'top center' : null"
-        [class.theme-foret]="doc().themeDesign === 'FORET_OR'"
-        [class.theme-slate]="doc().themeDesign === 'CORPORATE_SLATE'"
-        [class.theme-prestige]="doc().themeDesign === 'PRESTIGE_BORDEAUX'"
-        [class.theme-minimal]="doc().themeDesign === 'MINIMALISTE'"
-        [class.format-paysage]="doc().formatPage === 'A4_PAYSAGE'">
-        <!-- FILIGRANE DISCRET -->
-        @if (doc().filigrane) {
-        <div class="a4-watermark">{{ doc().filigrane }}</div>
-        }
+    <!-- GUIDE D'AIDE RAPIDE (REPLIABLE) -->
+    @if (showAide()) {
+      <div class="help-banner animate-fadeIn">
+        <div class="help-steps">
+          <span><strong>1. Saisie directe :</strong> Cliquez sur n'importe quel titre, paragraphe, chiffre ou cellule de la feuille ci-dessous pour écrire directement dedans.</span>
+          <span><strong>2. Mise en forme :</strong> Utilisez la barre ci-dessus pour changer la police, la taille, l'interligne et la couleur du document.</span>
+          <span><strong>3. Blocs & Export :</strong> Survolez une section pour la déplacer, la dupliquer ou l'aligner. Exportez ensuite en <em>Word</em> ou en <em>PDF</em>.</span>
+        </div>
+        <button type="button" class="help-close" (click)="showAide.set(false)">&times;</button>
+      </div>
+    }
+  </header>
 
-        <!-- BANNIÈRE RÉPUBLIQUE DU CAMEROUN (OPTIONNELLE) -->
-        @if (doc().enteteRepublique) {
+  <!-- ZONE DE TRAVAIL CENTRALE : FEUILLE A4 INTERACTIVE -->
+  <div class="a4-workspace" [class.preview-only]="modeEdition() === 'APERCU'">
+    <div class="a4-sheet"
+         [class.format-paysage]="doc().formatPage === 'A4_PAYSAGE'"
+         [style.--doc-accent]="doc().couleurPrincipale || '#14532D'"
+         [style.font-family]="doc().police"
+         [style.font-size]="doc().taillePolice || '12px'"
+         [style.line-height]="doc().interligne || '1.55'"
+         [style.transform]="zoomPreview() !== 100 ? 'scale(' + (zoomPreview() / 100) + ')' : null"
+         [style.transform-origin]="zoomPreview() !== 100 ? 'top center' : null">
+
+      <!-- FILIGRANE -->
+      @if (doc().filigrane) {
+        <div class="a4-watermark">{{ doc().filigrane }}</div>
+      }
+
+      <!-- BANNIÈRE RÉPUBLIQUE DU CAMEROUN (OPTIONNELLE) -->
+      @if (doc().enteteRepublique) {
         <div class="a4-republique-banner">
           <div>
             <strong>RÉPUBLIQUE DU CAMEROUN</strong>
@@ -601,173 +258,321 @@
             <span>Peace · Work · Fatherland</span>
           </div>
         </div>
-        }
+      }
 
-        <!-- EN-TÊTE OFFICIEL NTFOODS TANTY -->
-        <div class="a4-header">
-          <div class="a4-brand-block">
-            <div class="a4-logo-pill">
-              <span class="logo-leaf">🌿</span>
-              <span class="logo-txt">TANTY</span>
-            </div>
-            <div class="a4-company-details">
-              <strong>NT FOODS S.A.R.L</strong>
-              <span>Agroalimentaire & Nutrition Naturelle · Cameroun</span>
-              <span>B.P. 5244 Douala · RCCM RC/DLA/2012/B/154 · N.I.U: M011200043818H</span>
-              <span>Tél: (+237) 233 42 15 80 · contact&#64;ntfoodssarl.com</span>
-            </div>
+      <!-- EN-TÊTE OFFICIEL NTFOODS TANTY -->
+      <div class="a4-header">
+        <div class="a4-brand-block">
+          <div class="a4-logo-pill">
+            <span class="logo-leaf">🌿</span>
+            <span class="logo-txt">TANTY</span>
           </div>
-
-          <div class="a4-doc-metadata">
-            <div class="a4-ref-pill">{{ doc().reference }}</div>
-            <div style="font-size:11px;color:var(--n600);margin-top:4px">
-              Fait à {{ doc().lieu }}, le {{ doc().dateDocument | date:'dd MMMM yyyy':'':'fr' }}
-            </div>
-            <div style="font-size:11px;color:var(--g);font-weight:700">
-              Département Émetteur : {{ doc().moduleOrigine }}
-            </div>
-            <div style="font-size:10.5px;color:var(--n500)">
-              Destinataire : <strong>{{ doc().destinataire }}</strong>
-            </div>
+          <div class="a4-company-details">
+            <strong>NT FOODS S.A.R.L</strong>
+            <span>Agroalimentaire & Nutrition Naturelle · Cameroun</span>
+            <span>B.P. 5244 Douala · RCCM RC/DLA/2012/B/154 · N.I.U: M011200043818H</span>
+            <span>Tél: (+237) 233 42 15 80 · contact&#64;ntfoodssarl.com</span>
           </div>
         </div>
 
-        <!-- TITRE DU DOCUMENT -->
-        <div class="a4-title-band">
+        <div class="a4-doc-metadata">
+          @if (modeEdition() === 'DIRECT') {
+            <input type="text" class="a4-inline-ref" [ngModel]="doc().reference" (ngModelChange)="doc().reference = $event" title="Modifier la référence" />
+            <div class="meta-line">
+              Fait à <input type="text" class="a4-inline-meta" [ngModel]="doc().lieu" (ngModelChange)="doc().lieu = $event" style="width:110px" />,
+              le <input type="date" class="a4-inline-meta" [ngModel]="doc().dateDocument" (ngModelChange)="doc().dateDocument = $event" style="width:115px" />
+            </div>
+            <div class="meta-line" [style.color]="doc().couleurPrincipale || '#14532D'" style="font-weight:700">
+              Service : {{ doc().moduleOrigine }}
+            </div>
+            <div class="meta-line">
+              Destinataire : <input type="text" class="a4-inline-meta" [ngModel]="doc().destinataire" (ngModelChange)="doc().destinataire = $event" style="width:150px;font-weight:700" />
+            </div>
+          } @else {
+            <div class="a4-ref-pill">{{ doc().reference }}</div>
+            <div class="meta-line">Fait à {{ doc().lieu }}, le {{ doc().dateDocument | date:'dd MMMM yyyy':'':'fr' }}</div>
+            <div class="meta-line" [style.color]="doc().couleurPrincipale || '#14532D'" style="font-weight:700">Service : {{ doc().moduleOrigine }}</div>
+            <div class="meta-line">Destinataire : <strong>{{ doc().destinataire }}</strong></div>
+          }
+        </div>
+      </div>
+
+      <!-- TITRE DU DOCUMENT (ÉDITABLE DIRECTEMENT) -->
+      <div class="a4-title-band">
+        @if (modeEdition() === 'DIRECT') {
+          <input type="text" class="a4-inline-doc-title" [ngModel]="doc().titre" (ngModelChange)="doc().titre = $event" placeholder="Titre du document..." />
+          <div class="a4-doc-subbar">
+            <span>Émis par : <input type="text" class="a4-inline-meta" [ngModel]="doc().auteur" (ngModelChange)="doc().auteur = $event" style="width:200px" /></span>
+            <span>Statut : <strong style="text-transform:uppercase">{{ doc().statut }}</strong></span>
+          </div>
+        } @else {
           <h1 class="a4-doc-title">{{ doc().titre }}</h1>
           <div class="a4-doc-subbar">
             <span>Émis par : {{ doc().auteur }}</span>
             <span>Statut : <strong style="text-transform:uppercase">{{ doc().statut }}</strong></span>
           </div>
-        </div>
+        }
+      </div>
 
-        <!-- CORPS DU DOCUMENT (SECTIONS DYNAMIQUES) -->
-        @for (sec of doc().sections; track sec.id) {
+      <!-- CORPS DU DOCUMENT : SECTIONS ÉDITABLES DIRECTEMENT SUR LA FEUILLE -->
+      @for (sec of doc().sections; track sec.id; let idx = $index) {
         @if (sec.actif) {
-        <div class="a4-section">
-          <h2 class="a4-section-title">{{ sec.titre }}</h2>
+          <div class="a4-section" [class.a4-section-editable]="modeEdition() === 'DIRECT'">
 
-          <!-- RÉSUMÉ EXÉCUTIF -->
-          @if (sec.type === 'RESUME') {
-          <div class="a4-resume-box">
-            <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte
-              }}</p>
-          </div>
-          }
-
-          <!-- TEXTE STANDARD -->
-          @if (sec.type === 'TEXTE') {
-          <div class="a4-text-block">
-            <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte
-              }}</p>
-          </div>
-          }
-
-          <!-- ENCADRÉ CALLOUT -->
-          @if (sec.type === 'CALLOUT') {
-          <div class="a4-callout" [class.callout-important]="sec.calloutType === 'IMPORTANT'"
-            [class.callout-decision]="sec.calloutType === 'DECISION'"
-            [class.callout-alerte]="sec.calloutType === 'ALERTE'">
-            <div class="callout-header">
-              <i class="fa-solid fa-circle-exclamation"></i>
-              <span>{{ sec.calloutType || 'IMPORTANT' }}</span>
-            </div>
-            <p style="white-space:pre-line;margin:0">{{ sec.contenuTexte }}</p>
-          </div>
-          }
-
-          <!-- GRILLE DE KPIS -->
-          @if (sec.type === 'KPIS' && sec.kpis) {
-          <div class="a4-kpis-grid">
-            @for (kpi of sec.kpis; track kpi.label) {
-            <div class="a4-kpi-card">
-              <span class="a4-kpi-lbl">{{ kpi.label }}</span>
-              <span class="a4-kpi-val">{{ kpi.valeur }}</span>
-              @if (kpi.sousTitre) {
-              <span class="a4-kpi-sub">{{ kpi.sousTitre }}</span>
-              }
-            </div>
-            }
-          </div>
-          }
-
-          <!-- TABLEAU DE DONNÉES -->
-          @if (sec.type === 'TABLEAU_DONNEES' && sec.colonnesTableau && sec.lignesTableau) {
-          <div class="a4-table-wrap">
-            <table class="a4-table">
-              <thead>
-                <tr>
-                  @for (col of sec.colonnesTableau; track col) {
-                  <th>{{ col }}</th>
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of sec.lignesTableau; track row[0]) {
-                <tr>
-                  @for (cell of row; track $index) {
-                  <td>{{ cell }}</td>
-                  }
-                </tr>
+            <!-- BARRE D'ACTIONS FLOTTANTE SUR SURVOL (MODE ÉDITION DIRECTE UNIQUEMENT) -->
+            @if (modeEdition() === 'DIRECT') {
+              <div class="section-float-bar no-print">
+                @if (sec.type === 'RESUME' || sec.type === 'TEXTE' || sec.type === 'RECOMMANDATIONS') {
+                  <button type="button" [class.active]="(sec.alignement || 'left') === 'left'" (click)="sec.alignement = 'left'" title="Aligner à gauche"><i class="fa-solid fa-align-left"></i></button>
+                  <button type="button" [class.active]="sec.alignement === 'center'" (click)="sec.alignement = 'center'" title="Centrer"><i class="fa-solid fa-align-center"></i></button>
+                  <button type="button" [class.active]="sec.alignement === 'justify'" (click)="sec.alignement = 'justify'" title="Justifier"><i class="fa-solid fa-align-justify"></i></button>
+                  <span class="float-sep"></span>
+                  <button type="button" (click)="insererSnippet(sec, '• ')" title="Ajouter une puce">•</button>
+                  <button type="button" (click)="insererSnippet(sec, '1. ')" title="Ajouter un point numéroté">1.</button>
+                  <span class="float-sep"></span>
                 }
-              </tbody>
-              @if (sec.afficherTotalTableau) {
-              <tfoot>
-                <tr class="a4-table-total-row">
-                  @for (tot of calculerTotauxTableau(sec); track $index) {
-                  <td><strong>{{ tot }}</strong></td>
+                <button type="button" (click)="monterSection(idx)" [disabled]="idx === 0" title="Monter"><i class="fa-solid fa-arrow-up"></i></button>
+                <button type="button" (click)="descendreSection(idx)" [disabled]="idx === doc().sections.length - 1" title="Descendre"><i class="fa-solid fa-arrow-down"></i></button>
+                <button type="button" (click)="dupliquerSection(idx)" title="Dupliquer"><i class="fa-regular fa-clone"></i></button>
+                <button type="button" class="danger" (click)="supprimerSection(idx)" title="Supprimer cette section"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            }
+
+            <!-- TITRE DE SECTION -->
+            @if (modeEdition() === 'DIRECT') {
+              <input type="text" class="a4-inline-section-title" [ngModel]="sec.titre" (ngModelChange)="sec.titre = $event" placeholder="Titre de la section..." />
+            } @else {
+              <h2 class="a4-section-title">{{ sec.titre }}</h2>
+            }
+
+            <!-- RÉSUMÉ EXÉCUTIF -->
+            @if (sec.type === 'RESUME') {
+              <div class="a4-resume-box">
+                @if (modeEdition() === 'DIRECT') {
+                  <textarea class="a4-inline-textarea" rows="3" [style.text-align]="sec.alignement || 'left'" [ngModel]="sec.contenuTexte" (ngModelChange)="sec.contenuTexte = $event" placeholder="Rédigez le résumé exécutif ici..."></textarea>
+                } @else {
+                  <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte }}</p>
+                }
+              </div>
+            }
+
+            <!-- TEXTE STANDARD -->
+            @if (sec.type === 'TEXTE') {
+              <div class="a4-text-block">
+                @if (modeEdition() === 'DIRECT') {
+                  <textarea class="a4-inline-textarea" rows="4" [style.text-align]="sec.alignement || 'left'" [ngModel]="sec.contenuTexte" (ngModelChange)="sec.contenuTexte = $event" placeholder="Cliquez pour saisir votre paragraphe..."></textarea>
+                } @else {
+                  <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte }}</p>
+                }
+              </div>
+            }
+
+            <!-- ENCADRÉ CALLOUT -->
+            @if (sec.type === 'CALLOUT') {
+              <div class="a4-callout" [class.callout-important]="sec.calloutType === 'IMPORTANT'" [class.callout-decision]="sec.calloutType === 'DECISION'" [class.callout-alerte]="sec.calloutType === 'ALERTE'">
+                <div class="callout-header">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                  @if (modeEdition() === 'DIRECT') {
+                    <select class="a4-inline-select" [ngModel]="sec.calloutType || 'IMPORTANT'" (ngModelChange)="sec.calloutType = $event">
+                      <option value="IMPORTANT">IMPORTANT</option>
+                      <option value="INFO">INFORMATION</option>
+                      <option value="DECISION">DÉCISION</option>
+                      <option value="RECOMMANDATION">RECOMMANDATION</option>
+                      <option value="ALERTE">ALERTE</option>
+                    </select>
+                  } @else {
+                    <span>{{ sec.calloutType || 'IMPORTANT' }}</span>
                   }
-                </tr>
-              </tfoot>
+                </div>
+                @if (modeEdition() === 'DIRECT') {
+                  <textarea class="a4-inline-textarea" rows="2" [ngModel]="sec.contenuTexte" (ngModelChange)="sec.contenuTexte = $event" placeholder="Saisissez le message de l'encart..."></textarea>
+                } @else {
+                  <p style="white-space:pre-line;margin:0">{{ sec.contenuTexte }}</p>
+                }
+              </div>
+            }
+
+            <!-- GRILLE DE KPIS -->
+            @if (sec.type === 'KPIS' && sec.kpis) {
+              <div class="a4-kpis-grid">
+                @for (kpi of sec.kpis; track $index; let kIdx = $index) {
+                  <div class="a4-kpi-card">
+                    @if (modeEdition() === 'DIRECT') {
+                      @if (sec.kpis.length > 1) {
+                        <button type="button" class="inline-remove-chip no-print" (click)="supprimerKpi(sec, kIdx)" title="Supprimer">&times;</button>
+                      }
+                      <input type="text" class="a4-inline-kpi-lbl" [ngModel]="kpi.label" (ngModelChange)="kpi.label = $event" placeholder="Intitulé" />
+                      <input type="text" class="a4-inline-kpi-val" [ngModel]="kpi.valeur" (ngModelChange)="kpi.valeur = $event" placeholder="Valeur" />
+                      <input type="text" class="a4-inline-kpi-sub" [ngModel]="kpi.sousTitre" (ngModelChange)="kpi.sousTitre = $event" placeholder="Précision" />
+                    } @else {
+                      <span class="a4-kpi-lbl">{{ kpi.label }}</span>
+                      <span class="a4-kpi-val">{{ kpi.valeur }}</span>
+                      @if (kpi.sousTitre) {
+                        <span class="a4-kpi-sub">{{ kpi.sousTitre }}</span>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+              @if (modeEdition() === 'DIRECT') {
+                <div class="inline-add-bar no-print">
+                  <button type="button" class="inline-add-btn" (click)="ajouterKpi(sec)">+ Ajouter un indicateur</button>
+                </div>
               }
-            </table>
-          </div>
-          }
+            }
 
-          <!-- RECOMMANDATIONS & PLAN D'ACTIONS -->
-          @if (sec.type === 'RECOMMANDATIONS') {
-          <div class="a4-recommandations-box">
-            <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte
-              }}</p>
-          </div>
-          }
-
-          <!-- SIGNATURES ET VISAS OFFICIELS -->
-          @if (sec.type === 'SIGNATURES' && sec.signatures) {
-          <div class="a4-signatures-row">
-            @for (sig of sec.signatures; track sig.role) {
-            <div class="a4-signature-box">
-              <span class="sig-role">{{ sig.role }}</span>
-              <span class="sig-name">{{ sig.nom }}</span>
-              <div class="sig-stamp">
-                <span class="stamp-pill"><i class="fa-solid fa-stamp"></i> {{ sig.statut }}</span>
+            <!-- TABLEAU DE DONNÉES -->
+            @if (sec.type === 'TABLEAU_DONNEES' && sec.colonnesTableau && sec.lignesTableau) {
+              @if (modeEdition() === 'DIRECT') {
+                <div class="inline-table-tools no-print">
+                  <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+                    <input type="checkbox" [ngModel]="sec.afficherTotalTableau" (ngModelChange)="sec.afficherTotalTableau = $event" />
+                    <span>Total automatique</span>
+                  </label>
+                  <div style="display:flex;gap:6px">
+                    <button type="button" class="inline-add-btn" (click)="ajouterLigneTableau(sec)">+ Ligne</button>
+                    <button type="button" class="inline-add-btn" (click)="ajouterColonneTableau(sec)">+ Colonne</button>
+                    @if (sec.colonnesTableau.length > 1) {
+                      <button type="button" class="inline-add-btn" (click)="supprimerDerniereColonneTableau(sec)">- Colonne</button>
+                    }
+                  </div>
+                </div>
+              }
+              <div class="a4-table-wrap">
+                <table class="a4-table">
+                  <thead>
+                    <tr>
+                      @for (col of sec.colonnesTableau; track $index; let cIdx = $index) {
+                        <th>
+                          @if (modeEdition() === 'DIRECT') {
+                            <input type="text" class="a4-inline-th" [ngModel]="sec.colonnesTableau[cIdx]" (ngModelChange)="sec.colonnesTableau[cIdx] = $event" />
+                          } @else {
+                            {{ col }}
+                          }
+                        </th>
+                      }
+                      @if (modeEdition() === 'DIRECT') {
+                        <th class="no-print" style="width:26px"></th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of sec.lignesTableau; track $index; let rIdx = $index) {
+                      <tr>
+                        @for (cell of row; track $index; let cIdx = $index) {
+                          <td>
+                            @if (modeEdition() === 'DIRECT') {
+                              <input type="text" class="a4-inline-td" [ngModel]="row[cIdx]" (ngModelChange)="row[cIdx] = $event" />
+                            } @else {
+                              {{ cell }}
+                            }
+                          </td>
+                        }
+                        @if (modeEdition() === 'DIRECT') {
+                          <td class="no-print" style="text-align:center;width:26px">
+                            @if (sec.lignesTableau.length > 1) {
+                              <button type="button" class="inline-del-row" (click)="supprimerLigneTableau(sec, rIdx)" title="Supprimer la ligne">&times;</button>
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                  @if (sec.afficherTotalTableau) {
+                    <tfoot>
+                      <tr class="a4-table-total-row">
+                        @for (tot of calculerTotauxTableau(sec); track $index) {
+                          <td><strong>{{ tot }}</strong></td>
+                        }
+                        @if (modeEdition() === 'DIRECT') {
+                          <td class="no-print"></td>
+                        }
+                      </tr>
+                    </tfoot>
+                  }
+                </table>
               </div>
-            </div>
+            }
+
+            <!-- RECOMMANDATIONS & PLAN D'ACTIONS -->
+            @if (sec.type === 'RECOMMANDATIONS') {
+              <div class="a4-recommandations-box">
+                @if (modeEdition() === 'DIRECT') {
+                  <textarea class="a4-inline-textarea" rows="3" [style.text-align]="sec.alignement || 'left'" [ngModel]="sec.contenuTexte" (ngModelChange)="sec.contenuTexte = $event" placeholder="Listez les recommandations et actions..."></textarea>
+                } @else {
+                  <p style="white-space:pre-line;margin:0" [style.text-align]="sec.alignement || 'left'">{{ sec.contenuTexte }}</p>
+                }
+              </div>
+            }
+
+            <!-- SIGNATURES ET VISAS OFFICIELS -->
+            @if (sec.type === 'SIGNATURES' && sec.signatures) {
+              <div class="a4-signatures-row">
+                @for (sig of sec.signatures; track $index; let sIdx = $index) {
+                  <div class="a4-signature-box">
+                    @if (modeEdition() === 'DIRECT') {
+                      @if (sec.signatures.length > 1) {
+                        <button type="button" class="inline-remove-chip no-print" (click)="supprimerSignataire(sec, sIdx)" title="Supprimer">&times;</button>
+                      }
+                      <input type="text" class="a4-inline-sig-role" [ngModel]="sig.role" (ngModelChange)="sig.role = $event" placeholder="Rôle / Titre" />
+                      <input type="text" class="a4-inline-sig-name" [ngModel]="sig.nom" (ngModelChange)="sig.nom = $event" placeholder="Nom complet" />
+                      <div class="sig-stamp">
+                        <input type="text" class="a4-inline-sig-statut" [ngModel]="sig.statut" (ngModelChange)="sig.statut = $event" placeholder="Statut visa" />
+                      </div>
+                    } @else {
+                      <span class="sig-role">{{ sig.role }}</span>
+                      <span class="sig-name">{{ sig.nom }}</span>
+                      <div class="sig-stamp">
+                        <span class="stamp-pill"><i class="fa-solid fa-stamp"></i> {{ sig.statut }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              @if (modeEdition() === 'DIRECT') {
+                <div class="inline-add-bar no-print">
+                  <button type="button" class="inline-add-btn" (click)="ajouterSignataire(sec)">+ Ajouter un signataire</button>
+                </div>
+              }
+            }
+
+            <!-- ANNEXES & PIÈCES JOINTES -->
+            @if (sec.type === 'ANNEXES' && sec.annexes) {
+              <div class="a4-annexes-list">
+                @for (ann of sec.annexes; track $index; let aIdx = $index) {
+                  <div class="a4-annexe-item">
+                    <i class="fa-solid fa-paperclip"></i>
+                    @if (modeEdition() === 'DIRECT') {
+                      <div style="display:grid;grid-template-columns:90px 1fr 1.2fr auto;gap:8px;flex:1;align-items:center">
+                        <input type="text" class="a4-inline-td" style="font-weight:700" [ngModel]="ann.code" (ngModelChange)="ann.code = $event" placeholder="PJ-01" />
+                        <input type="text" class="a4-inline-td" style="font-weight:700" [ngModel]="ann.titre" (ngModelChange)="ann.titre = $event" placeholder="Titre pièce jointe" />
+                        <input type="text" class="a4-inline-td" [ngModel]="ann.description" (ngModelChange)="ann.description = $event" placeholder="Description" />
+                        @if (sec.annexes.length > 1) {
+                          <button type="button" class="inline-del-row no-print" (click)="supprimerAnnexe(sec, aIdx)">&times;</button>
+                        }
+                      </div>
+                    } @else {
+                      <div>
+                        @if (ann.code) { <span class="a4-annexe-ref">[{{ ann.code }}]</span> }
+                        <strong> {{ ann.titre }}</strong>
+                        @if (ann.description) { <span class="a4-annexe-note"> — {{ ann.description }}</span> }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              @if (modeEdition() === 'DIRECT') {
+                <div class="inline-add-bar no-print">
+                  <button type="button" class="inline-add-btn" (click)="ajouterAnnexe(sec)">+ Ajouter une pièce jointe</button>
+                </div>
+              }
             }
           </div>
-          }
-
-          <!-- ANNEXES & PIÈCES JOINTES -->
-          @if (sec.type === 'ANNEXES' && sec.annexes) {
-          <div class="a4-annexes-list">
-            @for (ann of sec.annexes; track $index) {
-            <div class="a4-annexe-item">
-              <i class="fa-solid fa-paperclip"></i>
-              <div>
-                @if (ann.code) { <span class="a4-annexe-ref">[{{ ann.code }}]</span> }
-                <strong> {{ ann.titre }}</strong>
-                @if (ann.description) { <span class="a4-annexe-note"> — {{ ann.description }}</span> }
-              </div>
-            </div>
-            }
-          </div>
-          }
-        </div>
         }
-        }
+      }
 
-        <!-- CACHET ROND OFFICIEL NT FOODS SARL -->
-        @if (doc().afficherCachetOfficiel) {
+      <!-- CACHET ROND OFFICIEL NT FOODS SARL -->
+      @if (doc().afficherCachetOfficiel) {
         <div class="a4-official-stamp">
           <div class="stamp-ring">
             <span class="stamp-top">NT FOODS S.A.R.L</span>
@@ -775,179 +580,117 @@
             <span class="stamp-bot">DOUALA · CAMEROUN</span>
           </div>
         </div>
-        }
-
-        <!-- PIED DE PAGE OFFICIEL -->
-        <div class="a4-footer">
-          <span>Document officiel généré via TantyDoc Studio · ERP Intégré NT FOODS SARL</span>
-          <span>Réf: {{ doc().reference }} · Date: {{ doc().dateDocument | date:'dd/MM/yyyy' }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL BIBLIOTHÈQUE DE DOCUMENTS ENREGISTRÉS -->
-@if (showModalBibliotheque()) {
-<div class="modal-backdrop animate-fadeIn">
-  <div class="modal-card" style="max-width:640px">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <i class="fa-solid fa-folder-open" style="font-size:18px;color:var(--g)"></i>
-        <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Bibliothèque de Documents TantyDoc</h3>
-      </div>
-      <button type="button" class="modal-close-btn" (click)="showModalBibliotheque.set(false)">&times;</button>
-    </div>
-
-    <div class="modal-body">
-      <p style="font-size:12.5px;color:var(--n600);margin:0 0 14px">
-        Sélectionnez un document précédemment sauvegardé sur ce poste pour le charger dans l'éditeur :
-      </p>
-
-      @if (bibliotheque().length === 0) {
-      <div style="text-align:center;padding:30px;color:var(--n400)">
-        <i class="fa-solid fa-file-circle-xmark" style="font-size:32px;margin-bottom:8px;display:block"></i>
-        Aucun document sauvegardé dans la bibliothèque locale pour le moment.
-      </div>
-      } @else {
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto">
-        @for (item of bibliotheque(); track item.reference) {
-        <div (click)="chargerDocumentDepuisBibliotheque(item.reference)"
-          style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--n200);border-radius:8px;background:var(--n50);cursor:pointer;transition:all 0.2s ease"
-          onmouseover="this.style.background='#ffffff';this.style.borderColor='var(--g)'"
-          onmouseout="this.style.background='var(--n50)';this.style.borderColor='var(--n200)'">
-          <div>
-            <strong style="font-size:13px;color:var(--g-d);display:block">{{ item.titre }}</strong>
-            <div style="font-size:11px;color:var(--n500);display:flex;gap:10px;margin-top:2px">
-              <span class="mono">{{ item.reference }}</span>
-              <span>•</span>
-              <span>Service: <strong>{{ item.moduleOrigine }}</strong></span>
-              <span>•</span>
-              <span>{{ item.dateEnregistrement | date:'dd/MM/yyyy HH:mm' }}</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="badge badge-success" style="font-size:11px"><i class="fa-solid fa-folder-open"></i>
-              Ouvrir</span>
-            <button type="button" (click)="supprimerDocumentDeBibliotheque(item.reference, $event)"
-              class="btn-action-mini" title="Retirer de la liste" style="color:var(--r)">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-        }
-      </div>
       }
-    </div>
 
-    <div class="modal-footer">
-      <button type="button" class="dash-21-btn dash-21-btn-ghost"
-        (click)="showModalBibliotheque.set(false)">Fermer</button>
+      <!-- PIED DE PAGE OFFICIEL -->
+      <div class="a4-footer">
+        <span>Document officiel · NT FOODS SARL</span>
+        <span>Réf: {{ doc().reference }} · {{ doc().dateDocument | date:'dd/MM/yyyy' }}</span>
+      </div>
     </div>
   </div>
 </div>
-}
 
-<!-- MODAL COPILOT IA : GÉNÉRATEUR COMPLET DE DOCUMENT -->
-@if (showModalIaPrompt()) {
-<div class="modal-backdrop animate-fadeIn">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <i class="fa-solid fa-wand-magic-sparkles" style="font-size:18px;color:#7c3aed"></i>
-        <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Copilot IA · Générateur Complet de Document
-        </h3>
-      </div>
-      <button type="button" class="modal-close-btn" (click)="showModalIaPrompt.set(false)">&times;</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">Ton rédactionnel souhaité :</label>
-        <select class="form-control" [ngModel]="iaTonStyle()" (ngModelChange)="iaTonStyle.set($event)">
-          <option value="CORPORATE">🌿 Institutionnel, Diplomatique & Corporate</option>
-          <option value="SYNTHETIQUE">⚡ Synthétique & Décisionnel Exécutif</option>
-          <option value="AUDIT">🔍 Rigueur d'Audit & Contrôle de Gestion</option>
-          <option value="COMMERCIAL">💼 Commercial, Incitatif & Partenariat</option>
-        </select>
+<!-- MODAL BIBLIOTHÈQUE -->
+@if (showModalBibliotheque()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card" style="max-width:640px">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-folder-open" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Mes Documents Enregistrés</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="showModalBibliotheque.set(false)">&times;</button>
       </div>
 
-      <p style="font-size:12.5px;color:var(--n600);margin:0 0 10px">
-        Décrivez brièvement le document à produire (objet, chiffres clés, partenaires, conditions négociées, décisions
-        attendues). L'IA compose le contenu officiel complet :
-      </p>
-      <textarea class="form-control" rows="5" [ngModel]="iaPromptBrief()" (ngModelChange)="iaPromptBrief.set($event)"
-        placeholder="Ex: Rédige la convention annuelle avec les supermarchés DOVV pour 2026. Prévoir 350 cartons de Tapioca 1kg par mois avec 10% de remise, tête de gondole garantie le 1er samedi de chaque mois et règlement à 30 jours..."></textarea>
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="dash-21-btn dash-21-btn-ghost"
-        (click)="showModalIaPrompt.set(false)">Annuler</button>
-      <button type="button" class="dash-21-btn btn-ia-gradient" [disabled]="iaEnCours() || !iaPromptBrief().trim()"
-        (click)="genererDocumentCompletViaIa()">
-        @if (iaEnCours()) {
-        <i class="fa-solid fa-rotate fa-spin"></i> Rédaction IA en cours...
+      <div class="modal-body">
+        @if (bibliotheque().length === 0) {
+          <div style="text-align:center;padding:30px;color:var(--n400)">
+            <i class="fa-solid fa-file-circle-xmark" style="font-size:32px;margin-bottom:8px;display:block"></i>
+            Aucun document sauvegardé sur ce poste pour le moment.
+          </div>
         } @else {
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Générer le Document
+          <div style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto">
+            @for (item of bibliotheque(); track item.reference) {
+              <div class="bib-row" (click)="chargerDocumentDepuisBibliotheque(item.reference)">
+                <div>
+                  <strong style="font-size:13px;color:var(--g-d);display:block">{{ item.titre }}</strong>
+                  <div style="font-size:11px;color:var(--n500);display:flex;gap:8px;margin-top:2px">
+                    <span class="mono">{{ item.reference }}</span>
+                    <span>•</span>
+                    <span>{{ item.moduleOrigine }}</span>
+                    <span>•</span>
+                    <span>{{ item.dateEnregistrement | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="badge badge-success" style="font-size:11px">Ouvrir</span>
+                  <button type="button" (click)="supprimerDocumentDeBibliotheque(item.reference, $event)" class="inline-del-row" title="Supprimer">&times;</button>
+                </div>
+              </div>
+            }
+          </div>
         }
-      </button>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="r-btn r-btn-ghost" (click)="showModalBibliotheque.set(false)">Fermer</button>
+      </div>
     </div>
   </div>
-</div>
 }
 
-<!-- MODAL PARTAGE INTERNE RAPIDE -->
+<!-- MODAL PARTAGE INTERNE -->
 @if (showModalPartage()) {
-<div class="modal-backdrop animate-fadeIn">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <i class="fa-solid fa-share-nodes" style="font-size:18px;color:var(--g)"></i>
-        <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Partager ce Document en Interne</h3>
-      </div>
-      <button type="button" class="modal-close-btn" (click)="fermerModalPartage()">&times;</button>
-    </div>
-
-    <div class="modal-body">
-      <div style="margin-bottom:12px;background:var(--n100);padding:10px 14px;border-radius:6px">
-        <strong style="font-size:13px;color:var(--g-d);display:block">{{ doc().titre }}</strong>
-        <span class="mono" style="font-size:11px;color:var(--n500)">{{ doc().reference }}</span>
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-share-nodes" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Partager ce Document</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModalPartage()">&times;</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div class="form-group">
-          <label class="form-label">Service destinataire *</label>
-          <select class="form-control" [ngModel]="partageCible()" (ngModelChange)="partageCible.set($event)">
-            @for (m of modulesDisponibles; track m.code) {
-            <option [value]="m.code">{{ m.label }}</option>
-            }
-            <option value="TOUS">Tous les services (Diffusion générale)</option>
-          </select>
+      <div class="modal-body">
+        <div style="margin-bottom:12px;background:var(--n100);padding:10px 14px;border-radius:6px">
+          <strong style="font-size:13px;color:var(--g-d);display:block">{{ doc().titre }}</strong>
+          <span class="mono" style="font-size:11px;color:var(--n500)">{{ doc().reference }}</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Service destinataire *</label>
+            <select class="form-control" [ngModel]="partageCible()" (ngModelChange)="partageCible.set($event)">
+              @for (m of modulesDisponibles; track m.code) {
+                <option [value]="m.code">{{ m.label }}</option>
+              }
+              <option value="TOUS">Tous les services</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Action attendue *</label>
+            <select class="form-control" [ngModel]="partageAction()" (ngModelChange)="partageAction.set($event)">
+              <option value="POUR_VISA_SIGNATURE">Pour Visa & Signature</option>
+              <option value="POUR_VALIDATION">Pour Validation</option>
+              <option value="POUR_INFORMATION">Pour Information</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Type d'action attendue *</label>
-          <select class="form-control" [ngModel]="partageAction()" (ngModelChange)="partageAction.set($event)">
-            <option value="POUR_VISA_SIGNATURE">Pour Visa & Signature officielle</option>
-            <option value="POUR_VALIDATION">Pour Validation préalable</option>
-            <option value="POUR_INFORMATION">Pour Information simple</option>
-          </select>
+          <label class="form-label">Message d'accompagnement</label>
+          <textarea class="form-control" rows="3" [ngModel]="partageObjet()" (ngModelChange)="partageObjet.set($event)"></textarea>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Note d'accompagnement</label>
-        <textarea class="form-control" rows="3" [ngModel]="partageObjet()"
-          (ngModelChange)="partageObjet.set($event)"></textarea>
+      <div class="modal-footer">
+        <button type="button" class="r-btn r-btn-ghost" (click)="fermerModalPartage()">Annuler</button>
+        <button type="button" class="r-btn r-btn-primary" (click)="executerPartageInterne()">
+          <i class="fa-solid fa-paper-plane"></i> Transmettre
+        </button>
       </div>
-    </div>
-
-    <div class="modal-footer">
-      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModalPartage()">Annuler</button>
-      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="executerPartageInterne()">
-        <i class="fa-solid fa-paper-plane"></i> Transmettre
-      </button>
     </div>
   </div>
-</div>
 }
