@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DocumentService, DocumentArchiveBE } from '../../../../shared/infrastructure/document.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { extractApiError } from '../../../../../core/http/api-error-parser';
@@ -8,7 +9,7 @@ import { extractApiError } from '../../../../../core/http/api-error-parser';
 @Component({
   selector: 'app-commercial-documents',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink],
   templateUrl: './commercial-documents.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

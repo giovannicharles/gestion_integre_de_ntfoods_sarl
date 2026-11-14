@@ -86,6 +86,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'commandes-clients',
         loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent)
       },
+      {
+        path: 'studio-documents',
+        loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent)
+      },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01).
       {
         path: 'profil',

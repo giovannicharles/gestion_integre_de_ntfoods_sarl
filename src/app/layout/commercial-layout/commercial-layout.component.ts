@@ -79,6 +79,7 @@ export class CommercialLayoutComponent implements OnInit {
     {
       label: 'Pilotage & Outils', icon: 'fa-chart-pie', children: [
         { label: 'Documents & Catalogues', icon: 'fa-folder-open', route: '/commercial/documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/commercial/studio-documents' },
         { label: 'Grille Tarifaire', icon: 'fa-tags', route: '/commercial/tarification' },
         { label: 'Zones de Vente', icon: 'fa-map-location-dot', route: '/commercial/zones' },
         { label: 'Rapports de Tournée', icon: 'fa-clipboard-list', route: '/commercial/reporting' },

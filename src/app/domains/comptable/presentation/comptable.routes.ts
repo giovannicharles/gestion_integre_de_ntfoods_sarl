@@ -15,6 +15,7 @@ export const COMPTABLE_ROUTES: Routes = [
       { path: 'rapprochement', loadComponent: () => import('./pages/rapprochement/comptable-rapprochement.component').then(m => m.ComptableRapprochementComponent) },
       // Documents comptables & justificatifs OHADA
       { path: 'documents', loadComponent: () => import('./pages/documents/comptable-documents.component').then(m => m.ComptableDocumentsComponent) },
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       // Statistiques financières, BFR & DSO
       { path: 'statistiques', loadComponent: () => import('./pages/statistiques/comptable-statistiques.component').then(m => m.ComptableStatistiquesComponent) },
       // Assistant comptable & fiscalité OHADA

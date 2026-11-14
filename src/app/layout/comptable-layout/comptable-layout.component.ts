@@ -101,6 +101,7 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
       label: 'Documents & Rapports', icon: 'fa-folder-open', children: [
         { label: 'Statistiques & Ratios BFR', icon: 'fa-chart-line', route: '/comptable/statistiques' },
         { label: 'Pièces & Documents OHADA', icon: 'fa-file-contract', route: '/comptable/documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/comptable/studio-documents' },
         { label: 'Reporting Financier', icon: 'fa-chart-column', route: '/comptable/reporting' },
         { label: 'Rapports Périodiques', icon: 'fa-file-export', route: '/comptable/rapports' },
       ]
@@ -154,7 +155,7 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
           error: () => this.pendingCommandesCount.set(nbTournees)
         });
       },
-      error: () => {},
+      error: () => { },
     });
 
     // 2. Factures émises non payées
@@ -166,7 +167,7 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
         const nb = (page.contenu || []).filter(f => f.statut === 'EMISE').length;
         this.pendingFacturesCount.set(nb);
       },
-      error: () => {},
+      error: () => { },
     });
 
     // 3. Recouvrements en attente
@@ -175,7 +176,7 @@ export class ComptableLayoutComponent implements OnInit, OnDestroy {
         const nb = (recs || []).filter(r => r.statut !== 'APURE').length;
         this.pendingRecouvrementCount.set(nb);
       },
-      error: () => {},
+      error: () => { },
     });
   }
 

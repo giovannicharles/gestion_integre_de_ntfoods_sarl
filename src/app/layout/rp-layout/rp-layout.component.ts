@@ -150,7 +150,7 @@ export class RpLayoutComponent implements OnInit {
           gc.badgeClass = d.relancesDues > 0 ? 'bd-orange' : undefined;
         }
       },
-      error: () => {},
+      error: () => { },
     });
   }
 

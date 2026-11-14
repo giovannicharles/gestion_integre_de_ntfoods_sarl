@@ -17,6 +17,7 @@ export const SECRETAIRE_ROUTES: Routes = [
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       { path: 'session', loadComponent: () => import('./pages/session/secretaire-session.component').then(m => m.SecretaireSessionComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/secretaire-documents.component').then(m => m.SecretaireDocumentsComponent) },
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/secretaire-reporting.component').then(m => m.SecretaireReportingComponent) },
       { path: 'statistiques', loadComponent: () => import('./pages/statistiques/secretaire-statistiques.component').then(m => m.SecretaireStatistiquesComponent) },
       { path: 'assistant', loadComponent: () => import('./pages/assistant/secretaire-assistant.component').then(m => m.SecretaireAssistantComponent) },

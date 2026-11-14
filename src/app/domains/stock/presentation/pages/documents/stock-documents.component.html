@@ -10,7 +10,10 @@
         <p class="ph-sub">Bons de réception, fiches de transfert, bons de sortie et décharges signées rattachées au stock physique</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a routerLink="/stock/studio-documents" class="btn" style="background:#047857; color:#fff; font-weight:700;">
+        <i class="fa-solid fa-pen-nib"></i> Rédiger dans TantyDoc Studio
+      </a>
       <button class="btn btn-primary" (click)="showModalImport.set(true)">
         <i class="fa-solid fa-cloud-arrow-up"></i> Numériser un Bon
       </button>

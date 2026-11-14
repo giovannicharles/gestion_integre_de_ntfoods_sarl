@@ -1,0 +1,276 @@
+<div class="dash animate-fadeInUp">
+  <!-- EN-TÊTE DIRECTION GÉNÉRALE -->
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-icon" style="background: var(--g); color: #fff;">
+        <i class="fa-solid fa-signature"></i>
+      </div>
+      <div>
+        <h1 class="ph-title">Visas Officiels & Diffusion Inter-Services · Direction Générale</h1>
+        <p class="ph-sub">Arbitrage exécutif des conventions, validation finale des engagements commerciaux et émission des notes de cadrage stratégique</p>
+      </div>
+    </div>
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- BASCULE SOUMIS AU DG / DIRECTIVES EMISES -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="ongletActif() === 'RECUS_POUR_VISA'" [class.btn-ghost]="ongletActif() !== 'RECUS_POUR_VISA'" (click)="ongletActif.set('RECUS_POUR_VISA')" style="padding:4px 12px">
+          <i class="fa-solid fa-stamp"></i> À Signer / Viser ({{ totalEnAttenteSignature() }})
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-primary]="ongletActif() === 'EMIS_PAR_DG'" [class.btn-ghost]="ongletActif() !== 'EMIS_PAR_DG'" (click)="ongletActif.set('EMIS_PAR_DG')" style="padding:4px 12px">
+          <i class="fa-solid fa-bullhorn"></i> Directives DG Émises ({{ totalDirectives() }})
+        </button>
+      </div>
+
+      <button class="btn btn-primary" (click)="ouvrirModalDirective()">
+        <i class="fa-solid fa-plus"></i> Nouvelle Directive DG
+      </button>
+      <a routerLink="/dg/studio-documents" class="btn btn-outline" title="Ouvrir le Studio Word DG">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Studio Word DG
+      </a>
+    </div>
+  </div>
+
+  <!-- 3-KPI SUITE CARDS -->
+  <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:20px">
+    <div class="card" style="padding:16px;border-left:4px solid var(--r)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--n600)">DOSSIERS EN ATTENTE DE VISA DG</span>
+        <i class="fa-solid fa-clock text-danger" style="font-size:18px"></i>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="mono fw-bold" style="font-size:26px;color:var(--r)">{{ totalEnAttenteSignature() }}</span>
+        <span style="font-size:12px;color:var(--n500)">dossier(s) prioritaire(s)</span>
+      </div>
+      <span style="font-size:11px;color:var(--n400)">Conventions GMS, accords dérogatoires et bilans</span>
+    </div>
+
+    <div class="card" style="padding:16px;border-left:4px solid var(--g)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--n600)">DOCUMENTS SIGNÉS / APPROUVÉS</span>
+        <i class="fa-solid fa-circle-check text-success" style="font-size:18px"></i>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="mono fw-bold" style="font-size:26px;color:var(--g)">{{ totalSignes() }}</span>
+        <span style="font-size:12px;color:var(--n500)">accords entérinés</span>
+      </div>
+      <span style="font-size:11px;color:var(--n400)">Visas électroniques apposés pour exécution</span>
+    </div>
+
+    <div class="card" style="padding:16px;border-left:4px solid var(--y)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--n600)">DIRECTIVES & NOTES DE CADRAGE</span>
+        <i class="fa-solid fa-scroll text-warning" style="font-size:18px"></i>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="mono fw-bold" style="font-size:26px;color:var(--g-d)">{{ totalDirectives() }}</span>
+        <span style="font-size:12px;color:var(--n500)">diffusions officielles</span>
+      </div>
+      <span style="font-size:11px;color:var(--n400)">Instructions transmises à l'ensemble des services</span>
+    </div>
+  </div>
+
+  <!-- DOUBLE PANNEAU COLLABORATIF -->
+  <div style="display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start">
+    <!-- COLONNE GAUCHE : FLUX DES DOCUMENTS -->
+    <div class="card" style="padding:0;overflow:hidden;max-height:calc(100vh - 280px);display:flex;flex-direction:column">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--n200);background:var(--n100)">
+        <div style="position:relative;margin-bottom:10px">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--n400);font-size:12px"></i>
+          <input type="text" class="form-control" style="padding-left:30px;font-size:12px" [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)" placeholder="Rechercher titre, référence, service..." />
+        </div>
+
+        <select class="form-control" style="font-size:11.5px;padding:4px 8px" [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)">
+          <option value="TOUS">Tous les statuts</option>
+          <option value="EN_ATTENTE">En attente de visa DG</option>
+          <option value="VALIDE">Approuvé / Validé</option>
+          <option value="VISE">Visé</option>
+          <option value="REJETE">Ajourné / Rejeté</option>
+        </select>
+      </div>
+
+      <div style="overflow-y:auto;flex:1">
+        @for (item of listeAffichee(); track item.id) {
+          <div class="partage-item" [class.active]="itemSelectionne()?.id === item.id" (click)="selectionnerItem(item)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+              <strong style="font-size:13px;color:var(--g-d);line-height:1.3">{{ item.titre }}</strong>
+              <span class="badge" [class.badge-danger]="item.statut === 'EN_ATTENTE'" [class.badge-success]="item.statut === 'VALIDE' || item.statut === 'VISE'" style="font-size:10px;margin-left:6px;flex-shrink:0">
+                {{ item.statut }}
+              </span>
+            </div>
+
+            <div style="font-size:11px;color:var(--n500);margin-bottom:6px">
+              <span>Émis par : <strong>{{ item.moduleEmetteur }}</strong> ({{ item.emetteurNom }})</span>
+              <span class="mono" style="margin-left:8px">[{{ item.reference }}]</span>
+            </div>
+
+            <p style="font-size:11.5px;color:var(--n600);margin:0 0 6px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+              {{ item.objet }}
+            </p>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--n400)">
+              <span>{{ item.datePartage | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="badge badge-neutral" style="font-size:10px">{{ item.typeAction }}</span>
+            </div>
+          </div>
+        } @empty {
+          <div style="padding:32px;text-align:center;color:var(--n400);font-size:12px">
+            Aucun document correspondant.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE : EXAMEN DU DOSSIER & ACTIONS DE VISA DG -->
+    <div>
+      @if (itemSelectionne(); as sel) {
+        <div class="card" style="padding:20px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--n200)">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                <h2 style="font-size:18px;font-weight:800;color:var(--g-d);margin:0">{{ sel.titre }}</h2>
+                <span class="badge" [class.badge-danger]="sel.statut === 'EN_ATTENTE'" [class.badge-success]="sel.statut === 'VALIDE' || sel.statut === 'VISE'">
+                  {{ sel.statut }}
+                </span>
+                <span class="badge badge-neutral">{{ sel.typeAction }}</span>
+              </div>
+              <div style="font-size:12px;color:var(--n500)">
+                Émetteur : <strong>{{ sel.emetteurNom }} (Direction {{ sel.moduleEmetteur }})</strong> · Réf: <span class="mono">{{ sel.reference }}</span> · Reçu le : {{ sel.datePartage | date:'dd MMMM yyyy à HH:mm':'':'fr' }}
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline" (click)="ouvrirDansStudio(sel)" title="Ouvrir dans le Studio Word pour consulter le texte complet">
+                <i class="fa-solid fa-pen-ruler"></i> Ouvrir dans Studio Word
+              </button>
+            </div>
+          </div>
+
+          <!-- OBJET DU DOSSIER -->
+          <div style="background:var(--n100);padding:14px;border-radius:6px;border-left:4px solid var(--g);margin-bottom:16px">
+            <strong style="display:block;font-size:12px;color:var(--g-d);margin-bottom:4px">Objet & Justificatif de la transmission :</strong>
+            <p style="font-size:13px;color:var(--n700);margin:0;line-height:1.5">{{ sel.objet }}</p>
+          </div>
+
+          <!-- ACTIONS EXÉCUTIVES DE VISA DG (1-CLIC) -->
+          @if (sel.statut === 'EN_ATTENTE') {
+            <div style="background:#fffbeb;border:1px solid #fde68a;padding:16px;border-radius:8px;margin-bottom:16px">
+              <h4 style="margin:0 0 10px;font-size:13.5px;font-weight:800;color:#92400e">
+                <i class="fa-solid fa-stamp" style="margin-right:6px"></i>
+                Arbitrage & Décision du Directeur Général :
+              </h4>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button type="button" class="btn btn-primary" (click)="apposerVisaOfficiel('VALIDE')" style="background:var(--g);border:none;padding:8px 16px">
+                  <i class="fa-solid fa-check-double"></i> Approuver & Signer Officiellement
+                </button>
+                <button type="button" class="btn btn-outline" (click)="apposerVisaOfficiel('VISE')" style="padding:8px 16px">
+                  <i class="fa-solid fa-signature"></i> Viser pour Accord
+                </button>
+                <button type="button" class="btn btn-danger" (click)="apposerVisaOfficiel('REJETE')" style="padding:8px 16px">
+                  <i class="fa-solid fa-xmark"></i> Ajourner / Rejeter
+                </button>
+              </div>
+            </div>
+          } @else if (sel.visePar) {
+            <div style="background:rgba(22, 163, 74, 0.08);border:1px solid rgba(22, 163, 74, 0.3);padding:12px 16px;border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <strong style="color:var(--g);font-size:13px"><i class="fa-solid fa-circle-check" style="margin-right:6px"></i>Décision DG enregistrée :</strong>
+                <span style="font-size:12px;color:var(--n700);margin-left:6px">{{ sel.statut }} par <strong>{{ sel.visePar }}</strong> le {{ sel.visaDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <span class="badge badge-success">ACTÉ</span>
+            </div>
+          }
+
+          <!-- FIL DE DISCUSSION & INSTRUCTIONS DE LA DIRECTION -->
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--n200)">
+            <h3 style="font-size:14px;font-weight:800;color:var(--g-d);margin:0 0 12px">
+              <i class="fa-regular fa-comments" style="color:var(--g);margin-right:6px"></i>
+              Fil d'Échanges & Instructions Exécutives ({{ sel.commentaires.length }})
+            </h3>
+
+            <div class="commentaires-flow" style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow-y:auto">
+              @for (c of sel.commentaires; track c.id) {
+                <div style="background:var(--n100);border:1px solid var(--n200);border-radius:8px;padding:10px 14px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11.5px">
+                    <strong style="color:var(--g-d)">{{ c.auteurNom }} ({{ c.auteurRole }})</strong>
+                    <span style="color:var(--n400)">{{ c.date | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <p style="font-size:12.5px;color:var(--n700);margin:0">{{ c.message }}</p>
+                </div>
+              } @empty {
+                <div style="padding:14px;background:var(--n100);border-radius:6px;font-size:12px;color:var(--n500);text-align:center">
+                  Aucun commentaire. Donnez vos instructions de direction ci-dessous.
+                </div>
+              }
+            </div>
+
+            <!-- ZONE D'AJOUT D'INSTRUCTION DG -->
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <input type="text" class="form-control" [ngModel]="nouveauCommentaireTexte()" (ngModelChange)="nouveauCommentaireTexte.set($event)" (keyup.enter)="envoyerCommentaire()" placeholder="Donner une instruction, consigne ou orientation DG..." />
+              <button class="btn btn-primary" [disabled]="!nouveauCommentaireTexte().trim()" (click)="envoyerCommentaire()">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="card" style="padding:48px;text-align:center;color:var(--n400)">
+          <i class="fa-solid fa-stamp" style="font-size:40px;color:var(--n300);margin-bottom:12px;display:block"></i>
+          <h3 style="margin:0 0 6px;color:var(--g-d)">Sélectionnez un document à examiner</h3>
+          <p style="font-size:13px;margin:0">Cliquez sur un dossier transmis dans la liste de gauche pour en prendre connaissance et apposer votre visa.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE DIRECTIVE DG -->
+@if (showModalDirective()) {
+  <div class="modal-backdrop animate-fadeIn" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999">
+    <div class="card" style="width:550px;max-width:95vw;padding:24px;border-radius:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n200)">
+        <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">
+          <i class="fa-solid fa-bullhorn" style="color:var(--g);margin-right:8px"></i>
+          Émettre une Note de Cadrage ou Directive DG
+        </h3>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="fermerModalDirective()">&times;</button>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label" style="font-size:12px;font-weight:700">Titre de la directive *</label>
+        <input type="text" class="form-control" [ngModel]="nouvelleDirective().titre" (ngModelChange)="nouvelleDirective().titre = $event" placeholder="Ex: Cadrage des Remises VIP 2026, Mesures de Sécurité Entrepôts..." />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;font-weight:700">Services destinataires *</label>
+          <select class="form-control" [ngModel]="nouvelleDirective().moduleDestinataire" (ngModelChange)="nouvelleDirective().moduleDestinataire = $event">
+            @for (m of modulesCibles; track m.code) {
+              <option [value]="m.code">{{ m.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;font-weight:700">Degré d'urgence *</label>
+          <select class="form-control" [ngModel]="nouvelleDirective().typeAction" (ngModelChange)="nouvelleDirective().typeAction = $event">
+            <option value="DIFFUSION_URGENTE">Diffusion urgente / Prioritaire</option>
+            <option value="POUR_INFORMATION">Pour Information & Application</option>
+            <option value="POUR_VALIDATION">Pour Mise en œuvre immédiate</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label" style="font-size:12px;font-weight:700">Corps de la directive & Instructions exécutives *</label>
+        <textarea class="form-control" rows="4" [ngModel]="nouvelleDirective().objet" (ngModelChange)="nouvelleDirective().objet = $event" placeholder="Détaillez les consignes impératives, dates d'effet et responsabilités des directions..."></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn btn-ghost" (click)="fermerModalDirective()">Annuler</button>
+        <button class="btn btn-primary" (click)="emettreDirectiveDg()">
+          <i class="fa-solid fa-paper-plane"></i> Diffuser la Directive
+        </button>
+      </div>
+    </div>
+  </div>
+}

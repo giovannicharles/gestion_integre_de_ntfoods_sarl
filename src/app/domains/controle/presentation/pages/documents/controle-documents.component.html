@@ -10,7 +10,10 @@
         <p class="ph-sub">Rapports d'audit interne, factures auditées, bons de réception validés et pièces justificatives</p>
       </div>
     </div>
-    <div class="ph-actions">
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a routerLink="/controle/studio-documents" class="btn" style="background:#047857; color:#fff; font-weight:700;">
+        <i class="fa-solid fa-pen-nib"></i> Rédiger dans TantyDoc Studio
+      </a>
       <button class="btn btn-primary" (click)="showModalImport.set(true)">
         <i class="fa-solid fa-cloud-arrow-up"></i> Archiver Pièce d'Audit
       </button>

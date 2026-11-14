@@ -9,7 +9,10 @@
         Factures fournisseurs, bordereaux de caisse, quittances d'impôts, relevés bancaires et pièces justificatives
       </p>
     </div>
-    <div class="dash-21-actions" style="display:flex;align-items:center;gap:10px">
+    <div class="dash-21-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a routerLink="/comptable/studio-documents" class="dash-21-btn" style="background:#047857; color:#fff; font-weight:700;">
+        <i class="fa-solid fa-pen-nib"></i> Rédiger dans TantyDoc Studio
+      </a>
       <!-- SÉLECTEUR DE VUE -->
       <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
         <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeAffichage() === 'table'" [class.dash-21-btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Vue Tableau" style="padding:4px 10px;font-size:12px">

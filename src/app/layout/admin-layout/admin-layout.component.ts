@@ -110,6 +110,7 @@ export class AdminLayoutComponent implements OnInit {
         { label: 'Commandes WhatsApp & Supervision', icon: 'fa-cart-shopping', route: '/admin/commandes-clients' },
         { label: "Journal d'audit", icon: 'fa-clipboard-list', route: '/admin/audit' },
         { label: 'Workflows de validation', icon: 'fa-diagram-project', route: '/admin/validation-workflows' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/admin/studio-documents' },
       ]
     },
     {

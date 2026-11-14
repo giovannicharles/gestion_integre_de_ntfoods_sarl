@@ -122,6 +122,7 @@ export class SecretaireLayoutComponent implements OnInit, OnDestroy {
     {
       label: 'Gestion Administrative', icon: 'fa-folder-closed', children: [
         { label: 'Courriers & Documents', icon: 'fa-envelopes-bulk', route: '/secretaire/documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/secretaire/studio-documents' },
         { label: 'Reporting & Caisse', icon: 'fa-receipt', route: '/secretaire/reporting' },
         { label: 'Statistiques & Délais', icon: 'fa-chart-pie', route: '/secretaire/statistiques' },
         { label: 'Assistant Administratif', icon: 'fa-pen-nib', route: '/secretaire/assistant' },

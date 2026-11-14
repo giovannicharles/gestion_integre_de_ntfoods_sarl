@@ -172,6 +172,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Rapports de Stock', icon: 'fa-file-lines', route: '/stock/rapports' },
         { label: 'Documents & PV Magasin', icon: 'fa-file-shield', route: '/stock/documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/stock/studio-documents' },
         { label: 'Calculateur Wilson & Réappro', icon: 'fa-boxes-packing', route: '/stock/assistant' },
         { label: 'Notifications', icon: 'fa-bell', route: '/stock/notifications' },
         { label: 'Paramètres', icon: 'fa-gear', route: '/stock/settings' },
@@ -290,7 +291,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
     // depuis l'unification du doublon de déclaration/validation de lot).
     this.api.get<any>('production/lots/a-valider')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (res) => this.pendingLotsCount.set(res?.donnees?.length || 0), error: () => {} });
+      .subscribe({ next: (res) => this.pendingLotsCount.set(res?.donnees?.length || 0), error: () => { } });
 
     // Pending dotations, all non-completed/rejected statuses
     this.api.get<any>('stock/dotations')
@@ -302,13 +303,13 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
             (Array.isArray(data) ? data : []).filter((d: any) => !['COMPLETED', 'REJECTED', 'ANNULEE', 'TERMINEE', 'REJETEE'].includes(d.status || d.statut)).length
           );
         },
-        error: () => {}
+        error: () => { }
       });
 
     // Active internal orders (not COMPLETED/CANCELLED)
     this.api.get<any>('stock/internal-orders/active')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (res) => this.pendingOrdersCount.set(res?.donnees?.length || 0), error: () => {} });
+      .subscribe({ next: (res) => this.pendingOrdersCount.set(res?.donnees?.length || 0), error: () => { } });
 
     // Pending validation count, receptions awaiting 1st or 2nd validation.
     // Base réelle du contrôleur = /api/v1/stock/receptions (pas /api/stock/receptions), et les
@@ -317,22 +318,26 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
     // (mauvais chemin) suivi d'un comptage toujours à 0 (mauvaise lecture de la réponse).
     this.api.get<any[]>('v1/stock/receptions/en-attente-premiere-validation')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (res) => {
-        const c1 = Array.isArray(res) ? res.length : 0;
-        this.api.get<any[]>('v1/stock/receptions/en-attente-seconde-validation')
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({ next: (res2) => {
-            const c2 = Array.isArray(res2) ? res2.length : 0;
-            this.pendingValidationCount.set(c1 + c2);
-          }, error: () => this.pendingValidationCount.set(c1) });
-      }, error: () => {} });
+      .subscribe({
+        next: (res) => {
+          const c1 = Array.isArray(res) ? res.length : 0;
+          this.api.get<any[]>('v1/stock/receptions/en-attente-seconde-validation')
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (res2) => {
+                const c2 = Array.isArray(res2) ? res2.length : 0;
+                this.pendingValidationCount.set(c1 + c2);
+              }, error: () => this.pendingValidationCount.set(c1)
+            });
+        }, error: () => { }
+      });
 
     // Moteur de validation générique (demandes de transfert, réappro tampon, etc.) : même
     // endpoint que la Boîte "Mes validations" (shared/validation-pending), raw array, pas
     // d'enveloppe ApiResponse (ValidationService.mesDemandesEnAttente).
     this.api.get<any[]>('v1/validation/demandes/en-attente-pour-moi')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: (res) => this.pendingGenericValidationCount.set(Array.isArray(res) ? res.length : 0), error: () => {} });
+      .subscribe({ next: (res) => this.pendingGenericValidationCount.set(Array.isArray(res) ? res.length : 0), error: () => { } });
   }
 
   private loadNotifCount() {
@@ -354,7 +359,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
           const data = res?.donnees ?? [];
           this.recentNotifs.set((Array.isArray(data) ? data : []).slice(0, 10).map(n => this.mapNotif(n)));
         },
-        error: () => {}
+        error: () => { }
       });
   }
 
@@ -406,7 +411,7 @@ export class StockLayoutComponent implements OnInit, OnDestroy {
         this.recentNotifs.update(list => list.map(x => x.id === n.id ? { ...x, read: true } : x));
         this.alertBadge.refresh();
       },
-      error: () => {}
+      error: () => { }
     });
   }
 

@@ -50,6 +50,7 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       { label: 'Registre Employés', icon: 'fa-users', route: '/production/employes' },
       { label: 'Expressions de Besoin', icon: 'fa-triangle-exclamation', route: '/production/besoins', badgeKey: 'besoinsEnAttente' },
       { label: 'Rapports Hebdomadaires', icon: 'fa-file-lines', route: '/production/rapports' },
+      { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/production/studio-documents' },
       { label: 'Analyse des Performances', icon: 'fa-chart-simple', route: '/production/chef-production/performances' },
       { label: 'Statistiques', icon: 'fa-chart-line', route: '/production/chef-production/statistiques' },
       { label: 'Alertes', icon: 'fa-triangle-exclamation', route: '/production/chef-production/alertes' },
@@ -83,6 +84,7 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
       // « Expressions de Besoin » retiré du menu RS : l'API la réserve à PRODUCTION_EXPRESSION_BESOIN_GERER,
       // absente du rôle RESPONSABLE_SALLE (403), vérifié dans RolePermissionMatrix.java.
       { label: 'Rapports Hebdomadaires', icon: 'fa-file-lines', route: '/production/rapports' },
+      { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/production/studio-documents' },
       { label: 'Statistiques', icon: 'fa-chart-line', route: '/production/responsable-salle/statistiques' },
       { label: 'Téléchargements', icon: 'fa-download', route: '/production/responsable-salle/telechargements' },
     ],
@@ -198,4 +200,5 @@ export const PRODUCTION_ROLE_CONFIG: Record<RoleProduction, ProductionRoleConfig
 /** Menu de repli si le rôle n'a pas pu être résolu, ou n'est pas géré par ce module (ex: GESTIONNAIRE_STOCK). */
 export const PRODUCTION_NAV_PAR_DEFAUT: ProductionNavItem[] = [
   { label: 'Tableau de Bord', icon: 'fa-chart-pie', route: '/production/dashboard' },
+  { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/production/studio-documents' },
 ];

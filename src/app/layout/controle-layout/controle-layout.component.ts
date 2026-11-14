@@ -104,6 +104,7 @@ export class ControleLayoutComponent implements OnInit {
     {
       label: 'Études & Directives', icon: 'fa-folder-tree', children: [
         { label: 'Cadrage & Procédures', icon: 'fa-folder-tree', route: '/controle/documents' },
+        { label: 'TantyDoc Studio', icon: 'fa-pen-nib', route: '/controle/studio-documents' },
         { label: 'Reporting & Budgets', icon: 'fa-chart-line', route: '/controle/reporting' },
         { label: 'Calculateur Point Mort', icon: 'fa-calculator', route: '/controle/assistant' },
       ]

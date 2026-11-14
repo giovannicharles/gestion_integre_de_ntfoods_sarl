@@ -18,6 +18,7 @@ export const CONTROLE_ROUTES: Routes = [
       { path: 'budget', loadComponent: () => import('./pages/budget/controle-budget.component').then(m => m.ControleBudgetComponent) },
       { path: 'variances', loadComponent: () => import('./pages/variances/controle-variances.component').then(m => m.ControleVariancesComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/controle-documents.component').then(m => m.ControleDocumentsComponent) },
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/controle-reporting.component').then(m => m.ControleReportingComponent) },
       { path: 'assistant', loadComponent: () => import('./pages/assistant/controle-assistant.component').then(m => m.ControleAssistantComponent) },
       { path: 'audit', loadComponent: () => import('../../admin/presentation/pages/audit/admin-audit.component').then(m => m.AdminAuditComponent) },

@@ -23,6 +23,10 @@ export const DG_ROUTES: Routes = [
       { path: 'securite', loadComponent: () => import('./pages/securite/dg-securite.component').then(m => m.DgSecuriteComponent) },
       { path: 'sync', loadComponent: () => import('./pages/sync/dg-sync.component').then(m => m.DgSyncComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/dg-documents.component').then(m => m.DgDocumentsComponent) },
+      // Studio universel de conception et génération de documents & rapports officiels
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
+      // Partage de documents & workflow de visas inter-directions pour la DG
+      { path: 'partage', loadComponent: () => import('./pages/partage/dg-partage.component').then(m => m.DgPartageComponent) },
       // Journal d'audit, écran DG propre (2026-11-01), GET /dg/audit (filtres matricule/module/
       // typeAction/période déjà supportés côté backend). Remplace l'alias direct vers
       // admin-audit.component retiré le même jour en même temps que les 5 autres écrans

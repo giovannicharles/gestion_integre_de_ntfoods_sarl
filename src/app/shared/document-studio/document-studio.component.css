@@ -252,6 +252,17 @@
   border-bottom: 1px solid #cbd5e1;
 }
 
+.a4-sheet.theme-prestige {
+  border-top: 6px solid #854d0e;
+}
+.a4-sheet.theme-prestige .a4-main-title {
+  color: #854d0e;
+}
+.a4-sheet.theme-prestige .a4-section-title {
+  color: #854d0e;
+  border-bottom: 2px solid #facc15;
+}
+
 /* HEADER */
 .a4-header {
   display: flex;

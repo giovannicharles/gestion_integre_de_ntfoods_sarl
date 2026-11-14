@@ -80,6 +80,7 @@ export const PRODUCTION_ROUTES: Routes = [
       { path: 'employes', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/employes/production-employes.component').then(m => m.ProductionEmployesComponent) },
       { path: 'besoins', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/besoins/production-besoins.component').then(m => m.ProductionBesoinsComponent) },
       { path: 'rapports', canActivate: [productionRoleGuard], loadComponent: () => import('./pages/rapports/production-rapports.component').then(m => m.ProductionRapportsComponent) },
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       // Prise de commande client WhatsApp (sans restriction sous-rôle)
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },
       // Mon Profil, libre-service, commun à tous les layouts (2026-11-01). Volontairement SANS

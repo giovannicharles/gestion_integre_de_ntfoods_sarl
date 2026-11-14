@@ -43,6 +43,7 @@ export class DgLayoutComponent implements OnInit {
   mobileOpen = signal(false);
   currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord DG');
+  userPhoto = signal<string | null>(null);
   alertCount = this.alertBadge.totalCount;
   criticalCount = this.alertBadge.criticalCount;
   /** 2026-11-01 : remplace un badge "2" fixe dans le template (jamais une vraie donnée). */
@@ -85,6 +86,8 @@ export class DgLayoutComponent implements OnInit {
       label: 'Pilotage Stratégique', icon: 'fa-compass', children: [
         { label: 'Console Décisionnelle', icon: 'fa-terminal', route: '/dg/chat' },
         { label: 'Diagnostic Global 360°', icon: 'fa-magnifying-glass-chart', route: '/dg/ia-analyse' },
+        { label: 'Studio Rapports & Documents', icon: 'fa-wand-magic-sparkles', route: '/dg/studio-documents' },
+        { label: 'Visas & Directives Inter-Services', icon: 'fa-signature', route: '/dg/partage' },
       ]
     },
     {
@@ -166,6 +169,12 @@ export class DgLayoutComponent implements OnInit {
   showNotifPanel = signal(false);
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      this.userPhoto.set(localStorage.getItem('tanty_user_photo'));
+      window.addEventListener('tanty_profile_photo_updated', (e: any) => {
+        this.userPhoto.set(e.detail || null);
+      });
+    }
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {

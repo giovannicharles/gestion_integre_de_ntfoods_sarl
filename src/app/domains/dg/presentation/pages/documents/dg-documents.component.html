@@ -10,7 +10,14 @@
         <p class="ph-sub">Gestion documentaire sécurisée, conventions, certificats ANOR, rapports et pièces d'audit centralisées</p>
       </div>
     </div>
-    <div class="ph-actions" style="display:flex;align-items:center;gap:10px">
+    <div class="ph-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <a routerLink="/dg/studio-documents" class="btn" style="background:#047857; color:#fff; font-weight:700;">
+        <i class="fa-solid fa-pen-nib"></i> TantyDoc Studio
+      </a>
+      <a routerLink="/dg/partage" class="btn btn-outline" style="font-weight:700;">
+        <i class="fa-solid fa-stamp"></i> Navette & Visas DG
+      </a>
+
       <!-- SÉLECTEUR DE VUE -->
       <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
         <button type="button" class="btn btn-sm" [class.btn-primary]="modeAffichage() === 'table'" [class.btn-ghost]="modeAffichage() !== 'table'" (click)="modeAffichage.set('table')" title="Vue Tableau" style="padding:4px 10px">
