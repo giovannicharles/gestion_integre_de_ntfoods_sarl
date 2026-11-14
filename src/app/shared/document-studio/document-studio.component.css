@@ -486,10 +486,181 @@
   color: #94a3b8;
 }
 
+/* DOUBLE ÉCRAN (SPLIT LIVE) & MINI TOOLBARS */
+.studio-split-container {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1.05fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.studio-grid-compact {
+  grid-template-columns: 1fr !important;
+}
+
+.a4-preview-split {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+  padding: 14px !important;
+  border-radius: 10px;
+}
+
+.a4-preview-split .a4-sheet {
+  width: 100%;
+  max-width: 210mm;
+  min-height: auto;
+  padding: 14mm 14mm;
+  margin: 0 auto;
+}
+
+.btn-toolbar-mini {
+  border: 1px solid var(--n200);
+  background: #fff;
+  color: var(--n700);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-toolbar-mini:hover {
+  background: var(--n100);
+  border-color: var(--g);
+}
+
+.btn-toolbar-mini.active {
+  background: var(--g);
+  color: #fff;
+  border-color: var(--g);
+}
+
+/* BANNIÈRE RÉPUBLIQUE, TOTAUX, ANNEXES & CACHET ROND */
+.a4-republique-banner {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  font-size: 9.5px;
+  color: #334155;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.a4-republique-banner > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.a4-table-total-row td {
+  background: #f0fdf4;
+  color: #14532D;
+  border-top: 2px solid #14532D;
+}
+
+.a4-annexes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.a4-annexe-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #1e293b;
+}
+
+.a4-annexe-item i {
+  color: #14532D;
+  margin-top: 2px;
+}
+
+.a4-annexe-ref {
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #14532D;
+}
+
+.a4-annexe-note {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.a4-official-stamp {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.stamp-ring {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 2.5px double #14532D;
+  color: #14532D;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transform: rotate(-10deg);
+  opacity: 0.85;
+  background: rgba(20, 83, 45, 0.03);
+}
+
+.stamp-top {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.stamp-mid {
+  font-size: 11px;
+  font-weight: 900;
+  margin: 3px 0;
+  padding: 2px 6px;
+  border-top: 1px solid #14532D;
+  border-bottom: 1px solid #14532D;
+}
+
+.stamp-bot {
+  font-size: 7.5px;
+  font-weight: 700;
+}
+
+@media (max-width: 1280px) {
+  .studio-split-container {
+    grid-template-columns: 1fr;
+  }
+  .a4-preview-split {
+    position: static;
+    max-height: none;
+  }
+}
+
 /* PRINT MEDIA */
 @media print {
   .no-print, header, .studio-config-panel, .studio-sections-panel, .app-sidebar, .sidebar, .topbar {
     display: none !important;
+  }
+
+  .studio-split-container {
+    display: block !important;
+  }
+
+  .a4-sheet {
+    transform: none !important;
   }
 
   body, html, .dash-21-root, .a4-preview-wrapper {

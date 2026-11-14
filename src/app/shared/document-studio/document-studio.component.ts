@@ -16,10 +16,13 @@ export interface DocumentSection {
   actif: boolean;
   ordre: number;
   contenuTexte?: string;
+  alignement?: 'left' | 'center' | 'justify';
+  taillePolice?: '11px' | '12px' | '13px' | '14px';
   calloutType?: 'INFO' | 'IMPORTANT' | 'RECOMMANDATION' | 'DECISION' | 'ALERTE';
   kpis?: { label: string; valeur: string; sousTitre?: string }[];
   colonnesTableau?: string[];
   lignesTableau?: string[][];
+  afficherTotalTableau?: boolean;
   signatures?: { role: string; nom: string; statut: string }[];
   annexes?: { code: string; titre: string; description: string }[];
 }
@@ -38,6 +41,8 @@ export interface DocumentProjet {
   themeDesign: 'FORET_OR' | 'CORPORATE_SLATE' | 'PRESTIGE_BORDEAUX' | 'MINIMALISTE';
   formatPage: 'A4_PORTRAIT' | 'A4_PAYSAGE';
   filigrane: string;
+  enteteRepublique?: boolean;
+  afficherCachetOfficiel?: boolean;
   sections: DocumentSection[];
 }
 
@@ -70,7 +75,8 @@ export class DocumentStudioComponent implements OnInit {
   private readonly iaService = inject(IaService);
   private readonly toast = inject(ToastService);
 
-  vueActive = signal<'EDITEUR' | 'PREVIEW'>('EDITEUR');
+  vueActive = signal<'EDITEUR' | 'SPLIT' | 'PREVIEW'>('EDITEUR');
+  zoomPreview = signal<number>(100);
   iaEnCours = signal(false);
   sauvegardeEnCours = signal(false);
 
@@ -187,6 +193,8 @@ export class DocumentStudioComponent implements OnInit {
     themeDesign: 'FORET_OR',
     formatPage: 'A4_PORTRAIT',
     filigrane: 'ORIGINAL',
+    enteteRepublique: false,
+    afficherCachetOfficiel: true,
     sections: []
   });
 
@@ -654,10 +662,78 @@ export class DocumentStudioComponent implements OnInit {
         { role: 'Responsable Opérationnel', nom: this.doc().auteur, statut: 'Signé' },
         { role: 'Direction Générale', nom: 'Directeur Général NT Foods', statut: 'Visé' }
       ];
+    } else if (type === 'ANNEXES') {
+      nouvelle.titre = 'Pièces Jointes & Annexes Officielles';
+      nouvelle.annexes = [
+        { code: 'ANN-01', titre: 'Certificat de Conformité ANOR', description: 'Copie certifiée conforme aux normes agroalimentaires camerounaises.' },
+        { code: 'ANN-02', titre: 'Bordereau de Réception Signé', description: 'Justificatif logistique signé par le magasinier en chef.' }
+      ];
     }
 
     this.doc.update(d => ({ ...d, sections: [...d.sections, nouvelle] }));
     this.toast.info('Nouvelle section ajoutée.');
+  }
+
+  dupliquerSection(index: number): void {
+    const orig = this.doc().sections[index];
+    if (!orig) return;
+    const clone: DocumentSection = JSON.parse(JSON.stringify(orig));
+    clone.id = 'sec-' + Date.now();
+    clone.titre = `${orig.titre} (Copie)`;
+    this.doc.update(d => {
+      const copy = [...d.sections];
+      copy.splice(index + 1, 0, clone);
+      copy.forEach((s, i) => s.ordre = i + 1);
+      return { ...d, sections: copy };
+    });
+    this.toast.info('Section dupliquée.');
+  }
+
+  insererSnippet(sec: DocumentSection, snippet: string): void {
+    const cur = sec.contenuTexte || '';
+    const sep = cur && !cur.endsWith('\n') && !cur.endsWith(' ') ? ' ' : '';
+    sec.contenuTexte = cur + sep + snippet;
+    this.doc.update(d => ({ ...d }));
+  }
+
+  ajouterAnnexe(sec: DocumentSection): void {
+    if (!sec.annexes) sec.annexes = [];
+    const num = String(sec.annexes.length + 1).padStart(2, '0');
+    sec.annexes.push({ code: `ANN-${num}`, titre: 'Nouvelle Pièce Jointe', description: 'Précisez le contenu ou la référence de la pièce.' });
+    this.doc.update(d => ({ ...d }));
+  }
+
+  supprimerAnnexe(sec: DocumentSection, idx: number): void {
+    if (sec.annexes && sec.annexes.length > 1) {
+      sec.annexes.splice(idx, 1);
+      this.doc.update(d => ({ ...d }));
+    }
+  }
+
+  calculerTotauxTableau(sec: DocumentSection): string[] {
+    if (!sec.colonnesTableau || !sec.lignesTableau) return [];
+    return sec.colonnesTableau.map((_, colIdx) => {
+      if (colIdx === 0) return 'TOTAL GÉNÉRAL';
+      let sum = 0;
+      let hasNumber = false;
+      let hasFcfa = false;
+      for (const row of sec.lignesTableau!) {
+        const val = (row[colIdx] || '').trim();
+        if (val.toUpperCase().includes('FCFA')) hasFcfa = true;
+        // Ne sommer que les cellules contenant uniquement un montant ou nombre avec unités simples
+        if (/^[\d\s.,]+(\s*(FCFA|fcfa|cartons?|sacs?|kg|unités?))?$/i.test(val)) {
+          const clean = val.replace(/[^\d.-]/g, '');
+          const n = parseFloat(clean);
+          if (!isNaN(n)) {
+            sum += n;
+            hasNumber = true;
+          }
+        }
+      }
+      if (!hasNumber) return '-';
+      const formatted = Math.round(sum).toLocaleString('fr-FR');
+      return hasFcfa ? `${formatted} FCFA` : formatted;
+    });
   }
 
   supprimerSection(index: number): void {
@@ -912,6 +988,116 @@ Rédige:
   // --- ACTIONS EXPORT & PARTAGE ---
   imprimerDocument(): void {
     window.print();
+  }
+
+  exporterWordDoc(): void {
+    const d = this.doc();
+    const esc = (s: string) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let bodyHtml = '';
+
+    if (d.enteteRepublique) {
+      bodyHtml += `<p style="text-align:center;font-weight:bold;font-size:11pt;margin:0 0 8pt;">RÉPUBLIQUE DU CAMEROUN<br/><span style="font-size:9pt;font-weight:normal;">Paix – Travail – Patrie</span></p><hr/>`;
+    }
+
+    bodyHtml += `
+      <table style="width:100%;border-bottom:2px solid #14532D;margin-bottom:14pt;">
+        <tr>
+          <td style="vertical-align:top;">
+            <h2 style="color:#14532D;margin:0;">NT FOODS S.A.R.L (TANTY)</h2>
+            <p style="font-size:9pt;color:#475569;margin:2pt 0;">Agroalimentaire & Nutrition Naturelle · B.P. 5244 Douala</p>
+          </td>
+          <td style="text-align:right;vertical-align:top;font-size:9.5pt;">
+            <strong>Réf : ${esc(d.reference)}</strong><br/>
+            Fait à ${esc(d.lieu)}, le ${esc(d.dateDocument)}<br/>
+            Département : ${esc(d.moduleOrigine)}<br/>
+            Destinataire : ${esc(d.destinataire)}
+          </td>
+        </tr>
+      </table>
+      <h1 style="color:#14532D;font-size:16pt;border-left:4px solid #F6B60B;padding-left:8pt;margin:10pt 0;">${esc(d.titre)}</h1>
+      <p style="font-size:9.5pt;color:#64748B;margin-bottom:14pt;">Émis par : ${esc(d.auteur)} | Statut : <strong>${esc(d.statut)}</strong></p>
+    `;
+
+    for (const sec of d.sections) {
+      if (!sec.actif) continue;
+      bodyHtml += `<h3 style="color:#14532D;border-bottom:1px solid #CBD5E1;padding-bottom:3pt;margin-top:14pt;">${esc(sec.titre)}</h3>`;
+      if (sec.type === 'TEXTE' || sec.type === 'RESUME' || sec.type === 'RECOMMANDATIONS' || sec.type === 'CALLOUT') {
+        bodyHtml += `<p style="font-size:10.5pt;line-height:1.5;white-space:pre-line;">${esc(sec.contenuTexte || '')}</p>`;
+      } else if (sec.type === 'KPIS' && sec.kpis) {
+        bodyHtml += `<table style="width:100%;border-collapse:collapse;margin:6pt 0;"><tr>`;
+        for (const k of sec.kpis) {
+          bodyHtml += `<td style="border:1px solid #CBD5E1;padding:6pt;text-align:center;"><div style="font-size:8.5pt;color:#64748B;">${esc(k.label)}</div><strong style="font-size:12pt;color:#14532D;">${esc(k.valeur)}</strong><div style="font-size:8pt;">${esc(k.sousTitre || '')}</div></td>`;
+        }
+        bodyHtml += `</tr></table>`;
+      } else if (sec.type === 'TABLEAU_DONNEES' && sec.colonnesTableau && sec.lignesTableau) {
+        bodyHtml += `<table style="width:100%;border-collapse:collapse;font-size:9.5pt;margin:6pt 0;"><thead><tr>`;
+        for (const col of sec.colonnesTableau) {
+          bodyHtml += `<th style="border:1px solid #94A3B8;background:#F1F5F9;padding:5pt;text-align:left;">${esc(col)}</th>`;
+        }
+        bodyHtml += `</tr></thead><tbody>`;
+        for (const row of sec.lignesTableau) {
+          bodyHtml += `<tr>`;
+          for (const cell of row) {
+            bodyHtml += `<td style="border:1px solid #CBD5E1;padding:5pt;">${esc(cell)}</td>`;
+          }
+          bodyHtml += `</tr>`;
+        }
+        if (sec.afficherTotalTableau) {
+          const totals = this.calculerTotauxTableau(sec);
+          bodyHtml += `<tr style="background:#ECFDF5;font-weight:bold;">`;
+          for (const t of totals) {
+            bodyHtml += `<td style="border:1px solid #94A3B8;padding:5pt;">${esc(t)}</td>`;
+          }
+          bodyHtml += `</tr>`;
+        }
+        bodyHtml += `</tbody></table>`;
+      } else if (sec.type === 'ANNEXES' && sec.annexes) {
+        bodyHtml += `<ul>`;
+        for (const a of sec.annexes) {
+          bodyHtml += `<li><strong>${esc(a.code)} — ${esc(a.titre)}</strong> : ${esc(a.description)}</li>`;
+        }
+        bodyHtml += `</ul>`;
+      } else if (sec.type === 'SIGNATURES' && sec.signatures) {
+        bodyHtml += `<table style="width:100%;margin-top:16pt;border-collapse:collapse;"><tr>`;
+        for (const s of sec.signatures) {
+          bodyHtml += `<td style="border:1px solid #CBD5E1;padding:10pt;text-align:center;width:${Math.floor(100 / sec.signatures.length)}%;"><strong>${esc(s.role)}</strong><br/><span style="font-size:9pt;">${esc(s.nom)}</span><br/><br/><em style="color:#15803D;font-size:8.5pt;">${esc(s.statut)}</em></td>`;
+        }
+        bodyHtml += `</tr></table>`;
+      }
+    }
+
+    const htmlDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${esc(d.titre)}</title></head><body style="font-family:Calibri,Arial,sans-serif;">${bodyHtml}</body></html>`;
+    const blob = new Blob(['\ufeff', htmlDoc], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${d.reference}_${d.moduleOrigine}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.toast.success('Document Word (.doc) exporté avec succès !');
+  }
+
+  copierTexteBrut(): void {
+    const d = this.doc();
+    let txt = `${d.titre.toUpperCase()}\nRéf : ${d.reference} | Date : ${d.dateDocument} (${d.lieu})\nÉmis par : ${d.auteur}\nDestinataire : ${d.destinataire}\n\n`;
+    for (const sec of d.sections) {
+      if (!sec.actif) continue;
+      txt += `=== ${sec.titre} ===\n`;
+      if (sec.contenuTexte) txt += `${sec.contenuTexte}\n\n`;
+      if (sec.kpis) {
+        txt += sec.kpis.map(k => `- ${k.label} : ${k.valeur} (${k.sousTitre || ''})`).join('\n') + '\n\n';
+      }
+      if (sec.lignesTableau && sec.colonnesTableau) {
+        txt += sec.colonnesTableau.join(' | ') + '\n';
+        for (const r of sec.lignesTableau) txt += r.join(' | ') + '\n';
+        txt += '\n';
+      }
+    }
+    navigator.clipboard?.writeText(txt).then(() => {
+      this.toast.success('Contenu copié dans le presse-papiers !');
+    }).catch(() => {
+      this.toast.error('Impossible d\'accéder au presse-papiers.');
+    });
   }
 
   partagerSurWhatsApp(): void {
