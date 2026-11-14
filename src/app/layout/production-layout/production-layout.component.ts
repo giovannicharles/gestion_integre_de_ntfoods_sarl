@@ -16,12 +16,13 @@ import { SignalerIncidentComponent } from '../../shared/signaler-incident/signal
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 registerLocaleData(localeFr);
 
 @Component({
   selector: 'app-production-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent, TantybotComponent],
   templateUrl: './production-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })

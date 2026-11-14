@@ -17,6 +17,7 @@ import { SidebarSearchComponent } from '../../shared/sidebar-search/sidebar-sear
 import { HeaderSearchComponent } from '../../shared/header-search/header-search.component';
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
@@ -25,7 +26,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-dg-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent, ConfirmDialogComponent, TantybotComponent],
   templateUrl: './dg-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })

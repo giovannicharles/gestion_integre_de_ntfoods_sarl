@@ -181,7 +181,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
         },
         error: () => {},
       });
-      this.api.get<any>('/comptable/decaissements').subscribe({
+      this.api.get<any>('/comptabilite/decaissements').subscribe({
         next: (r) => {
           const list = r?.donnees ?? r ?? [];
           const count = Array.isArray(list)
@@ -263,7 +263,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
         error: () => {},
       });
     } else if (role.includes('SECRETAIRE')) {
-      this.api.get<any>('/comptable/decaissements').subscribe({
+      this.api.get<any>('/comptabilite/decaissements').subscribe({
         next: (r) => {
           const list = r?.donnees ?? r ?? [];
           const count = Array.isArray(list) ? list.filter((x: any) => x.statut === 'VALIDEE_DG').length : 0;

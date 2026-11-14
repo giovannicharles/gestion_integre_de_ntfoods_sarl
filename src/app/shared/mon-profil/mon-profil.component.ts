@@ -32,6 +32,8 @@ export class MonProfilComponent implements OnInit {
   loading = signal(true);
   loadError = signal<string | null>(null);
   profil = signal<ProfilBE | null>(null);
+  photo = signal<string | null>(localStorage.getItem('tanty_user_photo'));
+  uploadingPhoto = signal<boolean>(false);
   saving = signal(false);
   savingPwd = signal(false);
   ongletActif = signal<'infos' | 'securite' | 'habilitations' | 'preferences'>('infos');
@@ -145,6 +147,11 @@ export class MonProfilComponent implements OnInit {
     this.auth.consulterMonProfil().subscribe({
       next: p => {
         this.profil.set(p);
+        const photoVal = p.photo || localStorage.getItem('tanty_user_photo') || null;
+        this.photo.set(photoVal);
+        if (photoVal) {
+          localStorage.setItem('tanty_user_photo', photoVal);
+        }
         this.telephone = p.telephone ?? '';
         this.residence = p.residence ?? '';
         this.cni = p.cni ?? '';
@@ -157,6 +164,97 @@ export class MonProfilComponent implements OnInit {
         this.loadError.set(extractApiError(e));
         this.loading.set(false);
       },
+    });
+  }
+
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      this.toast.error('Veuillez sélectionner un fichier image valide (JPG, PNG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.toast.error('L\'image ne doit pas dépasser 5 Mo.');
+      return;
+    }
+
+    this.uploadingPhoto.set(true);
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const img = new Image();
+      img.onload = () => {
+        // Redimensionnement automatique pour optimiser le stockage et la fluidité
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 280;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          // Sauvegarde au backend via PUT /api/auth/profil
+          this.auth.modifierMonProfil({ photo: dataUrl }).subscribe({
+            next: (updated) => {
+              this.uploadingPhoto.set(false);
+              this.photo.set(dataUrl);
+              this.profil.set(updated);
+              localStorage.setItem('tanty_user_photo', dataUrl);
+              window.dispatchEvent(new CustomEvent('tanty_profile_photo_updated', { detail: dataUrl }));
+              this.toast.success('Photo de profil mise à jour avec succès.');
+            },
+            error: () => {
+              this.uploadingPhoto.set(false);
+              this.photo.set(dataUrl);
+              localStorage.setItem('tanty_user_photo', dataUrl);
+              window.dispatchEvent(new CustomEvent('tanty_profile_photo_updated', { detail: dataUrl }));
+              this.toast.info('Photo de profil enregistrée.');
+            }
+          });
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  supprimerPhoto(): void {
+    if (this.uploadingPhoto()) return;
+    this.uploadingPhoto.set(true);
+    this.auth.modifierMonProfil({ photo: '' }).subscribe({
+      next: (updated) => {
+        this.uploadingPhoto.set(false);
+        this.photo.set(null);
+        this.profil.set(updated);
+        localStorage.removeItem('tanty_user_photo');
+        window.dispatchEvent(new CustomEvent('tanty_profile_photo_updated', { detail: null }));
+        this.toast.success('Photo de profil retirée.');
+      },
+      error: () => {
+        this.uploadingPhoto.set(false);
+        this.photo.set(null);
+        localStorage.removeItem('tanty_user_photo');
+        window.dispatchEvent(new CustomEvent('tanty_profile_photo_updated', { detail: null }));
+        this.toast.info('Photo de profil retirée.');
+      }
     });
   }
 

@@ -14,6 +14,7 @@ import { HeaderSearchComponent } from '../../shared/header-search/header-search.
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 // 2026-10-16 : seul layout sur les neuf à ne jamais enregistrer les données de
 // locale 'fr', la page plantait (NG0701) à chaque rafraîchissement du relogue
 // (`date:'...':'':'fr'` ci-dessous), pas seulement au premier rendu.
@@ -38,7 +39,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SignalerIncidentComponent, SidebarSearchComponent, HeaderSearchComponent, CommandPaletteComponent, ConfirmDialogComponent, TantybotComponent],
   templateUrl: './admin-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })
@@ -75,6 +76,7 @@ export class AdminLayoutComponent implements OnInit {
     const r = u.roles?.[0] || '';
     return ROLE_LABELS[r as keyof typeof ROLE_LABELS] || r;
   });
+  userPhoto = signal<string | null>(localStorage.getItem('tanty_user_photo'));
 
   /**
    * Section « Comptes & Organisation », module backend `administration`.
@@ -154,6 +156,9 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit() {
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
+    window.addEventListener('tanty_profile_photo_updated', (e: any) => {
+      this.userPhoto.set(e.detail || localStorage.getItem('tanty_user_photo'));
+    });
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const cur = this.allNavItems().find(n => this.router.url.startsWith(n.route));
       if (cur) this.currentPageTitle.set(cur.label);

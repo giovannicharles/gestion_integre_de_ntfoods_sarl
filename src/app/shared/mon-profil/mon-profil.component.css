@@ -10,10 +10,18 @@
   flex-wrap: wrap;
 }
 
+.profile-avatar-container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .profile-avatar-large {
-  width: 76px;
-  height: 76px;
-  border-radius: 16px;
+  width: 82px;
+  height: 82px;
+  border-radius: 20px;
   background: linear-gradient(135deg, var(--g) 0%, #14532d 100%);
   color: #ffffff;
   display: flex;
@@ -23,6 +31,60 @@
   font-weight: 800;
   box-shadow: 0 4px 14px rgba(20, 83, 45, 0.25);
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  border: 3px solid #ffffff;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  top: 56px;
+  right: -6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--mc, #14532D);
+  color: #ffffff;
+  border: 2.5px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
+  z-index: 2;
+}
+
+.avatar-edit-badge:hover {
+  transform: scale(1.15);
+  background: #0f3d20;
+}
+
+.avatar-delete-link {
+  background: none;
+  border: none;
+  color: var(--r, #dc2626);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.avatar-delete-link:hover {
+  background: rgba(220, 38, 38, 0.1);
 }
 
 .profile-hero-content {

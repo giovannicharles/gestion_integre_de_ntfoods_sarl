@@ -40,8 +40,27 @@
     <!-- BANDEAU D'IDENTITÉ SUPÉRIEUR -->
     <div class="dash-21-card profile-hero-card" style="margin-bottom:20px;padding:24px">
       <div class="profile-hero-inner">
-        <div class="profile-avatar-large">
-          {{ initiales() }}
+        <div class="profile-avatar-container">
+          <div class="profile-avatar-large">
+            @if (photo()) {
+              <img [src]="photo()" alt="Photo de profil" class="profile-avatar-img" />
+            } @else {
+              {{ initiales() }}
+            }
+          </div>
+          <button type="button" class="avatar-edit-badge" (click)="photoInput.click()" [title]="photo() ? 'Changer la photo' : 'Ajouter une photo'">
+            @if (uploadingPhoto()) {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            } @else {
+              <i class="fa-solid fa-camera"></i>
+            }
+          </button>
+          <input type="file" #photoInput accept="image/png,image/jpeg,image/webp" style="display:none" (change)="onPhotoSelected($event)">
+          @if (photo()) {
+            <button type="button" class="avatar-delete-link" (click)="supprimerPhoto()" title="Supprimer la photo">
+              <i class="fa-solid fa-trash-can"></i> Retirer
+            </button>
+          }
         </div>
         <div class="profile-hero-content">
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">

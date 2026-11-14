@@ -51,9 +51,6 @@
         <a href="/docs_guides/modules/guide_production.html" target="_blank" class="btn-guide-module" title="Consulter le guide Production Usine">
           <i class="fa-solid fa-circle-question"></i> <span>Guide Production</span>
         </a>
-        <a class="btn-quick-whatsapp" routerLink="/production/commandes-clients" title="Prise de commande client WhatsApp / Express">
-          <i class="fa-brands fa-whatsapp"></i> <span>+ Commande WhatsApp</span>
-        </a>
         <app-header-search [items]="navItems()"></app-header-search>
         <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
           <i class="fa-solid fa-bolt"></i>
@@ -92,4 +89,6 @@
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
     message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
     cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+
+  <app-tantybot />
 </div>

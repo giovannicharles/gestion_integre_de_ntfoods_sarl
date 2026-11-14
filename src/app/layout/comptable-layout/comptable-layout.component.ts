@@ -18,6 +18,7 @@ import { SignalerIncidentComponent } from '../../shared/signaler-incident/signal
 import { CommandPaletteComponent } from '../../shared/command-palette/command-palette.component';
 import { filtrerNavItems, filtrerNavGroupes } from '../../shared/utils/nav-filter.util';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TantybotComponent } from '../../shared/components/tantybot/tantybot.component';
 registerLocaleData(localeFr);
 interface NavItem { label: string; icon: string; route: string; badge?: number; badgeClass?: string; }
 interface NavGroup { label: string; icon: string; children: NavItem[]; }
@@ -25,7 +26,7 @@ interface NavGroup { label: string; icon: string; children: NavItem[]; }
 @Component({
   selector: 'app-comptable-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, DatePipe, NotificationCenterComponent, SidebarSearchComponent, HeaderSearchComponent, SignalerIncidentComponent, CommandPaletteComponent, ConfirmDialogComponent, TantybotComponent],
   templateUrl: './comptable-layout.component.html',
   styleUrls: ['../stock-layout/stock-layout.component.css']
 })

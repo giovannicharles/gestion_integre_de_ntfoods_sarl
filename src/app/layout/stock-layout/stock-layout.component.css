@@ -1498,13 +1498,56 @@
   color: #14532D;
 }
 
-/* Responsive Topbar pour éviter tout chevauchement */
-@media (max-width: 1440px) {
-  .btn-quick-whatsapp span,
+/* Responsive Topbar pour éviter tout chevauchement et garantir une fluidité totale */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tb-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.tb-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tb-page {
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .tb-date {
+    display: none !important;
+  }
   .btn-guide-module span {
     display: none;
   }
-  .btn-quick-whatsapp,
   .btn-guide-module {
     width: 34px;
     height: 34px;
@@ -1513,8 +1556,75 @@
   }
 }
 
-@media (max-width: 1250px) {
-  .tb-date {
+@media (max-width: 960px) {
+  .tb-user-txt {
     display: none;
   }
+  .tb-cmdk-btn kbd {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    padding: 0 10px;
+  }
+  .tb-module-chip span {
+    display: none;
+  }
+  .tb-module-chip {
+    padding: 6px;
+    border-radius: 50%;
+  }
+  .tb-module-chip i {
+    font-size: 13px;
+  }
+  .tb-page {
+    max-width: 140px;
+    font-size: 12.5px;
+  }
+  .tb-cmdk-btn {
+    display: none;
+  }
+}
+
+/* ── Page Header (En-tête de module réactif universel) ── */
+.ph {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-bottom: 20px !important;
+}
+
+.ph-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+  flex: 1 1 260px !important;
+}
+
+.ph-title {
+  font-size: clamp(16px, 2.2vw, 22px) !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  color: var(--g-d, #0f172a) !important;
+}
+
+.ph-sub {
+  font-size: 12.5px !important;
+  color: var(--n600, #475569) !important;
+  margin: 4px 0 0 !important;
+  line-height: 1.4 !important;
+}
+
+.ph-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  flex-shrink: 0 !important;
 }

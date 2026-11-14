@@ -86,9 +86,6 @@
         <a href="/docs_guides/modules/guide_admin.html" target="_blank" class="btn-guide-module" title="Consulter le guide Administration">
           <i class="fa-solid fa-circle-question"></i> <span>Guide Admin</span>
         </a>
-        <a class="btn-quick-whatsapp" routerLink="/admin/commandes-clients" title="Prise de commande client WhatsApp / Express">
-          <i class="fa-brands fa-whatsapp"></i> <span>+ Commande WhatsApp</span>
-        </a>
         <app-header-search [items]="tousLesItems()"></app-header-search>
         <button class="tb-cmdk-btn" type="button" (click)="commandPalette?.ouvrir()" title="Palette de commandes">
           <i class="fa-solid fa-bolt"></i>
@@ -109,13 +106,17 @@
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>
         <div class="tb-divider"></div>
-        <div class="tb-user">
-          <div class="tb-av">{{ userInitials() }}</div>
+        <a class="tb-user" routerLink="/admin/mon-profil" title="Consulter mon profil & photo" style="text-decoration:none;cursor:pointer">
+          @if (userPhoto()) {
+            <img [src]="userPhoto()" alt="Photo profil" class="tb-av" style="object-fit:cover;border-radius:50%;width:34px;height:34px;border:2px solid var(--mc,#14532D);padding:0" />
+          } @else {
+            <div class="tb-av">{{ userInitials() }}</div>
+          }
           <div class="tb-user-txt">
             <span class="tb-u-name">{{ userShortName() }}</span>
             <span class="tb-u-role">{{ userRoleLabel() }}</span>
           </div>
-        </div>
+        </a>
       </div>
     </header>
 
@@ -127,4 +128,6 @@
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
     message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
     cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+
+  <app-tantybot />
 </div>
