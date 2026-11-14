@@ -129,7 +129,7 @@ export class DocumentStudioComponent implements OnInit {
           });
           return;
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     const premierType = this.catalogueTypes[moduleDetecte]?.[0]?.code || 'RAPPORT_ACTIVITE';
@@ -346,7 +346,7 @@ export class DocumentStudioComponent implements OnInit {
     try {
       const data = localStorage.getItem(STORAGE_DOC_LIBRARY_KEY);
       if (data) this.bibliotheque.set(JSON.parse(data));
-    } catch (_) {}
+    } catch (_) { }
   }
 
   sauvegarderBrouillon(): void {
@@ -386,7 +386,7 @@ export class DocumentStudioComponent implements OnInit {
           return;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     this.toast.error('Impossible de charger ce document.');
   }
 

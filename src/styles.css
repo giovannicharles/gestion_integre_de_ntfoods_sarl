@@ -2317,3 +2317,157 @@ select.input { cursor:pointer; }
     grid-template-columns: 1fr;
   }
 }
+
+/* ══ DG EXECUTIVE DESIGN SYSTEM (.dg-executive-shell) ══ */
+.dg-executive-shell .dash {
+  gap: 20px;
+}
+
+.dg-executive-shell .ph {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--n200, #e2e8f0);
+  border-left: 4px solid var(--g, #14532D);
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+:root.dark-mode .dg-executive-shell .ph {
+  background: linear-gradient(135deg, #142219 0%, #0f1a13 100%);
+  border-color: rgba(255, 255, 255, 0.09);
+  border-left-color: var(--y, #F6B60B);
+}
+
+.dg-executive-shell .ph-icon {
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(20, 83, 45, 0.18);
+}
+
+.dg-executive-shell .card {
+  border-radius: 14px;
+  border: 1px solid var(--n200, #e2e8f0);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.dg-executive-shell .card:hover {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
+}
+
+.dg-executive-shell .card > .form-grid {
+  padding: 16px 20px 8px;
+}
+.dg-executive-shell .card > .form-actions {
+  padding: 10px 20px 16px;
+  border-top: 1px solid var(--n150, #f1f5f9);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dg-executive-shell .kpi-grid {
+  gap: 16px;
+}
+.dg-executive-shell .kpi-card {
+  border-radius: 14px;
+  border: 1px solid var(--n200, #e2e8f0);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.dg-executive-shell .kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(20, 83, 45, 0.1);
+}
+
+.dg-executive-shell .filter-bar {
+  background: var(--w, #ffffff);
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--n200, #e2e8f0);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+}
+:root.dark-mode .dg-executive-shell .filter-bar {
+  background: #142219;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dg-executive-shell .filter-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.dg-executive-shell .filter-btn.active {
+  background: var(--g, #14532D);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(20, 83, 45, 0.22);
+}
+
+.dg-executive-shell .period-selector {
+  background: var(--n100, #f1f5f9);
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid var(--n200, #e2e8f0);
+}
+.dg-executive-shell .period-btn {
+  border-radius: 7px;
+  font-weight: 600;
+}
+.dg-executive-shell .period-btn.active {
+  background: var(--g, #14532D);
+  color: #ffffff;
+}
+
+.dg-executive-shell .info-banner {
+  background: linear-gradient(90deg, rgba(20, 83, 45, 0.06) 0%, rgba(246, 182, 11, 0.08) 100%);
+  border: 1px solid rgba(20, 83, 45, 0.16);
+  border-left: 4px solid var(--g, #14532D);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--g-d, #14532D);
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+:root.dark-mode .dg-executive-shell .info-banner {
+  background: rgba(255, 255, 255, 0.04);
+  color: #d1fae5;
+}
+
+.dg-executive-shell .data-table thead th {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.dg-executive-shell .data-table tbody tr {
+  transition: background 0.14s ease;
+}
+
+.dg-executive-shell .section-titre {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--g-d, #14532D);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(20, 83, 45, 0.06);
+  border-left: 3px solid var(--g, #14532D);
+  border-radius: 6px;
+  margin-top: 6px;
+}
+:root.dark-mode .dg-executive-shell .section-titre {
+  color: #fde68a;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dg-executive-shell .loading-state,
+.dg-executive-shell .error-state {
+  background: var(--w, #ffffff);
+  border: 1px solid var(--n200, #e2e8f0);
+  border-radius: 14px;
+  padding: 36px 20px;
+  text-align: center;
+}
+:root.dark-mode .dg-executive-shell .loading-state,
+:root.dark-mode .dg-executive-shell .error-state {
+  background: #142219;
+  border-color: rgba(255, 255, 255, 0.08);
+}
