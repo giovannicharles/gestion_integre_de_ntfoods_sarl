@@ -206,7 +206,7 @@
             </div>
             <div>
               <span style="color:var(--n400);display:block;font-size:11px">Dernière Mise à Jour :</span>
-              <span>{{ (sel.dateDerniereModification | date:'dd/MM/yyyy HH:mm') || 'Système' }}</span>
+              <span>{{ ($any(sel).dateDerniereModification | date:'dd/MM/yyyy HH:mm') || 'Système à jour' }}</span>
             </div>
           </div>
         </div>
