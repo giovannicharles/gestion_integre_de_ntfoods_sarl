@@ -17,6 +17,8 @@ export const COMMERCIAL_ROUTES: Routes = [
       { path: 'classement', loadComponent: () => import('./pages/classement/commercial-classement.component').then(m => m.CommercialClassementComponent) },
       { path: 'fiche-synthese', loadComponent: () => import('./pages/fiche-synthese/fiche-synthese.component').then(m => m.FicheSyntheseComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/commercial-documents.component').then(m => m.CommercialDocumentsComponent) },
+      { path: 'tarification', loadComponent: () => import('./pages/tarification/tarification.component').then(m => m.TarificationComponent) },
+      { path: 'zones', loadComponent: () => import('./pages/zones-admin/zones-admin.component').then(m => m.ZonesAdminComponent) },
       { path: 'reporting', loadComponent: () => import('./pages/reporting/commercial-reporting.component').then(m => m.CommercialReportingComponent) },
       { path: 'statistiques', loadComponent: () => import('./pages/statistiques/commercial-statistiques.component').then(m => m.CommercialStatistiquesComponent) },
       { path: 'assistant', loadComponent: () => import('./pages/assistant/commercial-assistant.component').then(m => m.CommercialAssistantComponent) },

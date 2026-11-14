@@ -34,6 +34,7 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
 
   today = new Date();
   precommandes = signal<PrecommandeUI[]>([]);
+  vuePeriode = signal<'demain' | 'aujourdhui' | 'toutes'>('demain');
   filtreStatut = signal<'TOUS' | 'EN_ATTENTE' | 'VALIDEE_SECRETAIRE' | 'VALIDEE_COMPTABLE' | 'REFUSEE'>('TOUS');
   filtreTexte = signal<string>('');
   loading = signal(false);
@@ -124,20 +125,7 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const demain = this.fmtDate(new Date(Date.now() + 86_400_000));
-    this.loading.set(true);
-    this.svc.getPrecommandesParDate(demain).pipe(takeUntil(this.d$)).subscribe({
-      next: page => {
-        const matricule = this.auth.user()?.matricule;
-        this.precommandes.set(
-          page.contenu
-            .filter(pc => !matricule || pc.matriculeCommercial === matricule)
-            .map(this.mapPC)
-        );
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    this.chargerPrecommandes();
     this.stockRepo.getProducts().subscribe({
       next: list => {
         this.produits.set(list.map(p => ({
@@ -150,6 +138,43 @@ export class CommercialPrecommandesComponent implements OnInit, OnDestroy {
       },
       error: () => this.showToast('Impossible de charger le catalogue des produits', 'error'),
     });
+  }
+
+  setVuePeriode(v: 'demain' | 'aujourdhui' | 'toutes'): void {
+    this.vuePeriode.set(v);
+    this.chargerPrecommandes();
+  }
+
+  chargerPrecommandes(): void {
+    this.loading.set(true);
+    const matricule = this.auth.user()?.matricule;
+    const mode = this.vuePeriode();
+
+    if (mode === 'toutes' && matricule) {
+      this.svc.getPrecommandesParCommercial(matricule).pipe(takeUntil(this.d$)).subscribe({
+        next: list => {
+          this.precommandes.set(list.map(this.mapPC));
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    } else {
+      const cibleDate = mode === 'aujourdhui'
+        ? this.fmtDate(new Date())
+        : this.fmtDate(new Date(Date.now() + 86_400_000));
+
+      this.svc.getPrecommandesParDate(cibleDate).pipe(takeUntil(this.d$)).subscribe({
+        next: page => {
+          this.precommandes.set(
+            page.contenu
+              .filter(pc => !matricule || pc.matriculeCommercial === matricule)
+              .map(this.mapPC)
+          );
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    }
   }
 
   getProduit(code: string): ProduitUI | undefined {

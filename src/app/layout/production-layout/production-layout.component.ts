@@ -37,6 +37,7 @@ export class ProductionLayoutComponent implements OnInit {
   mobileOpen = signal(false);
   currentTime = signal(new Date());
   currentPageTitle = signal('Tableau de Bord');
+  userPhoto = signal<string | null>(null);
 
   /** Nom complet de l'utilisateur connecté (session réelle). */
   nomUtilisateur = computed(() => this.authSvc.user()?.nomComplet ?? 'Utilisateur');
@@ -70,6 +71,12 @@ export class ProductionLayoutComponent implements OnInit {
   @ViewChild('commandPalette') commandPalette?: CommandPaletteComponent;
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      this.userPhoto.set(localStorage.getItem('tanty_user_photo'));
+      window.addEventListener('tanty_profile_photo_updated', (e: any) => {
+        this.userPhoto.set(e.detail || null);
+      });
+    }
     setInterval(() => this.currentTime.set(new Date()), 30000);
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {

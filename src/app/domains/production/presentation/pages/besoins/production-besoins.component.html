@@ -7,6 +7,12 @@
     </div>
   </div>
   <div class="ph-actions">
+    <button class="btn btn-ghost" (click)="exporterCsv()" title="Exporter en CSV">
+      <i class="fa-solid fa-file-csv"></i> Exporter CSV
+    </button>
+    <button class="btn btn-ghost" (click)="charger()" title="Actualiser la liste">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+    </button>
     <button class="btn btn-primary" (click)="ouvrirSignaler()">
       <i class="fa-solid fa-plus"></i> Signaler un besoin
     </button>
@@ -45,9 +51,11 @@
 </div>
 
 <div class="card">
-  <div class="card-hd">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des besoins</h2>
-    <div class="filter-row" style="display:flex;gap:var(--sp-2)">
+  <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <h2 class="card-title"><i class="fa-solid fa-table"></i> Registre des besoins de production</h2>
+    <div class="filter-row" style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap">
+      <input type="text" class="input" style="max-width:220px;font-size:12px" placeholder="Rechercher code, produit, PPH..."
+             [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">
       <select class="input" [ngModel]="filtreStatut()" (ngModelChange)="changerFiltre($event)">
         <option value="">Tous les statuts</option>
         @for (s of statuts; track s) { <option [value]="s">{{ s }}</option> }
@@ -63,7 +71,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (b of besoins(); track b.numero) {
+        @for (b of besoinsFiltres(); track b.numero) {
           <tr>
             <td><a href="javascript:void(0)" (click)="voirDetail(b.numero)"><strong>{{ b.numero }}</strong></a></td>
             <td><span class="badge bg-neutral">{{ typeLabel(b.type) }}</span></td>
@@ -116,6 +124,16 @@
             @for (p of pphs(); track p.id) { <option [value]="p.referencePPH">{{ p.referencePPH }}</option> }
           </select>
         </label>
+        @if (produitsCatalogue().length > 0) {
+          <label style="grid-column: 1 / -1">Choisir depuis le catalogue Stock
+            <select class="input" (change)="onSelectProduit($any($event.target).value)">
+              <option value="">-- Sélectionner un article existant --</option>
+              @for (prod of produitsCatalogue(); track prod.sku) {
+                <option [value]="prod.sku">{{ prod.sku }} - {{ prod.designation }}</option>
+              }
+            </select>
+          </label>
+        }
         <label>Code produit<input class="input" [(ngModel)]="nouveauBesoin.codeProduit"></label>
         <label>Désignation<input class="input" [(ngModel)]="nouveauBesoin.designationProduit"></label>
         <label>Quantité demandée<input type="number" class="input" [(ngModel)]="nouveauBesoin.quantiteDemandee"></label>

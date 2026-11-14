@@ -201,6 +201,11 @@ export class CommercialService {
       .pipe(map(r => r.donnees!));
   }
 
+  getPrecommandesParCommercial(matricule: string): Observable<PreCommandeBE[]> {
+    return this.api.get<ApiResponse<PreCommandeBE[]>>(`commercial/precommandes/commercial/${encodeURIComponent(matricule)}`)
+      .pipe(map(r => r.donnees ?? []));
+  }
+
   soumettrePrecommande(req: {
     matriculeCommercial: string; dateSoumission: string;
     lignes: { codeProduit: string; designation: string; conditionnement: string; quantite: number }[];

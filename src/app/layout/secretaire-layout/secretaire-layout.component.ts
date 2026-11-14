@@ -170,7 +170,7 @@ export class SecretaireLayoutComponent implements OnInit, OnDestroy {
         this.pendingVersementsCount.set(attente);
         this.alertCount.set(versements.filter(v => v.alerteRouge).length);
       },
-      error: () => {},
+      error: () => { },
     });
 
     this.cptSvc.getDecaissements().subscribe({
@@ -179,7 +179,7 @@ export class SecretaireLayoutComponent implements OnInit, OnDestroy {
         this.pendingDecaissementsCount.set(n);
         this.validationBadge.set(n);
       },
-      error: () => {},
+      error: () => { },
     });
 
     this.comSvc.getPrecommandesAValider().subscribe({
@@ -187,7 +187,7 @@ export class SecretaireLayoutComponent implements OnInit, OnDestroy {
         const n = (page?.contenu ?? []).filter(c => c.statut === 'SOUMISE').length;
         this.pendingPrecommandesCount.set(n);
       },
-      error: () => {},
+      error: () => { },
     });
 
     this.comSvc.getCommandesDistance().subscribe({
@@ -195,7 +195,7 @@ export class SecretaireLayoutComponent implements OnInit, OnDestroy {
         const n = (list ?? []).filter(c => c.statut === 'RECUE').length;
         this.pendingCommandesClientsCount.set(n);
       },
-      error: () => {},
+      error: () => { },
     });
   }
 

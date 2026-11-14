@@ -39,6 +39,7 @@ export class CommercialLayoutComponent implements OnInit {
   currentTime = this.clock.now;
   currentPageTitle = signal('Précommandes');
   alertCount = this.alertBadge.totalCount;
+  userPhoto = signal<string | null>(null);
 
   currentUser = computed(() => this.authService.getCurrentUser());
   userInitials = computed(() => {
@@ -77,7 +78,9 @@ export class CommercialLayoutComponent implements OnInit {
     },
     {
       label: 'Pilotage & Outils', icon: 'fa-chart-pie', children: [
-        { label: 'Documents & Tarifs', icon: 'fa-folder-open', route: '/commercial/documents' },
+        { label: 'Documents & Catalogues', icon: 'fa-folder-open', route: '/commercial/documents' },
+        { label: 'Grille Tarifaire', icon: 'fa-tags', route: '/commercial/tarification' },
+        { label: 'Zones de Vente', icon: 'fa-map-location-dot', route: '/commercial/zones' },
         { label: 'Rapports de Tournée', icon: 'fa-clipboard-list', route: '/commercial/reporting' },
         { label: 'Statistiques & Ventes', icon: 'fa-chart-column', route: '/commercial/statistiques' },
         { label: 'Assistant Vente & Marge', icon: 'fa-calculator', route: '/commercial/assistant' },
@@ -100,6 +103,12 @@ export class CommercialLayoutComponent implements OnInit {
   ]);
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      this.userPhoto.set(localStorage.getItem('tanty_user_photo'));
+      window.addEventListener('tanty_profile_photo_updated', (e: any) => {
+        this.userPhoto.set(e.detail || null);
+      });
+    }
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.alertBadge.startPolling(30000);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {

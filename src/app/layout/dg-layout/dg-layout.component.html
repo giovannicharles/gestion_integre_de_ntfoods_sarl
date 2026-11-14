@@ -51,21 +51,22 @@
             [title]="!sidebarOpen() ? group.label : ''">
             <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
             <span class="sb-lbl">{{ group.label }}</span>
-            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
+            <i class="fa-solid fa-chevron-down sb-group-arrow"
+              [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
           </button>
           @if (expandedGroup() === group.label || rechercheActive()) {
-            <div class="sb-group-children">
-              @for (child of group.children; track child.route) {
-              <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
-                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
-                <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
-                <span class="sb-lbl">{{ child.label }}</span>
-                @if (child.badge && child.badge > 0) {
-                <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
-                }
-              </a>
+          <div class="sb-group-children">
+            @for (child of group.children; track child.route) {
+            <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
+              [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
+              <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
+              <span class="sb-lbl">{{ child.label }}</span>
+              @if (child.badge && child.badge > 0) {
+              <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
               }
-            </div>
+            </a>
+            }
+          </div>
           }
         </div>
         }
@@ -95,7 +96,8 @@
         </div>
       </div>
       <div class="tb-right">
-        <a href="/docs_guides/modules/guide_dg.html" target="_blank" class="btn-guide-module" title="Consulter le guide Direction Générale">
+        <a href="/docs_guides/modules/guide_dg.html" target="_blank" class="btn-guide-module"
+          title="Consulter le guide Direction Générale">
           <i class="fa-solid fa-circle-question"></i> <span>Guide DG</span>
         </a>
         <app-header-search [items]="tousLesItems()"></app-header-search>
@@ -111,13 +113,15 @@
         <!-- Centre de notifications unifié TANTY (Actions requises + Système + Session) -->
         <app-notification-center></app-notification-center>
 
-        <button class="tb-icon-btn" routerLink="/dg/arbitrage" title="Arbitrages en attente" [class.tb-alert-pulse]="criticalCount() > 0">
+        <button class="tb-icon-btn" routerLink="/dg/arbitrage" title="Arbitrages en attente"
+          [class.tb-alert-pulse]="criticalCount() > 0">
           <i class="fa-solid fa-scale-balanced"></i>
           @if (alertCount() > 0) { <span class="tb-badge tb-badge-orange">{{ alertCount() }}</span> }
         </button>
         <button class="tb-icon-btn" routerLink="/dg/decaissements" title="Décaissements en attente">
           <i class="fa-solid fa-money-bill-transfer"></i>
-          @if (decaissementsEnAttente() > 0) { <span class="tb-badge tb-badge-red">{{ decaissementsEnAttente() }}</span> }
+          @if (decaissementsEnAttente() > 0) { <span class="tb-badge tb-badge-red">{{ decaissementsEnAttente() }}</span>
+          }
         </button>
         <!-- Signalement d'incident : le DG signale comme tout le monde, il ne gère plus le tableau (admin seul). -->
         <app-signaler-incident></app-signaler-incident>
@@ -152,8 +156,8 @@
 
 
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
-    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
-    cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter" cancelText="Annuler"
+    (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
 
   <app-tantybot />
 </div>

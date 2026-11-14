@@ -109,7 +109,20 @@
   <!-- LISTE DES PRÉCOMMANDES -->
   <div class="card table-card">
     <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <span class="card-title"><i class="fa-solid fa-list"></i> Suivi des Précommandes &amp; Signatures</span>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span class="card-title"><i class="fa-solid fa-list"></i> Suivi des Précommandes &amp; Signatures</span>
+        <div class="btn-group" style="display:flex;background:var(--n100, #F3F4F6);padding:2px;border-radius:6px;gap:2px">
+          <button class="btn btn-xs" [class.btn-primary]="vuePeriode() === 'demain'" [class.btn-ghost]="vuePeriode() !== 'demain'" (click)="setVuePeriode('demain')">
+            <i class="fa-solid fa-calendar-day"></i> Demain (J+1)
+          </button>
+          <button class="btn btn-xs" [class.btn-primary]="vuePeriode() === 'aujourdhui'" [class.btn-ghost]="vuePeriode() !== 'aujourdhui'" (click)="setVuePeriode('aujourdhui')">
+            <i class="fa-solid fa-clock"></i> Aujourd'hui
+          </button>
+          <button class="btn btn-xs" [class.btn-primary]="vuePeriode() === 'toutes'" [class.btn-ghost]="vuePeriode() !== 'toutes'" (click)="setVuePeriode('toutes')">
+            <i class="fa-solid fa-folder-open"></i> Toutes mes précommandes
+          </button>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <input type="text" class="form-control" style="max-width:220px;font-size:12px" placeholder="Rechercher dossier, produit..."
                [ngModel]="filtreTexte()" (ngModelChange)="filtreTexte.set($event)">

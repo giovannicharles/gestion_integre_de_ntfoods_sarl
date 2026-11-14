@@ -9,7 +9,11 @@
         </button>
       </div>
       <a class="sb-user" routerLink="/production/profil" [title]="!sidebarOpen() ? 'Mon Profil' : ''">
-        <div class="sb-av">{{ initiales() }}<span class="sb-dot"></span></div>
+        @if (userPhoto()) {
+          <img [src]="userPhoto()" alt="Profil" class="sb-av sb-av-photo" style="object-fit:cover;border-radius:50%" />
+        } @else {
+          <div class="sb-av">{{ initiales() }}<span class="sb-dot"></span></div>
+        }
         <div class="sb-user-info">
           <span class="sb-name">{{ nomUtilisateur() }}</span>
           <span class="sb-role"><i class="fa-solid fa-industry"></i> {{ libelleRole() }}</span>
@@ -48,7 +52,8 @@
         </div>
       </div>
       <div class="tb-right">
-        <a href="/docs_guides/modules/guide_production.html" target="_blank" class="btn-guide-module" title="Consulter le guide Production Usine">
+        <a href="/docs_guides/modules/guide_production.html" target="_blank" class="btn-guide-module"
+          title="Consulter le guide Production Usine">
           <i class="fa-solid fa-circle-question"></i> <span>Guide Production</span>
         </a>
         <app-header-search [items]="navItems()"></app-header-search>
@@ -73,22 +78,26 @@
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>
         <div class="tb-divider"></div>
-        <div class="tb-user">
-          <div class="tb-av">{{ initiales() }}</div>
+        <a class="tb-user" routerLink="/production/profil" title="Voir mon profil" style="text-decoration:none;cursor:pointer">
+          @if (userPhoto()) {
+            <img [src]="userPhoto()" alt="Profil" class="tb-av tb-av-photo" style="object-fit:cover;border-radius:50%" />
+          } @else {
+            <div class="tb-av">{{ initiales() }}</div>
+          }
           <div class="tb-user-txt">
             <span class="tb-u-name">{{ nomUtilisateur() }}</span>
             <span class="tb-u-role">{{ libelleRole() }}</span>
           </div>
           <i class="fa-solid fa-chevron-down tb-caret"></i>
-        </div>
+        </a>
       </div>
     </header>
     <main class="page-content"><router-outlet /></main>
   </div>
 
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
-    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
-    cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter" cancelText="Annuler"
+    (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
 
   <app-tantybot />
 </div>

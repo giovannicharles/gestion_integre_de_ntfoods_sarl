@@ -4,7 +4,10 @@ import { FormsModule } from '@angular/forms';
 import {
   ProductionService, ExpressionBesoinBE, PPHBE, TYPES_BESOIN, STATUTS_BESOIN
 } from '../../../infrastructure/production.service';
+import { StockApiRepository } from '../../../../stock/infrastructure/repositories/stock-api.repository';
+import { Product } from '../../../../stock/domain/models/stock.models';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-production-besoins',
@@ -16,16 +19,20 @@ import { HasPermissionDirective } from '../../../../../shared/directives/has-per
 })
 export class ProductionBesoinsComponent implements OnInit {
   private readonly svc = inject(ProductionService);
+  private readonly stockRepo = inject(StockApiRepository);
+  private readonly toast = inject(ToastService);
 
   loading = signal(false);
   message = signal('');
 
   besoins = signal<ExpressionBesoinBE[]>([]);
   pphs = signal<PPHBE[]>([]);
+  produitsCatalogue = signal<Product[]>([]);
   typesBesoin = TYPES_BESOIN;
   statuts = STATUTS_BESOIN;
 
   filtreStatut = signal<string>('');
+  filtreTexte = signal<string>('');
 
   showSignaler = signal(false);
   showRejeter = signal<ExpressionBesoinBE | null>(null);
@@ -42,12 +49,70 @@ export class ProductionBesoinsComponent implements OnInit {
   nbValides = computed(() => this.besoins().filter(b => b.statut === 'VALIDE').length);
   nbRejetes = computed(() => this.besoins().filter(b => b.statut === 'REJETE').length);
 
+  besoinsFiltres = computed(() => {
+    const q = this.filtreTexte().trim().toLowerCase();
+    const st = this.filtreStatut();
+    let list = this.besoins();
+    if (st) list = list.filter(b => b.statut === st);
+    if (!q) return list;
+    return list.filter(b =>
+      b.numero.toLowerCase().includes(q) ||
+      b.codeProduit.toLowerCase().includes(q) ||
+      b.designationProduit.toLowerCase().includes(q) ||
+      (b.referencePPH || '').toLowerCase().includes(q) ||
+      (b.matriculeDemandeur || '').toLowerCase().includes(q)
+    );
+  });
+
   ngOnInit(): void {
     this.charger();
     this.svc.getPPHs().subscribe({
       next: p => this.pphs.set(p),
       error: () => this.message.set('Impossible de charger la liste des PPH')
     });
+    this.stockRepo.getProducts().subscribe({
+      next: prods => this.produitsCatalogue.set(prods),
+      error: () => {}
+    });
+  }
+
+  onSelectProduit(sku: string): void {
+    const p = this.produitsCatalogue().find(item => item.sku === sku);
+    if (p) {
+      this.nouveauBesoin.codeProduit = p.sku;
+      this.nouveauBesoin.designationProduit = p.designation || p.sku;
+      if (p.unit) this.nouveauBesoin.unite = p.unit;
+    }
+  }
+
+  exporterCsv(): void {
+    const list = this.besoinsFiltres();
+    if (!list.length) {
+      this.toast.info('Aucun besoin à exporter.');
+      return;
+    }
+    const headers = ['Numero', 'Type', 'Code Produit', 'Designation', 'PPH', 'Quantite', 'Unite', 'Date Besoin', 'Demandeur', 'Statut'];
+    const rows = list.map(b => [
+      `"${b.numero}"`,
+      `"${b.type}"`,
+      `"${b.codeProduit}"`,
+      `"${b.designationProduit}"`,
+      `"${b.referencePPH || ''}"`,
+      b.quantiteDemandee,
+      `"${b.unite}"`,
+      `"${b.dateBesoin || ''}"`,
+      `"${b.matriculeDemandeur || ''}"`,
+      `"${b.statut}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `expressions_besoin_production_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} besoin(s) exporté(s) en CSV.`);
   }
 
   charger(): void {

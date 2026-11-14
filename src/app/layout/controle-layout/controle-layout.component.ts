@@ -145,7 +145,7 @@ export class ControleLayoutComponent implements OnInit {
         this.setBadge('/controle/decaissements', d.decaissementsAttente, 'bd-red');
         this.setBadge('/controle/budget', d.budgetDepasse, 'bd-orange');
       },
-      error: () => {},
+      error: () => { },
     });
 
     forkJoin({
@@ -153,7 +153,7 @@ export class ControleLayoutComponent implements OnInit {
       materiel: this.receiptUc.getPendingSecondValidation('MATERIEL'),
     }).subscribe({
       next: r => this.setBadge('/controle/consommables', r.consommable.length + r.materiel.length, 'bd-orange'),
-      error: () => {},
+      error: () => { },
     });
   }
 

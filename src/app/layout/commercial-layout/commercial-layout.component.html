@@ -16,7 +16,11 @@
         </button>
       </div>
       <a class="sb-user" routerLink="/commercial/profil" [title]="!sidebarOpen() ? 'Mon Profil' : ''">
-        <div class="sb-av">{{ userInitials() }}<span class="sb-dot"></span></div>
+        @if (userPhoto()) {
+          <img [src]="userPhoto()" alt="Profil" class="sb-av sb-av-photo" style="object-fit:cover;border-radius:50%" />
+        } @else {
+          <div class="sb-av">{{ userInitials() }}<span class="sb-dot"></span></div>
+        }
         <div class="sb-user-info">
           <span class="sb-name">{{ userShortName() }}</span>
           <span class="sb-role"><i class="fa-solid fa-briefcase"></i> Commercial</span>
@@ -100,14 +104,18 @@
           <i class="fa-solid" [class.fa-moon]="!theme.isDark()" [class.fa-sun]="theme.isDark()"></i>
         </button>
         <div class="tb-divider"></div>
-        <div class="tb-user">
-          <div class="tb-av">{{ userInitials() }}</div>
+        <a class="tb-user" routerLink="/commercial/profil" title="Voir mon profil" style="text-decoration:none;cursor:pointer">
+          @if (userPhoto()) {
+            <img [src]="userPhoto()" alt="Profil" class="tb-av tb-av-photo" style="object-fit:cover;border-radius:50%" />
+          } @else {
+            <div class="tb-av">{{ userInitials() }}</div>
+          }
           <div class="tb-user-txt">
             <span class="tb-u-name">{{ userShortName() }}</span>
             <span class="tb-u-role">Commercial</span>
           </div>
           <i class="fa-solid fa-chevron-down tb-caret"></i>
-        </div>
+        </a>
       </div>
     </header>
     <main class="page-content"><router-outlet /></main>

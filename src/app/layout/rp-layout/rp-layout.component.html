@@ -40,21 +40,22 @@
             [title]="!sidebarOpen() ? group.label : ''">
             <span class="sb-ico"><i class="fa-solid {{ group.icon }}"></i></span>
             <span class="sb-lbl">{{ group.label }}</span>
-            <i class="fa-solid fa-chevron-down sb-group-arrow" [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
+            <i class="fa-solid fa-chevron-down sb-group-arrow"
+              [class.fa-rotate-180]="expandedGroup() === group.label || rechercheActive()"></i>
           </button>
           @if (expandedGroup() === group.label || rechercheActive()) {
-            <div class="sb-group-children">
-              @for (child of group.children; track child.route) {
-              <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
-                [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
-                <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
-                <span class="sb-lbl">{{ child.label }}</span>
-                @if (child.badge && child.badge > 0) {
-                <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
-                }
-              </a>
+          <div class="sb-group-children">
+            @for (child of group.children; track child.route) {
+            <a class="sb-item sb-child" [routerLink]="child.route" routerLinkActive="sb-active"
+              [routerLinkActiveOptions]="{exact:false}" [title]="!sidebarOpen() ? child.label : ''">
+              <span class="sb-ico"><i class="fa-solid {{ child.icon }}"></i></span>
+              <span class="sb-lbl">{{ child.label }}</span>
+              @if (child.badge && child.badge > 0) {
+              <span class="sb-badge {{ child.badgeClass || 'bd-neutral' }}">{{ child.badge }}</span>
               }
-            </div>
+            </a>
+            }
+          </div>
           }
         </div>
         }
@@ -80,7 +81,8 @@
         </div>
       </div>
       <div class="tb-right">
-        <a href="/docs_guides/modules/guide_rp.html" target="_blank" class="btn-guide-module" title="Consulter le guide Relations Publiques">
+        <a href="/docs_guides/modules/guide_rp.html" target="_blank" class="btn-guide-module"
+          title="Consulter le guide Relations Publiques">
           <i class="fa-solid fa-circle-question"></i> <span>Guide RP</span>
         </a>
         <app-header-search [items]="commandItems()"></app-header-search>
@@ -120,8 +122,8 @@
   </div>
 
   <app-confirm-dialog [isOpen]="showLogoutConfirm()" title="Se déconnecter ?"
-    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter"
-    cancelText="Annuler" (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
+    message="Vous allez être redirigé vers la page de connexion." confirmText="Se déconnecter" cancelText="Annuler"
+    (confirm)="confirmerLogout()" (cancel)="showLogoutConfirm.set(false)" />
 
   <app-tantybot />
 </div>
