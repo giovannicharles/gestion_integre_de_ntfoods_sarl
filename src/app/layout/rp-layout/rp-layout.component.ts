@@ -39,6 +39,7 @@ export class RpLayoutComponent implements OnInit {
   mobileOpen = signal(false);
   currentTime = this.clock.now;
   currentPageTitle = signal('Tableau de Bord RP');
+  userPhoto = signal<string | null>(null);
   /** Relances grands comptes dues, comptées en direct, pas une valeur figée. */
   alertCount = signal(0);
 
@@ -95,6 +96,12 @@ export class RpLayoutComponent implements OnInit {
         { label: 'Grille Tarifaire', icon: 'fa-money-check-dollar', route: '/rp/tarification' },
       ]
     },
+    {
+      label: 'Configuration & Profil', icon: 'fa-gear', children: [
+        { label: 'Paramètres RP', icon: 'fa-sliders', route: '/rp/parametres' },
+        { label: 'Mon Profil', icon: 'fa-user-circle', route: '/rp/profil' },
+      ]
+    },
   ];
 
   /** Recherche sidebar (2026-10-25, demande explicite du porteur), filtre inline léger. */
@@ -113,6 +120,12 @@ export class RpLayoutComponent implements OnInit {
   ]);
 
   ngOnInit() {
+    if (typeof window !== 'undefined') {
+      this.userPhoto.set(localStorage.getItem('tanty_user_photo'));
+      window.addEventListener('tanty_profile_photo_updated', (e: any) => {
+        this.userPhoto.set(e.detail || null);
+      });
+    }
     if (window.innerWidth <= 1024) this.sidebarOpen.set(false);
     this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
       const allItems = [...this.navItems, ...this.navGroups.flatMap(g => g.children)];

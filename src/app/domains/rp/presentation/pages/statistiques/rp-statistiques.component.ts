@@ -37,66 +37,27 @@ export class RpStatistiquesComponent implements OnInit {
   charger(): void {
     this.loading.set(true);
 
-    this.rpSvc.getOccupation().subscribe({
-      next: occ => {
-        this.secteurs.set(occ || []);
-      },
-      error: () => {}
-    });
-
-    const today = new Date();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    const semaineDebut = monday.toISOString().substring(0, 10);
-    const semaineFin = sunday.toISOString().substring(0, 10);
-
-    this.commercialSvc.getPrimesHebdoAutomatique(semaineDebut, semaineFin).subscribe({
-      next: res => {
-        const stats: GammeStatUI[] = [];
-        if (res?.length) {
-          const caParGamme: Record<string, number> = {};
-          let totalCa = 0;
-          for (const r of res) {
-            if (r.tauxParGamme) {
-              for (const [g, val] of Object.entries(r.tauxParGamme)) {
-                const numVal = Number(val) || 0;
-                const montant = Math.round(r.caRealise * (numVal / 100));
-                caParGamme[g] = (caParGamme[g] || 0) + montant;
-                totalCa += montant;
-              }
-            }
-          }
-          for (const [g, val] of Object.entries(caParGamme)) {
-            stats.push({
-              gamme: g,
-              cartonsVendus: Math.round(val / 15000),
-              partVolume: totalCa > 0 ? Math.round((val / totalCa) * 100) : 0,
-              chiffreAffaires: val,
-              tauxAtteinte: 85
-            });
-          }
+    this.rpSvc.getDashboard().subscribe({
+      next: dash => {
+        if (dash.occupation?.length) {
+          this.secteurs.set(dash.occupation);
         }
-
-        // Si aucune vente automatique cette semaine, alimenter avec les gammes TANTY de référence
-        if (stats.length === 0) {
-          stats.push(
-            { gamme: 'Tapioca Sans Sable Tanty (1kg & 500g)', cartonsVendus: 380, partVolume: 42, chiffreAffaires: 5700000, tauxAtteinte: 92 },
-            { gamme: 'Bouillie Lion Infantile & Maternelle', cartonsVendus: 260, partVolume: 29, chiffreAffaires: 3900000, tauxAtteinte: 88 },
-            { gamme: 'Farine Composée de Maïs & Soja', cartonsVendus: 160, partVolume: 18, chiffreAffaires: 2400000, tauxAtteinte: 78 },
-            { gamme: 'Snacks Croustillants & Spécialités Tanty', cartonsVendus: 95, partVolume: 11, chiffreAffaires: 1425000, tauxAtteinte: 71 }
-          );
+        if (dash.gammes?.length) {
+          const totalCa = dash.gammes.reduce((acc, g) => acc + (g.ca || 0), 0);
+          const stats: GammeStatUI[] = dash.gammes.map(g => ({
+            gamme: g.gamme,
+            cartonsVendus: Math.round((g.ca || 0) / 15000),
+            partVolume: totalCa > 0 ? Math.round(((g.ca || 0) / totalCa) * 100) : 0,
+            chiffreAffaires: g.ca || 0,
+            tauxAtteinte: g.objectif > 0 ? Math.min(100, Math.round(((g.ca || 0) / g.objectif) * 100)) : 0
+          }));
+          this.gammes.set(stats);
+        } else {
+          this.gammes.set([]);
         }
-        this.gammes.set(stats);
         this.loading.set(false);
       },
       error: () => {
-        this.gammes.set([
-          { gamme: 'Tapioca Sans Sable Tanty', cartonsVendus: 380, partVolume: 42, chiffreAffaires: 5700000, tauxAtteinte: 92 },
-          { gamme: 'Bouillie Infantile Tanty', cartonsVendus: 260, partVolume: 29, chiffreAffaires: 3900000, tauxAtteinte: 88 },
-          { gamme: 'Farines Composées & Soja', cartonsVendus: 160, partVolume: 18, chiffreAffaires: 2400000, tauxAtteinte: 78 }
-        ]);
         this.loading.set(false);
       }
     });

@@ -1,0 +1,106 @@
+.dash-21-root {
+  padding: 24px;
+}
+.dash-21-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.dash-21-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dash-21-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--g-d, #0F3E21);
+  margin: 0;
+}
+.dash-21-badge-live {
+  background: var(--g-l, #EAF2ED);
+  color: var(--g, #14532D);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.dash-21-subtitle {
+  color: var(--n500, #6B7280);
+  font-size: 13.5px;
+  margin: 6px 0 0;
+}
+.dash-21-actions {
+  display: flex;
+  gap: 10px;
+}
+.dash-21-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.dash-21-btn-primary {
+  background: var(--g, #14532D);
+  color: #fff;
+}
+.dash-21-btn-primary:hover {
+  background: var(--g-d, #0F3E21);
+}
+.dash-21-btn-ghost {
+  background: var(--w, #fff);
+  color: var(--n700, #374151);
+  border: 1px solid var(--n200, #E5E7EB);
+}
+.dash-21-btn-ghost:hover {
+  background: var(--n50, #F9FAFB);
+}
+.dash-21-tab-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--n600, #4B5563);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.dash-21-tab-btn:hover {
+  background: var(--n100, #F3F4F6);
+}
+.dash-21-tab-btn.active {
+  background: var(--g, #14532D);
+  color: #fff;
+}
+.dash-21-card {
+  background: var(--w, #fff);
+  border: 1px solid var(--n200, #E5E7EB);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.form-control {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--n300, #D1D5DB);
+  border-radius: 8px;
+  font-size: 13.5px;
+  box-sizing: border-box;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--g, #14532D);
+  box-shadow: 0 0 0 3px rgba(20,83,45,0.15);
+}

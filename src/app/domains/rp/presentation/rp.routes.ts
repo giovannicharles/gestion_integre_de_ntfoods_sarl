@@ -26,6 +26,8 @@ export const RP_ROUTES: Routes = [
       { path: 'statistiques', loadComponent: () => import('./pages/statistiques/rp-statistiques.component').then(m => m.RpStatistiquesComponent) },
       // Assistant & Guide de négociation commerciale RP
       { path: 'assistant', loadComponent: () => import('./pages/assistant/rp-assistant.component').then(m => m.RpAssistantComponent) },
+      // Paramètres du module RP (cadences, relances, modèles WhatsApp, dotations)
+      { path: 'parametres', loadComponent: () => import('./pages/parametres/rp-parametres.component').then(m => m.RpParametresComponent) },
       // Commandes clients hors tournée (téléphone, WhatsApp, SMS, email), écran
       // partagé (voir shared/commande-client), accessible aux grands comptes qu'elle suit.
       { path: 'commandes-clients', loadComponent: () => import('../../../shared/commande-client/commande-client.component').then(m => m.CommandeClientComponent) },

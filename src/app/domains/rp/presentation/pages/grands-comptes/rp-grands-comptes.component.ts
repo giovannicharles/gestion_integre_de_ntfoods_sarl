@@ -163,4 +163,43 @@ export class RpGrandsComptesComponent implements OnInit {
       error: e => this.toast.error(extractApiError(e), 'Archivage impossible'),
     });
   }
+
+  exporterCsv(): void {
+    const list = this.comptesFiltres();
+    if (!list.length) {
+      this.toast.info('Aucun grand compte à exporter.');
+      return;
+    }
+    const headers = ['Nom', 'Type', 'Contact', 'Telephone', 'CA Mensuel (FCFA)', 'Derniere Commande', 'Prochaine Relance', 'Statut'];
+    const rows = list.map(c => [
+      `"${c.nom}"`,
+      `"${c.type}"`,
+      `"${c.contact || ''}"`,
+      `"${c.telephone || ''}"`,
+      c.caMensuel || 0,
+      `"${c.derniereCommande ? new Date(c.derniereCommande).toLocaleDateString('fr-FR') : ''}"`,
+      `"${c.prochaineRelance ? new Date(c.prochaineRelance).toLocaleDateString('fr-FR') : ''}"`,
+      `"${c.statut}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portefeuille_grands_comptes_rp_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} grand(s) compte(s) exporté(s) en CSV.`);
+  }
+
+  contacterWhatsApp(c: GrandCompteResponse): void {
+    if (!c.telephone) {
+      this.toast.warning(`Aucun numéro de téléphone renseigné pour ${c.nom}.`);
+      return;
+    }
+    const cleanNum = c.telephone.replace(/[^0-9]/g, '');
+    const num = cleanNum.startsWith('237') ? cleanNum : `237${cleanNum}`;
+    const msg = encodeURIComponent(`Bonjour ${c.contact || c.nom}, ici la Direction RP NTFOODS TANTY. Nous prenons de vos nouvelles concernant vos approvisionnements et besoins en produits TANTY.`);
+    window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+  }
 }

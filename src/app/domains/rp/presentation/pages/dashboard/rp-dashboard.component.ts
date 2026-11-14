@@ -137,56 +137,33 @@ export class RpDashboardComponent implements OnInit {
           this.primes.set(mapped);
         }
 
-        // Si les gammes sont toujours vides, alimenter avec les gammes TANTY officielles
-        if (!this.gammes().length) {
-          const gammesRef: PerformanceGammeResponse[] = [
-            { gamme: 'Tapioca Sans Sable Tanty (1kg, 500g)', ca: 0, objectif: 5000000, marge: null, stock: null },
-            { gamme: 'Bouillie Lion Infantile & Maternelle', ca: 0, objectif: 4200000, marge: null, stock: null },
-            { gamme: 'Farine Composée de Maïs & Soja', ca: 0, objectif: 3500000, marge: null, stock: null },
-            { gamme: 'Snacks & Amuse-Gueules Croustillants', ca: 0, objectif: 2000000, marge: null, stock: null },
-            { gamme: 'Huile Végétale & Condiments Tanty', ca: 0, objectif: 2500000, marge: null, stock: null }
-          ];
-
-          // Si on a des calculs de gammes dans le résultat auto
-          if (res?.length) {
-            const cumulRealise: Record<string, number> = {};
-            const cumulCible: Record<string, number> = {};
-            for (const r of res) {
-              if (r.tauxParGamme) {
-                for (const [gName, val] of Object.entries(r.tauxParGamme)) {
-                  const numVal = Number(val) || 0;
-                  cumulRealise[gName] = (cumulRealise[gName] || 0) + (r.caRealise * (numVal / 100));
-                  cumulCible[gName] = (cumulCible[gName] || 0) + r.caCible;
-                }
+        // Si les gammes sont toujours vides, calculer dynamiquement à partir des primes auto
+        if (!this.gammes().length && res?.length) {
+          const cumulRealise: Record<string, number> = {};
+          const cumulCible: Record<string, number> = {};
+          for (const r of res) {
+            if (r.tauxParGamme) {
+              for (const [gName, val] of Object.entries(r.tauxParGamme)) {
+                const numVal = Number(val) || 0;
+                cumulRealise[gName] = (cumulRealise[gName] || 0) + (r.caRealise * (numVal / 100));
+                cumulCible[gName] = (cumulCible[gName] || 0) + r.caCible;
               }
             }
-            if (Object.keys(cumulCible).length > 0) {
-              const dynGammes: PerformanceGammeResponse[] = Object.keys(cumulCible).map(k => ({
-                gamme: k,
-                ca: Math.round(cumulRealise[k] || 0),
-                objectif: Math.round(cumulCible[k] || 1000000),
-                marge: null,
-                stock: null
-              }));
-              this.gammes.set(dynGammes);
-              this.loading.set(false);
-              return;
-            }
           }
-          this.gammes.set(gammesRef);
+          if (Object.keys(cumulCible).length > 0) {
+            const dynGammes: PerformanceGammeResponse[] = Object.keys(cumulCible).map(k => ({
+              gamme: k,
+              ca: Math.round(cumulRealise[k] || 0),
+              objectif: Math.round(cumulCible[k] || 0),
+              marge: null,
+              stock: null
+            }));
+            this.gammes.set(dynGammes);
+          }
         }
         this.loading.set(false);
       },
       error: () => {
-        // En cas d'erreur sur l'auto, initialiser les gammes de référence par défaut
-        if (!this.gammes().length) {
-          this.gammes.set([
-            { gamme: 'Tapioca Sans Sable Tanty', ca: 0, objectif: 5000000, marge: null, stock: null },
-            { gamme: 'Bouillie Infantile & Farines', ca: 0, objectif: 4200000, marge: null, stock: null },
-            { gamme: 'Soja & Farines Composées', ca: 0, objectif: 3000000, marge: null, stock: null },
-            { gamme: 'Snacks & Produits Spéciaux', ca: 0, objectif: 2000000, marge: null, stock: null }
-          ]);
-        }
         this.loading.set(false);
       }
     });

@@ -18,6 +18,10 @@
         </button>
       </div>
 
+      <button type="button" class="btn btn-ghost btn-sm" (click)="exporterCsv()" title="Exporter en CSV">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
+
       <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm" (click)="ouvrirCreation()">
         <i class="fa-solid fa-plus"></i> Nouveau grand compte
       </button>
@@ -83,6 +87,11 @@
           </div>
         </div>
         <div class="gc-actions">
+          @if (c.telephone) {
+            <button type="button" class="btn btn-sm gc-btn-flex" style="background:#25D366;color:#fff" (click)="contacterWhatsApp(c)" title="Contacter sur WhatsApp">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
+          }
           @if (estRelanceDue(c)) {
           <button *appCan="['CHARGEE_RP', 'DIRECTEUR_GENERAL', 'ADMIN']" class="btn btn-primary btn-sm gc-btn-flex" (click)="marquerRelance(c)" title="Enregistrer la relance et planifier la suivante">
             <i class="fa-solid fa-phone"></i> Relancé
@@ -148,6 +157,11 @@
                 </td>
                 <td class="text-center">
                   <div style="display:flex;gap:6px;justify-content:center">
+                    @if (c.telephone) {
+                      <button class="btn btn-sm" style="background:#25D366;color:#fff;padding:4px 8px;border:none" (click)="contacterWhatsApp(c)" title="Contacter sur WhatsApp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                      </button>
+                    }
                     @if (estRelanceDue(c)) {
                       <button class="btn btn-primary btn-sm" (click)="marquerRelance(c)" title="Marquer relance effectuée" style="padding:4px 8px">
                         <i class="fa-solid fa-phone"></i>

@@ -77,70 +77,43 @@ export class RpReportingComponent implements OnInit {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           this.campagnes.set(parsed);
           return;
         }
       } catch (_) {}
     }
+    this.campagnes.set([]);
+  }
 
-    // Données opérationnelles réelles par défaut
-    const initiales: CampagneRP[] = [
-      {
-        id: 1,
-        titre: 'Grandes Dégustations Tanty Bouillie Infantile & Tapioca Gourmand',
-        type: 'DEGUSTATION',
-        lieu: 'DOVV Bastos, Essos & Yaoundé Centre',
-        dateDebut: '2026-10-01',
-        dateFin: '2026-10-15',
-        budgetEngage: 450000,
-        caGenere: 2850000,
-        echantillonsDistribues: 3200,
-        contactsQualifies: 840,
-        statut: 'TERMINE'
-      },
-      {
-        id: 2,
-        titre: 'Animation Commerciale Tête de Gondole - Rentrée Scolaire Tanty',
-        type: 'PROMO_GMS',
-        lieu: 'Carrefour Bonamoussadi & Grand Mall Douala',
-        dateDebut: '2026-09-01',
-        dateFin: '2026-09-20',
-        budgetEngage: 600000,
-        caGenere: 4200000,
-        echantillonsDistribues: 4500,
-        contactsQualifies: 1120,
-        statut: 'TERMINE'
-      },
-      {
-        id: 3,
-        titre: 'Activation Terrains Marchés Urbains - Sensibilisation Nutritionnelle',
-        type: 'STREET_MARKETING',
-        lieu: 'Marché Mokolo (Yaoundé) & Marché Sandaga (Douala)',
-        dateDebut: '2026-11-01',
-        dateFin: '2026-11-12',
-        budgetEngage: 320000,
-        caGenere: 1950000,
-        echantillonsDistribues: 5000,
-        contactsQualifies: 620,
-        statut: 'EN_COURS'
-      },
-      {
-        id: 4,
-        titre: 'Pavillon Agroalimentaire Salon International PROMOTE',
-        type: 'SALON',
-        lieu: 'Palais des Congrès de Yaoundé',
-        dateDebut: '2026-12-05',
-        dateFin: '2026-12-13',
-        budgetEngage: 1800000,
-        caGenere: 8500000,
-        echantillonsDistribues: 12000,
-        contactsQualifies: 2400,
-        statut: 'PLANIFIE'
-      }
-    ];
-    this.campagnes.set(initiales);
-    this.sauvegarder(initiales);
+  exporterCsv(): void {
+    const list = this.campagnes();
+    if (!list.length) {
+      this.toast.info('Aucune campagne à exporter.');
+      return;
+    }
+    const headers = ['Titre', 'Type', 'Lieu', 'Date Debut', 'Date Fin', 'Budget Engage (FCFA)', 'CA Genere (FCFA)', 'Echantillons', 'Contacts Qualifies', 'Statut'];
+    const rows = list.map(c => [
+      `"${c.titre}"`,
+      `"${c.type}"`,
+      `"${c.lieu}"`,
+      `"${c.dateDebut}"`,
+      `"${c.dateFin}"`,
+      c.budgetEngage || 0,
+      c.caGenere || 0,
+      c.echantillonsDistribues || 0,
+      c.contactsQualifies || 0,
+      `"${c.statut}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rapport_campagnes_rp_tanty_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    this.toast.success(`${list.length} campagne(s) exportée(s) en CSV.`);
   }
 
   private sauvegarder(list: CampagneRP[]): void {
