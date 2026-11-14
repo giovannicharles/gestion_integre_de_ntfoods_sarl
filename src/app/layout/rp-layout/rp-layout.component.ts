@@ -87,6 +87,7 @@ export class RpLayoutComponent implements OnInit {
         { label: 'Grands Comptes VIP', icon: 'fa-building', route: '/rp/grands-comptes' },
         { label: 'Suivi & Chronologie VIP', icon: 'fa-timeline', route: '/rp/suivi' },
         { label: 'Documents & Contrats', icon: 'fa-folder-open', route: '/rp/documents' },
+        { label: 'Partage & Visas Documents', icon: 'fa-share-nodes', route: '/rp/partage' },
         { label: 'Commandes VIP & WhatsApp', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
       ]
     },

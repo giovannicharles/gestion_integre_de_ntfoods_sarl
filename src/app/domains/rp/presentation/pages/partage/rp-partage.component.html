@@ -1,0 +1,311 @@
+<div class="dash-21-root animate-fadeIn">
+  <!-- EN-TÊTE MODULE DE PARTAGE & COMMUNICATION -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Partage de Documents & Communication Inter-Services</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          WORKFLOW COLLABORATIF & VISAS EN DIRECT
+        </span>
+      </div>
+      <p class="dash-21-subtitle">
+        Transmettez les conventions GMS, bilans d'activation et fiches d'audit pour visa DG, contrôle budgétaire ou information inter-directions
+      </p>
+    </div>
+
+    <div class="dash-21-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- BASCULE ENVOYÉS / REÇUS -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="ongletActif() === 'EMIS'" [class.dash-21-btn-ghost]="ongletActif() !== 'EMIS'" (click)="ongletActif.set('EMIS')" style="padding:4px 12px;font-size:12px">
+          <i class="fa-solid fa-paper-plane"></i> Documents Émis ({{ totalEmis() }})
+        </button>
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="ongletActif() === 'RECUS'" [class.dash-21-btn-ghost]="ongletActif() !== 'RECUS'" (click)="ongletActif.set('RECUS')" style="padding:4px 12px;font-size:12px">
+          <i class="fa-solid fa-inbox"></i> Boîte de Réception ({{ documentsRecus().length }})
+        </button>
+      </div>
+
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalNouveauPartage()">
+        <i class="fa-solid fa-share-nodes"></i> Partager un Document
+      </button>
+      <a routerLink="/rp/studio-documents" class="dash-21-btn dash-21-btn-ghost" title="Ouvrir le Studio de documents">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Studio Word
+      </a>
+    </div>
+  </header>
+
+  <!-- 3-KPI CARDS WORKFLOW -->
+  <section class="dash-21-kpi-grid" style="margin-bottom:16px">
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Documents Partagés par RP</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-folder-tree"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalEmis() }}</span>
+        <span class="dash-21-trend-pill trend-up">Transmissions</span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Conventions GMS, bilans ROI, notes DG & Contrôle</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Visas & Approbations Obtenus</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-signature"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalVises() }}</span>
+        <span class="dash-21-trend-pill trend-up">Validés DG/Audit</span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Accords signés et prêts pour exécution terrain</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">En Attente de Décision</span>
+        <div class="dash-21-kpi-icon-wrap" [class.icon-gold]="totalEnAttente() > 0" [class.icon-green]="totalEnAttente() === 0">
+          <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalEnAttente() }}</span>
+        <span class="dash-21-trend-pill" [class.trend-down]="totalEnAttente() > 0" [class.trend-up]="totalEnAttente() === 0">
+          {{ totalEnAttente() > 0 ? 'En examen' : 'Tout est visé' }}
+        </span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Dossiers transmis en attente de retour hiérarchique</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENU PRINCIPAL : DOUBLE PANNEAU (LISTE DES FLUX + PANNEAU DÉTAIL & COMMENTAIRES) -->
+  <div class="partage-layout-grid">
+    <!-- COLONNE GAUCHE : FLUX DES DOCUMENTS -->
+    <div class="dash-21-card partage-sidebar">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--n200)">
+        <div style="position:relative;margin-bottom:10px">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--n400);font-size:12px"></i>
+          <input type="text" class="form-control" style="padding-left:30px;font-size:12px" [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)" placeholder="Rechercher titre, référence, service..." />
+        </div>
+
+        <select class="form-control" style="font-size:11.5px;padding:4px 8px" [ngModel]="filtreStatut()" (ngModelChange)="filtreStatut.set($event)">
+          <option value="TOUS">Tous les statuts</option>
+          <option value="EN_ATTENTE">En attente de visa</option>
+          <option value="VISE">Visé</option>
+          <option value="VALIDE">Validé DG</option>
+          <option value="LU">Lu pour information</option>
+        </select>
+      </div>
+
+      <div class="partage-items-list">
+        @for (item of listeAffichee(); track item.id) {
+          <div class="partage-item" [class.active]="itemSelectionne()?.id === item.id" (click)="selectionnerItem(item)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+              <strong style="font-size:13px;color:var(--g-d);line-height:1.3">{{ item.titre }}</strong>
+              <span class="badge" [class.badge-success]="item.statut === 'VALIDE' || item.statut === 'VISE'" [class.badge-gold]="item.statut === 'EN_ATTENTE'" [class.badge-neutral]="item.statut === 'LU'" style="font-size:10px;margin-left:6px;flex-shrink:0">
+                {{ item.statut }}
+              </span>
+            </div>
+
+            <div style="font-size:11px;color:var(--n500);margin-bottom:6px">
+              <span><i class="fa-solid fa-arrow-right-arrow-left" style="margin-right:4px"></i>{{ item.moduleEmetteur }} &rarr; <strong>{{ item.moduleDestinataire }}</strong></span>
+              <span class="mono" style="margin-left:8px">[{{ item.reference }}]</span>
+            </div>
+
+            <p style="font-size:11.5px;color:var(--n600);margin:0 0 6px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+              {{ item.objet }}
+            </p>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--n400)">
+              <span>{{ item.datePartage | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="meta-tag">{{ item.typeAction }}</span>
+            </div>
+          </div>
+        } @empty {
+          <div style="padding:28px;text-align:center;color:var(--n400);font-size:12px">
+            Aucun document partagé trouvé.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE : CONSULTATION DU DOCUMENT & FIL DE DISCUSSION INTER-SERVICES -->
+    <div class="partage-detail-area">
+      @if (itemSelectionne(); as sel) {
+        <div class="dash-21-card" style="padding:20px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--n200)">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                <h2 style="font-size:17px;font-weight:800;color:var(--g-d);margin:0">{{ sel.titre }}</h2>
+                <span class="badge" [class.badge-success]="sel.statut === 'VALIDE' || sel.statut === 'VISE'" [class.badge-gold]="sel.statut === 'EN_ATTENTE'">
+                  {{ sel.statut }}
+                </span>
+                <span class="meta-tag">{{ sel.typeAction }}</span>
+              </div>
+              <div style="font-size:12px;color:var(--n500)">
+                Émetteur : <strong>{{ sel.emetteurNom }} ({{ sel.moduleEmetteur }})</strong> · Transmis à : <strong>{{ sel.destinataireNom || sel.moduleDestinataire }}</strong> · Date : {{ sel.datePartage | date:'dd MMMM yyyy à HH:mm':'':'fr' }}
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px">
+              <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirDansStudio(sel)" title="Ouvrir dans le Studio pour modifier ou imprimer">
+                <i class="fa-solid fa-pen-ruler"></i> Ouvrir dans Studio Word
+              </button>
+            </div>
+          </div>
+
+          <!-- OBJET DU DOSSIER -->
+          <div style="background:var(--n100);padding:14px;border-radius:6px;border-left:4px solid var(--g);margin-bottom:16px">
+            <strong style="display:block;font-size:12px;color:var(--g-d);margin-bottom:4px">Objet & Note explicative de transmission :</strong>
+            <p style="font-size:13px;color:var(--n700);margin:0;line-height:1.5">{{ sel.objet }}</p>
+          </div>
+
+          <!-- VISA SI EFFECTUÉ -->
+          @if (sel.visePar) {
+            <div style="background:rgba(22, 163, 74, 0.08);border:1px solid rgba(22, 163, 74, 0.3);padding:12px 16px;border-radius:6px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <strong style="color:var(--g);font-size:13px"><i class="fa-solid fa-circle-check" style="margin-right:6px"></i>Visa officiel accordé :</strong>
+                <span style="font-size:12px;color:var(--n700);margin-left:6px">Visé par <strong>{{ sel.visePar }}</strong> le {{ sel.visaDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <span class="badge badge-success">CONFORME</span>
+            </div>
+          }
+
+          <!-- ACTIONS DE VISA RAPIDE POUR LES DESTINATAIRES -->
+          @if (sel.statut === 'EN_ATTENTE' && sel.moduleDestinataire === 'RP') {
+            <div style="display:flex;gap:10px;margin-bottom:16px">
+              <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="viserDocument('VALIDE')">
+                <i class="fa-solid fa-check"></i> Valider & Approuver
+              </button>
+              <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="viserDocument('VISE')">
+                <i class="fa-solid fa-signature"></i> Viser pour Accord
+              </button>
+              <button type="button" class="dash-21-btn dash-21-btn-danger" (click)="viserDocument('REJETE')">
+                <i class="fa-solid fa-xmark"></i> Rejeter avec motif
+              </button>
+            </div>
+          }
+
+          <!-- FIL DE DISCUSSION / COMMENTAIRES INTER-SERVICES -->
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--n200)">
+            <h3 style="font-size:14px;font-weight:800;color:var(--g-d);margin:0 0 12px">
+              <i class="fa-regular fa-comments" style="color:var(--g);margin-right:6px"></i>
+              Fil d'Échanges & Avis Inter-Services ({{ sel.commentaires.length }})
+            </h3>
+
+            <div class="commentaires-flow">
+              @for (c of sel.commentaires; track c.id) {
+                <div class="com-bubble">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11.5px">
+                    <strong style="color:var(--g-d)">{{ c.auteurNom }} ({{ c.auteurRole }})</strong>
+                    <span style="color:var(--n400)">{{ c.date | date:'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <p style="font-size:12.5px;color:var(--n700);margin:0">{{ c.message }}</p>
+                </div>
+              } @empty {
+                <div style="padding:14px;background:var(--n100);border-radius:6px;font-size:12px;color:var(--n500);text-align:center">
+                  Aucun commentaire pour le moment. Vous pouvez initier la discussion ci-dessous.
+                </div>
+              }
+            </div>
+
+            <!-- ZONE D'AJOUT DE COMMENTAIRE -->
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <input type="text" class="form-control" [ngModel]="nouveauCommentaireTexte()" (ngModelChange)="nouveauCommentaireTexte.set($event)" (keyup.enter)="envoyerCommentaire()" placeholder="Ajouter une consigne, un avis ou un complément d'information..." />
+              <button type="button" class="dash-21-btn dash-21-btn-primary" [disabled]="!nouveauCommentaireTexte().trim()" (click)="envoyerCommentaire()">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="dash-21-card" style="padding:48px;text-align:center;color:var(--n400)">
+          <i class="fa-solid fa-share-nodes" style="font-size:40px;color:var(--n300);margin-bottom:12px;display:block"></i>
+          <h3 style="margin:0 0 6px;color:var(--g-d)">Sélectionnez un dossier partagé</h3>
+          <p style="font-size:13px;margin:0">Cliquez sur un document à gauche pour consulter l'objet de transmission, le statut de visa et le fil d'échanges.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU PARTAGE -->
+@if (showModalPartage()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-share-nodes" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Transmettre un Document à un Service Interne</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModalPartage()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Titre ou intitulé de la pièce *</label>
+          <input type="text" class="form-control" [ngModel]="nouveauPartage().titre" (ngModelChange)="nouveauPartage().titre = $event" placeholder="Ex: Convention Annuelle DOVV 2026, Bilan Campagne Street-Marketing" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Type de document</label>
+            <select class="form-control" [ngModel]="nouveauPartage().typeDocument" (ngModelChange)="nouveauPartage().typeDocument = $event">
+              @for (t of typesDocuments; track t.code) {
+                <option [value]="t.code">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Référence officielle</label>
+            <input type="text" class="form-control mono" [ngModel]="nouveauPartage().reference" (ngModelChange)="nouveauPartage().reference = $event" />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Direction destinataire *</label>
+            <select class="form-control" [ngModel]="nouveauPartage().moduleDestinataire" (ngModelChange)="nouveauPartage().moduleDestinataire = $event">
+              @for (m of modulesCibles; track m.code) {
+                <option [value]="m.code">{{ m.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Action attendue *</label>
+            <select class="form-control" [ngModel]="nouveauPartage().typeAction" (ngModelChange)="nouveauPartage().typeAction = $event">
+              <option value="POUR_VISA_SIGNATURE">Pour Visa & Signature officielle</option>
+              <option value="POUR_VALIDATION">Pour Validation préalable</option>
+              <option value="POUR_INFORMATION">Pour Information simple</option>
+              <option value="POUR_COMMENTAIRE">Pour Avis technique & Relecture</option>
+              <option value="DIFFUSION_URGENTE">Diffusion urgente / Prioritaire</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Objet & Motifs de la transmission *</label>
+          <textarea class="form-control" rows="3" [ngModel]="nouveauPartage().objet" (ngModelChange)="nouveauPartage().objet = $event" placeholder="Expliquez les décisions attendues, les points sensibles ou les délais à respecter..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModalPartage()">Annuler</button>
+        <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="envoyerPartage()">
+          <i class="fa-solid fa-paper-plane"></i> Transmettre le Document
+        </button>
+      </div>
+    </div>
+  </div>
+}

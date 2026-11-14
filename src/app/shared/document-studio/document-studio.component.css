@@ -21,6 +21,48 @@
   gap: 8px;
 }
 
+.btn-insert-block {
+  background: #ffffff;
+  border: 1px solid var(--n200);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--g-d);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.btn-insert-block:hover {
+  border-color: var(--g);
+  background: rgba(20, 83, 45, 0.05);
+  transform: translateY(-1px);
+}
+
+.btn-ia-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.btn-ia-gradient:hover {
+  filter: brightness(1.1);
+}
+
+.btn-wa-share {
+  background: #25D366 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.btn-wa-share:hover {
+  filter: brightness(1.08);
+}
+
 .section-card {
   border: 1px solid var(--n200);
   border-radius: 8px;
@@ -63,11 +105,16 @@
   padding: 14px;
 }
 
+.btn-group-ia {
+  display: inline-flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
 .btn-ia-action {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
   color: #fff;
   border: none;
-  border-radius: 4px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 700;
@@ -77,7 +124,17 @@
   gap: 4px;
 }
 
-.btn-ia-action:hover {
+.btn-ia-subaction {
+  background: #4338ca;
+  color: #fff;
+  border: none;
+  border-left: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 8px;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.btn-ia-action:hover, .btn-ia-subaction:hover {
   filter: brightness(1.1);
 }
 
@@ -298,6 +355,26 @@
   font-size: 12px;
   line-height: 1.6;
   color: #334155;
+}
+
+.a4-callout-box {
+  background: #f8fafc;
+  border-left: 4px solid var(--g);
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.a4-callout-box.callout-important {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+}
+
+.a4-callout-box.callout-decision {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
 }
 
 .a4-kpis-grid {

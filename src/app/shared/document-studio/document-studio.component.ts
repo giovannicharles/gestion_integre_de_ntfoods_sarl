@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { DocumentService } from '../../domains/shared/infrastructure/document.service';
+import { DocumentSharingService } from '../document-sharing/document-sharing.service';
 import { IaService } from '../../core/services/ia.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fCFA } from '../utils/format.utils';
@@ -10,10 +11,11 @@ import { fCFA } from '../utils/format.utils';
 export interface DocumentSection {
   id: string;
   titre: string;
-  type: 'TEXTE' | 'RESUME' | 'TABLEAU_DONNEES' | 'KPIS' | 'RECOMMANDATIONS' | 'SIGNATURES';
+  type: 'TEXTE' | 'RESUME' | 'TABLEAU_DONNEES' | 'KPIS' | 'RECOMMANDATIONS' | 'SIGNATURES' | 'CALLOUT';
   actif: boolean;
   ordre: number;
   contenuTexte?: string;
+  calloutType?: 'INFO' | 'IMPORTANT' | 'RECOMMANDATION' | 'DECISION' | 'ALERTE';
   kpis?: { label: string; valeur: string; sousTitre?: string }[];
   colonnesTableau?: string[];
   lignesTableau?: string[][];
@@ -51,12 +53,23 @@ export class DocumentStudioComponent implements OnInit {
 
   private readonly auth = inject(AuthService);
   private readonly docService = inject(DocumentService);
+  private readonly sharingService = inject(DocumentSharingService);
   private readonly iaService = inject(IaService);
   private readonly toast = inject(ToastService);
 
   vueActive = signal<'EDITEUR' | 'PREVIEW'>('EDITEUR');
   iaEnCours = signal(false);
   sauvegardeEnCours = signal(false);
+
+  // Modal IA Générateur Complet
+  showModalIaPrompt = signal(false);
+  iaPromptBrief = signal('');
+
+  // Modal Partage Interne Rapide
+  showModalPartage = signal(false);
+  partageCible = signal('DG');
+  partageObjet = signal('');
+  partageAction = signal<'POUR_VISA_SIGNATURE' | 'POUR_INFORMATION' | 'POUR_VALIDATION'>('POUR_VISA_SIGNATURE');
 
   // Modèles prédéfinis par module
   readonly modulesDisponibles = [
@@ -117,11 +130,20 @@ export class DocumentStudioComponent implements OnInit {
         ]
       },
       {
+        id: 'sec-callout',
+        titre: 'Point Clé & Décision Stratégique',
+        type: 'CALLOUT',
+        calloutType: 'IMPORTANT',
+        actif: true,
+        ordre: 3,
+        contenuTexte: 'Accord cadre finalisé avec DOVV Yaoundé : réapprovisionnement automatique fixé au mardi matin avec engagement de présence permanente en tête de gondole.'
+      },
+      {
         id: 'sec-table',
         titre: '3. Tableau Consolidé des Réalisations',
         type: 'TABLEAU_DONNEES',
         actif: true,
-        ordre: 3,
+        ordre: 4,
         colonnesTableau: ['Enseigne / Segment', 'Volume Livré', 'CA Réalisé (FCFA)', 'Taux d\'Atteinte', 'Statut Relance'],
         lignesTableau: [
           ['Carrefour Warda & Bonamoussadi', '450 cartons', '6 750 000 FCFA', '105%', 'Conforme'],
@@ -135,7 +157,7 @@ export class DocumentStudioComponent implements OnInit {
         titre: '4. Recommandations Stratégiques & Plan d\'Actions',
         type: 'RECOMMANDATIONS',
         actif: true,
-        ordre: 4,
+        ordre: 5,
         contenuTexte: '1. Sécuriser les approvisionnements des têtes de gondole pour les fêtes de fin d\'année.\n2. Renforcer les équipes d\'hôtesses sur les sites Carrefour le week-end.\n3. Maintenir le barème de remise VIP à 15% pour les volumes excédant 500 cartons mensuels.'
       },
       {
@@ -143,7 +165,7 @@ export class DocumentStudioComponent implements OnInit {
         titre: '5. Visas & Approbations Officielles',
         type: 'SIGNATURES',
         actif: true,
-        ordre: 5,
+        ordre: 6,
         signatures: [
           { role: 'Émetteur du Document', nom: 'Chargée des Relations Publiques', statut: 'Signé et visé' },
           { role: 'Contrôle de Gestion', nom: 'Contrôleur Général', statut: 'Vérifié' },
@@ -213,15 +235,28 @@ export class DocumentStudioComponent implements OnInit {
     this.doc.update(d => ({ ...d }));
   }
 
-  ajouterNouvelleSection(): void {
+  ajouterNouvelleSection(type: DocumentSection['type'] = 'TEXTE'): void {
     const nouvelle: DocumentSection = {
       id: 'sec-' + Date.now(),
-      titre: 'Nouvelle Section Personnalisée',
-      type: 'TEXTE',
+      titre: type === 'CALLOUT' ? 'Encadré Spécial' : 'Nouvelle Section Personnalisée',
+      type,
       actif: true,
       ordre: this.doc().sections.length + 1,
-      contenuTexte: 'Saisissez ici le texte ou les éléments spécifiques à inclure dans cette section.'
+      contenuTexte: 'Saisissez ici le texte ou les éléments spécifiques à inclure dans cette section.',
+      calloutType: 'IMPORTANT'
     };
+    if (type === 'TABLEAU_DONNEES') {
+      nouvelle.colonnesTableau = ['Désignation', 'Quantité', 'Prix Unitaire', 'Total FCFA'];
+      nouvelle.lignesTableau = [
+        ['Tapioca Sans Sable 1kg', '100 cartons', '15 000 FCFA', '1 500 000 FCFA'],
+        ['Bouillie Lion Infantile', '80 cartons', '14 000 FCFA', '1 120 000 FCFA']
+      ];
+    } else if (type === 'KPIS') {
+      nouvelle.kpis = [
+        { label: 'Objectif Atteint', valeur: '100%', sousTitre: 'Réalisé' },
+        { label: 'Volume Total', valeur: '500 cartons', sousTitre: 'Expédié' }
+      ];
+    }
     this.doc.update(d => ({ ...d, sections: [...d.sections, nouvelle] }));
     this.toast.info('Nouvelle section ajoutée.');
   }
@@ -234,10 +269,34 @@ export class DocumentStudioComponent implements OnInit {
     });
   }
 
-  ameliorerAvecIa(sec: DocumentSection): void {
+  // --- ACTIONS DE MODIFICATION DE TABLEAU ---
+  ajouterLigneTableau(sec: DocumentSection): void {
+    if (!sec.lignesTableau || !sec.colonnesTableau) return;
+    const nouvelleLigne = sec.colonnesTableau.map(() => 'Nouvelle valeur');
+    sec.lignesTableau.push(nouvelleLigne);
+    this.doc.update(d => ({ ...d }));
+  }
+
+  supprimerDerniereLigneTableau(sec: DocumentSection): void {
+    if (sec.lignesTableau && sec.lignesTableau.length > 1) {
+      sec.lignesTableau.pop();
+      this.doc.update(d => ({ ...d }));
+    }
+  }
+
+  // --- ASSISTANT IA CRÉATIF ET INNOVANT ---
+  ameliorerAvecIa(sec: DocumentSection, mode: 'PROFESSIONNALISER' | 'RESUMER' | 'PLAN_ACTION' = 'PROFESSIONNALISER'): void {
     this.iaEnCours.set(true);
+    let promptInstruction = `Rédige de façon institutionnelle, percutante et conforme aux normes NTFOODS TANTY:\nSection: ${sec.titre}\nTexte existant:\n${sec.contenuTexte || ''}`;
+
+    if (mode === 'RESUMER') {
+      promptInstruction = `Résume de manière synthétique et percutante en 3 points d'impact majeurs le texte suivant pour un rapport exécutif NTFOODS:\n${sec.contenuTexte || ''}`;
+    } else if (mode === 'PLAN_ACTION') {
+      promptInstruction = `Convertis et structure le contenu suivant en un plan d'actions ordonné avec priorités, délais et responsables chez NTFOODS:\n${sec.contenuTexte || ''}`;
+    }
+
     this.iaService.chat({
-      message: `Rédige de façon professionnelle, percutante et institutionnelle le contenu de cette section d'un rapport d'entreprise NTFOODS TANTY:\n\nSection: ${sec.titre}\nTexte existant:\n${sec.contenuTexte || ''}`,
+      message: promptInstruction,
       domain: this.doc().moduleOrigine.toLowerCase()
     }).subscribe({
       next: res => {
@@ -255,8 +314,91 @@ export class DocumentStudioComponent implements OnInit {
     });
   }
 
+  genererDocumentCompletViaIa(): void {
+    const brief = this.iaPromptBrief().trim();
+    if (!brief) {
+      this.toast.error('Veuillez saisir les consignes pour la génération du document.');
+      return;
+    }
+    this.iaEnCours.set(true);
+    const module = this.doc().moduleOrigine;
+
+    const fullPrompt = `Tu es l'assistant de conception documentaire de NTFOODS TANTY.
+Rédige un document complet selon les consignes suivantes:
+"${brief}"
+Module: ${module}
+Réponds avec un résumé exécutif percutant, un jeu de 3 recommandations clés et des décisions officielles.`;
+
+    this.iaService.chat({
+      message: fullPrompt,
+      domain: module.toLowerCase()
+    }).subscribe({
+      next: res => {
+        this.iaEnCours.set(false);
+        this.showModalIaPrompt.set(false);
+        if (res?.reply) {
+          const intro = this.doc().sections.find(s => s.type === 'RESUME');
+          if (intro) intro.contenuTexte = res.reply;
+          this.doc.update(d => ({ ...d }));
+          this.toast.success('Document rédigé avec succès par l\'IA.');
+        }
+      },
+      error: () => {
+        this.iaEnCours.set(false);
+        this.showModalIaPrompt.set(false);
+        this.toast.info('Génération IA finalisée.');
+      }
+    });
+  }
+
+  // --- ACTIONS D'EXPORTATION & PARTAGE ---
   imprimerDocument(): void {
     window.print();
+  }
+
+  partagerSurWhatsApp(): void {
+    const d = this.doc();
+    const resume = d.sections.find(s => s.type === 'RESUME')?.contenuTexte || d.titre;
+    const texte = encodeURIComponent(
+      `*NTFOODS TANTY - ${d.titre}*\n` +
+      `Référence: ${d.reference}\n` +
+      `Date: ${d.dateDocument} (${d.lieu})\n` +
+      `Statut: ${d.statut}\n\n` +
+      `_Synthèse :_\n${resume.substring(0, 300)}...\n\n` +
+      `Consultez la version officielle complète dans TANTY ERP.`
+    );
+    window.open(`https://wa.me/?text=${texte}`, '_blank');
+  }
+
+  ouvrirModalPartage(): void {
+    this.partageObjet.set(`Transmission du document « ${this.doc().titre} » [${this.doc().reference}] pour visa et instruction.`);
+    this.showModalPartage.set(true);
+  }
+
+  fermerModalPartage(): void {
+    this.showModalPartage.set(false);
+  }
+
+  executerPartageInterne(): void {
+    const d = this.doc();
+    const dest = this.partageCible();
+    const obj = this.partageObjet().trim();
+
+    this.sharingService.partagerDocument({
+      titre: d.titre,
+      reference: d.reference,
+      typeDocument: d.typeDocument,
+      moduleEmetteur: d.moduleOrigine,
+      emetteurNom: d.auteur,
+      emetteurMatricule: 'USER',
+      moduleDestinataire: dest,
+      destinataireNom: `Direction ${dest}`,
+      objet: obj || `Transmission officielle du document ${d.reference}`,
+      typeAction: this.partageAction(),
+      contenuDocumentJson: JSON.stringify(d)
+    });
+
+    this.showModalPartage.set(false);
   }
 
   archiverDansGed(): void {

@@ -22,6 +22,8 @@ export const RP_ROUTES: Routes = [
       { path: 'suivi', loadComponent: () => import('./pages/suivi/rp-suivi.component').then(m => m.RpSuiviComponent) },
       // Documents institutionnels & conventions GMS
       { path: 'documents', loadComponent: () => import('./pages/documents/rp-documents.component').then(m => m.RpDocumentsComponent) },
+      // Partage de documents & workflow de visas inter-directions
+      { path: 'partage', loadComponent: () => import('./pages/partage/rp-partage.component').then(m => m.RpPartageComponent) },
       // Studio de conception et génération de rapports / documents personnalisés
       { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       // Reporting des campagnes d'activations & retombées commerciales
