@@ -76,7 +76,8 @@ export class RpLayoutComponent implements OnInit {
     {
       label: 'Analyses & Reporting', icon: 'fa-chart-line', children: [
         { label: 'Reporting Campagnes', icon: 'fa-bullhorn', route: '/rp/reporting' },
-        { label: 'Statistiques Marché', icon: 'fa-chart-pie', route: '/rp/statistiques' },
+        { label: 'Statistiques & Évolutions', icon: 'fa-chart-pie', route: '/rp/statistiques' },
+        { label: 'Studio Rapports & Documents', icon: 'fa-wand-magic-sparkles', route: '/rp/studio-documents' },
         { label: 'Classement & Primes', icon: 'fa-ranking-star', route: '/rp/classement' },
         { label: 'Objectifs Vente', icon: 'fa-bullseye', route: '/rp/objectifs' },
       ]
@@ -84,6 +85,7 @@ export class RpLayoutComponent implements OnInit {
     {
       label: 'Grands Comptes & Partenaires', icon: 'fa-handshake', children: [
         { label: 'Grands Comptes VIP', icon: 'fa-building', route: '/rp/grands-comptes' },
+        { label: 'Suivi & Chronologie VIP', icon: 'fa-timeline', route: '/rp/suivi' },
         { label: 'Documents & Contrats', icon: 'fa-folder-open', route: '/rp/documents' },
         { label: 'Commandes VIP & WhatsApp', icon: 'fa-cart-shopping', route: '/rp/commandes-clients' },
       ]

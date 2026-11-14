@@ -18,8 +18,12 @@ export const RP_ROUTES: Routes = [
       { path: 'objectifs', loadComponent: () => import('../../dg/presentation/pages/objectifs/dg-objectifs.component').then(m => m.DgObjectifsComponent) },
       { path: 'tarification', loadComponent: () => import('../../commercial/presentation/pages/tarification/tarification.component').then(m => m.TarificationComponent) },
       { path: 'grands-comptes', loadComponent: () => import('./pages/grands-comptes/rp-grands-comptes.component').then(m => m.RpGrandsComptesComponent) },
+      // Suivi détaillé et chronologique des interactions et relances partenaires VIP
+      { path: 'suivi', loadComponent: () => import('./pages/suivi/rp-suivi.component').then(m => m.RpSuiviComponent) },
       // Documents institutionnels & conventions GMS
       { path: 'documents', loadComponent: () => import('./pages/documents/rp-documents.component').then(m => m.RpDocumentsComponent) },
+      // Studio de conception et génération de rapports / documents personnalisés
+      { path: 'studio-documents', loadComponent: () => import('../../../shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent) },
       // Reporting des campagnes d'activations & retombées commerciales
       { path: 'reporting', loadComponent: () => import('./pages/reporting/rp-reporting.component').then(m => m.RpReportingComponent) },
       // Statistiques territoriales & couverture des marchés

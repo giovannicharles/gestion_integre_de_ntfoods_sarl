@@ -1,0 +1,366 @@
+<div class="dash-21-root animate-fadeIn">
+  <!-- EN-TÊTE SUIVI RP 21E SIÈCLE -->
+  <header class="dash-21-header">
+    <div class="dash-21-header-left">
+      <div class="dash-21-title-group">
+        <h1 class="dash-21-title">Suivi Détaillé des Partenaires & Grands Comptes</h1>
+        <span class="dash-21-badge-live">
+          <span class="dash-21-pulse"></span>
+          GESTION DES RELATIONS VIP EN TEMPS RÉEL
+        </span>
+      </div>
+      <p class="dash-21-subtitle">
+        Historique exhaustif des interactions, timeline des négociations GMS, journal des visites et respect des échéances contractuelles
+      </p>
+    </div>
+
+    <div class="dash-21-actions">
+      <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalNouvelleInteraction()">
+        <i class="fa-solid fa-plus"></i> Consigner une Interaction
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="exporterHistoriqueCsv()" title="Exporter l'historique en CSV">
+        <i class="fa-solid fa-file-csv"></i> Exporter CSV
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="imprimerFicheSuivi()" title="Imprimer la fiche de suivi">
+        <i class="fa-solid fa-print"></i> Imprimer
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="chargerComptes()" title="Actualiser la liste">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- KPIS RAPIDES -->
+  <section class="dash-21-kpi-grid" style="margin-bottom:16px">
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Portefeuille Suivi</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-building"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ totalComptes() }}</span>
+        <span class="dash-21-trend-pill trend-up">Partenaires VIP</span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>GMS, Hôtels, Restaurants & Réseaux régionaux</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Relances Dues</span>
+        <div class="dash-21-kpi-icon-wrap" [class.icon-red]="totalRelancesDues() > 0" [class.icon-green]="totalRelancesDues() === 0">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value" [style.color]="totalRelancesDues() > 0 ? 'var(--r)' : 'var(--g)'">{{ totalRelancesDues() }}</span>
+        <span class="dash-21-trend-pill" [class.trend-down]="totalRelancesDues() > 0" [class.trend-up]="totalRelancesDues() === 0">
+          {{ totalRelancesDues() > 0 ? 'Action requise' : 'À jour' }}
+        </span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Partenaires arrivés à échéance de contact</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">CA Mensuel Suivi</span>
+        <div class="dash-21-kpi-icon-wrap icon-gold">
+          <i class="fa-solid fa-money-bill-trend-up"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ fCFA(totalCaPortefeuille()) }}</span>
+        <span class="dash-21-trend-pill trend-up">Flux VIP</span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Volume récurrent généré par les comptes suivis</span>
+      </div>
+    </div>
+
+    <div class="dash-21-kpi-card">
+      <div class="dash-21-kpi-head">
+        <span class="dash-21-kpi-label">Interactions Consignées</span>
+        <div class="dash-21-kpi-icon-wrap icon-green">
+          <i class="fa-solid fa-comments"></i>
+        </div>
+      </div>
+      <div class="dash-21-kpi-value-row">
+        <span class="dash-21-kpi-value">{{ interactions().length }}</span>
+        <span class="dash-21-trend-pill trend-up">Historique</span>
+      </div>
+      <div class="dash-21-kpi-footer">
+        <span>Visites, appels WhatsApp, négociations</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENU PRINCIPAL : DOUBLE PANNEAU (LISTE COMPTES + TIMELINE DÉTAILLÉE) -->
+  <div class="suivi-layout-grid">
+    <!-- COLONNE GAUCHE : SÉLECTION DU PARTENAIRE & FILTRES -->
+    <div class="dash-21-card suivi-sidebar">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--n200)">
+        <h3 style="font-size:14.5px;font-weight:800;color:var(--g-d);margin:0 0 10px">Répertoire Partenaires</h3>
+        
+        <div style="position:relative;margin-bottom:10px">
+          <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--n400);font-size:12px"></i>
+          <input type="text" class="form-control" style="padding-left:30px;font-size:12px" [ngModel]="rechercheTexte()" (ngModelChange)="rechercheTexte.set($event)" placeholder="Rechercher enseigne, contact..." />
+        </div>
+
+        <div style="display:flex;gap:6px">
+          <select class="form-control" style="font-size:11.5px;padding:4px 8px" [ngModel]="filtreTypeCompte()" (ngModelChange)="filtreTypeCompte.set($event)">
+            <option value="TOUS">Tous types</option>
+            <option value="GMS">GMS Supermarché</option>
+            <option value="HOTEL_RESTAURANT">Hôtellerie / Resto</option>
+            <option value="DISTRIBUTEUR">Distributeur</option>
+          </select>
+          <select class="form-control" style="font-size:11.5px;padding:4px 8px" [ngModel]="filtreStatutRelance()" (ngModelChange)="filtreStatutRelance.set($event)">
+            <option value="TOUS">Tous statuts</option>
+            <option value="A_RELANCER">À relancer</option>
+            <option value="A_JOUR">À jour</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="suivi-compte-list">
+        @for (c of comptesFiltres(); track c.id) {
+          <div class="suivi-compte-item" [class.active]="compteSelectionne()?.id === c.id" (click)="selectionnerCompte(c)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+              <strong style="font-size:13px;color:var(--g-d)">{{ c.nom }}</strong>
+              <span class="badge" [class.badge-success]="!estRelanceDue(c)" [class.badge-danger]="estRelanceDue(c)" style="font-size:10px">
+                {{ estRelanceDue(c) ? 'À RELANCER' : 'À JOUR' }}
+              </span>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:6px">
+              <span><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>{{ c.contact || 'Contact non renseigné' }}</span>
+              <span class="mono fw-bold" style="color:var(--g)">{{ fCFA(c.caMensuel) }}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--n400)">
+              <span>Échéance : {{ (c.prochaineRelance | date:'dd/MM/yyyy') || 'N/A' }}</span>
+              @if (c.telephone) {
+                <button type="button" class="btn-wa-mini" (click)="contacterWhatsApp(c, $event)" title="Contacter sur WhatsApp">
+                  <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </button>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div style="padding:24px;text-align:center;color:var(--n400);font-size:12px">
+            Aucun compte trouvé.
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE : TIMELINE CHRONOLOGIQUE & FICHE DÉTAILLÉE DU COMPTE -->
+    <div class="suivi-detail-area">
+      @if (compteSelectionne(); as sel) {
+        <!-- BANDEAU COMPTE SÉLECTIONNÉ -->
+        <div class="dash-21-card" style="padding:16px 20px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <h2 style="font-size:18px;font-weight:800;color:var(--g-d);margin:0">{{ sel.nom }}</h2>
+                <span class="meta-tag">{{ sel.type }}</span>
+                <span class="badge" [class.badge-success]="!estRelanceDue(sel)" [class.badge-danger]="estRelanceDue(sel)">
+                  {{ estRelanceDue(sel) ? 'RELANCE DUE' : 'DOSSIER À JOUR' }}
+                </span>
+              </div>
+              <p style="font-size:12.5px;color:var(--n500);margin:0">
+                Contact référent : <strong>{{ sel.contact || 'Non spécifié' }}</strong> · Téléphone : <strong>{{ sel.telephone || 'Non renseigné' }}</strong>
+              </p>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center">
+              @if (sel.telephone) {
+                <button type="button" class="dash-21-btn" style="background:#25D366;color:#fff;border:none" (click)="contacterWhatsApp(sel)">
+                  <i class="fa-brands fa-whatsapp"></i> Échanger sur WhatsApp
+                </button>
+              }
+              <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalNouvelleInteraction(sel)">
+                <i class="fa-solid fa-pen-to-square"></i> Consigner Échange
+              </button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--n200);font-size:12px">
+            <div>
+              <span style="color:var(--n400);display:block;font-size:11px">CA Mensuel Moyen :</span>
+              <strong class="mono" style="color:var(--g);font-size:13px">{{ fCFA(sel.caMensuel) }}</strong>
+            </div>
+            <div>
+              <span style="color:var(--n400);display:block;font-size:11px">Dernière Commande :</span>
+              <strong>{{ (sel.derniereCommande | date:'dd MMMM yyyy':'':'fr') || 'Aucune commande enregistrée' }}</strong>
+            </div>
+            <div>
+              <span style="color:var(--n400);display:block;font-size:11px">Prochaine Échéance de Relance :</span>
+              <strong [style.color]="estRelanceDue(sel) ? 'var(--r)' : 'inherit'">
+                {{ (sel.prochaineRelance | date:'dd MMMM yyyy':'':'fr') || 'Non définie' }}
+              </strong>
+            </div>
+            <div>
+              <span style="color:var(--n400);display:block;font-size:11px">Dernière Mise à Jour :</span>
+              <span>{{ (sel.dateDerniereModification | date:'dd/MM/yyyy HH:mm') || 'Système' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- JOURNAL D'INTERACTIONS & TIMELINE -->
+        <div class="dash-21-card" style="padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--n200)">
+            <h3 style="font-size:15px;font-weight:800;color:var(--g-d);margin:0">
+              <i class="fa-solid fa-timeline" style="color:var(--g);margin-right:6px"></i>
+              Historique des Interactions & Événements
+            </h3>
+            <span style="font-size:12px;color:var(--n500)">
+              {{ interactionsDuCompte().length }} événement(s) consigné(s)
+            </span>
+          </div>
+
+          <div class="timeline-container">
+            @for (act of interactionsDuCompte(); track act.id) {
+              <div class="timeline-item">
+                <div class="timeline-badge" [class.badge-whatsapp]="act.canal === 'WHATSAPP'" [class.badge-visite]="act.canal === 'PRESENTIEL'" [class.badge-appel]="act.canal === 'TELEPHONE'">
+                  @if (act.canal === 'WHATSAPP') {
+                    <i class="fa-brands fa-whatsapp"></i>
+                  } @else if (act.canal === 'PRESENTIEL') {
+                    <i class="fa-solid fa-handshake"></i>
+                  } @else {
+                    <i class="fa-solid fa-phone"></i>
+                  }
+                </div>
+
+                <div class="timeline-content">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+                    <div>
+                      <strong style="color:var(--g-d);font-size:13.5px">{{ act.type }}</strong>
+                      <span style="font-size:11.5px;color:var(--n500);margin-left:8px">via {{ act.canal }} avec {{ act.interlocuteur || 'Partenaire' }}</span>
+                    </div>
+                    <span class="mono" style="font-size:11.5px;color:var(--n500)">{{ act.date | date:'dd/MM/yyyy' }}</span>
+                  </div>
+
+                  <p style="font-size:12.5px;color:var(--n700);line-height:1.5;margin:0 0 8px;background:var(--n100);padding:8px 12px;border-radius:6px">
+                    {{ act.compteRendu }}
+                  </p>
+
+                  @if (act.prochaineAction) {
+                    <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--g);font-weight:600">
+                      <i class="fa-solid fa-arrow-right"></i>
+                      <span>Prochaine action : {{ act.prochaineAction }}</span>
+                      @if (act.echeanceProchaineAction) {
+                        <span style="color:var(--n500);font-weight:normal">(Échéance : {{ act.echeanceProchaineAction | date:'dd/MM/yyyy' }})</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div style="text-align:center;padding:36px;color:var(--n400)">
+                <i class="fa-solid fa-clipboard-list" style="font-size:36px;margin-bottom:10px;display:block"></i>
+                <h4 style="margin:0 0 6px;color:var(--g-d)">Aucune interaction consignée pour ce partenaire</h4>
+                <p style="font-size:12px;margin:0 0 14px">Consignez les visites, appels et négociations pour assurer une traçabilité totale.</p>
+                <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="ouvrirModalNouvelleInteraction(sel)">
+                  <i class="fa-solid fa-plus"></i> Consigner le premier échange
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="dash-21-card" style="padding:48px;text-align:center;color:var(--n400)">
+          <i class="fa-solid fa-handshake" style="font-size:40px;color:var(--n300);margin-bottom:12px;display:block"></i>
+          <h3 style="margin:0 0 6px;color:var(--g-d)">Sélectionnez un Grand Compte</h3>
+          <p style="font-size:13px;margin:0">Choisissez un partenaire dans la colonne de gauche pour consulter sa fiche complète et sa timeline.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE INTERACTION -->
+@if (showModalInteraction()) {
+  <div class="modal-backdrop animate-fadeIn">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="fa-solid fa-pen-to-square" style="font-size:18px;color:var(--g)"></i>
+          <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--g-d)">Consigner un Échange / Rendez-vous Partenaire</h3>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="fermerModalInteraction()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Partenaire ciblé</label>
+          <input type="text" class="form-control" [value]="compteCiblePourInteraction()?.nom" disabled style="background:var(--n100)" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Type d'opération *</label>
+            <select class="form-control" [ngModel]="nouvelleInteraction().type" (ngModelChange)="nouvelleInteraction().type = $event">
+              <option value="VISITE_COURTOISIE">Visite de courtoisie</option>
+              <option value="NEGOCIATION_GMS">Négociation convention GMS</option>
+              <option value="APPEL_WHATSAPP">Appel / Échange WhatsApp</option>
+              <option value="RELANCE_COMMANDE">Relance réapprovisionnement</option>
+              <option value="LITIGE_AVARIE">Traitement litige ou avarie</option>
+              <option value="ANIMATION">Dégustation & Animation</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Canal utilisé *</label>
+            <select class="form-control" [ngModel]="nouvelleInteraction().canal" (ngModelChange)="nouvelleInteraction().canal = $event">
+              <option value="WHATSAPP">WhatsApp Business</option>
+              <option value="PRESENTIEL">Présentiel / Visite sur site</option>
+              <option value="TELEPHONE">Appel téléphonique direct</option>
+              <option value="EMAIL">Courrier électronique officiel</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label">Date de l'échange *</label>
+            <input type="date" class="form-control" [ngModel]="nouvelleInteraction().date" (ngModelChange)="nouvelleInteraction().date = $event" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Interlocuteur rencontré / contacté</label>
+            <input type="text" class="form-control" [ngModel]="nouvelleInteraction().interlocuteur" (ngModelChange)="nouvelleInteraction().interlocuteur = $event" placeholder="Ex: M. Dupont (Chef de Rayon GMS)" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Compte-rendu détaillé des échanges *</label>
+          <textarea class="form-control" rows="3" [ngModel]="nouvelleInteraction().compteRendu" (ngModelChange)="nouvelleInteraction().compteRendu = $event" placeholder="Résumé des discussions, retours sur les ruptures, accords de mise en avant..."></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Prochaine action convenue</label>
+            <input type="text" class="form-control" [ngModel]="nouvelleInteraction().prochaineAction" (ngModelChange)="nouvelleInteraction().prochaineAction = $event" placeholder="Ex: Livraison échantillonnage, bon de commande..." />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Échéance de relance</label>
+            <input type="date" class="form-control" [ngModel]="nouvelleInteraction().echeanceProchaineAction" (ngModelChange)="nouvelleInteraction().echeanceProchaineAction = $event" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="fermerModalInteraction()">Annuler</button>
+        <button type="button" class="dash-21-btn dash-21-btn-primary" (click)="enregistrerInteraction()">
+          <i class="fa-solid fa-check"></i> Enregistrer le Compte-Rendu
+        </button>
+      </div>
+    </div>
+  </div>
+}

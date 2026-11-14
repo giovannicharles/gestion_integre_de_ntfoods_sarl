@@ -295,19 +295,37 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
         },
         error: () => {},
       });
-    } else if (role.includes('RP')) {
+    } else if (role.includes('RP') || role.includes('CHARGEE')) {
       this.api.get<any>('/rp/dashboard').subscribe({
         next: (r) => {
           const d = r?.donnees ?? r;
           if (d?.relancesDues > 0) {
             this.upsertAction({
               id: 'rp-relances',
-              titre: `${d.relancesDues} relance(s) Grands Comptes`,
-              description: 'Clients grands comptes à recontacter',
+              titre: `${d.relancesDues} relance(s) Grands Comptes dues`,
+              description: 'Supermarchés ou partenaires GMS à recontacter rapidement',
               icone: 'fa-handshake',
               priorite: 'haute',
               route: '/rp/grands-comptes',
               count: d.relancesDues,
+            });
+          }
+        },
+        error: () => {},
+      });
+      this.api.get<any>('/commercial/commandes-clients').subscribe({
+        next: (r) => {
+          const list = r?.donnees ?? r ?? [];
+          const count = Array.isArray(list) ? list.filter((c: any) => c.statut === 'EN_ATTENTE' || c.statut === 'A_VALIDER').length : 0;
+          if (count > 0) {
+            this.upsertAction({
+              id: 'rp-commandes-vip',
+              titre: `${count} commande(s) VIP en attente`,
+              description: 'Commandes hors-tournée WhatsApp/téléphone à traiter',
+              icone: 'fa-cart-shopping',
+              priorite: 'haute',
+              route: '/rp/commandes-clients',
+              count,
             });
           }
         },

@@ -1,21 +1,38 @@
 <div class="dash-21-root animate-fadeIn">
+  <!-- EN-TÊTE STATISTIQUES AVEC BASCULE TEMPS RÉEL VS HISTORIQUE -->
   <header class="dash-21-header">
     <div class="dash-21-header-left">
       <div class="dash-21-title-group">
         <h1 class="dash-21-title">Statistiques & Pénétration Commerciale RP</h1>
         <span class="dash-21-badge-live">
           <span class="dash-21-pulse"></span>
-          INDICATEURS SECTORIELS
+          INDICATEURS SECTORIELS & ÉVOLUTIONS
         </span>
       </div>
       <p class="dash-21-subtitle">
-        Taux d'occupation des marchés, approvisionnement des points de vente et performance par gamme de produits
+        Suivi en direct des marchés (« ce qui se passe ») et rétrospective consolidée (« ce qui s'est passé ») par gamme, zone et campagne
       </p>
     </div>
 
-    <div class="dash-21-actions">
+    <div class="dash-21-actions" style="display:flex;align-items:center;gap:10px">
+      <!-- SELECTEUR MODE TEMPS RÉEL / HISTORIQUE -->
+      <div style="display:inline-flex;background:var(--n200);border-radius:6px;padding:2px">
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeVue() === 'EN_DIRECT'" [class.dash-21-btn-ghost]="modeVue() !== 'EN_DIRECT'" (click)="modeVue.set('EN_DIRECT')" style="padding:4px 12px;font-size:12px">
+          <i class="fa-solid fa-bolt"></i> En Direct
+        </button>
+        <button type="button" class="dash-21-btn" [class.dash-21-btn-primary]="modeVue() === 'HISTORIQUE'" [class.dash-21-btn-ghost]="modeVue() !== 'HISTORIQUE'" (click)="modeVue.set('HISTORIQUE')" style="padding:4px 12px;font-size:12px">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historique Passé
+        </button>
+      </div>
+
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="exporterCsv()" title="Exporter en CSV">
+        <i class="fa-solid fa-file-csv"></i> CSV
+      </button>
+      <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="imprimer()" title="Imprimer le bilan statistique">
+        <i class="fa-solid fa-print"></i> Imprimer
+      </button>
       <button type="button" class="dash-21-btn dash-21-btn-ghost" (click)="charger()" title="Actualiser les données">
-        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i> Actualiser
+        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
       </button>
     </div>
   </header>
@@ -36,7 +53,7 @@
         </span>
       </div>
       <div class="dash-21-kpi-footer">
-        <span>Boutiques livrées sur le total recensé</span>
+        <span>Points de vente desservis en direct sur le marché</span>
       </div>
     </div>
 
@@ -54,13 +71,13 @@
         </span>
       </div>
       <div class="dash-21-kpi-footer">
-        <span>Volume d'affaires réalisé sur la période</span>
+        <span>Volume d'affaires généré par les gammes phares TANTY</span>
       </div>
     </div>
 
     <div class="dash-21-kpi-card">
       <div class="dash-21-kpi-head">
-        <span class="dash-21-kpi-label">Secteurs & Marchés Sous Contrôle</span>
+        <span class="dash-21-kpi-label">Secteurs Sous Contrôle</span>
         <div class="dash-21-kpi-icon-wrap icon-gold">
           <i class="fa-solid fa-city"></i>
         </div>
@@ -68,105 +85,162 @@
       <div class="dash-21-kpi-value-row">
         <span class="dash-21-kpi-value">{{ secteurs().length }}</span>
         <span class="dash-21-trend-pill trend-up">
-          Zones urbaines
+          Bassins urbains
         </span>
       </div>
       <div class="dash-21-kpi-footer">
-        <span>Yaoundé, Douala et grands pôles régionaux</span>
+        <span>Marchés Yaoundé, Douala, Bafoussam et périphéries</span>
       </div>
     </div>
   </section>
 
-  <!-- 2 COLUMNS: SECTEURS & GAMMES -->
-  <div class="dash-21-grid">
-    <!-- COUVERTURE SECTEURS -->
-    <div class="dash-21-main-col">
-      <div class="dash-21-card">
-        <div class="dash-21-card-header">
-          <div class="dash-21-card-title-group">
-            <h3 class="dash-21-card-title"><i class="fa-solid fa-shop" style="color:var(--g)"></i> Taux d'Occupation par Secteur Commercial</h3>
-            <span class="dash-21-card-hint">Points de vente approvisionnés vs recensés</span>
-          </div>
-        </div>
+  <!-- CONTENU SELON LE MODE SÉLECTIONNÉ -->
 
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Secteur / Marché</th>
-                <th class="text-right">Boutiques Livrées</th>
-                <th class="text-right">Total Recensé</th>
-                <th>Potentiel</th>
-                <th style="min-width:160px">Taux de Pénétration</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (s of secteurs(); track s.zone) {
-                <tr>
-                  <td class="fw-bold" style="color:var(--g-d)">
-                    <i class="fa-solid fa-location-dot" style="color:var(--g);margin-right:6px"></i>{{ s.zone }}
-                  </td>
-                  <td class="text-right mono fw-bold" style="color:var(--g)">{{ s.livrees }}</td>
-                  <td class="text-right mono">{{ s.repertoriees }}</td>
-                  <td><span class="meta-tag">{{ s.potentiel || 'ÉLEVÉ' }}</span></td>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <div style="flex:1;height:8px;background:var(--n200);border-radius:6px;overflow:hidden">
-                        <div style="height:100%;border-radius:6px" 
-                             [style.width.%]="Math.min(tauxCouvertureSecteur(s), 100)" 
-                             [style.background]="tauxCouvertureSecteur(s) >= 70 ? 'var(--g)' : (tauxCouvertureSecteur(s) >= 45 ? 'var(--y)' : 'var(--r)')">
-                        </div>
-                      </div>
-                      <span class="taux-chip" 
-                            [class.taux-ok]="tauxCouvertureSecteur(s) >= 70" 
-                            [class.taux-mid]="tauxCouvertureSecteur(s) >= 45 && tauxCouvertureSecteur(s) < 70" 
-                            [class.taux-warn]="tauxCouvertureSecteur(s) < 45">
-                        {{ tauxCouvertureSecteur(s) }}%
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" style="text-align:center;padding:24px;color:var(--n400)">
-                    Aucun secteur renseigné.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- PERFORMANCE GAMMES -->
-    <div class="dash-21-side-col">
-      <div class="dash-21-card">
-        <div class="dash-21-card-header">
-          <div class="dash-21-card-title-group">
-            <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--g)"></i> Répartition Gammes TANTY</h3>
-            <span class="dash-21-card-hint">Poids en CA & écoulement en cartons</span>
-          </div>
-        </div>
-
-        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:14px">
-          @for (g of gammes(); track g.gamme) {
-            <div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-                <span style="font-size:12.5px;font-weight:700;color:var(--g-d)">{{ g.gamme }}</span>
-                <span style="font-size:12px;font-weight:700;color:var(--g)">{{ fCFA(g.chiffreAffaires) }}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:6px">
-                <span>{{ g.cartonsVendus }} cartons vendus</span>
-                <span>Part: {{ g.partVolume }}%</span>
-              </div>
-              <div style="height:6px;background:var(--n200);border-radius:4px;overflow:hidden">
-                <div style="height:100%;border-radius:4px;background:var(--g)" [style.width.%]="g.partVolume"></div>
-              </div>
+  <!-- 1. VUE EN DIRECT (CE QUI SE PASSE MAINTENANT) -->
+  @if (modeVue() === 'EN_DIRECT') {
+    <div class="dash-21-grid animate-fadeIn">
+      <!-- COUVERTURE SECTEURS -->
+      <div class="dash-21-main-col">
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-shop" style="color:var(--g)"></i> Taux d'Occupation Actuel par Secteur Commercial</h3>
+              <span class="dash-21-card-hint">Points de vente approvisionnés vs recensés en direct</span>
             </div>
-          }
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Secteur / Marché</th>
+                  <th class="text-right">Boutiques Livrées</th>
+                  <th class="text-right">Total Recensé</th>
+                  <th>Potentiel</th>
+                  <th style="min-width:160px">Taux de Pénétration</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of secteurs(); track s.zone) {
+                  <tr>
+                    <td class="fw-bold">{{ s.zone }}</td>
+                    <td class="text-right mono">{{ s.livrees }}</td>
+                    <td class="text-right mono">{{ s.repertoriees }}</td>
+                    <td>
+                      <span class="meta-tag">{{ s.potentiel || 'Standard' }}</span>
+                    </td>
+                    <td>
+                      <div class="progress-bar-wrap">
+                        <div class="progress-bar-track">
+                          <div class="progress-bar-fill" [style.width.%]="tauxCouvertureSecteur(s)" [style.background]="tauxCouvertureSecteur(s) >= 60 ? 'var(--g)' : 'var(--r)'"></div>
+                        </div>
+                        <span class="mono" style="font-size:11.5px;font-weight:700;width:38px;text-align:right">
+                          {{ tauxCouvertureSecteur(s) }}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" style="text-align:center;padding:32px;color:var(--n400)">
+                      Aucune donnée de secteur disponible.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE DES GAMMES -->
+      <div class="dash-21-side-col">
+        <div class="dash-21-card">
+          <div class="dash-21-card-header">
+            <div class="dash-21-card-title-group">
+              <h3 class="dash-21-card-title"><i class="fa-solid fa-chart-pie" style="color:var(--g)"></i> Pénétration par Gamme TANTY</h3>
+              <span class="dash-21-card-hint">Répartition des volumes et réalisation des objectifs</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;padding:6px 0">
+            @for (g of gammes(); track g.gamme) {
+              <div style="border-bottom:1px solid var(--n200);padding-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:4px">
+                  <span style="color:var(--g-d)">{{ g.gamme }}</span>
+                  <span class="mono" style="color:var(--g)">{{ fCFA(g.chiffreAffaires) }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n500);margin-bottom:6px">
+                  <span>{{ g.cartonsVendus }} cartons vendus ({{ g.partVolume }}% du volume)</span>
+                  <span class="mono fw-bold">{{ g.tauxAtteinte }}% objectif</span>
+                </div>
+                <div class="progress-bar-track" style="height:6px">
+                  <div class="progress-bar-fill" [style.width.%]="g.tauxAtteinte" style="background:var(--g)"></div>
+                </div>
+              </div>
+            } @empty {
+              <div style="text-align:center;padding:24px;color:var(--n400);font-size:12px">
+                Aucune gamme enregistrée.
+              </div>
+            }
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
+
+  <!-- 2. VUE HISTORIQUE PASSÉ (CE QUI S'EST DÉJÀ PASSÉ) -->
+  @if (modeVue() === 'HISTORIQUE') {
+    <div class="dash-21-card animate-fadeIn" style="margin-top:16px">
+      <div class="dash-21-card-header">
+        <div class="dash-21-card-title-group">
+          <h3 class="dash-21-card-title">
+            <i class="fa-solid fa-calendar-days" style="color:var(--g)"></i>
+            Historique Rétrospectif de l'Activité RP & Retombées Commerciales
+          </h3>
+          <span class="dash-21-card-hint">Comparatif des mois et trimestres écoulés de l'année 2026</span>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Période Historique</th>
+              <th class="text-right">Chiffre d'Affaires</th>
+              <th class="text-right">Volume Cartons</th>
+              <th class="text-center">Couverture Marché</th>
+              <th class="text-right">Opérations / Salons</th>
+              <th class="text-right">Échantillons Offerts</th>
+              <th class="text-center">ROI Campagnes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (h of historiquePeriodes(); track h.periode) {
+              <tr>
+                <td class="fw-bold" style="color:var(--g-d)">
+                  <i class="fa-regular fa-calendar-check" style="color:var(--g);margin-right:6px"></i>
+                  {{ h.periode }}
+                </td>
+                <td class="text-right mono fw-bold" style="color:var(--g)">{{ fCFA(h.caTotal) }}</td>
+                <td class="text-right mono">{{ h.cartonsTotal }} cartons</td>
+                <td class="text-center">
+                  <span class="badge" [class.badge-success]="h.tauxCouverture >= 60" [class.badge-neutral]="h.tauxCouverture < 60">
+                    {{ h.tauxCouverture }}%
+                  </span>
+                </td>
+                <td class="text-right mono">{{ h.nbActivations }}</td>
+                <td class="text-right mono">{{ h.echantillonsDistribues | number }}</td>
+                <td class="text-center">
+                  <span class="badge badge-success mono" style="font-size:11px">
+                    +{{ h.roiCampagnes }}% ROI
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
 </div>

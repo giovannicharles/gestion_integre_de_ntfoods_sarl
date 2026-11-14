@@ -116,6 +116,11 @@ export const routes: Routes = [
     loadChildren: () => import('./domains/sync/presentation/sync.routes').then(m => m.SYNC_ROUTES)
   },
   {
+    path: 'studio-documents',
+    canActivate: [authGuard],
+    loadComponent: () => import('./shared/document-studio/document-studio.component').then(m => m.DocumentStudioComponent)
+  },
+  {
     path: 'ia',
     canActivate: [authGuard, roleGuard],
     data: {
@@ -127,7 +132,10 @@ export const routes: Routes = [
         'ADMIN',
         'COMMERCIAL',
         'CONTROLEUR_GENERAL',
-        'COMPTABLE'
+        'COMPTABLE',
+        'CHARGEE_RP',
+        'SECRETAIRE',
+        'RESPONSABLE_RH'
       ]
     },
     loadChildren: () => import('./domains/ia/presentation/ia.routes').then(m => m.IA_ROUTES)

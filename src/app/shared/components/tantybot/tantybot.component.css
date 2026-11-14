@@ -8,10 +8,11 @@
   align-items: center;
   gap: 12px;
   font-family: 'Inter', -apple-system, sans-serif;
-  pointer-events: none; /* Les boutons internes ont pointer-events: auto */
+  pointer-events: none;
+  /* Les boutons internes ont pointer-events: auto */
 }
 
-.tanty-floating-dock > * {
+.tanty-floating-dock>* {
   pointer-events: auto;
 }
 
@@ -132,8 +133,15 @@
 }
 
 @keyframes tbBadgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
 }
 
 /* ── Panel ── */
@@ -288,7 +296,7 @@
   color: #1e293b;
   border: 1px solid #e2e8f0;
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .tb-msg-user .tb-msg-bubble {
@@ -354,12 +362,26 @@
   animation: tbTyping 1.4s ease-in-out infinite;
 }
 
-.tb-typing span:nth-child(2) { animation-delay: 0.2s; }
-.tb-typing span:nth-child(3) { animation-delay: 0.4s; }
+.tb-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.tb-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes tbTyping {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(-4px); opacity: 1; }
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 /* Input Area */
@@ -417,15 +439,18 @@
     right: 16px;
     gap: 8px;
   }
+
   .tb-wa-fab {
     width: 44px;
     height: 44px;
     font-size: 22px;
   }
+
   .tb-fab {
     width: 48px;
     height: 48px;
   }
+
   .tb-panel {
     width: calc(100vw - 32px);
     right: 0;

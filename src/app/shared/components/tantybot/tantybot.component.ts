@@ -324,12 +324,14 @@ export class TantybotComponent implements OnInit, AfterViewChecked {
     const contextualPrompt = `[Contexte ERP: ${ctx.code} - ${ctx.badge}] ${query}`;
 
     this.iaService.chat({
-      message: contextualPrompt,
+      message: query,
+      context: contextualPrompt,
+      domain: ctx.code.toLowerCase(),
       conversationHistory: this.conversationHistory.slice(-8)
     }).pipe(
       catchError(() => of({
-        reply: `Désolé, l'agent IA TantyBot n'a pas pu traiter cette demande textuelle pour le moment. Vous pouvez naviguer directement via les raccourcis du module ${ctx.badge} ci-dessous.`,
-        model: 'fallback',
+        reply: this.generateContextualFallback(query, ctx),
+        model: 'contextual-assistant',
         usingFallback: true
       }))
     ).subscribe(resp => {
@@ -337,6 +339,35 @@ export class TantybotComponent implements OnInit, AfterViewChecked {
       this.conversationHistory.push({ role: 'assistant', content: resp.reply });
       this.reply(resp.reply, ctx.quickReplies);
     });
+  }
+
+  private generateContextualFallback(query: string, ctx: ModuleContextInfo): string {
+    const q = query.toLowerCase();
+    if (ctx.code === 'RP' || q.includes('gms') || q.includes('carrefour') || q.includes('dovv') || q.includes('partenaire')) {
+      return `🤝 **Relations Publiques & GMS (TANTY)** :\n` +
+        `• **Grands Comptes** : Retrouvez les conventions de référencement, contrats et fiches partenaires dans **/rp/grands-comptes**.\n` +
+        `• **Commandes VIP** : Saisissez et suivez les commandes hors tournée dans **/rp/commandes-clients**.\n` +
+        `• **Reporting & ROI** : Bilan des dégustations et activations dans **/rp/reporting**.\n` +
+        `• **Barème Remises GMS** : 50-199 cartons = 5% | 200-499 = 10% | ≥500 VIP = 15%.`;
+    }
+    if (ctx.code === 'COMMERCIAL' || q.includes('vente') || q.includes('tournée')) {
+      return `💼 **Assistance Commerciale TANTY** :\n` +
+        `• Suivez vos ventes journalières et précommandes J+1 dans **/commercial/precommandes**.\n` +
+        `• Les commandes rapides WhatsApp et hors tournée sont gérées dans **/commercial/commandes-clients**.\n` +
+        `• Consultez vos primes hebdomadaires calculées dans **/commercial/classement**.`;
+    }
+    if (ctx.code === 'COMPTABLE' || q.includes('caisse') || q.includes('décaissement')) {
+      return `📊 **Comptabilité & Trésorerie OHADA** :\n` +
+        `• Les décaissements visés et validés par la DG sont accessibles dans **/comptable/decaissements**.\n` +
+        `• Le contrôle des encaissements et versements de caisse est centralisé dans **/comptable/caisse**.`;
+    }
+    if (ctx.code === 'PRODUCTION' || q.includes('ordre') || q.includes('formule')) {
+      return `🏭 **Production Industrielle TANTY** :\n` +
+        `• Suivi des ordres de fabrication (OF) et validation des lots dans **/production/ordres**.\n` +
+        `• Respect strict des fiches techniques et formulations certifiées ANOR.`;
+    }
+    return `💡 **${ctx.titre}** :\n` +
+      `Votre demande a été prise en compte pour le module ${ctx.badge}. Vous pouvez naviguer directement via les raccourcis configurés ci-dessous pour consulter les données en direct.`;
   }
 
   private fetchStockSummary(): void {
